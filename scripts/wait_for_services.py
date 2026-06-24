@@ -8,7 +8,6 @@ import urllib.error
 import urllib.request
 from collections.abc import Callable
 
-
 TIMEOUT_SECONDS = 60
 POLL_INTERVAL_SECONDS = 1
 
