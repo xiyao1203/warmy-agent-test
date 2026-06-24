@@ -1,0 +1,13 @@
+{
+  "name": "warmy-agent-test",
+  "private": true,
+  "packageManager": "pnpm@11.7.0",
+  "scripts": {
+    "format": "pnpm -r --if-present format",
+    "lint": "pnpm -r --if-present lint",
+    "typecheck": "pnpm -r --if-present typecheck",
+    "test": "pnpm -r --if-present test",
+    "build": "pnpm -r --if-present build",
+    "api:generate": "pnpm --filter @warmy/generated-api-client generate"
+  }
+}
