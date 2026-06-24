@@ -32,3 +32,4 @@ htmlcov/
 playwright-report/
 test-results/
 *.sqlite3
+*.tsbuildinfo
