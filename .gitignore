@@ -25,3 +25,12 @@ __pycache__/
 .mypy_cache/
 .ruff_cache/
 .venv/
+.coverage
+htmlcov/
+
+# Build and test output
+.turbo/
+playwright-report/
+test-results/
+*.sqlite3
+*.tsbuildinfo
