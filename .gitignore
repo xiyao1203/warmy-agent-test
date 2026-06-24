@@ -9,6 +9,7 @@
 .idea/
 .vscode/
 .codex-log/
+.worktrees/
 
 # Node.js
 node_modules/
