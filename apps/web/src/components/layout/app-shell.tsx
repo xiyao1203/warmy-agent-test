@@ -1,67 +1,97 @@
-import {
-  Bot,
-  Boxes,
-  ClipboardCheck,
-  FlaskConical,
-  LayoutDashboard,
-  Play,
-} from "lucide-react";
+"use client";
+
+import type {
+  ProjectResponse,
+  UserResponse,
+} from "@warmy/generated-api-client";
+import { LayoutDashboard, Users } from "lucide-react";
+import Link from "next/link";
 import type { ReactNode } from "react";
+
+import { ProjectSwitcher } from "@/features/projects";
+import { canManageUsers } from "@/lib/permissions";
 
 type AppShellProps = {
   children: ReactNode;
-  projectName: string;
-  userName: string;
+  currentProjectId?: string;
+  onProjectSelect: (projectId: string) => void;
+  projects: ProjectResponse[];
+  user: UserResponse;
+  workspaceMode?: "agent" | "management";
 };
 
-const navigation = [
-  { label: "概览", icon: LayoutDashboard },
-  { label: "测试 Agent", icon: Bot },
-  { label: "Agent 与版本", icon: Boxes },
-  { label: "测试集", icon: FlaskConical },
-  { label: "测试计划", icon: ClipboardCheck },
-  { label: "运行记录", icon: Play },
-];
+export function AppShell({
+  children,
+  currentProjectId,
+  onProjectSelect,
+  projects,
+  user,
+  workspaceMode = "management",
+}: AppShellProps) {
+  const projectHref = currentProjectId
+    ? `/projects/${currentProjectId}/overview`
+    : "#";
 
-export function AppShell({ children, projectName, userName }: AppShellProps) {
   return (
     <div className="min-h-screen bg-[var(--background)] text-[var(--text)]">
       <header className="flex h-12 items-center justify-between border-b border-[var(--border)] bg-[var(--surface)] px-4">
-        <div className="flex items-center gap-4">
-          <span className="text-sm font-semibold">Warmy Agent Test</span>
-          <button
-            className="rounded-md px-2 py-1 text-sm text-[var(--text-muted)] hover:bg-[var(--surface-subtle)]"
-            type="button"
-          >
-            {projectName}
-          </button>
+        <div className="flex min-w-0 items-center gap-5">
+          <Link className="shrink-0 text-sm font-semibold" href={projectHref}>
+            Warmy Agent Test
+          </Link>
+          <ProjectSwitcher
+            currentProjectId={currentProjectId}
+            onSelect={onProjectSelect}
+            projects={projects}
+          />
         </div>
         <button
-          className="flex size-7 items-center justify-center rounded-full bg-[var(--surface-subtle)] text-xs font-semibold"
-          title={userName}
+          aria-label={`当前用户：${user.display_name}`}
+          className="flex size-7 shrink-0 items-center justify-center rounded-full bg-[var(--surface-subtle)] text-xs font-semibold"
+          title={`${user.display_name} · ${user.email}`}
           type="button"
         >
-          {userName.slice(0, 1).toUpperCase()}
-          <span className="sr-only">{userName}</span>
+          {user.display_name.slice(0, 1).toUpperCase()}
         </button>
       </header>
-      <div className="grid min-h-[calc(100vh-3rem)] grid-cols-[14rem_1fr] max-[1279px]:grid-cols-[4rem_1fr]">
-        <aside className="border-r border-[var(--border)] bg-[var(--surface)] p-2">
-          <nav aria-label="主导航" className="space-y-1">
-            {navigation.map(({ icon: Icon, label }) => (
-              <a
-                className="flex h-9 items-center gap-3 rounded-md px-3 text-sm text-[var(--text-muted)] hover:bg-[var(--surface-subtle)] hover:text-[var(--text)] max-[1279px]:justify-center max-[1279px]:px-0"
-                href="#"
-                key={label}
-                title={label}
-              >
-                <Icon aria-hidden="true" className="size-4 shrink-0" />
-                <span className="max-[1279px]:sr-only">{label}</span>
-              </a>
-            ))}
+      <div
+        className={
+          workspaceMode === "agent"
+            ? "grid min-h-[calc(100vh-3rem)] grid-cols-[14rem_minmax(0,1fr)_20rem] max-[1279px]:grid-cols-[4rem_minmax(0,1fr)]"
+            : "grid min-h-[calc(100vh-3rem)] grid-cols-[14rem_minmax(0,1fr)] max-[1279px]:grid-cols-[4rem_minmax(0,1fr)]"
+        }
+      >
+        <aside className="flex flex-col border-r border-[var(--border)] bg-[var(--surface)] p-2">
+          <nav aria-label="项目导航" className="space-y-1">
+            <Link
+              className="flex h-9 items-center gap-3 rounded-[var(--radius-sm)] px-3 text-sm text-[var(--text-muted)] hover:bg-[var(--surface-subtle)] hover:text-[var(--text)] max-[1279px]:justify-center max-[1279px]:px-0"
+              href={projectHref}
+              title="项目概览"
+            >
+              <LayoutDashboard aria-hidden="true" className="size-4 shrink-0" />
+              <span className="max-[1279px]:sr-only">项目概览</span>
+            </Link>
           </nav>
+          {canManageUsers(user) ? (
+            <div className="mt-auto border-t border-[var(--border)] pt-3">
+              <p className="px-3 pb-1.5 text-xs font-medium text-[var(--text-subtle)] max-[1279px]:sr-only">
+                系统管理
+              </p>
+              <Link
+                className="flex h-9 items-center gap-3 rounded-[var(--radius-sm)] px-3 text-sm text-[var(--text-muted)] hover:bg-[var(--surface-subtle)] hover:text-[var(--text)] max-[1279px]:justify-center max-[1279px]:px-0"
+                href="/system/users"
+                title="用户管理"
+              >
+                <Users aria-hidden="true" className="size-4 shrink-0" />
+                <span className="max-[1279px]:sr-only">用户管理</span>
+              </Link>
+            </div>
+          ) : null}
         </aside>
-        <main className="min-w-0 p-6">{children}</main>
+        <main className="min-w-0">{children}</main>
+        {workspaceMode === "agent" ? (
+          <aside className="border-l border-[var(--border)] bg-[var(--surface)] max-[1279px]:hidden" />
+        ) : null}
       </div>
     </div>
   );
