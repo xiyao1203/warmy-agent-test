@@ -1,3 +1,11 @@
-export { listUsers } from "./api";
+export {
+  createUser,
+  deleteUser,
+  listUsers,
+  resetUserPassword,
+  setUserEnabled,
+  updateUser,
+} from "./api";
+export { CreateUserDialog } from "./user-dialog";
 export { UserManagement } from "./user-management";
 export { UserManagementScreen } from "./user-management-screen";

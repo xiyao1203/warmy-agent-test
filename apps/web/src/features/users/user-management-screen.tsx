@@ -5,7 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import { getCurrentUser } from "@/features/auth";
 import { problemKind } from "@/lib/api/problem";
 
-import { listUsers } from "./api";
+import { createUser, listUsers, resetUserPassword, setUserEnabled } from "./api";
 import { UserManagement } from "./user-management";
 
 export function UserManagementScreen() {
@@ -47,6 +47,18 @@ export function UserManagementScreen() {
     <UserManagement
       currentUser={userQuery.data}
       nextCursor={usersQuery.data.next_cursor}
+      onCreate={async (payload) => {
+        await createUser(payload);
+        await usersQuery.refetch();
+      }}
+      onResetPassword={async (userId, password) => {
+        await resetUserPassword(userId, password);
+        await usersQuery.refetch();
+      }}
+      onToggleStatus={async (userId, enabled) => {
+        await setUserEnabled(userId, enabled);
+        await usersQuery.refetch();
+      }}
       users={usersQuery.data.items}
     />
   );

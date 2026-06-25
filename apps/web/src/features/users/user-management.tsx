@@ -1,11 +1,10 @@
 "use client";
 
 import type { SystemRole, UserResponse, UserStatus } from "@warmy/generated-api-client";
-import { Search, UserPlus } from "lucide-react";
+import { Search } from "lucide-react";
 import { useMemo, useState } from "react";
 
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Input } from "@/components/ui/input";
 import {
@@ -18,12 +17,16 @@ import {
 } from "@/components/ui/table";
 
 import { UserDrawer } from "./user-drawer";
+import { CreateUserDialog } from "./user-dialog";
 
 type UserManagementProps = {
   currentUser: UserResponse;
   error?: "permission" | "service";
   loading?: boolean;
   nextCursor?: string | null;
+  onCreate?: (payload: import("@warmy/generated-api-client").CreateUserRequest) => Promise<unknown>;
+  onResetPassword?: (userId: string, password: string) => Promise<unknown>;
+  onToggleStatus?: (userId: string, enabled: boolean) => Promise<unknown>;
   users?: UserResponse[];
 };
 
@@ -45,6 +48,9 @@ export function UserManagement({
   error,
   loading = false,
   nextCursor,
+  onCreate = async () => undefined,
+  onResetPassword = async () => undefined,
+  onToggleStatus = async () => undefined,
   users = [],
 }: UserManagementProps) {
   const [query, setQuery] = useState("");
@@ -93,10 +99,7 @@ export function UserManagement({
             管理内部账号、系统角色和登录状态。
           </p>
         </div>
-        <Button variant="primary">
-          <UserPlus aria-hidden="true" className="mr-2 size-4" />
-          创建用户
-        </Button>
+        <CreateUserDialog onCreate={onCreate} />
       </header>
 
       <section className="grid grid-cols-4 border-b border-[var(--border)] py-4 text-sm max-[900px]:grid-cols-2 max-[900px]:gap-4">
@@ -233,6 +236,8 @@ export function UserManagement({
         onOpenChange={(open) => {
           if (!open) setSelectedUser(undefined);
         }}
+        onResetPassword={onResetPassword}
+        onToggleStatus={onToggleStatus}
         open={Boolean(selectedUser)}
         user={selectedUser}
       />

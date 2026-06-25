@@ -1,15 +1,23 @@
 "use client";
 
 import type { UserResponse } from "@warmy/generated-api-client";
+import { useState } from "react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import {
   Drawer,
   DrawerContent,
   DrawerDescription,
   DrawerTitle,
 } from "@/components/ui/drawer";
+import { Input } from "@/components/ui/input";
 
 const roleLabels = {
   developer: "开发",
@@ -22,14 +30,22 @@ const roleLabels = {
 export function UserDrawer({
   currentUser,
   onOpenChange,
+  onResetPassword,
+  onToggleStatus,
   open,
   user,
 }: {
   currentUser: UserResponse;
   onOpenChange: (open: boolean) => void;
+  onResetPassword: (userId: string, password: string) => Promise<unknown>;
+  onToggleStatus: (userId: string, enabled: boolean) => Promise<unknown>;
   open: boolean;
   user?: UserResponse;
 }) {
+  const [action, setAction] = useState<"reset" | "status">();
+  const [password, setPassword] = useState("");
+  const [pending, setPending] = useState(false);
+  const [error, setError] = useState("");
   if (!user) return null;
   const isCurrentUser = currentUser.id === user.id;
 
@@ -72,10 +88,24 @@ export function UserDrawer({
         </dl>
 
         <div className="mt-5 space-y-2">
-          <Button className="w-full justify-start">编辑用户</Button>
-          <Button className="w-full justify-start">重置密码</Button>
+          <Button
+            className="w-full justify-start"
+            onClick={() => {
+              setAction("reset");
+              setError("");
+            }}
+          >
+            重置密码
+          </Button>
           {!isCurrentUser ? (
-            <Button className="w-full justify-start" variant="danger">
+            <Button
+              className="w-full justify-start"
+              onClick={() => {
+                setAction("status");
+                setError("");
+              }}
+              variant="danger"
+            >
               {user.status === "active" ? "禁用用户" : "启用用户"}
             </Button>
           ) : (
@@ -85,6 +115,77 @@ export function UserDrawer({
           )}
         </div>
       </DrawerContent>
+      <Dialog onOpenChange={(value) => !value && setAction(undefined)} open={Boolean(action)}>
+        <DialogContent>
+          <DialogTitle>
+            {action === "reset"
+              ? `重置 ${user.display_name} 的密码`
+              : `${user.status === "active" ? "禁用" : "启用"} ${user.display_name}`}
+          </DialogTitle>
+          <DialogDescription>
+            {action === "reset"
+              ? "密码重置会立即撤销该用户的所有有效 Session，并要求使用新密码登录。"
+              : user.status === "active"
+                ? "禁用后用户将无法登录，现有 Session 会立即失效。"
+                : "启用后用户可以重新登录，但不会自动恢复已移除的项目权限。"}
+          </DialogDescription>
+          {action === "reset" ? (
+            <div className="mt-4">
+              <label className="mb-1.5 block text-sm font-medium" htmlFor="reset-password">
+                新密码
+              </label>
+              <Input
+                autoComplete="new-password"
+                autoFocus
+                id="reset-password"
+                onChange={(event) => setPassword(event.target.value)}
+                type="password"
+                value={password}
+              />
+            </div>
+          ) : null}
+          {error ? (
+            <p className="mt-3 text-sm text-[var(--danger)]" role="alert">
+              {error}
+            </p>
+          ) : null}
+          <div className="mt-5 flex justify-end gap-2">
+            <Button onClick={() => setAction(undefined)} type="button">
+              取消
+            </Button>
+            <Button
+              disabled={pending || (action === "reset" && password.length < 12)}
+              onClick={async () => {
+                setPending(true);
+                setError("");
+                try {
+                  if (action === "reset") {
+                    await onResetPassword(user.id, password);
+                    setPassword("");
+                  } else {
+                    await onToggleStatus(user.id, user.status !== "active");
+                  }
+                  setAction(undefined);
+                } catch {
+                  setError("操作失败，请刷新数据后重试。");
+                } finally {
+                  setPending(false);
+                }
+              }}
+              type="button"
+              variant={action === "status" ? "danger" : "primary"}
+            >
+              {pending
+                ? "正在处理…"
+                : action === "reset"
+                  ? "确认重置密码"
+                  : user.status === "active"
+                    ? "确认禁用用户"
+                    : "确认启用用户"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </Drawer>
   );
 }
