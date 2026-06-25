@@ -27,6 +27,18 @@ describe("AppShell", () => {
 
     expect(screen.getByText("Warmy Agent Test")).toBeInTheDocument();
     expect(screen.getByText("项目概览")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Agent 与版本" })).toHaveAttribute(
+      "href",
+      "/projects/project-1/agents",
+    );
+    expect(screen.getByRole("link", { name: "数据集与用例" })).toHaveAttribute(
+      "href",
+      "/projects/project-1/datasets",
+    );
+    expect(screen.getByRole("link", { name: "测试计划" })).toHaveAttribute(
+      "href",
+      "/projects/project-1/test-plans",
+    );
     expect(screen.queryByText("系统管理")).not.toBeInTheDocument();
     expect(screen.queryByText("用户管理")).not.toBeInTheDocument();
   });

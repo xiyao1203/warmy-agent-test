@@ -69,7 +69,7 @@ test.describe("user management", () => {
       page.getByText(/当前账号不能在此禁用或降权/),
     ).toBeVisible();
     await expect(
-      page.queryByRole("button", { name: "禁用用户" }),
-    ).not.toBeVisible();
+      page.getByRole("button", { name: "禁用用户" }),
+    ).toHaveCount(0);
   });
 });

@@ -4,7 +4,13 @@ import type {
   ProjectResponse,
   UserResponse,
 } from "@warmy/generated-api-client";
-import { LayoutDashboard, Users } from "lucide-react";
+import {
+  Bot,
+  ClipboardCheck,
+  Database,
+  LayoutDashboard,
+  Users,
+} from "lucide-react";
 import Link from "next/link";
 import type { ReactNode } from "react";
 
@@ -71,6 +77,35 @@ export function AppShell({
               <LayoutDashboard aria-hidden="true" className="size-4 shrink-0" />
               <span className="max-[1279px]:sr-only">项目概览</span>
             </Link>
+            {currentProjectId ? (
+              <>
+                <ProjectNavLink
+                  href={`/projects/${currentProjectId}/agents`}
+                  icon={<Bot aria-hidden="true" className="size-4 shrink-0" />}
+                  label="Agent 与版本"
+                />
+                <ProjectNavLink
+                  href={`/projects/${currentProjectId}/datasets`}
+                  icon={
+                    <Database
+                      aria-hidden="true"
+                      className="size-4 shrink-0"
+                    />
+                  }
+                  label="数据集与用例"
+                />
+                <ProjectNavLink
+                  href={`/projects/${currentProjectId}/test-plans`}
+                  icon={
+                    <ClipboardCheck
+                      aria-hidden="true"
+                      className="size-4 shrink-0"
+                    />
+                  }
+                  label="测试计划"
+                />
+              </>
+            ) : null}
           </nav>
           {canManageUsers(user) ? (
             <div className="mt-auto border-t border-[var(--border)] pt-3">
@@ -94,5 +129,26 @@ export function AppShell({
         ) : null}
       </div>
     </div>
+  );
+}
+
+function ProjectNavLink({
+  href,
+  icon,
+  label,
+}: {
+  href: string;
+  icon: ReactNode;
+  label: string;
+}) {
+  return (
+    <Link
+      className="flex h-9 items-center gap-3 rounded-[var(--radius-sm)] px-3 text-sm text-[var(--text-muted)] hover:bg-[var(--surface-subtle)] hover:text-[var(--text)] max-[1279px]:justify-center max-[1279px]:px-0"
+      href={href}
+      title={label}
+    >
+      {icon}
+      <span className="max-[1279px]:sr-only">{label}</span>
+    </Link>
   );
 }

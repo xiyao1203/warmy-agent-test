@@ -35,6 +35,7 @@ describe("ProjectOverview", () => {
           { role: "developer", user_id: "user-1" },
           { role: "viewer", user_id: "user-2" },
         ]}
+        assetSummary={{ agents: 2, datasets: 3, testPlans: 1 }}
         project={{ archived: true, id: "project-1", name: "项目 A" }}
         user={user}
       />,
@@ -44,7 +45,10 @@ describe("ProjectOverview", () => {
     expect(screen.getAllByText("已归档")).toHaveLength(2);
     expect(screen.getAllByText("开发")).toHaveLength(2);
     expect(screen.getByText("2 位成员")).toBeVisible();
+    expect(screen.getByText("2 Agents")).toBeVisible();
+    expect(screen.getByText("3 数据集")).toBeVisible();
+    expect(screen.getByText("1 测试计划")).toBeVisible();
     expect(screen.getByText("暂无测试活动")).toBeVisible();
-    expect(screen.getByText(/测试资产将在 M2/)).toBeVisible();
+    expect(screen.getByText(/运行与结果将在 M3/)).toBeVisible();
   });
 });
