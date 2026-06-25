@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import UTC, datetime, timezone
 from typing import Protocol
 from uuid import UUID, uuid4
 
@@ -18,7 +18,13 @@ class SessionRecord:
     session_id: UUID = field(default_factory=uuid4)
 
     def is_valid_at(self, moment: datetime) -> bool:
-        return self.revoked_at is None and self.expires_at > moment
+        # PostgreSQL 返回 aware datetime，SQLite 返回 naive datetime
+        expires = self.expires_at
+        if expires.tzinfo is None and moment.tzinfo is not None:
+            expires = expires.replace(tzinfo=UTC)
+        elif expires.tzinfo is not None and moment.tzinfo is None:
+            moment = moment.replace(tzinfo=UTC)
+        return self.revoked_at is None and expires > moment
 
 
 class UserReader(Protocol):

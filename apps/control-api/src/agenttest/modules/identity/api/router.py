@@ -70,7 +70,7 @@ def create_auth_router(
             settings.session_cookie_name,
             result.session_token,
             max_age=settings.session_ttl_seconds,
-            secure=True,
+            secure=settings.environment != "local",
             httponly=True,
             samesite="lax",
             path="/",
@@ -79,7 +79,7 @@ def create_auth_router(
             CSRF_COOKIE_NAME,
             result.csrf_token,
             max_age=settings.session_ttl_seconds,
-            secure=True,
+            secure=settings.environment != "local",
             httponly=False,
             samesite="lax",
             path="/",
@@ -125,14 +125,14 @@ def create_auth_router(
         response = Response(status_code=204)
         response.delete_cookie(
             settings.session_cookie_name,
-            secure=True,
+            secure=settings.environment != "local",
             httponly=True,
             samesite="lax",
             path="/",
         )
         response.delete_cookie(
             CSRF_COOKIE_NAME,
-            secure=True,
+            secure=settings.environment != "local",
             httponly=False,
             samesite="lax",
             path="/",

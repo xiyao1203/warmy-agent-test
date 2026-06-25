@@ -16,7 +16,7 @@ class AuditLogModel(Base):
             "project_id",
             text("created_at DESC"),
         ),
-        {"schema": "audit", "info": {"append_only": True}},
+        {"info": {"append_only": True}},
     )
     __mapper_args__ = {"confirm_deleted_rows": False}
 

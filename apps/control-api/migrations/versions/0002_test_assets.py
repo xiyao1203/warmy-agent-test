@@ -4,7 +4,6 @@ from collections.abc import Sequence
 
 import sqlalchemy as sa
 from alembic import op
-from sqlalchemy.dialects import postgresql
 
 revision: str = "0002"
 down_revision: str | None = "0001"
@@ -16,15 +15,15 @@ def upgrade() -> None:
     # --- agents ---
     op.create_table(
         "agents",
-        sa.Column("id", postgresql.UUID(as_uuid=True), primary_key=True),
-        sa.Column("project_id", postgresql.UUID(as_uuid=True), nullable=False),
+        sa.Column("id", sa.Uuid(), primary_key=True),
+        sa.Column("project_id", sa.Uuid(), nullable=False),
         sa.Column("name", sa.String(200), nullable=False),
         sa.Column("description", sa.Text(), nullable=True),
         sa.Column("agent_type", sa.String(64), nullable=False),
         sa.Column("created_at", sa.DateTime(timezone=True), nullable=False),
         sa.Column("updated_at", sa.DateTime(timezone=True), nullable=False),
-        sa.Column("created_by", postgresql.UUID(as_uuid=True), nullable=False),
-        sa.Column("updated_by", postgresql.UUID(as_uuid=True), nullable=False),
+        sa.Column("created_by", sa.Uuid(), nullable=False),
+        sa.Column("updated_by", sa.Uuid(), nullable=False),
         sa.ForeignKeyConstraint(["project_id"], ["projects.id"], ondelete="CASCADE"),
         sa.ForeignKeyConstraint(["created_by"], ["users.id"]),
         sa.ForeignKeyConstraint(["updated_by"], ["users.id"]),
@@ -42,15 +41,15 @@ def upgrade() -> None:
     # --- agent_versions ---
     op.create_table(
         "agent_versions",
-        sa.Column("id", postgresql.UUID(as_uuid=True), primary_key=True),
-        sa.Column("agent_id", postgresql.UUID(as_uuid=True), nullable=False),
+        sa.Column("id", sa.Uuid(), primary_key=True),
+        sa.Column("agent_id", sa.Uuid(), nullable=False),
         sa.Column("version_number", sa.Integer(), nullable=False),
         sa.Column("status", sa.String(32), nullable=False),
-        sa.Column("config", postgresql.JSONB(), nullable=False),
+        sa.Column("config", sa.JSON(), nullable=False),
         sa.Column("published_at", sa.DateTime(timezone=True), nullable=True),
         sa.Column("created_at", sa.DateTime(timezone=True), nullable=False),
         sa.Column("updated_at", sa.DateTime(timezone=True), nullable=False),
-        sa.Column("created_by", postgresql.UUID(as_uuid=True), nullable=False),
+        sa.Column("created_by", sa.Uuid(), nullable=False),
         sa.ForeignKeyConstraint(["agent_id"], ["agents.id"], ondelete="CASCADE"),
         sa.ForeignKeyConstraint(["created_by"], ["users.id"]),
         sa.CheckConstraint(
@@ -63,15 +62,15 @@ def upgrade() -> None:
     # --- environment_templates (before test_plan_versions for FK) ---
     op.create_table(
         "environment_templates",
-        sa.Column("id", postgresql.UUID(as_uuid=True), primary_key=True),
-        sa.Column("project_id", postgresql.UUID(as_uuid=True), nullable=False),
+        sa.Column("id", sa.Uuid(), primary_key=True),
+        sa.Column("project_id", sa.Uuid(), nullable=False),
         sa.Column("name", sa.String(200), nullable=False),
         sa.Column("description", sa.Text(), nullable=True),
         sa.Column("template_type", sa.String(32), nullable=False),
-        sa.Column("config", postgresql.JSONB(), nullable=False),
+        sa.Column("config", sa.JSON(), nullable=False),
         sa.Column("created_at", sa.DateTime(timezone=True), nullable=False),
         sa.Column("updated_at", sa.DateTime(timezone=True), nullable=False),
-        sa.Column("created_by", postgresql.UUID(as_uuid=True), nullable=False),
+        sa.Column("created_by", sa.Uuid(), nullable=False),
         sa.ForeignKeyConstraint(["project_id"], ["projects.id"], ondelete="CASCADE"),
         sa.ForeignKeyConstraint(["created_by"], ["users.id"]),
         sa.CheckConstraint(
@@ -89,14 +88,14 @@ def upgrade() -> None:
     # --- datasets ---
     op.create_table(
         "datasets",
-        sa.Column("id", postgresql.UUID(as_uuid=True), primary_key=True),
-        sa.Column("project_id", postgresql.UUID(as_uuid=True), nullable=False),
+        sa.Column("id", sa.Uuid(), primary_key=True),
+        sa.Column("project_id", sa.Uuid(), nullable=False),
         sa.Column("name", sa.String(200), nullable=False),
         sa.Column("description", sa.Text(), nullable=True),
         sa.Column("created_at", sa.DateTime(timezone=True), nullable=False),
         sa.Column("updated_at", sa.DateTime(timezone=True), nullable=False),
-        sa.Column("created_by", postgresql.UUID(as_uuid=True), nullable=False),
-        sa.Column("updated_by", postgresql.UUID(as_uuid=True), nullable=False),
+        sa.Column("created_by", sa.Uuid(), nullable=False),
+        sa.Column("updated_by", sa.Uuid(), nullable=False),
         sa.ForeignKeyConstraint(["project_id"], ["projects.id"], ondelete="CASCADE"),
         sa.ForeignKeyConstraint(["created_by"], ["users.id"]),
         sa.ForeignKeyConstraint(["updated_by"], ["users.id"]),
@@ -110,14 +109,14 @@ def upgrade() -> None:
     # --- dataset_versions ---
     op.create_table(
         "dataset_versions",
-        sa.Column("id", postgresql.UUID(as_uuid=True), primary_key=True),
-        sa.Column("dataset_id", postgresql.UUID(as_uuid=True), nullable=False),
+        sa.Column("id", sa.Uuid(), primary_key=True),
+        sa.Column("dataset_id", sa.Uuid(), nullable=False),
         sa.Column("version_number", sa.Integer(), nullable=False),
         sa.Column("status", sa.String(32), nullable=False),
         sa.Column("published_at", sa.DateTime(timezone=True), nullable=True),
         sa.Column("created_at", sa.DateTime(timezone=True), nullable=False),
         sa.Column("updated_at", sa.DateTime(timezone=True), nullable=False),
-        sa.Column("created_by", postgresql.UUID(as_uuid=True), nullable=False),
+        sa.Column("created_by", sa.Uuid(), nullable=False),
         sa.ForeignKeyConstraint(["dataset_id"], ["datasets.id"], ondelete="CASCADE"),
         sa.ForeignKeyConstraint(["created_by"], ["users.id"]),
         sa.CheckConstraint(
@@ -130,17 +129,17 @@ def upgrade() -> None:
     # --- test_cases ---
     op.create_table(
         "test_cases",
-        sa.Column("id", postgresql.UUID(as_uuid=True), primary_key=True),
-        sa.Column("dataset_version_id", postgresql.UUID(as_uuid=True), nullable=False),
+        sa.Column("id", sa.Uuid(), primary_key=True),
+        sa.Column("dataset_version_id", sa.Uuid(), nullable=False),
         sa.Column("name", sa.String(500), nullable=False),
-        sa.Column("input", postgresql.JSONB(), nullable=False),
-        sa.Column("initial_state", postgresql.JSONB(), nullable=True),
+        sa.Column("input", sa.JSON(), nullable=False),
+        sa.Column("initial_state", sa.JSON(), nullable=True),
         sa.Column("execution_mode", sa.String(32), nullable=False),
-        sa.Column("expected_outcome", postgresql.JSONB(), nullable=True),
-        sa.Column("assertions", postgresql.JSONB(), nullable=False),
-        sa.Column("scorers", postgresql.JSONB(), nullable=False),
-        sa.Column("security_policies", postgresql.JSONB(), nullable=False),
-        sa.Column("tags", postgresql.JSONB(), nullable=False),
+        sa.Column("expected_outcome", sa.JSON(), nullable=True),
+        sa.Column("assertions", sa.JSON(), nullable=False),
+        sa.Column("scorers", sa.JSON(), nullable=False),
+        sa.Column("security_policies", sa.JSON(), nullable=False),
+        sa.Column("tags", sa.JSON(), nullable=False),
         sa.Column("scenario", sa.String(200), nullable=True),
         sa.Column("priority", sa.String(32), nullable=True),
         sa.Column("risk_level", sa.String(32), nullable=True),
@@ -166,14 +165,14 @@ def upgrade() -> None:
     # --- test_plans ---
     op.create_table(
         "test_plans",
-        sa.Column("id", postgresql.UUID(as_uuid=True), primary_key=True),
-        sa.Column("project_id", postgresql.UUID(as_uuid=True), nullable=False),
+        sa.Column("id", sa.Uuid(), primary_key=True),
+        sa.Column("project_id", sa.Uuid(), nullable=False),
         sa.Column("name", sa.String(200), nullable=False),
         sa.Column("description", sa.Text(), nullable=True),
         sa.Column("created_at", sa.DateTime(timezone=True), nullable=False),
         sa.Column("updated_at", sa.DateTime(timezone=True), nullable=False),
-        sa.Column("created_by", postgresql.UUID(as_uuid=True), nullable=False),
-        sa.Column("updated_by", postgresql.UUID(as_uuid=True), nullable=False),
+        sa.Column("created_by", sa.Uuid(), nullable=False),
+        sa.Column("updated_by", sa.Uuid(), nullable=False),
         sa.ForeignKeyConstraint(["project_id"], ["projects.id"], ondelete="CASCADE"),
         sa.ForeignKeyConstraint(["created_by"], ["users.id"]),
         sa.ForeignKeyConstraint(["updated_by"], ["users.id"]),
@@ -187,18 +186,18 @@ def upgrade() -> None:
     # --- test_plan_versions ---
     op.create_table(
         "test_plan_versions",
-        sa.Column("id", postgresql.UUID(as_uuid=True), primary_key=True),
-        sa.Column("test_plan_id", postgresql.UUID(as_uuid=True), nullable=False),
+        sa.Column("id", sa.Uuid(), primary_key=True),
+        sa.Column("test_plan_id", sa.Uuid(), nullable=False),
         sa.Column("version_number", sa.Integer(), nullable=False),
         sa.Column("status", sa.String(32), nullable=False),
-        sa.Column("agent_version_id", postgresql.UUID(as_uuid=True), nullable=True),
-        sa.Column("dataset_version_id", postgresql.UUID(as_uuid=True), nullable=True),
-        sa.Column("environment_template_id", postgresql.UUID(as_uuid=True), nullable=True),
-        sa.Column("config", postgresql.JSONB(), nullable=False),
+        sa.Column("agent_version_id", sa.Uuid(), nullable=True),
+        sa.Column("dataset_version_id", sa.Uuid(), nullable=True),
+        sa.Column("environment_template_id", sa.Uuid(), nullable=True),
+        sa.Column("config", sa.JSON(), nullable=False),
         sa.Column("published_at", sa.DateTime(timezone=True), nullable=True),
         sa.Column("created_at", sa.DateTime(timezone=True), nullable=False),
         sa.Column("updated_at", sa.DateTime(timezone=True), nullable=False),
-        sa.Column("created_by", postgresql.UUID(as_uuid=True), nullable=False),
+        sa.Column("created_by", sa.Uuid(), nullable=False),
         sa.ForeignKeyConstraint(["test_plan_id"], ["test_plans.id"], ondelete="CASCADE"),
         sa.ForeignKeyConstraint(["agent_version_id"], ["agent_versions.id"], ondelete="SET NULL"),
         sa.ForeignKeyConstraint(["dataset_version_id"], ["dataset_versions.id"], ondelete="SET NULL"),

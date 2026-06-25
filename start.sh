@@ -287,6 +287,7 @@ start_frontend() {
     check_port "$FRONTEND_PORT"
     cd "$SCRIPT_DIR/apps/web"
 
+    NEXT_PUBLIC_CONTROL_API_URL="http://localhost:$BACKEND_PORT" \
     pnpm dev \
         --port "$FRONTEND_PORT" \
         --hostname 0.0.0.0 &

@@ -1,11 +1,12 @@
 from functools import lru_cache
+from pathlib import Path
 
 from pydantic import AnyHttpUrl, Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 # 本地开发使用的 SQLite 数据库路径
-LOCAL_SQLITE_PATH = "data/local.db"
+LOCAL_SQLITE_PATH = str(Path(__file__).resolve().parents[5] / "data" / "local.db")
 
 
 class Settings(BaseSettings):

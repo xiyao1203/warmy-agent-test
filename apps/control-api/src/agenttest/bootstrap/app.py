@@ -1,6 +1,10 @@
 from datetime import timedelta
 
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from starlette.requests import Request
+from starlette.responses import Response
+from starlette.middleware.base import BaseHTTPMiddleware
 
 from agenttest.bootstrap.project_access import ProjectAccessAdapter
 from agenttest.bootstrap.settings import Settings, get_settings
@@ -173,6 +177,26 @@ def create_app(
         version=resolved_settings.app_version,
     )
     app.state.settings = resolved_settings
+
+    # 全局 OPTIONS 处理：先拦截 OPTIONS 返回 200，再经过 CORS 添加响应头
+    class PreflightMiddleware(BaseHTTPMiddleware):
+        async def dispatch(self, request: Request, call_next):
+            if request.method == "OPTIONS":
+                return Response()
+            return await call_next(request)
+
+    app.add_middleware(PreflightMiddleware)
+
+    # CORS 中间件在最外层，确保所有响应都包含正确的 CORS 头
+    # 本地开发环境使用通配符 origin，生产环境应指定具体域名
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=["*"],
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
+
     app.include_router(health_router, prefix="/api/v1")
     dependencies = auth_dependencies or build_auth_dependencies(resolved_settings)
     app.include_router(

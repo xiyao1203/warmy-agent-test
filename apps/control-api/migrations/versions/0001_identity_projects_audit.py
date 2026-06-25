@@ -4,7 +4,6 @@ from collections.abc import Sequence
 
 import sqlalchemy as sa
 from alembic import op
-from sqlalchemy.dialects import postgresql
 
 revision: str = "0001"
 down_revision: str | None = None
@@ -13,10 +12,12 @@ depends_on: str | Sequence[str] | None = None
 
 
 def upgrade() -> None:
-    op.execute("CREATE SCHEMA IF NOT EXISTS audit")
+    # PostgreSQL 需要显式创建 audit schema，SQLite 不支持 SCHEMA
+    if op.get_bind().dialect.name != "sqlite":
+        op.execute("CREATE SCHEMA IF NOT EXISTS audit")
     op.create_table(
         "users",
-        sa.Column("id", postgresql.UUID(as_uuid=True), primary_key=True),
+        sa.Column("id", sa.Uuid(), primary_key=True),
         sa.Column("email", sa.String(length=320), nullable=False),
         sa.Column("email_normalized", sa.String(length=320), nullable=False),
         sa.Column("display_name", sa.String(length=200), nullable=False),
@@ -25,8 +26,8 @@ def upgrade() -> None:
         sa.Column("must_change_password", sa.Boolean(), nullable=False, server_default=sa.false()),
         sa.Column("created_at", sa.DateTime(timezone=True), nullable=False),
         sa.Column("updated_at", sa.DateTime(timezone=True), nullable=False),
-        sa.Column("created_by", postgresql.UUID(as_uuid=True), nullable=True),
-        sa.Column("updated_by", postgresql.UUID(as_uuid=True), nullable=True),
+        sa.Column("created_by", sa.Uuid(), nullable=True),
+        sa.Column("updated_by", sa.Uuid(), nullable=True),
         sa.CheckConstraint(
             "role IN ('super_admin', 'developer', 'tester', 'reviewer', 'viewer')",
             name="ck_users_role",
@@ -39,10 +40,10 @@ def upgrade() -> None:
     )
     op.create_table(
         "user_credentials",
-        sa.Column("id", postgresql.UUID(as_uuid=True), primary_key=True),
+        sa.Column("id", sa.Uuid(), primary_key=True),
         sa.Column(
             "user_id",
-            postgresql.UUID(as_uuid=True),
+            sa.Uuid(),
             sa.ForeignKey("users.id", ondelete="CASCADE"),
             nullable=False,
         ),
@@ -53,10 +54,10 @@ def upgrade() -> None:
     )
     op.create_table(
         "user_sessions",
-        sa.Column("id", postgresql.UUID(as_uuid=True), primary_key=True),
+        sa.Column("id", sa.Uuid(), primary_key=True),
         sa.Column(
             "user_id",
-            postgresql.UUID(as_uuid=True),
+            sa.Uuid(),
             sa.ForeignKey("users.id", ondelete="CASCADE"),
             nullable=False,
         ),
@@ -76,7 +77,7 @@ def upgrade() -> None:
     )
     op.create_table(
         "projects",
-        sa.Column("id", postgresql.UUID(as_uuid=True), primary_key=True),
+        sa.Column("id", sa.Uuid(), primary_key=True),
         sa.Column("name", sa.String(length=200), nullable=False),
         sa.Column("description", sa.String(length=2000), nullable=True),
         sa.Column("archived_at", sa.DateTime(timezone=True), nullable=True),
@@ -84,13 +85,13 @@ def upgrade() -> None:
         sa.Column("updated_at", sa.DateTime(timezone=True), nullable=False),
         sa.Column(
             "created_by",
-            postgresql.UUID(as_uuid=True),
+            sa.Uuid(),
             sa.ForeignKey("users.id"),
             nullable=False,
         ),
         sa.Column(
             "updated_by",
-            postgresql.UUID(as_uuid=True),
+            sa.Uuid(),
             sa.ForeignKey("users.id"),
             nullable=False,
         ),
@@ -102,16 +103,16 @@ def upgrade() -> None:
     )
     op.create_table(
         "project_members",
-        sa.Column("id", postgresql.UUID(as_uuid=True), primary_key=True),
+        sa.Column("id", sa.Uuid(), primary_key=True),
         sa.Column(
             "project_id",
-            postgresql.UUID(as_uuid=True),
+            sa.Uuid(),
             sa.ForeignKey("projects.id", ondelete="CASCADE"),
             nullable=False,
         ),
         sa.Column(
             "user_id",
-            postgresql.UUID(as_uuid=True),
+            sa.Uuid(),
             sa.ForeignKey("users.id", ondelete="CASCADE"),
             nullable=False,
         ),
@@ -120,13 +121,13 @@ def upgrade() -> None:
         sa.Column("updated_at", sa.DateTime(timezone=True), nullable=False),
         sa.Column(
             "created_by",
-            postgresql.UUID(as_uuid=True),
+            sa.Uuid(),
             sa.ForeignKey("users.id"),
             nullable=False,
         ),
         sa.Column(
             "updated_by",
-            postgresql.UUID(as_uuid=True),
+            sa.Uuid(),
             sa.ForeignKey("users.id"),
             nullable=False,
         ),
@@ -142,42 +143,47 @@ def upgrade() -> None:
     )
     op.create_table(
         "audit_logs",
-        sa.Column("id", postgresql.UUID(as_uuid=True), primary_key=True),
+        sa.Column("id", sa.Uuid(), primary_key=True),
         sa.Column(
             "actor_user_id",
-            postgresql.UUID(as_uuid=True),
+            sa.Uuid(),
             sa.ForeignKey("users.id"),
             nullable=True,
         ),
         sa.Column("action", sa.String(length=100), nullable=False),
         sa.Column("object_type", sa.String(length=100), nullable=False),
-        sa.Column("object_id", postgresql.UUID(as_uuid=True), nullable=True),
+        sa.Column("object_id", sa.Uuid(), nullable=True),
         sa.Column(
             "project_id",
-            postgresql.UUID(as_uuid=True),
+            sa.Uuid(),
             sa.ForeignKey("projects.id"),
             nullable=True,
         ),
-        sa.Column("changes", postgresql.JSONB(astext_type=sa.Text()), nullable=False),
+        sa.Column("changes", sa.JSON(), nullable=False),
         sa.Column("source_ip", sa.String(length=64), nullable=True),
         sa.Column("created_at", sa.DateTime(timezone=True), nullable=False),
-        schema="audit",
+        schema="audit" if op.get_bind().dialect.name != "sqlite" else None,
     )
-    op.create_index(
-        "ix_audit_logs_project_created_at_desc",
-        "audit_logs",
-        ["project_id", sa.text("created_at DESC")],
-        schema="audit",
-    )
+    if op.get_bind().dialect.name != "sqlite":
+        op.create_index(
+            "ix_audit_logs_project_created_at_desc",
+            "audit_logs",
+            ["project_id", sa.text("created_at DESC")],
+            schema="audit",
+        )
 
 
 def downgrade() -> None:
-    op.drop_index(
-        "ix_audit_logs_project_created_at_desc",
-        table_name="audit_logs",
-        schema="audit",
-    )
-    op.drop_table("audit_logs", schema="audit")
+    is_sqlite = op.get_bind().dialect.name == "sqlite"
+    if not is_sqlite:
+        op.drop_index(
+            "ix_audit_logs_project_created_at_desc",
+            table_name="audit_logs",
+            schema="audit",
+        )
+        op.drop_table("audit_logs", schema="audit")
+    else:
+        op.drop_table("audit_logs")
     op.drop_table("project_members")
     op.drop_index("ix_projects_created_at_desc", table_name="projects")
     op.drop_table("projects")
@@ -185,4 +191,5 @@ def downgrade() -> None:
     op.drop_table("user_sessions")
     op.drop_table("user_credentials")
     op.drop_table("users")
-    op.execute("DROP SCHEMA IF EXISTS audit")
+    if not is_sqlite:
+        op.execute("DROP SCHEMA IF EXISTS audit")
