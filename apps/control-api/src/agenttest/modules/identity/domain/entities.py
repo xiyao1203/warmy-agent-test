@@ -55,3 +55,17 @@ class User:
 
     def require_password_change(self) -> None:
         self.must_change_password = True
+
+    def update_profile(
+        self,
+        *,
+        email: Email,
+        display_name: str,
+        role: SystemRole,
+    ) -> None:
+        normalized_name = display_name.strip()
+        if not normalized_name:
+            raise ValueError("Display name is required")
+        self.email = email
+        self.display_name = normalized_name
+        self.role = role

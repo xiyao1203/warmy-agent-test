@@ -818,7 +818,13 @@ wheels = [
 [[package]]
 name = "warmy-admin-cli"
 version = "0.1.0"
-source = { virtual = "apps/admin-cli" }
+source = { editable = "apps/admin-cli" }
+dependencies = [
+    { name = "warmy-control-api" },
+]
+
+[package.metadata]
+requires-dist = [{ name = "warmy-control-api", editable = "apps/control-api" }]
 
 [[package]]
 name = "warmy-agent-test-workspace"

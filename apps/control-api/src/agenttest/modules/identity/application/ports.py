@@ -56,6 +56,13 @@ class UserAdminRepository(UserReader, Protocol):
 
     async def delete(self, user_id: UserId) -> None: ...
 
+    async def list_page(
+        self,
+        *,
+        cursor: UUID | None,
+        limit: int,
+    ) -> tuple[list[User], UUID | None]: ...
+
 
 class CredentialWriter(Protocol):
     async def set_password_hash(self, user_id: UserId, password_hash: str) -> None: ...

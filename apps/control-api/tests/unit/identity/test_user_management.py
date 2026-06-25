@@ -17,6 +17,10 @@ from agenttest.modules.identity.application.commands.set_user_status import (
     SetUserStatusCommand,
     SetUserStatusHandler,
 )
+from agenttest.modules.identity.application.commands.update_user import (
+    UpdateUserCommand,
+    UpdateUserHandler,
+)
 from agenttest.modules.identity.application.errors import PermissionDeniedError
 from agenttest.modules.identity.domain.entities import User
 from agenttest.modules.identity.domain.value_objects import Email, SystemRole, UserId, UserStatus
@@ -176,3 +180,32 @@ async def test_user_with_history_is_disabled_instead_of_deleted() -> None:
 
     assert target.status is UserStatus.DISABLED
     assert repository.deleted == []
+
+
+@pytest.mark.asyncio
+async def test_super_admin_cannot_change_own_role() -> None:
+    actor = create_user(SystemRole.SUPER_ADMIN, "admin@example.com")
+    repository = FakeUserAdminRepository([actor])
+
+    with pytest.raises(ProtectedAdministratorError):
+        await UpdateUserHandler(users=repository).execute(
+            actor,
+            UpdateUserCommand(
+                user_id=actor.user_id,
+                email=actor.email,
+                display_name=actor.display_name,
+                role=SystemRole.DEVELOPER,
+            ),
+        )
+
+
+@pytest.mark.asyncio
+async def test_final_active_super_admin_cannot_be_deleted() -> None:
+    admin = create_user(SystemRole.SUPER_ADMIN, "admin@example.com")
+    repository = FakeUserAdminRepository([admin])
+
+    with pytest.raises(ProtectedAdministratorError):
+        await DeleteUserHandler(
+            users=repository,
+            sessions=FakeSessionAdmin(),
+        ).execute(admin, admin.user_id)
