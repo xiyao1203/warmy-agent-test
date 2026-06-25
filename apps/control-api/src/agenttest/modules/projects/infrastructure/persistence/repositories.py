@@ -13,6 +13,7 @@ from agenttest.modules.projects.infrastructure.persistence.models import (
     ProjectMemberModel,
     ProjectModel,
 )
+from agenttest.shared.infrastructure.database import session_scope, transaction_scope
 
 
 class SqlAlchemyProjectRepository:
@@ -20,7 +21,7 @@ class SqlAlchemyProjectRepository:
         self._session_factory = session_factory
 
     async def get_by_id(self, project_id: ProjectId) -> Project | None:
-        async with self._session_factory() as session:
+        async with session_scope(self._session_factory) as session:
             model = await session.get(ProjectModel, project_id.value)
             if model is None:
                 return None
@@ -46,7 +47,7 @@ class SqlAlchemyProjectRepository:
                 .where(ProjectMemberModel.user_id == user_id.value)
                 .distinct()
             )
-        async with self._session_factory() as session:
+        async with session_scope(self._session_factory) as session:
             models = list((await session.scalars(statement)).all())
             if not models:
                 return []
@@ -69,7 +70,7 @@ class SqlAlchemyProjectRepository:
         ]
 
     async def add(self, project: Project) -> None:
-        async with self._session_factory.begin() as session:
+        async with transaction_scope(self._session_factory) as session:
             session.add(
                 ProjectModel(
                     id=project.project_id.value,
@@ -85,7 +86,7 @@ class SqlAlchemyProjectRepository:
             self._add_members(session, project)
 
     async def save(self, project: Project) -> None:
-        async with self._session_factory.begin() as session:
+        async with transaction_scope(self._session_factory) as session:
             await session.execute(
                 update(ProjectModel)
                 .where(ProjectModel.id == project.project_id.value)

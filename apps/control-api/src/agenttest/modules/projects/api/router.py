@@ -36,6 +36,7 @@ from agenttest.modules.projects.domain.policies import (
     ProjectNotFoundError,
 )
 from agenttest.shared.api.problem_details import ProblemDetails
+from agenttest.shared.application.uow import UnitOfWorkFactory, null_uow_factory
 
 CSRF_COOKIE_NAME = "agenttest_csrf"
 
@@ -93,6 +94,7 @@ class ProjectApiDependencies:
     add_member: ManageMemberExecutor
     update_member: ManageMemberExecutor
     remove_member: RemoveMemberExecutor
+    uow_factory: UnitOfWorkFactory = null_uow_factory
 
 
 def create_project_router(
@@ -150,9 +152,10 @@ def create_project_router(
         if isinstance(actor, JSONResponse):
             return actor
         try:
-            project = await dependencies.create_project.execute(
-                actor, CreateProjectCommand(name=payload.name)
-            )
+            async with dependencies.uow_factory():
+                project = await dependencies.create_project.execute(
+                    actor, CreateProjectCommand(name=payload.name)
+                )
         except ProjectAccessDeniedError:
             return permission_denied()
         return ProjectResponse.from_domain(project)
@@ -179,10 +182,14 @@ def create_project_router(
         if isinstance(actor, JSONResponse):
             return actor
         try:
-            project = await dependencies.rename_project.execute(
-                actor,
-                RenameProjectCommand(project_id=ProjectId(project_id), name=payload.name),
-            )
+            async with dependencies.uow_factory():
+                project = await dependencies.rename_project.execute(
+                    actor,
+                    RenameProjectCommand(
+                        project_id=ProjectId(project_id),
+                        name=payload.name,
+                    ),
+                )
         except ProjectNotFoundError:
             return project_not_found()
         except ProjectAccessDeniedError:
@@ -199,9 +206,10 @@ def create_project_router(
         if isinstance(actor, JSONResponse):
             return actor
         try:
-            project = await dependencies.archive_project.execute(
-                actor, ProjectId(project_id)
-            )
+            async with dependencies.uow_factory():
+                project = await dependencies.archive_project.execute(
+                    actor, ProjectId(project_id)
+                )
         except ProjectNotFoundError:
             return project_not_found()
         except ProjectAccessDeniedError:
@@ -269,14 +277,15 @@ def create_project_router(
         if isinstance(actor, JSONResponse):
             return actor
         try:
-            project = await executor.execute(
-                actor,
-                ProjectMemberCommand(
-                    project_id=ProjectId(project_id),
-                    user_id=UserId(user_id),
-                    role=role,
-                ),
-            )
+            async with dependencies.uow_factory():
+                project = await executor.execute(
+                    actor,
+                    ProjectMemberCommand(
+                        project_id=ProjectId(project_id),
+                        user_id=UserId(user_id),
+                        role=role,
+                    ),
+                )
         except ProjectNotFoundError:
             return project_not_found()
         except ProjectAccessDeniedError:
@@ -294,9 +303,10 @@ def create_project_router(
         if isinstance(actor, JSONResponse):
             return actor
         try:
-            await dependencies.remove_member.execute(
-                actor, ProjectId(project_id), UserId(user_id)
-            )
+            async with dependencies.uow_factory():
+                await dependencies.remove_member.execute(
+                    actor, ProjectId(project_id), UserId(user_id)
+                )
         except ProjectNotFoundError:
             return project_not_found()
         except ProjectAccessDeniedError:

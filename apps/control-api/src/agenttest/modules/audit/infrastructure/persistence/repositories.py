@@ -5,6 +5,7 @@ from agenttest.modules.audit.application.ports import AuditEntry
 from agenttest.modules.audit.infrastructure.persistence.models import AuditLogModel
 from agenttest.modules.identity.public import UserId
 from agenttest.modules.projects.public import ProjectId
+from agenttest.shared.infrastructure.database import session_scope, transaction_scope
 
 
 class SqlAlchemyAuditRepository:
@@ -12,7 +13,7 @@ class SqlAlchemyAuditRepository:
         self._session_factory = session_factory
 
     async def append(self, entry: AuditEntry) -> None:
-        async with self._session_factory.begin() as session:
+        async with transaction_scope(self._session_factory) as session:
             session.add(
                 AuditLogModel(
                     id=entry.entry_id,
@@ -35,7 +36,7 @@ class SqlAlchemyAuditRepository:
             .order_by(AuditLogModel.created_at.desc())
             .limit(limit)
         )
-        async with self._session_factory() as session:
+        async with session_scope(self._session_factory) as session:
             models = list((await session.scalars(statement)).all())
         return [_to_entry(model) for model in models]
 
@@ -51,7 +52,7 @@ class SqlAlchemyAuditRepository:
             .order_by(AuditLogModel.created_at.desc())
             .limit(limit)
         )
-        async with self._session_factory() as session:
+        async with session_scope(self._session_factory) as session:
             models = list((await session.scalars(statement)).all())
         return [_to_entry(model) for model in models]
 

@@ -64,6 +64,7 @@ from agenttest.modules.projects.infrastructure.persistence.repositories import (
 )
 from agenttest.shared.domain.clock import SystemClock
 from agenttest.shared.infrastructure.database import (
+    SqlAlchemyUnitOfWork,
     create_database_engine,
     create_session_factory,
 )
@@ -141,6 +142,7 @@ def build_auth_dependencies(settings: Settings) -> AuthApiDependencies:
         current_user=CurrentUserQuery(users=users, sessions=sessions, clock=clock),
         logout=LogoutHandler(sessions=sessions, clock=clock, audit=audit),
         csrf=CsrfValidator(sessions=sessions, clock=clock),
+        uow_factory=lambda: SqlAlchemyUnitOfWork(session_factory),
     )
 
 
@@ -183,6 +185,7 @@ def build_admin_dependencies(settings: Settings) -> AdminApiDependencies:
             clock=clock,
             audit=audit,
         ),
+        uow_factory=lambda: SqlAlchemyUnitOfWork(session_factory),
     )
 
 
@@ -201,6 +204,7 @@ def build_project_dependencies(settings: Settings) -> ProjectApiDependencies:
         add_member=AddProjectMemberHandler(projects=repository, audit=audit),
         update_member=UpdateProjectMemberHandler(projects=repository, audit=audit),
         remove_member=RemoveProjectMemberHandler(projects=repository, audit=audit),
+        uow_factory=lambda: SqlAlchemyUnitOfWork(session_factory),
     )
 
 

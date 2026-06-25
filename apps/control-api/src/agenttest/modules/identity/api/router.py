@@ -17,6 +17,7 @@ from agenttest.modules.identity.application.queries.current_user import InvalidS
 from agenttest.modules.identity.domain.entities import User
 from agenttest.modules.identity.domain.value_objects import Email
 from agenttest.shared.api.problem_details import ProblemDetails
+from agenttest.shared.application.uow import UnitOfWorkFactory, null_uow_factory
 
 CSRF_COOKIE_NAME = "agenttest_csrf"
 
@@ -43,6 +44,7 @@ class AuthApiDependencies:
     current_user: CurrentUserExecutor
     logout: LogoutExecutor
     csrf: CsrfExecutor
+    uow_factory: UnitOfWorkFactory = null_uow_factory
 
 
 def create_auth_router(
@@ -54,9 +56,10 @@ def create_auth_router(
     @router.post("/login", response_model=UserResponse)
     async def login(payload: LoginRequest, response: Response) -> UserResponse | JSONResponse:
         try:
-            result = await dependencies.login.execute(
-                LoginCommand(email=Email(payload.email), password=payload.password)
-            )
+            async with dependencies.uow_factory():
+                result = await dependencies.login.execute(
+                    LoginCommand(email=Email(payload.email), password=payload.password)
+                )
         except (InvalidCredentialsError, ValueError):
             return problem_response(
                 status=401,
@@ -111,7 +114,8 @@ def create_auth_router(
             )
         try:
             await dependencies.csrf.execute(session_token, x_csrf_token)
-            await dependencies.logout.execute(session_token)
+            async with dependencies.uow_factory():
+                await dependencies.logout.execute(session_token)
         except InvalidSessionError:
             return problem_response(
                 status=403,

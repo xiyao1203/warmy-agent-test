@@ -38,6 +38,7 @@ from agenttest.modules.identity.application.queries.current_user import InvalidS
 from agenttest.modules.identity.application.queries.list_users import UserPage
 from agenttest.modules.identity.domain.entities import User
 from agenttest.modules.identity.domain.value_objects import Email, UserId
+from agenttest.shared.application.uow import UnitOfWorkFactory, null_uow_factory
 
 
 class ListUsersExecutor(Protocol):
@@ -79,6 +80,7 @@ class AdminApiDependencies:
     reset_password: ResetPasswordExecutor
     set_status: SetStatusExecutor
     delete_user: DeleteUserExecutor
+    uow_factory: UnitOfWorkFactory = null_uow_factory
 
 
 def create_admin_router(
@@ -170,15 +172,16 @@ def create_admin_router(
         if isinstance(actor, JSONResponse):
             return actor
         try:
-            user = await dependencies.create_user.execute(
-                actor,
-                CreateUserCommand(
-                    email=Email(payload.email),
-                    display_name=payload.display_name,
-                    role=payload.role,
-                    initial_password=payload.initial_password,
-                ),
-            )
+            async with dependencies.uow_factory():
+                user = await dependencies.create_user.execute(
+                    actor,
+                    CreateUserCommand(
+                        email=Email(payload.email),
+                        display_name=payload.display_name,
+                        role=payload.role,
+                        initial_password=payload.initial_password,
+                    ),
+                )
         except PermissionDeniedError:
             return permission_denied()
         except (DuplicateEmailError, ValueError):
@@ -196,15 +199,16 @@ def create_admin_router(
         if isinstance(actor, JSONResponse):
             return actor
         try:
-            user = await dependencies.update_user.execute(
-                actor,
-                UpdateUserCommand(
-                    user_id=UserId(user_id),
-                    email=Email(payload.email),
-                    display_name=payload.display_name,
-                    role=payload.role,
-                ),
-            )
+            async with dependencies.uow_factory():
+                user = await dependencies.update_user.execute(
+                    actor,
+                    UpdateUserCommand(
+                        user_id=UserId(user_id),
+                        email=Email(payload.email),
+                        display_name=payload.display_name,
+                        role=payload.role,
+                    ),
+                )
         except PermissionDeniedError:
             return permission_denied()
         except UserNotFoundError:
@@ -226,13 +230,14 @@ def create_admin_router(
         if isinstance(actor, JSONResponse):
             return actor
         try:
-            await dependencies.reset_password.execute(
-                actor,
-                ResetPasswordCommand(
-                    user_id=UserId(user_id),
-                    new_password=payload.new_password,
-                ),
-            )
+            async with dependencies.uow_factory():
+                await dependencies.reset_password.execute(
+                    actor,
+                    ResetPasswordCommand(
+                        user_id=UserId(user_id),
+                        new_password=payload.new_password,
+                    ),
+                )
         except PermissionDeniedError:
             return permission_denied()
         except UserNotFoundError:
@@ -249,10 +254,11 @@ def create_admin_router(
         if isinstance(actor, JSONResponse):
             return actor
         try:
-            user = await dependencies.set_status.execute(
-                actor,
-                SetUserStatusCommand(user_id=UserId(user_id), enabled=enabled),
-            )
+            async with dependencies.uow_factory():
+                user = await dependencies.set_status.execute(
+                    actor,
+                    SetUserStatusCommand(user_id=UserId(user_id), enabled=enabled),
+                )
         except PermissionDeniedError:
             return permission_denied()
         except UserNotFoundError:
@@ -287,7 +293,8 @@ def create_admin_router(
         if isinstance(actor, JSONResponse):
             return actor
         try:
-            await dependencies.delete_user.execute(actor, UserId(user_id))
+            async with dependencies.uow_factory():
+                await dependencies.delete_user.execute(actor, UserId(user_id))
         except PermissionDeniedError:
             return permission_denied()
         except UserNotFoundError:
