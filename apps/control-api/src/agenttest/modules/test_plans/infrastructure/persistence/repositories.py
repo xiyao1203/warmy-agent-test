@@ -1,0 +1,217 @@
+"""SQLAlchemy implementations of test plan repositories."""
+
+from __future__ import annotations
+
+from base64 import b64decode, b64encode
+from datetime import datetime
+
+from sqlalchemy import func, select, update
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
+
+from agenttest.modules.agents.public import AgentVersionId
+from agenttest.modules.datasets.public import DatasetVersionId
+from agenttest.modules.identity.public import UserId
+from agenttest.modules.projects.public import ProjectId
+from agenttest.modules.test_plans.domain.entities import (
+    EnvironmentTemplateId,
+    TestPlan,
+    TestPlanId,
+    TestPlanVersion,
+    TestPlanVersionId,
+)
+from agenttest.modules.test_plans.domain.value_objects import (
+    TestPlanConfig,
+    VersionStatus,
+)
+from agenttest.modules.test_plans.infrastructure.persistence.models import (
+    TestPlanModel,
+    TestPlanVersionModel,
+)
+from agenttest.shared.infrastructure.database import session_scope, transaction_scope
+
+
+class SqlAlchemyTestPlanRepository:
+    def __init__(self, session_factory: async_sessionmaker[AsyncSession]) -> None:
+        self._session_factory = session_factory
+
+    async def get_by_id(self, test_plan_id: TestPlanId) -> TestPlan | None:
+        async with session_scope(self._session_factory) as session:
+            model = await session.get(TestPlanModel, test_plan_id.value)
+        return _to_plan(model) if model else None
+
+    async def list_by_project(
+        self,
+        project_id: ProjectId,
+        *,
+        limit: int = 50,
+        cursor: str | None = None,
+    ) -> tuple[list[TestPlan], str | None]:
+        statement = (
+            select(TestPlanModel)
+            .where(TestPlanModel.project_id == project_id.value)
+            .order_by(TestPlanModel.created_at.desc())
+            .limit(limit + 1)
+        )
+        if cursor is not None:
+            cursor_ts = _decode_cursor(cursor)
+            statement = statement.where(TestPlanModel.created_at < cursor_ts)
+        async with session_scope(self._session_factory) as session:
+            models = list((await session.scalars(statement)).all())
+        has_more = len(models) > limit
+        if has_more:
+            models = models[:limit]
+        next_cursor = _encode_cursor(models[-1].created_at) if has_more and models else None
+        return [_to_plan(m) for m in models], next_cursor
+
+    async def add(self, plan: TestPlan) -> None:
+        async with transaction_scope(self._session_factory) as session:
+            session.add(
+                TestPlanModel(
+                    id=plan.test_plan_id.value,
+                    project_id=plan.project_id.value,
+                    name=plan.name,
+                    description=plan.description,
+                    created_at=plan.created_at,
+                    updated_at=plan.updated_at,
+                    created_by=plan.created_by.value,
+                    updated_by=plan.updated_by.value,
+                )
+            )
+
+    async def save(self, plan: TestPlan) -> None:
+        async with transaction_scope(self._session_factory) as session:
+            await session.execute(
+                update(TestPlanModel)
+                .where(TestPlanModel.id == plan.test_plan_id.value)
+                .values(
+                    name=plan.name,
+                    description=plan.description,
+                    updated_at=plan.updated_at,
+                    updated_by=plan.updated_by.value,
+                )
+            )
+
+
+class SqlAlchemyTestPlanVersionRepository:
+    def __init__(self, session_factory: async_sessionmaker[AsyncSession]) -> None:
+        self._session_factory = session_factory
+
+    async def get_by_id(self, version_id: TestPlanVersionId) -> TestPlanVersion | None:
+        async with session_scope(self._session_factory) as session:
+            model = await session.get(TestPlanVersionModel, version_id.value)
+        return _to_version(model) if model else None
+
+    async def list_by_test_plan(self, test_plan_id: TestPlanId) -> list[TestPlanVersion]:
+        statement = (
+            select(TestPlanVersionModel)
+            .where(TestPlanVersionModel.test_plan_id == test_plan_id.value)
+            .order_by(TestPlanVersionModel.version_number.desc())
+        )
+        async with session_scope(self._session_factory) as session:
+            models = list((await session.scalars(statement)).all())
+        return [_to_version(m) for m in models]
+
+    async def get_next_version_number(self, test_plan_id: TestPlanId) -> int:
+        statement = select(func.max(TestPlanVersionModel.version_number)).where(
+            TestPlanVersionModel.test_plan_id == test_plan_id.value
+        )
+        async with session_scope(self._session_factory) as session:
+            result = await session.scalar(statement)
+        return (result or 0) + 1
+
+    async def add(self, version: TestPlanVersion) -> None:
+        async with transaction_scope(self._session_factory) as session:
+            av_id = version.agent_version_id
+            dv_id = version.dataset_version_id
+            et_id = version.environment_template_id
+            session.add(
+                TestPlanVersionModel(
+                    id=version.version_id.value,
+                    test_plan_id=version.test_plan_id.value,
+                    version_number=version.version_number,
+                    status=version.status.value,
+                    config=version.config.to_dict(),
+                    agent_version_id=av_id.value if av_id else None,
+                    dataset_version_id=dv_id.value if dv_id else None,
+                    environment_template_id=et_id.value if et_id else None,
+                    published_at=version.published_at,
+                    created_at=version.created_at,
+                    updated_at=version.updated_at,
+                    created_by=version.created_by.value,
+                )
+            )
+
+    async def save(self, version: TestPlanVersion) -> None:
+        async with transaction_scope(self._session_factory) as session:
+            av_id = version.agent_version_id
+            dv_id = version.dataset_version_id
+            et_id = version.environment_template_id
+            await session.execute(
+                update(TestPlanVersionModel)
+                .where(TestPlanVersionModel.id == version.version_id.value)
+                .values(
+                    status=version.status.value,
+                    config=version.config.to_dict(),
+                    agent_version_id=av_id.value if av_id else None,
+                    dataset_version_id=dv_id.value if dv_id else None,
+                    environment_template_id=et_id.value if et_id else None,
+                    published_at=version.published_at,
+                    updated_at=version.updated_at,
+                )
+            )
+
+
+# ── Mappers ─────────────────────────────────────────────────────────────────
+
+
+def _to_plan(model: TestPlanModel) -> TestPlan:
+    return TestPlan(
+        test_plan_id=TestPlanId(model.id),
+        project_id=ProjectId(model.project_id),
+        name=model.name,
+        created_by=UserId(model.created_by),
+        updated_by=UserId(model.updated_by),
+        created_at=model.created_at,
+        updated_at=model.updated_at,
+        description=model.description,
+    )
+
+
+def _to_version(model: TestPlanVersionModel) -> TestPlanVersion:
+    return TestPlanVersion(
+        version_id=TestPlanVersionId(model.id),
+        test_plan_id=TestPlanId(model.test_plan_id),
+        version_number=model.version_number,
+        status=VersionStatus(model.status),
+        config=TestPlanConfig.from_dict(model.config),
+        created_by=UserId(model.created_by),
+        created_at=model.created_at,
+        updated_at=model.updated_at,
+        agent_version_id=(
+            AgentVersionId(model.agent_version_id)
+            if model.agent_version_id
+            else None
+        ),
+        dataset_version_id=(
+            DatasetVersionId(model.dataset_version_id)
+            if model.dataset_version_id
+            else None
+        ),
+        environment_template_id=(
+            EnvironmentTemplateId(model.environment_template_id)
+            if model.environment_template_id
+            else None
+        ),
+        published_at=model.published_at,
+    )
+
+
+# ── Cursor helpers ──────────────────────────────────────────────────────────
+
+
+def _encode_cursor(ts: datetime) -> str:
+    return b64encode(ts.isoformat().encode()).decode()
+
+
+def _decode_cursor(cursor: str) -> datetime:
+    return datetime.fromisoformat(b64decode(cursor.encode()).decode())
