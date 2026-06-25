@@ -111,6 +111,27 @@ from agenttest.modules.projects.application.queries.list_projects import (
 from agenttest.modules.projects.infrastructure.persistence.repositories import (
     SqlAlchemyProjectRepository,
 )
+from agenttest.modules.test_plans.api.router import (
+    TestPlanApiDependencies,
+    create_test_plan_router,
+)
+from agenttest.modules.test_plans.application.commands import (
+    CreateTestPlanHandler,
+    CreateTestPlanVersionHandler,
+    PublishTestPlanVersionHandler,
+    UpdateTestPlanHandler,
+    UpdateTestPlanVersionHandler,
+)
+from agenttest.modules.test_plans.application.queries import (
+    GetTestPlanHandler,
+    GetTestPlanVersionHandler,
+    ListTestPlansHandler,
+    ListTestPlanVersionsHandler,
+)
+from agenttest.modules.test_plans.infrastructure.persistence.repositories import (
+    SqlAlchemyTestPlanRepository,
+    SqlAlchemyTestPlanVersionRepository,
+)
 from agenttest.shared.domain.clock import SystemClock
 from agenttest.shared.infrastructure.database import (
     SqlAlchemyUnitOfWork,
@@ -127,6 +148,7 @@ def create_app(
     audit_dependencies: AuditApiDependencies | None = None,
     agent_dependencies: AgentApiDependencies | None = None,
     dataset_dependencies: DatasetApiDependencies | None = None,
+    test_plan_dependencies: TestPlanApiDependencies | None = None,
 ) -> FastAPI:
     resolved_settings = settings or get_settings()
     app = FastAPI(
@@ -183,6 +205,18 @@ def create_app(
     app.include_router(
         create_dataset_router(
             datasets,
+            current_user=dependencies.current_user,
+            csrf=dependencies.csrf,
+            settings=resolved_settings,
+        ),
+        prefix="/api/v1",
+    )
+    test_plans = test_plan_dependencies or build_test_plan_dependencies(
+        resolved_settings
+    )
+    app.include_router(
+        create_test_plan_router(
+            test_plans,
             current_user=dependencies.current_user,
             csrf=dependencies.csrf,
             settings=resolved_settings,
@@ -427,6 +461,65 @@ def build_dataset_dependencies(settings: Settings) -> DatasetApiDependencies:
         import_export=ImportExportService(
             cases=cases,
             project_access=access,
+        ),
+        uow_factory=lambda: SqlAlchemyUnitOfWork(session_factory),
+    )
+
+
+def build_test_plan_dependencies(settings: Settings) -> TestPlanApiDependencies:
+    engine = create_database_engine(str(settings.database_url))
+    session_factory = create_session_factory(engine)
+    plans = SqlAlchemyTestPlanRepository(session_factory)
+    versions = SqlAlchemyTestPlanVersionRepository(session_factory)
+    projects = SqlAlchemyProjectRepository(session_factory)
+    access = ProjectAccessAdapter(projects)
+    audit = AuditRecorder(SqlAlchemyAuditRepository(session_factory))
+    return TestPlanApiDependencies(
+        list_plans=ListTestPlansHandler(
+            test_plans=plans,
+            project_access=access,
+        ),
+        get_plan=GetTestPlanHandler(
+            test_plans=plans,
+            project_access=access,
+        ),
+        create_plan=CreateTestPlanHandler(
+            test_plans=plans,
+            project_access=access,
+            audit=audit,
+        ),
+        update_plan=UpdateTestPlanHandler(
+            test_plans=plans,
+            project_access=access,
+            audit=audit,
+        ),
+        list_versions=ListTestPlanVersionsHandler(
+            test_plans=plans,
+            versions=versions,
+            project_access=access,
+        ),
+        get_version=GetTestPlanVersionHandler(
+            test_plans=plans,
+            versions=versions,
+            project_access=access,
+        ),
+        create_version=CreateTestPlanVersionHandler(
+            test_plans=plans,
+            versions=versions,
+            project_access=access,
+            audit=audit,
+        ),
+        update_version=UpdateTestPlanVersionHandler(
+            test_plans=plans,
+            versions=versions,
+            project_access=access,
+            audit=audit,
+        ),
+        publish_version=PublishTestPlanVersionHandler(
+            test_plans=plans,
+            versions=versions,
+            project_access=access,
+            audit=audit,
         ),
         uow_factory=lambda: SqlAlchemyUnitOfWork(session_factory),
     )
