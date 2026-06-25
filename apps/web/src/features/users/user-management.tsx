@@ -1,6 +1,12 @@
 "use client";
 
-import type { SystemRole, UserResponse, UserStatus } from "@warmy/generated-api-client";
+import type {
+  CreateUserRequest,
+  SystemRole,
+  UpdateUserRequest,
+  UserResponse,
+  UserStatus,
+} from "@warmy/generated-api-client";
 import { Search } from "lucide-react";
 import { useMemo, useState } from "react";
 
@@ -24,7 +30,9 @@ type UserManagementProps = {
   error?: "permission" | "service";
   loading?: boolean;
   nextCursor?: string | null;
-  onCreate?: (payload: import("@warmy/generated-api-client").CreateUserRequest) => Promise<unknown>;
+  onCreate?: (payload: CreateUserRequest) => Promise<unknown>;
+  onDelete?: (userId: string) => Promise<unknown>;
+  onEdit?: (userId: string, payload: UpdateUserRequest) => Promise<unknown>;
   onResetPassword?: (userId: string, password: string) => Promise<unknown>;
   onToggleStatus?: (userId: string, enabled: boolean) => Promise<unknown>;
   users?: UserResponse[];
@@ -49,6 +57,8 @@ export function UserManagement({
   loading = false,
   nextCursor,
   onCreate = async () => undefined,
+  onDelete = async () => undefined,
+  onEdit = async () => undefined,
   onResetPassword = async () => undefined,
   onToggleStatus = async () => undefined,
   users = [],
@@ -233,6 +243,8 @@ export function UserManagement({
 
       <UserDrawer
         currentUser={currentUser}
+        onDelete={onDelete}
+        onEdit={onEdit}
         onOpenChange={(open) => {
           if (!open) setSelectedUser(undefined);
         }}
