@@ -1,4 +1,8 @@
-"""TestPlan domain value objects and enums."""
+"""TestPlan 领域值对象。
+
+定义 TestPlanConfig 不可变值对象——保存测试运行的
+并发数、超时、重试策略、评分器和门禁阈值等配置。
+"""
 
 from __future__ import annotations
 
@@ -13,6 +17,20 @@ class VersionStatus(StrEnum):
 
 @dataclass(frozen=True, slots=True)
 class TestPlanConfig:
+    """测试计划运行配置值对象（不可变）。
+
+    创建时校验所有字段合法性，发布后不可修改。
+
+    Attributes:
+        api_browser_ratio: API 与浏览器执行比例。
+        runs_per_case: 每条用例运行次数，默认 1。
+        concurrency: 并发数，默认 1。
+        timeout: 单次执行超时秒数，默认 300。
+        retry_policy: 重试策略。
+        scorers: 评分器配置列表。
+        pass_threshold: 通过阈值（0-1），默认 1.0。
+        cost_budget: 费用预算上限（可选）。
+    """
     api_browser_ratio: float = 0.0
     runs_per_case: int = 1
     concurrency: int = 1
@@ -35,6 +53,7 @@ class TestPlanConfig:
             raise ValueError("cost_budget must be non-negative")
 
     def to_dict(self) -> dict[str, object]:
+        """序列化为字典，用于 JSONB 列存储。"""
         return {
             "api_browser_ratio": self.api_browser_ratio,
             "runs_per_case": self.runs_per_case,
@@ -48,6 +67,7 @@ class TestPlanConfig:
 
     @classmethod
     def from_dict(cls, data: dict[str, object]) -> TestPlanConfig:
+        """从字典反序列化（如从 JSONB 列读取）。"""
         cost_budget_raw = data.get("cost_budget")
         retry_policy_raw = data.get("retry_policy") or {}
         scorers_raw = data.get("scorers") or []

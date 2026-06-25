@@ -1,4 +1,4 @@
-"""Outbound ports for the environments application layer."""
+"""Environment 应用层的出站端口。"""
 
 from __future__ import annotations
 

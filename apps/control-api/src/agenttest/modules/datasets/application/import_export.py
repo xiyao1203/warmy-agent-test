@@ -1,4 +1,9 @@
-"""Dataset import / export application service."""
+"""数据集导入/导出应用服务。
+
+支持 JSON、JSONL、CSV 三种格式的导入导出。
+导入采用全量或全无策略——任一行出错则整体回滚，
+并报告每行的错误详情。
+"""
 
 from __future__ import annotations
 
@@ -27,7 +32,7 @@ ExportFormat = Literal["json", "jsonl", "csv"]
 
 
 class ImportError(Exception):
-    """Import failure with structured error details."""
+    """导入失败异常，包含每行的错误详情列表。"""
 
     def __init__(self, errors: list[dict[str, object]]) -> None:
         self.errors = errors
@@ -35,6 +40,11 @@ class ImportError(Exception):
 
 
 class ImportExportService:
+    """数据集的导入导出应用服务。
+
+    支持 JSON/JSONL/CSV 导入和 JSON/JSONL/CSV 导出。
+    导入为全量或全无——任一错误即回滚全部已导入用例。
+    """
     def __init__(
         self,
         *,

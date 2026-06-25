@@ -1,4 +1,4 @@
-"""Environment template application query handlers."""
+"""Environment 应用层查询处理器。"""
 
 from __future__ import annotations
 
@@ -16,6 +16,7 @@ from agenttest.modules.projects.public import ProjectId
 
 
 class ListEnvironmentTemplatesHandler:
+    """查询项目下环境模板列表，支持游标分页。"""
     def __init__(
         self,
         *,
@@ -38,6 +39,7 @@ class ListEnvironmentTemplatesHandler:
 
 
 class GetEnvironmentTemplateHandler:
+    """查询单个环境模板详情。"""
     def __init__(
         self,
         *,

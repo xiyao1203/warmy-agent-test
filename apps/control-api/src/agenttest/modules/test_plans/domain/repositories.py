@@ -1,4 +1,7 @@
-"""TestPlan domain repository protocols."""
+"""TestPlan 领域仓库接口。
+
+定义 TestPlanRepository 和 TestPlanVersionRepository 抽象协议。
+"""
 
 from __future__ import annotations
 
@@ -14,6 +17,7 @@ from agenttest.modules.test_plans.domain.entities import (
 
 
 class TestPlanRepository(Protocol):
+    """测试计划聚合根的持久化仓库接口。"""
     async def get_by_id(self, test_plan_id: TestPlanId) -> TestPlan | None: ...
 
     async def list_by_project(
@@ -30,6 +34,7 @@ class TestPlanRepository(Protocol):
 
 
 class TestPlanVersionRepository(Protocol):
+    """测试计划版本的持久化仓库接口。"""
     async def get_by_id(self, version_id: TestPlanVersionId) -> TestPlanVersion | None: ...
 
     async def list_by_test_plan(self, test_plan_id: TestPlanId) -> list[TestPlanVersion]: ...

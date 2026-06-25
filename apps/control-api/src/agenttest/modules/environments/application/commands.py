@@ -1,4 +1,7 @@
-"""Environment template application command handlers."""
+"""Environment 应用层命令和处理器。
+
+定义环境模板的创建、更新和删除操作的 Command 和 Handler。
+"""
 
 from __future__ import annotations
 
@@ -47,6 +50,7 @@ class DeleteEnvironmentTemplateCommand:
 
 
 class CreateEnvironmentTemplateHandler:
+    """创建环境模板的命令处理器。"""
     def __init__(
         self,
         *,
@@ -85,6 +89,7 @@ class CreateEnvironmentTemplateHandler:
 
 
 class UpdateEnvironmentTemplateHandler:
+    """更新环境模板的命令处理器。支持部分更新。"""
     def __init__(
         self,
         *,
@@ -126,6 +131,7 @@ class UpdateEnvironmentTemplateHandler:
 
 
 class DeleteEnvironmentTemplateHandler:
+    """删除环境模板的命令处理器。"""
     def __init__(
         self,
         *,
@@ -187,6 +193,7 @@ async def _record(
 
 
 class EnvironmentTemplateNotFoundError(Exception):
+    """环境模板不存在的领域异常。"""
     def __init__(self, template_id: EnvironmentTemplateId) -> None:
         self.template_id = template_id
         super().__init__(f"Environment template {template_id.value} not found")

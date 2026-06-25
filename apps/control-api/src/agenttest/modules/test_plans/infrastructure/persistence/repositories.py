@@ -1,4 +1,4 @@
-"""SQLAlchemy implementations of test plan repositories."""
+"""TestPlan 仓库的 SQLAlchemy 实现。"""
 
 from __future__ import annotations
 
@@ -31,6 +31,7 @@ from agenttest.shared.infrastructure.database import session_scope, transaction_
 
 
 class SqlAlchemyTestPlanRepository:
+    """测试计划聚合根的 SQLAlchemy 仓库实现。"""
     def __init__(self, session_factory: async_sessionmaker[AsyncSession]) -> None:
         self._session_factory = session_factory
 
@@ -93,6 +94,7 @@ class SqlAlchemyTestPlanRepository:
 
 
 class SqlAlchemyTestPlanVersionRepository:
+    """测试计划版本的 SQLAlchemy 仓库实现。"""
     def __init__(self, session_factory: async_sessionmaker[AsyncSession]) -> None:
         self._session_factory = session_factory
 
@@ -165,6 +167,7 @@ class SqlAlchemyTestPlanVersionRepository:
 
 
 def _to_plan(model: TestPlanModel) -> TestPlan:
+    """ORM 模型 → 领域实体映射。"""
     return TestPlan(
         test_plan_id=TestPlanId(model.id),
         project_id=ProjectId(model.project_id),
@@ -178,6 +181,7 @@ def _to_plan(model: TestPlanModel) -> TestPlan:
 
 
 def _to_version(model: TestPlanVersionModel) -> TestPlanVersion:
+    """ORM 模型 → 领域实体映射。"""
     return TestPlanVersion(
         version_id=TestPlanVersionId(model.id),
         test_plan_id=TestPlanId(model.test_plan_id),

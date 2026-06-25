@@ -1,4 +1,11 @@
-"""Agent application query handlers."""
+"""Agent 应用层查询处理器。
+
+定义只读查询 Handler：
+- ListAgents / GetAgent：Agent 聚合根查询。
+- ListAgentVersions / GetAgentVersion：版本查询。
+
+所有查询都校验用户对目标项目的成员资格。
+"""
 
 from __future__ import annotations
 
@@ -22,6 +29,7 @@ from agenttest.modules.projects.public import ProjectId
 
 
 class ListAgentsHandler:
+    """查询项目下 Agent 列表，支持游标分页。"""
     def __init__(
         self,
         *,
@@ -48,6 +56,7 @@ class ListAgentsHandler:
 
 
 class GetAgentHandler:
+    """查询单个 Agent 详情。"""
     def __init__(
         self,
         *,
@@ -64,6 +73,7 @@ class GetAgentHandler:
 
 
 class ListAgentVersionsHandler:
+    """查询 Agent 的所有版本列表（按版本号倒序）。"""
     def __init__(
         self,
         *,
@@ -82,6 +92,7 @@ class ListAgentVersionsHandler:
 
 
 class GetAgentVersionHandler:
+    """查询单个 Agent 版本详情。"""
     def __init__(
         self,
         *,

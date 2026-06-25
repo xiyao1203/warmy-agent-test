@@ -22,7 +22,7 @@ __all__ = [
 
 
 class TestPlanVersionRef:
-    """Lightweight reference to a published test plan version."""
+    """已发布测试计划版本的轻量引用。"""
 
     __slots__ = ("plan_version_id", "test_plan_id", "version_number")
 
@@ -38,4 +38,5 @@ class TestPlanVersionRef:
 
     @classmethod
     def from_version(cls, version: TestPlanVersion) -> TestPlanVersionRef:
+        """从完整 TestPlanVersion 实体创建引用。"""
         return cls(version.version_id, version.test_plan_id, version.version_number)

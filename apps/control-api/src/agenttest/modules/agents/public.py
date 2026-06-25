@@ -30,10 +30,10 @@ __all__ = [
 
 
 class AgentVersionRef:
-    """Lightweight reference to a published agent version.
+    """已发布 Agent 版本的轻量引用。
 
-    Used by other modules (e.g. test_plans) to reference a specific
-    agent version without loading the full entity.
+    供其他模块（如 test_plans）引用 Agent 版本时使用，
+    避免加载完整实体。
     """
 
     __slots__ = ("agent_version_id", "agent_id", "version_number")
@@ -50,4 +50,5 @@ class AgentVersionRef:
 
     @classmethod
     def from_version(cls, version: AgentVersion) -> AgentVersionRef:
+        """从完整 AgentVersion 实体创建引用。"""
         return cls(version.version_id, version.agent_id, version.version_number)

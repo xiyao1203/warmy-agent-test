@@ -1,4 +1,8 @@
-"""Dataset application command handlers."""
+"""Dataset 应用层命令和处理器。
+
+定义数据集管理、版本创建/发布、用例增删改查的 Command 和 Handler。
+每个 Handler 负责权限校验、领域操作、持久化和审计日志。
+"""
 
 from __future__ import annotations
 
@@ -104,6 +108,7 @@ class PublishDatasetVersionCommand:
 
 
 class CreateDatasetHandler:
+    """创建数据集的命令处理器。"""
     def __init__(
         self,
         *,
@@ -138,6 +143,7 @@ class CreateDatasetHandler:
 
 
 class UpdateDatasetHandler:
+    """更新数据集名称或描述的命令处理器。支持部分更新。"""
     def __init__(
         self,
         *,
@@ -175,6 +181,7 @@ class UpdateDatasetHandler:
 
 
 class CreateDatasetVersionHandler:
+    """创建数据集新版本的命令处理器。自动计算下一个版本号。"""
     def __init__(
         self,
         *,
@@ -212,6 +219,7 @@ class CreateDatasetVersionHandler:
 
 
 class AddTestCaseHandler:
+    """向数据集版本添加测试用例的命令处理器。仅草稿版本可添加。"""
     def __init__(
         self,
         *,
@@ -267,6 +275,7 @@ class AddTestCaseHandler:
 
 
 class UpdateTestCaseHandler:
+    """更新测试用例的命令处理器。仅草稿版本内的用例可编辑。"""
     def __init__(
         self,
         *,
@@ -311,6 +320,7 @@ class UpdateTestCaseHandler:
 
 
 class DeleteTestCaseHandler:
+    """删除测试用例的命令处理器。仅草稿版本内的用例可删除。"""
     def __init__(
         self,
         *,
@@ -346,6 +356,7 @@ class DeleteTestCaseHandler:
 
 
 class PublishDatasetVersionHandler:
+    """发布数据集版本的命令处理器。发布后版本及用例不可修改。"""
     def __init__(
         self,
         *,
@@ -432,24 +443,28 @@ async def _record(
 
 
 class DatasetNotFoundError(Exception):
+    """数据集不存在的领域异常。"""
     def __init__(self, dataset_id: DatasetId) -> None:
         self.dataset_id = dataset_id
         super().__init__(f"Dataset {dataset_id.value} not found")
 
 
 class DatasetVersionNotFoundError(Exception):
+    """数据集版本不存在的领域异常。"""
     def __init__(self, version_id: DatasetVersionId) -> None:
         self.version_id = version_id
         super().__init__(f"Dataset version {version_id.value} not found")
 
 
 class DatasetVersionNotEditableError(Exception):
+    """尝试修改已发布版本的领域异常。"""
     def __init__(self, version_id: DatasetVersionId) -> None:
         self.version_id = version_id
         super().__init__(f"Dataset version {version_id.value} is not editable")
 
 
 class TestCaseNotFoundError(Exception):
+    """测试用例不存在的领域异常。"""
     def __init__(self, case_id: TestCaseId) -> None:
         self.case_id = case_id
         super().__init__(f"Test case {case_id.value} not found")

@@ -1287,3 +1287,166 @@ Identity、Project、Dataset 和 Test Plan 在早期保持同一控制面。
 - ADR-006：插件只能依赖公开 SDK。
 - ADR-007：发布资产采用不可变版本。
 - ADR-008：开源框架采用最新稳定版接入、精确锁定和受控升级。
+
+---
+
+## 23. 代码注释规范
+
+### 23.1 基本原则
+
+> 代码自解释优先，注释解释"为什么"而不是"是什么"。AI 自动生成的代码更应添加注释以提升可读性和可维护性。
+
+- 所有公开接口（Public API、模块公开函数、导出的类和方法）必须有注释。
+- 领域模型（Entity、Value Object、Domain Service）的每个类和方法必须有注释。
+- 复杂业务逻辑、算法、状态机和边界条件必须有行内注释。
+- 注释用**中文**描述业务意图和场景，技术术语可保留英文。
+- 注释随着代码变更同步更新，禁止保留过时或错误的注释。
+
+### 23.2 Python 注释规范
+
+#### 模块级文档字符串
+
+每个 `.py` 文件必须以模块级 docstring 开头，说明本模块的职责和核心内容：
+
+```python
+"""Agent 领域实体。
+
+定义 Agent 聚合根和 AgentVersion 实体，包含：
+- Agent：项目下 AI Agent 的聚合根，管理名称、类型和版本。
+- AgentVersion：配置版本，支持草稿/发布状态和不可变版本。
+"""
+```
+
+#### 类和函数文档字符串
+
+使用 Google 风格 docstring，包含简要描述、Args 和 Returns/Raises：
+
+```python
+def publish(self) -> None:
+    """将草稿版本发布为正式版本。
+
+    发布后的版本不可修改，编辑必须创建新版本。
+
+    Raises:
+        ValueError: 当版本已经是已发布状态时抛出。
+    """
+```
+
+#### 领域实体和方法
+
+```python
+@dataclass(slots=True)
+class Agent:
+    """项目下的 AI Agent 聚合根。
+
+    管理 Agent 的基本信息和元数据。Agent 的具体配置通过
+    AgentVersion 进行版本化管理。
+
+    Attributes:
+        agent_id: Agent 唯一标识。
+        project_id: 所属项目 ID。
+        name: Agent 名称。
+        agent_type: Agent 类型，如 generic_http 或 canvas。
+    """
+    agent_id: AgentId
+    project_id: ProjectId
+    name: str
+    ...
+```
+
+#### 应用层 Handler
+
+```python
+class CreateAgentHandler:
+    """创建 Agent 的命令处理器。
+
+    执行以下步骤：
+    1. 校验 Actor 对目标项目的编辑权限。
+    2. 创建 Agent 领域对象。
+    3. 持久化并记录审计日志。
+    """
+
+    async def execute(self, actor: User, command: CreateAgentCommand) -> Agent:
+        """执行创建 Agent 命令。
+
+        Args:
+            actor: 当前操作用户。
+            command: 创建 Agent 命令参数。
+
+        Returns:
+            新创建的 Agent 实体。
+
+        Raises:
+            ProjectNotFoundError: 用户不是项目成员时抛出。
+        """
+```
+
+#### 行内注释
+
+- 非显而易见的逻辑必须先注释意图。
+- 算法、状态转换和边界处理必须用注释解释为什么这样处理。
+- 正则表达式、复杂 SQL、性能优化点必须注释。
+
+```python
+# 从已发布版本创建新草稿时，直接复制配置而非引用，
+# 确保两个版本独立演化
+new_config = copy.deepcopy(published_version.config)
+```
+
+### 23.3 TypeScript/JavaScript 注释规范
+
+#### 文件级 JSDoc
+
+```typescript
+/**
+ * Agent 管理 API 层。
+ *
+ * 封装 agent CRUD 操作的 React Query hooks 和 API 调用。
+ */
+```
+
+#### 导出函数和组件
+
+```typescript
+/**
+ * 创建 Agent 版本。
+ *
+ * @param agentId - Agent ID
+ * @param config - Agent 配置对象
+ * @returns 新创建的版本对象
+ * @throws {ApiError} 当用户无编辑权限时抛出 404
+ */
+export async function createAgentVersion(
+  agentId: string,
+  config: AgentConfig,
+): Promise<AgentVersion> {
+  // ...
+}
+```
+
+#### React 组件
+
+```typescript
+/**
+ * Agent 列表页面组件。
+ *
+ * 展示当前项目下所有 Agent，支持分页、搜索和类型筛选。
+ * 处理加载中、空数据和错误三种状态。
+ */
+export function AgentListPage() {
+  // ...
+}
+```
+
+### 23.4 注释检查清单
+
+代码评审时必须确认：
+
+- [ ] 每个模块文件有 docstring。
+- [ ] 公开函数、类、方法有 docstring。
+- [ ] 领域模型实体和方法有注释。
+- [ ] 应用层 Handler 有注释。
+- [ ] 复杂业务逻辑有行内注释。
+- [ ] 注释内容准确且与代码一致。
+- [ ] 没有注释掉的死代码。
+- [ ] 没有 TODO 注释（应转为 Issue 记录）。

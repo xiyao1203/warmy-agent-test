@@ -38,7 +38,10 @@ __all__ = [
 
 
 class DatasetVersionRef:
-    """Lightweight reference to a published dataset version."""
+    """已发布数据集版本的轻量引用。
+
+    供其他模块引用数据集版本时使用，避免加载完整实体。
+    """
 
     __slots__ = ("dataset_version_id", "dataset_id", "version_number")
 
@@ -54,4 +57,5 @@ class DatasetVersionRef:
 
     @classmethod
     def from_version(cls, version: DatasetVersion) -> DatasetVersionRef:
+        """从完整 DatasetVersion 实体创建引用。"""
         return cls(version.version_id, version.dataset_id, version.version_number)
