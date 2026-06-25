@@ -6,6 +6,6 @@ export {
   setUserEnabled,
   updateUser,
 } from "./api";
-export { CreateUserDialog } from "./user-dialog";
+export { CreateUserDialog, EditUserDialog } from "./user-dialog";
 export { UserManagement } from "./user-management";
 export { UserManagementScreen } from "./user-management-screen";
