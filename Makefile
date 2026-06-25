@@ -1,4 +1,4 @@
-.PHONY: bootstrap format lint typecheck test build verify
+.PHONY: bootstrap format lint typecheck test build verify api-generate api-check
 
 bootstrap:
 	pnpm install --frozen-lockfile
@@ -24,3 +24,11 @@ build:
 	pnpm build
 
 verify: format lint typecheck test build
+
+api-generate:
+	uv run python scripts/export_openapi.py
+	pnpm --filter @warmy/generated-api-client generate
+
+api-check:
+	$(MAKE) api-generate
+	git diff --exit-code -- docs/api/openapi.json packages/generated-api-client/src
