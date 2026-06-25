@@ -24,6 +24,20 @@ class AuditSink(Protocol):
     async def append(self, entry: AuditEntry) -> None: ...
 
 
+class AuditWriter(Protocol):
+    async def record(
+        self,
+        *,
+        actor_user_id: UserId | None,
+        action: str,
+        object_type: str,
+        object_id: UUID | None,
+        project_id: ProjectId | None,
+        changes: dict[str, Any],
+        source_ip: str | None,
+    ) -> None: ...
+
+
 class AuditReader(Protocol):
     async def list_global(self, *, limit: int) -> list[AuditEntry]: ...
 

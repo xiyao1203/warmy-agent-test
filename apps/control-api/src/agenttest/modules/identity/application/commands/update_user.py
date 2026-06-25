@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 
+from agenttest.modules.audit.public import AuditWriter
 from agenttest.modules.identity.application.commands.set_user_status import (
     ProtectedAdministratorError,
 )
@@ -19,8 +20,14 @@ class UpdateUserCommand:
 
 
 class UpdateUserHandler:
-    def __init__(self, *, users: UserAdminRepository) -> None:
+    def __init__(
+        self,
+        *,
+        users: UserAdminRepository,
+        audit: AuditWriter | None = None,
+    ) -> None:
         self._users = users
+        self._audit = audit
 
     async def execute(self, actor: User, command: UpdateUserCommand) -> User:
         require_super_admin(actor)
@@ -36,10 +43,33 @@ class UpdateUserHandler:
             and command.role is not target.role
         ):
             raise ProtectedAdministratorError
+        before = {
+            "email": target.email.value,
+            "display_name": target.display_name,
+            "role": target.role.value,
+        }
         target.update_profile(
             email=command.email,
             display_name=command.display_name,
             role=command.role or target.role,
         )
         await self._users.save(target)
+        if self._audit is not None:
+            await self._audit.record(
+                actor_user_id=actor.user_id,
+                action="identity.user.updated",
+                object_type="user",
+                object_id=target.user_id.value,
+                project_id=None,
+                changes={
+                    key: {"before": before[key], "after": value}
+                    for key, value in {
+                        "email": target.email.value,
+                        "display_name": target.display_name,
+                        "role": target.role.value,
+                    }.items()
+                    if before[key] != value
+                },
+                source_ip=None,
+            )
         return target

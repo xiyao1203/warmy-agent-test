@@ -4,6 +4,11 @@ from fastapi import FastAPI
 
 from agenttest.bootstrap.settings import Settings, get_settings
 from agenttest.entrypoints.http.health import router as health_router
+from agenttest.modules.audit.api.router import AuditApiDependencies, create_audit_router
+from agenttest.modules.audit.application.record import AuditRecorder
+from agenttest.modules.audit.infrastructure.persistence.repositories import (
+    SqlAlchemyAuditRepository,
+)
 from agenttest.modules.identity.api.admin_router import (
     AdminApiDependencies,
     create_admin_router,
@@ -69,6 +74,7 @@ def create_app(
     auth_dependencies: AuthApiDependencies | None = None,
     admin_dependencies: AdminApiDependencies | None = None,
     project_dependencies: ProjectApiDependencies | None = None,
+    audit_dependencies: AuditApiDependencies | None = None,
 ) -> FastAPI:
     resolved_settings = settings or get_settings()
     app = FastAPI(
@@ -102,6 +108,15 @@ def create_app(
         ),
         prefix="/api/v1",
     )
+    audits = audit_dependencies or build_audit_dependencies(resolved_settings)
+    app.include_router(
+        create_audit_router(
+            audits,
+            current_user=dependencies.current_user,
+            settings=resolved_settings,
+        ),
+        prefix="/api/v1",
+    )
     return app
 
 
@@ -111,6 +126,7 @@ def build_auth_dependencies(settings: Settings) -> AuthApiDependencies:
     users = SqlAlchemyUserRepository(session_factory)
     credentials = SqlAlchemyCredentialRepository(session_factory)
     sessions = SqlAlchemySessionRepository(session_factory)
+    audit = AuditRecorder(SqlAlchemyAuditRepository(session_factory))
     clock = SystemClock()
     return AuthApiDependencies(
         login=LoginHandler(
@@ -120,9 +136,10 @@ def build_auth_dependencies(settings: Settings) -> AuthApiDependencies:
             password_hasher=Argon2PasswordHasher(),
             clock=clock,
             session_ttl=timedelta(seconds=settings.session_ttl_seconds),
+            audit=audit,
         ),
         current_user=CurrentUserQuery(users=users, sessions=sessions, clock=clock),
-        logout=LogoutHandler(sessions=sessions, clock=clock),
+        logout=LogoutHandler(sessions=sessions, clock=clock, audit=audit),
         csrf=CsrfValidator(sessions=sessions, clock=clock),
     )
 
@@ -133,6 +150,7 @@ def build_admin_dependencies(settings: Settings) -> AdminApiDependencies:
     users = SqlAlchemyUserRepository(session_factory)
     credentials = SqlAlchemyCredentialRepository(session_factory)
     sessions = SqlAlchemySessionRepository(session_factory)
+    audit = AuditRecorder(SqlAlchemyAuditRepository(session_factory))
     clock = SystemClock()
     password_hasher = Argon2PasswordHasher()
     return AdminApiDependencies(
@@ -142,31 +160,54 @@ def build_admin_dependencies(settings: Settings) -> AdminApiDependencies:
             users=users,
             credentials=credentials,
             password_hasher=password_hasher,
+            audit=audit,
         ),
-        update_user=UpdateUserHandler(users=users),
+        update_user=UpdateUserHandler(users=users, audit=audit),
         reset_password=ResetPasswordHandler(
             users=users,
             credentials=credentials,
             sessions=sessions,
             password_hasher=password_hasher,
             clock=clock,
+            audit=audit,
         ),
-        set_status=SetUserStatusHandler(users=users, sessions=sessions, clock=clock),
-        delete_user=DeleteUserHandler(users=users, sessions=sessions, clock=clock),
+        set_status=SetUserStatusHandler(
+            users=users,
+            sessions=sessions,
+            clock=clock,
+            audit=audit,
+        ),
+        delete_user=DeleteUserHandler(
+            users=users,
+            sessions=sessions,
+            clock=clock,
+            audit=audit,
+        ),
     )
 
 
 def build_project_dependencies(settings: Settings) -> ProjectApiDependencies:
     engine = create_database_engine(str(settings.database_url))
-    repository = SqlAlchemyProjectRepository(create_session_factory(engine))
+    session_factory = create_session_factory(engine)
+    repository = SqlAlchemyProjectRepository(session_factory)
+    audit = AuditRecorder(SqlAlchemyAuditRepository(session_factory))
     return ProjectApiDependencies(
         list_projects=ListProjectsHandler(projects=repository),
         get_project=GetProjectHandler(projects=repository),
-        create_project=CreateProjectHandler(projects=repository),
-        rename_project=RenameProjectHandler(projects=repository),
-        archive_project=ArchiveProjectHandler(projects=repository),
+        create_project=CreateProjectHandler(projects=repository, audit=audit),
+        rename_project=RenameProjectHandler(projects=repository, audit=audit),
+        archive_project=ArchiveProjectHandler(projects=repository, audit=audit),
         list_members=ListProjectMembersHandler(projects=repository),
-        add_member=AddProjectMemberHandler(projects=repository),
-        update_member=UpdateProjectMemberHandler(projects=repository),
-        remove_member=RemoveProjectMemberHandler(projects=repository),
+        add_member=AddProjectMemberHandler(projects=repository, audit=audit),
+        update_member=UpdateProjectMemberHandler(projects=repository, audit=audit),
+        remove_member=RemoveProjectMemberHandler(projects=repository, audit=audit),
+    )
+
+
+def build_audit_dependencies(settings: Settings) -> AuditApiDependencies:
+    engine = create_database_engine(str(settings.database_url))
+    session_factory = create_session_factory(engine)
+    return AuditApiDependencies(
+        audits=SqlAlchemyAuditRepository(session_factory),
+        projects=SqlAlchemyProjectRepository(session_factory),
     )

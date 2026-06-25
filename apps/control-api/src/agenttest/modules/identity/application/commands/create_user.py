@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 
+from agenttest.modules.audit.public import AuditWriter
 from agenttest.modules.identity.application.errors import DuplicateEmailError
 from agenttest.modules.identity.application.policies import require_super_admin
 from agenttest.modules.identity.application.ports import (
@@ -26,10 +27,12 @@ class CreateUserHandler:
         users: UserAdminRepository,
         credentials: CredentialWriter,
         password_hasher: PasswordHasher,
+        audit: AuditWriter | None = None,
     ) -> None:
         self._users = users
         self._credentials = credentials
         self._password_hasher = password_hasher
+        self._audit = audit
 
     async def execute(self, actor: User, command: CreateUserCommand) -> User:
         require_super_admin(actor)
@@ -47,4 +50,18 @@ class CreateUserHandler:
             user.user_id,
             self._password_hasher.hash(command.initial_password),
         )
+        if self._audit is not None:
+            await self._audit.record(
+                actor_user_id=actor.user_id,
+                action="identity.user.created",
+                object_type="user",
+                object_id=user.user_id.value,
+                project_id=None,
+                changes={
+                    "email": {"after": user.email.value},
+                    "display_name": {"after": user.display_name},
+                    "role": {"after": user.role.value},
+                },
+                source_ip=None,
+            )
         return user

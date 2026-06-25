@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 
+from agenttest.modules.audit.public import AuditWriter
 from agenttest.modules.identity.application.errors import UserNotFoundError
 from agenttest.modules.identity.application.policies import require_super_admin
 from agenttest.modules.identity.application.ports import SessionAdmin, UserAdminRepository
@@ -25,10 +26,12 @@ class SetUserStatusHandler:
         users: UserAdminRepository,
         sessions: SessionAdmin,
         clock: Clock | None = None,
+        audit: AuditWriter | None = None,
     ) -> None:
         self._users = users
         self._sessions = sessions
         self._clock = clock or SystemClock()
+        self._audit = audit
 
     async def execute(self, actor: User, command: SetUserStatusCommand) -> User:
         require_super_admin(actor)
@@ -40,6 +43,20 @@ class SetUserStatusHandler:
             target.disable()
             await self._sessions.revoke_all_for_user(target.user_id, self._clock.now())
         await self._users.save(target)
+        if self._audit is not None:
+            await self._audit.record(
+                actor_user_id=actor.user_id,
+                action=(
+                    "identity.user.enabled"
+                    if command.enabled
+                    else "identity.user.disabled"
+                ),
+                object_type="user",
+                object_id=target.user_id.value,
+                project_id=None,
+                changes={"status": {"after": target.status.value}},
+                source_ip=None,
+            )
         return target
 
 
@@ -50,10 +67,12 @@ class DeleteUserHandler:
         users: UserAdminRepository,
         sessions: SessionAdmin,
         clock: Clock | None = None,
+        audit: AuditWriter | None = None,
     ) -> None:
         self._users = users
         self._sessions = sessions
         self._clock = clock or SystemClock()
+        self._audit = audit
 
     async def execute(self, actor: User, user_id: UserId) -> None:
         require_super_admin(actor)
@@ -63,9 +82,23 @@ class DeleteUserHandler:
             target.disable()
             await self._users.save(target)
             await self._sessions.revoke_all_for_user(user_id, self._clock.now())
+            await self._record_delete(actor, target, soft=True)
             return
         await self._users.delete(user_id)
         await self._sessions.revoke_all_for_user(user_id, self._clock.now())
+        await self._record_delete(actor, target, soft=False)
+
+    async def _record_delete(self, actor: User, target: User, *, soft: bool) -> None:
+        if self._audit is not None:
+            await self._audit.record(
+                actor_user_id=actor.user_id,
+                action="identity.user.deleted",
+                object_type="user",
+                object_id=target.user_id.value,
+                project_id=None,
+                changes={"soft_delete": {"after": soft}},
+                source_ip=None,
+            )
 
 
 async def _required_user(repository: UserAdminRepository, user_id: UserId) -> User:
