@@ -24,6 +24,16 @@ _current_session: ContextVar[AsyncSession | None] = ContextVar(
 
 
 def create_database_engine(database_url: str) -> AsyncEngine:
+    """创建数据库引擎，根据 URL 类型自动调整参数。
+
+    PostgreSQL 使用 pool_pre_ping 检测连接有效性，
+    SQLite 需要 check_same_thread=False 以支持异步访问。
+    """
+    if database_url.startswith("sqlite"):
+        return create_async_engine(
+            database_url,
+            connect_args={"check_same_thread": False},
+        )
     return create_async_engine(database_url, pool_pre_ping=True)
 
 
