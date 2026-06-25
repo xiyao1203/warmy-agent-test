@@ -2,8 +2,30 @@ from datetime import timedelta
 
 from fastapi import FastAPI
 
+from agenttest.bootstrap.project_access import ProjectAccessAdapter
 from agenttest.bootstrap.settings import Settings, get_settings
 from agenttest.entrypoints.http.health import router as health_router
+from agenttest.modules.agents.api.router import (
+    AgentApiDependencies,
+    create_agent_router,
+)
+from agenttest.modules.agents.application.commands import (
+    CreateAgentHandler,
+    CreateAgentVersionHandler,
+    PublishAgentVersionHandler,
+    UpdateAgentHandler,
+    UpdateAgentVersionHandler,
+)
+from agenttest.modules.agents.application.queries import (
+    GetAgentHandler,
+    GetAgentVersionHandler,
+    ListAgentsHandler,
+    ListAgentVersionsHandler,
+)
+from agenttest.modules.agents.infrastructure.persistence.repositories import (
+    SqlAlchemyAgentRepository,
+    SqlAlchemyAgentVersionRepository,
+)
 from agenttest.modules.audit.api.router import AuditApiDependencies, create_audit_router
 from agenttest.modules.audit.application.record import AuditRecorder
 from agenttest.modules.audit.infrastructure.persistence.repositories import (
@@ -76,6 +98,7 @@ def create_app(
     admin_dependencies: AdminApiDependencies | None = None,
     project_dependencies: ProjectApiDependencies | None = None,
     audit_dependencies: AuditApiDependencies | None = None,
+    agent_dependencies: AgentApiDependencies | None = None,
 ) -> FastAPI:
     resolved_settings = settings or get_settings()
     app = FastAPI(
@@ -114,6 +137,16 @@ def create_app(
         create_audit_router(
             audits,
             current_user=dependencies.current_user,
+            settings=resolved_settings,
+        ),
+        prefix="/api/v1",
+    )
+    agents = agent_dependencies or build_agent_dependencies(resolved_settings)
+    app.include_router(
+        create_agent_router(
+            agents,
+            current_user=dependencies.current_user,
+            csrf=dependencies.csrf,
             settings=resolved_settings,
         ),
         prefix="/api/v1",
@@ -214,4 +247,57 @@ def build_audit_dependencies(settings: Settings) -> AuditApiDependencies:
     return AuditApiDependencies(
         audits=SqlAlchemyAuditRepository(session_factory),
         projects=SqlAlchemyProjectRepository(session_factory),
+    )
+
+
+def build_agent_dependencies(settings: Settings) -> AgentApiDependencies:
+    engine = create_database_engine(str(settings.database_url))
+    session_factory = create_session_factory(engine)
+    agents = SqlAlchemyAgentRepository(session_factory)
+    versions = SqlAlchemyAgentVersionRepository(session_factory)
+    projects = SqlAlchemyProjectRepository(session_factory)
+    access = ProjectAccessAdapter(projects)
+    audit = AuditRecorder(SqlAlchemyAuditRepository(session_factory))
+    return AgentApiDependencies(
+        list_agents=ListAgentsHandler(agents=agents, project_access=access),
+        get_agent=GetAgentHandler(agents=agents, project_access=access),
+        create_agent=CreateAgentHandler(
+            agents=agents,
+            project_access=access,
+            audit=audit,
+        ),
+        update_agent=UpdateAgentHandler(
+            agents=agents,
+            project_access=access,
+            audit=audit,
+        ),
+        list_versions=ListAgentVersionsHandler(
+            agents=agents,
+            versions=versions,
+            project_access=access,
+        ),
+        get_version=GetAgentVersionHandler(
+            agents=agents,
+            versions=versions,
+            project_access=access,
+        ),
+        create_version=CreateAgentVersionHandler(
+            agents=agents,
+            versions=versions,
+            project_access=access,
+            audit=audit,
+        ),
+        update_version=UpdateAgentVersionHandler(
+            agents=agents,
+            versions=versions,
+            project_access=access,
+            audit=audit,
+        ),
+        publish_version=PublishAgentVersionHandler(
+            agents=agents,
+            versions=versions,
+            project_access=access,
+            audit=audit,
+        ),
+        uow_factory=lambda: SqlAlchemyUnitOfWork(session_factory),
     )
