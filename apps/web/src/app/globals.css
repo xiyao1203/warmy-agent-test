@@ -25,11 +25,18 @@ body {
 }
 
 button,
-a {
+a,
+input {
   outline: none;
 }
 
 button:focus-visible,
-a:focus-visible {
+a:focus-visible,
+input:focus-visible {
   box-shadow: 0 0 0 2px var(--focus-ring);
+}
+
+::selection {
+  background: var(--accent-subtle);
+  color: var(--text);
 }
