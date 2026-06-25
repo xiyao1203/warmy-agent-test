@@ -114,9 +114,7 @@ class SqlAlchemyCredentialRepository:
     async def set_password_hash(self, user_id: UserId, password_hash: str) -> None:
         async with transaction_scope(self._session_factory) as session:
             existing_id = await session.scalar(
-                select(UserCredentialModel.id).where(
-                    UserCredentialModel.user_id == user_id.value
-                )
+                select(UserCredentialModel.id).where(UserCredentialModel.user_id == user_id.value)
             )
             if existing_id is None:
                 session.add(

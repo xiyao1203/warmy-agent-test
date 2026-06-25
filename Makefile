@@ -1,4 +1,4 @@
-.PHONY: bootstrap format lint typecheck test build verify api-generate api-check
+.PHONY: bootstrap format lint typecheck test build verify architecture api-generate api-check
 
 bootstrap:
 	pnpm install --frozen-lockfile
@@ -6,7 +6,7 @@ bootstrap:
 
 format:
 	pnpm format
-	uv run ruff format .
+	uv run ruff format --check .
 
 lint:
 	pnpm lint
@@ -23,7 +23,11 @@ test:
 build:
 	pnpm build
 
-verify: format lint typecheck test build
+architecture:
+	uv run pytest apps/control-api/tests/architecture -v
+	uv run python scripts/check_architecture.py
+
+verify: format lint typecheck test build architecture api-check
 
 api-generate:
 	uv run python scripts/export_openapi.py

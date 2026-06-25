@@ -64,10 +64,7 @@ class SqlAlchemyProjectRepository:
         members_by_project: dict[UUID, list[ProjectMemberModel]] = {}
         for member in member_models:
             members_by_project.setdefault(member.project_id, []).append(member)
-        return [
-            _to_project(model, members_by_project.get(model.id, []))
-            for model in models
-        ]
+        return [_to_project(model, members_by_project.get(model.id, [])) for model in models]
 
     async def add(self, project: Project) -> None:
         async with transaction_scope(self._session_factory) as session:

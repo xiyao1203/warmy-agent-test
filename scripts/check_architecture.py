@@ -58,9 +58,7 @@ def find_violations(source_root: Path) -> list[str]:
                 ".infrastructure.persistence.models" in imported_module
                 for imported_module in imports
             ):
-                violations.append(
-                    f"{display_path}: API imports infrastructure persistence models"
-                )
+                violations.append(f"{display_path}: API imports infrastructure persistence models")
 
         source_module = module_name_for(relative_path)
         if source_module:

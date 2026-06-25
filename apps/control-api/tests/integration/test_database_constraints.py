@@ -38,8 +38,7 @@ def test_session_token_hash_is_unique() -> None:
     constraints = UserSessionModel.__table__.constraints
 
     assert any(
-        isinstance(item, UniqueConstraint)
-        and item.name == "uq_user_sessions_token_hash"
+        isinstance(item, UniqueConstraint) and item.name == "uq_user_sessions_token_hash"
         for item in constraints
     )
 

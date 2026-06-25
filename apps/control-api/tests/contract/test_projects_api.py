@@ -153,9 +153,7 @@ def test_normal_user_lists_only_assigned_projects_and_other_project_is_404() -> 
     listed = client.get("/api/v1/projects")
     direct = client.get(f"/api/v1/projects/{other.project_id.value}")
 
-    assert [item["id"] for item in listed.json()["items"]] == [
-        str(assigned.project_id.value)
-    ]
+    assert [item["id"] for item in listed.json()["items"]] == [str(assigned.project_id.value)]
     assert direct.status_code == 404
 
 

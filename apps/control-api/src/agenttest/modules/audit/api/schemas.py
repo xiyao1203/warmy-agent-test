@@ -22,9 +22,7 @@ class AuditEntryResponse(BaseModel):
     def from_entry(cls, entry: AuditEntry) -> "AuditEntryResponse":
         return cls(
             id=entry.entry_id,
-            actor_user_id=(
-                entry.actor_user_id.value if entry.actor_user_id is not None else None
-            ),
+            actor_user_id=(entry.actor_user_id.value if entry.actor_user_id is not None else None),
             action=entry.action,
             object_type=entry.object_type,
             object_id=entry.object_id,

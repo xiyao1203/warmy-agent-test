@@ -46,11 +46,7 @@ class SetUserStatusHandler:
         if self._audit is not None:
             await self._audit.record(
                 actor_user_id=actor.user_id,
-                action=(
-                    "identity.user.enabled"
-                    if command.enabled
-                    else "identity.user.disabled"
-                ),
+                action=("identity.user.enabled" if command.enabled else "identity.user.disabled"),
                 object_type="user",
                 object_id=target.user_id.value,
                 project_id=None,
@@ -115,8 +111,5 @@ async def _ensure_can_remove_access(
 ) -> None:
     if actor.user_id == target.user_id:
         raise ProtectedAdministratorError
-    if (
-        target.role is SystemRole.SUPER_ADMIN
-        and await repository.count_active_super_admins() <= 1
-    ):
+    if target.role is SystemRole.SUPER_ADMIN and await repository.count_active_super_admins() <= 1:
         raise ProtectedAdministratorError
