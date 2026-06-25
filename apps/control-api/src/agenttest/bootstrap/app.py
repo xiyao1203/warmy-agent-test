@@ -31,6 +31,33 @@ from agenttest.modules.audit.application.record import AuditRecorder
 from agenttest.modules.audit.infrastructure.persistence.repositories import (
     SqlAlchemyAuditRepository,
 )
+from agenttest.modules.datasets.api.router import (
+    DatasetApiDependencies,
+    create_dataset_router,
+)
+from agenttest.modules.datasets.application.commands import (
+    AddTestCaseHandler,
+    CreateDatasetHandler,
+    CreateDatasetVersionHandler,
+    DeleteTestCaseHandler,
+    PublishDatasetVersionHandler,
+    UpdateDatasetHandler,
+    UpdateTestCaseHandler,
+)
+from agenttest.modules.datasets.application.import_export import ImportExportService
+from agenttest.modules.datasets.application.queries import (
+    GetDatasetHandler,
+    GetDatasetVersionHandler,
+    GetTestCaseHandler,
+    ListDatasetsHandler,
+    ListDatasetVersionsHandler,
+    ListTestCasesHandler,
+)
+from agenttest.modules.datasets.infrastructure.persistence.repositories import (
+    SqlAlchemyDatasetRepository,
+    SqlAlchemyDatasetVersionRepository,
+    SqlAlchemyTestCaseRepository,
+)
 from agenttest.modules.identity.api.admin_router import (
     AdminApiDependencies,
     create_admin_router,
@@ -99,6 +126,7 @@ def create_app(
     project_dependencies: ProjectApiDependencies | None = None,
     audit_dependencies: AuditApiDependencies | None = None,
     agent_dependencies: AgentApiDependencies | None = None,
+    dataset_dependencies: DatasetApiDependencies | None = None,
 ) -> FastAPI:
     resolved_settings = settings or get_settings()
     app = FastAPI(
@@ -145,6 +173,16 @@ def create_app(
     app.include_router(
         create_agent_router(
             agents,
+            current_user=dependencies.current_user,
+            csrf=dependencies.csrf,
+            settings=resolved_settings,
+        ),
+        prefix="/api/v1",
+    )
+    datasets = dataset_dependencies or build_dataset_dependencies(resolved_settings)
+    app.include_router(
+        create_dataset_router(
+            datasets,
             current_user=dependencies.current_user,
             csrf=dependencies.csrf,
             settings=resolved_settings,
@@ -298,6 +336,97 @@ def build_agent_dependencies(settings: Settings) -> AgentApiDependencies:
             versions=versions,
             project_access=access,
             audit=audit,
+        ),
+        uow_factory=lambda: SqlAlchemyUnitOfWork(session_factory),
+    )
+
+
+def build_dataset_dependencies(settings: Settings) -> DatasetApiDependencies:
+    engine = create_database_engine(str(settings.database_url))
+    session_factory = create_session_factory(engine)
+    datasets = SqlAlchemyDatasetRepository(session_factory)
+    versions = SqlAlchemyDatasetVersionRepository(session_factory)
+    cases = SqlAlchemyTestCaseRepository(session_factory)
+    projects = SqlAlchemyProjectRepository(session_factory)
+    access = ProjectAccessAdapter(projects)
+    audit = AuditRecorder(SqlAlchemyAuditRepository(session_factory))
+    return DatasetApiDependencies(
+        list_datasets=ListDatasetsHandler(
+            datasets=datasets,
+            project_access=access,
+        ),
+        get_dataset=GetDatasetHandler(
+            datasets=datasets,
+            project_access=access,
+        ),
+        create_dataset=CreateDatasetHandler(
+            datasets=datasets,
+            project_access=access,
+            audit=audit,
+        ),
+        update_dataset=UpdateDatasetHandler(
+            datasets=datasets,
+            project_access=access,
+            audit=audit,
+        ),
+        list_versions=ListDatasetVersionsHandler(
+            datasets=datasets,
+            versions=versions,
+            project_access=access,
+        ),
+        get_version=GetDatasetVersionHandler(
+            datasets=datasets,
+            versions=versions,
+            project_access=access,
+        ),
+        create_version=CreateDatasetVersionHandler(
+            datasets=datasets,
+            versions=versions,
+            project_access=access,
+            audit=audit,
+        ),
+        list_cases=ListTestCasesHandler(
+            datasets=datasets,
+            versions=versions,
+            cases=cases,
+            project_access=access,
+        ),
+        get_case=GetTestCaseHandler(
+            datasets=datasets,
+            versions=versions,
+            cases=cases,
+            project_access=access,
+        ),
+        add_case=AddTestCaseHandler(
+            datasets=datasets,
+            versions=versions,
+            cases=cases,
+            project_access=access,
+            audit=audit,
+        ),
+        update_case=UpdateTestCaseHandler(
+            datasets=datasets,
+            versions=versions,
+            cases=cases,
+            project_access=access,
+            audit=audit,
+        ),
+        delete_case=DeleteTestCaseHandler(
+            datasets=datasets,
+            versions=versions,
+            cases=cases,
+            project_access=access,
+            audit=audit,
+        ),
+        publish_version=PublishDatasetVersionHandler(
+            datasets=datasets,
+            versions=versions,
+            project_access=access,
+            audit=audit,
+        ),
+        import_export=ImportExportService(
+            cases=cases,
+            project_access=access,
         ),
         uow_factory=lambda: SqlAlchemyUnitOfWork(session_factory),
     )

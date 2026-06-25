@@ -87,6 +87,31 @@ class ListDatasetVersionsHandler:
         return await self._versions.list_by_dataset(dataset.dataset_id)
 
 
+class GetDatasetVersionHandler:
+    """查询单个数据集版本详情。"""
+
+    def __init__(
+        self,
+        *,
+        datasets: DatasetRepository,
+        versions: DatasetVersionRepository,
+        project_access: ProjectAccessPort,
+    ) -> None:
+        self._datasets = datasets
+        self._versions = versions
+        self._project_access = project_access
+
+    async def execute(
+        self,
+        actor: User,
+        version_id: DatasetVersionId,
+    ) -> DatasetVersion:
+        version = await _required_version(self._versions, version_id)
+        dataset = await _required_dataset(self._datasets, version.dataset_id)
+        await self._project_access.ensure_member(actor, dataset.project_id)
+        return version
+
+
 class ListTestCasesHandler:
     """查询数据集版本下的测试用例列表，支持游标分页。"""
     def __init__(
