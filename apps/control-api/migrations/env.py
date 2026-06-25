@@ -3,7 +3,19 @@ from __future__ import annotations
 import asyncio
 from logging.config import fileConfig
 
+from agenttest.modules.agents.infrastructure.persistence.models import (
+    AgentModel,
+    AgentVersionModel,
+)
 from agenttest.modules.audit.infrastructure.persistence.models import AuditLogModel
+from agenttest.modules.datasets.infrastructure.persistence.models import (
+    DatasetModel,
+    DatasetVersionModel,
+    TestCaseModel,
+)
+from agenttest.modules.environments.infrastructure.persistence.models import (
+    EnvironmentTemplateModel,
+)
 from agenttest.modules.identity.infrastructure.persistence.models import (
     UserCredentialModel,
     UserModel,
@@ -13,18 +25,30 @@ from agenttest.modules.projects.infrastructure.persistence.models import (
     ProjectMemberModel,
     ProjectModel,
 )
+from agenttest.modules.test_plans.infrastructure.persistence.models import (
+    TestPlanModel,
+    TestPlanVersionModel,
+)
 from agenttest.shared.infrastructure.database import Base
 from alembic import context
 from sqlalchemy import Connection, pool
 from sqlalchemy.ext.asyncio import async_engine_from_config
 
 _MODELS = (
+    AgentModel,
+    AgentVersionModel,
     AuditLogModel,
+    DatasetModel,
+    DatasetVersionModel,
+    EnvironmentTemplateModel,
+    ProjectMemberModel,
+    ProjectModel,
+    TestCaseModel,
+    TestPlanModel,
+    TestPlanVersionModel,
     UserCredentialModel,
     UserModel,
     UserSessionModel,
-    ProjectMemberModel,
-    ProjectModel,
 )
 
 config = context.config
