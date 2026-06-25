@@ -58,6 +58,22 @@ from agenttest.modules.datasets.infrastructure.persistence.repositories import (
     SqlAlchemyDatasetVersionRepository,
     SqlAlchemyTestCaseRepository,
 )
+from agenttest.modules.environments.api.router import (
+    EnvironmentApiDependencies,
+    create_environment_router,
+)
+from agenttest.modules.environments.application.commands import (
+    CreateEnvironmentTemplateHandler,
+    DeleteEnvironmentTemplateHandler,
+    UpdateEnvironmentTemplateHandler,
+)
+from agenttest.modules.environments.application.queries import (
+    GetEnvironmentTemplateHandler,
+    ListEnvironmentTemplatesHandler,
+)
+from agenttest.modules.environments.infrastructure.persistence.repositories import (
+    SqlAlchemyEnvironmentTemplateRepository,
+)
 from agenttest.modules.identity.api.admin_router import (
     AdminApiDependencies,
     create_admin_router,
@@ -149,6 +165,7 @@ def create_app(
     agent_dependencies: AgentApiDependencies | None = None,
     dataset_dependencies: DatasetApiDependencies | None = None,
     test_plan_dependencies: TestPlanApiDependencies | None = None,
+    environment_dependencies: EnvironmentApiDependencies | None = None,
 ) -> FastAPI:
     resolved_settings = settings or get_settings()
     app = FastAPI(
@@ -217,6 +234,18 @@ def create_app(
     app.include_router(
         create_test_plan_router(
             test_plans,
+            current_user=dependencies.current_user,
+            csrf=dependencies.csrf,
+            settings=resolved_settings,
+        ),
+        prefix="/api/v1",
+    )
+    environments = environment_dependencies or build_environment_dependencies(
+        resolved_settings
+    )
+    app.include_router(
+        create_environment_router(
+            environments,
             current_user=dependencies.current_user,
             csrf=dependencies.csrf,
             settings=resolved_settings,
@@ -518,6 +547,41 @@ def build_test_plan_dependencies(settings: Settings) -> TestPlanApiDependencies:
         publish_version=PublishTestPlanVersionHandler(
             test_plans=plans,
             versions=versions,
+            project_access=access,
+            audit=audit,
+        ),
+        uow_factory=lambda: SqlAlchemyUnitOfWork(session_factory),
+    )
+
+
+def build_environment_dependencies(settings: Settings) -> EnvironmentApiDependencies:
+    engine = create_database_engine(str(settings.database_url))
+    session_factory = create_session_factory(engine)
+    templates = SqlAlchemyEnvironmentTemplateRepository(session_factory)
+    projects = SqlAlchemyProjectRepository(session_factory)
+    access = ProjectAccessAdapter(projects)
+    audit = AuditRecorder(SqlAlchemyAuditRepository(session_factory))
+    return EnvironmentApiDependencies(
+        list_templates=ListEnvironmentTemplatesHandler(
+            templates=templates,
+            project_access=access,
+        ),
+        get_template=GetEnvironmentTemplateHandler(
+            templates=templates,
+            project_access=access,
+        ),
+        create_template=CreateEnvironmentTemplateHandler(
+            templates=templates,
+            project_access=access,
+            audit=audit,
+        ),
+        update_template=UpdateEnvironmentTemplateHandler(
+            templates=templates,
+            project_access=access,
+            audit=audit,
+        ),
+        delete_template=DeleteEnvironmentTemplateHandler(
+            templates=templates,
             project_access=access,
             audit=audit,
         ),
