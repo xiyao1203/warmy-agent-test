@@ -3,6 +3,9 @@
 import { useQuery } from "@tanstack/react-query";
 
 import { getCurrentUser } from "@/features/auth";
+import { listAgents } from "@/features/agents";
+import { listDatasets } from "@/features/datasets";
+import { listTestPlans } from "@/features/test-plans";
 import { problemKind } from "@/lib/api/problem";
 
 import { getProject, listProjectMembers } from "./api";
@@ -18,8 +21,28 @@ export function ProjectOverviewScreen({ projectId }: { projectId: string }) {
     queryFn: () => listProjectMembers(projectId),
     queryKey: ["project-members", projectId],
   });
+  const assetsQuery = useQuery({
+    queryFn: async () => {
+      const [agents, datasets, testPlans] = await Promise.all([
+        listAgents(projectId),
+        listDatasets(projectId),
+        listTestPlans(projectId),
+      ]);
+      return {
+        agents: agents.items.length,
+        datasets: datasets.items.length,
+        testPlans: testPlans.items.length,
+      };
+    },
+    queryKey: ["project-assets", projectId],
+  });
 
-  if (userQuery.isPending || projectQuery.isPending || membersQuery.isPending) {
+  if (
+    userQuery.isPending ||
+    projectQuery.isPending ||
+    membersQuery.isPending ||
+    assetsQuery.isPending
+  ) {
     return (
       <ProjectOverview
         loading
@@ -39,7 +62,8 @@ export function ProjectOverviewScreen({ projectId }: { projectId: string }) {
     return null;
   }
 
-  const queryError = projectQuery.error ?? membersQuery.error;
+  const queryError =
+    projectQuery.error ?? membersQuery.error ?? assetsQuery.error;
   if (queryError) {
     const kind = problemKind(queryError);
     return (
@@ -52,6 +76,7 @@ export function ProjectOverviewScreen({ projectId }: { projectId: string }) {
 
   return (
     <ProjectOverview
+      assetSummary={assetsQuery.data}
       members={membersQuery.data}
       project={projectQuery.data}
       user={userQuery.data}

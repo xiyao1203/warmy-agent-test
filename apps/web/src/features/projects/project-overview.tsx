@@ -18,6 +18,11 @@ import {
 } from "@/components/ui/table";
 
 type ProjectOverviewProps = {
+  assetSummary?: {
+    agents: number;
+    datasets: number;
+    testPlans: number;
+  };
   error?: "not-found" | "service";
   loading?: boolean;
   members?: ProjectMemberResponse[];
@@ -33,6 +38,7 @@ const memberRoleLabels = {
 } as const;
 
 export function ProjectOverview({
+  assetSummary = { agents: 0, datasets: 0, testPlans: 0 },
   error,
   loading = false,
   members = [],
@@ -99,7 +105,11 @@ export function ProjectOverview({
           {members.length} 位成员
         </Metric>
         <Metric icon={<Archive className="size-4" />} label="测试资产">
-          尚未创建
+          <span className="flex flex-wrap gap-x-3 gap-y-1">
+            <span>{assetSummary.agents} Agents</span>
+            <span>{assetSummary.datasets} 数据集</span>
+            <span>{assetSummary.testPlans} 测试计划</span>
+          </span>
         </Metric>
       </section>
 
@@ -152,7 +162,7 @@ export function ProjectOverview({
             <h2 className="text-sm font-semibold">测试活动</h2>
           </div>
           <EmptyState
-            description="测试资产将在 M2 创建；这里不会展示虚构的运行数据。"
+            description="运行与结果将在 M3 接入；这里不会展示虚构的执行数据。"
             title="暂无测试活动"
           />
         </section>
