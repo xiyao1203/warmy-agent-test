@@ -124,9 +124,7 @@ async def test_failed_login_records_failure_audit() -> None:
     )
 
     with pytest.raises(InvalidCredentialsError):
-        await handler.execute(
-            LoginCommand(email=Email("unknown@example.com"), password="wrong")
-        )
+        await handler.execute(LoginCommand(email=Email("unknown@example.com"), password="wrong"))
 
     assert sink.entries[0].action == "identity.login.failed"
 

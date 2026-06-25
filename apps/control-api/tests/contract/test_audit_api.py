@@ -38,11 +38,7 @@ class FakeAuditReader:
         project_id: ProjectId,
         limit: int,
     ) -> list[AuditEntry]:
-        return [
-            entry
-            for entry in self.entries
-            if entry.project_id == project_id
-        ][:limit]
+        return [entry for entry in self.entries if entry.project_id == project_id][:limit]
 
 
 class FakeProjectReader:
@@ -104,9 +100,7 @@ def client_for(
 
 def test_super_admin_can_query_global_audit_without_secrets() -> None:
     admin = create_user(SystemRole.SUPER_ADMIN, "admin@example.com")
-    response = client_for(admin, entries=[create_entry()], projects=[]).get(
-        "/api/v1/system/audit"
-    )
+    response = client_for(admin, entries=[create_entry()], projects=[]).get("/api/v1/system/audit")
 
     assert response.status_code == 200
     assert response.json()["items"][0]["changes"]["password"]["after"] == "[REDACTED]"

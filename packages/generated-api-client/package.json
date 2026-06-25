@@ -1,0 +1,20 @@
+{
+  "name": "@warmy/generated-api-client",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "generate": "openapi-ts",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@hey-api/openapi-ts": "0.99.0",
+    "prettier": "3.8.4",
+    "typescript": "6.0.3",
+    "vitest": "4.1.9"
+  }
+}

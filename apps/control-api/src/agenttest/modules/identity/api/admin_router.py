@@ -42,9 +42,7 @@ from agenttest.shared.application.uow import UnitOfWorkFactory, null_uow_factory
 
 
 class ListUsersExecutor(Protocol):
-    async def execute(
-        self, actor: User, cursor: UUID | None, limit: int
-    ) -> UserPage: ...
+    async def execute(self, actor: User, cursor: UUID | None, limit: int) -> UserPage: ...
 
 
 class GetUserExecutor(Protocol):
@@ -110,12 +108,7 @@ def create_admin_router(
             return actor
         session_token = request.cookies.get(settings.session_cookie_name)
         csrf_cookie = request.cookies.get(CSRF_COOKIE_NAME)
-        if (
-            not session_token
-            or not csrf_header
-            or not csrf_cookie
-            or csrf_header != csrf_cookie
-        ):
+        if not session_token or not csrf_header or not csrf_cookie or csrf_header != csrf_cookie:
             return problem_response(
                 status=403,
                 title="CSRF validation failed",

@@ -78,9 +78,7 @@ class ManageMemberExecutor(Protocol):
 
 
 class RemoveMemberExecutor(Protocol):
-    async def execute(
-        self, actor: User, project_id: ProjectId, user_id: UserId
-    ) -> None: ...
+    async def execute(self, actor: User, project_id: ProjectId, user_id: UserId) -> None: ...
 
 
 @dataclass(frozen=True, slots=True)
@@ -207,9 +205,7 @@ def create_project_router(
             return actor
         try:
             async with dependencies.uow_factory():
-                project = await dependencies.archive_project.execute(
-                    actor, ProjectId(project_id)
-                )
+                project = await dependencies.archive_project.execute(actor, ProjectId(project_id))
         except ProjectNotFoundError:
             return project_not_found()
         except ProjectAccessDeniedError:

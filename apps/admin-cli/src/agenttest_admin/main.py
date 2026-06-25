@@ -67,9 +67,7 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 async def run_create_super_admin(email: str, name: str) -> int:
-    password = os.environ.get("AGENTTEST_ADMIN_PASSWORD") or getpass.getpass(
-        "Initial password: "
-    )
+    password = os.environ.get("AGENTTEST_ADMIN_PASSWORD") or getpass.getpass("Initial password: ")
     if not password:
         raise ValueError("Initial password is required")
     settings = get_settings()

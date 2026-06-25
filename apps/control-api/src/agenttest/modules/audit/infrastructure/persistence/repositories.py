@@ -31,11 +31,7 @@ class SqlAlchemyAuditRepository:
             )
 
     async def list_global(self, *, limit: int) -> list[AuditEntry]:
-        statement = (
-            select(AuditLogModel)
-            .order_by(AuditLogModel.created_at.desc())
-            .limit(limit)
-        )
+        statement = select(AuditLogModel).order_by(AuditLogModel.created_at.desc()).limit(limit)
         async with session_scope(self._session_factory) as session:
             models = list((await session.scalars(statement)).all())
         return [_to_entry(model) for model in models]

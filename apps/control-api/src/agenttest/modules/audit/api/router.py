@@ -90,9 +90,7 @@ def create_audit_router(
 
 
 def audit_response(entries: list) -> AuditListResponse:
-    return AuditListResponse(
-        items=[AuditEntryResponse.from_entry(entry) for entry in entries]
-    )
+    return AuditListResponse(items=[AuditEntryResponse.from_entry(entry) for entry in entries])
 
 
 def authentication_required() -> JSONResponse:
