@@ -1,4 +1,8 @@
-"""Dataset domain repository protocols."""
+"""Dataset 领域仓库接口。
+
+定义 DatasetRepository、DatasetVersionRepository 和 TestCaseRepository
+的抽象协议，由基础设施层实现。
+"""
 
 from __future__ import annotations
 
@@ -16,6 +20,7 @@ from agenttest.modules.projects.public import ProjectId
 
 
 class DatasetRepository(Protocol):
+    """数据集聚合根的持久化仓库接口。"""
     async def get_by_id(self, dataset_id: DatasetId) -> Dataset | None: ...
 
     async def list_by_project(
@@ -32,6 +37,7 @@ class DatasetRepository(Protocol):
 
 
 class DatasetVersionRepository(Protocol):
+    """数据集版本的持久化仓库接口。"""
     async def get_by_id(self, version_id: DatasetVersionId) -> DatasetVersion | None: ...
 
     async def list_by_dataset(self, dataset_id: DatasetId) -> list[DatasetVersion]: ...
@@ -44,6 +50,7 @@ class DatasetVersionRepository(Protocol):
 
 
 class TestCaseRepository(Protocol):
+    """测试用例的持久化仓库接口。"""
     async def get_by_id(self, case_id: TestCaseId) -> TestCase | None: ...
 
     async def list_by_version(

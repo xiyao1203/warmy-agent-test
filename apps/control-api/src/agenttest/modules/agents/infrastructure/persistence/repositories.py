@@ -1,4 +1,8 @@
-"""SQLAlchemy implementations of agent repositories."""
+"""Agent 仓库的 SQLAlchemy 实现。
+
+提供 SqlAlchemyAgentRepository 和 SqlAlchemyAgentVersionRepository，
+实现领域层定义的仓库接口。
+"""
 
 from __future__ import annotations
 
@@ -29,6 +33,7 @@ from agenttest.shared.infrastructure.database import session_scope, transaction_
 
 
 class SqlAlchemyAgentRepository:
+    """Agent 聚合根的 SQLAlchemy 仓库实现。"""
     def __init__(self, session_factory: async_sessionmaker[AsyncSession]) -> None:
         self._session_factory = session_factory
 
@@ -93,6 +98,7 @@ class SqlAlchemyAgentRepository:
 
 
 class SqlAlchemyAgentVersionRepository:
+    """Agent 版本的 SQLAlchemy 仓库实现。"""
     def __init__(self, session_factory: async_sessionmaker[AsyncSession]) -> None:
         self._session_factory = session_factory
 
@@ -153,6 +159,7 @@ class SqlAlchemyAgentVersionRepository:
 
 
 def _to_agent(model: AgentModel) -> Agent:
+    """将 ORM 模型映射为领域实体。"""
     return Agent(
         agent_id=AgentId(model.id),
         project_id=ProjectId(model.project_id),
@@ -167,6 +174,7 @@ def _to_agent(model: AgentModel) -> Agent:
 
 
 def _to_version(model: AgentVersionModel) -> AgentVersion:
+    """将 ORM 模型映射为领域实体。"""
     return AgentVersion(
         version_id=AgentVersionId(model.id),
         agent_id=AgentId(model.agent_id),
@@ -184,8 +192,10 @@ def _to_version(model: AgentVersionModel) -> AgentVersion:
 
 
 def _encode_cursor(ts: datetime) -> str:
+    """将时间戳编码为游标字符串。"""
     return b64encode(ts.isoformat().encode()).decode()
 
 
 def _decode_cursor(cursor: str) -> datetime:
+    """将游标字符串解码为时间戳。"""
     return datetime.fromisoformat(b64decode(cursor.encode()).decode())

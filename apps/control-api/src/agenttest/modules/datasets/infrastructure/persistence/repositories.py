@@ -1,4 +1,8 @@
-"""SQLAlchemy implementations of dataset repositories."""
+"""Dataset 仓库的 SQLAlchemy 实现。
+
+提供 Dataset、DatasetVersion 和 TestCase 的持久化实现，
+遵循领域层定义的仓库接口。
+"""
 
 from __future__ import annotations
 
@@ -34,6 +38,7 @@ from agenttest.shared.infrastructure.database import session_scope, transaction_
 
 
 class SqlAlchemyDatasetRepository:
+    """数据集聚合根的 SQLAlchemy 仓库实现。"""
     def __init__(self, session_factory: async_sessionmaker[AsyncSession]) -> None:
         self._session_factory = session_factory
 
@@ -96,6 +101,7 @@ class SqlAlchemyDatasetRepository:
 
 
 class SqlAlchemyDatasetVersionRepository:
+    """数据集版本的 SQLAlchemy 仓库实现。"""
     def __init__(self, session_factory: async_sessionmaker[AsyncSession]) -> None:
         self._session_factory = session_factory
 
@@ -151,6 +157,7 @@ class SqlAlchemyDatasetVersionRepository:
 
 
 class SqlAlchemyTestCaseRepository:
+    """测试用例的 SQLAlchemy 仓库实现。"""
     def __init__(self, session_factory: async_sessionmaker[AsyncSession]) -> None:
         self._session_factory = session_factory
 
@@ -261,6 +268,7 @@ class SqlAlchemyTestCaseRepository:
 
 
 def _to_dataset(model: DatasetModel) -> Dataset:
+    """ORM 模型 → 领域实体映射。"""
     return Dataset(
         dataset_id=DatasetId(model.id),
         project_id=ProjectId(model.project_id),
@@ -274,6 +282,7 @@ def _to_dataset(model: DatasetModel) -> Dataset:
 
 
 def _to_version(model: DatasetVersionModel) -> DatasetVersion:
+    """ORM 模型 → 领域实体映射。"""
     return DatasetVersion(
         version_id=DatasetVersionId(model.id),
         dataset_id=DatasetId(model.dataset_id),
@@ -287,6 +296,7 @@ def _to_version(model: DatasetVersionModel) -> DatasetVersion:
 
 
 def _to_test_case(model: TestCaseModel) -> TestCase:
+    """ORM 模型 → 领域实体映射。"""
     return TestCase(
         case_id=TestCaseId(model.id),
         dataset_version_id=DatasetVersionId(model.dataset_version_id),

@@ -1,4 +1,8 @@
-"""Agent domain repository protocols."""
+"""Agent 领域仓库接口（Protocol）。
+
+定义 AgentRepository 和 AgentVersionRepository 的抽象协议，
+由基础设施层提供 SQLAlchemy 实现。
+"""
 
 from __future__ import annotations
 
@@ -14,6 +18,7 @@ from agenttest.modules.projects.public import ProjectId
 
 
 class AgentRepository(Protocol):
+    """Agent 聚合根的持久化仓库接口。"""
     async def get_by_id(self, agent_id: AgentId) -> Agent | None: ...
 
     async def list_by_project(
@@ -30,6 +35,7 @@ class AgentRepository(Protocol):
 
 
 class AgentVersionRepository(Protocol):
+    """Agent 版本的持久化仓库接口。"""
     async def get_by_id(self, version_id: AgentVersionId) -> AgentVersion | None: ...
 
     async def list_by_agent(self, agent_id: AgentId) -> list[AgentVersion]: ...

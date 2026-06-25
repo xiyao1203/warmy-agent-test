@@ -1,4 +1,7 @@
-"""Outbound ports for the datasets application layer."""
+"""Dataset 应用层的出站端口。
+
+定义项目成员资格和编辑权限检查接口。
+"""
 
 from __future__ import annotations
 

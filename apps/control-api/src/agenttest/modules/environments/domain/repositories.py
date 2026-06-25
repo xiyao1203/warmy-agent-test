@@ -1,4 +1,4 @@
-"""Environment template domain repository protocols."""
+"""Environment 领域仓库接口。"""
 
 from __future__ import annotations
 
@@ -12,6 +12,7 @@ from agenttest.modules.projects.public import ProjectId
 
 
 class EnvironmentTemplateRepository(Protocol):
+    """环境模板的持久化仓库接口。"""
     async def get_by_id(self, template_id: EnvironmentTemplateId) -> EnvironmentTemplate | None: ...
 
     async def list_by_project(

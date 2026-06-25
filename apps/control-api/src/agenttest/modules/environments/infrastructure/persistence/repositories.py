@@ -1,4 +1,4 @@
-"""SQLAlchemy implementations of environment template repositories."""
+"""Environment 仓库的 SQLAlchemy 实现。"""
 
 from __future__ import annotations
 
@@ -22,6 +22,7 @@ from agenttest.shared.infrastructure.database import session_scope, transaction_
 
 
 class SqlAlchemyEnvironmentTemplateRepository:
+    """环境模板的 SQLAlchemy 仓库实现。"""
     def __init__(self, session_factory: async_sessionmaker[AsyncSession]) -> None:
         self._session_factory = session_factory
 
@@ -96,6 +97,7 @@ class SqlAlchemyEnvironmentTemplateRepository:
 
 
 def _to_template(model: EnvironmentTemplateModel) -> EnvironmentTemplate:
+    """ORM 模型 → 领域实体映射。"""
     return EnvironmentTemplate(
         template_id=EnvironmentTemplateId(model.id),
         project_id=ProjectId(model.project_id),

@@ -1,4 +1,7 @@
-"""Outbound ports for the agents application layer."""
+"""Agent 应用层的出站端口（Port）。
+
+定义项目访问权限检查接口，由启动层提供实现。
+"""
 
 from __future__ import annotations
 
@@ -9,23 +12,20 @@ from agenttest.modules.projects.public import ProjectId
 
 
 class ProjectAccessPort(Protocol):
-    """Port for verifying project membership and edit permissions.
+    """项目成员资格和编辑权限检查端口。
 
-    Implementations are provided by the bootstrap layer, which has access
-    to the projects module infrastructure.
+    实现由 bootstrap 层提供，注入 projects 模块的基础设施。
     """
 
     async def ensure_member(self, actor: User, project_id: ProjectId) -> None:
-        """Ensure the actor is a member of the project.
-
-        Raises ``ProjectNotFoundError`` if the actor is not a member.
-        """
+        """校验 Actor 是项目成员，否则抛出 ProjectNotFoundError。"""
         ...
 
     async def ensure_editor(self, actor: User, project_id: ProjectId) -> None:
-        """Ensure the actor can edit test assets (developer/tester or super_admin).
+        """校验 Actor 有编辑权限（developer/tester 或 super_admin）。
 
-        Raises ``ProjectNotFoundError`` if not a member.
-        Raises ``PermissionError`` if a member but lacks edit rights.
+        Raises:
+            ProjectNotFoundError: 非项目成员。
+            PermissionError: 是成员但无编辑权限。
         """
         ...
