@@ -1,0 +1,159 @@
+from __future__ import annotations
+
+from dataclasses import dataclass
+from typing import Protocol
+
+from fastapi import APIRouter, Header, Request, Response
+from fastapi.responses import JSONResponse
+
+from agenttest.bootstrap.settings import Settings
+from agenttest.modules.identity.api.schemas import LoginRequest, UserResponse
+from agenttest.modules.identity.application.commands.login import (
+    InvalidCredentialsError,
+    LoginCommand,
+    LoginResult,
+)
+from agenttest.modules.identity.application.queries.current_user import InvalidSessionError
+from agenttest.modules.identity.domain.entities import User
+from agenttest.modules.identity.domain.value_objects import Email
+from agenttest.shared.api.problem_details import ProblemDetails
+from agenttest.shared.application.uow import UnitOfWorkFactory, null_uow_factory
+
+CSRF_COOKIE_NAME = "agenttest_csrf"
+
+
+class LoginExecutor(Protocol):
+    async def execute(self, command: LoginCommand) -> LoginResult: ...
+
+
+class CurrentUserExecutor(Protocol):
+    async def execute(self, session_token: str) -> User: ...
+
+
+class LogoutExecutor(Protocol):
+    async def execute(self, session_token: str) -> None: ...
+
+
+class CsrfExecutor(Protocol):
+    async def execute(self, session_token: str, csrf_token: str) -> None: ...
+
+
+@dataclass(frozen=True, slots=True)
+class AuthApiDependencies:
+    login: LoginExecutor
+    current_user: CurrentUserExecutor
+    logout: LogoutExecutor
+    csrf: CsrfExecutor
+    uow_factory: UnitOfWorkFactory = null_uow_factory
+
+
+def create_auth_router(
+    dependencies: AuthApiDependencies,
+    settings: Settings,
+) -> APIRouter:
+    router = APIRouter(prefix="/auth", tags=["identity"])
+
+    @router.post("/login", response_model=UserResponse)
+    async def login(payload: LoginRequest, response: Response) -> UserResponse | JSONResponse:
+        try:
+            async with dependencies.uow_factory():
+                result = await dependencies.login.execute(
+                    LoginCommand(email=Email(payload.email), password=payload.password)
+                )
+        except (InvalidCredentialsError, ValueError):
+            return problem_response(
+                status=401,
+                title="Authentication failed",
+                detail="Invalid email or password",
+            )
+        response.set_cookie(
+            settings.session_cookie_name,
+            result.session_token,
+            max_age=settings.session_ttl_seconds,
+            secure=True,
+            httponly=True,
+            samesite="lax",
+            path="/",
+        )
+        response.set_cookie(
+            CSRF_COOKIE_NAME,
+            result.csrf_token,
+            max_age=settings.session_ttl_seconds,
+            secure=True,
+            httponly=False,
+            samesite="lax",
+            path="/",
+        )
+        return UserResponse.from_domain(result.user)
+
+    @router.get("/me", response_model=UserResponse)
+    async def current_user(request: Request) -> UserResponse | JSONResponse:
+        session_token = request.cookies.get(settings.session_cookie_name)
+        if not session_token:
+            return authentication_required()
+        try:
+            user = await dependencies.current_user.execute(session_token)
+        except InvalidSessionError:
+            return authentication_required()
+        return UserResponse.from_domain(user)
+
+    @router.post("/logout", status_code=204)
+    async def logout(
+        request: Request,
+        x_csrf_token: str | None = Header(default=None),
+    ) -> Response:
+        session_token = request.cookies.get(settings.session_cookie_name)
+        csrf_cookie = request.cookies.get(CSRF_COOKIE_NAME)
+        if not session_token:
+            return authentication_required()
+        if not x_csrf_token or not csrf_cookie or x_csrf_token != csrf_cookie:
+            return problem_response(
+                status=403,
+                title="CSRF validation failed",
+                detail="A valid CSRF token is required",
+            )
+        try:
+            await dependencies.csrf.execute(session_token, x_csrf_token)
+            async with dependencies.uow_factory():
+                await dependencies.logout.execute(session_token)
+        except InvalidSessionError:
+            return problem_response(
+                status=403,
+                title="CSRF validation failed",
+                detail="A valid CSRF token is required",
+            )
+        response = Response(status_code=204)
+        response.delete_cookie(
+            settings.session_cookie_name,
+            secure=True,
+            httponly=True,
+            samesite="lax",
+            path="/",
+        )
+        response.delete_cookie(
+            CSRF_COOKIE_NAME,
+            secure=True,
+            httponly=False,
+            samesite="lax",
+            path="/",
+        )
+        return response
+
+    return router
+
+
+def authentication_required() -> JSONResponse:
+    return problem_response(
+        status=401,
+        title="Authentication required",
+        detail="A valid session is required",
+    )
+
+
+def problem_response(*, status: int, title: str, detail: str) -> JSONResponse:
+    problem = ProblemDetails(title=title, status=status, detail=detail)
+    return JSONResponse(
+        status_code=status,
+        content=problem.model_dump(exclude_none=True),
+        media_type="application/problem+json",
+    )
