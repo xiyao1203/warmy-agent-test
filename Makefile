@@ -35,4 +35,4 @@ api-generate:
 
 api-check:
 	$(MAKE) api-generate
-	git diff --exit-code -- docs/api/openapi.json packages/generated-api-client/src
+	git diff --exit-code -- docs/api/openapi.json packages/generated-api-client/src/client

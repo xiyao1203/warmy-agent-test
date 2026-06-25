@@ -1,6 +1,6 @@
-import { createClient as createFetchClient } from "./client/client/index.js";
+import { createClient as createFetchClient } from "./client/client";
 
-export * from "./client/index.js";
+export * from "./client";
 
 export function createClient(baseUrl: string) {
   return createFetchClient({
