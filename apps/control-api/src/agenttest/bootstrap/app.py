@@ -35,6 +35,28 @@ from agenttest.modules.identity.infrastructure.persistence.repositories import (
     SqlAlchemySessionRepository,
     SqlAlchemyUserRepository,
 )
+from agenttest.modules.projects.api.router import (
+    ProjectApiDependencies,
+    create_project_router,
+)
+from agenttest.modules.projects.application.commands.create_project import (
+    CreateProjectHandler,
+)
+from agenttest.modules.projects.application.commands.manage_members import (
+    AddProjectMemberHandler,
+    ArchiveProjectHandler,
+    RemoveProjectMemberHandler,
+    RenameProjectHandler,
+    UpdateProjectMemberHandler,
+)
+from agenttest.modules.projects.application.queries.list_projects import (
+    GetProjectHandler,
+    ListProjectMembersHandler,
+    ListProjectsHandler,
+)
+from agenttest.modules.projects.infrastructure.persistence.repositories import (
+    SqlAlchemyProjectRepository,
+)
 from agenttest.shared.domain.clock import SystemClock
 from agenttest.shared.infrastructure.database import (
     create_database_engine,
@@ -46,6 +68,7 @@ def create_app(
     settings: Settings | None = None,
     auth_dependencies: AuthApiDependencies | None = None,
     admin_dependencies: AdminApiDependencies | None = None,
+    project_dependencies: ProjectApiDependencies | None = None,
 ) -> FastAPI:
     resolved_settings = settings or get_settings()
     app = FastAPI(
@@ -63,6 +86,16 @@ def create_app(
     app.include_router(
         create_admin_router(
             admin,
+            current_user=dependencies.current_user,
+            csrf=dependencies.csrf,
+            settings=resolved_settings,
+        ),
+        prefix="/api/v1",
+    )
+    projects = project_dependencies or build_project_dependencies(resolved_settings)
+    app.include_router(
+        create_project_router(
+            projects,
             current_user=dependencies.current_user,
             csrf=dependencies.csrf,
             settings=resolved_settings,
@@ -120,4 +153,20 @@ def build_admin_dependencies(settings: Settings) -> AdminApiDependencies:
         ),
         set_status=SetUserStatusHandler(users=users, sessions=sessions, clock=clock),
         delete_user=DeleteUserHandler(users=users, sessions=sessions, clock=clock),
+    )
+
+
+def build_project_dependencies(settings: Settings) -> ProjectApiDependencies:
+    engine = create_database_engine(str(settings.database_url))
+    repository = SqlAlchemyProjectRepository(create_session_factory(engine))
+    return ProjectApiDependencies(
+        list_projects=ListProjectsHandler(projects=repository),
+        get_project=GetProjectHandler(projects=repository),
+        create_project=CreateProjectHandler(projects=repository),
+        rename_project=RenameProjectHandler(projects=repository),
+        archive_project=ArchiveProjectHandler(projects=repository),
+        list_members=ListProjectMembersHandler(projects=repository),
+        add_member=AddProjectMemberHandler(projects=repository),
+        update_member=UpdateProjectMemberHandler(projects=repository),
+        remove_member=RemoveProjectMemberHandler(projects=repository),
     )
