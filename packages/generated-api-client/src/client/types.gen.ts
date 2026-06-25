@@ -5,6 +5,170 @@ export type ClientOptions = {
 };
 
 /**
+ * AgentConfigRequest
+ */
+export type AgentConfigRequest = {
+  /**
+   * Api Url
+   */
+  api_url: string;
+  /**
+   * Code Version
+   */
+  code_version?: string | null;
+  /**
+   * Cost Limit
+   */
+  cost_limit?: number | null;
+  /**
+   * Git Commit
+   */
+  git_commit?: string | null;
+  /**
+   * Max Steps
+   */
+  max_steps?: number | null;
+  /**
+   * Model
+   */
+  model?: string | null;
+  /**
+   * Model Params
+   */
+  model_params?: {
+    [key: string]: string | number | number | boolean;
+  };
+  /**
+   * System Prompt
+   */
+  system_prompt?: string | null;
+  /**
+   * Timeout
+   */
+  timeout?: number;
+  /**
+   * Tools
+   */
+  tools?: Array<{
+    [key: string]: string;
+  }>;
+};
+
+/**
+ * AgentListResponse
+ */
+export type AgentListResponse = {
+  /**
+   * Items
+   */
+  items: Array<AgentResponse>;
+  /**
+   * Next Cursor
+   */
+  next_cursor?: string | null;
+};
+
+/**
+ * AgentResponse
+ */
+export type AgentResponse = {
+  agent_type: AgentType;
+  /**
+   * Created At
+   */
+  created_at: string;
+  /**
+   * Created By
+   */
+  created_by: string;
+  /**
+   * Description
+   */
+  description: string | null;
+  /**
+   * Id
+   */
+  id: string;
+  /**
+   * Name
+   */
+  name: string;
+  /**
+   * Project Id
+   */
+  project_id: string;
+  /**
+   * Updated At
+   */
+  updated_at: string;
+  /**
+   * Updated By
+   */
+  updated_by: string;
+};
+
+/**
+ * AgentType
+ *
+ * Agent 类型枚举。
+ *
+ * - GENERIC_HTTP: 通用 HTTP Agent，通过 api_url 调用。
+ * - CANVAS: 画布 Agent，通过 Canvas 插件适配。
+ */
+export type AgentType = "generic_http" | "canvas";
+
+/**
+ * AgentVersionListResponse
+ */
+export type AgentVersionListResponse = {
+  /**
+   * Items
+   */
+  items: Array<AgentVersionResponse>;
+};
+
+/**
+ * AgentVersionResponse
+ */
+export type AgentVersionResponse = {
+  /**
+   * Agent Id
+   */
+  agent_id: string;
+  /**
+   * Config
+   */
+  config: {
+    [key: string]: unknown;
+  };
+  /**
+   * Created At
+   */
+  created_at: string;
+  /**
+   * Created By
+   */
+  created_by: string;
+  /**
+   * Id
+   */
+  id: string;
+  /**
+   * Published At
+   */
+  published_at: string | null;
+  status: AgenttestModulesAgentsDomainValueObjectsVersionStatus;
+  /**
+   * Updated At
+   */
+  updated_at: string;
+  /**
+   * Version Number
+   */
+  version_number: number;
+};
+
+/**
  * AuditEntryResponse
  */
 export type AuditEntryResponse = {
@@ -59,6 +223,63 @@ export type AuditListResponse = {
 };
 
 /**
+ * CreateAgentRequest
+ */
+export type CreateAgentRequest = {
+  agent_type: AgentType;
+  /**
+   * Description
+   */
+  description?: string | null;
+  /**
+   * Name
+   */
+  name: string;
+};
+
+/**
+ * CreateAgentVersionRequest
+ */
+export type CreateAgentVersionRequest = {
+  config: AgentConfigRequest;
+};
+
+/**
+ * CreateDatasetRequest
+ */
+export type CreateDatasetRequest = {
+  /**
+   * Description
+   */
+  description?: string | null;
+  /**
+   * Name
+   */
+  name: string;
+};
+
+/**
+ * CreateEnvironmentTemplateRequest
+ */
+export type CreateEnvironmentTemplateRequest = {
+  /**
+   * Config
+   */
+  config?: {
+    [key: string]: unknown;
+  };
+  /**
+   * Description
+   */
+  description?: string | null;
+  /**
+   * Name
+   */
+  name: string;
+  template_type: TemplateType;
+};
+
+/**
  * CreateProjectRequest
  */
 export type CreateProjectRequest = {
@@ -66,6 +287,101 @@ export type CreateProjectRequest = {
    * Name
    */
   name: string;
+};
+
+/**
+ * CreateTestCaseRequest
+ */
+export type CreateTestCaseRequest = {
+  /**
+   * Assertions
+   */
+  assertions?: Array<{
+    [key: string]: unknown;
+  }>;
+  /**
+   * Difficulty
+   */
+  difficulty?: string | null;
+  execution_mode: ExecutionMode;
+  /**
+   * Expected Outcome
+   */
+  expected_outcome?: {
+    [key: string]: unknown;
+  } | null;
+  /**
+   * Initial State
+   */
+  initial_state?: {
+    [key: string]: unknown;
+  } | null;
+  /**
+   * Input
+   */
+  input: {
+    [key: string]: unknown;
+  };
+  /**
+   * Name
+   */
+  name: string;
+  priority?: Priority | null;
+  risk_level?: RiskLevel | null;
+  /**
+   * Scenario
+   */
+  scenario?: string | null;
+  /**
+   * Scorers
+   */
+  scorers?: Array<{
+    [key: string]: unknown;
+  }>;
+  /**
+   * Security Policies
+   */
+  security_policies?: Array<{
+    [key: string]: unknown;
+  }>;
+  /**
+   * Tags
+   */
+  tags?: Array<string>;
+  test_group?: TestGroup | null;
+};
+
+/**
+ * CreateTestPlanRequest
+ */
+export type CreateTestPlanRequest = {
+  /**
+   * Description
+   */
+  description?: string | null;
+  /**
+   * Name
+   */
+  name: string;
+};
+
+/**
+ * CreateTestPlanVersionRequest
+ */
+export type CreateTestPlanVersionRequest = {
+  /**
+   * Agent Version Id
+   */
+  agent_version_id?: string | null;
+  config: TestPlanConfigRequest;
+  /**
+   * Dataset Version Id
+   */
+  dataset_version_id?: string | null;
+  /**
+   * Environment Template Id
+   */
+  environment_template_id?: string | null;
 };
 
 /**
@@ -85,6 +401,179 @@ export type CreateUserRequest = {
    */
   initial_password: string;
   role: SystemRole;
+};
+
+/**
+ * DatasetListResponse
+ */
+export type DatasetListResponse = {
+  /**
+   * Items
+   */
+  items: Array<DatasetResponse>;
+  /**
+   * Next Cursor
+   */
+  next_cursor?: string | null;
+};
+
+/**
+ * DatasetResponse
+ */
+export type DatasetResponse = {
+  /**
+   * Created At
+   */
+  created_at: string;
+  /**
+   * Created By
+   */
+  created_by: string;
+  /**
+   * Description
+   */
+  description: string | null;
+  /**
+   * Id
+   */
+  id: string;
+  /**
+   * Name
+   */
+  name: string;
+  /**
+   * Project Id
+   */
+  project_id: string;
+  /**
+   * Updated At
+   */
+  updated_at: string;
+  /**
+   * Updated By
+   */
+  updated_by: string;
+};
+
+/**
+ * DatasetVersionListResponse
+ */
+export type DatasetVersionListResponse = {
+  /**
+   * Items
+   */
+  items: Array<DatasetVersionResponse>;
+};
+
+/**
+ * DatasetVersionResponse
+ */
+export type DatasetVersionResponse = {
+  /**
+   * Created At
+   */
+  created_at: string;
+  /**
+   * Created By
+   */
+  created_by: string;
+  /**
+   * Dataset Id
+   */
+  dataset_id: string;
+  /**
+   * Id
+   */
+  id: string;
+  /**
+   * Published At
+   */
+  published_at: string | null;
+  status: AgenttestModulesDatasetsDomainValueObjectsVersionStatus;
+  /**
+   * Updated At
+   */
+  updated_at: string;
+  /**
+   * Version Number
+   */
+  version_number: number;
+};
+
+/**
+ * EnvironmentTemplateListResponse
+ */
+export type EnvironmentTemplateListResponse = {
+  /**
+   * Items
+   */
+  items: Array<EnvironmentTemplateResponse>;
+  /**
+   * Next Cursor
+   */
+  next_cursor?: string | null;
+};
+
+/**
+ * EnvironmentTemplateResponse
+ */
+export type EnvironmentTemplateResponse = {
+  /**
+   * Config
+   */
+  config: {
+    [key: string]: unknown;
+  };
+  /**
+   * Created At
+   */
+  created_at: string;
+  /**
+   * Created By
+   */
+  created_by: string;
+  /**
+   * Description
+   */
+  description: string | null;
+  /**
+   * Id
+   */
+  id: string;
+  /**
+   * Name
+   */
+  name: string;
+  /**
+   * Project Id
+   */
+  project_id: string;
+  template_type: TemplateType;
+  /**
+   * Updated At
+   */
+  updated_at: string;
+};
+
+/**
+ * ExecutionMode
+ *
+ * 测试用例执行模式：API 调用或浏览器操作。
+ */
+export type ExecutionMode = "api" | "browser";
+
+/**
+ * ExportTestCasesResponse
+ */
+export type ExportTestCasesResponse = {
+  /**
+   * Content
+   */
+  content: string;
+  /**
+   * Format
+   */
+  format: "json" | "jsonl" | "csv";
 };
 
 /**
@@ -116,6 +605,34 @@ export type HealthResponse = {
 };
 
 /**
+ * ImportTestCasesRequest
+ */
+export type ImportTestCasesRequest = {
+  /**
+   * Content
+   */
+  content: string;
+  /**
+   * Format
+   */
+  format: "json" | "jsonl" | "csv";
+};
+
+/**
+ * ImportTestCasesResponse
+ */
+export type ImportTestCasesResponse = {
+  /**
+   * Imported Count
+   */
+  imported_count: number;
+  /**
+   * Items
+   */
+  items: Array<TestCaseResponse>;
+};
+
+/**
  * LoginRequest
  */
 export type LoginRequest = {
@@ -128,6 +645,13 @@ export type LoginRequest = {
    */
   password: string;
 };
+
+/**
+ * Priority
+ *
+ * 用例优先级：P0（最高）→ P3（最低）。
+ */
+export type Priority = "P0" | "P1" | "P2" | "P3";
 
 /**
  * ProjectListResponse
@@ -222,6 +746,13 @@ export type ResetPasswordRequest = {
 };
 
 /**
+ * RiskLevel
+ *
+ * 风险评估等级。
+ */
+export type RiskLevel = "critical" | "high" | "medium" | "low";
+
+/**
  * SystemRole
  */
 export type SystemRole =
@@ -230,6 +761,427 @@ export type SystemRole =
   | "tester"
   | "reviewer"
   | "viewer";
+
+/**
+ * TemplateType
+ *
+ * 环境模板类型：blank 为空环境，preset 为预设环境。
+ */
+export type TemplateType = "blank" | "preset";
+
+/**
+ * TestCaseListResponse
+ */
+export type TestCaseListResponse = {
+  /**
+   * Items
+   */
+  items: Array<TestCaseResponse>;
+  /**
+   * Next Cursor
+   */
+  next_cursor?: string | null;
+};
+
+/**
+ * TestCaseResponse
+ */
+export type TestCaseResponse = {
+  /**
+   * Assertions
+   */
+  assertions: Array<{
+    [key: string]: unknown;
+  }>;
+  /**
+   * Created At
+   */
+  created_at: string | null;
+  /**
+   * Dataset Version Id
+   */
+  dataset_version_id: string;
+  /**
+   * Difficulty
+   */
+  difficulty: string | null;
+  execution_mode: ExecutionMode;
+  /**
+   * Expected Outcome
+   */
+  expected_outcome: {
+    [key: string]: unknown;
+  } | null;
+  /**
+   * Id
+   */
+  id: string;
+  /**
+   * Initial State
+   */
+  initial_state: {
+    [key: string]: unknown;
+  } | null;
+  /**
+   * Input
+   */
+  input: {
+    [key: string]: unknown;
+  };
+  /**
+   * Name
+   */
+  name: string;
+  priority: Priority | null;
+  risk_level: RiskLevel | null;
+  /**
+   * Scenario
+   */
+  scenario: string | null;
+  /**
+   * Scorers
+   */
+  scorers: Array<{
+    [key: string]: unknown;
+  }>;
+  /**
+   * Security Policies
+   */
+  security_policies: Array<{
+    [key: string]: unknown;
+  }>;
+  /**
+   * Sort Order
+   */
+  sort_order: number;
+  /**
+   * Tags
+   */
+  tags: Array<string>;
+  test_group: TestGroup | null;
+  /**
+   * Updated At
+   */
+  updated_at: string | null;
+};
+
+/**
+ * TestGroup
+ *
+ * 数据集分组：训练集 / 验证集 / 测试集。
+ */
+export type TestGroup = "train" | "validation" | "test";
+
+/**
+ * TestPlanConfigRequest
+ */
+export type TestPlanConfigRequest = {
+  /**
+   * Api Browser Ratio
+   */
+  api_browser_ratio?: number;
+  /**
+   * Concurrency
+   */
+  concurrency?: number;
+  /**
+   * Cost Budget
+   */
+  cost_budget?: number | null;
+  /**
+   * Pass Threshold
+   */
+  pass_threshold?: number;
+  /**
+   * Retry Policy
+   */
+  retry_policy?: {
+    [key: string]: unknown;
+  };
+  /**
+   * Runs Per Case
+   */
+  runs_per_case?: number;
+  /**
+   * Scorers
+   */
+  scorers?: Array<{
+    [key: string]: unknown;
+  }>;
+  /**
+   * Timeout
+   */
+  timeout?: number;
+};
+
+/**
+ * TestPlanListResponse
+ */
+export type TestPlanListResponse = {
+  /**
+   * Items
+   */
+  items: Array<TestPlanResponse>;
+  /**
+   * Next Cursor
+   */
+  next_cursor?: string | null;
+};
+
+/**
+ * TestPlanResponse
+ */
+export type TestPlanResponse = {
+  /**
+   * Created At
+   */
+  created_at: string;
+  /**
+   * Created By
+   */
+  created_by: string;
+  /**
+   * Description
+   */
+  description: string | null;
+  /**
+   * Id
+   */
+  id: string;
+  /**
+   * Name
+   */
+  name: string;
+  /**
+   * Project Id
+   */
+  project_id: string;
+  /**
+   * Updated At
+   */
+  updated_at: string;
+  /**
+   * Updated By
+   */
+  updated_by: string;
+};
+
+/**
+ * TestPlanVersionListResponse
+ */
+export type TestPlanVersionListResponse = {
+  /**
+   * Items
+   */
+  items: Array<TestPlanVersionResponse>;
+};
+
+/**
+ * TestPlanVersionResponse
+ */
+export type TestPlanVersionResponse = {
+  /**
+   * Agent Version Id
+   */
+  agent_version_id: string | null;
+  /**
+   * Config
+   */
+  config: {
+    [key: string]: unknown;
+  };
+  /**
+   * Created At
+   */
+  created_at: string;
+  /**
+   * Created By
+   */
+  created_by: string;
+  /**
+   * Dataset Version Id
+   */
+  dataset_version_id: string | null;
+  /**
+   * Environment Template Id
+   */
+  environment_template_id: string | null;
+  /**
+   * Id
+   */
+  id: string;
+  /**
+   * Published At
+   */
+  published_at: string | null;
+  status: AgenttestModulesTestPlansDomainValueObjectsVersionStatus;
+  /**
+   * Test Plan Id
+   */
+  test_plan_id: string;
+  /**
+   * Updated At
+   */
+  updated_at: string;
+  /**
+   * Version Number
+   */
+  version_number: number;
+};
+
+/**
+ * UpdateAgentRequest
+ */
+export type UpdateAgentRequest = {
+  /**
+   * Description
+   */
+  description?: string | null;
+  /**
+   * Name
+   */
+  name?: string | null;
+};
+
+/**
+ * UpdateAgentVersionRequest
+ */
+export type UpdateAgentVersionRequest = {
+  config: AgentConfigRequest;
+};
+
+/**
+ * UpdateDatasetRequest
+ */
+export type UpdateDatasetRequest = {
+  /**
+   * Description
+   */
+  description?: string | null;
+  /**
+   * Name
+   */
+  name?: string | null;
+};
+
+/**
+ * UpdateEnvironmentTemplateRequest
+ */
+export type UpdateEnvironmentTemplateRequest = {
+  /**
+   * Config
+   */
+  config?: {
+    [key: string]: unknown;
+  } | null;
+  /**
+   * Description
+   */
+  description?: string | null;
+  /**
+   * Name
+   */
+  name?: string | null;
+};
+
+/**
+ * UpdateTestCaseRequest
+ */
+export type UpdateTestCaseRequest = {
+  /**
+   * Assertions
+   */
+  assertions?: Array<{
+    [key: string]: unknown;
+  }> | null;
+  /**
+   * Difficulty
+   */
+  difficulty?: string | null;
+  execution_mode?: ExecutionMode | null;
+  /**
+   * Expected Outcome
+   */
+  expected_outcome?: {
+    [key: string]: unknown;
+  } | null;
+  /**
+   * Initial State
+   */
+  initial_state?: {
+    [key: string]: unknown;
+  } | null;
+  /**
+   * Input
+   */
+  input?: {
+    [key: string]: unknown;
+  } | null;
+  /**
+   * Name
+   */
+  name?: string | null;
+  priority?: Priority | null;
+  risk_level?: RiskLevel | null;
+  /**
+   * Scenario
+   */
+  scenario?: string | null;
+  /**
+   * Scorers
+   */
+  scorers?: Array<{
+    [key: string]: unknown;
+  }> | null;
+  /**
+   * Security Policies
+   */
+  security_policies?: Array<{
+    [key: string]: unknown;
+  }> | null;
+  /**
+   * Sort Order
+   */
+  sort_order?: number | null;
+  /**
+   * Tags
+   */
+  tags?: Array<string> | null;
+  test_group?: TestGroup | null;
+};
+
+/**
+ * UpdateTestPlanRequest
+ */
+export type UpdateTestPlanRequest = {
+  /**
+   * Description
+   */
+  description?: string | null;
+  /**
+   * Name
+   */
+  name?: string | null;
+};
+
+/**
+ * UpdateTestPlanVersionRequest
+ */
+export type UpdateTestPlanVersionRequest = {
+  /**
+   * Agent Version Id
+   */
+  agent_version_id?: string | null;
+  config?: TestPlanConfigRequest | null;
+  /**
+   * Dataset Version Id
+   */
+  dataset_version_id?: string | null;
+  /**
+   * Environment Template Id
+   */
+  environment_template_id?: string | null;
+};
 
 /**
  * UpdateUserRequest
@@ -316,6 +1268,34 @@ export type ValidationError = {
    */
   type: string;
 };
+
+/**
+ * VersionStatus
+ *
+ * 版本状态枚举。
+ *
+ * - DRAFT: 草稿，可编辑。
+ * - PUBLISHED: 已发布，不可修改。
+ */
+export type AgenttestModulesAgentsDomainValueObjectsVersionStatus =
+  | "draft"
+  | "published";
+
+/**
+ * VersionStatus
+ *
+ * 版本状态：DRAFT（可编辑）→ PUBLISHED（不可修改）。
+ */
+export type AgenttestModulesDatasetsDomainValueObjectsVersionStatus =
+  | "draft"
+  | "published";
+
+/**
+ * VersionStatus
+ */
+export type AgenttestModulesTestPlansDomainValueObjectsVersionStatus =
+  | "draft"
+  | "published";
 
 export type LoginApiV1AuthLoginPostData = {
   body: LoginRequest;
@@ -531,6 +1511,385 @@ export type RenameProjectApiV1ProjectsProjectIdPatchResponses = {
 export type RenameProjectApiV1ProjectsProjectIdPatchResponse =
   RenameProjectApiV1ProjectsProjectIdPatchResponses[keyof RenameProjectApiV1ProjectsProjectIdPatchResponses];
 
+export type ListAgentsApiV1ProjectsProjectIdAgentsGetData = {
+  body?: never;
+  path: {
+    /**
+     * Project Id
+     */
+    project_id: string;
+  };
+  query?: {
+    /**
+     * Limit
+     */
+    limit?: number;
+    /**
+     * Cursor
+     */
+    cursor?: string | null;
+  };
+  url: "/api/v1/projects/{project_id}/agents";
+};
+
+export type ListAgentsApiV1ProjectsProjectIdAgentsGetErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type ListAgentsApiV1ProjectsProjectIdAgentsGetError =
+  ListAgentsApiV1ProjectsProjectIdAgentsGetErrors[keyof ListAgentsApiV1ProjectsProjectIdAgentsGetErrors];
+
+export type ListAgentsApiV1ProjectsProjectIdAgentsGetResponses = {
+  /**
+   * Successful Response
+   */
+  200: AgentListResponse;
+};
+
+export type ListAgentsApiV1ProjectsProjectIdAgentsGetResponse =
+  ListAgentsApiV1ProjectsProjectIdAgentsGetResponses[keyof ListAgentsApiV1ProjectsProjectIdAgentsGetResponses];
+
+export type CreateAgentApiV1ProjectsProjectIdAgentsPostData = {
+  body: CreateAgentRequest;
+  headers?: {
+    /**
+     * X-Csrf-Token
+     */
+    "x-csrf-token"?: string | null;
+  };
+  path: {
+    /**
+     * Project Id
+     */
+    project_id: string;
+  };
+  query?: never;
+  url: "/api/v1/projects/{project_id}/agents";
+};
+
+export type CreateAgentApiV1ProjectsProjectIdAgentsPostErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type CreateAgentApiV1ProjectsProjectIdAgentsPostError =
+  CreateAgentApiV1ProjectsProjectIdAgentsPostErrors[keyof CreateAgentApiV1ProjectsProjectIdAgentsPostErrors];
+
+export type CreateAgentApiV1ProjectsProjectIdAgentsPostResponses = {
+  /**
+   * Successful Response
+   */
+  201: AgentResponse;
+};
+
+export type CreateAgentApiV1ProjectsProjectIdAgentsPostResponse =
+  CreateAgentApiV1ProjectsProjectIdAgentsPostResponses[keyof CreateAgentApiV1ProjectsProjectIdAgentsPostResponses];
+
+export type GetAgentApiV1ProjectsProjectIdAgentsAgentIdGetData = {
+  body?: never;
+  path: {
+    /**
+     * Project Id
+     */
+    project_id: string;
+    /**
+     * Agent Id
+     */
+    agent_id: string;
+  };
+  query?: never;
+  url: "/api/v1/projects/{project_id}/agents/{agent_id}";
+};
+
+export type GetAgentApiV1ProjectsProjectIdAgentsAgentIdGetErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type GetAgentApiV1ProjectsProjectIdAgentsAgentIdGetError =
+  GetAgentApiV1ProjectsProjectIdAgentsAgentIdGetErrors[keyof GetAgentApiV1ProjectsProjectIdAgentsAgentIdGetErrors];
+
+export type GetAgentApiV1ProjectsProjectIdAgentsAgentIdGetResponses = {
+  /**
+   * Successful Response
+   */
+  200: AgentResponse;
+};
+
+export type GetAgentApiV1ProjectsProjectIdAgentsAgentIdGetResponse =
+  GetAgentApiV1ProjectsProjectIdAgentsAgentIdGetResponses[keyof GetAgentApiV1ProjectsProjectIdAgentsAgentIdGetResponses];
+
+export type UpdateAgentApiV1ProjectsProjectIdAgentsAgentIdPatchData = {
+  body: UpdateAgentRequest;
+  headers?: {
+    /**
+     * X-Csrf-Token
+     */
+    "x-csrf-token"?: string | null;
+  };
+  path: {
+    /**
+     * Project Id
+     */
+    project_id: string;
+    /**
+     * Agent Id
+     */
+    agent_id: string;
+  };
+  query?: never;
+  url: "/api/v1/projects/{project_id}/agents/{agent_id}";
+};
+
+export type UpdateAgentApiV1ProjectsProjectIdAgentsAgentIdPatchErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type UpdateAgentApiV1ProjectsProjectIdAgentsAgentIdPatchError =
+  UpdateAgentApiV1ProjectsProjectIdAgentsAgentIdPatchErrors[keyof UpdateAgentApiV1ProjectsProjectIdAgentsAgentIdPatchErrors];
+
+export type UpdateAgentApiV1ProjectsProjectIdAgentsAgentIdPatchResponses = {
+  /**
+   * Successful Response
+   */
+  200: AgentResponse;
+};
+
+export type UpdateAgentApiV1ProjectsProjectIdAgentsAgentIdPatchResponse =
+  UpdateAgentApiV1ProjectsProjectIdAgentsAgentIdPatchResponses[keyof UpdateAgentApiV1ProjectsProjectIdAgentsAgentIdPatchResponses];
+
+export type ListVersionsApiV1ProjectsProjectIdAgentsAgentIdVersionsGetData = {
+  body?: never;
+  path: {
+    /**
+     * Project Id
+     */
+    project_id: string;
+    /**
+     * Agent Id
+     */
+    agent_id: string;
+  };
+  query?: never;
+  url: "/api/v1/projects/{project_id}/agents/{agent_id}/versions";
+};
+
+export type ListVersionsApiV1ProjectsProjectIdAgentsAgentIdVersionsGetErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type ListVersionsApiV1ProjectsProjectIdAgentsAgentIdVersionsGetError =
+  ListVersionsApiV1ProjectsProjectIdAgentsAgentIdVersionsGetErrors[keyof ListVersionsApiV1ProjectsProjectIdAgentsAgentIdVersionsGetErrors];
+
+export type ListVersionsApiV1ProjectsProjectIdAgentsAgentIdVersionsGetResponses =
+  {
+    /**
+     * Successful Response
+     */
+    200: AgentVersionListResponse;
+  };
+
+export type ListVersionsApiV1ProjectsProjectIdAgentsAgentIdVersionsGetResponse =
+  ListVersionsApiV1ProjectsProjectIdAgentsAgentIdVersionsGetResponses[keyof ListVersionsApiV1ProjectsProjectIdAgentsAgentIdVersionsGetResponses];
+
+export type CreateVersionApiV1ProjectsProjectIdAgentsAgentIdVersionsPostData = {
+  body: CreateAgentVersionRequest;
+  headers?: {
+    /**
+     * X-Csrf-Token
+     */
+    "x-csrf-token"?: string | null;
+  };
+  path: {
+    /**
+     * Project Id
+     */
+    project_id: string;
+    /**
+     * Agent Id
+     */
+    agent_id: string;
+  };
+  query?: never;
+  url: "/api/v1/projects/{project_id}/agents/{agent_id}/versions";
+};
+
+export type CreateVersionApiV1ProjectsProjectIdAgentsAgentIdVersionsPostErrors =
+  {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+  };
+
+export type CreateVersionApiV1ProjectsProjectIdAgentsAgentIdVersionsPostError =
+  CreateVersionApiV1ProjectsProjectIdAgentsAgentIdVersionsPostErrors[keyof CreateVersionApiV1ProjectsProjectIdAgentsAgentIdVersionsPostErrors];
+
+export type CreateVersionApiV1ProjectsProjectIdAgentsAgentIdVersionsPostResponses =
+  {
+    /**
+     * Successful Response
+     */
+    201: AgentVersionResponse;
+  };
+
+export type CreateVersionApiV1ProjectsProjectIdAgentsAgentIdVersionsPostResponse =
+  CreateVersionApiV1ProjectsProjectIdAgentsAgentIdVersionsPostResponses[keyof CreateVersionApiV1ProjectsProjectIdAgentsAgentIdVersionsPostResponses];
+
+export type GetVersionApiV1ProjectsProjectIdAgentsAgentIdVersionsVersionIdGetData =
+  {
+    body?: never;
+    path: {
+      /**
+       * Project Id
+       */
+      project_id: string;
+      /**
+       * Agent Id
+       */
+      agent_id: string;
+      /**
+       * Version Id
+       */
+      version_id: string;
+    };
+    query?: never;
+    url: "/api/v1/projects/{project_id}/agents/{agent_id}/versions/{version_id}";
+  };
+
+export type GetVersionApiV1ProjectsProjectIdAgentsAgentIdVersionsVersionIdGetErrors =
+  {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+  };
+
+export type GetVersionApiV1ProjectsProjectIdAgentsAgentIdVersionsVersionIdGetError =
+  GetVersionApiV1ProjectsProjectIdAgentsAgentIdVersionsVersionIdGetErrors[keyof GetVersionApiV1ProjectsProjectIdAgentsAgentIdVersionsVersionIdGetErrors];
+
+export type GetVersionApiV1ProjectsProjectIdAgentsAgentIdVersionsVersionIdGetResponses =
+  {
+    /**
+     * Successful Response
+     */
+    200: AgentVersionResponse;
+  };
+
+export type GetVersionApiV1ProjectsProjectIdAgentsAgentIdVersionsVersionIdGetResponse =
+  GetVersionApiV1ProjectsProjectIdAgentsAgentIdVersionsVersionIdGetResponses[keyof GetVersionApiV1ProjectsProjectIdAgentsAgentIdVersionsVersionIdGetResponses];
+
+export type UpdateVersionApiV1ProjectsProjectIdAgentsAgentIdVersionsVersionIdPatchData =
+  {
+    body: UpdateAgentVersionRequest;
+    headers?: {
+      /**
+       * X-Csrf-Token
+       */
+      "x-csrf-token"?: string | null;
+    };
+    path: {
+      /**
+       * Project Id
+       */
+      project_id: string;
+      /**
+       * Agent Id
+       */
+      agent_id: string;
+      /**
+       * Version Id
+       */
+      version_id: string;
+    };
+    query?: never;
+    url: "/api/v1/projects/{project_id}/agents/{agent_id}/versions/{version_id}";
+  };
+
+export type UpdateVersionApiV1ProjectsProjectIdAgentsAgentIdVersionsVersionIdPatchErrors =
+  {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+  };
+
+export type UpdateVersionApiV1ProjectsProjectIdAgentsAgentIdVersionsVersionIdPatchError =
+  UpdateVersionApiV1ProjectsProjectIdAgentsAgentIdVersionsVersionIdPatchErrors[keyof UpdateVersionApiV1ProjectsProjectIdAgentsAgentIdVersionsVersionIdPatchErrors];
+
+export type UpdateVersionApiV1ProjectsProjectIdAgentsAgentIdVersionsVersionIdPatchResponses =
+  {
+    /**
+     * Successful Response
+     */
+    200: AgentVersionResponse;
+  };
+
+export type UpdateVersionApiV1ProjectsProjectIdAgentsAgentIdVersionsVersionIdPatchResponse =
+  UpdateVersionApiV1ProjectsProjectIdAgentsAgentIdVersionsVersionIdPatchResponses[keyof UpdateVersionApiV1ProjectsProjectIdAgentsAgentIdVersionsVersionIdPatchResponses];
+
+export type PublishVersionApiV1ProjectsProjectIdAgentsAgentIdVersionsVersionIdPublishPostData =
+  {
+    body?: never;
+    headers?: {
+      /**
+       * X-Csrf-Token
+       */
+      "x-csrf-token"?: string | null;
+    };
+    path: {
+      /**
+       * Project Id
+       */
+      project_id: string;
+      /**
+       * Agent Id
+       */
+      agent_id: string;
+      /**
+       * Version Id
+       */
+      version_id: string;
+    };
+    query?: never;
+    url: "/api/v1/projects/{project_id}/agents/{agent_id}/versions/{version_id}/publish";
+  };
+
+export type PublishVersionApiV1ProjectsProjectIdAgentsAgentIdVersionsVersionIdPublishPostErrors =
+  {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+  };
+
+export type PublishVersionApiV1ProjectsProjectIdAgentsAgentIdVersionsVersionIdPublishPostError =
+  PublishVersionApiV1ProjectsProjectIdAgentsAgentIdVersionsVersionIdPublishPostErrors[keyof PublishVersionApiV1ProjectsProjectIdAgentsAgentIdVersionsVersionIdPublishPostErrors];
+
+export type PublishVersionApiV1ProjectsProjectIdAgentsAgentIdVersionsVersionIdPublishPostResponses =
+  {
+    /**
+     * Successful Response
+     */
+    200: AgentVersionResponse;
+  };
+
+export type PublishVersionApiV1ProjectsProjectIdAgentsAgentIdVersionsVersionIdPublishPostResponse =
+  PublishVersionApiV1ProjectsProjectIdAgentsAgentIdVersionsVersionIdPublishPostResponses[keyof PublishVersionApiV1ProjectsProjectIdAgentsAgentIdVersionsVersionIdPublishPostResponses];
+
 export type ArchiveProjectApiV1ProjectsProjectIdArchivePostData = {
   body?: never;
   headers?: {
@@ -605,6 +1964,855 @@ export type ProjectAuditApiV1ProjectsProjectIdAuditGetResponses = {
 
 export type ProjectAuditApiV1ProjectsProjectIdAuditGetResponse =
   ProjectAuditApiV1ProjectsProjectIdAuditGetResponses[keyof ProjectAuditApiV1ProjectsProjectIdAuditGetResponses];
+
+export type ListDatasetsApiV1ProjectsProjectIdDatasetsGetData = {
+  body?: never;
+  path: {
+    /**
+     * Project Id
+     */
+    project_id: string;
+  };
+  query?: {
+    /**
+     * Limit
+     */
+    limit?: number;
+    /**
+     * Cursor
+     */
+    cursor?: string | null;
+  };
+  url: "/api/v1/projects/{project_id}/datasets";
+};
+
+export type ListDatasetsApiV1ProjectsProjectIdDatasetsGetErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type ListDatasetsApiV1ProjectsProjectIdDatasetsGetError =
+  ListDatasetsApiV1ProjectsProjectIdDatasetsGetErrors[keyof ListDatasetsApiV1ProjectsProjectIdDatasetsGetErrors];
+
+export type ListDatasetsApiV1ProjectsProjectIdDatasetsGetResponses = {
+  /**
+   * Successful Response
+   */
+  200: DatasetListResponse;
+};
+
+export type ListDatasetsApiV1ProjectsProjectIdDatasetsGetResponse =
+  ListDatasetsApiV1ProjectsProjectIdDatasetsGetResponses[keyof ListDatasetsApiV1ProjectsProjectIdDatasetsGetResponses];
+
+export type CreateDatasetApiV1ProjectsProjectIdDatasetsPostData = {
+  body: CreateDatasetRequest;
+  headers?: {
+    /**
+     * X-Csrf-Token
+     */
+    "x-csrf-token"?: string | null;
+  };
+  path: {
+    /**
+     * Project Id
+     */
+    project_id: string;
+  };
+  query?: never;
+  url: "/api/v1/projects/{project_id}/datasets";
+};
+
+export type CreateDatasetApiV1ProjectsProjectIdDatasetsPostErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type CreateDatasetApiV1ProjectsProjectIdDatasetsPostError =
+  CreateDatasetApiV1ProjectsProjectIdDatasetsPostErrors[keyof CreateDatasetApiV1ProjectsProjectIdDatasetsPostErrors];
+
+export type CreateDatasetApiV1ProjectsProjectIdDatasetsPostResponses = {
+  /**
+   * Successful Response
+   */
+  201: DatasetResponse;
+};
+
+export type CreateDatasetApiV1ProjectsProjectIdDatasetsPostResponse =
+  CreateDatasetApiV1ProjectsProjectIdDatasetsPostResponses[keyof CreateDatasetApiV1ProjectsProjectIdDatasetsPostResponses];
+
+export type GetDatasetApiV1ProjectsProjectIdDatasetsDatasetIdGetData = {
+  body?: never;
+  path: {
+    /**
+     * Project Id
+     */
+    project_id: string;
+    /**
+     * Dataset Id
+     */
+    dataset_id: string;
+  };
+  query?: never;
+  url: "/api/v1/projects/{project_id}/datasets/{dataset_id}";
+};
+
+export type GetDatasetApiV1ProjectsProjectIdDatasetsDatasetIdGetErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type GetDatasetApiV1ProjectsProjectIdDatasetsDatasetIdGetError =
+  GetDatasetApiV1ProjectsProjectIdDatasetsDatasetIdGetErrors[keyof GetDatasetApiV1ProjectsProjectIdDatasetsDatasetIdGetErrors];
+
+export type GetDatasetApiV1ProjectsProjectIdDatasetsDatasetIdGetResponses = {
+  /**
+   * Successful Response
+   */
+  200: DatasetResponse;
+};
+
+export type GetDatasetApiV1ProjectsProjectIdDatasetsDatasetIdGetResponse =
+  GetDatasetApiV1ProjectsProjectIdDatasetsDatasetIdGetResponses[keyof GetDatasetApiV1ProjectsProjectIdDatasetsDatasetIdGetResponses];
+
+export type UpdateDatasetApiV1ProjectsProjectIdDatasetsDatasetIdPatchData = {
+  body: UpdateDatasetRequest;
+  headers?: {
+    /**
+     * X-Csrf-Token
+     */
+    "x-csrf-token"?: string | null;
+  };
+  path: {
+    /**
+     * Project Id
+     */
+    project_id: string;
+    /**
+     * Dataset Id
+     */
+    dataset_id: string;
+  };
+  query?: never;
+  url: "/api/v1/projects/{project_id}/datasets/{dataset_id}";
+};
+
+export type UpdateDatasetApiV1ProjectsProjectIdDatasetsDatasetIdPatchErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type UpdateDatasetApiV1ProjectsProjectIdDatasetsDatasetIdPatchError =
+  UpdateDatasetApiV1ProjectsProjectIdDatasetsDatasetIdPatchErrors[keyof UpdateDatasetApiV1ProjectsProjectIdDatasetsDatasetIdPatchErrors];
+
+export type UpdateDatasetApiV1ProjectsProjectIdDatasetsDatasetIdPatchResponses =
+  {
+    /**
+     * Successful Response
+     */
+    200: DatasetResponse;
+  };
+
+export type UpdateDatasetApiV1ProjectsProjectIdDatasetsDatasetIdPatchResponse =
+  UpdateDatasetApiV1ProjectsProjectIdDatasetsDatasetIdPatchResponses[keyof UpdateDatasetApiV1ProjectsProjectIdDatasetsDatasetIdPatchResponses];
+
+export type ListVersionsApiV1ProjectsProjectIdDatasetsDatasetIdVersionsGetData =
+  {
+    body?: never;
+    path: {
+      /**
+       * Project Id
+       */
+      project_id: string;
+      /**
+       * Dataset Id
+       */
+      dataset_id: string;
+    };
+    query?: never;
+    url: "/api/v1/projects/{project_id}/datasets/{dataset_id}/versions";
+  };
+
+export type ListVersionsApiV1ProjectsProjectIdDatasetsDatasetIdVersionsGetErrors =
+  {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+  };
+
+export type ListVersionsApiV1ProjectsProjectIdDatasetsDatasetIdVersionsGetError =
+  ListVersionsApiV1ProjectsProjectIdDatasetsDatasetIdVersionsGetErrors[keyof ListVersionsApiV1ProjectsProjectIdDatasetsDatasetIdVersionsGetErrors];
+
+export type ListVersionsApiV1ProjectsProjectIdDatasetsDatasetIdVersionsGetResponses =
+  {
+    /**
+     * Successful Response
+     */
+    200: DatasetVersionListResponse;
+  };
+
+export type ListVersionsApiV1ProjectsProjectIdDatasetsDatasetIdVersionsGetResponse =
+  ListVersionsApiV1ProjectsProjectIdDatasetsDatasetIdVersionsGetResponses[keyof ListVersionsApiV1ProjectsProjectIdDatasetsDatasetIdVersionsGetResponses];
+
+export type CreateVersionApiV1ProjectsProjectIdDatasetsDatasetIdVersionsPostData =
+  {
+    body?: never;
+    headers?: {
+      /**
+       * X-Csrf-Token
+       */
+      "x-csrf-token"?: string | null;
+    };
+    path: {
+      /**
+       * Project Id
+       */
+      project_id: string;
+      /**
+       * Dataset Id
+       */
+      dataset_id: string;
+    };
+    query?: never;
+    url: "/api/v1/projects/{project_id}/datasets/{dataset_id}/versions";
+  };
+
+export type CreateVersionApiV1ProjectsProjectIdDatasetsDatasetIdVersionsPostErrors =
+  {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+  };
+
+export type CreateVersionApiV1ProjectsProjectIdDatasetsDatasetIdVersionsPostError =
+  CreateVersionApiV1ProjectsProjectIdDatasetsDatasetIdVersionsPostErrors[keyof CreateVersionApiV1ProjectsProjectIdDatasetsDatasetIdVersionsPostErrors];
+
+export type CreateVersionApiV1ProjectsProjectIdDatasetsDatasetIdVersionsPostResponses =
+  {
+    /**
+     * Successful Response
+     */
+    201: DatasetVersionResponse;
+  };
+
+export type CreateVersionApiV1ProjectsProjectIdDatasetsDatasetIdVersionsPostResponse =
+  CreateVersionApiV1ProjectsProjectIdDatasetsDatasetIdVersionsPostResponses[keyof CreateVersionApiV1ProjectsProjectIdDatasetsDatasetIdVersionsPostResponses];
+
+export type GetVersionApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdGetData =
+  {
+    body?: never;
+    path: {
+      /**
+       * Project Id
+       */
+      project_id: string;
+      /**
+       * Dataset Id
+       */
+      dataset_id: string;
+      /**
+       * Version Id
+       */
+      version_id: string;
+    };
+    query?: never;
+    url: "/api/v1/projects/{project_id}/datasets/{dataset_id}/versions/{version_id}";
+  };
+
+export type GetVersionApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdGetErrors =
+  {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+  };
+
+export type GetVersionApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdGetError =
+  GetVersionApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdGetErrors[keyof GetVersionApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdGetErrors];
+
+export type GetVersionApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdGetResponses =
+  {
+    /**
+     * Successful Response
+     */
+    200: DatasetVersionResponse;
+  };
+
+export type GetVersionApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdGetResponse =
+  GetVersionApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdGetResponses[keyof GetVersionApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdGetResponses];
+
+export type ListCasesApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdCasesGetData =
+  {
+    body?: never;
+    path: {
+      /**
+       * Project Id
+       */
+      project_id: string;
+      /**
+       * Dataset Id
+       */
+      dataset_id: string;
+      /**
+       * Version Id
+       */
+      version_id: string;
+    };
+    query?: {
+      /**
+       * Limit
+       */
+      limit?: number;
+      /**
+       * Cursor
+       */
+      cursor?: string | null;
+    };
+    url: "/api/v1/projects/{project_id}/datasets/{dataset_id}/versions/{version_id}/cases";
+  };
+
+export type ListCasesApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdCasesGetErrors =
+  {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+  };
+
+export type ListCasesApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdCasesGetError =
+  ListCasesApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdCasesGetErrors[keyof ListCasesApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdCasesGetErrors];
+
+export type ListCasesApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdCasesGetResponses =
+  {
+    /**
+     * Successful Response
+     */
+    200: TestCaseListResponse;
+  };
+
+export type ListCasesApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdCasesGetResponse =
+  ListCasesApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdCasesGetResponses[keyof ListCasesApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdCasesGetResponses];
+
+export type AddCaseApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdCasesPostData =
+  {
+    body: CreateTestCaseRequest;
+    headers?: {
+      /**
+       * X-Csrf-Token
+       */
+      "x-csrf-token"?: string | null;
+    };
+    path: {
+      /**
+       * Project Id
+       */
+      project_id: string;
+      /**
+       * Dataset Id
+       */
+      dataset_id: string;
+      /**
+       * Version Id
+       */
+      version_id: string;
+    };
+    query?: never;
+    url: "/api/v1/projects/{project_id}/datasets/{dataset_id}/versions/{version_id}/cases";
+  };
+
+export type AddCaseApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdCasesPostErrors =
+  {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+  };
+
+export type AddCaseApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdCasesPostError =
+  AddCaseApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdCasesPostErrors[keyof AddCaseApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdCasesPostErrors];
+
+export type AddCaseApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdCasesPostResponses =
+  {
+    /**
+     * Successful Response
+     */
+    201: TestCaseResponse;
+  };
+
+export type AddCaseApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdCasesPostResponse =
+  AddCaseApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdCasesPostResponses[keyof AddCaseApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdCasesPostResponses];
+
+export type DeleteCaseApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdCasesCaseIdDeleteData =
+  {
+    body?: never;
+    headers?: {
+      /**
+       * X-Csrf-Token
+       */
+      "x-csrf-token"?: string | null;
+    };
+    path: {
+      /**
+       * Project Id
+       */
+      project_id: string;
+      /**
+       * Dataset Id
+       */
+      dataset_id: string;
+      /**
+       * Version Id
+       */
+      version_id: string;
+      /**
+       * Case Id
+       */
+      case_id: string;
+    };
+    query?: never;
+    url: "/api/v1/projects/{project_id}/datasets/{dataset_id}/versions/{version_id}/cases/{case_id}";
+  };
+
+export type DeleteCaseApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdCasesCaseIdDeleteErrors =
+  {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+  };
+
+export type DeleteCaseApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdCasesCaseIdDeleteError =
+  DeleteCaseApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdCasesCaseIdDeleteErrors[keyof DeleteCaseApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdCasesCaseIdDeleteErrors];
+
+export type DeleteCaseApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdCasesCaseIdDeleteResponses =
+  {
+    /**
+     * Successful Response
+     */
+    204: void;
+  };
+
+export type DeleteCaseApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdCasesCaseIdDeleteResponse =
+  DeleteCaseApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdCasesCaseIdDeleteResponses[keyof DeleteCaseApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdCasesCaseIdDeleteResponses];
+
+export type UpdateCaseApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdCasesCaseIdPatchData =
+  {
+    body: UpdateTestCaseRequest;
+    headers?: {
+      /**
+       * X-Csrf-Token
+       */
+      "x-csrf-token"?: string | null;
+    };
+    path: {
+      /**
+       * Project Id
+       */
+      project_id: string;
+      /**
+       * Dataset Id
+       */
+      dataset_id: string;
+      /**
+       * Version Id
+       */
+      version_id: string;
+      /**
+       * Case Id
+       */
+      case_id: string;
+    };
+    query?: never;
+    url: "/api/v1/projects/{project_id}/datasets/{dataset_id}/versions/{version_id}/cases/{case_id}";
+  };
+
+export type UpdateCaseApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdCasesCaseIdPatchErrors =
+  {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+  };
+
+export type UpdateCaseApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdCasesCaseIdPatchError =
+  UpdateCaseApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdCasesCaseIdPatchErrors[keyof UpdateCaseApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdCasesCaseIdPatchErrors];
+
+export type UpdateCaseApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdCasesCaseIdPatchResponses =
+  {
+    /**
+     * Successful Response
+     */
+    200: TestCaseResponse;
+  };
+
+export type UpdateCaseApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdCasesCaseIdPatchResponse =
+  UpdateCaseApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdCasesCaseIdPatchResponses[keyof UpdateCaseApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdCasesCaseIdPatchResponses];
+
+export type ExportCasesApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdExportGetData =
+  {
+    body?: never;
+    path: {
+      /**
+       * Project Id
+       */
+      project_id: string;
+      /**
+       * Dataset Id
+       */
+      dataset_id: string;
+      /**
+       * Version Id
+       */
+      version_id: string;
+    };
+    query?: {
+      /**
+       * Format
+       */
+      format?: "json" | "jsonl" | "csv";
+    };
+    url: "/api/v1/projects/{project_id}/datasets/{dataset_id}/versions/{version_id}/export";
+  };
+
+export type ExportCasesApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdExportGetErrors =
+  {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+  };
+
+export type ExportCasesApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdExportGetError =
+  ExportCasesApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdExportGetErrors[keyof ExportCasesApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdExportGetErrors];
+
+export type ExportCasesApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdExportGetResponses =
+  {
+    /**
+     * Successful Response
+     */
+    200: ExportTestCasesResponse;
+  };
+
+export type ExportCasesApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdExportGetResponse =
+  ExportCasesApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdExportGetResponses[keyof ExportCasesApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdExportGetResponses];
+
+export type ImportCasesApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdImportPostData =
+  {
+    body: ImportTestCasesRequest;
+    headers?: {
+      /**
+       * X-Csrf-Token
+       */
+      "x-csrf-token"?: string | null;
+    };
+    path: {
+      /**
+       * Project Id
+       */
+      project_id: string;
+      /**
+       * Dataset Id
+       */
+      dataset_id: string;
+      /**
+       * Version Id
+       */
+      version_id: string;
+    };
+    query?: never;
+    url: "/api/v1/projects/{project_id}/datasets/{dataset_id}/versions/{version_id}/import";
+  };
+
+export type ImportCasesApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdImportPostErrors =
+  {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+  };
+
+export type ImportCasesApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdImportPostError =
+  ImportCasesApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdImportPostErrors[keyof ImportCasesApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdImportPostErrors];
+
+export type ImportCasesApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdImportPostResponses =
+  {
+    /**
+     * Successful Response
+     */
+    201: ImportTestCasesResponse;
+  };
+
+export type ImportCasesApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdImportPostResponse =
+  ImportCasesApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdImportPostResponses[keyof ImportCasesApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdImportPostResponses];
+
+export type PublishVersionApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdPublishPostData =
+  {
+    body?: never;
+    headers?: {
+      /**
+       * X-Csrf-Token
+       */
+      "x-csrf-token"?: string | null;
+    };
+    path: {
+      /**
+       * Project Id
+       */
+      project_id: string;
+      /**
+       * Dataset Id
+       */
+      dataset_id: string;
+      /**
+       * Version Id
+       */
+      version_id: string;
+    };
+    query?: never;
+    url: "/api/v1/projects/{project_id}/datasets/{dataset_id}/versions/{version_id}/publish";
+  };
+
+export type PublishVersionApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdPublishPostErrors =
+  {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+  };
+
+export type PublishVersionApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdPublishPostError =
+  PublishVersionApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdPublishPostErrors[keyof PublishVersionApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdPublishPostErrors];
+
+export type PublishVersionApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdPublishPostResponses =
+  {
+    /**
+     * Successful Response
+     */
+    200: DatasetVersionResponse;
+  };
+
+export type PublishVersionApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdPublishPostResponse =
+  PublishVersionApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdPublishPostResponses[keyof PublishVersionApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdPublishPostResponses];
+
+export type ListTemplatesApiV1ProjectsProjectIdEnvironmentTemplatesGetData = {
+  body?: never;
+  path: {
+    /**
+     * Project Id
+     */
+    project_id: string;
+  };
+  query?: {
+    /**
+     * Limit
+     */
+    limit?: number;
+    /**
+     * Cursor
+     */
+    cursor?: string | null;
+  };
+  url: "/api/v1/projects/{project_id}/environment-templates";
+};
+
+export type ListTemplatesApiV1ProjectsProjectIdEnvironmentTemplatesGetErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type ListTemplatesApiV1ProjectsProjectIdEnvironmentTemplatesGetError =
+  ListTemplatesApiV1ProjectsProjectIdEnvironmentTemplatesGetErrors[keyof ListTemplatesApiV1ProjectsProjectIdEnvironmentTemplatesGetErrors];
+
+export type ListTemplatesApiV1ProjectsProjectIdEnvironmentTemplatesGetResponses =
+  {
+    /**
+     * Successful Response
+     */
+    200: EnvironmentTemplateListResponse;
+  };
+
+export type ListTemplatesApiV1ProjectsProjectIdEnvironmentTemplatesGetResponse =
+  ListTemplatesApiV1ProjectsProjectIdEnvironmentTemplatesGetResponses[keyof ListTemplatesApiV1ProjectsProjectIdEnvironmentTemplatesGetResponses];
+
+export type CreateTemplateApiV1ProjectsProjectIdEnvironmentTemplatesPostData = {
+  body: CreateEnvironmentTemplateRequest;
+  headers?: {
+    /**
+     * X-Csrf-Token
+     */
+    "x-csrf-token"?: string | null;
+  };
+  path: {
+    /**
+     * Project Id
+     */
+    project_id: string;
+  };
+  query?: never;
+  url: "/api/v1/projects/{project_id}/environment-templates";
+};
+
+export type CreateTemplateApiV1ProjectsProjectIdEnvironmentTemplatesPostErrors =
+  {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+  };
+
+export type CreateTemplateApiV1ProjectsProjectIdEnvironmentTemplatesPostError =
+  CreateTemplateApiV1ProjectsProjectIdEnvironmentTemplatesPostErrors[keyof CreateTemplateApiV1ProjectsProjectIdEnvironmentTemplatesPostErrors];
+
+export type CreateTemplateApiV1ProjectsProjectIdEnvironmentTemplatesPostResponses =
+  {
+    /**
+     * Successful Response
+     */
+    201: EnvironmentTemplateResponse;
+  };
+
+export type CreateTemplateApiV1ProjectsProjectIdEnvironmentTemplatesPostResponse =
+  CreateTemplateApiV1ProjectsProjectIdEnvironmentTemplatesPostResponses[keyof CreateTemplateApiV1ProjectsProjectIdEnvironmentTemplatesPostResponses];
+
+export type DeleteTemplateApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdDeleteData =
+  {
+    body?: never;
+    headers?: {
+      /**
+       * X-Csrf-Token
+       */
+      "x-csrf-token"?: string | null;
+    };
+    path: {
+      /**
+       * Project Id
+       */
+      project_id: string;
+      /**
+       * Template Id
+       */
+      template_id: string;
+    };
+    query?: never;
+    url: "/api/v1/projects/{project_id}/environment-templates/{template_id}";
+  };
+
+export type DeleteTemplateApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdDeleteErrors =
+  {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+  };
+
+export type DeleteTemplateApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdDeleteError =
+  DeleteTemplateApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdDeleteErrors[keyof DeleteTemplateApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdDeleteErrors];
+
+export type DeleteTemplateApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdDeleteResponses =
+  {
+    /**
+     * Successful Response
+     */
+    204: void;
+  };
+
+export type DeleteTemplateApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdDeleteResponse =
+  DeleteTemplateApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdDeleteResponses[keyof DeleteTemplateApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdDeleteResponses];
+
+export type GetTemplateApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdGetData =
+  {
+    body?: never;
+    path: {
+      /**
+       * Project Id
+       */
+      project_id: string;
+      /**
+       * Template Id
+       */
+      template_id: string;
+    };
+    query?: never;
+    url: "/api/v1/projects/{project_id}/environment-templates/{template_id}";
+  };
+
+export type GetTemplateApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdGetErrors =
+  {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+  };
+
+export type GetTemplateApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdGetError =
+  GetTemplateApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdGetErrors[keyof GetTemplateApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdGetErrors];
+
+export type GetTemplateApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdGetResponses =
+  {
+    /**
+     * Successful Response
+     */
+    200: EnvironmentTemplateResponse;
+  };
+
+export type GetTemplateApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdGetResponse =
+  GetTemplateApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdGetResponses[keyof GetTemplateApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdGetResponses];
+
+export type UpdateTemplateApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdPatchData =
+  {
+    body: UpdateEnvironmentTemplateRequest;
+    headers?: {
+      /**
+       * X-Csrf-Token
+       */
+      "x-csrf-token"?: string | null;
+    };
+    path: {
+      /**
+       * Project Id
+       */
+      project_id: string;
+      /**
+       * Template Id
+       */
+      template_id: string;
+    };
+    query?: never;
+    url: "/api/v1/projects/{project_id}/environment-templates/{template_id}";
+  };
+
+export type UpdateTemplateApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdPatchErrors =
+  {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+  };
+
+export type UpdateTemplateApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdPatchError =
+  UpdateTemplateApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdPatchErrors[keyof UpdateTemplateApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdPatchErrors];
+
+export type UpdateTemplateApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdPatchResponses =
+  {
+    /**
+     * Successful Response
+     */
+    200: EnvironmentTemplateResponse;
+  };
+
+export type UpdateTemplateApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdPatchResponse =
+  UpdateTemplateApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdPatchResponses[keyof UpdateTemplateApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdPatchResponses];
 
 export type ListMembersApiV1ProjectsProjectIdMembersGetData = {
   body?: never;
@@ -759,6 +2967,387 @@ export type UpdateMemberApiV1ProjectsProjectIdMembersUserIdPatchResponses = {
 
 export type UpdateMemberApiV1ProjectsProjectIdMembersUserIdPatchResponse =
   UpdateMemberApiV1ProjectsProjectIdMembersUserIdPatchResponses[keyof UpdateMemberApiV1ProjectsProjectIdMembersUserIdPatchResponses];
+
+export type ListPlansApiV1ProjectsProjectIdTestPlansGetData = {
+  body?: never;
+  path: {
+    /**
+     * Project Id
+     */
+    project_id: string;
+  };
+  query?: {
+    /**
+     * Limit
+     */
+    limit?: number;
+    /**
+     * Cursor
+     */
+    cursor?: string | null;
+  };
+  url: "/api/v1/projects/{project_id}/test-plans";
+};
+
+export type ListPlansApiV1ProjectsProjectIdTestPlansGetErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type ListPlansApiV1ProjectsProjectIdTestPlansGetError =
+  ListPlansApiV1ProjectsProjectIdTestPlansGetErrors[keyof ListPlansApiV1ProjectsProjectIdTestPlansGetErrors];
+
+export type ListPlansApiV1ProjectsProjectIdTestPlansGetResponses = {
+  /**
+   * Successful Response
+   */
+  200: TestPlanListResponse;
+};
+
+export type ListPlansApiV1ProjectsProjectIdTestPlansGetResponse =
+  ListPlansApiV1ProjectsProjectIdTestPlansGetResponses[keyof ListPlansApiV1ProjectsProjectIdTestPlansGetResponses];
+
+export type CreatePlanApiV1ProjectsProjectIdTestPlansPostData = {
+  body: CreateTestPlanRequest;
+  headers?: {
+    /**
+     * X-Csrf-Token
+     */
+    "x-csrf-token"?: string | null;
+  };
+  path: {
+    /**
+     * Project Id
+     */
+    project_id: string;
+  };
+  query?: never;
+  url: "/api/v1/projects/{project_id}/test-plans";
+};
+
+export type CreatePlanApiV1ProjectsProjectIdTestPlansPostErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type CreatePlanApiV1ProjectsProjectIdTestPlansPostError =
+  CreatePlanApiV1ProjectsProjectIdTestPlansPostErrors[keyof CreatePlanApiV1ProjectsProjectIdTestPlansPostErrors];
+
+export type CreatePlanApiV1ProjectsProjectIdTestPlansPostResponses = {
+  /**
+   * Successful Response
+   */
+  201: TestPlanResponse;
+};
+
+export type CreatePlanApiV1ProjectsProjectIdTestPlansPostResponse =
+  CreatePlanApiV1ProjectsProjectIdTestPlansPostResponses[keyof CreatePlanApiV1ProjectsProjectIdTestPlansPostResponses];
+
+export type GetPlanApiV1ProjectsProjectIdTestPlansPlanIdGetData = {
+  body?: never;
+  path: {
+    /**
+     * Project Id
+     */
+    project_id: string;
+    /**
+     * Plan Id
+     */
+    plan_id: string;
+  };
+  query?: never;
+  url: "/api/v1/projects/{project_id}/test-plans/{plan_id}";
+};
+
+export type GetPlanApiV1ProjectsProjectIdTestPlansPlanIdGetErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type GetPlanApiV1ProjectsProjectIdTestPlansPlanIdGetError =
+  GetPlanApiV1ProjectsProjectIdTestPlansPlanIdGetErrors[keyof GetPlanApiV1ProjectsProjectIdTestPlansPlanIdGetErrors];
+
+export type GetPlanApiV1ProjectsProjectIdTestPlansPlanIdGetResponses = {
+  /**
+   * Successful Response
+   */
+  200: TestPlanResponse;
+};
+
+export type GetPlanApiV1ProjectsProjectIdTestPlansPlanIdGetResponse =
+  GetPlanApiV1ProjectsProjectIdTestPlansPlanIdGetResponses[keyof GetPlanApiV1ProjectsProjectIdTestPlansPlanIdGetResponses];
+
+export type UpdatePlanApiV1ProjectsProjectIdTestPlansPlanIdPatchData = {
+  body: UpdateTestPlanRequest;
+  headers?: {
+    /**
+     * X-Csrf-Token
+     */
+    "x-csrf-token"?: string | null;
+  };
+  path: {
+    /**
+     * Project Id
+     */
+    project_id: string;
+    /**
+     * Plan Id
+     */
+    plan_id: string;
+  };
+  query?: never;
+  url: "/api/v1/projects/{project_id}/test-plans/{plan_id}";
+};
+
+export type UpdatePlanApiV1ProjectsProjectIdTestPlansPlanIdPatchErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type UpdatePlanApiV1ProjectsProjectIdTestPlansPlanIdPatchError =
+  UpdatePlanApiV1ProjectsProjectIdTestPlansPlanIdPatchErrors[keyof UpdatePlanApiV1ProjectsProjectIdTestPlansPlanIdPatchErrors];
+
+export type UpdatePlanApiV1ProjectsProjectIdTestPlansPlanIdPatchResponses = {
+  /**
+   * Successful Response
+   */
+  200: TestPlanResponse;
+};
+
+export type UpdatePlanApiV1ProjectsProjectIdTestPlansPlanIdPatchResponse =
+  UpdatePlanApiV1ProjectsProjectIdTestPlansPlanIdPatchResponses[keyof UpdatePlanApiV1ProjectsProjectIdTestPlansPlanIdPatchResponses];
+
+export type ListVersionsApiV1ProjectsProjectIdTestPlansPlanIdVersionsGetData = {
+  body?: never;
+  path: {
+    /**
+     * Project Id
+     */
+    project_id: string;
+    /**
+     * Plan Id
+     */
+    plan_id: string;
+  };
+  query?: never;
+  url: "/api/v1/projects/{project_id}/test-plans/{plan_id}/versions";
+};
+
+export type ListVersionsApiV1ProjectsProjectIdTestPlansPlanIdVersionsGetErrors =
+  {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+  };
+
+export type ListVersionsApiV1ProjectsProjectIdTestPlansPlanIdVersionsGetError =
+  ListVersionsApiV1ProjectsProjectIdTestPlansPlanIdVersionsGetErrors[keyof ListVersionsApiV1ProjectsProjectIdTestPlansPlanIdVersionsGetErrors];
+
+export type ListVersionsApiV1ProjectsProjectIdTestPlansPlanIdVersionsGetResponses =
+  {
+    /**
+     * Successful Response
+     */
+    200: TestPlanVersionListResponse;
+  };
+
+export type ListVersionsApiV1ProjectsProjectIdTestPlansPlanIdVersionsGetResponse =
+  ListVersionsApiV1ProjectsProjectIdTestPlansPlanIdVersionsGetResponses[keyof ListVersionsApiV1ProjectsProjectIdTestPlansPlanIdVersionsGetResponses];
+
+export type CreateVersionApiV1ProjectsProjectIdTestPlansPlanIdVersionsPostData =
+  {
+    body: CreateTestPlanVersionRequest;
+    headers?: {
+      /**
+       * X-Csrf-Token
+       */
+      "x-csrf-token"?: string | null;
+    };
+    path: {
+      /**
+       * Project Id
+       */
+      project_id: string;
+      /**
+       * Plan Id
+       */
+      plan_id: string;
+    };
+    query?: never;
+    url: "/api/v1/projects/{project_id}/test-plans/{plan_id}/versions";
+  };
+
+export type CreateVersionApiV1ProjectsProjectIdTestPlansPlanIdVersionsPostErrors =
+  {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+  };
+
+export type CreateVersionApiV1ProjectsProjectIdTestPlansPlanIdVersionsPostError =
+  CreateVersionApiV1ProjectsProjectIdTestPlansPlanIdVersionsPostErrors[keyof CreateVersionApiV1ProjectsProjectIdTestPlansPlanIdVersionsPostErrors];
+
+export type CreateVersionApiV1ProjectsProjectIdTestPlansPlanIdVersionsPostResponses =
+  {
+    /**
+     * Successful Response
+     */
+    201: TestPlanVersionResponse;
+  };
+
+export type CreateVersionApiV1ProjectsProjectIdTestPlansPlanIdVersionsPostResponse =
+  CreateVersionApiV1ProjectsProjectIdTestPlansPlanIdVersionsPostResponses[keyof CreateVersionApiV1ProjectsProjectIdTestPlansPlanIdVersionsPostResponses];
+
+export type GetVersionApiV1ProjectsProjectIdTestPlansPlanIdVersionsVersionIdGetData =
+  {
+    body?: never;
+    path: {
+      /**
+       * Project Id
+       */
+      project_id: string;
+      /**
+       * Plan Id
+       */
+      plan_id: string;
+      /**
+       * Version Id
+       */
+      version_id: string;
+    };
+    query?: never;
+    url: "/api/v1/projects/{project_id}/test-plans/{plan_id}/versions/{version_id}";
+  };
+
+export type GetVersionApiV1ProjectsProjectIdTestPlansPlanIdVersionsVersionIdGetErrors =
+  {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+  };
+
+export type GetVersionApiV1ProjectsProjectIdTestPlansPlanIdVersionsVersionIdGetError =
+  GetVersionApiV1ProjectsProjectIdTestPlansPlanIdVersionsVersionIdGetErrors[keyof GetVersionApiV1ProjectsProjectIdTestPlansPlanIdVersionsVersionIdGetErrors];
+
+export type GetVersionApiV1ProjectsProjectIdTestPlansPlanIdVersionsVersionIdGetResponses =
+  {
+    /**
+     * Successful Response
+     */
+    200: TestPlanVersionResponse;
+  };
+
+export type GetVersionApiV1ProjectsProjectIdTestPlansPlanIdVersionsVersionIdGetResponse =
+  GetVersionApiV1ProjectsProjectIdTestPlansPlanIdVersionsVersionIdGetResponses[keyof GetVersionApiV1ProjectsProjectIdTestPlansPlanIdVersionsVersionIdGetResponses];
+
+export type UpdateVersionApiV1ProjectsProjectIdTestPlansPlanIdVersionsVersionIdPatchData =
+  {
+    body: UpdateTestPlanVersionRequest;
+    headers?: {
+      /**
+       * X-Csrf-Token
+       */
+      "x-csrf-token"?: string | null;
+    };
+    path: {
+      /**
+       * Project Id
+       */
+      project_id: string;
+      /**
+       * Plan Id
+       */
+      plan_id: string;
+      /**
+       * Version Id
+       */
+      version_id: string;
+    };
+    query?: never;
+    url: "/api/v1/projects/{project_id}/test-plans/{plan_id}/versions/{version_id}";
+  };
+
+export type UpdateVersionApiV1ProjectsProjectIdTestPlansPlanIdVersionsVersionIdPatchErrors =
+  {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+  };
+
+export type UpdateVersionApiV1ProjectsProjectIdTestPlansPlanIdVersionsVersionIdPatchError =
+  UpdateVersionApiV1ProjectsProjectIdTestPlansPlanIdVersionsVersionIdPatchErrors[keyof UpdateVersionApiV1ProjectsProjectIdTestPlansPlanIdVersionsVersionIdPatchErrors];
+
+export type UpdateVersionApiV1ProjectsProjectIdTestPlansPlanIdVersionsVersionIdPatchResponses =
+  {
+    /**
+     * Successful Response
+     */
+    200: TestPlanVersionResponse;
+  };
+
+export type UpdateVersionApiV1ProjectsProjectIdTestPlansPlanIdVersionsVersionIdPatchResponse =
+  UpdateVersionApiV1ProjectsProjectIdTestPlansPlanIdVersionsVersionIdPatchResponses[keyof UpdateVersionApiV1ProjectsProjectIdTestPlansPlanIdVersionsVersionIdPatchResponses];
+
+export type PublishVersionApiV1ProjectsProjectIdTestPlansPlanIdVersionsVersionIdPublishPostData =
+  {
+    body?: never;
+    headers?: {
+      /**
+       * X-Csrf-Token
+       */
+      "x-csrf-token"?: string | null;
+    };
+    path: {
+      /**
+       * Project Id
+       */
+      project_id: string;
+      /**
+       * Plan Id
+       */
+      plan_id: string;
+      /**
+       * Version Id
+       */
+      version_id: string;
+    };
+    query?: never;
+    url: "/api/v1/projects/{project_id}/test-plans/{plan_id}/versions/{version_id}/publish";
+  };
+
+export type PublishVersionApiV1ProjectsProjectIdTestPlansPlanIdVersionsVersionIdPublishPostErrors =
+  {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+  };
+
+export type PublishVersionApiV1ProjectsProjectIdTestPlansPlanIdVersionsVersionIdPublishPostError =
+  PublishVersionApiV1ProjectsProjectIdTestPlansPlanIdVersionsVersionIdPublishPostErrors[keyof PublishVersionApiV1ProjectsProjectIdTestPlansPlanIdVersionsVersionIdPublishPostErrors];
+
+export type PublishVersionApiV1ProjectsProjectIdTestPlansPlanIdVersionsVersionIdPublishPostResponses =
+  {
+    /**
+     * Successful Response
+     */
+    200: TestPlanVersionResponse;
+  };
+
+export type PublishVersionApiV1ProjectsProjectIdTestPlansPlanIdVersionsVersionIdPublishPostResponse =
+  PublishVersionApiV1ProjectsProjectIdTestPlansPlanIdVersionsVersionIdPublishPostResponses[keyof PublishVersionApiV1ProjectsProjectIdTestPlansPlanIdVersionsVersionIdPublishPostResponses];
 
 export type GlobalAuditApiV1SystemAuditGetData = {
   body?: never;
