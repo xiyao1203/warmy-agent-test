@@ -1,7 +1,7 @@
 "use client";
 
-import { Eye, EyeOff, LoaderCircle } from "lucide-react";
-import { useState, type FormEvent } from "react";
+import { AlertCircle, Eye, EyeOff, LoaderCircle } from "lucide-react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import type { LoginRequest, UserResponse } from "@warmy/generated-api-client";
 
 import { Button } from "@/components/ui/button";
@@ -40,6 +40,12 @@ export function LoginForm({
   const [errors, setErrors] = useState<FieldErrors>({});
   const [formError, setFormError] = useState("");
   const [pending, setPending] = useState(false);
+  const emailRef = useRef<HTMLInputElement>(null);
+
+  // 页面加载时自动聚焦邮箱输入框
+  useEffect(() => {
+    emailRef.current?.focus();
+  }, []);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -66,10 +72,11 @@ export function LoginForm({
     <form className="space-y-4" noValidate onSubmit={handleSubmit}>
       {formError ? (
         <div
-          className="rounded-[var(--radius-sm)] border border-[var(--danger)] bg-[var(--danger-subtle)] px-3 py-2 text-sm text-[var(--danger)]"
+          className="flex items-start gap-2 rounded-[var(--radius-sm)] border border-[var(--danger)] bg-[var(--danger-subtle)] px-3.5 py-3 text-sm text-[var(--danger)]"
           role="alert"
         >
-          {formError}
+          <AlertCircle aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
+          <span>{formError}</span>
         </div>
       ) : null}
 
@@ -84,6 +91,7 @@ export function LoginForm({
           id="email"
           onChange={(event) => setEmail(event.target.value)}
           placeholder="name@company.com"
+          ref={emailRef}
           type="email"
           value={email}
         />
@@ -129,7 +137,12 @@ export function LoginForm({
         ) : null}
       </div>
 
-      <Button className="w-full" disabled={pending} type="submit" variant="primary">
+      <Button
+        className="mt-2 w-full"
+        disabled={pending}
+        type="submit"
+        variant="primary"
+      >
         {pending ? (
           <>
             <LoaderCircle
