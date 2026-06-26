@@ -10,13 +10,23 @@ export function LoginScreen({ returnTo }: { returnTo?: string }) {
   return (
     <main className="grid min-h-screen lg:grid-cols-2">
       {/* 左侧品牌区域 */}
-      <aside className="hidden bg-[var(--accent)] lg:flex lg:flex-col lg:justify-between lg:p-14">
-        <div>
+      <aside className="relative hidden overflow-hidden lg:flex lg:flex-col lg:justify-between lg:p-14" style={{ background: "linear-gradient(135deg, var(--accent) 0%, color-mix(in srgb, var(--accent) 70%, #1a1a2e) 100%)" }}>
+        {/* 装饰性背景图案 */}
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0 opacity-[0.06]"
+          style={{
+            backgroundImage:
+              "radial-gradient(circle at 20% 50%, white 1px, transparent 1px), radial-gradient(circle at 80% 20%, white 1px, transparent 1px)",
+            backgroundSize: "60px 60px, 100px 100px",
+          }}
+        />
+        <div className="relative">
           <p className="text-sm font-semibold tracking-wide text-white/70">
             Warmy Agent Test
           </p>
         </div>
-        <div className="max-w-md">
+        <div className="relative max-w-md">
           <blockquote className="text-3xl font-semibold leading-snug tracking-tight text-white">
             “统一测试、
             <br />
@@ -29,7 +39,7 @@ export function LoginScreen({ returnTo }: { returnTo?: string }) {
             后续通过插件扩展客服、浏览器、工作流等场景。
           </p>
         </div>
-        <p className="text-xs text-white/40">
+        <p className="relative text-xs text-white/40">
           {"©"} {new Date().getFullYear()} Warmy. 仅供内部使用。
         </p>
       </aside>

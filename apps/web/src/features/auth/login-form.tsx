@@ -47,6 +47,19 @@ export function LoginForm({
     emailRef.current?.focus();
   }, []);
 
+  /** 输入时清除对应字段错误，提升 UX 即时反馈 */
+  function clearFieldError(field: keyof LoginRequest) {
+    if (errors[field]) {
+      setErrors((prev) => {
+        const next = { ...prev };
+        delete next[field];
+        return next;
+      });
+    }
+    // 同时清除表单级错误
+    if (formError) setFormError("");
+  }
+
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (pending) return;
@@ -66,8 +79,13 @@ export function LoginForm({
         return;
       }
       onSuccess(safeReturnTo(returnTo));
-    } catch {
-      setFormError("邮箱或密码不正确，请重试。");
+    } catch (err: unknown) {
+      // 区分网络错误和凭证错误
+      if (err instanceof TypeError && err.message === "Failed to fetch") {
+        setFormError("网络连接失败，请检查后端服务是否启动。");
+      } else {
+        setFormError("邮箱或密码不正确，请重试。");
+      }
     } finally {
       setPending(false);
     }
@@ -94,7 +112,10 @@ export function LoginForm({
           aria-invalid={Boolean(errors.email)}
           autoComplete="email"
           id="email"
-          onChange={(event) => setEmail(event.target.value)}
+          onChange={(event) => {
+            setEmail(event.target.value);
+            clearFieldError("email");
+          }}
           placeholder="name@company.com"
           ref={emailRef}
           type="email"
@@ -118,7 +139,10 @@ export function LoginForm({
             autoComplete="current-password"
             className="pr-10"
             id="password"
-            onChange={(event) => setPassword(event.target.value)}
+            onChange={(event) => {
+              setPassword(event.target.value);
+              clearFieldError("password");
+            }}
             type={showPassword ? "text" : "password"}
             value={password}
           />
