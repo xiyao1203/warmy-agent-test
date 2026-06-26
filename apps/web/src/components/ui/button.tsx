@@ -34,10 +34,16 @@ export function Button({
       {...props}
       disabled={loading || props.disabled}
     >
-      {loading ? (
-        <LoaderCircle aria-hidden="true" className="size-4 animate-spin" />
-      ) : null}
-      {children}
+      {asChild ? (
+        children
+      ) : (
+        <>
+          {loading ? (
+            <LoaderCircle aria-hidden="true" className="size-4 animate-spin" />
+          ) : null}
+          {children}
+        </>
+      )}
     </Component>
   );
 }
