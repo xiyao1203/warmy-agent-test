@@ -103,3 +103,53 @@ def test_run_requires_reproducible_snapshots() -> None:
             total_cases=1,
         )
 
+
+def test_run_cannot_start_already_running() -> None:
+    """已开始的运行不能重复启动。"""
+    run = make_run()
+    run.start()
+    with pytest.raises(ValueError, match="queued"):
+        run.start()
+
+
+def test_run_cannot_start_completed() -> None:
+    """已完成的运行不能再次启动。"""
+    run = make_run()
+    run.start()
+    run.complete(passed_cases=2, failed_cases=0, error_cases=0)
+    with pytest.raises(ValueError, match="queued"):
+        run.start()
+
+
+def test_run_cannot_cancel_queued() -> None:
+    """QUEUED 状态的运行可以取消（尚未开始即可中止）。"""
+    run = make_run()
+    run.cancel()
+    assert run.status is RunStatus.CANCELLED
+    assert run.completed_at is not None
+
+
+def test_run_case_idempotent_result_write() -> None:
+    """RunCase 结果写入幂等：终态后不能重复写入。"""
+    case = RunCase.create(
+        run_case_id=RunCaseId.new(),
+        run_id=RunId.new(),
+        test_case_id=uuid4(),
+        name="test case",
+        input_snapshot={"x": 1},
+        assertion_snapshot=[],
+    )
+    case.start()
+    case.pass_case(output={"ok": True}, trace=[], duration_ms=100)
+    with pytest.raises(ValueError, match="running"):
+        case.pass_case(output={"ok": False}, trace=[], duration_ms=50)
+
+
+def test_run_cancel_mid_execution() -> None:
+    """运行中取消：状态转为 CANCELLED，记录完成时间。"""
+    run = make_run()
+    run.start()
+    run.cancel()
+    assert run.status is RunStatus.CANCELLED
+    assert run.completed_at is not None
+
