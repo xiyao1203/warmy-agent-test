@@ -16,7 +16,7 @@ class ModelConfig:
 
     base_url: str
     api_key: str
-    vision_model: str = "gpt-4o"
+    vision_model: str = "mimo-v2.5-pro"
 
     @classmethod
     def from_env(cls) -> ModelConfig:
@@ -27,5 +27,5 @@ class ModelConfig:
                 "https://api.openai.com/v1",
             ),
             api_key=os.environ.get("CANVAS_MODEL_API_KEY", ""),
-            vision_model=os.environ.get("CANVAS_MODEL_VISION", "gpt-4o"),
+            vision_model=os.environ.get("CANVAS_MODEL_VISION", "mimo-v2.5-pro"),
         )
