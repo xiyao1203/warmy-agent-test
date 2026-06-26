@@ -1,10 +1,15 @@
 "use client";
 
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import { cancelRun, getRun, listRunCases, runEventsUrl } from "./api";
 import { RunDetail } from "./run-detail";
+
+/** SSE 重连配置 */
+const MAX_RECONNECT_ATTEMPTS = 3;
+const INITIAL_RECONNECT_MS = 1000;
+const MAX_RECONNECT_MS = 10000;
 
 export function RunDetailScreen({
   projectId,
@@ -16,6 +21,9 @@ export function RunDetailScreen({
   const [eventStreamFailed, setEventStreamFailed] = useState(false);
   const eventStreamAvailable =
     !eventStreamFailed && typeof EventSource !== "undefined";
+  const reconnectAttemptRef = useRef(0);
+  const reconnectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   const runQuery = useQuery({
     queryFn: () => getRun(projectId, runId),
     queryKey: ["runs", projectId, runId],
@@ -31,6 +39,16 @@ export function RunDetailScreen({
     queryFn: () => listRunCases(projectId, runId),
     queryKey: ["runs", projectId, runId, "cases"],
   });
+
+  /** 清理重连计时器 */
+  const clearReconnectTimer = useCallback(() => {
+    if (reconnectTimerRef.current) {
+      clearTimeout(reconnectTimerRef.current);
+      reconnectTimerRef.current = null;
+    }
+  }, []);
+
+  /** 建立 SSE 连接（含退避重连） */
   useEffect(() => {
     const status = runQuery.data?.status;
     if (
@@ -38,22 +56,54 @@ export function RunDetailScreen({
       (status !== "running" && status !== "queued") ||
       typeof EventSource === "undefined"
     ) {
+      clearReconnectTimer();
       return;
     }
+
     const source = new EventSource(runEventsUrl(projectId, runId));
+
+    source.onopen = () => {
+      // 连接成功，重置重连计数
+      reconnectAttemptRef.current = 0;
+      clearReconnectTimer();
+    };
+
     source.onmessage = () => {
       void runQuery.refetch();
       void casesQuery.refetch();
     };
+
     source.onerror = () => {
       source.close();
-      setEventStreamFailed(true);
+      clearReconnectTimer();
+
+      const attempts = reconnectAttemptRef.current;
+      if (attempts < MAX_RECONNECT_ATTEMPTS) {
+        // 指数退避重连：1s, 2s, 4s, 最大 10s
+        const delay = Math.min(
+          INITIAL_RECONNECT_MS * Math.pow(2, attempts),
+          MAX_RECONNECT_MS,
+        );
+        reconnectAttemptRef.current = attempts + 1;
+        reconnectTimerRef.current = setTimeout(() => {
+          // 强制触发 useEffect 重建 EventSource
+          setEventStreamFailed(false);
+          // 触发 query 重新活跃以启动新的 SSE
+          void runQuery.refetch();
+        }, delay);
+      } else {
+        // 超过最大重连次数，回退到轮询
+        setEventStreamFailed(true);
+      }
     };
+
     return () => {
       source.close();
+      clearReconnectTimer();
     };
   }, [
     casesQuery,
+    clearReconnectTimer,
     eventStreamAvailable,
     projectId,
     runId,
