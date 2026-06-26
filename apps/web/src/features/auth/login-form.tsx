@@ -1,6 +1,6 @@
 "use client";
 
-import { AlertCircle, Eye, EyeOff, LoaderCircle } from "lucide-react";
+import { AlertCircle, Eye, EyeOff } from "lucide-react";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import type { LoginRequest, UserResponse } from "@warmy/generated-api-client";
 
@@ -59,7 +59,12 @@ export function LoginForm({
 
     setPending(true);
     try {
-      await onLogin(credentials);
+      const user = await onLogin(credentials);
+      // 如果需要修改密码，跳转到用户管理页（超级管理员视角）
+      if (user.must_change_password) {
+        onSuccess("/system/users");
+        return;
+      }
       onSuccess(safeReturnTo(returnTo));
     } catch {
       setFormError("邮箱或密码不正确，请重试。");
@@ -139,21 +144,11 @@ export function LoginForm({
 
       <Button
         className="mt-2 w-full"
-        disabled={pending}
+        loading={pending}
         type="submit"
         variant="primary"
       >
-        {pending ? (
-          <>
-            <LoaderCircle
-              aria-hidden="true"
-              className="mr-2 size-4 animate-spin"
-            />
-            正在登录…
-          </>
-        ) : (
-          "登录"
-        )}
+        {pending ? "正在登录…" : "登录"}
       </Button>
     </form>
   );
