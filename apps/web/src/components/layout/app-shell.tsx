@@ -37,7 +37,9 @@ export function AppShell({
 }: AppShellProps) {
   const projectHref = currentProjectId
     ? `/projects/${currentProjectId}/overview`
-    : "#";
+    : "/projects";
+
+  const activeProjectId = currentProjectId || (projects.length > 0 ? projects[0].id : null);
 
   return (
     <div className="min-h-screen bg-[var(--background)] text-[var(--text)]">
@@ -78,15 +80,15 @@ export function AppShell({
               <LayoutDashboard aria-hidden="true" className="size-4 shrink-0" />
               <span className="max-[1279px]:sr-only">项目概览</span>
             </Link>
-            {currentProjectId ? (
+            {activeProjectId ? (
               <>
                 <ProjectNavLink
-                  href={`/projects/${currentProjectId}/agents`}
+                  href={`/projects/${activeProjectId}/agents`}
                   icon={<Bot aria-hidden="true" className="size-4 shrink-0" />}
                   label="Agent 与版本"
                 />
                 <ProjectNavLink
-                  href={`/projects/${currentProjectId}/datasets`}
+                  href={`/projects/${activeProjectId}/datasets`}
                   icon={
                     <Database
                       aria-hidden="true"
@@ -96,7 +98,7 @@ export function AppShell({
                   label="数据集与用例"
                 />
                 <ProjectNavLink
-                  href={`/projects/${currentProjectId}/test-plans`}
+                  href={`/projects/${activeProjectId}/test-plans`}
                   icon={
                     <ClipboardCheck
                       aria-hidden="true"
@@ -106,7 +108,7 @@ export function AppShell({
                   label="测试计划"
                 />
                 <ProjectNavLink
-                  href={`/projects/${currentProjectId}/runs`}
+                  href={`/projects/${activeProjectId}/runs`}
                   icon={
                     <PlayCircle
                       aria-hidden="true"
