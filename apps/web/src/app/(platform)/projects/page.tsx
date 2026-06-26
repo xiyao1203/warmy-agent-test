@@ -3,7 +3,7 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { Plus } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -18,14 +18,23 @@ import { createProject, listProjects } from "@/features/projects";
 
 export default function ProjectsPage() {
   const router = useRouter();
-  const { data: projects, isSuccess } = useQuery({
+  const { data: projects, isSuccess, isLoading } = useQuery({
     queryFn: listProjects,
     queryKey: ["projects"],
   });
 
-  if (isSuccess && projects && projects.length > 0) {
-    router.replace(`/projects/${projects[0].id}/overview`);
-    return null;
+  useEffect(() => {
+    if (isSuccess && projects && projects.length > 0) {
+      router.replace(`/projects/${projects[0].id}/overview`);
+    }
+  }, [isSuccess, projects, router]);
+
+  if (isLoading || (isSuccess && projects && projects.length > 0)) {
+    return (
+      <main className="grid min-h-screen place-items-center text-sm text-[var(--text-muted)]">
+        正在加载…
+      </main>
+    );
   }
 
   return (
