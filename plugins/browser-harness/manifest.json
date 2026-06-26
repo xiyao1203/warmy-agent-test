@@ -1,0 +1,19 @@
+{
+  "id": "browser-harness",
+  "name": "Browser Harness Plugin",
+  "version": "1.0.0",
+  "sdk_version": 1,
+  "entry_point": "agenttest_plugin_browser",
+  "capabilities": [
+    "artifact_adapter",
+    "security_policy"
+  ],
+  "config_schema": {
+    "type": "object",
+    "properties": {
+      "headless": { "type": "boolean", "default": true },
+      "viewport_width": { "type": "integer", "default": 1280 },
+      "viewport_height": { "type": "integer", "default": 720 }
+    }
+  }
+}

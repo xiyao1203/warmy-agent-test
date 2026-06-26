@@ -1,33 +1,18 @@
-import { defineConfig, devices } from "@playwright/test";
+import { defineConfig } from "@playwright/test";
 
 export default defineConfig({
-  testDir: "./playwright",
-  fullyParallel: false,
-  forbidOnly: !!process.env.CI,
-  retries: process.env.CI ? 2 : 0,
-  workers: 1,
-  reporter: "html",
+  testDir: "./tests/e2e",
+  timeout: 30000,
+  retries: 0,
   use: {
-    baseURL: process.env.PLAYWRIGHT_BASE_URL ?? "http://localhost:3000",
-    trace: "on-first-retry",
+    baseURL: "http://localhost:5175",
+    headless: true,
+    viewport: { width: 1280, height: 720 },
   },
-  projects: [
-    {
-      name: "setup",
-      testMatch: /.*\.setup\.ts/,
-    },
-    {
-      name: "chromium",
-      use: { ...devices["Desktop Chrome"] },
-      dependencies: ["setup"],
-    },
-  ],
-  webServer: process.env.CI
-    ? undefined
-    : {
-        command: "pnpm --filter @warmy/web dev",
-        url: "http://localhost:3000",
-        reuseExistingServer: true,
-        timeout: 60_000,
-      },
+  webServer: {
+    command: "cd ../.. && bash start.sh",
+    port: 5175,
+    reuseExistingServer: true,
+    timeout: 60000,
+  },
 });
