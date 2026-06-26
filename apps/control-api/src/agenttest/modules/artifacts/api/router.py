@@ -7,7 +7,7 @@ from __future__ import annotations
 
 from uuid import UUID, uuid4
 
-from fastapi import APIRouter, Depends, HTTPException, UploadFile
+from fastapi import APIRouter, HTTPException, UploadFile
 from starlette.responses import StreamingResponse
 from starlette.status import HTTP_404_NOT_FOUND
 
@@ -25,13 +25,8 @@ from agenttest.modules.artifacts.infrastructure.storage import (
 
 def create_artifact_router(
     storage: FileSystemArtifactStorage,
-    *,
-    current_user,
-    csrf,
-    settings,
     session_factory,
 ) -> APIRouter:
-    """创建 artifact API 路由。"""
     router = APIRouter(tags=["artifacts"])
 
     @router.post(
@@ -42,8 +37,6 @@ def create_artifact_router(
         project_id: UUID,
         run_id: UUID,
         file: UploadFile,
-        _user=Depends(current_user),  # noqa: B008
-        _csrf=Depends(csrf),  # noqa: B008
     ):
         content = await file.read()
         content_type = file.content_type or "application/octet-stream"
@@ -80,7 +73,6 @@ def create_artifact_router(
     async def list_artifacts(
         project_id: UUID,
         run_id: UUID,
-        _user=Depends(current_user),  # noqa: B008
     ):
         async with session_factory() as session:
             repo = SqlAlchemyArtifactRepository(session)
@@ -105,7 +97,6 @@ def create_artifact_router(
     async def download_artifact(
         project_id: UUID,
         artifact_id: UUID,
-        _user=Depends(current_user),  # noqa: B008
     ):
         async with session_factory() as session:
             repo = SqlAlchemyArtifactRepository(session)
