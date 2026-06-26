@@ -89,6 +89,12 @@ def run_sync_migrations(connection: Connection) -> None:
 
 
 async def run_async_migrations() -> None:
+    # 支持 DATABASE_URL 环境变量覆盖（不覆盖 alembic.ini 硬编码的 SQLite）
+    import os
+
+    db_url = os.environ.get("DATABASE_URL") or config.get_main_option("sqlalchemy.url")
+    config.set_main_option("sqlalchemy.url", db_url)
+
     engine = async_engine_from_config(
         config.get_section(config.config_ini_section, {}),
         prefix="sqlalchemy.",
