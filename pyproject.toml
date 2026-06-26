@@ -8,6 +8,7 @@ members = [
   "apps/control-api",
   "apps/admin-cli",
   "workers/api-runner",
+  "plugins/canvas-agent",
 ]
 
 [tool.ruff]

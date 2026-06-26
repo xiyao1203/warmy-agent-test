@@ -4,11 +4,17 @@ requires-python = ">=3.12, <3.14"
 
 [manifest]
 members = [
+    "agenttest-plugin-canvas",
     "warmy-admin-cli",
     "warmy-agent-test-workspace",
     "warmy-api-runner",
     "warmy-control-api",
 ]
+
+[[package]]
+name = "agenttest-plugin-canvas"
+version = "0.1.0"
+source = { editable = "plugins/canvas-agent" }
 
 [[package]]
 name = "aiosqlite"
