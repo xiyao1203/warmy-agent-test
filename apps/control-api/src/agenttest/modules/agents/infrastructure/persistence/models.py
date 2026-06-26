@@ -34,6 +34,14 @@ class AgentModel(Base):
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     created_by: Mapped[UUID] = mapped_column(ForeignKey("users.id"))
     updated_by: Mapped[UUID] = mapped_column(ForeignKey("users.id"))
+    current_version_id: Mapped[UUID | None] = mapped_column(
+        ForeignKey("agent_versions.id", ondelete="SET NULL"),
+        nullable=True,
+    )
+    baseline_version_id: Mapped[UUID | None] = mapped_column(
+        ForeignKey("agent_versions.id", ondelete="SET NULL"),
+        nullable=True,
+    )
 
 
 class AgentVersionModel(Base):
