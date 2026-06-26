@@ -9,6 +9,7 @@ import {
   ClipboardCheck,
   Database,
   LayoutDashboard,
+  PlayCircle,
   Users,
 } from "lucide-react";
 import Link from "next/link";
@@ -103,6 +104,16 @@ export function AppShell({
                     />
                   }
                   label="测试计划"
+                />
+                <ProjectNavLink
+                  href={`/projects/${currentProjectId}/runs`}
+                  icon={
+                    <PlayCircle
+                      aria-hidden="true"
+                      className="size-4 shrink-0"
+                    />
+                  }
+                  label="运行中心"
                 />
               </>
             ) : null}

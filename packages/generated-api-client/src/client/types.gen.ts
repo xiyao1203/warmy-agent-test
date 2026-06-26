@@ -169,6 +169,54 @@ export type AgentVersionResponse = {
 };
 
 /**
+ * ApplyRunCaseResultRequest
+ */
+export type ApplyRunCaseResultRequest = {
+  /**
+   * Duration Ms
+   */
+  duration_ms?: number | null;
+  /**
+   * Error Message
+   */
+  error_message?: string | null;
+  /**
+   * Error Type
+   */
+  error_type?: string | null;
+  /**
+   * Output
+   */
+  output?: {
+    [key: string]: unknown;
+  } | null;
+  /**
+   * Run Case Id
+   */
+  run_case_id: string;
+  /**
+   * Status
+   */
+  status: string;
+  /**
+   * Trace
+   */
+  trace?: Array<{
+    [key: string]: unknown;
+  }>;
+};
+
+/**
+ * ApplyRunResultRequest
+ */
+export type ApplyRunResultRequest = {
+  /**
+   * Cases
+   */
+  cases: Array<ApplyRunCaseResultRequest>;
+};
+
+/**
  * AuditEntryResponse
  */
 export type AuditEntryResponse = {
@@ -287,6 +335,16 @@ export type CreateProjectRequest = {
    * Name
    */
   name: string;
+};
+
+/**
+ * CreateRunRequest
+ */
+export type CreateRunRequest = {
+  /**
+   * Test Plan Version Id
+   */
+  test_plan_version_id: string;
 };
 
 /**
@@ -751,6 +809,130 @@ export type ResetPasswordRequest = {
  * 风险评估等级。
  */
 export type RiskLevel = "critical" | "high" | "medium" | "low";
+
+/**
+ * RunCaseListResponse
+ */
+export type RunCaseListResponse = {
+  /**
+   * Items
+   */
+  items: Array<RunCaseResponse>;
+};
+
+/**
+ * RunCaseResponse
+ */
+export type RunCaseResponse = {
+  /**
+   * Duration Ms
+   */
+  duration_ms: number | null;
+  /**
+   * Error Message
+   */
+  error_message: string | null;
+  /**
+   * Error Type
+   */
+  error_type: string | null;
+  /**
+   * Id
+   */
+  id: string;
+  /**
+   * Name
+   */
+  name: string;
+  /**
+   * Output
+   */
+  output: {
+    [key: string]: unknown;
+  } | null;
+  /**
+   * Status
+   */
+  status: string;
+  /**
+   * Test Case Id
+   */
+  test_case_id: string;
+  /**
+   * Trace
+   */
+  trace: Array<{
+    [key: string]: unknown;
+  }>;
+};
+
+/**
+ * RunListResponse
+ */
+export type RunListResponse = {
+  /**
+   * Items
+   */
+  items: Array<RunResponse>;
+};
+
+/**
+ * RunResponse
+ */
+export type RunResponse = {
+  /**
+   * Cancelled Cases
+   */
+  cancelled_cases: number;
+  /**
+   * Completed At
+   */
+  completed_at: string | null;
+  /**
+   * Created At
+   */
+  created_at: string;
+  /**
+   * Error Cases
+   */
+  error_cases: number;
+  /**
+   * Failed Cases
+   */
+  failed_cases: number;
+  /**
+   * Id
+   */
+  id: string;
+  /**
+   * Passed Cases
+   */
+  passed_cases: number;
+  /**
+   * Project Id
+   */
+  project_id: string;
+  /**
+   * Started At
+   */
+  started_at: string | null;
+  /**
+   * Status
+   */
+  status: string;
+  /**
+   * Test Plan Version Id
+   */
+  test_plan_version_id: string;
+  /**
+   * Total Cases
+   */
+  total_cases: number;
+  /**
+   * Workflow Id
+   */
+  workflow_id: string | null;
+};
 
 /**
  * SystemRole
@@ -2967,6 +3149,274 @@ export type UpdateMemberApiV1ProjectsProjectIdMembersUserIdPatchResponses = {
 
 export type UpdateMemberApiV1ProjectsProjectIdMembersUserIdPatchResponse =
   UpdateMemberApiV1ProjectsProjectIdMembersUserIdPatchResponses[keyof UpdateMemberApiV1ProjectsProjectIdMembersUserIdPatchResponses];
+
+export type ListRunsApiV1ProjectsProjectIdRunsGetData = {
+  body?: never;
+  path: {
+    /**
+     * Project Id
+     */
+    project_id: string;
+  };
+  query?: {
+    /**
+     * Limit
+     */
+    limit?: number;
+  };
+  url: "/api/v1/projects/{project_id}/runs";
+};
+
+export type ListRunsApiV1ProjectsProjectIdRunsGetErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type ListRunsApiV1ProjectsProjectIdRunsGetError =
+  ListRunsApiV1ProjectsProjectIdRunsGetErrors[keyof ListRunsApiV1ProjectsProjectIdRunsGetErrors];
+
+export type ListRunsApiV1ProjectsProjectIdRunsGetResponses = {
+  /**
+   * Successful Response
+   */
+  200: RunListResponse;
+};
+
+export type ListRunsApiV1ProjectsProjectIdRunsGetResponse =
+  ListRunsApiV1ProjectsProjectIdRunsGetResponses[keyof ListRunsApiV1ProjectsProjectIdRunsGetResponses];
+
+export type CreateRunApiV1ProjectsProjectIdRunsPostData = {
+  body: CreateRunRequest;
+  headers?: {
+    /**
+     * Idempotency-Key
+     */
+    "Idempotency-Key"?: string | null;
+    /**
+     * X-Csrf-Token
+     */
+    "x-csrf-token"?: string | null;
+  };
+  path: {
+    /**
+     * Project Id
+     */
+    project_id: string;
+  };
+  query?: never;
+  url: "/api/v1/projects/{project_id}/runs";
+};
+
+export type CreateRunApiV1ProjectsProjectIdRunsPostErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type CreateRunApiV1ProjectsProjectIdRunsPostError =
+  CreateRunApiV1ProjectsProjectIdRunsPostErrors[keyof CreateRunApiV1ProjectsProjectIdRunsPostErrors];
+
+export type CreateRunApiV1ProjectsProjectIdRunsPostResponses = {
+  /**
+   * Successful Response
+   */
+  201: RunResponse;
+};
+
+export type CreateRunApiV1ProjectsProjectIdRunsPostResponse =
+  CreateRunApiV1ProjectsProjectIdRunsPostResponses[keyof CreateRunApiV1ProjectsProjectIdRunsPostResponses];
+
+export type GetRunApiV1ProjectsProjectIdRunsRunIdGetData = {
+  body?: never;
+  path: {
+    /**
+     * Project Id
+     */
+    project_id: string;
+    /**
+     * Run Id
+     */
+    run_id: string;
+  };
+  query?: never;
+  url: "/api/v1/projects/{project_id}/runs/{run_id}";
+};
+
+export type GetRunApiV1ProjectsProjectIdRunsRunIdGetErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type GetRunApiV1ProjectsProjectIdRunsRunIdGetError =
+  GetRunApiV1ProjectsProjectIdRunsRunIdGetErrors[keyof GetRunApiV1ProjectsProjectIdRunsRunIdGetErrors];
+
+export type GetRunApiV1ProjectsProjectIdRunsRunIdGetResponses = {
+  /**
+   * Successful Response
+   */
+  200: RunResponse;
+};
+
+export type GetRunApiV1ProjectsProjectIdRunsRunIdGetResponse =
+  GetRunApiV1ProjectsProjectIdRunsRunIdGetResponses[keyof GetRunApiV1ProjectsProjectIdRunsRunIdGetResponses];
+
+export type CancelRunApiV1ProjectsProjectIdRunsRunIdCancelPostData = {
+  body?: never;
+  headers?: {
+    /**
+     * X-Csrf-Token
+     */
+    "x-csrf-token"?: string | null;
+  };
+  path: {
+    /**
+     * Project Id
+     */
+    project_id: string;
+    /**
+     * Run Id
+     */
+    run_id: string;
+  };
+  query?: never;
+  url: "/api/v1/projects/{project_id}/runs/{run_id}/cancel";
+};
+
+export type CancelRunApiV1ProjectsProjectIdRunsRunIdCancelPostErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type CancelRunApiV1ProjectsProjectIdRunsRunIdCancelPostError =
+  CancelRunApiV1ProjectsProjectIdRunsRunIdCancelPostErrors[keyof CancelRunApiV1ProjectsProjectIdRunsRunIdCancelPostErrors];
+
+export type CancelRunApiV1ProjectsProjectIdRunsRunIdCancelPostResponses = {
+  /**
+   * Successful Response
+   */
+  200: RunResponse;
+};
+
+export type CancelRunApiV1ProjectsProjectIdRunsRunIdCancelPostResponse =
+  CancelRunApiV1ProjectsProjectIdRunsRunIdCancelPostResponses[keyof CancelRunApiV1ProjectsProjectIdRunsRunIdCancelPostResponses];
+
+export type ListCasesApiV1ProjectsProjectIdRunsRunIdCasesGetData = {
+  body?: never;
+  path: {
+    /**
+     * Project Id
+     */
+    project_id: string;
+    /**
+     * Run Id
+     */
+    run_id: string;
+  };
+  query?: never;
+  url: "/api/v1/projects/{project_id}/runs/{run_id}/cases";
+};
+
+export type ListCasesApiV1ProjectsProjectIdRunsRunIdCasesGetErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type ListCasesApiV1ProjectsProjectIdRunsRunIdCasesGetError =
+  ListCasesApiV1ProjectsProjectIdRunsRunIdCasesGetErrors[keyof ListCasesApiV1ProjectsProjectIdRunsRunIdCasesGetErrors];
+
+export type ListCasesApiV1ProjectsProjectIdRunsRunIdCasesGetResponses = {
+  /**
+   * Successful Response
+   */
+  200: RunCaseListResponse;
+};
+
+export type ListCasesApiV1ProjectsProjectIdRunsRunIdCasesGetResponse =
+  ListCasesApiV1ProjectsProjectIdRunsRunIdCasesGetResponses[keyof ListCasesApiV1ProjectsProjectIdRunsRunIdCasesGetResponses];
+
+export type EventsApiV1ProjectsProjectIdRunsRunIdEventsGetData = {
+  body?: never;
+  path: {
+    /**
+     * Project Id
+     */
+    project_id: string;
+    /**
+     * Run Id
+     */
+    run_id: string;
+  };
+  query?: never;
+  url: "/api/v1/projects/{project_id}/runs/{run_id}/events";
+};
+
+export type EventsApiV1ProjectsProjectIdRunsRunIdEventsGetErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type EventsApiV1ProjectsProjectIdRunsRunIdEventsGetError =
+  EventsApiV1ProjectsProjectIdRunsRunIdEventsGetErrors[keyof EventsApiV1ProjectsProjectIdRunsRunIdEventsGetErrors];
+
+export type EventsApiV1ProjectsProjectIdRunsRunIdEventsGetResponses = {
+  /**
+   * Successful Response
+   */
+  200: unknown;
+};
+
+export type ApplyResultApiV1ProjectsProjectIdRunsRunIdResultPostData = {
+  body: ApplyRunResultRequest;
+  headers?: {
+    /**
+     * X-Internal-Token
+     */
+    "x-internal-token"?: string | null;
+  };
+  path: {
+    /**
+     * Project Id
+     */
+    project_id: string;
+    /**
+     * Run Id
+     */
+    run_id: string;
+  };
+  query?: never;
+  url: "/api/v1/projects/{project_id}/runs/{run_id}/result";
+};
+
+export type ApplyResultApiV1ProjectsProjectIdRunsRunIdResultPostErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type ApplyResultApiV1ProjectsProjectIdRunsRunIdResultPostError =
+  ApplyResultApiV1ProjectsProjectIdRunsRunIdResultPostErrors[keyof ApplyResultApiV1ProjectsProjectIdRunsRunIdResultPostErrors];
+
+export type ApplyResultApiV1ProjectsProjectIdRunsRunIdResultPostResponses = {
+  /**
+   * Successful Response
+   */
+  200: RunResponse;
+};
+
+export type ApplyResultApiV1ProjectsProjectIdRunsRunIdResultPostResponse =
+  ApplyResultApiV1ProjectsProjectIdRunsRunIdResultPostResponses[keyof ApplyResultApiV1ProjectsProjectIdRunsRunIdResultPostResponses];
 
 export type ListPlansApiV1ProjectsProjectIdTestPlansGetData = {
   body?: never;
