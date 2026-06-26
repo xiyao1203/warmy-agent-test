@@ -10,6 +10,7 @@ import { RunDetail } from "../run-detail";
 const api = vi.hoisted(() => ({
   cancelRun: vi.fn(),
   getRun: vi.fn(),
+  listArtifacts: vi.fn(),
   listRunCases: vi.fn(),
   runEventsUrl: vi.fn(),
 }));
@@ -115,6 +116,7 @@ describe("RunDetail", () => {
     const onCancel = vi.fn().mockResolvedValue(undefined);
     render(
       <RunDetail
+        artifacts={[]}
         cases={[
           {
             duration_ms: 120,
@@ -134,6 +136,7 @@ describe("RunDetail", () => {
           },
         ]}
         onCancel={onCancel}
+        projectId="test-project"
         run={running}
       />,
     );

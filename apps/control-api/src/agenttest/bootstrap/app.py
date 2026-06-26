@@ -311,6 +311,9 @@ def create_app(
     # ── 归档端点（Agents/Datasets/TestPlans）────────────────────────────────
     _register_archive_endpoints(app, resolved_settings, dependencies)
 
+    # ── Artifact 产物上传/下载 ────────────────────────────────────────────
+    _register_artifact_endpoints(app, resolved_settings, dependencies)
+
     # ── 插件注册表 ──────────────────────────────────────────────────────────
     from agenttest.modules.plugins.infrastructure.file_registry import (
         FileBasedPluginRegistry,
@@ -809,3 +812,37 @@ def build_run_dependencies(settings: Settings) -> RunApiDependencies:
         apply_result=ApplyRunResultHandler(runs=runs),
         uow_factory=lambda: SqlAlchemyUnitOfWork(session_factory),
     )
+
+
+def _register_artifact_endpoints(
+    app: FastAPI,
+    settings: Settings,
+    auth_deps,  # AuthApiDependencies
+) -> None:
+    """注册产物上传/列表/下载端点。"""
+    from pathlib import Path
+
+    from agenttest.modules.artifacts.api.router import create_artifact_router
+    from agenttest.modules.artifacts.infrastructure.storage import (
+        FileSystemArtifactStorage,
+    )
+    from agenttest.shared.infrastructure.database import (
+        create_database_engine,
+        create_session_factory,
+    )
+
+    artifacts_dir = Path(".data/artifacts")
+    artifacts_dir.mkdir(parents=True, exist_ok=True)
+    storage = FileSystemArtifactStorage(artifacts_dir)
+
+    engine = create_database_engine(str(settings.database_url))
+    session_factory = create_session_factory(engine)
+
+    router = create_artifact_router(
+        storage,
+        current_user=auth_deps.current_user,
+        csrf=auth_deps.csrf,
+        settings=settings,
+        session_factory=session_factory,
+    )
+    app.include_router(router, prefix="/api/v1")

@@ -98,3 +98,51 @@ export async function listPublishedPlanVersions(projectId: string) {
   );
   return versions.flat();
 }
+
+// ── Artifact 产物 ────────────────────────────────────────────────────────
+
+export interface ArtifactItem {
+  id: string;
+  filename: string;
+  content_type: string;
+  size_bytes: number;
+  created_at: string;
+}
+
+export async function listArtifacts(
+  projectId: string,
+  runId: string,
+): Promise<ArtifactItem[]> {
+  const url = `${CONTROL_API_URL}/api/v1/projects/${projectId}/runs/${runId}/artifacts`;
+  const res = await fetch(url, { credentials: "include" });
+  if (!res.ok) return [];
+  const data = await res.json();
+  return (data as { items?: ArtifactItem[] }).items ?? [];
+}
+
+export function artifactDownloadUrl(
+  projectId: string,
+  artifactId: string,
+): string {
+  return `${CONTROL_API_URL}/api/v1/projects/${projectId}/artifacts/${artifactId}/download`;
+}
+
+export async function uploadArtifact(
+  projectId: string,
+  runId: string,
+  file: File,
+): Promise<ArtifactItem> {
+  const form = new FormData();
+  form.append("file", file);
+  const url = `${CONTROL_API_URL}/api/v1/projects/${projectId}/runs/${runId}/artifacts`;
+  const res = await fetch(url, {
+    body: form,
+    credentials: "include",
+    headers: { "X-Csrf-Token": csrfHeaders()["x-csrf-token"] || "" },
+    method: "POST",
+  });
+  if (!res.ok) {
+    throw new Error(`上传失败 (${res.status})`);
+  }
+  return (await res.json()) as ArtifactItem;
+}
