@@ -43,7 +43,7 @@ export function TestPlanList({
   error?: "not-found" | "service";
   loading?: boolean;
   onCreate?: (payload: CreateTestPlanRequest) => Promise<unknown>;
-  onDelete?: (planId: string) => void;
+  onDelete?: (planId: string) => Promise<unknown>;
   plans?: TestPlanResponse[];
   projectId: string;
 }) {
@@ -139,11 +139,14 @@ function CreatePlanDialog({
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [error, setError] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+
   async function submit() {
     if (!name.trim()) {
       setError("请输入计划名称");
       return;
     }
+    setSubmitting(true);
     try {
       await onCreate({
         description: description.trim() || null,
@@ -152,6 +155,8 @@ function CreatePlanDialog({
       setOpen(false);
     } catch {
       setError("创建测试计划失败，请检查输入。");
+    } finally {
+      setSubmitting(false);
     }
   }
   return (
@@ -184,8 +189,13 @@ function CreatePlanDialog({
           </label>
           {error ? <p className="text-sm text-[var(--danger)]">{error}</p> : null}
           <div className="flex justify-end gap-2">
-            <Button onClick={() => setOpen(false)}>取消</Button>
-            <Button onClick={submit} variant="primary">
+            <Button disabled={submitting} onClick={() => setOpen(false)}>取消</Button>
+            <Button
+              disabled={submitting}
+              loading={submitting}
+              onClick={submit}
+              variant="primary"
+            >
               保存测试计划
             </Button>
           </div>
@@ -200,9 +210,10 @@ function ConfirmDeleteButton({
   onConfirm,
 }: {
   label: string;
-  onConfirm: () => void;
+  onConfirm: () => Promise<unknown>;
 }) {
   const [open, setOpen] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   return (
     <Dialog onOpenChange={setOpen} open={open}>
@@ -221,11 +232,20 @@ function ConfirmDeleteButton({
           确定要删除「{label}」吗？此操作不可恢复。
         </DialogDescription>
         <div className="mt-5 flex justify-end gap-2">
-          <Button onClick={() => setOpen(false)}>取消</Button>
+          <Button disabled={deleting} onClick={() => setOpen(false)}>
+            取消
+          </Button>
           <Button
-            onClick={() => {
-              setOpen(false);
-              onConfirm();
+            disabled={deleting}
+            loading={deleting}
+            onClick={async () => {
+              setDeleting(true);
+              try {
+                await onConfirm();
+                setOpen(false);
+              } finally {
+                setDeleting(false);
+              }
             }}
             variant="danger"
           >

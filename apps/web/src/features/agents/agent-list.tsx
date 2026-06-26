@@ -39,7 +39,7 @@ type AgentListProps = {
   error?: "not-found" | "service";
   loading?: boolean;
   onCreate?: (payload: CreateAgentRequest) => Promise<unknown>;
-  onDelete?: (agentId: string) => void;
+  onDelete?: (agentId: string) => Promise<unknown>;
   projectId: string;
 };
 
@@ -156,12 +156,14 @@ function CreateAgentDialog({
   const [description, setDescription] = useState("");
   const [agentType, setAgentType] = useState<AgentType>("generic_http");
   const [error, setError] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
   async function submit() {
     if (!name.trim()) {
       setError("请输入 Agent 名称");
       return;
     }
+    setSubmitting(true);
     try {
       await onCreate({
         agent_type: agentType,
@@ -174,6 +176,8 @@ function CreateAgentDialog({
       setError("");
     } catch {
       setError("创建 Agent 失败，请检查输入后重试。");
+    } finally {
+      setSubmitting(false);
     }
   }
 
@@ -218,10 +222,16 @@ function CreateAgentDialog({
           </label>
           {error ? <p className="text-sm text-[var(--danger)]">{error}</p> : null}
           <div className="flex justify-end gap-2">
-            <Button onClick={() => setOpen(false)} type="button">
+            <Button disabled={submitting} onClick={() => setOpen(false)} type="button">
               取消
             </Button>
-            <Button onClick={submit} type="button" variant="primary">
+            <Button
+              disabled={submitting}
+              loading={submitting}
+              onClick={submit}
+              type="button"
+              variant="primary"
+            >
               保存 Agent
             </Button>
           </div>
@@ -236,9 +246,10 @@ function ConfirmDeleteButton({
   onConfirm,
 }: {
   label: string;
-  onConfirm: () => void;
+  onConfirm: () => Promise<unknown>;
 }) {
   const [open, setOpen] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   return (
     <Dialog onOpenChange={setOpen} open={open}>
@@ -257,11 +268,20 @@ function ConfirmDeleteButton({
           确定要删除「{label}」吗？此操作不可恢复。
         </DialogDescription>
         <div className="mt-5 flex justify-end gap-2">
-          <Button onClick={() => setOpen(false)}>取消</Button>
+          <Button disabled={deleting} onClick={() => setOpen(false)}>
+            取消
+          </Button>
           <Button
-            onClick={() => {
-              setOpen(false);
-              onConfirm();
+            disabled={deleting}
+            loading={deleting}
+            onClick={async () => {
+              setDeleting(true);
+              try {
+                await onConfirm();
+                setOpen(false);
+              } finally {
+                setDeleting(false);
+              }
             }}
             variant="danger"
           >
