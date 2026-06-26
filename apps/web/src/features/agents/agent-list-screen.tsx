@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 
 import { problemKind } from "@/lib/api/problem";
 
-import { createAgent, listAgents } from "./api";
+import { createAgent, deleteAgent, listAgents } from "./api";
 import { AgentList } from "./agent-list";
 
 export function AgentListScreen({ projectId }: { projectId: string }) {
@@ -34,6 +34,10 @@ export function AgentListScreen({ projectId }: { projectId: string }) {
       agents={agentsQuery.data.items}
       onCreate={async (payload) => {
         await createAgent(projectId, payload);
+        await agentsQuery.refetch();
+      }}
+      onDelete={async (agentId) => {
+        await deleteAgent(projectId, agentId);
         await agentsQuery.refetch();
       }}
       projectId={projectId}

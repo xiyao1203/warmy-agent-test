@@ -31,12 +31,14 @@ export function TestPlanList({
   error,
   loading = false,
   onCreate = async () => undefined,
+  onDelete,
   plans = [],
   projectId,
 }: {
   error?: "not-found" | "service";
   loading?: boolean;
   onCreate?: (payload: CreateTestPlanRequest) => Promise<unknown>;
+  onDelete?: (planId: string) => void;
   plans?: TestPlanResponse[];
   projectId: string;
 }) {
@@ -100,6 +102,14 @@ export function TestPlanList({
                         查看
                       </Link>
                     </Button>
+                    {onDelete ? (
+                      <Button
+                        onClick={() => onDelete(plan.id)}
+                        variant="danger"
+                      >
+                        删除
+                      </Button>
+                    ) : null}
                   </TableCell>
                 </TableRow>
               ))}

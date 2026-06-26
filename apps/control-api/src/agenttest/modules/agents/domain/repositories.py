@@ -33,6 +33,8 @@ class AgentRepository(Protocol):
 
     async def save(self, agent: Agent) -> None: ...
 
+    async def delete(self, agent_id: AgentId) -> None: ...
+
 
 class AgentVersionRepository(Protocol):
     """Agent 版本的持久化仓库接口。"""

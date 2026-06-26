@@ -14,6 +14,9 @@ import {
 import { apiClient } from "@/lib/api/client";
 import { csrfHeaders } from "@/lib/api/csrf";
 
+const CONTROL_API_URL =
+  process.env.NEXT_PUBLIC_CONTROL_API_URL ?? "http://localhost:8181";
+
 export async function listAgents(projectId: string) {
   const { data } = await listAgentsApiV1ProjectsProjectIdAgentsGet({
     client: apiClient,
@@ -45,6 +48,18 @@ export async function createAgent(
     throwOnError: true,
   });
   return data;
+}
+
+export async function deleteAgent(projectId: string, agentId: string) {
+  await fetch(
+    `${CONTROL_API_URL}/api/v1/projects/${projectId}/agents/${agentId}`,
+    {
+      method: "DELETE",
+      headers: csrfHeaders() as Record<string, string>,
+      credentials: "include",
+    },
+  );
+  return;
 }
 
 export async function listAgentVersions(projectId: string, agentId: string) {

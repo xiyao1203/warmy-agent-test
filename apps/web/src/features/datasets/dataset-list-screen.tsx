@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 
 import { problemKind } from "@/lib/api/problem";
 
-import { createDataset, listDatasets } from "./api";
+import { createDataset, deleteDataset, listDatasets } from "./api";
 import { DatasetList } from "./dataset-list";
 
 export function DatasetListScreen({ projectId }: { projectId: string }) {
@@ -34,6 +34,10 @@ export function DatasetListScreen({ projectId }: { projectId: string }) {
       datasets={datasetsQuery.data.items}
       onCreate={async (payload) => {
         await createDataset(projectId, payload);
+        await datasetsQuery.refetch();
+      }}
+      onDelete={async (datasetId) => {
+        await deleteDataset(projectId, datasetId);
         await datasetsQuery.refetch();
       }}
       projectId={projectId}

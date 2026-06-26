@@ -32,12 +32,14 @@ export function DatasetList({
   error,
   loading = false,
   onCreate = async () => undefined,
+  onDelete,
   projectId,
 }: {
   datasets?: DatasetResponse[];
   error?: "not-found" | "service";
   loading?: boolean;
   onCreate?: (payload: CreateDatasetRequest) => Promise<unknown>;
+  onDelete?: (datasetId: string) => void;
   projectId: string;
 }) {
   if (loading) return <StatusPanel title="正在加载数据集…" />;
@@ -101,6 +103,14 @@ export function DatasetList({
                         查看
                       </Link>
                     </Button>
+                    {onDelete ? (
+                      <Button
+                        onClick={() => onDelete(dataset.id)}
+                        variant="danger"
+                      >
+                        删除
+                      </Button>
+                    ) : null}
                   </TableCell>
                 </TableRow>
               ))}

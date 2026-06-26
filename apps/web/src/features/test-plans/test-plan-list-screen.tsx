@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 
 import { problemKind } from "@/lib/api/problem";
 
-import { createTestPlan, listTestPlans } from "./api";
+import { createTestPlan, deleteTestPlan, listTestPlans } from "./api";
 import { TestPlanList } from "./test-plan-list";
 
 export function TestPlanListScreen({ projectId }: { projectId: string }) {
@@ -32,6 +32,10 @@ export function TestPlanListScreen({ projectId }: { projectId: string }) {
     <TestPlanList
       onCreate={async (payload) => {
         await createTestPlan(projectId, payload);
+        await plansQuery.refetch();
+      }}
+      onDelete={async (planId) => {
+        await deleteTestPlan(projectId, planId);
         await plansQuery.refetch();
       }}
       plans={plansQuery.data.items}

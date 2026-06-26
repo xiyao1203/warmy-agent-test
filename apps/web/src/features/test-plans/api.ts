@@ -15,6 +15,9 @@ import {
 import { apiClient } from "@/lib/api/client";
 import { csrfHeaders } from "@/lib/api/csrf";
 
+const API_BASE =
+  process.env.NEXT_PUBLIC_CONTROL_API_URL ?? "http://localhost:8181";
+
 export async function listTestPlans(projectId: string) {
   const { data } = await listPlansApiV1ProjectsProjectIdTestPlansGet({
     client: apiClient,
@@ -23,6 +26,14 @@ export async function listTestPlans(projectId: string) {
     throwOnError: true,
   });
   return data;
+}
+
+export async function deleteTestPlan(projectId: string, planId: string) {
+  await fetch(`${API_BASE}/api/v1/projects/${projectId}/test-plans/${planId}`, {
+    method: "DELETE",
+    headers: csrfHeaders() as Record<string, string>,
+    credentials: "include",
+  });
 }
 
 export async function getTestPlan(projectId: string, planId: string) {

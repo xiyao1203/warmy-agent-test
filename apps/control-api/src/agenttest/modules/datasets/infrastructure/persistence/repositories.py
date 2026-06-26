@@ -99,6 +99,12 @@ class SqlAlchemyDatasetRepository:
                 )
             )
 
+    async def delete(self, dataset_id: DatasetId) -> None:
+        async with transaction_scope(self._session_factory) as session:
+            await session.execute(
+                delete(DatasetModel).where(DatasetModel.id == dataset_id.value)
+            )
+
 
 class SqlAlchemyDatasetVersionRepository:
     """数据集版本的 SQLAlchemy 仓库实现。"""

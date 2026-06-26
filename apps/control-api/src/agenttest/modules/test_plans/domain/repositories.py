@@ -32,6 +32,8 @@ class TestPlanRepository(Protocol):
 
     async def save(self, test_plan: TestPlan) -> None: ...
 
+    async def delete(self, test_plan_id: TestPlanId) -> None: ...
+
 
 class TestPlanVersionRepository(Protocol):
     """测试计划版本的持久化仓库接口。"""

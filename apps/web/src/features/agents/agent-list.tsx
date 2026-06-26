@@ -34,6 +34,7 @@ type AgentListProps = {
   error?: "not-found" | "service";
   loading?: boolean;
   onCreate?: (payload: CreateAgentRequest) => Promise<unknown>;
+  onDelete?: (agentId: string) => void;
   projectId: string;
 };
 
@@ -47,6 +48,7 @@ export function AgentList({
   error,
   loading = false,
   onCreate = async () => undefined,
+  onDelete,
   projectId,
 }: AgentListProps) {
   if (loading) return <StatusPanel title="正在加载 Agent…" />;
@@ -109,11 +111,21 @@ export function AgentList({
                     {new Date(agent.updated_at).toLocaleDateString("zh-CN")}
                   </TableCell>
                   <TableCell className="text-right">
-                    <Button asChild variant="ghost">
-                      <Link href={`/projects/${projectId}/agents/${agent.id}`}>
-                        查看
-                      </Link>
-                    </Button>
+                    <div className="flex items-center justify-end gap-1">
+                      <Button asChild variant="ghost">
+                        <Link href={`/projects/${projectId}/agents/${agent.id}`}>
+                          查看
+                        </Link>
+                      </Button>
+                      {onDelete ? (
+                        <Button
+                          onClick={() => onDelete(agent.id)}
+                          variant="danger"
+                        >
+                          删除
+                        </Button>
+                      ) : null}
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}

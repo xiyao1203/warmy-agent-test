@@ -5,7 +5,7 @@ from __future__ import annotations
 from base64 import b64decode, b64encode
 from datetime import datetime
 
-from sqlalchemy import func, select, update
+from sqlalchemy import delete, func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from agenttest.modules.agents.public import AgentVersionId
@@ -90,6 +90,12 @@ class SqlAlchemyTestPlanRepository:
                     updated_at=plan.updated_at,
                     updated_by=plan.updated_by.value,
                 )
+            )
+
+    async def delete(self, test_plan_id: TestPlanId) -> None:
+        async with transaction_scope(self._session_factory) as session:
+            await session.execute(
+                delete(TestPlanModel).where(TestPlanModel.id == test_plan_id.value)
             )
 
 

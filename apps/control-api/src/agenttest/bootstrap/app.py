@@ -306,7 +306,128 @@ def create_app(
         ),
         prefix="/api/v1",
     )
+
+    # ── 归档端点（Agents/Datasets/TestPlans）────────────────────────────────
+    _register_archive_endpoints(app, resolved_settings, dependencies)
+
     return app
+
+
+def _register_archive_endpoints(
+    app: FastAPI,
+    settings: Settings,
+    auth_deps: AuthApiDependencies,
+) -> None:
+    """注册资产归档（软删除）端点，避免修改各模块 router 内部结构。"""
+    from uuid import UUID
+
+    from fastapi import Header, Request
+    from fastapi.responses import JSONResponse, Response
+
+    from agenttest.bootstrap.project_access import ProjectAccessAdapter
+    from agenttest.modules.agents.domain.entities import AgentId
+    from agenttest.modules.agents.infrastructure.persistence.repositories import (
+        SqlAlchemyAgentRepository,
+    )
+    from agenttest.modules.datasets.domain.entities import DatasetId
+    from agenttest.modules.datasets.infrastructure.persistence.repositories import (
+        SqlAlchemyDatasetRepository,
+    )
+    from agenttest.modules.identity.application.queries.current_user import (
+        InvalidSessionError,
+    )
+    from agenttest.modules.identity.public import User
+    from agenttest.modules.projects.infrastructure.persistence.repositories import (
+        SqlAlchemyProjectRepository,
+    )
+    from agenttest.modules.projects.public import ProjectId, ProjectNotFoundError
+    from agenttest.modules.test_plans.domain.entities import TestPlanId
+    from agenttest.modules.test_plans.infrastructure.persistence.repositories import (
+        SqlAlchemyTestPlanRepository,
+    )
+    from agenttest.shared.infrastructure.database import (
+        create_database_engine,
+        create_session_factory,
+    )
+
+    CSRF_NAME = "agenttest_csrf"
+    engine = create_database_engine(str(settings.database_url))
+    sf = create_session_factory(engine)
+    agent_repo = SqlAlchemyAgentRepository(sf)
+    dataset_repo = SqlAlchemyDatasetRepository(sf)
+    plan_repo = SqlAlchemyTestPlanRepository(sf)
+    project_repo = SqlAlchemyProjectRepository(sf)
+    access = ProjectAccessAdapter(project_repo)
+
+    async def _actor(request: Request) -> User:
+        token = request.cookies.get(settings.session_cookie_name)
+        if not token:
+            raise InvalidSessionError
+        return await auth_deps.current_user.execute(token)
+
+    def _check_csrf(request: Request, header: str | None) -> None:
+        if not header or header != request.cookies.get(CSRF_NAME):
+            raise PermissionError("CSRF mismatch")
+
+    @app.delete("/api/v1/projects/{project_id}/agents/{agent_id}", status_code=204)
+    async def delete_agent(
+        request: Request,
+        project_id: UUID,
+        agent_id: UUID,
+        x_csrf_token: str | None = Header(default=None),
+    ) -> Response:
+        try:
+            actor = await _actor(request)
+            _check_csrf(request, x_csrf_token)
+            await access.ensure_editor(actor, ProjectId(project_id))
+            await agent_repo.delete(AgentId(agent_id))
+        except InvalidSessionError:
+            return JSONResponse(status_code=401, content={"detail": "Unauthorized"})
+        except PermissionError:
+            return JSONResponse(status_code=403, content={"detail": "Forbidden"})
+        except ProjectNotFoundError:
+            return JSONResponse(status_code=404, content={"detail": "Not Found"})
+        return Response(status_code=204)
+
+    @app.delete("/api/v1/projects/{project_id}/datasets/{dataset_id}", status_code=204)
+    async def delete_dataset(
+        request: Request,
+        project_id: UUID,
+        dataset_id: UUID,
+        x_csrf_token: str | None = Header(default=None),
+    ) -> Response:
+        try:
+            actor = await _actor(request)
+            _check_csrf(request, x_csrf_token)
+            await access.ensure_editor(actor, ProjectId(project_id))
+            await dataset_repo.delete(DatasetId(dataset_id))
+        except InvalidSessionError:
+            return JSONResponse(status_code=401, content={"detail": "Unauthorized"})
+        except PermissionError:
+            return JSONResponse(status_code=403, content={"detail": "Forbidden"})
+        except ProjectNotFoundError:
+            return JSONResponse(status_code=404, content={"detail": "Not Found"})
+        return Response(status_code=204)
+
+    @app.delete("/api/v1/projects/{project_id}/test-plans/{plan_id}", status_code=204)
+    async def delete_test_plan(
+        request: Request,
+        project_id: UUID,
+        plan_id: UUID,
+        x_csrf_token: str | None = Header(default=None),
+    ) -> Response:
+        try:
+            actor = await _actor(request)
+            _check_csrf(request, x_csrf_token)
+            await access.ensure_editor(actor, ProjectId(project_id))
+            await plan_repo.delete(TestPlanId(plan_id))
+        except InvalidSessionError:
+            return JSONResponse(status_code=401, content={"detail": "Unauthorized"})
+        except PermissionError:
+            return JSONResponse(status_code=403, content={"detail": "Forbidden"})
+        except ProjectNotFoundError:
+            return JSONResponse(status_code=404, content={"detail": "Not Found"})
+        return Response(status_code=204)
 
 
 def build_auth_dependencies(settings: Settings) -> AuthApiDependencies:

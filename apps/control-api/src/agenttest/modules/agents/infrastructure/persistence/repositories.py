@@ -9,7 +9,7 @@ from __future__ import annotations
 from base64 import b64decode, b64encode
 from datetime import datetime
 
-from sqlalchemy import func, select, update
+from sqlalchemy import delete, func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from agenttest.modules.agents.domain.entities import (
@@ -94,6 +94,12 @@ class SqlAlchemyAgentRepository:
                     updated_at=agent.updated_at,
                     updated_by=agent.updated_by.value,
                 )
+            )
+
+    async def delete(self, agent_id: AgentId) -> None:
+        async with transaction_scope(self._session_factory) as session:
+            await session.execute(
+                delete(AgentModel).where(AgentModel.id == agent_id.value)
             )
 
 

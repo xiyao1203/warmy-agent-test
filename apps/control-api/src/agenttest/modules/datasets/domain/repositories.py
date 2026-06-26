@@ -35,6 +35,8 @@ class DatasetRepository(Protocol):
 
     async def save(self, dataset: Dataset) -> None: ...
 
+    async def delete(self, dataset_id: DatasetId) -> None: ...
+
 
 class DatasetVersionRepository(Protocol):
     """数据集版本的持久化仓库接口。"""
