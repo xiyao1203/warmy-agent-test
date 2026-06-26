@@ -1,0 +1,19 @@
+{
+  "id": "canvas-agent",
+  "name": "Canvas Agent Plugin",
+  "version": "1.0.0",
+  "sdk_version": 1,
+  "capabilities": [
+    "agent_adapter",
+    "artifact_adapter",
+    "scorer"
+  ],
+  "config_schema": {
+    "type": "object",
+    "properties": {
+      "api_url": { "type": "string", "format": "uri" },
+      "template_id": { "type": "string" }
+    },
+    "required": ["api_url"]
+  }
+}
