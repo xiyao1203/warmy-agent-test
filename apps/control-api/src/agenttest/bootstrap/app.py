@@ -840,9 +840,6 @@ def _register_artifact_endpoints(
 
     router = create_artifact_router(
         storage,
-        current_user=auth_deps.current_user,
-        csrf=auth_deps.csrf,
-        settings=settings,
         session_factory=session_factory,
     )
     app.include_router(router, prefix="/api/v1")
