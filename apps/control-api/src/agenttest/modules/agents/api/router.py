@@ -425,6 +425,111 @@ def create_agent_router(
             return conflict(str(error))
         return AgentVersionResponse.from_domain(version)
 
+    # ── 版本对比 API ──────────────────────────────────────────────────────
+
+    @router.get(
+        "{agent_id}/versions/{v1_id}/diff/{v2_id}",
+        response_model=dict,
+    )
+    async def diff_versions(
+        request: Request,
+        project_id: UUID,
+        agent_id: UUID,
+        v1_id: UUID,
+        v2_id: UUID,
+    ) -> dict | JSONResponse:
+        actor = await actor_for(request)
+        if isinstance(actor, JSONResponse):
+            return actor
+        try:
+            v1 = await project_version(actor, project_id, agent_id, v1_id)
+            v2 = await project_version(actor, project_id, agent_id, v2_id)
+        except (AgentNotFoundError, AgentVersionNotFoundError):
+            return asset_not_found()
+
+        dict_v1 = v1.config.to_dict()
+        dict_v2 = v2.config.to_dict()
+        all_keys = sorted(set(list(dict_v1.keys()) + list(dict_v2.keys())))
+        fields: list[dict] = []
+        for key in all_keys:
+            val1 = dict_v1.get(key)
+            val2 = dict_v2.get(key)
+            fields.append({
+                "field": key,
+                "left_value": val1,
+                "right_value": val2,
+                "changed": val1 != val2,
+            })
+        return {
+            "v1": {
+                "id": str(v1.version_id.value),
+                "version_number": v1.version_number,
+                "status": v1.status.value,
+            },
+            "v2": {
+                "id": str(v2.version_id.value),
+                "version_number": v2.version_number,
+                "status": v2.status.value,
+            },
+            "fields": fields,
+        }
+
+    # ── 版本基线标记 ───────────────────────────────────────────────────────
+
+    @router.patch(
+        "{agent_id}/current-version",
+        response_model=AgentResponse,
+    )
+    async def set_current_version_endpoint(
+        request: Request,
+        project_id: UUID,
+        agent_id: UUID,
+        x_csrf_token: str | None = Header(default=None),
+    ) -> AgentResponse | JSONResponse:
+        actor = await writer(request, x_csrf_token)
+        if isinstance(actor, JSONResponse):
+            return actor
+        try:
+            agent = await project_agent(actor, project_id, agent_id)
+            body = await request.json()
+            version_id = body.get("version_id")
+            if not version_id:
+                return invalid_request("version_id is required")
+            async with dependencies.uow_factory():
+                agent.set_current_version(AgentVersionId(UUID(str(version_id))))
+        except (AgentNotFoundError, AgentVersionNotFoundError):
+            return asset_not_found()
+        except PermissionError:
+            return permission_denied()
+        return AgentResponse.from_domain(agent)
+
+    @router.patch(
+        "{agent_id}/baseline-version",
+        response_model=AgentResponse,
+    )
+    async def set_baseline_version_endpoint(
+        request: Request,
+        project_id: UUID,
+        agent_id: UUID,
+        x_csrf_token: str | None = Header(default=None),
+    ) -> AgentResponse | JSONResponse:
+        actor = await writer(request, x_csrf_token)
+        if isinstance(actor, JSONResponse):
+            return actor
+        try:
+            agent = await project_agent(actor, project_id, agent_id)
+            body = await request.json()
+            version_id = body.get("version_id")
+            if not version_id:
+                return invalid_request("version_id is required")
+            async with dependencies.uow_factory():
+                agent.set_baseline_version(AgentVersionId(UUID(str(version_id))))
+        except (AgentNotFoundError, AgentVersionNotFoundError):
+            return asset_not_found()
+        except PermissionError:
+            return permission_denied()
+        return AgentResponse.from_domain(agent)
+
     return router
 
 
