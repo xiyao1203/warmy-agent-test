@@ -1,4 +1,5 @@
 from datetime import timedelta
+from pathlib import Path
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -309,6 +310,14 @@ def create_app(
 
     # ── 归档端点（Agents/Datasets/TestPlans）────────────────────────────────
     _register_archive_endpoints(app, resolved_settings, dependencies)
+
+    # ── 插件注册表 ──────────────────────────────────────────────────────────
+    from agenttest.modules.plugins.infrastructure.file_registry import (
+        FileBasedPluginRegistry,
+    )
+
+    plugins_root = Path(__file__).resolve().parents[5] / "plugins"
+    app.state.plugins = FileBasedPluginRegistry(plugins_root)
 
     return app
 

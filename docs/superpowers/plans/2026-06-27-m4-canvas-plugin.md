@@ -35,18 +35,19 @@ apps/control-api/src/agenttest/modules/
 
 ### Task 2: 画布结构断言
 
-- [ ] 节点存在性断言
-- [ ] 连线正确性断言
-- [ ] 孤立节点检测
-- [ ] 画布 JSON Schema 校验
+- [x] 节点存在性断言（节点数量/类型/属性）
+- [x] 连线正确性断言（连线数量/方向）
+- [x] 孤立节点检测
+- [x] 画布 JSON Schema 校验
 
 ### Task 3: 多模态评分适配
 
-- [ ] DeepEval 适配层
-- [ ] 图片 Prompt 一致性评分
-- [ ] 参考图相似度评分
+- [x] Mira/MIMO 视觉模型适配层（OpenAI 兼容）
+- [x] 图片 Prompt 一致性评分（关键词启发式 + 视觉模型）
+- [x] 参考图相似度评分（URL 结构 + 视觉模型对比）
 
 ### Task 4: 插件注册与控制面集成
 
-- [ ] 控制面插件注册表
-- [ ] 插件发现与加载
+- [x] 控制面插件注册表（domain/infrastructure）
+- [x] 插件发现与加载（FileBasedPluginRegistry）
+- [x] 启动时自动扫描 plugins/ 并挂载到 app.state

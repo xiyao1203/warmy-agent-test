@@ -44,7 +44,7 @@ export function DatasetList({
   error?: "not-found" | "service";
   loading?: boolean;
   onCreate?: (payload: CreateDatasetRequest) => Promise<unknown>;
-  onDelete?: (datasetId: string) => void;
+  onDelete?: (datasetId: string) => Promise<unknown>;
   projectId: string;
 }) {
   if (loading) return <StatusPanel title="正在加载数据集…" />;
@@ -140,12 +140,14 @@ function CreateDatasetDialog({
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [error, setError] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
   async function submit() {
     if (!name.trim()) {
       setError("请输入数据集名称");
       return;
     }
+    setSubmitting(true);
     try {
       await onCreate({
         description: description.trim() || null,
@@ -157,6 +159,8 @@ function CreateDatasetDialog({
       setError("");
     } catch {
       setError("创建数据集失败，请检查输入后重试。");
+    } finally {
+      setSubmitting(false);
     }
   }
 
@@ -192,8 +196,13 @@ function CreateDatasetDialog({
           </label>
           {error ? <p className="text-sm text-[var(--danger)]">{error}</p> : null}
           <div className="flex justify-end gap-2">
-            <Button onClick={() => setOpen(false)}>取消</Button>
-            <Button onClick={submit} variant="primary">
+            <Button disabled={submitting} onClick={() => setOpen(false)}>取消</Button>
+            <Button
+              disabled={submitting}
+              loading={submitting}
+              onClick={submit}
+              variant="primary"
+            >
               保存数据集
             </Button>
           </div>
@@ -208,9 +217,10 @@ function ConfirmDeleteButton({
   onConfirm,
 }: {
   label: string;
-  onConfirm: () => void;
+  onConfirm: () => Promise<unknown>;
 }) {
   const [open, setOpen] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   return (
     <Dialog onOpenChange={setOpen} open={open}>
@@ -229,11 +239,20 @@ function ConfirmDeleteButton({
           确定要删除「{label}」吗？此操作不可恢复。
         </DialogDescription>
         <div className="mt-5 flex justify-end gap-2">
-          <Button onClick={() => setOpen(false)}>取消</Button>
+          <Button disabled={deleting} onClick={() => setOpen(false)}>
+            取消
+          </Button>
           <Button
-            onClick={() => {
-              setOpen(false);
-              onConfirm();
+            disabled={deleting}
+            loading={deleting}
+            onClick={async () => {
+              setDeleting(true);
+              try {
+                await onConfirm();
+                setOpen(false);
+              } finally {
+                setDeleting(false);
+              }
             }}
             variant="danger"
           >

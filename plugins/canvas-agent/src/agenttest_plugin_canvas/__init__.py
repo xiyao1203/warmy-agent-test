@@ -9,6 +9,11 @@ from agenttest_plugin_canvas.adapter import (
     CanvasNodeType,
     CanvasTrace,
 )
+from agenttest_plugin_canvas.scoring.multimodal import (
+    HeuristicMultiModalScorer,
+    MultiModalScorer,
+    ScoreResult,
+)
 
 __all__ = [
     "CanvasAgentAdapter",
@@ -18,4 +23,7 @@ __all__ = [
     "CanvasNode",
     "CanvasNodeType",
     "CanvasTrace",
+    "HeuristicMultiModalScorer",
+    "MultiModalScorer",
+    "ScoreResult",
 ]
