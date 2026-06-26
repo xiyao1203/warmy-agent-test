@@ -4,7 +4,7 @@ import { csrfHeaders, readCookie } from "./csrf";
 
 describe("csrf helpers", () => {
   it("reads and decodes the CSRF cookie", () => {
-    expect(readCookie("csrf_token", "a=1; csrf_token=hello%20world")).toBe(
+    expect(readCookie("agenttest_csrf", "a=1; agenttest_csrf=hello%20world")).toBe(
       "hello world",
     );
   });

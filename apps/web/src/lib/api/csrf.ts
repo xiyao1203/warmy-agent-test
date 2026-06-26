@@ -12,6 +12,6 @@ export function readCookie(
   return value ? decodeURIComponent(value) : undefined;
 }
 
-export function csrfHeaders(token = readCookie("csrf_token")) {
+export function csrfHeaders(token = readCookie("agenttest_csrf")) {
   return token ? { "x-csrf-token": token } : {};
 }
