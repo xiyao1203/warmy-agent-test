@@ -1,7 +1,7 @@
-"""Browser Harness 浏览器探索插件。
+"""Browser Harness 插件 — 基于 browser-use/browser-harness 官方库。
 
-通过 Playwright 内核驱动浏览器，提供页面内容采集、截图、
-DOM 结构抓取和可访问性检查能力。
+通过 Chrome DevTools Protocol (CDP) 控制真实浏览器，
+提供页面截图、DOM 采集和可访问性检查能力。
 """
 
 from __future__ import annotations
@@ -22,130 +22,74 @@ class BrowserPageSnapshot:
     errors: list[str] = field(default_factory=list)
 
 
-@dataclass
-class BrowserHarnessConfig:
-    """浏览器 Harness 配置。"""
+async def capture(url: str) -> BrowserPageSnapshot:
+    """打开页面并采集完整快照。
 
-    headless: bool = True
-    viewport_width: int = 1280
-    viewport_height: int = 720
-    timeout_ms: int = 30000
-    navigation_timeout_ms: int = 15000
+    Args:
+        url: 目标页面地址。
 
-
-class BrowserHarness:
-    """浏览器探索器。
-
-    作为 Playwright 的轻量包装，提供页面快照采集、截图
-    和 DOM 检查的统一接口。
+    Returns:
+        BrowserPageSnapshot 包含完整的页面信息。
     """
+    import base64
 
-    def __init__(self, config: BrowserHarnessConfig | None = None) -> None:
-        self._config = config or BrowserHarnessConfig()
+    from browser_harness.helpers import (  # type: ignore[import-untyped]
+        capture_screenshot,
+        goto_url,
+        js,
+        page_info,
+    )
 
-    async def capture(self, url: str) -> BrowserPageSnapshot:
-        """打开页面并采集完整快照。
+    errors: list[str] = []
 
-        使用 Playwright 异步 API 加载页面，采集标题、文本、
-        DOM 数量，并在 headless 模式下生成截图。
+    await goto_url(url)
+    info = page_info()
 
-        Args:
-            url: 目标页面地址。
+    html = js("return document.documentElement.outerHTML")
+    text = js("return document.body.innerText || ''")
+    dom_count = js("return document.querySelectorAll('*').length")
 
-        Returns:
-            BrowserPageSnapshot 包含完整的页面信息。
-        """
-        from playwright.async_api import async_playwright
+    screenshot_b64 = None
+    try:
+        raw = capture_screenshot()
+        screenshot_b64 = base64.b64encode(raw).decode()
+    except Exception:
+        pass
 
-        async with async_playwright() as pw:
-            browser = await pw.chromium.launch(headless=self._config.headless)
-            page = await browser.new_page(
-                viewport={
-                    "width": self._config.viewport_width,
-                    "height": self._config.viewport_height,
-                }
-            )
-            errors: list[str] = []
+    return BrowserPageSnapshot(
+        url=info.get("url", url),
+        title=info.get("title", ""),
+        html_preview=str(html)[:2000],
+        text_content=str(text)[:5000],
+        screenshot_base64=screenshot_b64,
+        dom_nodes_count=int(dom_count) if dom_count else 0,
+        errors=errors,
+    )
 
-            # 监听控制台错误
-            page.on("pageerror", lambda err: errors.append(str(err)))
 
-            try:
-                await page.goto(
-                    url,
-                    timeout=self._config.navigation_timeout_ms,
-                    wait_until="domcontentloaded",
-                )
-            except Exception as exc:
-                errors.append(f"导航失败: {exc}")
+async def check_accessibility(url: str) -> dict[str, object]:
+    """执行可访问性检查。
 
-            title = await page.title()
-            html = await page.content()
-            text = await page.inner_text("body")
-            dom_count = await page.evaluate(
-                "() => document.querySelectorAll('*').length"
-            )
+    返回页面中缺失 alt 的图片数、空链接数和
+    表单标签缺失情况。
+    """
+    from browser_harness.helpers import goto_url, js  # type: ignore[import-untyped]
 
-            screenshot = None
-            try:
-                screenshot_bytes = await page.screenshot(type="png")
-                import base64
+    await goto_url(url)
 
-                screenshot = base64.b64encode(screenshot_bytes).decode()
-            except Exception:
-                pass
+    missing_alts = js("return document.querySelectorAll('img:not([alt])').length")
+    empty_links = js("return document.querySelectorAll('a[href]:empty').length")
+    missing_labels = js("""
+        const inputs = document.querySelectorAll('input:not([type=hidden])');
+        let count = 0;
+        inputs.forEach((el) => {
+            if (!el.labels || el.labels.length === 0) count++;
+        });
+        return count;
+    """)
 
-            await browser.close()
-
-            return BrowserPageSnapshot(
-                url=url,
-                title=title,
-                html_preview=html[:2000],
-                text_content=text[:5000],
-                screenshot_base64=screenshot,
-                dom_nodes_count=dom_count,
-                errors=errors,
-            )
-
-    async def check_accessibility(self, url: str) -> dict[str, object]:
-        """执行可访问性检查。
-
-        返回页面中缺失 alt 的图片数、空链接数和
-        表单标签缺失情况。
-
-        Args:
-            url: 目标页面地址。
-
-        Returns:
-            包含可访问性统计的字典。
-        """
-        from playwright.async_api import async_playwright
-
-        async with async_playwright() as pw:
-            browser = await pw.chromium.launch(headless=self._config.headless)
-            page = await browser.new_page()
-            await page.goto(url, timeout=self._config.navigation_timeout_ms)
-
-            missing_alts = await page.evaluate(
-                "() => document.querySelectorAll('img:not([alt])').length"
-            )
-            empty_links = await page.evaluate(
-                "() => document.querySelectorAll('a[href]:empty').length"
-            )
-            missing_labels = await page.evaluate(
-                """() => {
-                  const inputs = document.querySelectorAll('input:not([type=hidden])');
-                  let count = 0;
-                  inputs.forEach((el) => {
-                    if (!el.labels || el.labels.length === 0) count++;
-                  });
-                  return count;
-                }"""
-            )
-
-            await browser.close()
-            return {
-                "missing_alt_images": missing_alts,
-                "empty_links": empty_links,
-                "inputs_without_labels": missing_labels,
-            }
+    return {
+        "missing_alt_images": int(missing_alts) if missing_alts else 0,
+        "empty_links": int(empty_links) if empty_links else 0,
+        "inputs_without_labels": int(missing_labels) if missing_labels else 0,
+    }

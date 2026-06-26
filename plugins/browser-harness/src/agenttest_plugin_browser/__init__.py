@@ -1,9 +1,9 @@
-"""Browser Harness 插件。"""
+"""Browser Harness 插件 — 基于 browser-use/browser-harness。"""
 
 from agenttest_plugin_browser.harness import (
-    BrowserHarness,
-    BrowserHarnessConfig,
     BrowserPageSnapshot,
+    capture,
+    check_accessibility,
 )
 
-__all__ = ["BrowserHarness", "BrowserHarnessConfig", "BrowserPageSnapshot"]
+__all__ = ["BrowserPageSnapshot", "capture", "check_accessibility"]
