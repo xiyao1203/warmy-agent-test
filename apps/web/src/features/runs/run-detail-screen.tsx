@@ -3,7 +3,7 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useCallback, useEffect, useRef, useState } from "react";
 
-import { cancelRun, getRun, listRunCases, runEventsUrl } from "./api";
+import { cancelRun, getRun, listArtifacts, listRunCases, runEventsUrl } from "./api";
 import { RunDetail } from "./run-detail";
 
 /** SSE 重连配置 */
@@ -41,6 +41,10 @@ export function RunDetailScreen({
   const casesQuery = useQuery({
     queryFn: () => listRunCases(projectId, runId),
     queryKey: ["runs", projectId, runId, "cases"],
+  });
+  const artifactsQuery = useQuery({
+    queryFn: () => listArtifacts(projectId, runId),
+    queryKey: ["runs", projectId, runId, "artifacts"],
   });
   const runStatus = runQuery.data?.status;
   const refetchRun = runQuery.refetch;
@@ -130,9 +134,11 @@ export function RunDetailScreen({
   });
   return (
     <RunDetail
+      artifacts={artifactsQuery.data ?? []}
       cases={casesQuery.data ?? []}
       loading={runQuery.isPending || casesQuery.isPending}
       onCancel={() => cancelMutation.mutateAsync()}
+      projectId={projectId}
       run={runQuery.data}
     />
   );

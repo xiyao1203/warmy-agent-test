@@ -4,6 +4,8 @@ import type { RunCaseResponse, RunResponse } from "@warmy/generated-api-client";
 import {
   AlertTriangle,
   CheckCircle2,
+  Download,
+  FileText,
   ListTree,
   Radio,
   Square,
@@ -12,17 +14,23 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
+import type { ArtifactItem } from "./api";
+import { artifactDownloadUrl } from "./api";
 import { StatusBadge } from "./run-center";
 
 export function RunDetail({
+  artifacts = [],
   cases = [],
   loading = false,
   onCancel = async () => undefined,
+  projectId,
   run,
 }: {
+  artifacts?: ArtifactItem[];
   cases?: RunCaseResponse[];
   loading?: boolean;
   onCancel?: () => Promise<unknown>;
+  projectId: string;
   run?: RunResponse;
 }) {
   if (loading || !run) {
@@ -173,6 +181,41 @@ export function RunDetail({
           </div>
         </aside>
       </div>
+
+      {/* Artifact 产物区 */}
+      {artifacts.length > 0 && (
+        <section className="mt-6 border-t border-[var(--border)] pt-5">
+          <h2 className="flex items-center gap-2 text-sm font-semibold">
+            <FileText aria-hidden="true" className="size-4" />
+            运行产物
+          </h2>
+          <ul className="mt-3 divide-y divide-[var(--border)] rounded-[var(--radius-sm)] border border-[var(--border)]">
+            {artifacts.map((a) => (
+              <li
+                key={a.id}
+                className="flex items-center justify-between gap-3 px-3 py-2.5"
+              >
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-medium">{a.filename}</p>
+                  <p className="text-xs text-[var(--text-muted)]">
+                    {a.content_type}{" "}
+                    · {formatBytes(a.size_bytes)}{" "}
+                    · {new Date(a.created_at).toLocaleDateString("zh-CN")}
+                  </p>
+                </div>
+                <Button asChild className="shrink-0" variant="ghost">
+                  <a
+                    download={a.filename}
+                    href={artifactDownloadUrl(projectId, a.id)}
+                  >
+                    <Download aria-hidden="true" className="size-4" />
+                  </a>
+                </Button>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
     </div>
   );
 }
@@ -193,4 +236,10 @@ function InfoRow({ label, value }: { label: string; value: string }) {
       <span className="max-w-44 break-all text-right font-medium">{value}</span>
     </div>
   );
+}
+
+function formatBytes(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }

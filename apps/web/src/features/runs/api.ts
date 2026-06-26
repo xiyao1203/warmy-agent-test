@@ -98,3 +98,31 @@ export async function listPublishedPlanVersions(projectId: string) {
   );
   return versions.flat();
 }
+
+// ── Artifact 产物 ────────────────────────────────────────────────────────
+
+export interface ArtifactItem {
+  id: string;
+  filename: string;
+  content_type: string;
+  size_bytes: number;
+  created_at: string;
+}
+
+export async function listArtifacts(
+  projectId: string,
+  runId: string,
+): Promise<ArtifactItem[]> {
+  const url = `${CONTROL_API_URL}/api/v1/projects/${projectId}/runs/${runId}/artifacts`;
+  const res = await fetch(url, { credentials: "include" });
+  if (!res.ok) return [];
+  const data = await res.json();
+  return (data as { items?: ArtifactItem[] }).items ?? [];
+}
+
+export function artifactDownloadUrl(
+  projectId: string,
+  artifactId: string,
+): string {
+  return `${CONTROL_API_URL}/api/v1/projects/${projectId}/artifacts/${artifactId}/download`;
+}
