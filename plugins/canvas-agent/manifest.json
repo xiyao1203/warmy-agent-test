@@ -3,6 +3,7 @@
   "name": "Canvas Agent Plugin",
   "version": "1.0.0",
   "sdk_version": 1,
+  "entry_point": "agenttest_plugin_canvas",
   "capabilities": [
     "agent_adapter",
     "artifact_adapter",
