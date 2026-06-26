@@ -7,6 +7,7 @@ from starlette.requests import Request
 from starlette.responses import Response
 
 from agenttest.bootstrap.project_access import ProjectAccessAdapter
+from agenttest.bootstrap.run_source import SqlAlchemyRunSource
 from agenttest.bootstrap.settings import Settings, get_settings
 from agenttest.entrypoints.http.health import router as health_router
 from agenttest.modules.agents.api.router import (
@@ -131,6 +132,24 @@ from agenttest.modules.projects.application.queries.list_projects import (
 from agenttest.modules.projects.infrastructure.persistence.repositories import (
     SqlAlchemyProjectRepository,
 )
+from agenttest.modules.runs.api.router import RunApiDependencies, create_run_router
+from agenttest.modules.runs.application.commands import (
+    ApplyRunResultHandler,
+    CancelRunHandler,
+    CreateRunHandler,
+)
+from agenttest.modules.runs.application.queries import (
+    GetRunHandler,
+    ListRunCasesHandler,
+    ListRunsHandler,
+)
+from agenttest.modules.runs.infrastructure.orchestrator import LocalRunOrchestrator
+from agenttest.modules.runs.infrastructure.persistence.repositories import (
+    SqlAlchemyRunRepository,
+)
+from agenttest.modules.runs.infrastructure.temporal_orchestrator import (
+    TemporalRunOrchestrator,
+)
 from agenttest.modules.test_plans.api.router import (
     TestPlanApiDependencies,
     create_test_plan_router,
@@ -170,6 +189,7 @@ def create_app(
     dataset_dependencies: DatasetApiDependencies | None = None,
     test_plan_dependencies: TestPlanApiDependencies | None = None,
     environment_dependencies: EnvironmentApiDependencies | None = None,
+    run_dependencies: RunApiDependencies | None = None,
 ) -> FastAPI:
     resolved_settings = settings or get_settings()
     app = FastAPI(
@@ -270,6 +290,16 @@ def create_app(
     app.include_router(
         create_environment_router(
             environments,
+            current_user=dependencies.current_user,
+            csrf=dependencies.csrf,
+            settings=resolved_settings,
+        ),
+        prefix="/api/v1",
+    )
+    runs = run_dependencies or build_run_dependencies(resolved_settings)
+    app.include_router(
+        create_run_router(
+            runs,
             current_user=dependencies.current_user,
             csrf=dependencies.csrf,
             settings=resolved_settings,
@@ -609,5 +639,43 @@ def build_environment_dependencies(settings: Settings) -> EnvironmentApiDependen
             project_access=access,
             audit=audit,
         ),
+        uow_factory=lambda: SqlAlchemyUnitOfWork(session_factory),
+    )
+
+
+def build_run_dependencies(settings: Settings) -> RunApiDependencies:
+    engine = create_database_engine(str(settings.database_url))
+    session_factory = create_session_factory(engine)
+    runs = SqlAlchemyRunRepository(session_factory)
+    projects = SqlAlchemyProjectRepository(session_factory)
+    access = ProjectAccessAdapter(projects)
+    source = SqlAlchemyRunSource(session_factory)
+    orchestrator = (
+        TemporalRunOrchestrator(
+            address=settings.temporal_address,
+            control_api_base_url=settings.control_api_base_url,
+            internal_api_token=settings.internal_api_token,
+            namespace=settings.temporal_namespace,
+            task_queue=settings.temporal_task_queue,
+        )
+        if settings.temporal_address
+        else LocalRunOrchestrator()
+    )
+    return RunApiDependencies(
+        create_run=CreateRunHandler(
+            runs=runs,
+            source=source,
+            project_access=access,
+            orchestrator=orchestrator,
+        ),
+        list_runs=ListRunsHandler(runs=runs, project_access=access),
+        get_run=GetRunHandler(runs=runs, project_access=access),
+        list_cases=ListRunCasesHandler(runs=runs, project_access=access),
+        cancel_run=CancelRunHandler(
+            runs=runs,
+            project_access=access,
+            orchestrator=orchestrator,
+        ),
+        apply_result=ApplyRunResultHandler(runs=runs),
         uow_factory=lambda: SqlAlchemyUnitOfWork(session_factory),
     )

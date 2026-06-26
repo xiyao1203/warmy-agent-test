@@ -7,6 +7,7 @@ requires-python = ">=3.12,<3.14"
 members = [
   "apps/control-api",
   "apps/admin-cli",
+  "workers/api-runner",
 ]
 
 [tool.ruff]

@@ -1,0 +1,105 @@
+from __future__ import annotations
+
+from uuid import uuid4
+
+import pytest
+from agenttest.modules.identity.public import UserId
+from agenttest.modules.projects.public import ProjectId
+from agenttest.modules.runs.domain.entities import Run, RunCase, RunCaseId, RunId
+from agenttest.modules.runs.domain.value_objects import RunCaseStatus, RunStatus
+from agenttest.modules.test_plans.public import TestPlanVersionId
+
+
+def make_run() -> Run:
+    return Run.create(
+        run_id=RunId.new(),
+        project_id=ProjectId.new(),
+        test_plan_version_id=TestPlanVersionId.new(),
+        agent_version_id=uuid4(),
+        dataset_version_id=uuid4(),
+        idempotency_key="run-once",
+        created_by=UserId.new(),
+        config_snapshot={"concurrency": 4},
+        plugin_snapshot={"id": "generic-http", "version": "1.0.0"},
+        total_cases=2,
+    )
+
+
+def test_run_follows_explicit_state_machine() -> None:
+    run = make_run()
+
+    assert run.status is RunStatus.QUEUED
+    run.start()
+    assert run.status is RunStatus.RUNNING
+
+    run.complete(passed_cases=2, failed_cases=0, error_cases=0)
+    assert run.status is RunStatus.PASSED
+    assert run.completed_at is not None
+
+    with pytest.raises(ValueError, match="terminal"):
+        run.cancel()
+
+
+def test_run_distinguishes_failed_error_and_cancelled() -> None:
+    failed = make_run()
+    failed.start()
+    failed.complete(passed_cases=1, failed_cases=1, error_cases=0)
+    assert failed.status is RunStatus.FAILED
+
+    errored = make_run()
+    errored.start()
+    errored.complete(passed_cases=1, failed_cases=0, error_cases=1)
+    assert errored.status is RunStatus.ERROR
+
+    cancelled = make_run()
+    cancelled.start()
+    cancelled.cancel()
+    assert cancelled.status is RunStatus.CANCELLED
+
+
+def test_run_rejects_inconsistent_case_totals() -> None:
+    run = make_run()
+    run.start()
+
+    with pytest.raises(ValueError, match="case counts"):
+        run.complete(passed_cases=1, failed_cases=0, error_cases=0)
+
+
+def test_run_case_records_trace_and_error_classification() -> None:
+    case = RunCase.create(
+        run_case_id=RunCaseId.new(),
+        run_id=RunId.new(),
+        test_case_id=uuid4(),
+        name="streaming response",
+        input_snapshot={"message": "hello"},
+        assertion_snapshot=[{"type": "contains", "value": "world"}],
+    )
+    case.start()
+    case.fail(
+        status=RunCaseStatus.ERROR,
+        error_type="TransientError",
+        error_message="upstream timed out",
+        trace=[{"name": "http.request", "status": "error"}],
+    )
+
+    assert case.status is RunCaseStatus.ERROR
+    assert case.error_type == "TransientError"
+    assert case.trace[0]["name"] == "http.request"
+    assert case.completed_at is not None
+
+
+def test_run_requires_reproducible_snapshots() -> None:
+    with pytest.raises(ValueError, match="idempotency_key"):
+        Run.create(
+            run_id=RunId.new(),
+            project_id=ProjectId.new(),
+            test_plan_version_id=TestPlanVersionId.new(),
+            agent_version_id=uuid4(),
+            dataset_version_id=uuid4(),
+            idempotency_key=" ",
+            created_by=UserId.new(),
+            config_snapshot={},
+            plugin_snapshot={},
+            total_cases=1,
+        )
+

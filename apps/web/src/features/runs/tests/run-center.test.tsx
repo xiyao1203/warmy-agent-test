@@ -1,0 +1,199 @@
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import type { ReactNode } from "react";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+
+import { RunDetailScreen } from "../run-detail-screen";
+import { RunCenter } from "../run-center";
+import { RunDetail } from "../run-detail";
+
+const api = vi.hoisted(() => ({
+  cancelRun: vi.fn(),
+  getRun: vi.fn(),
+  listRunCases: vi.fn(),
+  runEventsUrl: vi.fn(),
+}));
+
+vi.mock("../api", () => api);
+
+beforeEach(() => {
+  vi.clearAllMocks();
+});
+
+afterEach(() => {
+  vi.unstubAllGlobals();
+  vi.useRealTimers();
+});
+
+const running = {
+  cancelled_cases: 0,
+  completed_at: null,
+  created_at: "2026-06-26T10:00:00Z",
+  error_cases: 0,
+  failed_cases: 0,
+  id: "run-1",
+  passed_cases: 1,
+  project_id: "project-1",
+  started_at: "2026-06-26T10:00:01Z",
+  status: "running",
+  test_plan_version_id: "version-1",
+  total_cases: 3,
+  workflow_id: "run-run-1",
+};
+
+function renderWithQueryClient(children: ReactNode) {
+  const client = new QueryClient({
+    defaultOptions: {
+      mutations: { retry: false },
+      queries: { retry: false, staleTime: 0 },
+    },
+  });
+  return render(
+    <QueryClientProvider client={client}>{children}</QueryClientProvider>,
+  );
+}
+
+describe("RunCenter", () => {
+  it("creates a run from a published plan version and renders progress", async () => {
+    const onCreate = vi.fn().mockResolvedValue(undefined);
+    render(
+      <RunCenter
+        onCreate={onCreate}
+        planVersions={[{ id: "version-1", label: "客服回归 v2" }]}
+        projectId="project-1"
+        runs={[running]}
+      />,
+    );
+
+    expect(screen.getByText("1 / 3")).toBeVisible();
+    fireEvent.change(screen.getByLabelText("测试计划版本"), {
+      target: { value: "version-1" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "开始运行" }));
+
+    await waitFor(() => expect(onCreate).toHaveBeenCalledWith("version-1"));
+  });
+
+  it("renders empty and service states", () => {
+    const { rerender } = render(
+      <RunCenter planVersions={[]} projectId="project-1" runs={[]} />,
+    );
+    expect(screen.getByText("暂无运行记录")).toBeVisible();
+
+    rerender(
+      <RunCenter
+        error="service"
+        planVersions={[]}
+        projectId="project-1"
+      />,
+    );
+    expect(screen.getByText("运行中心暂时不可用")).toBeVisible();
+  });
+});
+
+describe("RunDetail", () => {
+  it("shows cases, normalized trace, errors and cancellation", async () => {
+    const onCancel = vi.fn().mockResolvedValue(undefined);
+    render(
+      <RunDetail
+        cases={[
+          {
+            duration_ms: 120,
+            error_message: "upstream timed out",
+            error_type: "TransientError",
+            id: "case-1",
+            name: "流式回答",
+            output: null,
+            status: "error",
+            test_case_id: "test-case-1",
+            trace: [
+              {
+                name: "http.request",
+                attributes: { "http.response.status_code": 504 },
+              },
+            ],
+          },
+        ]}
+        onCancel={onCancel}
+        run={running}
+      />,
+    );
+
+    expect(screen.getByText("TransientError")).toBeVisible();
+    expect(screen.getByText("http.request")).toBeVisible();
+    fireEvent.click(screen.getByRole("button", { name: "取消运行" }));
+    await waitFor(() => expect(onCancel).toHaveBeenCalledTimes(1));
+  });
+});
+
+describe("RunDetailScreen realtime refresh", () => {
+  it("opens run events and refreshes detail data after snapshots", async () => {
+    const sources: Array<{
+      close: ReturnType<typeof vi.fn>;
+      onerror: (() => void) | null;
+      onmessage: ((event: MessageEvent) => void) | null;
+      url: string;
+    }> = [];
+    class FakeEventSource {
+      close = vi.fn();
+      onerror: (() => void) | null = null;
+      onmessage: ((event: MessageEvent) => void) | null = null;
+
+      constructor(public url: string) {
+        sources.push(this);
+      }
+    }
+    vi.stubGlobal("EventSource", FakeEventSource);
+    api.getRun.mockResolvedValue(running);
+    api.listRunCases.mockResolvedValue([]);
+    api.runEventsUrl.mockReturnValue("/api/v1/projects/project-1/runs/run-1/events");
+
+    renderWithQueryClient(
+      <RunDetailScreen projectId="project-1" runId="run-1" />,
+    );
+
+    await waitFor(() =>
+      expect(api.runEventsUrl).toHaveBeenCalledWith("project-1", "run-1"),
+    );
+    expect(sources[0]?.url).toBe("/api/v1/projects/project-1/runs/run-1/events");
+
+    sources[0]?.onmessage?.(
+      new MessageEvent("message", {
+        data: JSON.stringify({ ...running, passed_cases: 2 }),
+      }),
+    );
+
+    await waitFor(() => expect(api.getRun).toHaveBeenCalledTimes(2));
+    expect(api.listRunCases).toHaveBeenCalledTimes(2);
+  });
+
+  it("closes a broken event stream so polling fallback can continue", async () => {
+    const sources: Array<{
+      close: ReturnType<typeof vi.fn>;
+      onerror: (() => void) | null;
+      onmessage: ((event: MessageEvent) => void) | null;
+    }> = [];
+    class FakeEventSource {
+      close = vi.fn();
+      onerror: (() => void) | null = null;
+      onmessage: ((event: MessageEvent) => void) | null = null;
+
+      constructor() {
+        sources.push(this);
+      }
+    }
+    vi.stubGlobal("EventSource", FakeEventSource);
+    api.getRun.mockResolvedValue(running);
+    api.listRunCases.mockResolvedValue([]);
+    api.runEventsUrl.mockReturnValue("/events");
+
+    renderWithQueryClient(
+      <RunDetailScreen projectId="project-1" runId="run-1" />,
+    );
+
+    await waitFor(() => expect(sources).toHaveLength(1));
+    sources[0]?.onerror?.();
+
+    await waitFor(() => expect(sources[0]?.close).toHaveBeenCalledTimes(1));
+  });
+});

@@ -25,6 +25,11 @@ from agenttest.modules.projects.infrastructure.persistence.models import (
     ProjectMemberModel,
     ProjectModel,
 )
+from agenttest.modules.runs.infrastructure.persistence.models import (
+    RunCaseModel,
+    RunEventModel,
+    RunModel,
+)
 from agenttest.modules.test_plans.infrastructure.persistence.models import (
     TestPlanModel,
     TestPlanVersionModel,
@@ -43,6 +48,9 @@ _MODELS = (
     EnvironmentTemplateModel,
     ProjectMemberModel,
     ProjectModel,
+    RunCaseModel,
+    RunEventModel,
+    RunModel,
     TestCaseModel,
     TestPlanModel,
     TestPlanVersionModel,

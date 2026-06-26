@@ -30,6 +30,11 @@ class Settings(BaseSettings):
     web_origin: AnyHttpUrl = AnyHttpUrl("http://localhost:5175")
     session_cookie_name: str = "agenttest_session"
     session_ttl_seconds: int = Field(default=28800, ge=300, le=604800)
+    control_api_base_url: str = "http://localhost:8181"
+    internal_api_token: str = Field(default="local-internal-token", min_length=16)
+    temporal_address: str | None = None
+    temporal_namespace: str = "default"
+    temporal_task_queue: str = "agenttest-api-runner"
 
 
 @lru_cache

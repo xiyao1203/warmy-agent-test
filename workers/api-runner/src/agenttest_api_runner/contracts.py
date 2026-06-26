@@ -1,0 +1,52 @@
+from __future__ import annotations
+
+from dataclasses import dataclass, field
+
+
+@dataclass(frozen=True, slots=True)
+class ResultCallbackConfig:
+    base_url: str
+    internal_token: str
+    project_id: str
+
+
+@dataclass(frozen=True, slots=True)
+class RunCaseTask:
+    run_case_id: str
+    input: dict[str, object]
+    assertions: list[dict[str, object]]
+
+
+@dataclass(frozen=True, slots=True)
+class RunTask:
+    run_id: str
+    idempotency_key: str
+    cases: list[RunCaseTask]
+    agent_config: dict[str, object]
+    callback: ResultCallbackConfig | None = None
+
+
+@dataclass(frozen=True, slots=True)
+class ReportArtifact:
+    name: str
+    content_type: str
+    content: str
+
+
+@dataclass(frozen=True, slots=True)
+class RunCaseResult:
+    run_case_id: str
+    status: str
+    output: dict[str, object] | None = None
+    trace: list[dict[str, object]] = field(default_factory=list)
+    error_type: str | None = None
+    error_message: str | None = None
+    duration_ms: int | None = None
+
+
+@dataclass(frozen=True, slots=True)
+class RunResult:
+    run_id: str
+    status: str
+    cases: list[RunCaseResult]
+    reports: list[ReportArtifact] = field(default_factory=list)
