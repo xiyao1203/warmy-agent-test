@@ -7,6 +7,10 @@ from temporalio.common import RetryPolicy
 
 with workflow.unsafe.imports_passed_through():
     from agenttest_api_runner.activities import execute_agent_case, post_run_result
+    from agenttest_api_runner.browser_harness_activity import (
+        CapturePageInput,
+        capture_page_snapshot,
+    )
     from agenttest_api_runner.callback import ResultCallbackTask
     from agenttest_api_runner.contracts import (
         ResultCallbackConfig,
@@ -66,6 +70,21 @@ class RunWorkflow:
                 )
                 continue
             try:
+                # ── Browser Harness 前置采集（可选） ──────────────────
+                capture_url = task.agent_config.get("pre_capture_url")
+                if capture_url and isinstance(capture_url, str):
+                    await workflow.execute_activity(
+                        capture_page_snapshot,
+                        CapturePageInput(
+                            url=capture_url,
+                            run_case_id=case.run_case_id,
+                        ),
+                        start_to_close_timeout=timedelta(seconds=30),
+                        retry_policy=RetryPolicy(
+                            maximum_attempts=2,
+                        ),
+                    )
+
                 result = await workflow.execute_activity(
                     execute_agent_case,
                     args=[case, task.agent_config],

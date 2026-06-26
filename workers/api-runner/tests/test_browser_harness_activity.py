@@ -1,6 +1,5 @@
 """Browser Harness Activity 测试。"""
 
-import pytest
 
 
 class TestBrowserHarnessActivity:
