@@ -5,6 +5,7 @@
 - 连线存在性和方向检查
 - 孤立节点检测
 - 强制连接规则验证
+- Canvas JSON Schema 结构校验
 """
 
 from __future__ import annotations
@@ -176,6 +177,74 @@ def assert_no_orphan_nodes(trace: CanvasTrace) -> AssertionResult:
 
 # ── 综合断言函数 ────────────────────────────────────────────────────────────
 
+CANVAS_SCHEMA = {
+    "type": "object",
+    "required": ["nodes", "connections"],
+    "properties": {
+        "nodes": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "required": ["node_id", "node_type"],
+                "properties": {
+                    "node_id": {"type": "string"},
+                    "node_type": {"type": "string"},
+                    "label": {"type": "string"},
+                    "properties": {"type": "object"},
+                },
+            },
+        },
+        "connections": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "required": ["source_node_id", "target_node_id", "connection_type"],
+                "properties": {
+                    "source_node_id": {"type": "string"},
+                    "target_node_id": {"type": "string"},
+                    "connection_type": {"type": "string"},
+                    "properties": {"type": "object"},
+                },
+            },
+        },
+    },
+}
+
+
+def assert_canvas_schema(trace: CanvasTrace) -> AssertionResult:
+    """校验 CanvasTrace 数据结构是否符合 JSON Schema。"""
+    import jsonschema
+
+    raw = {
+        "nodes": [
+            {
+                "node_id": n.node_id,
+                "node_type": n.node_type.value,
+                "label": n.label,
+                "properties": n.properties,
+            }
+            for n in trace.nodes
+        ],
+        "connections": [
+            {
+                "source_node_id": c.source_node_id,
+                "target_node_id": c.target_node_id,
+                "connection_type": c.connection_type.value,
+                "properties": c.properties,
+            }
+            for c in trace.connections
+        ],
+    }
+    try:
+        jsonschema.validate(raw, CANVAS_SCHEMA)
+    except jsonschema.ValidationError as exc:
+        return AssertionResult.fail(
+            "Canvas JSON Schema 校验",
+            f"数据结构不符合规范: {exc.message}",
+            [str(exc.path) if exc.path else "根层级"],
+        )
+    return AssertionResult.ok("Canvas JSON Schema 校验", "结构完全符合规范")
+
 
 def run_all_assertions(
     trace: CanvasTrace,
@@ -197,5 +266,7 @@ def run_all_assertions(
         results.append(assert_required_connection(trace, from_type=from_t, to_type=to_t))
 
     results.append(assert_no_orphan_nodes(trace))
+
+    results.append(assert_canvas_schema(trace))
 
     return AssertionReport.from_results(results)
