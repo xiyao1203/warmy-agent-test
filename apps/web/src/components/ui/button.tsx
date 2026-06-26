@@ -1,14 +1,18 @@
 import { Slot } from "@radix-ui/react-slot";
+import { LoaderCircle } from "lucide-react";
 import type { ButtonHTMLAttributes } from "react";
 
 type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
   asChild?: boolean;
+  loading?: boolean;
   variant?: "danger" | "ghost" | "primary" | "secondary";
 };
 
 export function Button({
   asChild = false,
+  children,
   className = "",
+  loading = false,
   variant = "secondary",
   ...props
 }: ButtonProps) {
@@ -26,8 +30,14 @@ export function Button({
 
   return (
     <Component
-      className={`inline-flex h-8 items-center justify-center rounded-[var(--radius-sm)] border px-3 text-sm font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${variants[variant]} ${className}`}
+      className={`inline-flex h-8 items-center justify-center gap-2 rounded-[var(--radius-sm)] border px-3 text-sm font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${variants[variant]} ${className}`}
       {...props}
-    />
+      disabled={loading || props.disabled}
+    >
+      {loading ? (
+        <LoaderCircle aria-hidden="true" className="size-4 animate-spin" />
+      ) : null}
+      {children}
+    </Component>
   );
 }

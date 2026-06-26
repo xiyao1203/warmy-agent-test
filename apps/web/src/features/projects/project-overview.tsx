@@ -162,8 +162,8 @@ export function ProjectOverview({
             <h2 className="text-sm font-semibold">测试活动</h2>
           </div>
           <EmptyState
-            description="运行与结果将在 M3 接入；这里不会展示虚构的执行数据。"
-            title="暂无测试活动"
+            description="运行记录、进度与结果可在运行中心查看。"
+            title="查看运行中心"
           />
         </section>
       </div>

@@ -179,7 +179,7 @@ function CreateAgentDialog({
           <label className="block text-sm font-medium">
             Agent 类型
             <select
-              className="mt-1.5 h-9 w-full rounded-[var(--radius-sm)] border border-[var(--border)] bg-[var(--surface)] px-3"
+              className="mt-1.5 h-9 w-full rounded-[var(--radius-sm)] border border-[var(--border)] bg-[var(--surface)] px-3 text-sm text-[var(--text)] hover:border-[var(--border-strong)] focus:border-[var(--accent)] focus:outline-none focus:ring-2 focus:ring-[var(--focus-ring-subtle)]"
               onChange={(event) => setAgentType(event.target.value as AgentType)}
               value={agentType}
             >
@@ -212,8 +212,13 @@ function CreateAgentDialog({
 
 function StatusPanel({ title }: { title: string }) {
   return (
-    <div className="grid min-h-[calc(100vh-3rem)] place-items-center text-sm">
-      {title}
+    <div className="grid min-h-[calc(100vh-3rem)] place-items-center px-6 text-center">
+      <div>
+        <h1 className="text-base font-semibold">{title}</h1>
+        <p className="mt-2 max-w-md text-sm leading-6 text-[var(--text-muted)]">
+          请稍后刷新重试，或联系超级管理员。
+        </p>
+      </div>
     </div>
   );
 }
