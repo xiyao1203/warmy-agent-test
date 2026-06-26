@@ -126,3 +126,23 @@ export function artifactDownloadUrl(
 ): string {
   return `${CONTROL_API_URL}/api/v1/projects/${projectId}/artifacts/${artifactId}/download`;
 }
+
+export async function uploadArtifact(
+  projectId: string,
+  runId: string,
+  file: File,
+): Promise<ArtifactItem> {
+  const form = new FormData();
+  form.append("file", file);
+  const url = `${CONTROL_API_URL}/api/v1/projects/${projectId}/runs/${runId}/artifacts`;
+  const res = await fetch(url, {
+    body: form,
+    credentials: "include",
+    headers: { "X-Csrf-Token": csrfHeaders()["x-csrf-token"] || "" },
+    method: "POST",
+  });
+  if (!res.ok) {
+    throw new Error(`上传失败 (${res.status})`);
+  }
+  return (await res.json()) as ArtifactItem;
+}

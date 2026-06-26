@@ -9,13 +9,15 @@ import {
   ListTree,
   Radio,
   Square,
+  Upload,
 } from "lucide-react";
+import { useRef, useState } from "react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
 import type { ArtifactItem } from "./api";
-import { artifactDownloadUrl } from "./api";
+import { artifactDownloadUrl, uploadArtifact } from "./api";
 import { StatusBadge } from "./run-center";
 
 export function RunDetail({
@@ -33,6 +35,9 @@ export function RunDetail({
   projectId: string;
   run?: RunResponse;
 }) {
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState("");
   if (loading || !run) {
     return (
       <div className="grid min-h-[calc(100vh-3rem)] place-items-center text-sm">
@@ -183,12 +188,52 @@ export function RunDetail({
       </div>
 
       {/* Artifact 产物区 */}
-      {artifacts.length > 0 && (
-        <section className="mt-6 border-t border-[var(--border)] pt-5">
+      <section className="mt-6 border-t border-[var(--border)] pt-5">
+        <div className="flex items-center justify-between gap-3">
           <h2 className="flex items-center gap-2 text-sm font-semibold">
             <FileText aria-hidden="true" className="size-4" />
             运行产物
           </h2>
+          <div className="flex items-center gap-2">
+            <input
+              accept="*/*"
+              className="hidden"
+              onChange={async (event) => {
+                const file = event.target.files?.[0];
+                if (!file) return;
+                setUploading(true);
+                setUploadError("");
+                try {
+                  await uploadArtifact(projectId, run.id, file);
+                  window.location.reload();
+                } catch {
+                  setUploadError("上传失败，请重试。");
+                } finally {
+                  setUploading(false);
+                  event.target.value = "";
+                }
+              }}
+              ref={fileInputRef}
+              type="file"
+            />
+            <Button
+              disabled={uploading}
+              loading={uploading}
+              onClick={() => fileInputRef.current?.click()}
+              variant="ghost"
+            >
+              <Upload aria-hidden="true" className="size-4" />
+            </Button>
+          </div>
+        </div>
+        {uploadError && (
+          <p className="mt-2 text-sm text-[var(--danger)]">{uploadError}</p>
+        )}
+        {artifacts.length === 0 ? (
+          <p className="mt-3 text-sm text-[var(--text-muted)]">
+            暂无产物，点击上传按钮添加。
+          </p>
+        ) : (
           <ul className="mt-3 divide-y divide-[var(--border)] rounded-[var(--radius-sm)] border border-[var(--border)]">
             {artifacts.map((a) => (
               <li
@@ -214,8 +259,8 @@ export function RunDetail({
               </li>
             ))}
           </ul>
+        )}
         </section>
-      )}
     </div>
   );
 }
