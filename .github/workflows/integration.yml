@@ -1,0 +1,37 @@
+# 🔗 Integration Tests — Docker Compose + API Contract
+name: Integration
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  integration:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_DB: agenttest
+          POSTGRES_USER: agenttest
+          POSTGRES_PASSWORD: agenttest-test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 12
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - run: |
+          uv run alembic -c apps/control-api/alembic.ini upgrade head
+        env:
+          DATABASE_URL: postgresql+asyncpg://agenttest:agenttest-test@localhost:5432/agenttest
+      - run: uv run pytest apps/control-api/tests/ -q
+        env:
+          DATABASE_URL: postgresql+asyncpg://agenttest:agenttest-test@localhost:5432/agenttest
