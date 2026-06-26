@@ -314,6 +314,9 @@ def create_app(
     # ── Artifact 产物上传/下载 ────────────────────────────────────────────
     _register_artifact_endpoints(app, resolved_settings, dependencies)
 
+    # ── Security Policy Engine ──────────────────────────────────────────────
+    _register_security_endpoints(app, resolved_settings, dependencies)
+
     # ── 插件注册表 ──────────────────────────────────────────────────────────
     from agenttest.modules.plugins.infrastructure.file_registry import (
         FileBasedPluginRegistry,
@@ -819,17 +822,26 @@ def _register_artifact_endpoints(
     settings: Settings,
     auth_deps,  # AuthApiDependencies
 ) -> None:
-    """注册产物上传/列表/下载端点。"""
+    """注册产物上传/列表/下载端点（auth+csrf+project 保护）。"""
     from pathlib import Path
+    from uuid import UUID
+
+    from fastapi import Request
 
     from agenttest.modules.artifacts.api.router import create_artifact_router
     from agenttest.modules.artifacts.infrastructure.storage import (
         FileSystemArtifactStorage,
     )
+    from agenttest.modules.identity.application.queries.current_user import (
+        InvalidSessionError,
+    )
+    from agenttest.modules.identity.public import User
     from agenttest.shared.infrastructure.database import (
         create_database_engine,
         create_session_factory,
     )
+
+    CSRF_NAME = "agenttest_csrf"
 
     artifacts_dir = Path(".data/artifacts")
     artifacts_dir.mkdir(parents=True, exist_ok=True)
@@ -838,8 +850,160 @@ def _register_artifact_endpoints(
     engine = create_database_engine(str(settings.database_url))
     session_factory = create_session_factory(engine)
 
+    async def _actor(request: Request) -> User:
+        token = request.cookies.get(settings.session_cookie_name)
+        if not token:
+            raise InvalidSessionError
+        return await auth_deps.current_user.execute(token)
+
+    def _check_csrf(request: Request) -> None:
+        header = request.headers.get("X-Csrf-Token")
+        if not header or header != request.cookies.get(CSRF_NAME):
+            raise PermissionError("CSRF mismatch")
+
+    async def _check_project(project_id: UUID) -> None:
+        """验证项目存在（SQL 查询）。"""
+        from sqlalchemy import text
+
+        async with session_factory() as session:
+            result = await session.execute(
+                text("SELECT 1 FROM projects WHERE id = :pid"),
+                {"pid": project_id},
+            )
+            if result.scalar() is None:
+                from fastapi import HTTPException
+
+                raise HTTPException(status_code=404, detail="Project not found")
+
     router = create_artifact_router(
         storage,
         session_factory=session_factory,
+        _actor=_actor,
+        _check_csrf=_check_csrf,
+        _check_project=_check_project,
     )
     app.include_router(router, prefix="/api/v1")
+
+
+def _register_security_endpoints(
+    app: FastAPI,
+    settings: Settings,
+    auth_deps,  # AuthApiDependencies
+) -> None:
+    """注册安全策略 CRUD 端点（auth+csrf+project 保护）。"""
+    from uuid import UUID, uuid4
+
+    from fastapi import Header, Request
+    from fastapi.responses import JSONResponse
+    from pydantic import BaseModel
+
+    from agenttest.bootstrap.project_access import ProjectAccessAdapter
+    from agenttest.modules.identity.application.queries.current_user import (
+        InvalidSessionError,
+    )
+    from agenttest.modules.identity.public import User
+    from agenttest.modules.projects.infrastructure.persistence.repositories import (
+        SqlAlchemyProjectRepository,
+    )
+    from agenttest.modules.projects.public import ProjectId, ProjectNotFoundError
+    from agenttest.modules.security.domain.models import (
+        SecurityPolicy,
+    )
+    from agenttest.modules.security.infrastructure.repositories import (
+        SqlAlchemySecurityPolicyRepository,
+    )
+    from agenttest.shared.infrastructure.database import (
+        create_database_engine,
+        create_session_factory,
+    )
+
+    class CreatePolicyRequest(BaseModel):
+        name: str
+        max_steps: int = 20
+        timeout_seconds: int = 300
+        blocked_tools: list[str] = []
+        require_confirmation: bool = True
+        enabled: bool = True
+
+    CSRF_NAME = "agenttest_csrf"
+    engine = create_database_engine(str(settings.database_url))
+    session_factory = create_session_factory(engine)
+    project_repo = SqlAlchemyProjectRepository(session_factory)
+    access = ProjectAccessAdapter(project_repo)
+
+    async def _actor(request: Request) -> User:
+        token = request.cookies.get(settings.session_cookie_name)
+        if not token:
+            raise InvalidSessionError
+        return await auth_deps.current_user.execute(token)
+
+    @app.get("/api/v1/projects/{project_id}/security/policies")
+    async def list_policies(
+        request: Request,
+        project_id: UUID,
+    ):
+        try:
+            await _actor(request)
+            # 项目存在性检查
+            from sqlalchemy import text
+
+            async with session_factory() as session:
+                result = await session.execute(
+                    text("SELECT 1 FROM projects WHERE id = :pid"),
+                    {"pid": project_id},
+                )
+                if result.scalar() is None:
+                    return JSONResponse(status_code=404, content={"detail": "Not Found"})
+        except InvalidSessionError:
+            return JSONResponse(status_code=401, content={"detail": "Unauthorized"})
+
+        async with session_factory() as session:
+            repo = SqlAlchemySecurityPolicyRepository(session)
+            policies = await repo.list_all(project_id=project_id)
+            return {
+                "items": [
+                    {
+                        "id": str(p.id),
+                        "name": p.name,
+                        "max_steps": p.max_steps,
+                        "timeout_seconds": p.timeout_seconds,
+                        "blocked_tools": p.blocked_tools,
+                        "require_confirmation": p.require_confirmation,
+                        "enabled": p.enabled,
+                    }
+                    for p in policies
+                ]
+            }
+
+    @app.post("/api/v1/projects/{project_id}/security/policies")
+    async def create_policy(
+        request: Request,
+        project_id: UUID,
+        body: CreatePolicyRequest,
+        x_csrf_token: str | None = Header(default=None),
+    ):
+        try:
+            actor = await _actor(request)
+            if not x_csrf_token or x_csrf_token != request.cookies.get(CSRF_NAME):
+                return JSONResponse(status_code=403, content={"detail": "Forbidden"})
+            await access.ensure_editor(actor, ProjectId(project_id))
+        except InvalidSessionError:
+            return JSONResponse(status_code=401, content={"detail": "Unauthorized"})
+        except ProjectNotFoundError:
+            return JSONResponse(status_code=404, content={"detail": "Not Found"})
+
+        async with session_factory() as session:
+            repo = SqlAlchemySecurityPolicyRepository(session)
+            policy = SecurityPolicy(
+                id=uuid4(),
+                project_id=project_id,
+                name=body.name,
+                max_steps=body.max_steps,
+                timeout_seconds=body.timeout_seconds,
+                blocked_tools=body.blocked_tools,
+                require_confirmation=body.require_confirmation,
+                enabled=body.enabled,
+            )
+            await repo.save(policy, project_id=project_id)
+            await session.commit()
+            return {"id": str(policy.id), "name": policy.name}

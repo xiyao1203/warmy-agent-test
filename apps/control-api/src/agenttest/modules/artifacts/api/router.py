@@ -1,15 +1,16 @@
 """Artifact API 路由。
 
 提供产物上传、列表和下载端点。
+所有端点受 current_user + csrf + project_id 隔离保护。
 """
 
 from __future__ import annotations
 
 from uuid import UUID, uuid4
 
-from fastapi import APIRouter, HTTPException, UploadFile
-from starlette.responses import StreamingResponse
-from starlette.status import HTTP_404_NOT_FOUND
+from fastapi import APIRouter, HTTPException, Request
+from starlette.responses import JSONResponse, StreamingResponse
+from starlette.status import HTTP_401_UNAUTHORIZED, HTTP_403_FORBIDDEN, HTTP_404_NOT_FOUND
 
 from agenttest.modules.artifacts.domain.models import (
     Artifact,
@@ -26,6 +27,10 @@ from agenttest.modules.artifacts.infrastructure.storage import (
 def create_artifact_router(
     storage: FileSystemArtifactStorage,
     session_factory,
+    *,
+    _actor,
+    _check_csrf,
+    _check_project,
 ) -> APIRouter:
     router = APIRouter(tags=["artifacts"])
 
@@ -34,24 +39,51 @@ def create_artifact_router(
         summary="上传产物",
     )
     async def upload_artifact(
+        request: Request,
         project_id: UUID,
         run_id: UUID,
-        file: UploadFile,
     ):
-        content = await file.read()
-        content_type = file.content_type or "application/octet-stream"
-        filename = file.filename or "artifact"
+        try:
+            await _actor(request)
+            _check_csrf(request)
+            await _check_project(project_id)
+        except Exception as exc:
+            if "InvalidSession" in type(exc).__name__:
+                return JSONResponse(
+                    status_code=HTTP_401_UNAUTHORIZED,
+                    content={"detail": "Unauthorized"},
+                )
+            if "PermissionError" in str(exc) or "CSRF" in str(exc):
+                return JSONResponse(
+                    status_code=HTTP_403_FORBIDDEN,
+                    content={"detail": "Forbidden"},
+                )
+            if "ProjectNotFound" in type(exc).__name__:
+                return JSONResponse(
+                    status_code=HTTP_404_NOT_FOUND,
+                    content={"detail": "Project not found"},
+                )
+            raise
+
+        form = await request.form()
+        file = form.get("file")
+        if not file or not hasattr(file, "filename"):
+            raise HTTPException(status_code=400, detail="缺少上传文件")
+
+        content = await file.read()  # type: ignore[union-attr]
+        ct = getattr(file, "content_type", "") or "application/octet-stream"
+        fn = getattr(file, "filename", "") or "artifact"
 
         async with session_factory() as session:
             repo = SqlAlchemyArtifactRepository(session)
-            storage_path = await storage.store(filename=filename, content=content)
+            storage_path = await storage.store(filename=fn, content=content)
 
             artifact = Artifact(
                 id=ArtifactId(str(uuid4())),
                 project_id=project_id,
                 run_id=run_id,
-                filename=filename,
-                content_type=content_type,
+                filename=fn,
+                content_type=ct,
                 size_bytes=len(content),
                 storage_path=storage_path,
             )
@@ -71,9 +103,26 @@ def create_artifact_router(
         summary="列出产物",
     )
     async def list_artifacts(
+        request: Request,
         project_id: UUID,
         run_id: UUID,
     ):
+        try:
+            await _actor(request)
+            await _check_project(project_id)
+        except Exception as exc:
+            if "InvalidSession" in type(exc).__name__:
+                return JSONResponse(
+                    status_code=HTTP_401_UNAUTHORIZED,
+                    content={"detail": "Unauthorized"},
+                )
+            if "ProjectNotFound" in type(exc).__name__:
+                return JSONResponse(
+                    status_code=HTTP_404_NOT_FOUND,
+                    content={"detail": "Project not found"},
+                )
+            raise
+
         async with session_factory() as session:
             repo = SqlAlchemyArtifactRepository(session)
             artifacts = await repo.list_by_run(run_id, project_id=project_id)
@@ -95,9 +144,26 @@ def create_artifact_router(
         summary="下载产物",
     )
     async def download_artifact(
+        request: Request,
         project_id: UUID,
         artifact_id: UUID,
     ):
+        try:
+            await _actor(request)
+            await _check_project(project_id)
+        except Exception as exc:
+            if "InvalidSession" in type(exc).__name__:
+                return JSONResponse(
+                    status_code=HTTP_401_UNAUTHORIZED,
+                    content={"detail": "Unauthorized"},
+                )
+            if "ProjectNotFound" in type(exc).__name__:
+                return JSONResponse(
+                    status_code=HTTP_404_NOT_FOUND,
+                    content={"detail": "Project not found"},
+                )
+            raise
+
         async with session_factory() as session:
             repo = SqlAlchemyArtifactRepository(session)
             artifact = await repo.get(
