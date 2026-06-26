@@ -96,21 +96,21 @@ export function DatasetList({
                     {new Date(dataset.updated_at).toLocaleDateString("zh-CN")}
                   </TableCell>
                   <TableCell className="text-right">
-                    <Button asChild variant="ghost">
-                      <Link
-                        href={`/projects/${projectId}/datasets/${dataset.id}`}
-                      >
-                        查看
-                      </Link>
-                    </Button>
-                    {onDelete ? (
-                      <Button
-                        onClick={() => onDelete(dataset.id)}
-                        variant="danger"
-                      >
-                        删除
+                    <div className="inline-flex items-center gap-1">
+                      <Button asChild variant="ghost">
+                        <Link
+                          href={`/projects/${projectId}/datasets/${dataset.id}`}
+                        >
+                          查看
+                        </Link>
                       </Button>
-                    ) : null}
+                      {onDelete ? (
+                        <ConfirmDeleteButton
+                          label={dataset.name}
+                          onConfirm={() => onDelete(dataset.id)}
+                        />
+                      ) : null}
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}
@@ -188,6 +188,42 @@ function CreateDatasetDialog({
               保存数据集
             </Button>
           </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function ConfirmDeleteButton({
+  label,
+  onConfirm,
+}: {
+  label: string;
+  onConfirm: () => void;
+}) {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <Dialog onOpenChange={setOpen} open={open}>
+      <DialogTrigger asChild>
+        <Button variant="danger">删除</Button>
+      </DialogTrigger>
+      <DialogContent>
+        <DialogTitle>确认删除</DialogTitle>
+        <DialogDescription>
+          确定要删除「{label}」吗？此操作不可恢复。
+        </DialogDescription>
+        <div className="mt-5 flex justify-end gap-2">
+          <Button onClick={() => setOpen(false)}>取消</Button>
+          <Button
+            onClick={() => {
+              setOpen(false);
+              onConfirm();
+            }}
+            variant="danger"
+          >
+            确认删除
+          </Button>
         </div>
       </DialogContent>
     </Dialog>

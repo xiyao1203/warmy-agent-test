@@ -111,19 +111,17 @@ export function AgentList({
                     {new Date(agent.updated_at).toLocaleDateString("zh-CN")}
                   </TableCell>
                   <TableCell className="text-right">
-                    <div className="flex items-center justify-end gap-1">
+                    <div className="inline-flex items-center gap-1">
                       <Button asChild variant="ghost">
                         <Link href={`/projects/${projectId}/agents/${agent.id}`}>
                           查看
                         </Link>
                       </Button>
                       {onDelete ? (
-                        <Button
-                          onClick={() => onDelete(agent.id)}
-                          variant="danger"
-                        >
-                          删除
-                        </Button>
+                        <ConfirmDeleteButton
+                          label={agent.name}
+                          onConfirm={() => onDelete(agent.id)}
+                        />
                       ) : null}
                     </div>
                   </TableCell>
@@ -216,6 +214,42 @@ function CreateAgentDialog({
               保存 Agent
             </Button>
           </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function ConfirmDeleteButton({
+  label,
+  onConfirm,
+}: {
+  label: string;
+  onConfirm: () => void;
+}) {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <Dialog onOpenChange={setOpen} open={open}>
+      <DialogTrigger asChild>
+        <Button variant="danger">删除</Button>
+      </DialogTrigger>
+      <DialogContent>
+        <DialogTitle>确认删除</DialogTitle>
+        <DialogDescription>
+          确定要删除「{label}」吗？此操作不可恢复。
+        </DialogDescription>
+        <div className="mt-5 flex justify-end gap-2">
+          <Button onClick={() => setOpen(false)}>取消</Button>
+          <Button
+            onClick={() => {
+              setOpen(false);
+              onConfirm();
+            }}
+            variant="danger"
+          >
+            确认删除
+          </Button>
         </div>
       </DialogContent>
     </Dialog>
