@@ -1,13 +1,22 @@
 "use client";
 
 import type { RunResponse } from "@warmy/generated-api-client";
-import { Activity, Play, RotateCcw } from "lucide-react";
+import {
+  Activity,
+  AlertTriangle,
+  CheckCircle2,
+  Play,
+  RotateCcw,
+  Search,
+  Timer,
+} from "lucide-react";
 import Link from "next/link";
-import { useState } from "react";
+import { type ReactNode, useMemo, useState } from "react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
+import { Input } from "@/components/ui/input";
 import {
   Table,
   TableBody,
@@ -35,7 +44,15 @@ export function RunCenter({
   runs?: RunResponse[];
 }) {
   const [versionId, setVersionId] = useState(planVersions[0]?.id ?? "");
+  const [query, setQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
   const [busy, setBusy] = useState(false);
+  const summary = useMemo(() => summarizeRuns(runs), [runs]);
+  const filteredRuns = runs.filter((run) => {
+    const matchesStatus = statusFilter === "all" || run.status === statusFilter;
+    const haystack = `${run.id} ${run.workflow_id ?? ""} ${run.status}`.toLowerCase();
+    return matchesStatus && haystack.includes(query.trim().toLowerCase());
+  });
   if (loading) return <StatusPanel title="正在加载运行中心…" />;
   if (error === "not-found") return <StatusPanel title="项目不存在或你无权访问" />;
   if (error === "service") return <StatusPanel title="运行中心暂时不可用" />;
@@ -49,9 +66,10 @@ export function RunCenter({
     }
   }
   return (
-    <div className="min-w-0 px-6 py-6">
-      <header className="flex flex-wrap items-start justify-between gap-4 border-b border-[var(--border)] pb-5">
+    <div className="min-w-0 bg-[var(--background)] px-6 py-6">
+      <header className="flex flex-wrap items-start justify-between gap-4">
         <div>
+          <p className="text-xs font-medium text-[var(--text-subtle)]">测试执行</p>
           <h1 className="text-2xl font-semibold tracking-tight">运行中心</h1>
           <p className="mt-2 text-sm text-[var(--text-muted)]">
             基于已发布测试计划启动 API Agent 执行，并查看进度、结果与 Trace。
@@ -79,11 +97,79 @@ export function RunCenter({
           </Button>
         </div>
       </header>
-      <section className="mt-5 overflow-hidden rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--surface)]">
-        {!runs.length ? (
+      <section className="mt-5 grid grid-cols-4 gap-3 max-[1100px]:grid-cols-2 max-[700px]:grid-cols-1">
+        <SummaryCard
+          icon={<Activity aria-hidden="true" className="size-4" />}
+          label="总运行"
+          value={String(summary.total)}
+        />
+        <SummaryCard
+          icon={<Timer aria-hidden="true" className="size-4" />}
+          label="运行中"
+          value={String(summary.active)}
+        />
+        <SummaryCard
+          icon={<CheckCircle2 aria-hidden="true" className="size-4" />}
+          label="通过率"
+          value={`${summary.passRate}%`}
+        />
+        <SummaryCard
+          icon={<AlertTriangle aria-hidden="true" className="size-4" />}
+          label="异常运行"
+          value={String(summary.unhealthy)}
+        />
+      </section>
+      <section className="mt-5 overflow-hidden rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--surface)] shadow-[0_12px_40px_rgba(15,23,42,0.04)]">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--border)] px-4 py-3">
+          <label className="relative min-w-[18rem] flex-1 text-sm">
+            <span className="sr-only">搜索运行</span>
+            <Search
+              aria-hidden="true"
+              className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-[var(--text-muted)]"
+            />
+            <Input
+              aria-label="搜索运行"
+              className="pl-9"
+              onChange={(event) => setQuery(event.target.value)}
+              placeholder="搜索 Run ID、Workflow 或状态"
+              value={query}
+            />
+          </label>
+          <label className="text-sm">
+            <span className="sr-only">运行状态</span>
+            <select
+              aria-label="运行状态"
+              className="h-9 rounded-[var(--radius-sm)] border border-[var(--border)] bg-[var(--surface)] px-2 text-sm"
+              onChange={(event) => setStatusFilter(event.target.value)}
+              value={statusFilter}
+            >
+              <option value="all">状态：全部</option>
+              <option value="queued">排队中</option>
+              <option value="running">运行中</option>
+              <option value="passed">已通过</option>
+              <option value="failed">断言失败</option>
+              <option value="error">执行错误</option>
+              <option value="cancelled">已取消</option>
+            </select>
+          </label>
+          <Button
+            disabled={!query && statusFilter === "all"}
+            onClick={() => {
+              setQuery("");
+              setStatusFilter("all");
+            }}
+          >
+            重置
+          </Button>
+        </div>
+        {!filteredRuns.length ? (
           <EmptyState
-            description="选择一个已发布测试计划版本后启动首个运行。"
-            title="暂无运行记录"
+            description={
+              runs.length
+                ? "换个关键词或状态筛选再试试。"
+                : "选择一个已发布测试计划版本后启动首个运行。"
+            }
+            title={runs.length ? "没有匹配的运行" : "暂无运行记录"}
           />
         ) : (
           <Table>
@@ -97,8 +183,11 @@ export function RunCenter({
               </TableRow>
             </TableHeader>
             <TableBody>
-              {runs.map((run) => (
-                <TableRow key={run.id}>
+              {filteredRuns.map((run) => (
+                <TableRow
+                  className="hover:bg-[var(--surface-subtle)]"
+                  key={run.id}
+                >
                   <TableCell>
                     <div className="flex items-center gap-3">
                       <span className="grid size-8 place-items-center rounded-[var(--radius-sm)] bg-[var(--surface-subtle)]">
@@ -167,3 +256,43 @@ function StatusPanel({ title }: { title: string }) {
   );
 }
 
+function SummaryCard({
+  icon,
+  label,
+  value,
+}: {
+  icon: ReactNode;
+  label: string;
+  value: string;
+}) {
+  return (
+    <article className="rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--surface)] p-4 shadow-[0_12px_40px_rgba(15,23,42,0.04)]">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <p className="text-xs text-[var(--text-muted)]">{label}</p>
+          <p className="mt-2 text-2xl font-semibold tracking-tight">{value}</p>
+        </div>
+        <span className="grid size-9 place-items-center rounded-full bg-[var(--surface-subtle)] text-[var(--text-muted)]">
+          {icon}
+        </span>
+      </div>
+    </article>
+  );
+}
+
+function summarizeRuns(runs: RunResponse[]) {
+  const total = runs.length;
+  const passed = runs.filter((run) => run.status === "passed").length;
+  const active = runs.filter((run) =>
+    ["queued", "running"].includes(run.status),
+  ).length;
+  const unhealthy = runs.filter((run) =>
+    ["failed", "error", "cancelled"].includes(run.status),
+  ).length;
+  return {
+    active,
+    passRate: total ? Math.round((passed / total) * 100) : 0,
+    total,
+    unhealthy,
+  };
+}

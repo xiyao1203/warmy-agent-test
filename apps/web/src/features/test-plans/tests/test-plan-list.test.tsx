@@ -64,8 +64,30 @@ describe("TestPlanList", () => {
     rerender(<TestPlanList error="service" projectId="project-1" />);
     expect(screen.getByText("测试计划列表暂时不可用")).toBeVisible();
 
-    rerender(<TestPlanList plans={[plan]} projectId="project-1" />);
+    rerender(
+      <TestPlanList
+        onDelete={vi.fn()}
+        plans={[plan]}
+        projectId="project-1"
+      />,
+    );
     expect(screen.getByText("回归计划")).toBeVisible();
+    expect(
+      screen.getByRole("columnheader", { name: "计划信息" }),
+    ).toHaveClass("w-[420px]", "pl-16");
+    expect(screen.getByRole("columnheader", { name: "更新时间" })).toHaveClass(
+      "w-32",
+      "text-center",
+    );
+    expect(screen.getByRole("table")).toHaveClass("w-auto", "table-fixed");
+    expect(screen.getByRole("group", { name: "回归计划 操作" })).toHaveClass(
+      "whitespace-nowrap",
+    );
+    expect(screen.getByRole("link", { name: "查看回归计划" })).toHaveAttribute(
+      "href",
+      "/projects/project-1/test-plans/plan-1",
+    );
+    expect(screen.getByRole("button", { name: "删除回归计划" })).toBeVisible();
   });
 
   it("creates a test plan", async () => {

@@ -48,7 +48,7 @@ describe("ProjectOverview", () => {
     expect(screen.getByText("2 Agents")).toBeVisible();
     expect(screen.getByText("3 数据集")).toBeVisible();
     expect(screen.getByText("1 测试计划")).toBeVisible();
-    expect(screen.getByText("暂无测试活动")).toBeVisible();
-    expect(screen.getByText(/运行与结果将在 M3/)).toBeVisible();
+    expect(screen.getByText("查看运行中心")).toBeVisible();
+    expect(screen.getByText("运行记录、进度与结果可在运行中心查看。")).toBeVisible();
   });
 });

@@ -118,7 +118,12 @@ apps/web/src/app/(platform)/projects/[projectId]/runs/
 
 - [x] 先编写运行列表、创建、取消、实时进度和 Trace 展示组件测试。
 - [x] 实现状态筛选、创建运行、进度摘要、RunCase 结果和错误分类。
-- [ ] SSE 断线后使用退避重连并回退到查询刷新。（已完成前端 SSE 接入和断线查询刷新兜底；退避重连待补）
+- [x] 按方案 1 管理台风格打磨应用壳、运行中心和运行详情交互：顶部搜索/用户区、统计卡、搜索/状态筛选、匹配空状态、执行摘要侧栏与实时刷新提示。
+- [x] 统一资产列表表格操作区，避免 Agent、数据集、测试计划列表的“查看/删除”按钮在窄列中竖排换行。
+- [x] 优化资产列表表头与字段布局，使用固定列宽、中文语义表头、浅色表头背景、行 hover 和名称/描述截断，减少宽屏空白与字段漂移。
+- [x] 微调资产列表首列表头对齐，使表头文字对齐到行内名称文字起点，避免图标列造成视觉错位。
+- [x] 收紧资产列表列组，表格改为内容宽度，短字段列定宽居中，避免类型、时间和操作字段被拉散到页面中间。
+- [x] SSE 断线后使用退避重连并回退到查询刷新。（已完成 1s、2s、4s 最多 3 次重连，超过次数后回退查询轮询）
 - [x] Trace 组件按需加载，窄屏提供基础查看。
 - [x] 保留 Agent 流式对话页面的三栏 `workspaceMode="agent"`。
 
@@ -132,8 +137,8 @@ apps/web/src/app/(platform)/projects/[projectId]/runs/
 
 ## 2026-06-26 当前切片状态
 
-- 已完成：Run/RunCase 数据模型与迁移、项目隔离 API、幂等创建/取消/查询、基础 SSE 事件流、受 Token 保护的内部结果回写接口、真实 Temporal Adapter 代码路径、Generic HTTP Agent Adapter、Worker Workflow/Activity 骨架、Worker 内部结果回写 Activity、Worker JSON/JUnit/HTML 报告产物、100 case 合约与报告验收、控制面结果回写应用服务、OpenAPI/Client、运行中心与运行详情页面、前端运行详情 SSE 刷新与断线轮询兜底。
-- 未完成：真实 Temporal Server 环境运行验证、前端 SSE 退避重连、真实 Artifact 上传、真实 PostgreSQL/Docker/Temporal Server 环境验证。
+- 已完成：Run/RunCase 数据模型与迁移、项目隔离 API、幂等创建/取消/查询、基础 SSE 事件流、受 Token 保护的内部结果回写接口、真实 Temporal Adapter 代码路径、Generic HTTP Agent Adapter、Worker Workflow/Activity 骨架、Worker 内部结果回写 Activity、Worker JSON/JUnit/HTML 报告产物、100 case 合约与报告验收、控制面结果回写应用服务、OpenAPI/Client、运行中心与运行详情页面、前端运行详情 SSE 刷新、断线退避重连与轮询兜底、方案 1 管理台 UI 与交互打磨。
+- 未完成：真实 Temporal Server 环境运行验证、真实 Artifact 上传、真实 PostgreSQL/Docker/Temporal Server 环境验证。
 
 ## Commit Strategy
 

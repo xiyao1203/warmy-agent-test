@@ -18,7 +18,10 @@ export function RunDetailScreen({
   projectId: string;
   runId: string;
 }) {
-  const [eventStreamFailed, setEventStreamFailed] = useState(false);
+  const streamKey = `${projectId}:${runId}`;
+  const [failedStreamKey, setFailedStreamKey] = useState<string | null>(null);
+  const [reconnectTick, setReconnectTick] = useState(0);
+  const eventStreamFailed = failedStreamKey === streamKey;
   const eventStreamAvailable =
     !eventStreamFailed && typeof EventSource !== "undefined";
   const reconnectAttemptRef = useRef(0);
@@ -39,6 +42,9 @@ export function RunDetailScreen({
     queryFn: () => listRunCases(projectId, runId),
     queryKey: ["runs", projectId, runId, "cases"],
   });
+  const runStatus = runQuery.data?.status;
+  const refetchRun = runQuery.refetch;
+  const refetchCases = casesQuery.refetch;
 
   /** 清理重连计时器 */
   const clearReconnectTimer = useCallback(() => {
@@ -48,12 +54,17 @@ export function RunDetailScreen({
     }
   }, []);
 
+  /** 切换运行时重置 SSE 状态 */
+  useEffect(() => {
+    reconnectAttemptRef.current = 0;
+    clearReconnectTimer();
+  }, [clearReconnectTimer, streamKey]);
+
   /** 建立 SSE 连接（含退避重连） */
   useEffect(() => {
-    const status = runQuery.data?.status;
     if (
       !eventStreamAvailable ||
-      (status !== "running" && status !== "queued") ||
+      (runStatus !== "running" && runStatus !== "queued") ||
       typeof EventSource === "undefined"
     ) {
       clearReconnectTimer();
@@ -69,8 +80,8 @@ export function RunDetailScreen({
     };
 
     source.onmessage = () => {
-      void runQuery.refetch();
-      void casesQuery.refetch();
+      void refetchRun();
+      void refetchCases();
     };
 
     source.onerror = () => {
@@ -86,14 +97,12 @@ export function RunDetailScreen({
         );
         reconnectAttemptRef.current = attempts + 1;
         reconnectTimerRef.current = setTimeout(() => {
-          // 强制触发 useEffect 重建 EventSource
-          setEventStreamFailed(false);
-          // 触发 query 重新活跃以启动新的 SSE
-          void runQuery.refetch();
+          // 显式触发 useEffect 重建 EventSource
+          setReconnectTick((tick) => tick + 1);
         }, delay);
       } else {
         // 超过最大重连次数，回退到轮询
-        setEventStreamFailed(true);
+        setFailedStreamKey(streamKey);
       }
     };
 
@@ -102,13 +111,15 @@ export function RunDetailScreen({
       clearReconnectTimer();
     };
   }, [
-    casesQuery,
     clearReconnectTimer,
     eventStreamAvailable,
     projectId,
+    refetchCases,
+    refetchRun,
+    reconnectTick,
     runId,
-    runQuery,
-    runQuery.data?.status,
+    runStatus,
+    streamKey,
   ]);
   const cancelMutation = useMutation({
     mutationFn: () => cancelRun(projectId, runId),

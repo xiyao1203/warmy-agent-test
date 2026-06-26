@@ -59,9 +59,31 @@ describe("DatasetList", () => {
     rerender(<DatasetList error="service" projectId="project-1" />);
     expect(screen.getByText("数据集列表暂时不可用")).toBeVisible();
 
-    rerender(<DatasetList datasets={[dataset]} projectId="project-1" />);
+    rerender(
+      <DatasetList
+        datasets={[dataset]}
+        onDelete={vi.fn()}
+        projectId="project-1"
+      />,
+    );
     expect(screen.getByText("对话回归")).toBeVisible();
     expect(screen.getByText("Agent 对话回归集")).toBeVisible();
+    expect(
+      screen.getByRole("columnheader", { name: "数据集信息" }),
+    ).toHaveClass("w-[420px]", "pl-16");
+    expect(screen.getByRole("columnheader", { name: "更新时间" })).toHaveClass(
+      "w-32",
+      "text-center",
+    );
+    expect(screen.getByRole("table")).toHaveClass("w-auto", "table-fixed");
+    expect(screen.getByRole("group", { name: "对话回归 操作" })).toHaveClass(
+      "whitespace-nowrap",
+    );
+    expect(screen.getByRole("link", { name: "查看对话回归" })).toHaveAttribute(
+      "href",
+      "/projects/project-1/datasets/dataset-1",
+    );
+    expect(screen.getByRole("button", { name: "删除对话回归" })).toBeVisible();
   });
 
   it("creates a dataset", async () => {

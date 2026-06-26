@@ -28,6 +28,11 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  TableActions,
+  tableActionCellClass,
+  tableActionHeadClass,
+} from "@/components/ui/table-actions";
 
 type AgentListProps = {
   agents?: AgentResponse[];
@@ -77,43 +82,49 @@ export function AgentList({
             title="暂无 Agent"
           />
         ) : (
-          <Table>
-            <TableHeader>
+          <Table className="w-auto min-w-[760px] table-fixed">
+            <TableHeader className="bg-[var(--surface-subtle)]">
               <TableRow>
-                <TableHead>Agent</TableHead>
-                <TableHead>类型</TableHead>
-                <TableHead>最近更新</TableHead>
-                <TableHead className="w-24 text-right">操作</TableHead>
+                <TableHead className="w-[360px] pl-16">智能体信息</TableHead>
+                <TableHead className="w-36 text-center">接入类型</TableHead>
+                <TableHead className="w-32 text-center">更新时间</TableHead>
+                <TableHead className={tableActionHeadClass}>操作</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {agents.map((agent) => (
-                <TableRow key={agent.id}>
+                <TableRow
+                  className="transition-colors hover:bg-[var(--surface-subtle)]"
+                  key={agent.id}
+                >
                   <TableCell>
-                    <div className="flex items-center gap-3">
-                      <span className="grid size-8 place-items-center rounded-[var(--radius-sm)] bg-[var(--surface-subtle)]">
+                    <div className="flex min-w-0 items-center gap-3">
+                      <span className="grid size-8 shrink-0 place-items-center rounded-[var(--radius-sm)] bg-[var(--surface-subtle)]">
                         <Bot aria-hidden="true" className="size-4" />
                       </span>
-                      <div>
-                        <p className="font-medium">{agent.name}</p>
-                        <p className="mt-0.5 text-xs text-[var(--text-muted)]">
+                      <div className="min-w-0">
+                        <p className="truncate font-medium">{agent.name}</p>
+                        <p className="mt-0.5 truncate text-xs text-[var(--text-muted)]">
                           {agent.description || "暂无描述"}
                         </p>
                       </div>
                     </div>
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="text-center">
                     <Badge tone={agent.agent_type === "canvas" ? "accent" : "neutral"}>
                       {typeLabels[agent.agent_type]}
                     </Badge>
                   </TableCell>
-                  <TableCell className="text-sm text-[var(--text-muted)]">
+                  <TableCell className="whitespace-nowrap text-center text-sm text-[var(--text-muted)]">
                     {new Date(agent.updated_at).toLocaleDateString("zh-CN")}
                   </TableCell>
-                  <TableCell className="text-right">
-                    <div className="inline-flex items-center gap-1">
-                      <Button asChild variant="ghost">
-                        <Link href={`/projects/${projectId}/agents/${agent.id}`}>
+                  <TableCell className={tableActionCellClass}>
+                    <TableActions label={agent.name}>
+                      <Button asChild className="shrink-0 px-2.5" variant="ghost">
+                        <Link
+                          aria-label={`查看${agent.name}`}
+                          href={`/projects/${projectId}/agents/${agent.id}`}
+                        >
                           查看
                         </Link>
                       </Button>
@@ -123,7 +134,7 @@ export function AgentList({
                           onConfirm={() => onDelete(agent.id)}
                         />
                       ) : null}
-                    </div>
+                    </TableActions>
                   </TableCell>
                 </TableRow>
               ))}
@@ -232,7 +243,13 @@ function ConfirmDeleteButton({
   return (
     <Dialog onOpenChange={setOpen} open={open}>
       <DialogTrigger asChild>
-        <Button variant="danger">删除</Button>
+        <Button
+          aria-label={`删除${label}`}
+          className="shrink-0 border-transparent bg-transparent px-2.5 hover:bg-[var(--danger-subtle)]"
+          variant="danger"
+        >
+          删除
+        </Button>
       </DialogTrigger>
       <DialogContent>
         <DialogTitle>确认删除</DialogTitle>
