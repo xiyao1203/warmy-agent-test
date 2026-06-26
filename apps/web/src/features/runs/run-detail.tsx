@@ -1,7 +1,13 @@
 "use client";
 
 import type { RunCaseResponse, RunResponse } from "@warmy/generated-api-client";
-import { AlertTriangle, ListTree, Square } from "lucide-react";
+import {
+  AlertTriangle,
+  CheckCircle2,
+  ListTree,
+  Radio,
+  Square,
+} from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -27,10 +33,16 @@ export function RunDetail({
     );
   }
   const canCancel = run.status === "queued" || run.status === "running";
+  const finishedCases =
+    run.passed_cases + run.failed_cases + run.error_cases + run.cancelled_cases;
+  const progress = run.total_cases
+    ? Math.round((finishedCases / run.total_cases) * 100)
+    : 0;
   return (
-    <div className="min-w-0 px-6 py-6">
+    <div className="min-w-0 bg-[var(--background)] px-6 py-6">
       <header className="flex flex-wrap items-start justify-between gap-4 border-b border-[var(--border)] pb-5">
         <div>
+          <p className="text-xs font-medium text-[var(--text-subtle)]">运行详情</p>
           <h1 className="text-2xl font-semibold tracking-tight">
             Run {run.id.slice(0, 8)}
           </h1>
@@ -47,66 +59,138 @@ export function RunDetail({
           </Button>
         </div>
       </header>
-      <section className="mt-5 grid gap-4">
-        {cases.map((item) => (
-          <article
-            className="rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--surface)] p-4"
-            key={item.id}
-          >
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <div>
-                <h2 className="font-medium">{item.name}</h2>
-                <p className="mt-1 text-xs text-[var(--text-muted)]">
-                  {item.duration_ms == null ? "未记录耗时" : `${item.duration_ms} ms`}
-                </p>
-              </div>
-              <StatusBadge status={item.status} />
-            </div>
-            {item.error_type ? (
-              <div className="mt-4 rounded-[var(--radius-sm)] bg-[var(--danger-subtle)] p-3 text-sm text-[var(--danger)]">
-                <div className="flex items-center gap-2 font-medium">
-                  <AlertTriangle aria-hidden="true" className="size-4" />
-                  {item.error_type}
+      <div className="mt-5 grid grid-cols-[minmax(0,1fr)_22rem] gap-5 max-[1100px]:grid-cols-1">
+        <section className="grid gap-4">
+          {cases.map((item) => (
+            <article
+              className="rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--surface)] p-4 shadow-[0_12px_40px_rgba(15,23,42,0.04)]"
+              key={item.id}
+            >
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <h2 className="font-medium">{item.name}</h2>
+                  <p className="mt-1 text-xs text-[var(--text-muted)]">
+                    {item.duration_ms == null ? "未记录耗时" : `${item.duration_ms} ms`}
+                  </p>
                 </div>
-                <p className="mt-1">{item.error_message}</p>
+                <StatusBadge status={item.status} />
               </div>
-            ) : null}
-            {item.output ? (
-              <pre className="mt-4 overflow-auto rounded-[var(--radius-sm)] bg-[var(--surface-subtle)] p-3 text-xs">
-                {JSON.stringify(item.output, null, 2)}
-              </pre>
-            ) : null}
-            <details className="mt-4" open={item.status === "error"}>
-              <summary className="flex cursor-pointer items-center gap-2 text-sm font-medium">
-                <ListTree aria-hidden="true" className="size-4" />
-                Trace
-              </summary>
-              <div className="mt-3 space-y-2">
-                {item.trace.length ? (
-                  item.trace.map((span, index) => (
-                    <div
-                      className="rounded-[var(--radius-sm)] border border-[var(--border)] p-3 text-xs"
-                      key={index}
-                    >
-                      <div className="flex items-center justify-between gap-3">
-                        <span className="font-medium">
-                          {String(span.name ?? `span-${index + 1}`)}
-                        </span>
-                        <Badge>{String(span.status ?? "recorded")}</Badge>
+              {item.error_type ? (
+                <div className="mt-4 rounded-[var(--radius-sm)] bg-[var(--danger-subtle)] p-3 text-sm text-[var(--danger)]">
+                  <div className="flex items-center gap-2 font-medium">
+                    <AlertTriangle aria-hidden="true" className="size-4" />
+                    {item.error_type}
+                  </div>
+                  <p className="mt-1">{item.error_message}</p>
+                </div>
+              ) : null}
+              {item.output ? (
+                <pre className="mt-4 overflow-auto rounded-[var(--radius-sm)] bg-[var(--surface-subtle)] p-3 text-xs">
+                  {JSON.stringify(item.output, null, 2)}
+                </pre>
+              ) : null}
+              <details className="mt-4" open={item.status === "error"}>
+                <summary className="flex cursor-pointer items-center gap-2 text-sm font-medium">
+                  <ListTree aria-hidden="true" className="size-4" />
+                  Trace
+                </summary>
+                <div className="mt-3 space-y-2">
+                  {item.trace.length ? (
+                    item.trace.map((span, index) => (
+                      <div
+                        className="rounded-[var(--radius-sm)] border border-[var(--border)] p-3 text-xs"
+                        key={index}
+                      >
+                        <div className="flex items-center justify-between gap-3">
+                          <span className="font-medium">
+                            {String(span.name ?? `span-${index + 1}`)}
+                          </span>
+                          <Badge>{String(span.status ?? "recorded")}</Badge>
+                        </div>
+                        <pre className="mt-2 overflow-auto text-[var(--text-muted)]">
+                          {JSON.stringify(span, null, 2)}
+                        </pre>
                       </div>
-                      <pre className="mt-2 overflow-auto text-[var(--text-muted)]">
-                        {JSON.stringify(span, null, 2)}
-                      </pre>
-                    </div>
-                  ))
-                ) : (
-                  <p className="text-sm text-[var(--text-muted)]">暂无 Trace</p>
-                )}
-              </div>
-            </details>
-          </article>
-        ))}
-      </section>
+                    ))
+                  ) : (
+                    <p className="text-sm text-[var(--text-muted)]">暂无 Trace</p>
+                  )}
+                </div>
+              </details>
+            </article>
+          ))}
+        </section>
+        <aside className="h-fit rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[0_12px_40px_rgba(15,23,42,0.04)]">
+          <div className="flex items-center justify-between gap-3">
+            <h2 className="text-base font-semibold">执行摘要</h2>
+            <Badge tone={canCancel ? "accent" : "neutral"}>
+              <Radio aria-hidden="true" className="mr-1 size-3" />
+              {canCancel ? "实时刷新" : "已结束"}
+            </Badge>
+          </div>
+          <div className="mt-5">
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-[var(--text-muted)]">完成进度</span>
+              <span className="font-medium">{progress}%</span>
+            </div>
+            <div className="mt-2 h-2 overflow-hidden rounded-full bg-[var(--surface-subtle)]">
+              <div
+                className="h-full rounded-full bg-[var(--accent)]"
+                style={{ width: `${progress}%` }}
+              />
+            </div>
+          </div>
+          <dl className="mt-5 grid grid-cols-2 gap-3 text-sm">
+            <SummaryItem label="总用例" value={String(run.total_cases)} />
+            <SummaryItem label="已完成" value={String(finishedCases)} />
+            <SummaryItem label="通过" value={String(run.passed_cases)} />
+            <SummaryItem label="失败/错误" value={String(run.failed_cases + run.error_cases)} />
+          </dl>
+          <div className="mt-5 space-y-3 border-t border-[var(--border)] pt-5 text-sm">
+            <InfoRow label="Workflow" value={run.workflow_id ?? "待启动"} />
+            <InfoRow label="创建时间" value={new Date(run.created_at).toLocaleString("zh-CN")} />
+            <InfoRow
+              label="开始时间"
+              value={run.started_at ? new Date(run.started_at).toLocaleString("zh-CN") : "未开始"}
+            />
+            <InfoRow
+              label="完成时间"
+              value={
+                run.completed_at
+                  ? new Date(run.completed_at).toLocaleString("zh-CN")
+                  : "进行中"
+              }
+            />
+          </div>
+          <div className="mt-5 rounded-[var(--radius-sm)] bg-[var(--surface-subtle)] p-3 text-xs leading-5 text-[var(--text-muted)]">
+            <div className="flex items-center gap-2 font-medium text-[var(--text)]">
+              <CheckCircle2 aria-hidden="true" className="size-4" />
+              Trace 会随运行结果持续更新
+            </div>
+            <p className="mt-1">
+              SSE 可用时实时刷新；断线后自动回退到查询刷新。
+            </p>
+          </div>
+        </aside>
+      </div>
+    </div>
+  );
+}
+
+function SummaryItem({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-[var(--radius-sm)] border border-[var(--border)] p-3">
+      <dt className="text-xs text-[var(--text-muted)]">{label}</dt>
+      <dd className="mt-1 text-lg font-semibold">{value}</dd>
+    </div>
+  );
+}
+
+function InfoRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex items-start justify-between gap-3">
+      <span className="text-[var(--text-muted)]">{label}</span>
+      <span className="max-w-44 break-all text-right font-medium">{value}</span>
     </div>
   );
 }

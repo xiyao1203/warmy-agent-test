@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { ReactNode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -54,18 +54,37 @@ function renderWithQueryClient(children: ReactNode) {
 }
 
 describe("RunCenter", () => {
-  it("creates a run from a published plan version and renders progress", async () => {
+  it("creates a run from a published plan version and renders dashboard summary", async () => {
     const onCreate = vi.fn().mockResolvedValue(undefined);
     render(
       <RunCenter
         onCreate={onCreate}
         planVersions={[{ id: "version-1", label: "客服回归 v2" }]}
         projectId="project-1"
-        runs={[running]}
+        runs={[
+          running,
+          {
+            ...running,
+            completed_at: "2026-06-26T10:02:00Z",
+            id: "run-2",
+            passed_cases: 3,
+            status: "passed",
+            total_cases: 3,
+          },
+        ]}
       />,
     );
 
+    expect(screen.getByText("总运行")).toBeVisible();
+    expect(screen.getByText("2")).toBeVisible();
+    expect(screen.getAllByText("运行中").length).toBeGreaterThan(0);
+    expect(screen.getByText("通过率")).toBeVisible();
     expect(screen.getByText("1 / 3")).toBeVisible();
+    fireEvent.change(screen.getByLabelText("搜索运行"), {
+      target: { value: "run-2" },
+    });
+    expect(screen.queryByText("Run run-1")).not.toBeInTheDocument();
+    expect(screen.getByText("Run run-2")).toBeVisible();
     fireEvent.change(screen.getByLabelText("测试计划版本"), {
       target: { value: "version-1" },
     });
@@ -119,6 +138,8 @@ describe("RunDetail", () => {
       />,
     );
 
+    expect(screen.getByText("执行摘要")).toBeVisible();
+    expect(screen.getByText("实时刷新")).toBeVisible();
     expect(screen.getByText("TransientError")).toBeVisible();
     expect(screen.getByText("http.request")).toBeVisible();
     fireEvent.click(screen.getByRole("button", { name: "取消运行" }));
@@ -195,5 +216,57 @@ describe("RunDetailScreen realtime refresh", () => {
     sources[0]?.onerror?.();
 
     await waitFor(() => expect(sources[0]?.close).toHaveBeenCalledTimes(1));
+  });
+
+  it("reconnects a broken event stream with exponential backoff", async () => {
+    const sources: Array<{
+      close: ReturnType<typeof vi.fn>;
+      onerror: (() => void) | null;
+      onmessage: ((event: MessageEvent) => void) | null;
+      url: string;
+    }> = [];
+    class FakeEventSource {
+      close = vi.fn();
+      onerror: (() => void) | null = null;
+      onmessage: ((event: MessageEvent) => void) | null = null;
+
+      constructor(public url: string) {
+        sources.push(this);
+      }
+    }
+    vi.stubGlobal("EventSource", FakeEventSource);
+    api.getRun.mockResolvedValue(running);
+    api.listRunCases.mockResolvedValue([]);
+    api.runEventsUrl.mockReturnValue("/events");
+
+    renderWithQueryClient(
+      <RunDetailScreen projectId="project-1" runId="run-1" />,
+    );
+
+    await waitFor(() => expect(sources).toHaveLength(1));
+    vi.useFakeTimers();
+    sources[0]?.onerror?.();
+    expect(sources[0]?.close).toHaveBeenCalledTimes(1);
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(999);
+    });
+    expect(sources).toHaveLength(1);
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(1);
+    });
+    expect(sources).toHaveLength(2);
+
+    sources[1]?.onerror?.();
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(1999);
+    });
+    expect(sources).toHaveLength(2);
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(1);
+    });
+    expect(sources).toHaveLength(3);
   });
 });

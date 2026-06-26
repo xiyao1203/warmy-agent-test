@@ -26,12 +26,16 @@ describe("AppShell", () => {
     );
 
     expect(screen.getByText("Warmy Agent Test")).toBeInTheDocument();
-    expect(screen.getByText("项目概览")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Agent 与版本" })).toHaveAttribute(
+    expect(screen.getByText("项目导航")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "概览" })).toHaveAttribute(
+      "href",
+      "/projects/project-1/overview",
+    );
+    expect(screen.getByRole("link", { name: "智能体" })).toHaveAttribute(
       "href",
       "/projects/project-1/agents",
     );
-    expect(screen.getByRole("link", { name: "数据集与用例" })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: "测试用例" })).toHaveAttribute(
       "href",
       "/projects/project-1/datasets",
     );

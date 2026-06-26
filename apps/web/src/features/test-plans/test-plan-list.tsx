@@ -26,6 +26,11 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  TableActions,
+  tableActionCellClass,
+  tableActionHeadClass,
+} from "@/components/ui/table-actions";
 
 export function TestPlanList({
   error,
@@ -67,37 +72,41 @@ export function TestPlanList({
             title="暂无测试计划"
           />
         ) : (
-          <Table>
-            <TableHeader>
+          <Table className="w-auto min-w-[680px] table-fixed">
+            <TableHeader className="bg-[var(--surface-subtle)]">
               <TableRow>
-                <TableHead>计划</TableHead>
-                <TableHead>最近更新</TableHead>
-                <TableHead className="w-24 text-right">操作</TableHead>
+                <TableHead className="w-[420px] pl-16">计划信息</TableHead>
+                <TableHead className="w-32 text-center">更新时间</TableHead>
+                <TableHead className={tableActionHeadClass}>操作</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {plans.map((plan) => (
-                <TableRow key={plan.id}>
+                <TableRow
+                  className="transition-colors hover:bg-[var(--surface-subtle)]"
+                  key={plan.id}
+                >
                   <TableCell>
-                    <div className="flex items-center gap-3">
-                      <span className="grid size-8 place-items-center rounded-[var(--radius-sm)] bg-[var(--surface-subtle)]">
+                    <div className="flex min-w-0 items-center gap-3">
+                      <span className="grid size-8 shrink-0 place-items-center rounded-[var(--radius-sm)] bg-[var(--surface-subtle)]">
                         <ClipboardCheck aria-hidden="true" className="size-4" />
                       </span>
-                      <div>
-                        <p className="font-medium">{plan.name}</p>
-                        <p className="mt-0.5 text-xs text-[var(--text-muted)]">
+                      <div className="min-w-0">
+                        <p className="truncate font-medium">{plan.name}</p>
+                        <p className="mt-0.5 truncate text-xs text-[var(--text-muted)]">
                           {plan.description || "暂无描述"}
                         </p>
                       </div>
                     </div>
                   </TableCell>
-                  <TableCell className="text-sm text-[var(--text-muted)]">
+                  <TableCell className="whitespace-nowrap text-center text-sm text-[var(--text-muted)]">
                     {new Date(plan.updated_at).toLocaleDateString("zh-CN")}
                   </TableCell>
-                  <TableCell className="text-right">
-                    <div className="inline-flex items-center gap-1">
-                      <Button asChild variant="ghost">
+                  <TableCell className={tableActionCellClass}>
+                    <TableActions label={plan.name}>
+                      <Button asChild className="shrink-0 px-2.5" variant="ghost">
                         <Link
+                          aria-label={`查看${plan.name}`}
                           href={`/projects/${projectId}/test-plans/${plan.id}`}
                         >
                           查看
@@ -109,7 +118,7 @@ export function TestPlanList({
                           onConfirm={() => onDelete(plan.id)}
                         />
                       ) : null}
-                    </div>
+                    </TableActions>
                   </TableCell>
                 </TableRow>
               ))}
@@ -198,7 +207,13 @@ function ConfirmDeleteButton({
   return (
     <Dialog onOpenChange={setOpen} open={open}>
       <DialogTrigger asChild>
-        <Button variant="danger">删除</Button>
+        <Button
+          aria-label={`删除${label}`}
+          className="shrink-0 border-transparent bg-transparent px-2.5 hover:bg-[var(--danger-subtle)]"
+          variant="danger"
+        >
+          删除
+        </Button>
       </DialogTrigger>
       <DialogContent>
         <DialogTitle>确认删除</DialogTitle>
