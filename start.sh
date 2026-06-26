@@ -228,12 +228,11 @@ init_database() {
         # SQLite: 只需确保目录存在，Alembic 会自动创建数据库文件
         mkdir -p data
         ok "SQLite 数据库路径已就绪 (data/local.db)"
-    else
-        # PostgreSQL: 运行迁移
-        info "运行数据库迁移..."
-        (cd "$SCRIPT_DIR" && uv run alembic -c apps/control-api/alembic.ini upgrade head) 2>&1 | tail -3
-        ok "数据库迁移完成"
     fi
+    # 无论何种数据库，都运行迁移确保表结构最新
+    info "运行数据库迁移..."
+    (cd "$SCRIPT_DIR" && uv run alembic -c apps/control-api/alembic.ini upgrade head) 2>&1 | tail -3
+    ok "数据库迁移完成"
 }
 
 # ── 端口检测 ──────────────────────────────────────────────────────────────────
