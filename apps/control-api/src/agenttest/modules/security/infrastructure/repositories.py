@@ -5,12 +5,14 @@ from __future__ import annotations
 from datetime import datetime
 from uuid import UUID
 
-from sqlalchemy import JSON, Boolean, DateTime, ForeignKey, Integer, String, select
-from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import JSON, Boolean, DateTime, ForeignKey, Integer, String, select, text
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 from sqlalchemy.orm import Mapped, mapped_column
 
 from agenttest.modules.security.domain.models import (
+    ScanStatus,
     SecurityPolicy,
+    SecurityScan,
 )
 from agenttest.shared.infrastructure.database import Base
 
@@ -94,3 +96,103 @@ class SqlAlchemySecurityPolicyRepository:
         )
         result = await self._session.execute(stmt)
         return [_to_domain(r) for r in result.scalars().all()]
+
+
+# ── Security Scan ─────────────────────────────────────────────────────────
+
+
+class SecurityScanModel(Base):
+    __tablename__ = "security_scans"
+    __table_args__ = ()
+
+    id = mapped_column(primary_key=True)
+    project_id = mapped_column(
+        ForeignKey("projects.id", ondelete="CASCADE"), nullable=False,
+    )
+    status: Mapped[str] = mapped_column(String(32), nullable=False, default="pending")
+    scan_type: Mapped[str] = mapped_column(String(64), nullable=False, default="full")
+    findings: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    summary: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False,
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False,
+    )
+    completed_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True,
+    )
+
+
+class SqlAlchemySecurityScanRepository:
+    def __init__(self, session_factory: async_sessionmaker[AsyncSession]) -> None:
+        self._session_factory = session_factory
+
+    async def add(self, scan: SecurityScan) -> None:
+        async with self._session_factory() as session:
+            session.add(SecurityScanModel(
+                id=scan.scan_id,
+                project_id=scan.project_id,
+                status=scan.status.value,
+                scan_type=scan.scan_type,
+                findings=scan.findings,
+                summary=scan.summary,
+                created_at=scan.created_at,
+                updated_at=scan.updated_at,
+                completed_at=scan.completed_at,
+            ))
+            await session.commit()
+
+    async def get_by_id_and_project(
+        self, scan_id: UUID, project_id: UUID,
+    ) -> SecurityScan | None:
+        async with self._session_factory() as session:
+            row = await session.get(SecurityScanModel, scan_id)
+            if row is None or row.project_id != project_id:
+                return None
+            return _scan_to_domain(row)
+
+    async def list_by_project(
+        self, project_id: UUID, *, limit: int = 50,
+    ) -> list[SecurityScan]:
+        async with self._session_factory() as session:
+            stmt = (
+                select(SecurityScanModel)
+                .where(SecurityScanModel.project_id == project_id)
+                .order_by(SecurityScanModel.created_at.desc())
+                .limit(limit)
+            )
+            rows = (await session.execute(stmt)).scalars().all()
+            return [_scan_to_domain(r) for r in rows]
+
+    async def save(self, scan: SecurityScan) -> None:
+        async with self._session_factory() as session:
+            await session.execute(
+                text(
+                    "UPDATE security_scans SET status=:s, findings=:f, "
+                    "summary=:sum, updated_at=:u, completed_at=:c WHERE id=:id"
+                ),
+                {
+                    "id": scan.scan_id,
+                    "s": scan.status.value,
+                    "f": scan.findings,
+                    "sum": scan.summary,
+                    "u": scan.updated_at,
+                    "c": scan.completed_at,
+                },
+            )
+            await session.commit()
+
+
+def _scan_to_domain(row: SecurityScanModel) -> SecurityScan:
+    return SecurityScan(
+        scan_id=row.id,
+        project_id=row.project_id,
+        status=ScanStatus(row.status),
+        scan_type=row.scan_type,
+        findings=list(row.findings) if isinstance(row.findings, list) else [],
+        summary=dict(row.summary) if isinstance(row.summary, dict) else {},
+        created_at=row.created_at,
+        updated_at=row.updated_at,
+        completed_at=row.completed_at,
+    )

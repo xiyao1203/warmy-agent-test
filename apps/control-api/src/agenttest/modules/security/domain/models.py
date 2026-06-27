@@ -3,9 +3,10 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import UTC, datetime
+from enum import StrEnum
 from typing import Protocol
-from uuid import UUID
+from uuid import UUID, uuid4
 
 
 @dataclass
@@ -79,3 +80,65 @@ class PolicyEngine:
         if not self._policy.require_confirmation:
             return False
         return self.is_tool_blocked(tool_name)
+
+
+# ── Security Scan ─────────────────────────────────────────────────────────
+
+
+class ScanStatus(StrEnum):
+    PENDING = "pending"
+    RUNNING = "running"
+    COMPLETED = "completed"
+    FAILED = "failed"
+
+
+class FindingCategory(StrEnum):
+    INJECTION = "injection"
+    LEAK = "leak"
+    JAILBREAK = "jailbreak"
+    OTHER = "other"
+
+
+@dataclass(slots=True)
+class SecurityScan:
+    """安全扫描实体。"""
+    scan_id: UUID
+    project_id: UUID
+    status: ScanStatus
+    scan_type: str
+    findings: list[dict[str, object]]
+    summary: dict[str, int]
+    created_at: datetime
+    updated_at: datetime
+    completed_at: datetime | None = None
+
+    @classmethod
+    def create(cls, *, project_id: UUID, scan_type: str = "full") -> SecurityScan:
+        now = datetime.now(UTC)
+        return cls(
+            scan_id=uuid4(),
+            project_id=project_id,
+            status=ScanStatus.PENDING,
+            scan_type=scan_type,
+            findings=[],
+            summary={},
+            created_at=now,
+            updated_at=now,
+        )
+
+    def complete(self, findings: list[dict[str, object]]) -> None:
+        self.findings = findings
+        summary: dict[str, int] = {}
+        for f in findings:
+            cat = str(f.get("category", "other"))
+            summary[cat] = summary.get(cat, 0) + 1
+        self.summary = summary
+        self.status = ScanStatus.COMPLETED
+        now = datetime.now(UTC)
+        self.completed_at = now
+        self.updated_at = now
+
+    def fail(self, error: str) -> None:
+        self.status = ScanStatus.FAILED
+        self.summary = {"error": 1}
+        self.updated_at = datetime.now(UTC)

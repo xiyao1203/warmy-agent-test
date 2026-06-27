@@ -1,9 +1,10 @@
-"""Phase 5-8 新表 + run_events 扩展。
+"""Phase 5-9 新表 + run_events 扩展。
 
 - scorers 表（Phase 6 评分器）
 - experiments 表（Phase 7 实验对比）
 - review_tasks 表（Phase 8 人工审核）
 - run_events 新增列（Phase 5 Trace）
+- security_scans 表（Phase 9 安全测试）
 """
 
 from typing import Sequence, Union
@@ -134,8 +135,28 @@ def upgrade() -> None:
         "ix_review_tasks_run_case", "review_tasks", ["run_case_id"],
     )
 
+    # ── Phase 9: security_scans 表 ─────────────────────────────────────
+    op.create_table(
+        "security_scans",
+        sa.Column("id", sa.Uuid(), primary_key=True),
+        sa.Column(
+            "project_id",
+            sa.Uuid(),
+            sa.ForeignKey("projects.id", ondelete="CASCADE"),
+            nullable=False,
+        ),
+        sa.Column("status", sa.String(32), nullable=False, server_default="pending"),
+        sa.Column("scan_type", sa.String(64), nullable=False, server_default="full"),
+        sa.Column("findings", sa.JSON(), nullable=False, server_default="[]"),
+        sa.Column("summary", sa.JSON(), nullable=False, server_default="{}"),
+        sa.Column("created_at", sa.DateTime(timezone=True), nullable=False),
+        sa.Column("updated_at", sa.DateTime(timezone=True), nullable=False),
+        sa.Column("completed_at", sa.DateTime(timezone=True), nullable=True),
+    )
+
 
 def downgrade() -> None:
+    op.drop_table("security_scans")
     op.drop_table("review_tasks")
     op.drop_table("experiments")
     op.drop_table("scorers")
