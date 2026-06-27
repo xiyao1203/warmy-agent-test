@@ -5,6 +5,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field
 
+from agenttest.modules.environments.api.credential_mask import mask_credentials
 from agenttest.modules.environments.domain.entities import EnvironmentTemplate
 from agenttest.modules.environments.domain.value_objects import TemplateType
 
@@ -43,7 +44,7 @@ class EnvironmentTemplateResponse(BaseModel):
             project_id=template.project_id.value,
             name=template.name,
             template_type=template.template_type,
-            config=template.config,
+            config=mask_credentials(template.config),
             description=template.description,
             created_by=template.created_by.value,
             created_at=template.created_at,
