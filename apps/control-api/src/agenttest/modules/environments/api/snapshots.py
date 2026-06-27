@@ -12,7 +12,9 @@ from agenttest.modules.environments.domain.entities import EnvironmentTemplateId
 from agenttest.modules.environments.infrastructure.persistence.repositories import (
     SqlAlchemyEnvironmentTemplateRepository,
 )
+from agenttest.modules.identity.public import InvalidSessionError
 from agenttest.modules.projects.public import ProjectId as Pid
+from agenttest.modules.projects.public import ProjectNotFoundError
 from agenttest.shared.api.auth_guard import require_actor, require_writer
 
 
@@ -40,6 +42,12 @@ def create_snapshot_router(
         actor = await require_writer(request, actor_for, settings, x_csrf_token)
         if isinstance(actor, JSONResponse):
             return actor
+        try:
+            await check_project(project_id)
+        except ProjectNotFoundError:
+            return JSONResponse(status_code=404, content={"detail": "项目不存在"})
+        except InvalidSessionError:
+            return JSONResponse(status_code=401, content={"detail": "认证失败"})
 
         template = await repo.get_by_id_and_project(
             EnvironmentTemplateId(template_id), Pid(project_id),
@@ -69,6 +77,12 @@ def create_snapshot_router(
         actor = await require_actor(request, actor_for, settings)
         if isinstance(actor, JSONResponse):
             return actor
+        try:
+            await check_project(project_id)
+        except ProjectNotFoundError:
+            return JSONResponse(status_code=404, content={"detail": "项目不存在"})
+        except InvalidSessionError:
+            return JSONResponse(status_code=401, content={"detail": "认证失败"})
 
         template = await repo.get_by_id_and_project(
             EnvironmentTemplateId(template_id), Pid(project_id),
@@ -95,6 +109,12 @@ def create_snapshot_router(
         actor = await require_writer(request, actor_for, settings, x_csrf_token)
         if isinstance(actor, JSONResponse):
             return actor
+        try:
+            await check_project(project_id)
+        except ProjectNotFoundError:
+            return JSONResponse(status_code=404, content={"detail": "项目不存在"})
+        except InvalidSessionError:
+            return JSONResponse(status_code=401, content={"detail": "认证失败"})
 
         template = await repo.get_by_id_and_project(
             EnvironmentTemplateId(template_id), Pid(project_id),
@@ -123,6 +143,12 @@ def create_snapshot_router(
         actor = await require_writer(request, actor_for, settings, x_csrf_token)
         if isinstance(actor, JSONResponse):
             return actor
+        try:
+            await check_project(project_id)
+        except ProjectNotFoundError:
+            return JSONResponse(status_code=404, content={"detail": "项目不存在"})
+        except InvalidSessionError:
+            return JSONResponse(status_code=401, content={"detail": "认证失败"})
 
         template = await repo.get_by_id_and_project(
             EnvironmentTemplateId(template_id), Pid(project_id),

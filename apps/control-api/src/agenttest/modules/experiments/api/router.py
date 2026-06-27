@@ -16,6 +16,7 @@ from agenttest.modules.experiments.domain.entities import (
 from agenttest.modules.experiments.infrastructure.persistence.repositories import (
     SqlAlchemyExperimentRepository,
 )
+from agenttest.modules.identity.public import InvalidSessionError
 from agenttest.modules.projects.public import ProjectId, ProjectNotFoundError
 from agenttest.shared.api.auth_guard import require_actor, require_writer
 
@@ -46,8 +47,10 @@ def create_experiment_router(
             return actor
         try:
             await check_project(project_id)
-        except (ProjectNotFoundError, Exception):
+        except ProjectNotFoundError:
             return JSONResponse(status_code=404, content={"detail": "项目不存在"})
+        except InvalidSessionError:
+            return JSONResponse(status_code=401, content={"detail": "认证失败"})
         experiments = await repo.list_by_project(
             ProjectId(project_id), limit=limit, offset=offset,
         )
@@ -65,8 +68,10 @@ def create_experiment_router(
             return actor
         try:
             await check_project(project_id)
-        except (ProjectNotFoundError, Exception):
+        except ProjectNotFoundError:
             return JSONResponse(status_code=404, content={"detail": "项目不存在"})
+        except InvalidSessionError:
+            return JSONResponse(status_code=401, content={"detail": "认证失败"})
 
         # 校验 run_a_id 和 run_b_id 属于同一项目
         async with session_factory() as session:
@@ -127,6 +132,10 @@ def create_experiment_router(
         )
         if exp is None:
             return JSONResponse(status_code=404, content={"detail": "实验不存在"})
+
+        # 幂等：已完成的实验直接返回现有结果
+        if exp.status.value == "completed":
+            return _to_dict(exp)
 
         async with session_factory() as session:
             # 校验 run 归属（双重校验）
