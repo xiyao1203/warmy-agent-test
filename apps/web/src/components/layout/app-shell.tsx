@@ -18,6 +18,7 @@ import {
   PlayCircle,
   Scale,
   Search,
+  Shield,
   Users,
 } from "lucide-react";
 import Link from "next/link";
@@ -205,6 +206,16 @@ export function AppShell({
                     />
                   }
                   label="人工审核"
+                />
+                <ProjectNavLink
+                  href={`/projects/${activeProjectId}/security`}
+                  icon={
+                    <Shield
+                      aria-hidden="true"
+                      className="size-4 shrink-0"
+                    />
+                  }
+                  label="安全测试"
                 />
               </>
             ) : null}
