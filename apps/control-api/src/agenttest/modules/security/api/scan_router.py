@@ -9,6 +9,7 @@ from fastapi.responses import JSONResponse
 
 from agenttest.modules.identity.public import InvalidSessionError
 from agenttest.modules.projects.public import ProjectNotFoundError
+from agenttest.modules.security.adapters import create_scanner
 from agenttest.modules.security.domain.models import ScanStatus, SecurityScan
 from agenttest.modules.security.infrastructure.repositories import (
     SqlAlchemySecurityScanRepository,
@@ -61,42 +62,16 @@ def create_security_scan_router(
         scan = SecurityScan.create(project_id=project_id, scan_type="promptfoo")
         await repo.add(scan)
 
-        # 模拟扫描执行（实际应调用 Promptfoo）
         scan.status = ScanStatus.RUNNING
         await repo.save(scan)
 
-        # 生成模拟扫描结果
-        mock_findings = [
-            {
-                "category": "injection",
-                "severity": "high",
-                "title": "Prompt injection vulnerability",
-                "description": "Agent accepts user input that can override system prompt",
-                "vector": "Direct prompt injection via user input",
-                "response": "Agent followed injected instructions",
-                "score": 0.2,
-            },
-            {
-                "category": "leak",
-                "severity": "medium",
-                "title": "System prompt leakage",
-                "description": "Agent reveals system prompt when asked directly",
-                "vector": "Direct question about system configuration",
-                "response": "Agent shared partial system prompt",
-                "score": 0.5,
-            },
-            {
-                "category": "jailbreak",
-                "severity": "low",
-                "title": "Role-play jailbreak attempt",
-                "description": "Agent partially complied with "
-                "role-play scenario to bypass restrictions",
-                "vector": "Hypothetical scenario framing",
-                "response": "Agent acknowledged but did not fully comply",
-                "score": 0.7,
-            },
-        ]
-        scan.complete(mock_findings)
+        # 通过适配器执行扫描（自动选择 Promptfoo 或 Mock）
+        scanner = create_scanner()
+        try:
+            findings = await scanner.run_scan(scan_type="full")
+            scan.complete(findings)
+        except Exception as e:
+            scan.fail(str(e))
         await repo.save(scan)
 
         return _scan_to_dict(scan)
