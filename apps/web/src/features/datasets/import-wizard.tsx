@@ -13,9 +13,9 @@ import {
 } from "@/components/ui/dialog";
 
 type ImportWizardProps = {
-  datasetId: string;
-  projectId: string;
-  versionId: string;
+  datasetId?: string;
+  projectId?: string;
+  versionId?: string;
   onImport?: (file: File) => Promise<unknown>;
 };
 

@@ -495,6 +495,8 @@ def create_agent_router(
             version_id = body.get("version_id")
             if not version_id:
                 return invalid_request("version_id is required")
+            # 验证版本属于该 agent
+            await project_version(actor, project_id, agent_id, UUID(str(version_id)))
             async with dependencies.uow_factory():
                 agent.set_current_version(AgentVersionId(UUID(str(version_id))))
         except (AgentNotFoundError, AgentVersionNotFoundError):
@@ -522,6 +524,8 @@ def create_agent_router(
             version_id = body.get("version_id")
             if not version_id:
                 return invalid_request("version_id is required")
+            # 验证版本属于该 agent
+            await project_version(actor, project_id, agent_id, UUID(str(version_id)))
             async with dependencies.uow_factory():
                 agent.set_baseline_version(AgentVersionId(UUID(str(version_id))))
         except (AgentNotFoundError, AgentVersionNotFoundError):
