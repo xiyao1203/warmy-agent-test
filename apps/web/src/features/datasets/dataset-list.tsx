@@ -17,6 +17,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ImportWizard } from "./import-wizard";
 import { Input } from "@/components/ui/input";
 import {
   Table,
@@ -64,7 +65,10 @@ export function DatasetList({
             管理 API 与浏览器测试用例、导入导出和不可变版本。
           </p>
         </div>
-        <CreateDatasetDialog onCreate={onCreate} />
+        <div className="flex items-center gap-2">
+          <ImportWizard />
+          <CreateDatasetDialog onCreate={onCreate} />
+        </div>
       </header>
       <section className="mt-5 overflow-hidden rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--surface)]">
         {!datasets.length ? (

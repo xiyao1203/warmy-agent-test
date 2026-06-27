@@ -684,8 +684,8 @@ def create_dataset_router(
 
     # ── 批量删除用例 ──────────────────────────────────────────────────────
 
-    @router.delete(
-        "{dataset_id}/versions/{version_id}/cases/batch",
+    @router.post(
+        "{dataset_id}/versions/{version_id}/cases/batch-delete",
         response_model=dict,
     )
     async def batch_delete_cases(
@@ -693,15 +693,19 @@ def create_dataset_router(
         project_id: UUID,
         dataset_id: UUID,
         version_id: UUID,
-        case_ids: list[UUID],
         x_csrf_token: str | None = Header(default=None),
     ) -> dict | JSONResponse:
-        """批量删除用例。"""
+        """批量删除用例（从 request body 读取 case_ids）。"""
         actor = await writer(request, x_csrf_token)
         if isinstance(actor, JSONResponse):
             return actor
         try:
             await project_version(actor, project_id, dataset_id, version_id)
+            body = await request.json()
+            case_ids_raw = body.get("case_ids", [])
+            case_ids = [UUID(str(c)) for c in case_ids_raw]
+            if not case_ids:
+                return invalid_request("case_ids is required")
             async with dependencies.uow_factory():
                 for cid in case_ids:
                     await dependencies.delete_case.execute(
@@ -718,7 +722,7 @@ def create_dataset_router(
             ProjectNotFoundError,
         ):
             return asset_not_found()
-        except PermissionError:
+        except (PermissionError, ValueError):
             return permission_denied()
         return {"deleted": len(case_ids)}
 
@@ -740,6 +744,14 @@ def create_dataset_router(
         if isinstance(actor, JSONResponse):
             return actor
         try:
+            await project_version(actor, project_id, dataset_id, version_id)
+        except (
+            DatasetNotFoundError,
+            DatasetVersionNotFoundError,
+            ProjectNotFoundError,
+        ):
+            return asset_not_found()
+        try:
             body = await request.json()
             run_id = body.get("run_id")
             if not run_id:
@@ -747,12 +759,25 @@ def create_dataset_router(
         except Exception:
             return invalid_request("Invalid request body")
 
-        # 生成逻辑 - 通过 domain 命令
+        from agenttest.modules.datasets.application.generate_from_run import (
+            GenerateFromRunCommand,
+            generate_cases_from_failed_run,
+        )
+        from agenttest.modules.projects.public import ProjectId as Pid
+
+        result = await generate_cases_from_failed_run(
+            actor=actor,
+            project_id=Pid(project_id),
+            command=GenerateFromRunCommand(
+                run_id=UUID(str(run_id)),
+                dataset_version_id=version_id,
+            ),
+        )
         return {
-            "status": "accepted",
-            "run_id": run_id,
-            "dataset_version_id": version_id,
-            "message": "生成任务已提交，正在从失败运行提取用例",
+            "status": "completed",
+            "generated": len(result.generated_cases),
+            "total_failed": result.total_failed,
+            "message": f"已从失败运行提取 {len(result.generated_cases)} 条用例",
         }
 
     return router
