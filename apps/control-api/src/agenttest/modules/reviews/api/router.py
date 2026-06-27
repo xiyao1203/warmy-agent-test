@@ -8,6 +8,7 @@ from fastapi import APIRouter, Header, Request
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
+from agenttest.modules.identity.public import InvalidSessionError
 from agenttest.modules.projects.public import ProjectId, ProjectNotFoundError
 from agenttest.modules.reviews.domain.entities import ReviewTaskId
 from agenttest.modules.reviews.infrastructure.persistence.repositories import (
@@ -52,8 +53,10 @@ def create_review_router(
             return actor
         try:
             await check_project(project_id)
-        except (ProjectNotFoundError, Exception):
+        except ProjectNotFoundError:
             return JSONResponse(status_code=404, content={"detail": "项目不存在"})
+        except InvalidSessionError:
+            return JSONResponse(status_code=401, content={"detail": "认证失败"})
         tasks, total = await repo.list_by_project(
             ProjectId(project_id), status=status, limit=limit, offset=offset,
         )
@@ -73,8 +76,10 @@ def create_review_router(
             return actor
         try:
             await check_project(project_id)
-        except (ProjectNotFoundError, Exception):
+        except ProjectNotFoundError:
             return JSONResponse(status_code=404, content={"detail": "项目不存在"})
+        except InvalidSessionError:
+            return JSONResponse(status_code=401, content={"detail": "认证失败"})
         stats = await repo.get_stats(ProjectId(project_id))
         return stats
 
@@ -91,8 +96,10 @@ def create_review_router(
             return actor
         try:
             await check_project(project_id)
-        except (ProjectNotFoundError, Exception):
+        except ProjectNotFoundError:
             return JSONResponse(status_code=404, content={"detail": "项目不存在"})
+        except InvalidSessionError:
+            return JSONResponse(status_code=401, content={"detail": "认证失败"})
         created = await repo.auto_enqueue_low_confidence(
             ProjectId(project_id), body.run_id, body.confidence_threshold,
         )

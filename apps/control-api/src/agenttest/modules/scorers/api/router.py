@@ -9,6 +9,7 @@ from fastapi import APIRouter, Header, Request
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
+from agenttest.modules.identity.public import InvalidSessionError
 from agenttest.modules.projects.public import ProjectId, ProjectNotFoundError
 from agenttest.modules.scorers.domain.entities import Scorer, ScorerId
 from agenttest.modules.scorers.domain.value_objects import ScorerType
@@ -63,8 +64,10 @@ def create_scorer_router(
             return actor
         try:
             await check_project(project_id)
-        except (ProjectNotFoundError, Exception):
+        except ProjectNotFoundError:
             return JSONResponse(status_code=404, content={"detail": "项目不存在"})
+        except InvalidSessionError:
+            return JSONResponse(status_code=401, content={"detail": "认证失败"})
 
         scorers, total = await repo.list_by_project(
             ProjectId(project_id), limit=limit, offset=offset,
@@ -86,8 +89,10 @@ def create_scorer_router(
             return actor
         try:
             await check_project(project_id)
-        except (ProjectNotFoundError, Exception):
+        except ProjectNotFoundError:
             return JSONResponse(status_code=404, content={"detail": "项目不存在"})
+        except InvalidSessionError:
+            return JSONResponse(status_code=401, content={"detail": "认证失败"})
 
         try:
             scorer_type = ScorerType(body.scorer_type)
