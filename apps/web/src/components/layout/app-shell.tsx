@@ -14,6 +14,7 @@ import {
   HelpCircle,
   KeyRound,
   LayoutDashboard,
+  MessageSquareText,
   PlayCircle,
   Scale,
   Search,
@@ -194,6 +195,16 @@ export function AppShell({
                     />
                   }
                   label="实验对比"
+                />
+                <ProjectNavLink
+                  href={`/projects/${activeProjectId}/reviews`}
+                  icon={
+                    <MessageSquareText
+                      aria-hidden="true"
+                      className="size-4 shrink-0"
+                    />
+                  }
+                  label="人工审核"
                 />
               </>
             ) : null}
