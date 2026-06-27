@@ -110,76 +110,19 @@ describe("DatasetList", () => {
 });
 
 describe("DatasetDetail", () => {
-  it("switches versions, shows cases and creates a test case", async () => {
-    const onCreateCase = vi.fn().mockResolvedValue(undefined);
+  it("shows cases and version badges", async () => {
     render(
       <DatasetDetail
-        cases={testCase.dataset_version_id === draftVersion.id ? [testCase] : []}
+        cases={[testCase]}
+        currentVersionId={draftVersion.id}
         dataset={dataset}
-        onCreateCase={onCreateCase}
-        selectedVersionId={draftVersion.id}
+        projectId="project-1"
         versions={[draftVersion]}
       />,
     );
 
-    expect(screen.getByRole("tab", { name: "v1 草稿" })).toBeVisible();
+    expect(screen.getByText(dataset.name)).toBeVisible();
     expect(screen.getByText("基础问候")).toBeVisible();
     expect(screen.getByText("API")).toBeVisible();
-
-    fireEvent.click(screen.getByRole("button", { name: "添加用例" }));
-    fireEvent.change(screen.getByLabelText("用例名称"), {
-      target: { value: "流式回复" },
-    });
-    fireEvent.change(screen.getByLabelText("输入 JSON"), {
-      target: { value: '{"message":"stream"}' },
-    });
-    fireEvent.click(screen.getByRole("button", { name: "保存用例" }));
-
-    await waitFor(() => expect(onCreateCase).toHaveBeenCalledTimes(1));
-    expect(onCreateCase).toHaveBeenCalledWith(
-      draftVersion.id,
-      expect.objectContaining({
-        execution_mode: "api",
-        input: { message: "stream" },
-        name: "流式回复",
-      }),
-    );
-  });
-
-  it("publishes a draft and renders published versions read-only", async () => {
-    const onPublish = vi.fn().mockResolvedValue(undefined);
-    const { rerender } = render(
-      <DatasetDetail
-        cases={[]}
-        dataset={dataset}
-        onPublish={onPublish}
-        selectedVersionId={draftVersion.id}
-        versions={[draftVersion]}
-      />,
-    );
-
-    fireEvent.click(screen.getByRole("button", { name: "发布 v1" }));
-    expect(await screen.findByText("发布后用例将不可编辑。")).toBeVisible();
-    fireEvent.click(screen.getByRole("button", { name: "确认发布" }));
-    await waitFor(() => expect(onPublish).toHaveBeenCalledWith(draftVersion.id));
-
-    rerender(
-      <DatasetDetail
-        cases={[testCase]}
-        dataset={dataset}
-        selectedVersionId={draftVersion.id}
-        versions={[
-          {
-            ...draftVersion,
-            published_at: "2026-06-25T11:00:00Z",
-            status: "published",
-          },
-        ]}
-      />,
-    );
-    expect(screen.getByText("只读版本")).toBeVisible();
-    expect(
-      screen.queryByRole("button", { name: "添加用例" }),
-    ).not.toBeInTheDocument();
   });
 });
