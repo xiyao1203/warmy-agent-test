@@ -51,9 +51,13 @@ def create_trace_diff_router(
             cases_a = await _get_run_cases_summary(session, run_a_id)
             cases_b = await _get_run_cases_summary(session, run_b_id)
 
-            case_map_a = {c["test_case_id"]: c for c in cases_a}
-            case_map_b = {c["test_case_id"]: c for c in cases_b}
-            all_case_ids = sorted(set(case_map_a) | set(case_map_b))
+            case_map_a: dict[str, dict[str, str | int | None]] = {
+                c["test_case_id"]: c for c in cases_a  # type: ignore[misc]
+            }
+            case_map_b: dict[str, dict[str, str | int | None]] = {
+                c["test_case_id"]: c for c in cases_b  # type: ignore[misc]
+            }
+            all_case_ids: list[str] = sorted(set(case_map_a) | set(case_map_b))
 
             case_diffs = []
             for cid in all_case_ids:
@@ -63,7 +67,7 @@ def create_trace_diff_router(
                 if a and b:
                     a_dur = a.get("duration_ms") or 0
                     b_dur = b.get("duration_ms") or 0
-                    diff["duration_delta_ms"] = b_dur - a_dur
+                    diff["duration_delta_ms"] = int(b_dur) - int(a_dur)
                     diff["status_a"] = a.get("status")
                     diff["status_b"] = b.get("status")
                     diff["status_changed"] = a.get("status") != b.get("status")
@@ -127,7 +131,9 @@ async def _get_run_summary(
     }
 
 
-async def _get_run_cases_summary(session, run_id: UUID) -> list[dict[str, object]]:
+async def _get_run_cases_summary(
+    session, run_id: UUID,
+) -> list[dict[str, str | int | None]]:
     result = await session.execute(
         text(
             "SELECT test_case_id, status, duration_ms, error_type "

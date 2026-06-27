@@ -712,7 +712,6 @@ def create_dataset_router(
                         actor,
                         DeleteTestCaseCommand(
                             case_id=TestCaseId(cid),
-                            version_id=DatasetVersionId(version_id),
                         ),
                     )
         except (

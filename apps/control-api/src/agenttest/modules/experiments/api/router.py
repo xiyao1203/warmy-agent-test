@@ -192,7 +192,8 @@ def create_experiment_router(
                     status_a = a.get("status")
                     unchanged += 1
                 else:
-                    status_b = b.get("status")  # type: ignore[assignment]
+                    if b is not None:
+                        status_b = b.get("status")
                     unchanged += 1
 
                 case_diffs.append({
@@ -223,7 +224,7 @@ def create_experiment_router(
                 "p95_duration_delta_ms": float(p95),
             }
 
-        result_json = {"case_diffs": case_diffs, "summary": summary}
+        result_json: dict[str, object] = {"case_diffs": case_diffs, "summary": summary}
         exp.complete(result_json)
         await repo.save(exp)
         return _to_dict(exp)
