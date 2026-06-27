@@ -43,6 +43,9 @@ class FakeUserRepository:
             return self.user
         return None
 
+    async def update_lockout(self, user: User) -> None:
+        pass
+
 
 class FakeCredentialRepository:
     def __init__(self, password_hash: str | None) -> None:

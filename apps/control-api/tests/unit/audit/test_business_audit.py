@@ -49,6 +49,9 @@ class IdentityRepository:
     async def add(self, user: User) -> None:
         self.user = user
 
+    async def update_lockout(self, user: User) -> None:
+        pass
+
 
 class Credentials:
     def __init__(self, password_hash: str | None = None) -> None:

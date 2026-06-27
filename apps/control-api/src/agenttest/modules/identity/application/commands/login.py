@@ -65,6 +65,9 @@ class LoginHandler:
             or not user.can_authenticate
             or not self._password_hasher.verify(password_hash, command.password)
         ):
+            if user is not None:
+                user.record_failed_login()
+                await self._users.update_lockout(user)
             if self._audit is not None:
                 await self._audit.record(
                     actor_user_id=user.user_id if user is not None else None,
@@ -77,6 +80,8 @@ class LoginHandler:
                 )
             raise InvalidCredentialsError
 
+        user.reset_failed_logins()
+        await self._users.update_lockout(user)
         now = self._clock.now()
         session_token = token_urlsafe(32)
         csrf_token = token_urlsafe(32)

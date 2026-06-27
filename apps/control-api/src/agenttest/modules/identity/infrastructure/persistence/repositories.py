@@ -81,6 +81,19 @@ class SqlAlchemyUserRepository:
         async with transaction_scope(self._session_factory) as session:
             await session.execute(delete(UserModel).where(UserModel.id == user_id.value))
 
+    async def update_lockout(self, user: User) -> None:
+        """更新登录失败计数和锁定时间。"""
+        async with transaction_scope(self._session_factory) as session:
+            await session.execute(
+                update(UserModel)
+                .where(UserModel.id == user.user_id.value)
+                .values(
+                    failed_login_count=user.failed_login_count,
+                    locked_until=user.locked_until,
+                    updated_at=func.now(),
+                )
+            )
+
     async def list_page(
         self,
         *,
@@ -204,6 +217,8 @@ def _to_user(model: UserModel | None) -> User | None:
         role=SystemRole(model.role),
         status=UserStatus(model.status),
         must_change_password=model.must_change_password,
+        failed_login_count=model.failed_login_count,
+        locked_until=model.locked_until,
     )
 
 
@@ -216,6 +231,8 @@ def _to_model(user: User) -> UserModel:
         role=user.role.value,
         status=user.status.value,
         must_change_password=user.must_change_password,
+        failed_login_count=user.failed_login_count,
+        locked_until=user.locked_until,
         created_at=func.now(),
         updated_at=func.now(),
         created_by=None,
