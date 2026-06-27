@@ -10,6 +10,7 @@ import {
   ChevronDown,
   ClipboardCheck,
   Database,
+  FlaskConical,
   HelpCircle,
   KeyRound,
   LayoutDashboard,
@@ -183,6 +184,16 @@ export function AppShell({
                     />
                   }
                   label="评分器"
+                />
+                <ProjectNavLink
+                  href={`/projects/${activeProjectId}/experiments`}
+                  icon={
+                    <FlaskConical
+                      aria-hidden="true"
+                      className="size-4 shrink-0"
+                    />
+                  }
+                  label="实验对比"
                 />
               </>
             ) : null}
