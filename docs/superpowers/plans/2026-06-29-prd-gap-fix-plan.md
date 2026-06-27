@@ -21,12 +21,13 @@
 - 测试：6 个锁定域测试
 - 验收：连续 5 次失败后锁定 15 分钟
 
-### 3. 测试账号管理 API（PRD 8.4）
+### 3. 测试账号管理 API（PRD 8.4） ✅ 已完成
+- Commit: 45dc2a2
 - 范围：独立的测试账号 CRUD + 凭证加密
-- 后端：新建 `test_accounts` DDD 模块（entity / repo / API）
-- 迁移：CREATE TABLE test_accounts
-- 前端：环境模板页新增"测试账号"子页面
-- 验收：CRUD + 凭证加密存储 + 项目隔离
+- 后端：`test_accounts` DDD 模块（entity / repo / API）
+- API 响应自动掩码凭证字段
+- 测试：5 个领域测试
+- 验收：CRUD + 凭证掩码 + 项目隔离
 
 ### 4. 安全扫描实际执行（PRD 9.1-9.3）
 - 范围：Promptfoo 适配器集成，替换 Mock 数据
