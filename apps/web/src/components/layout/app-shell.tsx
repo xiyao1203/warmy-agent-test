@@ -11,6 +11,7 @@ import {
   ClipboardCheck,
   Database,
   HelpCircle,
+  KeyRound,
   LayoutDashboard,
   PlayCircle,
   Search,
@@ -161,6 +162,16 @@ export function AppShell({
                     />
                   }
                   label="测试执行"
+                />
+                <ProjectNavLink
+                  href={`/projects/${activeProjectId}/environments`}
+                  icon={
+                    <KeyRound
+                      aria-hidden="true"
+                      className="size-4 shrink-0"
+                    />
+                  }
+                  label="环境与凭证"
                 />
               </>
             ) : null}
