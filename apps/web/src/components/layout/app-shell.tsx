@@ -14,6 +14,7 @@ import {
   KeyRound,
   LayoutDashboard,
   PlayCircle,
+  Scale,
   Search,
   Users,
 } from "lucide-react";
@@ -172,6 +173,16 @@ export function AppShell({
                     />
                   }
                   label="环境与凭证"
+                />
+                <ProjectNavLink
+                  href={`/projects/${activeProjectId}/scorers`}
+                  icon={
+                    <Scale
+                      aria-hidden="true"
+                      className="size-4 shrink-0"
+                    />
+                  }
+                  label="评分器"
                 />
               </>
             ) : null}
