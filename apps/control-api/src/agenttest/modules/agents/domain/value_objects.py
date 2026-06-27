@@ -52,6 +52,9 @@ class AgentConfig:
         timeout: 请求超时秒数，必须为正数。
         max_steps: 最大执行步数（可选）。
         cost_limit: 费用上限（可选）。
+        system_prompt_version: System Prompt 版本标识（可选）。
+        knowledge_version: 知识库或数据版本（可选）。
+        adapter_version: AgentAdapter 版本（可选）。
     """
 
     api_url: str
@@ -64,6 +67,9 @@ class AgentConfig:
     timeout: int = 30
     max_steps: int | None = None
     cost_limit: float | None = None
+    system_prompt_version: str | None = None
+    knowledge_version: str | None = None
+    adapter_version: str | None = None
 
     def __post_init__(self) -> None:
         """创建后校验：api_url 必填且合法，timeout 为正数，
@@ -93,6 +99,9 @@ class AgentConfig:
             "timeout": self.timeout,
             "max_steps": self.max_steps,
             "cost_limit": self.cost_limit,
+            "system_prompt_version": self.system_prompt_version,
+            "knowledge_version": self.knowledge_version,
+            "adapter_version": self.adapter_version,
         }
 
     @classmethod
@@ -122,4 +131,7 @@ class AgentConfig:
                 if isinstance(cost_limit_raw, (int, float, str))
                 else None
             ),
+            system_prompt_version=str(data.get("system_prompt_version") or "") or None,
+            knowledge_version=str(data.get("knowledge_version") or "") or None,
+            adapter_version=str(data.get("adapter_version") or "") or None,
         )

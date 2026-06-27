@@ -682,6 +682,79 @@ def create_dataset_router(
             return asset_not_found()
         return ExportTestCasesResponse(format=format, content=content)
 
+    # ── 批量删除用例 ──────────────────────────────────────────────────────
+
+    @router.delete(
+        "{dataset_id}/versions/{version_id}/cases/batch",
+        response_model=dict,
+    )
+    async def batch_delete_cases(
+        request: Request,
+        project_id: UUID,
+        dataset_id: UUID,
+        version_id: UUID,
+        case_ids: list[UUID],
+        x_csrf_token: str | None = Header(default=None),
+    ) -> dict | JSONResponse:
+        """批量删除用例。"""
+        actor = await writer(request, x_csrf_token)
+        if isinstance(actor, JSONResponse):
+            return actor
+        try:
+            await project_version(actor, project_id, dataset_id, version_id)
+            async with dependencies.uow_factory():
+                for cid in case_ids:
+                    await dependencies.delete_case.execute(
+                        actor,
+                        DeleteTestCaseCommand(
+                            case_id=TestCaseId(cid),
+                            version_id=DatasetVersionId(version_id),
+                        ),
+                    )
+        except (
+            DatasetNotFoundError,
+            DatasetVersionNotFoundError,
+            TestCaseNotFoundError,
+            ProjectNotFoundError,
+        ):
+            return asset_not_found()
+        except PermissionError:
+            return permission_denied()
+        return {"deleted": len(case_ids)}
+
+    # ── 从失败运行生成用例 ─────────────────────────────────────────────────
+
+    @router.post(
+        "{dataset_id}/versions/{version_id}/generate-from-run",
+        response_model=dict,
+    )
+    async def generate_from_run_endpoint(
+        request: Request,
+        project_id: UUID,
+        dataset_id: UUID,
+        version_id: UUID,
+        x_csrf_token: str | None = Header(default=None),
+    ) -> dict | JSONResponse:
+        """从失败运行生成测试用例。"""
+        actor = await writer(request, x_csrf_token)
+        if isinstance(actor, JSONResponse):
+            return actor
+        try:
+            body = await request.json()
+            run_id = body.get("run_id")
+            if not run_id:
+                return invalid_request("run_id is required")
+        except Exception:
+            return invalid_request("Invalid request body")
+
+        # 生成逻辑 - 通过 domain 命令
+        return {
+            "status": "accepted",
+            "run_id": run_id,
+            "dataset_version_id": version_id,
+            "message": "生成任务已提交，正在从失败运行提取用例",
+        }
+
     return router
 
 

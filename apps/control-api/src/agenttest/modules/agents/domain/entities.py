@@ -70,6 +70,8 @@ class Agent:
     created_at: datetime
     updated_at: datetime
     description: str | None = None
+    current_version_id: AgentVersionId | None = None
+    baseline_version_id: AgentVersionId | None = None
 
     @classmethod
     def create(
@@ -132,6 +134,16 @@ class Agent:
     def update_description(self, description: str | None) -> None:
         """更新 Agent 描述，同时刷新 updated_at。"""
         self.description = description
+        self.updated_at = datetime.now(UTC)
+
+    def set_current_version(self, version_id: AgentVersionId) -> None:
+        """设置当前版本 ID。"""
+        self.current_version_id = version_id
+        self.updated_at = datetime.now(UTC)
+
+    def set_baseline_version(self, version_id: AgentVersionId) -> None:
+        """设置基线版本 ID。"""
+        self.baseline_version_id = version_id
         self.updated_at = datetime.now(UTC)
 
 
