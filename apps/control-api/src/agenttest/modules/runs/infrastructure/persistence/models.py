@@ -58,6 +58,7 @@ class RunModel(Base):
     error_cases: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     cancelled_cases: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     workflow_id: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    session_id: Mapped[str | None] = mapped_column(String(255), nullable=True)
     created_by: Mapped[UUID] = mapped_column(ForeignKey("users.id"), nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)

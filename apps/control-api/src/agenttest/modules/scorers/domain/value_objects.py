@@ -11,6 +11,7 @@ class ScorerType(StrEnum):
     RULE = "rule"
     MODEL = "model"
     REFERENCE = "reference"
+    VIDEO = "video"
 
 
 @dataclass(frozen=True, slots=True)
