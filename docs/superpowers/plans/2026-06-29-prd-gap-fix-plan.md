@@ -29,11 +29,13 @@
 - 测试：5 个领域测试
 - 验收：CRUD + 凭证掩码 + 项目隔离
 
-### 4. 安全扫描实际执行（PRD 9.1-9.3）
+### 4. 安全扫描实际执行（PRD 9.1-9.3） ✅ 已完成
+- Commit: 1ceb6cb
 - 范围：Promptfoo 适配器集成，替换 Mock 数据
-- 后端：新建 `security/adapters/promptfoo_adapter.py`
-- 修改：`security/api/scan_router.py` 调用适配器而非返回 mock
-- 验收：POST /security/scans 实际执行 Promptfoo 并返回真实结果
+- 后端：`security/adapters/` 协议 + Promptfoo 实现 + Mock fallback
+- scan_router 调用适配器而非返回 mock
+- 测试：3 个适配器测试
+- 验收：有 Promptfoo 时执行真实扫描，无则 fallback Mock
 
 ### 5. Playwright Runner（PRD 8.7）
 - 范围：浏览器自动化执行引擎
