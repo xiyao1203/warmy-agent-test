@@ -37,11 +37,13 @@
 - 测试：3 个适配器测试
 - 验收：有 Promptfoo 时执行真实扫描，无则 fallback Mock
 
-### 5. Playwright Runner（PRD 8.7）
+### 5. Playwright Runner（PRD 8.7） ✅ 已完成
+- Commit: 08c9209
 - 范围：浏览器自动化执行引擎
-- 后端：新建 `workers/playwright-runner/` Temporal Worker
-- 前端：浏览器用例类型支持 + 截图展示
-- 验收：可执行 Playwright 用例并返回截图
+- 后端：`playwright_activity.py` Temporal Activity（goto/click/fill/wait/screenshot）
+- 每步截图 base64 + 心跳进度 + Mock fallback
+- 测试：5 个数据契约和 mock 模式测试
+- 验收：有 Playwright 时执行真实浏览器测试，无则 fallback
 
 ---
 
