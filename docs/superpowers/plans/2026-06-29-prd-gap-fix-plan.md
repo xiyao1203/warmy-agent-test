@@ -13,10 +13,12 @@
 - 测试：9 个单元测试
 - 验收：API 返回掩码值，非明文
 
-### 2. 登录失败锁定（PRD 8.1）
+### 2. 登录失败锁定（PRD 8.1） ✅ 已完成
+- Commit: 00e1547
 - 范围：连续登录失败达阈值后自动锁定账号
-- 后端：`identity` 模块新增 `failed_login_count` + `locked_until` 字段
-- 迁移：ALTER TABLE users 新增列
+- 后端：User 实体新增 `failed_login_count` + `locked_until`
+- LoginHandler：失败时调用 `record_failed_login`，成功时调用 `reset_failed_logins`
+- 测试：6 个锁定域测试
 - 验收：连续 5 次失败后锁定 15 分钟
 
 ### 3. 测试账号管理 API（PRD 8.4）
