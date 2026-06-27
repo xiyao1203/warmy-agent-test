@@ -5,7 +5,6 @@ from __future__ import annotations
 from uuid import uuid4
 
 import pytest
-
 from agenttest.modules.identity.public import Email, SystemRole, User, UserId
 from agenttest.modules.projects.public import ProjectId
 from agenttest.modules.test_plans.domain.entities import (
@@ -176,3 +175,49 @@ def test_cannot_update_published_version() -> None:
     version.publish()
     with pytest.raises(ValueError, match="Cannot modify a published version"):
         version.update_config(TestPlanConfig(timeout=999))
+
+
+# ── Phase 4: New TestPlanConfig fields ─────────────────────────────────────
+
+
+def test_config_new_defaults() -> None:
+    """新字段默认值正确。"""
+    cfg = TestPlanConfig()
+    assert cfg.max_retries == 0
+    assert cfg.baseline_run_id is None
+    assert cfg.release_gate == {}
+
+
+def test_config_new_fields_roundtrip() -> None:
+    """新字段序列化/反序列化往返。"""
+    cfg = TestPlanConfig(
+        max_retries=3,
+        baseline_run_id="run-abc-123",
+        release_gate={"type": "all_pass", "min_score": 0.9},
+    )
+    data = cfg.to_dict()
+    assert data["max_retries"] == 3
+    assert data["baseline_run_id"] == "run-abc-123"
+    assert data["release_gate"] == {"type": "all_pass", "min_score": 0.9}
+
+    restored = TestPlanConfig.from_dict(data)
+    assert restored.max_retries == 3
+    assert restored.baseline_run_id == "run-abc-123"
+    assert restored.release_gate == {"type": "all_pass", "min_score": 0.9}
+
+
+def test_config_validates_max_retries() -> None:
+    """max_retries 不能为负数。"""
+    with pytest.raises(ValueError, match="max_retries must be >= 0"):
+        TestPlanConfig(max_retries=-1)
+
+
+def test_config_dry_run_estimate() -> None:
+    """dry_run_preview 返回正确的预估值。"""
+    cfg = TestPlanConfig(concurrency=2, timeout=100, cost_budget=50.0)
+    estimate = cfg.dry_run_preview(num_cases=10)
+    assert estimate["concurrency"] == 2
+    assert estimate["timeout_seconds"] == 100
+    assert estimate["estimated_cases"] == 10
+    assert estimate["cost_budget"] == 50.0
+    assert estimate["max_retries"] == 0

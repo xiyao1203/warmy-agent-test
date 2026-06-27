@@ -35,10 +35,13 @@ class TestPlanConfig:
     runs_per_case: int = 1
     concurrency: int = 1
     timeout: int = 300
+    max_retries: int = 0
     retry_policy: dict[str, object] = field(default_factory=dict)
     scorers: list[dict[str, object]] = field(default_factory=list)
     pass_threshold: float = 1.0
     cost_budget: float | None = None
+    baseline_run_id: str | None = None
+    release_gate: dict[str, object] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
         if self.runs_per_case < 1:
@@ -51,6 +54,8 @@ class TestPlanConfig:
             raise ValueError("pass_threshold must be between 0 and 1")
         if self.cost_budget is not None and self.cost_budget < 0:
             raise ValueError("cost_budget must be non-negative")
+        if self.max_retries < 0:
+            raise ValueError("max_retries must be >= 0")
 
     def to_dict(self) -> dict[str, object]:
         """序列化为字典，用于 JSONB 列存储。"""
@@ -59,10 +64,13 @@ class TestPlanConfig:
             "runs_per_case": self.runs_per_case,
             "concurrency": self.concurrency,
             "timeout": self.timeout,
+            "max_retries": self.max_retries,
             "retry_policy": self.retry_policy,
             "scorers": self.scorers,
             "pass_threshold": self.pass_threshold,
             "cost_budget": self.cost_budget,
+            "baseline_run_id": self.baseline_run_id,
+            "release_gate": self.release_gate,
         }
 
     @classmethod
@@ -75,12 +83,16 @@ class TestPlanConfig:
         rpc_raw = data.get("runs_per_case", 1)
         conc_raw = data.get("concurrency", 1)
         to_raw = data.get("timeout", 300)
+        mr_raw = data.get("max_retries", 0)
         pt_raw = data.get("pass_threshold", 1.0)
+        br_raw = data.get("baseline_run_id")
+        rg_raw = data.get("release_gate") or {}
         return cls(
             api_browser_ratio=float(abr_raw) if isinstance(abr_raw, (int, float, str)) else 0.0,
             runs_per_case=int(rpc_raw) if isinstance(rpc_raw, (int, float, str)) else 1,
             concurrency=int(conc_raw) if isinstance(conc_raw, (int, float, str)) else 1,
             timeout=int(to_raw) if isinstance(to_raw, (int, float, str)) else 300,
+            max_retries=int(mr_raw) if isinstance(mr_raw, (int, float, str)) else 0,
             retry_policy=(
                 dict(retry_policy_raw)
                 if isinstance(retry_policy_raw, dict)
@@ -97,4 +109,23 @@ class TestPlanConfig:
                 if isinstance(cost_budget_raw, (int, float))
                 else None
             ),
+            baseline_run_id=str(br_raw) if isinstance(br_raw, str) else None,
+            release_gate=(
+                dict(rg_raw)
+                if isinstance(rg_raw, dict)
+                else {}
+            ),  # type: ignore[arg-type]
         )
+
+    def dry_run_preview(self, *, num_cases: int = 0) -> dict[str, object]:
+        """试运行预览：返回预计用例数、配置参数。"""
+        return {
+            "estimated_cases": num_cases,
+            "concurrency": self.concurrency,
+            "timeout_seconds": self.timeout,
+            "max_retries": self.max_retries,
+            "cost_budget": self.cost_budget,
+            "pass_threshold": self.pass_threshold,
+            "baseline_run_id": self.baseline_run_id,
+            "release_gate": self.release_gate,
+        }
