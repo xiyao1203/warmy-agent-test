@@ -92,6 +92,15 @@ class SqlAlchemyEnvironmentTemplateRepository:
                 )
             )
 
+    async def get_by_id_and_project(
+        self, template_id: EnvironmentTemplateId, project_id: ProjectId
+    ) -> EnvironmentTemplate | None:
+        async with session_scope(self._session_factory) as session:
+            model = await session.get(EnvironmentTemplateModel, template_id.value)
+            if model and model.project_id != project_id.value:
+                return None
+            return _to_template(model) if model else None
+
 
 # ── Mappers ─────────────────────────────────────────────────────────────────
 

@@ -47,7 +47,11 @@ def create_snapshot_router(
 
         async with session_factory() as session:
             repo = SqlAlchemyEnvironmentTemplateRepository(session)
-            template = await repo.get(template_id, project_id=project_id)
+            from agenttest.modules.environments.domain.entities import EnvironmentTemplateId
+            from agenttest.modules.projects.public import ProjectId as Pid
+            template = await repo.get_by_id_and_project(
+                EnvironmentTemplateId(template_id), Pid(project_id)
+            )
             if template is None:
                 return JSONResponse(
                     status_code=404, content={"detail": "环境模板不存在"}
@@ -61,10 +65,10 @@ def create_snapshot_router(
                 "created_at": datetime.now(UTC).isoformat(),
             }
 
-            snapshots = list(template.config.get("snapshots", []))
+            snapshots = list(template.config.get("snapshots", []))  # type: ignore[call-overload]
             snapshots.append(snapshot)
-            template.config["snapshots"] = snapshots
-            await repo.save(template, project_id=project_id)
+            template.config["snapshots"] = snapshots  # type: ignore[assignment]
+            await repo.save(template)
             await session.commit()
 
             return {"id": snapshot_id, "name": snapshot["name"]}
@@ -85,13 +89,17 @@ def create_snapshot_router(
 
         async with session_factory() as session:
             repo = SqlAlchemyEnvironmentTemplateRepository(session)
-            template = await repo.get(template_id, project_id=project_id)
+            from agenttest.modules.environments.domain.entities import EnvironmentTemplateId
+            from agenttest.modules.projects.public import ProjectId as Pid
+            template = await repo.get_by_id_and_project(
+                EnvironmentTemplateId(template_id), Pid(project_id)
+            )
             if template is None:
                 return JSONResponse(
                     status_code=404, content={"detail": "环境模板不存在"}
                 )
 
-            snapshots = list(template.config.get("snapshots", []))
+            snapshots = list(template.config.get("snapshots", []))  # type: ignore[call-overload]
             return {
                 "items": [
                     {
@@ -120,13 +128,17 @@ def create_snapshot_router(
 
         async with session_factory() as session:
             repo = SqlAlchemyEnvironmentTemplateRepository(session)
-            template = await repo.get(template_id, project_id=project_id)
+            from agenttest.modules.environments.domain.entities import EnvironmentTemplateId
+            from agenttest.modules.projects.public import ProjectId as Pid
+            template = await repo.get_by_id_and_project(
+                EnvironmentTemplateId(template_id), Pid(project_id)
+            )
             if template is None:
                 return JSONResponse(
                     status_code=404, content={"detail": "环境模板不存在"}
                 )
 
-            snapshots = list(template.config.get("snapshots", []))
+            snapshots = list(template.config.get("snapshots", []))  # type: ignore[call-overload]
             snapshot = next(
                 (s for s in snapshots if s.get("id") == snapshot_id), None
             )
@@ -135,9 +147,9 @@ def create_snapshot_router(
                     status_code=404, content={"detail": "快照不存在"}
                 )
 
-            template.config = dict(snapshot.get("config", {}))
-            template.config["snapshots"] = snapshots
-            await repo.save(template, project_id=project_id)
+            template.config = dict(snapshot.get("config", {}))  # type: ignore[arg-type]
+            template.config["snapshots"] = snapshots  # type: ignore[assignment]
+            await repo.save(template)
             await session.commit()
 
             return {"status": "restored", "snapshot_id": snapshot_id}
@@ -159,16 +171,20 @@ def create_snapshot_router(
 
         async with session_factory() as session:
             repo = SqlAlchemyEnvironmentTemplateRepository(session)
-            template = await repo.get(template_id, project_id=project_id)
+            from agenttest.modules.environments.domain.entities import EnvironmentTemplateId
+            from agenttest.modules.projects.public import ProjectId as Pid
+            template = await repo.get_by_id_and_project(
+                EnvironmentTemplateId(template_id), Pid(project_id)
+            )
             if template is None:
                 return JSONResponse(
                     status_code=404, content={"detail": "环境模板不存在"}
                 )
 
-            snapshots = list(template.config.get("snapshots", []))
+            snapshots = list(template.config.get("snapshots", []))  # type: ignore[call-overload]
             snapshots = [s for s in snapshots if s.get("id") != snapshot_id]
-            template.config["snapshots"] = snapshots
-            await repo.save(template, project_id=project_id)
+            template.config["snapshots"] = snapshots  # type: ignore[assignment]
+            await repo.save(template)
             await session.commit()
 
             return {"status": "deleted", "snapshot_id": snapshot_id}
