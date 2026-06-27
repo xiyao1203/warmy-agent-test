@@ -1,10 +1,11 @@
-"""Phase 5-9 新表 + run_events 扩展。
+"""Phase 5-10 新表 + run_events 扩展。
 
 - scorers 表（Phase 6 评分器）
 - experiments 表（Phase 7 实验对比）
 - review_tasks 表（Phase 8 人工审核）
 - run_events 新增列（Phase 5 Trace）
 - security_scans 表（Phase 9 安全测试）
+- release_gates 表（Phase 10 发布门禁）
 """
 
 from typing import Sequence, Union
@@ -154,8 +155,41 @@ def upgrade() -> None:
         sa.Column("completed_at", sa.DateTime(timezone=True), nullable=True),
     )
 
+    # ── Phase 10: release_gates 表 ────────────────────────────────────
+    op.create_table(
+        "release_gates",
+        sa.Column("id", sa.Uuid(), primary_key=True),
+        sa.Column(
+            "project_id",
+            sa.Uuid(),
+            sa.ForeignKey("projects.id", ondelete="CASCADE"),
+            nullable=False,
+        ),
+        sa.Column("name", sa.String(200), nullable=False),
+        sa.Column(
+            "success_rate_threshold",
+            sa.Float(),
+            nullable=False,
+            server_default="0.8",
+        ),
+        sa.Column("critical_cases", sa.JSON(), nullable=False, server_default="[]"),
+        sa.Column("cost_limit", sa.Float(), nullable=True),
+        sa.Column(
+            "security_threshold",
+            sa.Float(),
+            nullable=False,
+            server_default="0.8",
+        ),
+        sa.Column(
+            "enabled", sa.Boolean(), nullable=False, server_default="1",
+        ),
+        sa.Column("created_at", sa.DateTime(timezone=True), nullable=False),
+        sa.Column("updated_at", sa.DateTime(timezone=True), nullable=False),
+    )
+
 
 def downgrade() -> None:
+    op.drop_table("release_gates")
     op.drop_table("security_scans")
     op.drop_table("review_tasks")
     op.drop_table("experiments")

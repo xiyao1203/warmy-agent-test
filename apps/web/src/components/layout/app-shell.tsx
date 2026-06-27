@@ -19,6 +19,7 @@ import {
   Scale,
   Search,
   Shield,
+  ShieldCheck,
   Users,
 } from "lucide-react";
 import Link from "next/link";
@@ -216,6 +217,16 @@ export function AppShell({
                     />
                   }
                   label="安全测试"
+                />
+                <ProjectNavLink
+                  href={`/projects/${activeProjectId}/gates`}
+                  icon={
+                    <ShieldCheck
+                      aria-hidden="true"
+                      className="size-4 shrink-0"
+                    />
+                  }
+                  label="发布门禁"
                 />
               </>
             ) : null}
