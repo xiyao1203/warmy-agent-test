@@ -10,6 +10,7 @@ from pydantic import BaseModel
 
 from agenttest.modules.identity.public import InvalidSessionError
 from agenttest.modules.projects.public import ProjectNotFoundError
+from agenttest.modules.test_agent.adapters import create_llm_adapter
 from agenttest.modules.test_agent.domain.entities import (
     ChatSession,
 )
@@ -35,6 +36,7 @@ def create_test_agent_router(
 
     # In-memory session store (production should use DB)
     _sessions: dict[str, ChatSession] = {}
+    _llm = create_llm_adapter()
 
     @router.post("/chat")
     async def chat(
@@ -70,8 +72,8 @@ def create_test_agent_router(
 
         session.add_user_message(body.message)
 
-        # Simulate Agent response (in production, call LLM)
-        plan_draft = _generate_mock_plan(body.message)
+        # Generate plan via LLM adapter (OpenAI or Mock fallback)
+        plan_draft = await _llm.generate_plan(body.message)
         response_text = (
             f"已为您生成测试计划草稿。包含 {plan_draft.get('estimated_cases', 0)} "
             f"个用例，预计执行 {plan_draft.get('estimated_duration_min', 0)} 分钟。"
@@ -173,17 +175,3 @@ def create_test_agent_router(
         }
 
     return router
-
-
-def _generate_mock_plan(message: str) -> dict[str, object]:
-    """生成模拟测试计划（实际应调用 LLM）。"""
-    return {
-        "name": f"测试计划：{message[:30]}",
-        "agent_version_id": None,
-        "dataset_id": None,
-        "environment_id": None,
-        "estimated_cases": 5,
-        "estimated_duration_min": 2,
-        "scorers": ["exact_match"],
-        "description": f"基于用户指令「{message[:50]}」自动生成的测试计划",
-    }

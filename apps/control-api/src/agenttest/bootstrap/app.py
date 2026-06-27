@@ -347,6 +347,9 @@ def create_app(
     # ── Test Account API ───────────────────────────────────────────────
     _register_test_account_endpoints(app, resolved_settings, dependencies)
 
+    # ── Run Progress SSE ───────────────────────────────────────────────
+    _register_run_stream_endpoints(app, resolved_settings, dependencies)
+
     # ── 插件注册表 ──────────────────────────────────────────────────────────
     from agenttest.modules.plugins.infrastructure.file_registry import (
         FileBasedPluginRegistry,
@@ -1463,6 +1466,50 @@ def _register_test_account_endpoints(
         return await auth_deps.current_user.execute(token)
 
     router = create_test_account_router(
+        session_factory=session_factory,
+        actor_for=actor_for,
+        check_project=check_project,
+        settings=settings,
+    )
+    app.include_router(router, prefix="/api/v1")
+
+
+def _register_run_stream_endpoints(
+    app: FastAPI,
+    settings: Settings,
+    auth_deps,
+) -> None:
+    """注册运行进度 SSE 端点。"""
+    from agenttest.modules.runs.api.stream import create_run_stream_router
+    from agenttest.shared.infrastructure.database import (
+        create_database_engine,
+        create_session_factory,
+    )
+
+    engine = create_database_engine(str(settings.database_url))
+    session_factory = create_session_factory(engine)
+
+    async def check_project(project_id):
+        from sqlalchemy import text
+
+        async with session_factory() as session:
+            result = await session.execute(
+                text("SELECT 1 FROM projects WHERE id = :pid"),
+                {"pid": project_id},
+            )
+            if result.scalar() is None:
+                from fastapi import HTTPException
+                raise HTTPException(
+                    status_code=404, detail="Project not found",
+                )
+
+    async def actor_for(request: Request):
+        token = request.cookies.get(settings.session_cookie_name)
+        if not token:
+            return None
+        return await auth_deps.current_user.execute(token)
+
+    router = create_run_stream_router(
         session_factory=session_factory,
         actor_for=actor_for,
         check_project=check_project,
