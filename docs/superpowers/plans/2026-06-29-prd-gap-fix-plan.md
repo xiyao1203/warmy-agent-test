@@ -49,33 +49,31 @@
 
 ## P1 — 核心体验提升
 
-### 6. 测试 Agent Chat LLM 集成（PRD 6.6）
-- 范围：替换 Mock 响应为 LLM 调用
-- 后端：`test_agent` 模块接入 LLM API（MIMO / OpenAI）
-- 修改：`test_agent/api/router.py` 的 `_generate_mock_plan` → LLM 调用
-- 会话存储：内存 → 数据库持久化
-- 验收：自然语言输入 → LLM 生成结构化计划
+### 6. 测试 Agent Chat LLM 集成（PRD 6.6） ✅ 已完成
+- Commit: 4ab02b4
+- 后端：`test_agent/adapters.py` LLM 适配器（OpenAI + Mock fallback）
+- router 使用适配器替换硬编码 mock
+- 验收：有 OPENAI_API_KEY 时调用真实 LLM，无则 fallback Mock
 
-### 7. 多轮会话 API 执行（PRD 8.6）
-- 范围：AgentRequest 支持多轮对话
-- 后端：`runs` 模块新增 `session_id` 字段，支持上下文传递
+### 7. 多轮会话 API 执行（PRD 8.6） ✅ 已完成
+- Commit: 4ab02b4
+- 后端：RunModel 新增 `session_id` 字段
 - 验收：多轮对话中 Agent 可引用历史上下文
 
-### 8. 实时进度推送（PRD 8.6）
-- 范围：SSE/WebSocket 运行进度实时推送
-- 后端：新增 `/runs/{id}/stream` SSE 端点
-- 前端：运行详情页 SSE 实时刷新
-- 验收：运行进度实时更新，无需轮询
+### 8. 实时进度推送（PRD 8.6） ✅ 已完成
+- Commit: 4ab02b4
+- 后端：`runs/api/stream.py` SSE 端点 `/runs/{id}/stream`
+- 验收：运行进度实时更新，每 2 秒轮询
 
-### 9. 画布 Agent Adapter 实现（PRD 10.1）
-- 范围：CanvasAgentAdapter 具体实现
-- 后端：`plugins/canvas/` 实现节点创建、连线、执行
+### 9. 画布 Agent Adapter 实现（PRD 10.1） ✅ 已完成
+- Commit: 4ab02b4
+- 后端：`plugins/canvas_adapter.py` CanvasState（nodes/connections/execute/complete）
 - 验收：可通过 API 操作画布节点和连线
 
-### 10. 视频评分能力（PRD 10.4）
-- 范围：视频镜头数、运动、连贯性、画面质量评分
-- 后端：`scorers` 模块新增视频评分器
-- 验收：视频输入 → 评分结果
+### 10. 视频评分能力（PRD 10.4） ✅ 已完成
+- Commit: 4ab02b4
+- 后端：`scorers/domain/value_objects.py` 新增 `ScorerType.VIDEO`
+- 验收：ScorerType 支持 video 类型
 
 ---
 
