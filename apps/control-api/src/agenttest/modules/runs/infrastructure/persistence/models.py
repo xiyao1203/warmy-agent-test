@@ -98,6 +98,7 @@ class RunEventModel(Base):
     __table_args__ = (
         UniqueConstraint("run_id", "sequence", name="uq_run_events_sequence"),
         Index("ix_run_events_run_sequence", "run_id", "sequence"),
+        Index("ix_run_events_parent", "parent_event_id"),
     )
 
     id: Mapped[UUID] = mapped_column(primary_key=True)
@@ -108,5 +109,12 @@ class RunEventModel(Base):
     sequence: Mapped[int] = mapped_column(Integer, nullable=False)
     event_type: Mapped[str] = mapped_column(String(100), nullable=False)
     payload: Mapped[dict] = mapped_column(JSON, nullable=False)
+    parent_event_id: Mapped[UUID | None] = mapped_column(
+        ForeignKey("run_events.id", ondelete="SET NULL"), nullable=True
+    )
+    duration_ms: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    token_count: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    cost: Mapped[float | None] = mapped_column(nullable=True)
+    metadata: Mapped[dict | None] = mapped_column(JSON, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
 

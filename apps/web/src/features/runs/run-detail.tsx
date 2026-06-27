@@ -19,6 +19,7 @@ import { Button } from "@/components/ui/button";
 import type { ArtifactItem } from "./api";
 import { artifactDownloadUrl, uploadArtifact } from "./api";
 import { StatusBadge } from "./run-center";
+import { TraceTimeline, TraceTree, type TraceSpan } from "./trace-tree";
 
 export function RunDetail({
   artifacts = [],
@@ -27,6 +28,7 @@ export function RunDetail({
   onCancel = async () => undefined,
   projectId,
   run,
+  traceSpans = [],
 }: {
   artifacts?: ArtifactItem[];
   cases?: RunCaseResponse[];
@@ -34,11 +36,13 @@ export function RunDetail({
   onCancel?: () => Promise<unknown>;
   projectId: string;
   run?: RunResponse;
+  traceSpans?: TraceSpan[];
 }) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState("");
   const [cancelling, setCancelling] = useState(false);
+  const [activeTab, setActiveTab] = useState<"overview" | "cases" | "trace" | "artifacts">("overview");
   if (loading || !run) {
     return (
       <div className="grid min-h-[calc(100vh-3rem)] place-items-center text-sm">
@@ -84,8 +88,101 @@ export function RunDetail({
           </Button>
         </div>
       </header>
-      <div className="mt-5 grid grid-cols-[minmax(0,1fr)_22rem] gap-5 max-[1100px]:grid-cols-1">
-        <section className="grid gap-4">
+      {/* Tabs */}
+      <nav className="mt-5 flex gap-1 border-b border-[var(--border)]">
+        {([
+          ["overview", "概览"],
+          ["cases", "用例列表"],
+          ["trace", "Trace"],
+          ["artifacts", "产物"],
+        ] as const).map(([key, label]) => (
+          <button
+            key={key}
+            className={`rounded-t px-4 py-2 text-sm font-medium transition-colors ${
+              activeTab === key
+                ? "border-b-2 border-[var(--accent)] text-[var(--accent)]"
+                : "text-[var(--text-muted)] hover:text-[var(--text)]"
+            }`}
+            onClick={() => setActiveTab(key)}
+            type="button"
+          >
+            {label}
+          </button>
+        ))}
+      </nav>
+
+      {/* Overview Tab */}
+      {activeTab === "overview" ? (
+        <div className="mt-5 grid grid-cols-[minmax(0,1fr)_22rem] gap-5 max-[1100px]:grid-cols-1">
+          <section className="space-y-3">
+            <div className="rounded border border-[var(--border)] bg-[var(--surface)] p-5">
+              <h3 className="text-sm font-semibold">执行摘要</h3>
+              <dl className="mt-3 grid grid-cols-4 gap-3">
+                <SummaryItem label="总用例" value={String(run.total_cases)} />
+                <SummaryItem label="通过" value={String(run.passed_cases)} />
+                <SummaryItem label="失败" value={String(run.failed_cases)} />
+                <SummaryItem label="错误" value={String(run.error_cases)} />
+              </dl>
+            </div>
+          </section>
+          <aside className="h-fit rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[0_12px_40px_rgba(15,23,42,0.04)]">
+            <div className="flex items-center justify-between gap-3">
+              <h2 className="text-base font-semibold">执行摘要</h2>
+              <Badge tone={canCancel ? "accent" : "neutral"}>
+                <Radio aria-hidden="true" className="mr-1 size-3" />
+                {canCancel ? "实时刷新" : "已结束"}
+              </Badge>
+            </div>
+            <div className="mt-5">
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-[var(--text-muted)]">完成进度</span>
+                <span className="font-medium">{progress}%</span>
+              </div>
+              <div className="mt-2 h-2 overflow-hidden rounded-full bg-[var(--surface-subtle)]">
+                <div
+                  className="h-full rounded-full bg-[var(--accent)]"
+                  style={{ width: `${progress}%` }}
+                />
+              </div>
+            </div>
+            <dl className="mt-5 grid grid-cols-2 gap-3 text-sm">
+              <SummaryItem label="总用例" value={String(run.total_cases)} />
+              <SummaryItem label="已完成" value={String(finishedCases)} />
+              <SummaryItem label="通过" value={String(run.passed_cases)} />
+              <SummaryItem label="失败/错误" value={String(run.failed_cases + run.error_cases)} />
+            </dl>
+            <div className="mt-5 space-y-3 border-t border-[var(--border)] pt-5 text-sm">
+              <InfoRow label="Workflow" value={run.workflow_id ?? "待启动"} />
+              <InfoRow label="创建时间" value={new Date(run.created_at).toLocaleString("zh-CN")} />
+              <InfoRow
+                label="开始时间"
+                value={run.started_at ? new Date(run.started_at).toLocaleString("zh-CN") : "未开始"}
+              />
+              <InfoRow
+                label="完成时间"
+                value={
+                  run.completed_at
+                    ? new Date(run.completed_at).toLocaleString("zh-CN")
+                    : "进行中"
+                }
+              />
+            </div>
+            <div className="mt-5 rounded-[var(--radius-sm)] bg-[var(--surface-subtle)] p-3 text-xs leading-5 text-[var(--text-muted)]">
+              <div className="flex items-center gap-2 font-medium text-[var(--text)]">
+                <CheckCircle2 aria-hidden="true" className="size-4" />
+                Trace 会随运行结果持续更新
+              </div>
+              <p className="mt-1">
+                SSE 可用时实时刷新；断线后自动回退到查询刷新。
+              </p>
+            </div>
+          </aside>
+        </div>
+      ) : null}
+
+      {/* Cases Tab */}
+      {activeTab === "cases" ? (
+        <section className="mt-5 grid gap-4">
           {cases.length === 0 ? (
             <div className="rounded-[var(--radius-md)] border border-[var(--border)] p-8 text-center">
               <p className="text-sm font-medium text-[var(--text-muted)]">暂无用例数据</p>
@@ -151,134 +248,100 @@ export function RunDetail({
             ))
           )}
         </section>
-        <aside className="h-fit rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[0_12px_40px_rgba(15,23,42,0.04)]">
-          <div className="flex items-center justify-between gap-3">
-            <h2 className="text-base font-semibold">执行摘要</h2>
-            <Badge tone={canCancel ? "accent" : "neutral"}>
-              <Radio aria-hidden="true" className="mr-1 size-3" />
-              {canCancel ? "实时刷新" : "已结束"}
-            </Badge>
-          </div>
-          <div className="mt-5">
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-[var(--text-muted)]">完成进度</span>
-              <span className="font-medium">{progress}%</span>
-            </div>
-            <div className="mt-2 h-2 overflow-hidden rounded-full bg-[var(--surface-subtle)]">
-              <div
-                className="h-full rounded-full bg-[var(--accent)]"
-                style={{ width: `${progress}%` }}
-              />
-            </div>
-          </div>
-          <dl className="mt-5 grid grid-cols-2 gap-3 text-sm">
-            <SummaryItem label="总用例" value={String(run.total_cases)} />
-            <SummaryItem label="已完成" value={String(finishedCases)} />
-            <SummaryItem label="通过" value={String(run.passed_cases)} />
-            <SummaryItem label="失败/错误" value={String(run.failed_cases + run.error_cases)} />
-          </dl>
-          <div className="mt-5 space-y-3 border-t border-[var(--border)] pt-5 text-sm">
-            <InfoRow label="Workflow" value={run.workflow_id ?? "待启动"} />
-            <InfoRow label="创建时间" value={new Date(run.created_at).toLocaleString("zh-CN")} />
-            <InfoRow
-              label="开始时间"
-              value={run.started_at ? new Date(run.started_at).toLocaleString("zh-CN") : "未开始"}
-            />
-            <InfoRow
-              label="完成时间"
-              value={
-                run.completed_at
-                  ? new Date(run.completed_at).toLocaleString("zh-CN")
-                  : "进行中"
-              }
-            />
-          </div>
-          <div className="mt-5 rounded-[var(--radius-sm)] bg-[var(--surface-subtle)] p-3 text-xs leading-5 text-[var(--text-muted)]">
-            <div className="flex items-center gap-2 font-medium text-[var(--text)]">
-              <CheckCircle2 aria-hidden="true" className="size-4" />
-              Trace 会随运行结果持续更新
-            </div>
-            <p className="mt-1">
-              SSE 可用时实时刷新；断线后自动回退到查询刷新。
-            </p>
-          </div>
-        </aside>
-      </div>
+      ) : null}
 
-      {/* Artifact 产物区 */}
-      <section className="mt-6 border-t border-[var(--border)] pt-5">
-        <div className="flex items-center justify-between gap-3">
-          <h2 className="flex items-center gap-2 text-sm font-semibold">
-            <FileText aria-hidden="true" className="size-4" />
-            运行产物
-          </h2>
-          <div className="flex items-center gap-2">
-            <input
-              accept="*/*"
-              className="hidden"
-              onChange={async (event) => {
-                const file = event.target.files?.[0];
-                if (!file) return;
-                setUploading(true);
-                setUploadError("");
-                try {
-                  await uploadArtifact(projectId, run.id, file);
-                  window.location.reload();
-                } catch {
-                  setUploadError("上传失败，请重试。");
-                } finally {
-                  setUploading(false);
-                  event.target.value = "";
-                }
-              }}
-              ref={fileInputRef}
-              type="file"
-            />
-            <Button
-              disabled={uploading}
-              loading={uploading}
-              onClick={() => fileInputRef.current?.click()}
-              variant="ghost"
-            >
-              <Upload aria-hidden="true" className="size-4" />
-            </Button>
+      {/* Trace Tab */}
+      {activeTab === "trace" ? (
+        <section className="mt-5 space-y-5">
+          <div>
+            <h3 className="mb-3 text-sm font-semibold">Trace 树</h3>
+            <TraceTree spans={traceSpans} />
           </div>
-        </div>
-        {uploadError && (
-          <p className="mt-2 text-sm text-[var(--danger)]">{uploadError}</p>
-        )}
-        {artifacts.length === 0 ? (
-          <p className="mt-3 text-sm text-[var(--text-muted)]">
-            暂无产物，点击上传按钮添加。
-          </p>
-        ) : (
-          <ul className="mt-3 divide-y divide-[var(--border)] rounded-[var(--radius-sm)] border border-[var(--border)]">
-            {artifacts.map((a) => (
-              <li
-                key={a.id}
-                className="flex items-center justify-between gap-3 px-3 py-2.5"
-              >
-                <div className="min-w-0">
-                  <p className="truncate text-sm font-medium">{a.filename}</p>
-                  <p className="text-xs text-[var(--text-muted)]">
-                    {a.content_type}{" "}
-                    · {formatBytes(a.size_bytes)}{" "}
-                    · {new Date(a.created_at).toLocaleDateString("zh-CN")}
-                  </p>
-                </div>
-                <Button asChild className="shrink-0" variant="ghost">
-                  <a
-                    download={a.filename}
-                    href={artifactDownloadUrl(projectId, a.id)}
-                  >
-                    <Download aria-hidden="true" className="size-4" />
-                  </a>
-                </Button>
-              </li>
-            ))}
-          </ul>
-        )}
+          {traceSpans.length > 0 ? (
+            <div>
+              <h3 className="mb-3 text-sm font-semibold">时间线</h3>
+              <TraceTimeline spans={traceSpans} />
+            </div>
+          ) : null}
         </section>
+      ) : null}
+
+      {/* Artifacts Tab */}
+      {activeTab === "artifacts" ? (
+        <section className="mt-6 pt-5">
+          <div className="flex items-center justify-between gap-3">
+            <h2 className="flex items-center gap-2 text-sm font-semibold">
+              <FileText aria-hidden="true" className="size-4" />
+              运行产物
+            </h2>
+            <div className="flex items-center gap-2">
+              <input
+                accept="*/*"
+                className="hidden"
+                onChange={async (event) => {
+                  const file = event.target.files?.[0];
+                  if (!file) return;
+                  setUploading(true);
+                  setUploadError("");
+                  try {
+                    await uploadArtifact(projectId, run.id, file);
+                    window.location.reload();
+                  } catch {
+                    setUploadError("上传失败，请重试。");
+                  } finally {
+                    setUploading(false);
+                    event.target.value = "";
+                  }
+                }}
+                ref={fileInputRef}
+                type="file"
+              />
+              <Button
+                disabled={uploading}
+                loading={uploading}
+                onClick={() => fileInputRef.current?.click()}
+                variant="ghost"
+              >
+                <Upload aria-hidden="true" className="size-4" />
+              </Button>
+            </div>
+          </div>
+          {uploadError && (
+            <p className="mt-2 text-sm text-[var(--danger)]">{uploadError}</p>
+          )}
+          {artifacts.length === 0 ? (
+            <p className="mt-3 text-sm text-[var(--text-muted)]">
+              暂无产物，点击上传按钮添加。
+            </p>
+          ) : (
+            <ul className="mt-3 divide-y divide-[var(--border)] rounded-[var(--radius-sm)] border border-[var(--border)]">
+              {artifacts.map((a) => (
+                <li
+                  key={a.id}
+                  className="flex items-center justify-between gap-3 px-3 py-2.5"
+                >
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-medium">{a.filename}</p>
+                    <p className="text-xs text-[var(--text-muted)]">
+                      {a.content_type}{" "}
+                      · {formatBytes(a.size_bytes)}{" "}
+                      · {new Date(a.created_at).toLocaleDateString("zh-CN")}
+                    </p>
+                  </div>
+                  <Button asChild className="shrink-0" variant="ghost">
+                    <a
+                      download={a.filename}
+                      href={artifactDownloadUrl(projectId, a.id)}
+                    >
+                      <Download aria-hidden="true" className="size-4" />
+                    </a>
+                  </Button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+      ) : null}
     </div>
   );
 }
