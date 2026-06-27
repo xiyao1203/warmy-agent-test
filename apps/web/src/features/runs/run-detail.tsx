@@ -38,6 +38,7 @@ export function RunDetail({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState("");
+  const [cancelling, setCancelling] = useState(false);
   if (loading || !run) {
     return (
       <div className="grid min-h-[calc(100vh-3rem)] place-items-center text-sm">
@@ -66,7 +67,18 @@ export function RunDetail({
         </div>
         <div className="flex items-center gap-2">
           <StatusBadge status={run.status} />
-          <Button disabled={!canCancel} onClick={onCancel}>
+          <Button
+            disabled={!canCancel || cancelling}
+            loading={cancelling}
+            onClick={async () => {
+              setCancelling(true);
+              try {
+                await onCancel();
+              } finally {
+                setCancelling(false);
+              }
+            }}
+          >
             <Square aria-hidden="true" className="mr-1.5 size-4" />
             取消运行
           </Button>
@@ -74,8 +86,13 @@ export function RunDetail({
       </header>
       <div className="mt-5 grid grid-cols-[minmax(0,1fr)_22rem] gap-5 max-[1100px]:grid-cols-1">
         <section className="grid gap-4">
-          {cases.map((item) => (
-            <article
+          {cases.length === 0 ? (
+            <div className="rounded-[var(--radius-md)] border border-[var(--border)] p-8 text-center">
+              <p className="text-sm font-medium text-[var(--text-muted)]">暂无用例数据</p>
+            </div>
+          ) : (
+            cases.map((item) => (
+              <article
               className="rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--surface)] p-4 shadow-[0_12px_40px_rgba(15,23,42,0.04)]"
               key={item.id}
             >
@@ -131,7 +148,8 @@ export function RunDetail({
                 </div>
               </details>
             </article>
-          ))}
+            ))
+          )}
         </section>
         <aside className="h-fit rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[0_12px_40px_rgba(15,23,42,0.04)]">
           <div className="flex items-center justify-between gap-3">

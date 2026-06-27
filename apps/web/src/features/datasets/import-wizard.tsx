@@ -17,12 +17,14 @@ type ImportWizardProps = {
   projectId?: string;
   versionId?: string;
   onImport?: (file: File) => Promise<unknown>;
+  onSuccess?: () => void;
 };
 
 type WizardStep = "select" | "preview" | "result";
 
 export function ImportWizard({
   onImport,
+  onSuccess,
 }: ImportWizardProps) {
   const [open, setOpen] = useState(false);
   const [step, setStep] = useState<WizardStep>("select");
@@ -56,12 +58,13 @@ export function ImportWizard({
     try {
       await onImport(file);
       setStep("result");
+      onSuccess?.();
     } catch {
       setError("导入失败，请检查文件格式后重试。");
     } finally {
       setImporting(false);
     }
-  }, [file, onImport]);
+  }, [file, onImport, onSuccess]);
 
   const handleClose = useCallback(() => {
     setOpen(false);
@@ -106,7 +109,6 @@ export function ImportWizard({
             >
               <Upload className="size-8 text-[var(--text-muted)]" />
               <p className="text-sm font-medium">点击选择文件</p>
-              <p className="text-xs text-[var(--text-muted)]">或拖拽文件到此处</p>
             </div>
             <div className="flex items-center gap-4 text-xs text-[var(--text-muted)]">
               <span className="flex items-center gap-1">
@@ -132,6 +134,7 @@ export function ImportWizard({
                   <span className="text-sm font-medium">{file.name}</span>
                 </div>
                 <button
+                  aria-label="移除文件"
                   className="text-[var(--text-muted)] hover:text-[var(--danger)]"
                   onClick={() => {
                     setFile(null);

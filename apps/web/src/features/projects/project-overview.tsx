@@ -131,7 +131,10 @@ export function ProjectOverview({
               </TableHeader>
               <TableBody>
                 {members.map((member) => (
-                  <TableRow key={member.user_id}>
+                  <TableRow
+                    className="transition-colors hover:bg-[var(--surface-subtle)]"
+                    key={member.user_id}
+                  >
                     <TableCell className="font-mono text-xs">
                       {member.user_id}
                       {member.user_id === user.id ? (

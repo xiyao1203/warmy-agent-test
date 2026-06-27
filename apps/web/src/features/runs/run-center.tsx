@@ -8,6 +8,7 @@ import {
   Play,
   RotateCcw,
   Search,
+  Square,
   Timer,
 } from "lucide-react";
 import Link from "next/link";
@@ -235,9 +236,19 @@ export function StatusBadge({ status }: { status: string }) {
         : status === "cancelled"
           ? "warning"
           : "accent";
+  const icon =
+    status === "passed" ? (
+      <CheckCircle2 aria-hidden="true" className="mr-1 size-3" />
+    ) : status === "failed" || status === "error" ? (
+      <AlertTriangle aria-hidden="true" className="mr-1 size-3" />
+    ) : status === "cancelled" ? (
+      <Square aria-hidden="true" className="mr-1 size-3" />
+    ) : (
+      <RotateCcw aria-hidden="true" className="mr-1 size-3 animate-spin" />
+    );
   return (
     <Badge tone={tone}>
-      <RotateCcw aria-hidden="true" className="mr-1 size-3" />
+      {icon}
       {status}
     </Badge>
   );
