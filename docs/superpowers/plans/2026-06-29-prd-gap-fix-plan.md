@@ -6,11 +6,12 @@
 
 ## P0 — MVP 上线必做
 
-### 1. 凭证脱敏（PRD 8.4）
+### 1. 凭证脱敏（PRD 8.4） ✅ 已完成
+- Commit: 784b1c1
 - 范围：环境模板 config 字段 API 响应脱敏
-- 后端：`environments/api/router.py` 响应层掩码（password/api_key/token 字段）
-- 前端：凭证字段显示掩码 `••••••`，编辑时可切换明文
-- 验收：API 返回掩码值，前端可切换明文编辑
+- 后端：`credential_mask.py` 深度递归掩码（password/api_key/token/secret/auth 字段）
+- 测试：9 个单元测试
+- 验收：API 返回掩码值，非明文
 
 ### 2. 登录失败锁定（PRD 8.1）
 - 范围：连续登录失败达阈值后自动锁定账号
