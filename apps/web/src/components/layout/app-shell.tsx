@@ -20,6 +20,7 @@ import {
   Search,
   Shield,
   ShieldCheck,
+  Sparkles,
   Users,
 } from "lucide-react";
 import Link from "next/link";
@@ -227,6 +228,16 @@ export function AppShell({
                     />
                   }
                   label="发布门禁"
+                />
+                <ProjectNavLink
+                  href={`/projects/${activeProjectId}/test-agent`}
+                  icon={
+                    <Sparkles
+                      aria-hidden="true"
+                      className="size-4 shrink-0"
+                    />
+                  }
+                  label="测试 Agent"
                 />
               </>
             ) : null}
