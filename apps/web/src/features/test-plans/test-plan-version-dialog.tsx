@@ -58,6 +58,15 @@ export function TestPlanVersionDialog({
   const [passThreshold, setPassThreshold] = useState(
     Number(config.pass_threshold ?? 1),
   );
+  const [maxRetries, setMaxRetries] = useState(
+    Number(config.max_retries ?? 0),
+  );
+  const [baselineRunId, setBaselineRunId] = useState(
+    String(config.baseline_run_id ?? ""),
+  );
+  const [releaseGateType, setReleaseGateType] = useState(
+    String((config.release_gate as Record<string, unknown>)?.type ?? ""),
+  );
   const [error, setError] = useState("");
   const publishedAgents = agentVersions.filter(
     (option) => option.status === "published",
@@ -71,8 +80,13 @@ export function TestPlanVersionDialog({
       await onSubmit({
         agent_version_id: agentVersionId || null,
         config: {
+          baseline_run_id: baselineRunId || null,
           concurrency,
+          max_retries: maxRetries,
           pass_threshold: passThreshold,
+          release_gate: releaseGateType
+            ? { type: releaseGateType }
+            : {},
           runs_per_case: runsPerCase,
           timeout,
         },
@@ -143,6 +157,38 @@ export function TestPlanVersionDialog({
             step={0.01}
             value={passThreshold}
           />
+          <NumberField
+            label="最大重试次数"
+            min={0}
+            onChange={setMaxRetries}
+            value={maxRetries}
+          />
+          <div className="col-span-2">
+            <label className="block text-sm font-medium">
+              基线运行 ID（可选）
+              <Input
+                className="mt-1.5"
+                onChange={(e) => setBaselineRunId(e.target.value)}
+                placeholder="留空则无基线"
+                value={baselineRunId}
+              />
+            </label>
+          </div>
+          <div className="col-span-2">
+            <label className="block text-sm font-medium">
+              发布门禁类型
+              <select
+                aria-label="发布门禁类型"
+                className="mt-1.5 h-9 w-full rounded-[var(--radius-sm)] border border-[var(--border)] bg-[var(--surface)] px-3"
+                onChange={(e) => setReleaseGateType(e.target.value)}
+                value={releaseGateType}
+              >
+                <option value="">无门禁</option>
+                <option value="all_pass">全部通过</option>
+                <option value="threshold">达到阈值</option>
+              </select>
+            </label>
+          </div>
         </div>
         {error ? <p className="mt-3 text-sm text-[var(--danger)]">{error}</p> : null}
         <div className="mt-5 flex justify-end gap-2">

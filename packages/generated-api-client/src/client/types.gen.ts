@@ -1058,41 +1058,22 @@ export type TestGroup = "train" | "validation" | "test";
  * TestPlanConfigRequest
  */
 export type TestPlanConfigRequest = {
-  /**
-   * Api Browser Ratio
-   */
   api_browser_ratio?: number;
-  /**
-   * Concurrency
-   */
+  baseline_run_id?: string | null;
   concurrency?: number;
-  /**
-   * Cost Budget
-   */
   cost_budget?: number | null;
-  /**
-   * Pass Threshold
-   */
+  max_retries?: number;
   pass_threshold?: number;
-  /**
-   * Retry Policy
-   */
+  release_gate?: {
+    [key: string]: unknown;
+  };
   retry_policy?: {
     [key: string]: unknown;
   };
-  /**
-   * Runs Per Case
-   */
   runs_per_case?: number;
-  /**
-   * Scorers
-   */
   scorers?: Array<{
     [key: string]: unknown;
   }>;
-  /**
-   * Timeout
-   */
   timeout?: number;
 };
 

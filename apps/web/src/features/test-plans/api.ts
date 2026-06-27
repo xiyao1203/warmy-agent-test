@@ -141,3 +141,20 @@ export async function listEnvironmentTemplates(projectId: string) {
   });
   return data.items;
 }
+
+export async function dryRunTestPlanVersion(
+  projectId: string,
+  planId: string,
+  versionId: string,
+) {
+  const res = await fetch(
+    `${API_BASE}/api/v1/projects/${projectId}/test-plans/${planId}/versions/${versionId}/dry-run`,
+    {
+      method: "POST",
+      headers: csrfHeaders() as Record<string, string>,
+      credentials: "include",
+    },
+  );
+  if (!res.ok) throw new Error("Dry run failed");
+  return res.json();
+}
