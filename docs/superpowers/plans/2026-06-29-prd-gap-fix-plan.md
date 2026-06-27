@@ -79,24 +79,32 @@
 
 ## P2 — 后续迭代
 
-### 11. 安全框架适配器预留（PRD 9.3）
-- Garak / PyRIT / AgentDojo 适配器接口预留
+### 11. 安全框架适配器预留（PRD 9.3） ✅ 已完成
+- `security/adapters/future_adapters.py` Garak/PyRIT/AgentDojo 预留接口
+- 测试：3 个异步扫描器空结果测试
 
-### 12. 画布断言补充（PRD 10.3）
-- 节点创建/执行顺序断言
-- 失败/错误节点检测
-- 必需输入/输出断言
-- 布局重叠检测
+### 12. 画布断言补充（PRD 10.3） ✅ 已完成
+- `canvas_adapter.py` 新增 5 个断言方法：
+  - `get_execution_order()` 拓扑排序
+  - `assert_creation_order()` 创建顺序
+  - `assert_no_failed_nodes()` 失败/错误节点
+  - `assert_required_io()` 必需连线
+  - `assert_no_overlapping_nodes()` 布局重叠
+- 测试：6 个画布断言测试
 
-### 13. 测试账号与环境模板关联
-- 测试账号可关联到环境模板
-- Mock 服务管理
+### 13. 测试账号与环境模板关联 ✅ 已完成
+- `test_accounts` 模块新增 `environment_template_id` FK
+- 迁移：`0008_p2_account_env_template.py`
+- 测试：7 个领域测试更新
 
-### 14. Webhook 回调任务（PRD 8.6）
-- 任务完成时通过 Webhook 通知
+### 14. Webhook 回调任务（PRD 8.6） ✅ 已完成
+- `runs/domain/webhook.py` Webhook 通知服务
+- `send_webhook_notification()` 异步 POST + 超时
 
-### 15. 网络 Mock 和异常注入（PRD 8.7）
-- 浏览器测试网络层 Mock
+### 15. 网络 Mock 和异常注入（PRD 8.7） ✅ 已完成
+- `plugins/network_mock.py` NetworkMockManager
+- 支持 Mock 规则（URL/status/body）和异常注入（abort/timeout/slow/error）
+- 测试：3 个网络 Mock 管理测试
 
 ---
 

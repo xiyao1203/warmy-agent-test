@@ -56,8 +56,9 @@ class SqlAlchemyTestAccountRepository:
             await session.execute(
                 text(
                     "UPDATE test_accounts SET name=:n, username=:u, "
-                    "credential_encrypted=:ce, account_type=:at, "
-                    "enabled=:e, description=:d, updated_at=:ua WHERE id=:id"
+                    "credential_encrypted=:ce, account_type=:at, enabled=:e, "
+                    "description=:d, environment_template_id=:eti, "
+                    "updated_at=:ua WHERE id=:id"
                 ),
                 {
                     "id": account.account_id.value,
@@ -67,6 +68,7 @@ class SqlAlchemyTestAccountRepository:
                     "at": account.account_type,
                     "e": account.enabled,
                     "d": account.description,
+                    "eti": account.environment_template_id,
                     "ua": account.updated_at,
                 },
             )
@@ -93,6 +95,7 @@ def _to_model(a: TestAccount) -> TestAccountModel:
         created_at=a.created_at,
         updated_at=a.updated_at,
         description=a.description,
+        environment_template_id=a.environment_template_id,
     )
 
 
@@ -108,4 +111,5 @@ def _to_entity(row: TestAccountModel) -> TestAccount:
         created_at=row.created_at,
         updated_at=row.updated_at,
         description=row.description,
+        environment_template_id=row.environment_template_id,
     )

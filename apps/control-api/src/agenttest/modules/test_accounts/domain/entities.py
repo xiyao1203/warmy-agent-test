@@ -44,6 +44,7 @@ class TestAccount:
     created_at: datetime
     updated_at: datetime
     description: str | None = None
+    environment_template_id: UUID | None = None
 
     @classmethod
     def create(
@@ -55,6 +56,7 @@ class TestAccount:
         credential_encrypted: str,
         account_type: str = "user",
         description: str | None = None,
+        environment_template_id: UUID | None = None,
     ) -> TestAccount:
         normalized_name = name.strip()
         if not normalized_name:
@@ -73,6 +75,7 @@ class TestAccount:
             created_at=now,
             updated_at=now,
             description=description,
+            environment_template_id=environment_template_id,
         )
 
     def update_credential(self, credential_encrypted: str) -> None:

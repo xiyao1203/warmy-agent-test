@@ -19,6 +19,7 @@ from agenttest.shared.infrastructure.database import Base
 
 class SecurityPolicyModel(Base):
     __tablename__ = "security_policies"
+    __table_args__ = ({"extend_existing": True},)
 
     id: Mapped[UUID] = mapped_column(primary_key=True)
     project_id: Mapped[UUID] = mapped_column(
@@ -103,10 +104,10 @@ class SqlAlchemySecurityPolicyRepository:
 
 class SecurityScanModel(Base):
     __tablename__ = "security_scans"
-    __table_args__ = ()
+    __table_args__ = ({"extend_existing": True},)
 
-    id = mapped_column(primary_key=True)
-    project_id = mapped_column(
+    id: Mapped[UUID] = mapped_column(primary_key=True)
+    project_id: Mapped[UUID] = mapped_column(
         ForeignKey("projects.id", ondelete="CASCADE"), nullable=False,
     )
     status: Mapped[str] = mapped_column(String(32), nullable=False, default="pending")

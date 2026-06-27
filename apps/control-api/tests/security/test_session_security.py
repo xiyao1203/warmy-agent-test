@@ -88,6 +88,10 @@ class InMemoryUserReader:
     async def get_by_id(self, user_id: UserId) -> User | None:
         return self._by_id.get(user_id)
 
+    async def update_lockout(self, user: User) -> None:
+        self._by_email[user.email] = user
+        self._by_id[user.user_id] = user
+
 
 class InMemoryCredentialReader:
     def __init__(self, hashes: dict[UserId, str] | None = None) -> None:

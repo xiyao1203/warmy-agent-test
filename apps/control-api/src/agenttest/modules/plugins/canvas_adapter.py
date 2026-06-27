@@ -86,3 +86,66 @@ class CanvasState:
         if node is None:
             raise ValueError(f"Node {node_id} not found")
         node.status = "completed"  # type: ignore[misc]
+
+    def get_execution_order(self) -> list[UUID]:
+        """返回基于拓扑排序的执行顺序（无向图 BFS）。"""
+        adj: dict[UUID, set[UUID]] = {n.id: set() for n in self.nodes}
+        for c in self.connections:
+            adj[c.source_node_id].add(c.target_node_id)
+            adj[c.target_node_id].add(c.source_node_id)
+        visited: set[UUID] = set()
+        order: list[UUID] = []
+        for n in self.nodes:
+            if n.id not in visited:
+                queue = [n.id]
+                visited.add(n.id)
+                while queue:
+                    cur = queue.pop(0)
+                    order.append(cur)
+                    for nb in adj[cur]:
+                        if nb not in visited:
+                            visited.add(nb)
+                            queue.append(nb)
+        return order
+
+    def assert_creation_order(self, expected: list[UUID]) -> list[str]:
+        """断言节点创建顺序。返回错误列表（空则通过）。"""
+        errors: list[str] = []
+        actual_ids = [n.id for n in self.nodes]
+        for i, nid in enumerate(expected):
+            if nid not in actual_ids:
+                errors.append(f"expected node {nid} at position {i} not found")
+            elif actual_ids.index(nid) != i:
+                errors.append(f"node {nid} expected at {i}, actual {actual_ids.index(nid)}")
+        return errors
+
+    def assert_no_failed_nodes(self) -> list[str]:
+        """断言无失败/错误节点。返回错误列表（空则通过）。"""
+        errors: list[str] = []
+        for n in self.nodes:
+            if n.status in ("failed", "error"):
+                errors.append(f"node {n.id} ({n.label}) is {n.status}")
+        return errors
+
+    def assert_required_io(self) -> list[str]:
+        """断言所有节点都有必需的连线（输入或输出至少一个）。返回错误列表。"""
+        errors: list[str] = []
+        sources = {c.source_node_id for c in self.connections}
+        targets = {c.target_node_id for c in self.connections}
+        for n in self.nodes:
+            has_output = n.id in sources
+            has_input = n.id in targets
+            if not has_output and not has_input and len(self.nodes) > 1:
+                errors.append(f"node {n.id} ({n.label}) has no connections")
+        return errors
+
+    def assert_no_overlapping_nodes(self, threshold: float = 10.0) -> list[str]:
+        """断言节点位置无重叠（基于阈值）。返回错误列表。"""
+        errors: list[str] = []
+        for i, a in enumerate(self.nodes):
+            for b in self.nodes[i + 1:]:
+                dx = abs(a.position.get("x", 0) - b.position.get("x", 0))
+                dy = abs(a.position.get("y", 0) - b.position.get("y", 0))
+                if dx < threshold and dy < threshold:
+                    errors.append(f"nodes {a.id} and {b.id} overlap (dx={dx:.1f}, dy={dy:.1f})")
+        return errors
