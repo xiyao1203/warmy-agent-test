@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from uuid import UUID
 
-from fastapi import APIRouter, Request
+from fastapi import APIRouter, Header, Request
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from sqlalchemy import text
@@ -16,8 +16,8 @@ from agenttest.modules.experiments.domain.entities import (
 from agenttest.modules.experiments.infrastructure.persistence.repositories import (
     SqlAlchemyExperimentRepository,
 )
-from agenttest.modules.identity.public import InvalidSessionError
 from agenttest.modules.projects.public import ProjectId, ProjectNotFoundError
+from agenttest.shared.api.auth_guard import require_actor, require_writer
 
 
 class CreateExperimentRequest(BaseModel):
@@ -28,36 +28,59 @@ class CreateExperimentRequest(BaseModel):
 
 
 def create_experiment_router(
-    *, session_factory, actor_for, check_project,
+    *, session_factory, actor_for, check_project, settings,
 ) -> APIRouter:
     router = APIRouter(
         prefix="/projects/{project_id}/experiments",
         tags=["experiments"],
     )
 
+    repo = SqlAlchemyExperimentRepository(session_factory)
+
     @router.get("")
     async def list_experiments(
         request: Request, project_id: UUID, limit: int = 50, offset: int = 0,
     ):
+        actor = await require_actor(request, actor_for, settings)
+        if isinstance(actor, JSONResponse):
+            return actor
         try:
             await check_project(project_id)
-        except (ProjectNotFoundError, InvalidSessionError):
+        except (ProjectNotFoundError, Exception):
             return JSONResponse(status_code=404, content={"detail": "项目不存在"})
-        async with session_factory() as session:
-            repo = SqlAlchemyExperimentRepository(session)
-            experiments = await repo.list_by_project(
-                ProjectId(project_id), limit=limit, offset=offset,
-            )
-            return {"items": [_to_dict(e) for e in experiments]}
+        experiments = await repo.list_by_project(
+            ProjectId(project_id), limit=limit, offset=offset,
+        )
+        return {"items": [_to_dict(e) for e in experiments]}
 
     @router.post("")
     async def create_experiment(
-        request: Request, project_id: UUID, body: CreateExperimentRequest,
+        request: Request,
+        project_id: UUID,
+        body: CreateExperimentRequest,
+        x_csrf_token: str | None = Header(default=None),
     ):
+        actor = await require_writer(request, actor_for, settings, x_csrf_token)
+        if isinstance(actor, JSONResponse):
+            return actor
         try:
             await check_project(project_id)
-        except (ProjectNotFoundError, InvalidSessionError):
+        except (ProjectNotFoundError, Exception):
             return JSONResponse(status_code=404, content={"detail": "项目不存在"})
+
+        # 校验 run_a_id 和 run_b_id 属于同一项目
+        async with session_factory() as session:
+            for run_id in [body.run_a_id, body.run_b_id]:
+                result = await session.execute(
+                    text("SELECT 1 FROM runs WHERE id = :rid AND project_id = :pid"),
+                    {"rid": run_id, "pid": project_id},
+                )
+                if result.scalar() is None:
+                    return JSONResponse(
+                        status_code=422,
+                        content={"detail": f"运行 {run_id} 不存在或不属于该项目"},
+                    )
+
         try:
             exp = Experiment.create(
                 experiment_id=ExperimentId.new(),
@@ -69,39 +92,55 @@ def create_experiment_router(
             )
         except ValueError as e:
             return JSONResponse(status_code=422, content={"detail": str(e)})
-        async with session_factory() as session:
-            repo = SqlAlchemyExperimentRepository(session)
-            await repo.add(exp)
-            await session.commit()
+        await repo.add(exp)
         return _to_dict(exp)
 
     @router.get("/{experiment_id}")
     async def get_experiment(
         request: Request, project_id: UUID, experiment_id: UUID,
     ):
-        async with session_factory() as session:
-            repo = SqlAlchemyExperimentRepository(session)
-            exp = await repo.get_by_id_and_project(
-                ExperimentId(experiment_id), ProjectId(project_id),
-            )
-            if exp is None:
-                return JSONResponse(status_code=404, content={"detail": "实验不存在"})
-            return _to_dict(exp)
+        actor = await require_actor(request, actor_for, settings)
+        if isinstance(actor, JSONResponse):
+            return actor
+
+        exp = await repo.get_by_id_and_project(
+            ExperimentId(experiment_id), ProjectId(project_id),
+        )
+        if exp is None:
+            return JSONResponse(status_code=404, content={"detail": "实验不存在"})
+        return _to_dict(exp)
 
     @router.post("/{experiment_id}/run")
     async def run_experiment(
-        request: Request, project_id: UUID, experiment_id: UUID,
+        request: Request,
+        project_id: UUID,
+        experiment_id: UUID,
+        x_csrf_token: str | None = Header(default=None),
     ):
         """执行对比实验：逐用例对比 + 统计。"""
-        async with session_factory() as session:
-            repo = SqlAlchemyExperimentRepository(session)
-            exp = await repo.get_by_id_and_project(
-                ExperimentId(experiment_id), ProjectId(project_id),
-            )
-            if exp is None:
-                return JSONResponse(status_code=404, content={"detail": "实验不存在"})
+        actor = await require_writer(request, actor_for, settings, x_csrf_token)
+        if isinstance(actor, JSONResponse):
+            return actor
 
-            # 获取两个运行的用例
+        exp = await repo.get_by_id_and_project(
+            ExperimentId(experiment_id), ProjectId(project_id),
+        )
+        if exp is None:
+            return JSONResponse(status_code=404, content={"detail": "实验不存在"})
+
+        async with session_factory() as session:
+            # 校验 run 归属（双重校验）
+            for run_id in [exp.run_a_id, exp.run_b_id]:
+                result = await session.execute(
+                    text("SELECT 1 FROM runs WHERE id = :rid AND project_id = :pid"),
+                    {"rid": run_id, "pid": project_id},
+                )
+                if result.scalar() is None:
+                    return JSONResponse(
+                        status_code=422,
+                        content={"detail": f"运行 {run_id} 不属于该项目"},
+                    )
+
             cases_a = await _get_run_cases(session, exp.run_a_id)
             cases_b = await _get_run_cases(session, exp.run_b_id)
 
@@ -129,7 +168,6 @@ def create_experiment_router(
                     dur_delta = dur_b - dur_a
                     changed = status_a != status_b
                     if changed:
-                        # "passed" → "failed"/"error" = degraded
                         if status_a == "passed" and status_b != "passed":
                             category = "degraded"
                             degraded += 1
@@ -143,11 +181,9 @@ def create_experiment_router(
                     duration_deltas.append(dur_delta)
                 elif a and not b:
                     status_a = a.get("status")
-                    category = "no_change"
                     unchanged += 1
                 else:
                     status_b = b.get("status")  # type: ignore[assignment]
-                    category = "no_change"
                     unchanged += 1
 
                 case_diffs.append({
@@ -159,7 +195,6 @@ def create_experiment_router(
                     "category": category,
                 })
 
-            # 统计
             import statistics
 
             avg_dur = statistics.mean(duration_deltas) if duration_deltas else 0.0
@@ -179,12 +214,10 @@ def create_experiment_router(
                 "p95_duration_delta_ms": float(p95),
             }
 
-            result_json = {"case_diffs": case_diffs, "summary": summary}
-            exp.complete(result_json)
-            await repo.save(exp)
-            await session.commit()
-
-            return _to_dict(exp)
+        result_json = {"case_diffs": case_diffs, "summary": summary}
+        exp.complete(result_json)
+        await repo.save(exp)
+        return _to_dict(exp)
 
     return router
 

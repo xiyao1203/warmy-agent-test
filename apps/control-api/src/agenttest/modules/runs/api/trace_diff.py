@@ -1,8 +1,4 @@
-"""Trace 对比 API 端点。
-
-GET /api/v1/projects/{project_id}/runs/{run_a_id}/diff/{run_b_id}
-返回两个运行之间的逐用例执行时间差异、评分差异和状态差异。
-"""
+"""Trace 对比 API 端点。"""
 
 from __future__ import annotations
 
@@ -12,8 +8,8 @@ from fastapi import APIRouter, Request
 from fastapi.responses import JSONResponse
 from sqlalchemy import text
 
-from agenttest.modules.identity.public import InvalidSessionError
 from agenttest.modules.projects.public import ProjectNotFoundError
+from agenttest.shared.api.auth_guard import require_actor
 
 
 def create_trace_diff_router(
@@ -21,8 +17,8 @@ def create_trace_diff_router(
     session_factory,
     actor_for,
     check_project,
+    settings,
 ) -> APIRouter:
-    """创建 Trace 对比 API 路由。"""
     router = APIRouter(
         prefix="/projects/{project_id}/runs/{run_a_id}/diff/{run_b_id}",
         tags=["trace-diff"],
@@ -35,32 +31,29 @@ def create_trace_diff_router(
         run_a_id: UUID,
         run_b_id: UUID,
     ):
-        """对比两个运行的执行结果。"""
+        actor = await require_actor(request, actor_for, settings)
+        if isinstance(actor, JSONResponse):
+            return actor
         try:
             await check_project(project_id)
-        except (ProjectNotFoundError, InvalidSessionError):
-            return JSONResponse(
-                status_code=404, content={"detail": "项目不存在"}
-            )
+        except (ProjectNotFoundError, Exception):
+            return JSONResponse(status_code=404, content={"detail": "项目不存在"})
 
         async with session_factory() as session:
-            # 获取两个运行的基础信息
-            run_a = await _get_run_summary(session, run_a_id)
-            run_b = await _get_run_summary(session, run_b_id)
+            run_a = await _get_run_summary(session, run_a_id, project_id)
+            run_b = await _get_run_summary(session, run_b_id, project_id)
 
             if run_a is None:
                 return JSONResponse(status_code=404, content={"detail": f"运行 {run_a_id} 不存在"})
             if run_b is None:
                 return JSONResponse(status_code=404, content={"detail": f"运行 {run_b_id} 不存在"})
 
-            # 获取两个运行的用例详情
             cases_a = await _get_run_cases_summary(session, run_a_id)
             cases_b = await _get_run_cases_summary(session, run_b_id)
 
-            # 按 test_case_id 对齐
             case_map_a = {c["test_case_id"]: c for c in cases_a}
             case_map_b = {c["test_case_id"]: c for c in cases_b}
-            all_case_ids = sorted(set(case_map_a.keys()) | set(case_map_b.keys()))
+            all_case_ids = sorted(set(case_map_a) | set(case_map_b))
 
             case_diffs = []
             for cid in all_case_ids:
@@ -106,14 +99,17 @@ def create_trace_diff_router(
     return router
 
 
-async def _get_run_summary(session, run_id: UUID) -> dict[str, object] | None:
+async def _get_run_summary(
+    session, run_id: UUID, project_id: UUID,
+) -> dict[str, object] | None:
+    """获取运行摘要，校验 project_id 归属。"""
     result = await session.execute(
         text(
             "SELECT id, status, total_cases, passed_cases, failed_cases, "
             "error_cases, cancelled_cases, started_at, completed_at "
-            "FROM runs WHERE id = :rid"
+            "FROM runs WHERE id = :rid AND project_id = :pid"
         ),
-        {"rid": run_id},
+        {"rid": run_id, "pid": project_id},
     )
     row = result.mappings().first()
     if row is None:

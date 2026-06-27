@@ -1065,6 +1065,7 @@ def _register_snapshot_endpoints(
         session_factory=session_factory,
         actor_for=actor_for,
         check_project=check_project,
+        settings=settings,
     )
     app.include_router(router, prefix="/api/v1")
 
@@ -1107,6 +1108,7 @@ def _register_dry_run_endpoints(
         session_factory=session_factory,
         actor_for=actor_for,
         check_project=check_project,
+        settings=settings,
     )
     app.include_router(router, prefix="/api/v1")
 
@@ -1149,6 +1151,7 @@ def _register_trace_diff_endpoints(
         session_factory=session_factory,
         actor_for=actor_for,
         check_project=check_project,
+        settings=settings,
     )
     app.include_router(router, prefix="/api/v1")
 
@@ -1191,6 +1194,7 @@ def _register_scorer_endpoints(
         session_factory=session_factory,
         actor_for=actor_for,
         check_project=check_project,
+        settings=settings,
     )
     app.include_router(router, prefix="/api/v1")
 
@@ -1232,6 +1236,7 @@ def _register_experiment_endpoints(
         session_factory=session_factory,
         actor_for=actor_for,
         check_project=check_project,
+        settings=settings,
     )
     app.include_router(router, prefix="/api/v1")
 
@@ -1273,5 +1278,6 @@ def _register_review_endpoints(
         session_factory=session_factory,
         actor_for=actor_for,
         check_project=check_project,
+        settings=settings,
     )
     app.include_router(router, prefix="/api/v1")

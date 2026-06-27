@@ -12,12 +12,12 @@ from fastapi import APIRouter, Request
 from fastapi.responses import JSONResponse
 from sqlalchemy import text
 
-from agenttest.modules.identity.public import InvalidSessionError
 from agenttest.modules.projects.public import ProjectNotFoundError
 from agenttest.modules.test_plans.domain.entities import TestPlanVersionId
 from agenttest.modules.test_plans.infrastructure.persistence.repositories import (
     SqlAlchemyTestPlanVersionRepository,
 )
+from agenttest.shared.api.auth_guard import require_writer
 
 
 def create_dry_run_router(
@@ -25,6 +25,7 @@ def create_dry_run_router(
     session_factory,
     actor_for,
     check_project,
+    settings,
 ) -> APIRouter:
     """创建试运行 API 路由。"""
     router = APIRouter(
@@ -38,14 +39,16 @@ def create_dry_run_router(
         project_id: UUID,
         plan_id: UUID,
         version_id: UUID,
+        x_csrf_token: str | None = None,
     ):
         """试运行：预览测试计划版本的执行参数。"""
+        actor = await require_writer(request, actor_for, settings, x_csrf_token)
+        if isinstance(actor, JSONResponse):
+            return actor
         try:
             await check_project(project_id)
-        except (ProjectNotFoundError, InvalidSessionError):
-            return JSONResponse(
-                status_code=404, content={"detail": "项目不存在"}
-            )
+        except (ProjectNotFoundError, Exception):
+            return JSONResponse(status_code=404, content={"detail": "项目不存在"})
 
         async with session_factory() as session:
             version_repo = SqlAlchemyTestPlanVersionRepository(session)

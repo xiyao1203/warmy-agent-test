@@ -5,17 +5,17 @@ from __future__ import annotations
 from datetime import UTC, datetime
 from uuid import UUID
 
-from fastapi import APIRouter, Request
+from fastapi import APIRouter, Header, Request
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
-from agenttest.modules.identity.public import InvalidSessionError
 from agenttest.modules.projects.public import ProjectId, ProjectNotFoundError
 from agenttest.modules.scorers.domain.entities import Scorer, ScorerId
 from agenttest.modules.scorers.domain.value_objects import ScorerType
 from agenttest.modules.scorers.infrastructure.persistence.repositories import (
     SqlAlchemyScorerRepository,
 )
+from agenttest.shared.api.auth_guard import require_actor, require_writer
 
 
 class CreateScorerRequest(BaseModel):
@@ -41,12 +41,15 @@ def create_scorer_router(
     session_factory,
     actor_for,
     check_project,
+    settings,
 ) -> APIRouter:
     """创建评分器 CRUD 路由。"""
     router = APIRouter(
         prefix="/projects/{project_id}/scorers",
         tags=["scorers"],
     )
+
+    repo = SqlAlchemyScorerRepository(session_factory)
 
     @router.get("")
     async def list_scorers(
@@ -55,30 +58,35 @@ def create_scorer_router(
         limit: int = 50,
         offset: int = 0,
     ):
+        actor = await require_actor(request, actor_for, settings)
+        if isinstance(actor, JSONResponse):
+            return actor
         try:
             await check_project(project_id)
-        except (ProjectNotFoundError, InvalidSessionError):
+        except (ProjectNotFoundError, Exception):
             return JSONResponse(status_code=404, content={"detail": "项目不存在"})
 
-        async with session_factory() as session:
-            repo = SqlAlchemyScorerRepository(session)
-            scorers, total = await repo.list_by_project(
-                ProjectId(project_id), limit=limit, offset=offset
-            )
-            return {
-                "items": [_scorer_to_dict(s) for s in scorers],
-                "total": total,
-            }
+        scorers, total = await repo.list_by_project(
+            ProjectId(project_id), limit=limit, offset=offset,
+        )
+        return {
+            "items": [_scorer_to_dict(s) for s in scorers],
+            "total": total,
+        }
 
     @router.post("")
     async def create_scorer(
         request: Request,
         project_id: UUID,
         body: CreateScorerRequest,
+        x_csrf_token: str | None = Header(default=None),
     ):
+        actor = await require_writer(request, actor_for, settings, x_csrf_token)
+        if isinstance(actor, JSONResponse):
+            return actor
         try:
             await check_project(project_id)
-        except (ProjectNotFoundError, InvalidSessionError):
+        except (ProjectNotFoundError, Exception):
             return JSONResponse(status_code=404, content={"detail": "项目不存在"})
 
         try:
@@ -103,11 +111,7 @@ def create_scorer_router(
         except ValueError as e:
             return JSONResponse(status_code=422, content={"detail": str(e)})
 
-        async with session_factory() as session:
-            repo = SqlAlchemyScorerRepository(session)
-            await repo.add(scorer)
-            await session.commit()
-
+        await repo.add(scorer)
         return _scorer_to_dict(scorer)
 
     @router.get("/{scorer_id}")
@@ -116,14 +120,16 @@ def create_scorer_router(
         project_id: UUID,
         scorer_id: UUID,
     ):
-        async with session_factory() as session:
-            repo = SqlAlchemyScorerRepository(session)
-            scorer = await repo.get_by_id_and_project(
-                ScorerId(scorer_id), ProjectId(project_id)
-            )
-            if scorer is None:
-                return JSONResponse(status_code=404, content={"detail": "评分器不存在"})
-            return _scorer_to_dict(scorer)
+        actor = await require_actor(request, actor_for, settings)
+        if isinstance(actor, JSONResponse):
+            return actor
+
+        scorer = await repo.get_by_id_and_project(
+            ScorerId(scorer_id), ProjectId(project_id),
+        )
+        if scorer is None:
+            return JSONResponse(status_code=404, content={"detail": "评分器不存在"})
+        return _scorer_to_dict(scorer)
 
     @router.patch("/{scorer_id}")
     async def update_scorer(
@@ -131,42 +137,43 @@ def create_scorer_router(
         project_id: UUID,
         scorer_id: UUID,
         body: UpdateScorerRequest,
+        x_csrf_token: str | None = Header(default=None),
     ):
-        async with session_factory() as session:
-            repo = SqlAlchemyScorerRepository(session)
-            scorer = await repo.get_by_id_and_project(
-                ScorerId(scorer_id), ProjectId(project_id)
-            )
-            if scorer is None:
-                return JSONResponse(status_code=404, content={"detail": "评分器不存在"})
+        actor = await require_writer(request, actor_for, settings, x_csrf_token)
+        if isinstance(actor, JSONResponse):
+            return actor
 
-            if body.name is not None:
-                try:
-                    scorer.rename(body.name)
-                except ValueError as e:
-                    return JSONResponse(status_code=422, content={"detail": str(e)})
-            if body.weight is not None:
-                try:
-                    scorer.update_weight(body.weight)
-                except ValueError as e:
-                    return JSONResponse(status_code=422, content={"detail": str(e)})
-            if body.threshold is not None:
-                try:
-                    scorer.update_threshold(body.threshold)
-                except ValueError as e:
-                    return JSONResponse(status_code=422, content={"detail": str(e)})
-            if body.config_json is not None:
-                scorer.config_json = body.config_json
-                scorer.updated_at = datetime.now(UTC)
-            if body.description is not None:
-                scorer.description = body.description
-                scorer.updated_at = datetime.now(UTC)
-            if body.enabled is not None and body.enabled != scorer.enabled:
-                scorer.toggle()
+        scorer = await repo.get_by_id_and_project(
+            ScorerId(scorer_id), ProjectId(project_id),
+        )
+        if scorer is None:
+            return JSONResponse(status_code=404, content={"detail": "评分器不存在"})
 
-            await repo.save(scorer)
-            await session.commit()
+        if body.name is not None:
+            try:
+                scorer.rename(body.name)
+            except ValueError as e:
+                return JSONResponse(status_code=422, content={"detail": str(e)})
+        if body.weight is not None:
+            try:
+                scorer.update_weight(body.weight)
+            except ValueError as e:
+                return JSONResponse(status_code=422, content={"detail": str(e)})
+        if body.threshold is not None:
+            try:
+                scorer.update_threshold(body.threshold)
+            except ValueError as e:
+                return JSONResponse(status_code=422, content={"detail": str(e)})
+        if body.config_json is not None:
+            scorer.config_json = body.config_json
+            scorer.updated_at = datetime.now(UTC)
+        if body.description is not None:
+            scorer.description = body.description
+            scorer.updated_at = datetime.now(UTC)
+        if body.enabled is not None and body.enabled != scorer.enabled:
+            scorer.toggle()
 
+        await repo.save(scorer)
         return _scorer_to_dict(scorer)
 
     @router.delete("/{scorer_id}")
@@ -174,16 +181,18 @@ def create_scorer_router(
         request: Request,
         project_id: UUID,
         scorer_id: UUID,
+        x_csrf_token: str | None = Header(default=None),
     ):
-        async with session_factory() as session:
-            repo = SqlAlchemyScorerRepository(session)
-            scorer = await repo.get_by_id_and_project(
-                ScorerId(scorer_id), ProjectId(project_id)
-            )
-            if scorer is None:
-                return JSONResponse(status_code=404, content={"detail": "评分器不存在"})
-            await repo.delete(ScorerId(scorer_id))
-            await session.commit()
+        actor = await require_writer(request, actor_for, settings, x_csrf_token)
+        if isinstance(actor, JSONResponse):
+            return actor
+
+        scorer = await repo.get_by_id_and_project(
+            ScorerId(scorer_id), ProjectId(project_id),
+        )
+        if scorer is None:
+            return JSONResponse(status_code=404, content={"detail": "评分器不存在"})
+        await repo.delete(ScorerId(scorer_id))
         return {"status": "deleted", "scorer_id": str(scorer_id)}
 
     return router
