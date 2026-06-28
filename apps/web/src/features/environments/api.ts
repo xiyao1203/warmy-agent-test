@@ -11,9 +11,6 @@ import {
 import { apiClient } from "@/lib/api/client";
 import { csrfHeaders } from "@/lib/api/csrf";
 
-const API_BASE =
-  process.env.NEXT_PUBLIC_CONTROL_API_URL ?? "http://localhost:8181";
-
 export async function listEnvironmentTemplates(projectId: string) {
   const { data } =
     await listTemplatesApiV1ProjectsProjectIdEnvironmentTemplatesGet({

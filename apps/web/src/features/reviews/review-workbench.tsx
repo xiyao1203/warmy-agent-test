@@ -19,7 +19,10 @@ import { Input } from "@/components/ui/input";
 import type { ReviewTask } from "./api";
 import { listReviews, scoreReview, rejectReview, skipReview } from "./api";
 
-const STATUS_TONES: Record<string, "success" | "warning" | "danger" | "neutral"> = {
+const STATUS_TONES: Record<
+  string,
+  "success" | "warning" | "danger" | "neutral"
+> = {
   pending: "warning",
   approved: "success",
   rejected: "danger",
@@ -34,8 +37,12 @@ export function ReviewWorkbench({ projectId }: { projectId: string }) {
   const [score, setScore] = useState(0.8);
   const [opinion, setOpinion] = useState("");
   const [acting, setActing] = useState(false);
-  const [reviewMode, setReviewMode] = useState<"score" | "ab_preference">("score");
-  const [abPreference, setAbPreference] = useState<"a" | "b" | "equal" | null>(null);
+  const [reviewMode, setReviewMode] = useState<"score" | "ab_preference">(
+    "score",
+  );
+  const [abPreference, setAbPreference] = useState<"a" | "b" | "equal" | null>(
+    null,
+  );
 
   const reload = useCallback(async () => {
     setLoading(true);
@@ -49,14 +56,28 @@ export function ReviewWorkbench({ projectId }: { projectId: string }) {
   }, [projectId, filter]);
 
   useEffect(() => {
-    void reload();
-  }, [reload]);
+    let active = true;
+    void listReviews(projectId, filter || undefined)
+      .then((items) => {
+        if (active) setTasks(items);
+      })
+      .catch(() => undefined)
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, [filter, projectId]);
 
   async function handleApprove() {
     if (!selected) return;
     setActing(true);
     try {
-      await scoreReview(projectId, selected.id, { score, opinion: opinion || undefined });
+      await scoreReview(projectId, selected.id, {
+        score,
+        opinion: opinion || undefined,
+      });
       setSelected(null);
       setOpinion("");
       await reload();
@@ -111,15 +132,25 @@ export function ReviewWorkbench({ projectId }: { projectId: string }) {
           </p>
         </div>
         <div className="flex gap-2">
-          {(["pending", "approved", "rejected", "skipped", ""] as const).map((s) => (
-            <Button
-              key={s}
-              onClick={() => setFilter(s)}
-              variant={filter === s ? "primary" : "ghost"}
-            >
-              {s === "" ? "全部" : s === "pending" ? "待审核" : s === "approved" ? "通过" : s === "rejected" ? "拒绝" : "跳过"}
-            </Button>
-          ))}
+          {(["pending", "approved", "rejected", "skipped", ""] as const).map(
+            (s) => (
+              <Button
+                key={s}
+                onClick={() => setFilter(s)}
+                variant={filter === s ? "primary" : "ghost"}
+              >
+                {s === ""
+                  ? "全部"
+                  : s === "pending"
+                    ? "待审核"
+                    : s === "approved"
+                      ? "通过"
+                      : s === "rejected"
+                        ? "拒绝"
+                        : "跳过"}
+              </Button>
+            ),
+          )}
         </div>
       </header>
 
@@ -144,14 +175,22 @@ export function ReviewWorkbench({ projectId }: { projectId: string }) {
                   type="button"
                 >
                   <div className="min-w-0 flex-1">
-                    <p className="font-mono text-xs">{t.run_case_id.slice(0, 12)}</p>
+                    <p className="font-mono text-xs">
+                      {t.run_case_id.slice(0, 12)}
+                    </p>
                     <p className="mt-0.5 text-xs text-[var(--text-muted)]">
                       置信度 {(t.confidence * 100).toFixed(0)}%
                       {t.score != null ? ` · 评分 ${t.score.toFixed(2)}` : ""}
                     </p>
                   </div>
                   <Badge tone={STATUS_TONES[t.status] ?? "neutral"}>
-                    {t.status === "pending" ? "待审核" : t.status === "approved" ? "通过" : t.status === "rejected" ? "拒绝" : "跳过"}
+                    {t.status === "pending"
+                      ? "待审核"
+                      : t.status === "approved"
+                        ? "通过"
+                        : t.status === "rejected"
+                          ? "拒绝"
+                          : "跳过"}
                   </Badge>
                   {t.status === "pending" ? (
                     <Button
@@ -176,13 +215,17 @@ export function ReviewWorkbench({ projectId }: { projectId: string }) {
           {selected ? (
             <div className="space-y-4">
               <div>
-                <p className="text-xs font-medium text-[var(--text-muted)]">用例 ID</p>
+                <p className="text-xs font-medium text-[var(--text-muted)]">
+                  用例 ID
+                </p>
                 <p className="mt-1 font-mono text-sm">{selected.run_case_id}</p>
               </div>
               <div className="grid grid-cols-2 gap-3 text-sm">
                 <div>
                   <p className="text-xs text-[var(--text-muted)]">置信度</p>
-                  <p className="font-semibold">{(selected.confidence * 100).toFixed(0)}%</p>
+                  <p className="font-semibold">
+                    {(selected.confidence * 100).toFixed(0)}%
+                  </p>
                 </div>
                 <div>
                   <p className="text-xs text-[var(--text-muted)]">状态</p>
@@ -216,7 +259,9 @@ export function ReviewWorkbench({ projectId }: { projectId: string }) {
                     </Button>
                     <Button
                       onClick={() => setReviewMode("ab_preference")}
-                      variant={reviewMode === "ab_preference" ? "primary" : "ghost"}
+                      variant={
+                        reviewMode === "ab_preference" ? "primary" : "ghost"
+                      }
                     >
                       A/B 偏好
                     </Button>

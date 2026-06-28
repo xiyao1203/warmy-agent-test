@@ -1,6 +1,6 @@
 "use client";
 
-import { Eye, EyeOff, Key, Plus, Shield, Trash2, User } from "lucide-react";
+import { Eye, EyeOff, Plus, Trash2, User } from "lucide-react";
 import { useState } from "react";
 
 import { Badge } from "@/components/ui/badge";
@@ -62,10 +62,7 @@ export function TestAccountList({
   onCreate,
   onDelete,
   onToggleEnabled,
-  projectId,
 }: TestAccountListProps) {
-  const [showCreate, setShowCreate] = useState(false);
-
   if (loading) {
     return (
       <div className="grid min-h-[200px] place-items-center text-sm">
@@ -83,9 +80,7 @@ export function TestAccountList({
             管理用于测试的账号凭证，凭证已加密存储。
           </p>
         </div>
-        {onCreate && (
-          <CreateAccountDialog onCreate={onCreate} />
-        )}
+        {onCreate && <CreateAccountDialog onCreate={onCreate} />}
       </div>
 
       <section className="mt-4 overflow-hidden rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--surface)]">
@@ -125,7 +120,9 @@ export function TestAccountList({
                     </div>
                   </TableCell>
                   <TableCell className="text-center">
-                    <Badge>{typeLabels[account.account_type] ?? account.account_type}</Badge>
+                    <Badge>
+                      {typeLabels[account.account_type] ?? account.account_type}
+                    </Badge>
                   </TableCell>
                   <TableCell className="text-center">
                     <code className="rounded bg-[var(--surface-subtle)] px-2 py-1 text-xs">
@@ -142,7 +139,9 @@ export function TestAccountList({
                       {onToggleEnabled && (
                         <Button
                           aria-label={account.enabled ? "禁用" : "启用"}
-                          onClick={() => onToggleEnabled(account.id, !account.enabled)}
+                          onClick={() =>
+                            onToggleEnabled(account.id, !account.enabled)
+                          }
                           variant="ghost"
                         >
                           {account.enabled ? (
@@ -314,7 +313,12 @@ function CreateAccountDialog({
           {error && <p className="text-sm text-[var(--danger)]">{error}</p>}
           <div className="flex justify-end gap-2 border-t border-[var(--border)] pt-4">
             <Button onClick={() => setOpen(false)}>取消</Button>
-            <Button disabled={submitting} loading={submitting} onClick={submit} variant="primary">
+            <Button
+              disabled={submitting}
+              loading={submitting}
+              onClick={submit}
+              variant="primary"
+            >
               创建账号
             </Button>
           </div>

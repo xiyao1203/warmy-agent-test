@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from "vitest";
 
 import { DatasetDetail } from "../dataset-detail";
 import { DatasetList } from "../dataset-list";
+import { TestCaseEditor } from "../test-case-editor";
 
 const dataset = {
   created_at: "2026-06-25T10:00:00Z",
@@ -89,11 +90,7 @@ describe("DatasetList", () => {
   it("creates a dataset", async () => {
     const onCreate = vi.fn().mockResolvedValue(undefined);
     render(
-      <DatasetList
-        datasets={[]}
-        onCreate={onCreate}
-        projectId="project-1"
-      />,
+      <DatasetList datasets={[]} onCreate={onCreate} projectId="project-1" />,
     );
 
     fireEvent.click(screen.getByRole("button", { name: "创建数据集" }));
@@ -124,5 +121,37 @@ describe("DatasetDetail", () => {
     expect(screen.getByText(dataset.name)).toBeVisible();
     expect(screen.getByText("基础问候")).toBeVisible();
     expect(screen.getByText("API")).toBeVisible();
+  });
+});
+
+describe("TestCaseEditor", () => {
+  it("submits enhanced test case fields with API enum values", async () => {
+    const onSubmit = vi.fn().mockResolvedValue(undefined);
+    render(<TestCaseEditor onSubmit={onSubmit} triggerLabel="添加测试用例" />);
+
+    fireEvent.click(screen.getByRole("button", { name: "添加测试用例" }));
+    fireEvent.change(screen.getByLabelText("用例名称"), {
+      target: { value: "权限回归" },
+    });
+    fireEvent.change(screen.getByLabelText("优先级"), {
+      target: { value: "P1" },
+    });
+    fireEvent.change(screen.getByLabelText("风险等级"), {
+      target: { value: "high" },
+    });
+    fireEvent.change(screen.getByLabelText("测试分组"), {
+      target: { value: "validation" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "保存用例" }));
+
+    await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
+    expect(onSubmit).toHaveBeenCalledWith(
+      expect.objectContaining({
+        name: "权限回归",
+        priority: "P1",
+        risk_level: "high",
+        test_group: "validation",
+      }),
+    );
   });
 });

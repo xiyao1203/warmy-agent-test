@@ -10,7 +10,8 @@
     "moduleResolution": "bundler",
     "resolveJsonModule": true,
     "isolatedModules": true,
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "types": ["node", "@playwright/test"]
   },
   "include": ["**/*.ts"],
   "exclude": ["node_modules"]

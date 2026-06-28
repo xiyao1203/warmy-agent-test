@@ -24,7 +24,10 @@ import { Input } from "@/components/ui/input";
 import type { ExperimentItem } from "./api";
 import { createExperiment, listExperiments, runExperiment } from "./api";
 
-const STATUS_TONES: Record<string, "success" | "warning" | "danger" | "neutral"> = {
+const STATUS_TONES: Record<
+  string,
+  "success" | "warning" | "danger" | "neutral"
+> = {
   completed: "success",
   running: "warning",
   failed: "danger",
@@ -48,8 +51,19 @@ export function ExperimentList({ projectId }: { projectId: string }) {
   }, [projectId]);
 
   useEffect(() => {
-    void reload();
-  }, [reload]);
+    let active = true;
+    void listExperiments(projectId)
+      .then((items) => {
+        if (active) setExperiments(items);
+      })
+      .catch(() => undefined)
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, [projectId]);
 
   async function handleRun(expId: string) {
     await runExperiment(projectId, expId);
@@ -81,8 +95,13 @@ export function ExperimentList({ projectId }: { projectId: string }) {
 
       {experiments.length === 0 ? (
         <div className="mt-8 rounded-[var(--radius-md)] border border-dashed border-[var(--border)] p-10 text-center">
-          <FlaskConical aria-hidden="true" className="mx-auto size-8 text-[var(--text-muted)]" />
-          <p className="mt-3 text-sm font-medium text-[var(--text-muted)]">暂无实验</p>
+          <FlaskConical
+            aria-hidden="true"
+            className="mx-auto size-8 text-[var(--text-muted)]"
+          />
+          <p className="mt-3 text-sm font-medium text-[var(--text-muted)]">
+            暂无实验
+          </p>
           <p className="mt-1 text-xs text-[var(--text-muted)]">
             点击「创建实验」选择两个运行进行 A/B 对比。
           </p>
@@ -213,18 +232,21 @@ function ExperimentCard({
               </thead>
               <tbody>
                 {(
-                  (exp.result_json as Record<string, unknown>).case_diffs as Record<
-                    string,
-                    unknown
-                  >[]
+                  (exp.result_json as Record<string, unknown>)
+                    .case_diffs as Record<string, unknown>[]
                 ).map((d, i) => (
-                  <tr className="border-b border-[var(--border)] last:border-0" key={i}>
+                  <tr
+                    className="border-b border-[var(--border)] last:border-0"
+                    key={i}
+                  >
                     <td className="py-1.5 pr-3 font-mono">
                       {String(d.test_case_id).slice(0, 8)}
                     </td>
                     <td className="py-1.5 pr-3">{String(d.status_a ?? "-")}</td>
                     <td className="py-1.5 pr-3">{String(d.status_b ?? "-")}</td>
-                    <td className="py-1.5 pr-3">{String(d.duration_delta_ms)}ms</td>
+                    <td className="py-1.5 pr-3">
+                      {String(d.duration_delta_ms)}ms
+                    </td>
                     <td className="py-1.5">
                       <Badge
                         tone={
@@ -328,9 +350,7 @@ function CreateExperimentDialog({
     >
       <DialogContent>
         <DialogTitle>创建对比实验</DialogTitle>
-        <DialogDescription>
-          选择两个运行进行 A/B 对比分析。
-        </DialogDescription>
+        <DialogDescription>选择两个运行进行 A/B 对比分析。</DialogDescription>
         <div className="mt-5 space-y-4">
           <label className="block text-sm font-medium">
             实验名称
@@ -359,10 +379,17 @@ function CreateExperimentDialog({
             />
           </label>
         </div>
-        {error ? <p className="mt-3 text-sm text-[var(--danger)]">{error}</p> : null}
+        {error ? (
+          <p className="mt-3 text-sm text-[var(--danger)]">{error}</p>
+        ) : null}
         <div className="mt-5 flex justify-end gap-2">
           <Button onClick={() => onOpenChange(false)}>取消</Button>
-          <Button disabled={saving} loading={saving} onClick={handleCreate} variant="primary">
+          <Button
+            disabled={saving}
+            loading={saving}
+            onClick={handleCreate}
+            variant="primary"
+          >
             创建
           </Button>
         </div>

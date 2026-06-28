@@ -25,7 +25,6 @@ import {
 
 import { ImportWizard } from "./import-wizard";
 import { TestCaseDetail } from "./test-case-detail";
-import { TestCaseEditor } from "./test-case-editor";
 
 type DatasetDetailProps = {
   dataset: DatasetResponse;
@@ -45,7 +44,6 @@ export function DatasetDetail({
   dataset,
   loading = false,
   onDeleteCases,
-  onCreateCase,
   onRefresh,
   projectId,
   versions = [],
@@ -54,7 +52,6 @@ export function DatasetDetail({
   const [search, setSearch] = useState("");
   const [deleting, setDeleting] = useState(false);
   const [viewingCase, setViewingCase] = useState<TestCaseResponse | null>(null);
-  const [editingCase, setEditingCase] = useState<TestCaseResponse | null>(null);
 
   const filteredCases = useMemo(() => {
     if (!search.trim()) return cases;
@@ -137,8 +134,7 @@ export function DatasetDetail({
               key={v.id}
               tone={v.id === currentVersionId ? "accent" : "neutral"}
             >
-              v{v.version_number}{" "}
-              {v.status === "published" ? "已发布" : "草稿"}
+              v{v.version_number} {v.status === "published" ? "已发布" : "草稿"}
             </Badge>
           ))}
         </section>
@@ -176,9 +172,7 @@ export function DatasetDetail({
         {!filteredCases.length ? (
           <EmptyState
             description={
-              search
-                ? "没有匹配的用例。"
-                : "暂无用例，点击右上角导入或创建。"
+              search ? "没有匹配的用例。" : "暂无用例，点击右上角导入或创建。"
             }
             title={search ? "无匹配结果" : "暂无测试用例"}
           />
@@ -215,9 +209,7 @@ export function DatasetDetail({
                   >
                     <TableCell>
                       <button
-                        aria-label={
-                          selectedIds.has(c.id) ? "取消选中" : "选中"
-                        }
+                        aria-label={selectedIds.has(c.id) ? "取消选中" : "选中"}
                         onClick={() => toggleSelect(c.id)}
                         type="button"
                       >
