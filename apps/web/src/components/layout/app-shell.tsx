@@ -26,8 +26,12 @@ import {
 import Link from "next/link";
 import type { ReactNode } from "react";
 
+import { logout } from "@/features/auth";
 import { ProjectSwitcher } from "@/features/projects";
+import { Tooltip } from "@/components/uiverse";
 import { canManageUsers } from "@/lib/permissions";
+
+import { UserDropdown } from "./user-dropdown";
 
 type AppShellProps = {
   children: ReactNode;
@@ -81,35 +85,29 @@ export function AppShell({
           />
         </label>
         <div className="flex items-center justify-end gap-2">
-          <button
-            aria-label="帮助"
-            className="grid size-8 place-items-center rounded-[var(--radius-sm)] text-[var(--text-muted)] hover:bg-[var(--surface-subtle)] hover:text-[var(--text)]"
-            type="button"
-          >
-            <HelpCircle aria-hidden="true" className="size-4" />
-          </button>
-          <button
-            aria-label="通知"
-            className="grid size-8 place-items-center rounded-[var(--radius-sm)] text-[var(--text-muted)] hover:bg-[var(--surface-subtle)] hover:text-[var(--text)]"
-            type="button"
-          >
-            <Bell aria-hidden="true" className="size-4" />
-          </button>
-          <button
-            aria-label={`当前用户：${user.display_name}`}
-            className="flex h-8 shrink-0 items-center gap-2 rounded-[var(--radius-sm)] px-2 text-sm hover:bg-[var(--surface-subtle)]"
-            title={`${user.display_name} · ${user.email}`}
-            type="button"
-          >
-            <span className="grid size-7 place-items-center rounded-full bg-[var(--accent)] text-xs font-semibold text-white">
-              {user.display_name.slice(0, 1).toUpperCase()}
-            </span>
-            <span className="max-[900px]:hidden">{user.display_name}</span>
-            <ChevronDown
-              aria-hidden="true"
-              className="size-3 text-[var(--text-muted)] max-[900px]:hidden"
-            />
-          </button>
+          <Tooltip content="帮助中心">
+            <button
+              aria-label="帮助"
+              className="grid size-8 place-items-center rounded-[var(--radius-sm)] text-[var(--text-muted)] transition-colors hover:bg-[var(--surface-subtle)] hover:text-[var(--text)]"
+              type="button"
+            >
+              <HelpCircle aria-hidden="true" className="size-4" />
+            </button>
+          </Tooltip>
+          <Tooltip content="通知中心">
+            <button
+              aria-label="通知"
+              className="grid size-8 place-items-center rounded-[var(--radius-sm)] text-[var(--text-muted)] transition-colors hover:bg-[var(--surface-subtle)] hover:text-[var(--text)]"
+              type="button"
+            >
+              <Bell aria-hidden="true" className="size-4" />
+            </button>
+          </Tooltip>
+          <UserDropdown
+            displayName={user.display_name}
+            email={user.email}
+            onLogout={logout}
+          />
         </div>
       </header>
       <div
