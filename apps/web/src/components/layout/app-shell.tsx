@@ -24,6 +24,7 @@ import {
   Users,
 } from "lucide-react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
 
 import { logout } from "@/features/auth";
@@ -122,14 +123,7 @@ export function AppShell({
             项目导航
           </p>
           <nav aria-label="项目导航" className="space-y-1">
-            <Link
-              className="flex h-9 items-center gap-3 rounded-[var(--radius-sm)] px-3 text-sm text-[var(--text-muted)] hover:bg-[var(--surface-subtle)] hover:text-[var(--text)] max-[1279px]:justify-center max-[1279px]:px-0"
-              href={projectHref}
-              title="概览"
-            >
-              <LayoutDashboard aria-hidden="true" className="size-4 shrink-0" />
-              <span className="max-[1279px]:sr-only">概览</span>
-            </Link>
+            <OverviewNavLink href={projectHref} />
             {activeProjectId ? (
               <>
                 <ProjectNavLink
@@ -265,6 +259,26 @@ export function AppShell({
   );
 }
 
+function OverviewNavLink({ href }: { href: string }) {
+  const pathname = usePathname();
+  const isActive = pathname === href;
+
+  return (
+    <Link
+      className={`flex h-9 items-center gap-3 rounded-[var(--radius-sm)] px-3 text-sm transition-colors max-[1279px]:justify-center max-[1279px]:px-0 ${
+        isActive
+          ? "bg-[var(--accent-subtle)] font-medium text-[var(--accent)]"
+          : "text-[var(--text-muted)] hover:bg-[var(--surface-subtle)] hover:text-[var(--text)]"
+      }`}
+      href={href}
+      title="概览"
+    >
+      <LayoutDashboard aria-hidden="true" className="size-4 shrink-0" />
+      <span className="max-[1279px]:sr-only">概览</span>
+    </Link>
+  );
+}
+
 function ProjectNavLink({
   href,
   icon,
@@ -274,9 +288,16 @@ function ProjectNavLink({
   icon: ReactNode;
   label: string;
 }) {
+  const pathname = usePathname();
+  const isActive = pathname === href || pathname.startsWith(href + "/");
+
   return (
     <Link
-      className="flex h-9 items-center gap-3 rounded-[var(--radius-sm)] px-3 text-sm text-[var(--text-muted)] hover:bg-[var(--surface-subtle)] hover:text-[var(--text)] max-[1279px]:justify-center max-[1279px]:px-0"
+      className={`flex h-9 items-center gap-3 rounded-[var(--radius-sm)] px-3 text-sm transition-colors max-[1279px]:justify-center max-[1279px]:px-0 ${
+        isActive
+          ? "bg-[var(--accent-subtle)] font-medium text-[var(--accent)]"
+          : "text-[var(--text-muted)] hover:bg-[var(--surface-subtle)] hover:text-[var(--text)]"
+      }`}
       href={href}
       title={label}
     >
