@@ -214,8 +214,15 @@ check_uv() {
 
 check_db_choice() {
     info "检测数据库..."
-    if pg_isready -q 2>/dev/null; then
+    # 优先检测 Docker 容器中的 PostgreSQL
+    if docker ps --format '{{.Names}}' 2>/dev/null | grep -q "postgresql"; then
+        ok "检测到 PostgreSQL Docker 容器运行中，将使用 PostgreSQL"
+        export AGENTTEST_DATABASE_URL="postgresql+asyncpg://agenttest:agenttest-local@localhost:5432/agenttest"
+    elif pg_isready -q 2>/dev/null; then
         ok "检测到 PostgreSQL 运行中，将使用 PostgreSQL"
+        export AGENTTEST_DATABASE_URL="postgresql+asyncpg://agenttest:agenttest-local@localhost:5432/agenttest"
+    elif lsof -i :5432 -sTCP:LISTEN &>/dev/null 2>&1; then
+        ok "检测到端口 5432 监听中，将使用 PostgreSQL"
         export AGENTTEST_DATABASE_URL="postgresql+asyncpg://agenttest:agenttest-local@localhost:5432/agenttest"
     else
         warn "PostgreSQL 未运行，将使用本地 SQLite (data/local.db)"
