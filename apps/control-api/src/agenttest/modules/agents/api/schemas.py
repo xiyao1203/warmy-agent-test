@@ -59,6 +59,8 @@ class AgentResponse(BaseModel):
     updated_by: UUID
     created_at: datetime
     updated_at: datetime
+    current_version_id: UUID | None = None
+    baseline_version_id: UUID | None = None
 
     @classmethod
     def from_domain(cls, agent: Agent) -> "AgentResponse":
@@ -72,6 +74,8 @@ class AgentResponse(BaseModel):
             updated_by=agent.updated_by.value,
             created_at=agent.created_at,
             updated_at=agent.updated_at,
+            current_version_id=agent.current_version_id.value if agent.current_version_id else None,
+            baseline_version_id=agent.baseline_version_id.value if agent.baseline_version_id else None,
         )
 
 

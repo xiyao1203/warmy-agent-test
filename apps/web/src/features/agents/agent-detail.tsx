@@ -13,6 +13,7 @@ import {
   Download,
   Layers,
   LockKeyhole,
+  GitBranch,
 } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
@@ -27,6 +28,8 @@ import {
 } from "@/components/ui/dialog";
 
 import { AgentVersionDialog } from "./agent-version-dialog";
+import { VersionDetailDrawer } from "./version-detail-drawer";
+import { VersionDiffView } from "./version-diff-view";
 
 type AgentDetailProps = {
   agent: AgentResponse;
@@ -37,6 +40,9 @@ type AgentDetailProps = {
     versionId: string,
     payload: CreateAgentVersionRequest,
   ) => Promise<unknown>;
+  onSetCurrentVersion?: (versionId: string) => Promise<unknown>;
+  onSetBaselineVersion?: (versionId: string) => Promise<unknown>;
+  onFetchDiff?: (v1Id: string, v2Id: string) => Promise<unknown>;
   versions?: AgentVersionResponse[];
 };
 
@@ -56,9 +62,13 @@ export function AgentDetail({
   onCreateVersion = async () => undefined,
   onPublish = async () => undefined,
   onUpdateVersion = async () => undefined,
+  onSetCurrentVersion = async () => undefined,
+  onSetBaselineVersion = async () => undefined,
+  onFetchDiff,
   versions = [],
 }: AgentDetailProps) {
   const [publishVersion, setPublishVersion] = useState<AgentVersionResponse>();
+  const [selectedVersion, setSelectedVersion] = useState<AgentVersionResponse | null>(null);
   const [activeTab, setActiveTab] = useState<TabKey>("versions");
 
   if (loading) return <div className="p-6">正在加载 Agent 详情…</div>;
@@ -119,9 +129,15 @@ export function AgentDetail({
         {activeTab === "versions" && (
           <VersionsTab
             versions={versions}
+            currentVersionId={agent.current_version_id ?? undefined}
+            baselineVersionId={agent.baseline_version_id ?? undefined}
             onPublish={onPublish}
             onUpdateVersion={onUpdateVersion}
+            onSetCurrentVersion={onSetCurrentVersion}
+            onSetBaselineVersion={onSetBaselineVersion}
             setPublishVersion={setPublishVersion}
+            onViewDetail={setSelectedVersion}
+            onFetchDiff={onFetchDiff}
           />
         )}
         {activeTab === "runs" && <RunsTab />}
@@ -153,6 +169,17 @@ export function AgentDetail({
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* ── 版本详情抽屉 ─────────────────────────────────────────────── */}
+      {selectedVersion && (
+        <VersionDetailDrawer
+          version={selectedVersion}
+          isCurrent={selectedVersion.id === agent.current_version_id}
+          isBaseline={selectedVersion.id === agent.baseline_version_id}
+          open={true}
+          onClose={() => setSelectedVersion(null)}
+        />
+      )}
     </div>
   );
 }
@@ -242,17 +269,37 @@ function ConfigTab({ versions }: { versions: AgentVersionResponse[] }) {
 
 function VersionsTab({
   versions,
+  currentVersionId,
+  baselineVersionId,
   onUpdateVersion,
+  onSetCurrentVersion,
+  onSetBaselineVersion,
   setPublishVersion,
+  onViewDetail,
+  onFetchDiff,
 }: {
   versions: AgentVersionResponse[];
+  currentVersionId?: string;
+  baselineVersionId?: string;
   onPublish?: (versionId: string) => Promise<unknown>;
   onUpdateVersion?: (
     versionId: string,
     payload: CreateAgentVersionRequest,
   ) => Promise<unknown>;
+  onSetCurrentVersion?: (versionId: string) => Promise<unknown>;
+  onSetBaselineVersion?: (versionId: string) => Promise<unknown>;
   setPublishVersion: (v: AgentVersionResponse) => void;
+  onViewDetail: (v: AgentVersionResponse) => void;
+  onFetchDiff?: (v1Id: string, v2Id: string) => Promise<unknown>;
 }) {
+  const [selectedVersions, setSelectedVersions] = useState<string[]>([]);
+
+  function toggleSelect(id: string) {
+    setSelectedVersions((prev) =>
+      prev.includes(id) ? prev.filter((v) => v !== id) : prev.length < 2 ? [...prev, id] : prev
+    );
+  }
+
   if (!versions.length) {
     return (
       <div className="rounded-[var(--radius-md)] border border-[var(--border)] p-8 text-center">
@@ -264,48 +311,148 @@ function VersionsTab({
     );
   }
 
+  const v1 = versions.find((v) => v.id === selectedVersions[0]);
+  const v2 = versions.find((v) => v.id === selectedVersions[1]);
+
   return (
-    <div className="space-y-3">
-      {versions.map((version) => (
-        <article
-          className="flex items-center justify-between gap-4 rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--surface)] px-4 py-3"
-          key={version.id}
-        >
-          <div>
-            <div className="flex items-center gap-2">
-              <h2 className="text-sm font-semibold">版本 v{version.version_number}</h2>
-              <Badge tone={version.status === "published" ? "success" : "warning"}>
-                {version.status === "published" ? "已发布" : "草稿"}
-              </Badge>
-              {version.status === "published" && (
-                <span className="inline-flex items-center gap-1 text-xs text-[var(--text-muted)]">
-                  <LockKeyhole aria-hidden="true" className="size-3.5" />
-                  已锁定
-                </span>
-              )}
-            </div>
-            <p className="mt-1 text-xs text-[var(--text-muted)]">
-              {String(version.config.api_url ?? "未配置 API 地址")}
-            </p>
-          </div>
-          {version.status === "draft" && (
-            <div className="flex gap-2">
-              <AgentVersionDialog
-                onSubmit={async (payload) => { await onUpdateVersion?.(version.id, payload); }}
-                triggerLabel={`编辑 v${version.version_number}`}
-                version={version}
-              />
-              <Button
-                aria-label={`发布版本 v${version.version_number}`}
-                onClick={() => setPublishVersion(version)}
-                variant="primary"
-              >
-                发布
-              </Button>
-            </div>
-          )}
-        </article>
-      ))}
+    <div className="space-y-4">
+      {/* 操作栏 */}
+      <div className="flex items-center justify-between">
+        <p className="text-sm text-[var(--text-muted)]">
+          共 {versions.length} 个版本
+          {currentVersionId && " · 当前版本已标记"}
+          {baselineVersionId && " · 基线版本已标记"}
+        </p>
+        {selectedVersions.length === 2 && onFetchDiff && (
+          <Button
+            onClick={() => {
+              /* 对比逻辑在下方 VersionDiffView 中 */
+            }}
+            variant="secondary"
+          >
+            对比选中版本
+          </Button>
+        )}
+      </div>
+
+      {/* 版本列表 */}
+      <div className="space-y-3">
+        {versions.map((version) => {
+          const isCurrent = version.id === currentVersionId;
+          const isBaseline = version.id === baselineVersionId;
+          const isSelected = selectedVersions.includes(version.id);
+
+          return (
+            <article
+              className={`flex items-center justify-between gap-4 rounded-[var(--radius-md)] border bg-[var(--surface)] px-4 py-3 transition-colors ${
+                isSelected
+                  ? "border-[var(--accent)] ring-1 ring-[var(--accent)]"
+                  : "border-[var(--border)]"
+              }`}
+              key={version.id}
+            >
+              <div className="flex items-center gap-3">
+                {/* 选择框 */}
+                <input
+                  checked={isSelected}
+                  onChange={() => toggleSelect(version.id)}
+                  type="checkbox"
+                  className="rounded"
+                  aria-label="选择版本"
+                />
+
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h2 className="text-sm font-semibold">版本 v{version.version_number}</h2>
+                    <Badge tone={version.status === "published" ? "success" : "warning"}>
+                      {version.status === "published" ? "已发布" : "草稿"}
+                    </Badge>
+                    {isCurrent && (
+                      <Badge tone="accent">
+                        <GitBranch className="mr-1 size-3" />
+                        当前
+                      </Badge>
+                    )}
+                    {isBaseline && (
+                      <Badge tone="neutral">
+                        <GitBranch className="mr-1 size-3" />
+                        基线
+                      </Badge>
+                    )}
+                    {version.status === "published" && (
+                      <span className="inline-flex items-center gap-1 text-xs text-[var(--text-muted)]">
+                        <LockKeyhole aria-hidden="true" className="size-3.5" />
+                        已锁定
+                      </span>
+                    )}
+                  </div>
+                  <p className="mt-1 text-xs text-[var(--text-muted)]">
+                    {String(version.config.api_url ?? "未配置 API 地址")}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex gap-2">
+                {/* 查看详情 */}
+                <Button onClick={() => onViewDetail(version)} variant="secondary">
+                  详情
+                </Button>
+
+                {/* 设置当前版本 */}
+                {version.status === "published" && !isCurrent && (
+                  <Button
+                    onClick={() => onSetCurrentVersion?.(version.id)}
+                    variant="secondary"
+                  >
+                    设为当前
+                  </Button>
+                )}
+
+                {/* 设置基线版本 */}
+                {version.status === "published" && !isBaseline && (
+                  <Button
+                    onClick={() => onSetBaselineVersion?.(version.id)}
+                    variant="secondary"
+                  >
+                    设为基线
+                  </Button>
+                )}
+
+                {/* 编辑草稿 */}
+                {version.status === "draft" && (
+                  <>
+                    <AgentVersionDialog
+                      onSubmit={async (payload) => { await onUpdateVersion?.(version.id, payload); }}
+                      triggerLabel={`编辑 v${version.version_number}`}
+                      version={version}
+                    />
+                    <Button
+                      aria-label={`发布版本 v${version.version_number}`}
+                      onClick={() => setPublishVersion(version)}
+                      variant="primary"
+                    >
+                      发布
+                    </Button>
+                  </>
+                )}
+              </div>
+            </article>
+          );
+        })}
+      </div>
+
+      {/* 版本对比视图 */}
+      {selectedVersions.length === 2 && v1 && v2 && onFetchDiff && (
+        <div className="mt-6">
+          <VersionDiffView
+            v1Id={v1.id}
+            v2Id={v2.id}
+            v1Number={v1.version_number}
+            v2Number={v2.version_number}
+            onFetchDiff={onFetchDiff as (v1Id: string, v2Id: string) => Promise<import("./version-diff-view").VersionDiffResponse>}
+          />
+        </div>
+      )}
     </div>
   );
 }
