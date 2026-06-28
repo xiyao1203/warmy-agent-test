@@ -13,6 +13,10 @@ from agenttest.modules.experiments.domain.entities import (
     Experiment,
     ExperimentId,
 )
+from agenttest.modules.experiments.domain.statistics import (
+    calculate_statistics,
+    identify_degradation,
+)
 from agenttest.modules.experiments.infrastructure.persistence.repositories import (
     SqlAlchemyExperimentRepository,
 )
@@ -228,6 +232,57 @@ def create_experiment_router(
         exp.complete(result_json)
         await repo.save(exp)
         return _to_dict(exp)
+
+    @router.get("/statistics")
+    async def get_statistics(
+        request: Request,
+        project_id: UUID,
+        run_id: UUID | None = None,
+        experiment_id: UUID | None = None,
+    ):
+        """获取运行统计或实验对比统计。"""
+        actor = await require_actor(request, actor_for, settings)
+        if isinstance(actor, JSONResponse):
+            return actor
+        try:
+            await check_project(project_id)
+        except ProjectNotFoundError:
+            return JSONResponse(status_code=404, content={"detail": "项目不存在"})
+        except InvalidSessionError:
+            return JSONResponse(status_code=401, content={"detail": "认证失败"})
+
+        async with session_factory() as session:
+            if run_id:
+                # 获取单个运行的统计
+                cases = await _get_run_cases(session, run_id)
+                stats = calculate_statistics(cases)
+                return {
+                    "run_id": str(run_id),
+                    "statistics": stats.to_dict(),
+                }
+            elif experiment_id:
+                # 获取实验对比统计
+                exp = await repo.get_by_id_and_project(
+                    ExperimentId(experiment_id), ProjectId(project_id),
+                )
+                if exp is None:
+                    return JSONResponse(status_code=404, content={"detail": "实验不存在"})
+
+                cases_a = await _get_run_cases(session, exp.run_a_id)
+                cases_b = await _get_run_cases(session, exp.run_b_id)
+
+                stats_a = calculate_statistics(cases_a)
+                stats_b = calculate_statistics(cases_b)
+                degradations = identify_degradation(cases_a, cases_b)
+
+                return {
+                    "experiment_id": str(experiment_id),
+                    "run_a": {"id": str(exp.run_a_id), "statistics": stats_a.to_dict()},
+                    "run_b": {"id": str(exp.run_b_id), "statistics": stats_b.to_dict()},
+                    "degradation": degradations,
+                }
+            else:
+                return JSONResponse(status_code=422, content={"detail": "run_id 或 experiment_id 必须提供一个"})
 
     return router
 
