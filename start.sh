@@ -83,14 +83,37 @@ get_lan_ip() {
 
 check_node() {
     info "检测 Node.js..."
+    
+    # 检查常见安装位置
+    local node_paths=(
+        "$HOME/.local/node-v20.18.0/bin/node"
+        "$HOME/.local/node-v22.15.0/bin/node"
+        "$HOME/.local/share/fnm/node-versions/v20.18.0/installation/bin/node"
+        "$HOME/.local/share/fnm/node-versions/v22.15.0/installation/bin/node"
+        "/usr/local/bin/node"
+        "/opt/homebrew/bin/node"
+    )
+    
+    # 如果 node 不在 PATH 中，尝试查找
     if ! command -v node &>/dev/null; then
-        warn "Node.js 未安装"
+        for node_path in "${node_paths[@]}"; do
+            if [ -x "$node_path" ]; then
+                # 添加到 PATH
+                export PATH="$(dirname "$node_path"):$PATH"
+                ok "Node.js 已找到: $node_path"
+                ok "Node.js $(node --version)"
+                return
+            fi
+        done
+        
+        warn "Node.js 未安装或不在 PATH 中"
         if [ "$NO_INSTALL" = true ]; then
             fail "请先安装 Node.js >= ${MIN_NODE_MAJOR} (https://nodejs.org)"
         fi
         install_node
         return
     fi
+    
     local ver
     ver=$(node --version | sed 's/v//' | cut -d. -f1)
     if [ "$ver" -lt "$MIN_NODE_MAJOR" ]; then
