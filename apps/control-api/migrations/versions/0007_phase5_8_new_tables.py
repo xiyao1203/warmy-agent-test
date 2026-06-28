@@ -25,14 +25,16 @@ def upgrade() -> None:
         "run_events",
         sa.Column("parent_event_id", sa.Uuid(), nullable=True),
     )
-    op.create_foreign_key(
-        "fk_run_events_parent",
-        "run_events",
-        "run_events",
-        ["parent_event_id"],
-        ["id"],
-        ondelete="SET NULL",
-    )
+    # SQLite 不支持添加外键约束，仅在 PostgreSQL 中执行
+    if op.get_bind().dialect.name != "sqlite":
+        op.create_foreign_key(
+            "fk_run_events_parent",
+            "run_events",
+            "run_events",
+            ["parent_event_id"],
+            ["id"],
+            ondelete="SET NULL",
+        )
     op.create_index(
         "ix_run_events_parent", "run_events", ["parent_event_id"],
     )
