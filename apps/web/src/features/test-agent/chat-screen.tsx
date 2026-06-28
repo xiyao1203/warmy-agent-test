@@ -8,6 +8,12 @@ import {
   Send,
   Sparkles,
   User,
+  Play,
+  FileCode,
+  Wrench,
+  Loader2,
+  CheckCircle,
+  XCircle,
 } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 
@@ -15,8 +21,18 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
-import type { ChatMessage, ChatResponse } from "./api";
-import { confirmPlan, sendChatMessage } from "./api";
+import type {
+  ChatMessage,
+  ChatResponse,
+  PlaywrightAgentTask,
+  PlaywrightAgentRequest,
+} from "./api";
+import {
+  confirmPlan,
+  sendChatMessage,
+  executePlaywrightAgent,
+  getPlaywrightTask,
+} from "./api";
 
 export function TestAgentChat({ projectId }: { projectId: string }) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -246,6 +262,195 @@ function PlanCard({
           确认执行
         </Button>
       </div>
+    </div>
+  );
+}
+
+// ── Playwright Agent Panel ────────────────────────────────────────────────────
+
+export function PlaywrightAgentPanel({ projectId }: { projectId: string }) {
+  const [agentType, setAgentType] = useState<"planner" | "generator" | "healer">("planner");
+  const [prompt, setPrompt] = useState("");
+  const [planPath, setPlanPath] = useState("");
+  const [testName, setTestName] = useState("");
+  const [executing, setExecuting] = useState(false);
+  const [task, setTask] = useState<PlaywrightAgentTask | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  async function handleExecute() {
+    if (!prompt.trim() || executing) return;
+    setExecuting(true);
+    setError(null);
+    setTask(null);
+
+    try {
+      const request: PlaywrightAgentRequest = {
+        agent_type: agentType,
+        prompt: prompt.trim(),
+      };
+
+      if (agentType === "generator" && planPath.trim()) {
+        request.plan_path = planPath.trim();
+      }
+      if (agentType === "healer" && testName.trim()) {
+        request.test_name = testName.trim();
+      }
+
+      const result = await executePlaywrightAgent(projectId, request);
+      setTask(result);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "执行失败");
+    } finally {
+      setExecuting(false);
+    }
+  }
+
+  const agentIcons = {
+    planner: <Play className="size-4" />,
+    generator: <FileCode className="size-4" />,
+    healer: <Wrench className="size-4" />,
+  };
+
+  const agentLabels = {
+    planner: "Planner",
+    generator: "Generator",
+    healer: "Healer",
+  };
+
+  return (
+    <div className="rounded-lg border border-[var(--border)] bg-[var(--surface)] p-4">
+      <h3 className="mb-3 text-sm font-semibold text-[var(--text)]">
+        Playwright Test Agents
+      </h3>
+
+      {/* Agent Type Selector */}
+      <div className="mb-3 flex gap-2">
+        {(["planner", "generator", "healer"] as const).map((type) => (
+          <button
+            key={type}
+            className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
+              agentType === type
+                ? "bg-[var(--accent)] text-white"
+                : "bg-[var(--surface-subtle)] text-[var(--text-muted)] hover:bg-[var(--border)]"
+            }`}
+            onClick={() => setAgentType(type)}
+            type="button"
+          >
+            {agentIcons[type]}
+            {agentLabels[type]}
+          </button>
+        ))}
+      </div>
+
+      {/* Prompt Input */}
+      <div className="mb-3">
+        <Input
+          className="w-full"
+          disabled={executing}
+          onChange={(e) => setPrompt(e.target.value)}
+          placeholder={
+            agentType === "planner"
+              ? "描述要测试的功能..."
+              : agentType === "generator"
+                ? "输入测试计划内容..."
+                : "输入失败的测试名称..."
+          }
+          value={prompt}
+        />
+      </div>
+
+      {/* Conditional Inputs */}
+      {agentType === "generator" && (
+        <div className="mb-3">
+          <Input
+            className="w-full"
+            disabled={executing}
+            onChange={(e) => setPlanPath(e.target.value)}
+            placeholder="测试计划文件路径（可选）"
+            value={planPath}
+          />
+        </div>
+      )}
+
+      {agentType === "healer" && (
+        <div className="mb-3">
+          <Input
+            className="w-full"
+            disabled={executing}
+            onChange={(e) => setTestName(e.target.value)}
+            placeholder="失败的测试名称"
+            value={testName}
+          />
+        </div>
+      )}
+
+      {/* Execute Button */}
+      <Button
+        className="w-full"
+        disabled={executing || !prompt.trim()}
+        loading={executing}
+        onClick={handleExecute}
+        variant="primary"
+      >
+        {executing ? (
+          <>
+            <Loader2 className="mr-1.5 size-4 animate-spin" />
+            执行中...
+          </>
+        ) : (
+          <>
+            <Play className="mr-1.5 size-4" />
+            执行 {agentLabels[agentType]}
+          </>
+        )}
+      </Button>
+
+      {/* Error Display */}
+      {error && (
+        <div className="mt-3 flex items-center gap-2 rounded border border-[var(--error)] bg-[var(--error-subtle)] px-3 py-2 text-xs text-[var(--error)]">
+          <XCircle className="size-3.5 shrink-0" />
+          {error}
+        </div>
+      )}
+
+      {/* Task Result */}
+      {task && (
+        <div className="mt-3 space-y-2">
+          <div className="flex items-center gap-2">
+            {task.status === "completed" ? (
+              <CheckCircle className="size-4 text-[var(--success)]" />
+            ) : task.status === "failed" ? (
+              <XCircle className="size-4 text-[var(--error)]" />
+            ) : (
+              <Loader2 className="size-4 animate-spin text-[var(--accent)]" />
+            )}
+            <span className="text-xs font-medium">
+              任务 {task.task_id}
+            </span>
+            <Badge tone={task.status === "completed" ? "success" : task.status === "failed" ? "danger" : "neutral"}>
+              {task.status}
+            </Badge>
+          </div>
+
+          {task.output && (
+            <div className="rounded bg-[var(--surface-subtle)] p-2 text-xs">
+              <pre className="whitespace-pre-wrap break-words">{task.output}</pre>
+            </div>
+          )}
+
+          {task.artifacts && task.artifacts.length > 0 && (
+            <div className="space-y-1">
+              <span className="text-xs font-medium text-[var(--text-muted)]">生成的文件：</span>
+              {task.artifacts.map((file, i) => (
+                <div className="flex items-center gap-1.5 text-xs" key={i}>
+                  <FileCode className="size-3.5 text-[var(--accent)]" />
+                  <span className="font-mono">{file}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
