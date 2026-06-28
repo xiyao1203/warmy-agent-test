@@ -4,7 +4,10 @@ import {
   CheckCircle2,
   ChevronRight,
   ClipboardCheck,
+  Equal,
   SkipForward,
+  ThumbsDown,
+  ThumbsUp,
   XCircle,
 } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
@@ -31,6 +34,8 @@ export function ReviewWorkbench({ projectId }: { projectId: string }) {
   const [score, setScore] = useState(0.8);
   const [opinion, setOpinion] = useState("");
   const [acting, setActing] = useState(false);
+  const [reviewMode, setReviewMode] = useState<"score" | "ab_preference">("score");
+  const [abPreference, setAbPreference] = useState<"a" | "b" | "equal" | null>(null);
 
   const reload = useCallback(async () => {
     setLoading(true);
@@ -201,27 +206,92 @@ export function ReviewWorkbench({ projectId }: { projectId: string }) {
 
               {selected.status === "pending" ? (
                 <div className="border-t border-[var(--border)] pt-4">
-                  <label className="block text-sm font-medium">
-                    评分（0-1）
-                    <Input
-                      className="mt-1.5"
-                      max={1}
-                      min={0}
-                      onChange={(e) => setScore(Number(e.target.value))}
-                      step={0.01}
-                      type="number"
-                      value={score}
-                    />
-                  </label>
-                  <label className="mt-3 block text-sm font-medium">
-                    审核意见
-                    <Input
-                      className="mt-1.5"
-                      onChange={(e) => setOpinion(e.target.value)}
-                      placeholder="可选"
-                      value={opinion}
-                    />
-                  </label>
+                  {/* 审核模式切换 */}
+                  <div className="mb-4 flex gap-2">
+                    <Button
+                      onClick={() => setReviewMode("score")}
+                      variant={reviewMode === "score" ? "primary" : "ghost"}
+                    >
+                      评分模式
+                    </Button>
+                    <Button
+                      onClick={() => setReviewMode("ab_preference")}
+                      variant={reviewMode === "ab_preference" ? "primary" : "ghost"}
+                    >
+                      A/B 偏好
+                    </Button>
+                  </div>
+
+                  {reviewMode === "score" ? (
+                    /* 评分模式 */
+                    <>
+                      <label className="block text-sm font-medium">
+                        评分（0-1）
+                        <Input
+                          className="mt-1.5"
+                          max={1}
+                          min={0}
+                          onChange={(e) => setScore(Number(e.target.value))}
+                          step={0.01}
+                          type="number"
+                          value={score}
+                        />
+                      </label>
+                      <label className="mt-3 block text-sm font-medium">
+                        审核意见
+                        <Input
+                          className="mt-1.5"
+                          onChange={(e) => setOpinion(e.target.value)}
+                          placeholder="可选"
+                          value={opinion}
+                        />
+                      </label>
+                    </>
+                  ) : (
+                    /* A/B 偏好模式 */
+                    <div>
+                      <p className="mb-3 text-sm font-medium">选择偏好：</p>
+                      <div className="flex gap-3">
+                        <button
+                          className={`flex-1 rounded-lg border p-4 text-center transition-colors ${
+                            abPreference === "a"
+                              ? "border-[var(--accent)] bg-[var(--accent-subtle)]"
+                              : "border-[var(--border)] hover:bg-[var(--surface-subtle)]"
+                          }`}
+                          onClick={() => setAbPreference("a")}
+                          type="button"
+                        >
+                          <ThumbsUp className="mx-auto size-6 text-[var(--success)]" />
+                          <p className="mt-2 text-sm font-medium">A 更好</p>
+                        </button>
+                        <button
+                          className={`flex-1 rounded-lg border p-4 text-center transition-colors ${
+                            abPreference === "equal"
+                              ? "border-[var(--accent)] bg-[var(--accent-subtle)]"
+                              : "border-[var(--border)] hover:bg-[var(--surface-subtle)]"
+                          }`}
+                          onClick={() => setAbPreference("equal")}
+                          type="button"
+                        >
+                          <Equal className="mx-auto size-6 text-[var(--text-muted)]" />
+                          <p className="mt-2 text-sm font-medium">相同</p>
+                        </button>
+                        <button
+                          className={`flex-1 rounded-lg border p-4 text-center transition-colors ${
+                            abPreference === "b"
+                              ? "border-[var(--accent)] bg-[var(--accent-subtle)]"
+                              : "border-[var(--border)] hover:bg-[var(--surface-subtle)]"
+                          }`}
+                          onClick={() => setAbPreference("b")}
+                          type="button"
+                        >
+                          <ThumbsDown className="mx-auto size-6 text-[var(--danger)]" />
+                          <p className="mt-2 text-sm font-medium">B 更好</p>
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
                   <div className="mt-4 flex gap-2">
                     <Button
                       disabled={acting}
