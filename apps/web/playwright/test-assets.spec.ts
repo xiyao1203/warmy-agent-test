@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import type { Page, Browser } from "@playwright/test";
 
 // 使用预认证的管理员状态，避免重复登录
 test.use({ storageState: "playwright/.auth/admin.json" });
@@ -6,10 +7,10 @@ test.use({ storageState: "playwright/.auth/admin.json" });
 test.describe("test assets E2E", () => {
   const projectId = process.env.E2E_PROJECT_ID ?? "";
 
-  test.beforeAll(async ({ browser }) => {
+  test.beforeAll(async ({ browser }: { browser: Browser }) => {
     // 确保存在可用项目；如果未通过环境变量指定，先创建一个
     if (!projectId) {
-      const page = await browser.newPage();
+      const page: Page = await browser.newPage();
       await page.goto("/");
       // 如果被重定向到项目概览，则提取 projectId
       const match = page.url().match(/\/projects\/([^/]+)/);
@@ -21,7 +22,7 @@ test.describe("test assets E2E", () => {
   });
 
   // ── 场景 1：创建 Agent 并发布版本 ─────────────────────────────────────
-  test("developer creates an Agent and publishes a version", async ({ page }) => {
+  test("developer creates an Agent and publishes a version", async ({ page }: { page: Page }) => {
     const pid = process.env.E2E_PROJECT_ID!;
     await page.goto(`/projects/${pid}/agents`);
 
@@ -57,7 +58,7 @@ test.describe("test assets E2E", () => {
   });
 
   // ── 场景 2：创建 Dataset、导入用例并发布 ──────────────────────────────
-  test("developer creates a Dataset, imports test cases, and publishes", async ({ page }) => {
+  test("developer creates a Dataset, imports test cases, and publishes", async ({ page }: { page: Page }) => {
     const pid = process.env.E2E_PROJECT_ID!;
     await page.goto(`/projects/${pid}/datasets`);
 
@@ -108,7 +109,7 @@ test.describe("test assets E2E", () => {
   });
 
   // ── 场景 3：创建 TestPlan 引用已发布版本 ──────────────────────────────
-  test("developer creates a TestPlan referencing published Agent and Dataset", async ({ page }) => {
+  test("developer creates a TestPlan referencing published Agent and Dataset", async ({ page }: { page: Page }) => {
     const pid = process.env.E2E_PROJECT_ID!;
     await page.goto(`/projects/${pid}/test-plans`);
 
@@ -137,7 +138,7 @@ test.describe("test assets E2E", () => {
   });
 
   // ── 场景 4：Viewer 可以查看但不能编辑 ─────────────────────────────────
-  test("viewer can view but not edit test assets", async ({ browser }) => {
+  test("viewer can view but not edit test assets", async ({ browser }: { browser: Browser }) => {
     const viewerCtx = await browser.newContext();
     const page = await viewerCtx.newPage();
 
@@ -159,7 +160,7 @@ test.describe("test assets E2E", () => {
   });
 
   // ── 场景 5：非项目成员访问返回 404 ────────────────────────────────────
-  test("non-member gets 404 on project test assets", async ({ browser }) => {
+  test("non-member gets 404 on project test assets", async ({ browser }: { browser: Browser }) => {
     const outsiderCtx = await browser.newContext();
     const page = await outsiderCtx.newPage();
 
@@ -180,7 +181,7 @@ test.describe("test assets E2E", () => {
   });
 
   // ── 场景 6：已发布版本不可编辑 ─────────────────────────────────────────
-  test("published version cannot be edited", async ({ page }) => {
+  test("published version cannot be edited", async ({ page }: { page: Page }) => {
     const pid = process.env.E2E_PROJECT_ID!;
     await page.goto(`/projects/${pid}/test-plans`);
 
@@ -197,7 +198,7 @@ test.describe("test assets E2E", () => {
   });
 
   // ── 场景 7：导入无效数据显示行级错误 ───────────────────────────────────
-  test("import with invalid data shows line-by-line errors", async ({ page }) => {
+  test("import with invalid data shows line-by-line errors", async ({ page }: { page: Page }) => {
     const pid = process.env.E2E_PROJECT_ID!;
     await page.goto(`/projects/${pid}/datasets`);
 
