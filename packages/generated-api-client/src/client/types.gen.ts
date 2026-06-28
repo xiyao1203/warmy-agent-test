@@ -74,6 +74,14 @@ export type AgentListResponse = {
 export type AgentResponse = {
   agent_type: AgentType;
   /**
+   * Current Version Id
+   */
+  current_version_id?: string | null;
+  /**
+   * Baseline Version Id
+   */
+  baseline_version_id?: string | null;
+  /**
    * Created At
    */
   created_at: string;
