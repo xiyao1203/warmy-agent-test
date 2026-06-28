@@ -1,4 +1,10 @@
-import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import {
+  act,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { ReactNode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -101,11 +107,7 @@ describe("RunCenter", () => {
     expect(screen.getByText("暂无运行记录")).toBeVisible();
 
     rerender(
-      <RunCenter
-        error="service"
-        planVersions={[]}
-        projectId="project-1"
-      />,
+      <RunCenter error="service" planVersions={[]} projectId="project-1" />,
     );
     expect(screen.getByText("运行中心暂时不可用")).toBeVisible();
   });
@@ -141,8 +143,9 @@ describe("RunDetail", () => {
       />,
     );
 
-    expect(screen.getByText("执行摘要")).toBeVisible();
+    expect(screen.getAllByText("执行摘要")).toHaveLength(2);
     expect(screen.getByText("实时刷新")).toBeVisible();
+    fireEvent.click(screen.getByRole("button", { name: "用例列表" }));
     expect(screen.getByText("TransientError")).toBeVisible();
     expect(screen.getByText("http.request")).toBeVisible();
     fireEvent.click(screen.getByRole("button", { name: "取消运行" }));
@@ -170,7 +173,9 @@ describe("RunDetailScreen realtime refresh", () => {
     vi.stubGlobal("EventSource", FakeEventSource);
     api.getRun.mockResolvedValue(running);
     api.listRunCases.mockResolvedValue([]);
-    api.runEventsUrl.mockReturnValue("/api/v1/projects/project-1/runs/run-1/events");
+    api.runEventsUrl.mockReturnValue(
+      "/api/v1/projects/project-1/runs/run-1/events",
+    );
 
     renderWithQueryClient(
       <RunDetailScreen projectId="project-1" runId="run-1" />,
@@ -179,7 +184,9 @@ describe("RunDetailScreen realtime refresh", () => {
     await waitFor(() =>
       expect(api.runEventsUrl).toHaveBeenCalledWith("project-1", "run-1"),
     );
-    expect(sources[0]?.url).toBe("/api/v1/projects/project-1/runs/run-1/events");
+    expect(sources[0]?.url).toBe(
+      "/api/v1/projects/project-1/runs/run-1/events",
+    );
 
     sources[0]?.onmessage?.(
       new MessageEvent("message", {

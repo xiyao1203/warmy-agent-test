@@ -15,7 +15,7 @@ import {
   CheckCircle,
   XCircle,
 } from "lucide-react";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -27,12 +27,7 @@ import type {
   PlaywrightAgentTask,
   PlaywrightAgentRequest,
 } from "./api";
-import {
-  confirmPlan,
-  sendChatMessage,
-  executePlaywrightAgent,
-  getPlaywrightTask,
-} from "./api";
+import { confirmPlan, sendChatMessage, executePlaywrightAgent } from "./api";
 
 export function TestAgentChat({ projectId }: { projectId: string }) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -73,7 +68,11 @@ export function TestAgentChat({ projectId }: { projectId: string }) {
     } catch {
       setMessages((prev) => [
         ...prev,
-        { role: "assistant", content: "抱歉，处理失败，请重试。", timestamp: new Date().toISOString() },
+        {
+          role: "assistant",
+          content: "抱歉，处理失败，请重试。",
+          timestamp: new Date().toISOString(),
+        },
       ]);
     } finally {
       setSending(false);
@@ -87,14 +86,22 @@ export function TestAgentChat({ projectId }: { projectId: string }) {
       const res = await confirmPlan(projectId, sessionId);
       setMessages((prev) => [
         ...prev,
-        { role: "assistant", content: res.message, timestamp: new Date().toISOString() },
+        {
+          role: "assistant",
+          content: res.message,
+          timestamp: new Date().toISOString(),
+        },
       ]);
       setStatus(res.status);
       setPlanDraft(null);
     } catch {
       setMessages((prev) => [
         ...prev,
-        { role: "assistant", content: "确认失败，请重试。", timestamp: new Date().toISOString() },
+        {
+          role: "assistant",
+          content: "确认失败，请重试。",
+          timestamp: new Date().toISOString(),
+        },
       ]);
     } finally {
       setConfirming(false);
@@ -192,11 +199,7 @@ function MessageBubble({ message }: { message: ChatMessage }) {
             : "bg-[var(--surface-subtle)] text-[var(--text)]"
         }`}
       >
-        {isUser ? (
-          <User className="size-4" />
-        ) : (
-          <Bot className="size-4" />
-        )}
+        {isUser ? <User className="size-4" /> : <Bot className="size-4" />}
       </div>
       <div
         className={`max-w-[80%] rounded-lg px-4 py-2.5 text-sm ${
@@ -230,9 +233,7 @@ function PlanCard({
         type="button"
       >
         <Sparkles className="size-4 text-[var(--accent)]" />
-        <span className="flex-1 text-sm font-semibold">
-          测试计划草稿
-        </span>
+        <span className="flex-1 text-sm font-semibold">测试计划草稿</span>
         {expanded ? (
           <ChevronDown className="size-4" />
         ) : (
@@ -269,7 +270,9 @@ function PlanCard({
 // ── Playwright Agent Panel ────────────────────────────────────────────────────
 
 export function PlaywrightAgentPanel({ projectId }: { projectId: string }) {
-  const [agentType, setAgentType] = useState<"planner" | "generator" | "healer">("planner");
+  const [agentType, setAgentType] = useState<
+    "planner" | "generator" | "healer"
+  >("planner");
   const [prompt, setPrompt] = useState("");
   const [planPath, setPlanPath] = useState("");
   const [testName, setTestName] = useState("");
@@ -424,23 +427,33 @@ export function PlaywrightAgentPanel({ projectId }: { projectId: string }) {
             ) : (
               <Loader2 className="size-4 animate-spin text-[var(--accent)]" />
             )}
-            <span className="text-xs font-medium">
-              任务 {task.task_id}
-            </span>
-            <Badge tone={task.status === "completed" ? "success" : task.status === "failed" ? "danger" : "neutral"}>
+            <span className="text-xs font-medium">任务 {task.task_id}</span>
+            <Badge
+              tone={
+                task.status === "completed"
+                  ? "success"
+                  : task.status === "failed"
+                    ? "danger"
+                    : "neutral"
+              }
+            >
               {task.status}
             </Badge>
           </div>
 
           {task.output && (
             <div className="rounded bg-[var(--surface-subtle)] p-2 text-xs">
-              <pre className="whitespace-pre-wrap break-words">{task.output}</pre>
+              <pre className="whitespace-pre-wrap break-words">
+                {task.output}
+              </pre>
             </div>
           )}
 
           {task.artifacts && task.artifacts.length > 0 && (
             <div className="space-y-1">
-              <span className="text-xs font-medium text-[var(--text-muted)]">生成的文件：</span>
+              <span className="text-xs font-medium text-[var(--text-muted)]">
+                生成的文件：
+              </span>
               {task.artifacts.map((file, i) => (
                 <div className="flex items-center gap-1.5 text-xs" key={i}>
                   <FileCode className="size-3.5 text-[var(--accent)]" />

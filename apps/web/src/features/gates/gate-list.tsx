@@ -1,16 +1,6 @@
 "use client";
 
-import {
-  CheckCircle2,
-  Minus,
-  Pencil,
-  Plus,
-  ShieldCheck,
-  ToggleLeft,
-  ToggleRight,
-  Trash2,
-  XCircle,
-} from "lucide-react";
+import { CheckCircle2, Plus, ShieldCheck, Trash2, XCircle } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 
 import { Badge } from "@/components/ui/badge";
@@ -24,12 +14,7 @@ import {
 import { Input } from "@/components/ui/input";
 
 import type { GateItem, GateResult } from "./api";
-import {
-  createGate,
-  deleteGate,
-  evaluateGate,
-  listGates,
-} from "./api";
+import { createGate, deleteGate, evaluateGate, listGates } from "./api";
 
 export function GateList({ projectId }: { projectId: string }) {
   const [gates, setGates] = useState<GateItem[]>([]);
@@ -52,8 +37,19 @@ export function GateList({ projectId }: { projectId: string }) {
   }, [projectId]);
 
   useEffect(() => {
-    void reload();
-  }, [reload]);
+    let active = true;
+    void listGates(projectId)
+      .then((items) => {
+        if (active) setGates(items);
+      })
+      .catch(() => undefined)
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, [projectId]);
 
   async function handleDelete(gateId: string) {
     if (!confirm("确定删除此门禁？")) return;
@@ -149,8 +145,6 @@ function GateCard({
   onEvaluate: () => Promise<void>;
   result?: GateResult;
 }) {
-  const [deleting, setDeleting] = useState(false);
-
   return (
     <li className="rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--surface)] px-5 py-4">
       <div className="flex items-center justify-between gap-4">
@@ -164,8 +158,8 @@ function GateCard({
             )}
           </div>
           <p className="mt-1 text-xs text-[var(--text-muted)]">
-            通过率 ≥ {(gate.success_rate_threshold * 100).toFixed(0)}%
-            · 安全评分 ≥ {gate.security_threshold.toFixed(1)}
+            通过率 ≥ {(gate.success_rate_threshold * 100).toFixed(0)}% ·
+            安全评分 ≥ {gate.security_threshold.toFixed(1)}
             {gate.cost_limit != null ? ` · 成本 ≤ ${gate.cost_limit}` : ""}
             {gate.critical_cases.length > 0
               ? ` · 关键用例 ${gate.critical_cases.length} 个`
@@ -176,17 +170,7 @@ function GateCard({
           <Button onClick={onEvaluate} variant="ghost">
             评估
           </Button>
-          <Button
-            onClick={async () => {
-              setDeleting(true);
-              try {
-                await onDelete();
-              } finally {
-                setDeleting(false);
-              }
-            }}
-            variant="ghost"
-          >
+          <Button onClick={onDelete} variant="ghost">
             <Trash2 className="size-4 text-[var(--danger)]" />
           </Button>
         </div>
@@ -271,9 +255,7 @@ function CreateGateDialog({
     >
       <DialogContent>
         <DialogTitle>创建发布门禁</DialogTitle>
-        <DialogDescription>
-          配置发布前必须满足的条件。
-        </DialogDescription>
+        <DialogDescription>配置发布前必须满足的条件。</DialogDescription>
         <div className="mt-5 space-y-4">
           <label className="block text-sm font-medium">
             名称

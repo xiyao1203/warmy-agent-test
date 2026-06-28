@@ -35,8 +35,21 @@ export function ScorerList({ projectId }: { projectId: string }) {
   }, [projectId]);
 
   useEffect(() => {
-    void reload();
-  }, [reload]);
+    let active = true;
+    void listScorers(projectId)
+      .then((items) => {
+        if (active) setScorers(items);
+      })
+      .catch(() => {
+        if (active) setError("加载评分器列表失败");
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, [projectId]);
 
   async function handleToggle(item: ScorerItem) {
     await updateScorer(projectId, item.id, { enabled: !item.enabled });
@@ -102,9 +115,7 @@ export function ScorerList({ projectId }: { projectId: string }) {
                 <div className="flex items-center gap-2">
                   <h2 className="text-sm font-semibold">{s.name}</h2>
                   <Badge>{TYPE_LABELS[s.scorer_type] ?? s.scorer_type}</Badge>
-                  {!s.enabled ? (
-                    <Badge tone="warning">已禁用</Badge>
-                  ) : null}
+                  {!s.enabled ? <Badge tone="warning">已禁用</Badge> : null}
                 </div>
                 <p className="mt-1 text-xs text-[var(--text-muted)]">
                   权重 {s.weight} · 阈值 {s.threshold}
@@ -118,9 +129,15 @@ export function ScorerList({ projectId }: { projectId: string }) {
                   variant="ghost"
                 >
                   {s.enabled ? (
-                    <ToggleRight aria-hidden="true" className="size-4 text-[var(--success)]" />
+                    <ToggleRight
+                      aria-hidden="true"
+                      className="size-4 text-[var(--success)]"
+                    />
                   ) : (
-                    <ToggleLeft aria-hidden="true" className="size-4 text-[var(--text-muted)]" />
+                    <ToggleLeft
+                      aria-hidden="true"
+                      className="size-4 text-[var(--text-muted)]"
+                    />
                   )}
                 </Button>
                 <Button
@@ -138,7 +155,10 @@ export function ScorerList({ projectId }: { projectId: string }) {
                   onClick={() => handleDelete(s.id)}
                   variant="ghost"
                 >
-                  <Trash2 aria-hidden="true" className="size-4 text-[var(--danger)]" />
+                  <Trash2
+                    aria-hidden="true"
+                    className="size-4 text-[var(--danger)]"
+                  />
                 </Button>
               </div>
             </li>

@@ -4,7 +4,7 @@ import type {
   CreateEnvironmentTemplateRequest,
   EnvironmentTemplateResponse,
 } from "@warmy/generated-api-client";
-import { Cog, Plus, Shield } from "lucide-react";
+import { Cog, Plus } from "lucide-react";
 import { useState } from "react";
 
 import { Badge } from "@/components/ui/badge";
@@ -47,7 +47,6 @@ export function EnvironmentList({
   loading = false,
   onCreate,
   onDelete,
-  projectId,
 }: EnvironmentListProps) {
   if (loading) {
     return (

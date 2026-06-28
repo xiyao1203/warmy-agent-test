@@ -10,7 +10,7 @@ import {
   ShieldAlert,
   ShieldCheck,
 } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -34,22 +34,24 @@ export function SecurityScanPage({ projectId }: { projectId: string }) {
   const [scans, setScans] = useState<SecurityScanItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [triggering, setTriggering] = useState(false);
-  const [selectedScan, setSelectedScan] = useState<SecurityScanItem | null>(null);
-
-  const reload = useCallback(async () => {
-    setLoading(true);
-    try {
-      setScans(await listScans(projectId));
-    } catch {
-      /* empty */
-    } finally {
-      setLoading(false);
-    }
-  }, [projectId]);
+  const [selectedScan, setSelectedScan] = useState<SecurityScanItem | null>(
+    null,
+  );
 
   useEffect(() => {
-    void reload();
-  }, [reload]);
+    let active = true;
+    void listScans(projectId)
+      .then((items) => {
+        if (active) setScans(items);
+      })
+      .catch(() => undefined)
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, [projectId]);
 
   async function handleTrigger() {
     setTriggering(true);
@@ -123,7 +125,8 @@ export function SecurityScanPage({ projectId }: { projectId: string }) {
                   <div className="min-w-0 flex-1">
                     <p className="font-mono text-xs">{scan.id.slice(0, 12)}</p>
                     <p className="mt-0.5 text-xs text-[var(--text-muted)]">
-                      {scan.scan_type} · {new Date(scan.created_at).toLocaleString("zh-CN")}
+                      {scan.scan_type} ·{" "}
+                      {new Date(scan.created_at).toLocaleString("zh-CN")}
                     </p>
                   </div>
                   <Badge
@@ -137,7 +140,9 @@ export function SecurityScanPage({ projectId }: { projectId: string }) {
                   >
                     {scan.status}
                   </Badge>
-                  {scan.summary.injection != null || scan.summary.leak != null || scan.summary.jailbreak != null ? (
+                  {scan.summary.injection != null ||
+                  scan.summary.leak != null ||
+                  scan.summary.jailbreak != null ? (
                     <span className="text-xs text-[var(--text-muted)]">
                       {Object.entries(scan.summary)
                         .filter(([k]) => k !== "error")
@@ -246,11 +251,15 @@ function FindingCard({ finding }: { finding: Finding }) {
           <div className="mt-2 grid grid-cols-2 gap-2">
             <div>
               <p className="font-medium text-[var(--text)]">攻击向量</p>
-              <p className="mt-0.5 text-[var(--text-muted)]">{finding.vector}</p>
+              <p className="mt-0.5 text-[var(--text-muted)]">
+                {finding.vector}
+              </p>
             </div>
             <div>
               <p className="font-medium text-[var(--text)]">响应</p>
-              <p className="mt-0.5 text-[var(--text-muted)]">{finding.response}</p>
+              <p className="mt-0.5 text-[var(--text-muted)]">
+                {finding.response}
+              </p>
             </div>
           </div>
           <p className="mt-2">
