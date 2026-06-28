@@ -1,0 +1,86 @@
+# 测试报告生成模板
+# 用于在 CI/CD 中生成和发布测试报告
+
+name: Generate Test Report
+
+on:
+  workflow_call:
+    inputs:
+      run_id:
+        description: '测试运行 ID'
+        required: true
+        type: string
+      format:
+        description: '报告格式 (json|junit|html)'
+        required: false
+        type: string
+        default: 'junit'
+
+jobs:
+  generate-report:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: |
+          pip install uv
+          uv sync
+
+      - name: Generate Report
+        id: report
+        run: |
+          REPORT_FORMAT=${{ inputs.format }}
+          RUN_ID=${{ inputs.run_id }}
+          
+          # 调用 API 生成报告
+          curl -s "http://localhost:8000/api/v1/reports/${RUN_ID}?format=${REPORT_FORMAT}" \
+            -o "report.${REPORT_FORMAT}"
+          
+          echo "report_path=report.${REPORT_FORMAT}" >> $GITHUB_OUTPUT
+
+      - name: Upload Report Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-report-${{ inputs.format }}
+          path: ${{ steps.report.outputs.report_path }}
+
+      - name: Publish JUnit Results
+        if: inputs.format == 'junit'
+        uses: mikepenz/action-junit-report@v4
+        with:
+          report_paths: 'report.junit'
+          check_name: Test Results
+
+      - name: Comment PR
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const report = fs.readFileSync('report.json', 'utf8');
+            const data = JSON.parse(report);
+            
+            const body = `## Test Report
+            
+            | Metric | Value |
+            |--------|-------|
+            | Total | ${data.total_cases} |
+            | Passed | ${data.passed_cases} |
+            | Failed | ${data.failed_cases} |
+            | Pass Rate | ${(data.passed_cases / data.total_cases * 100).toFixed(1)}% |
+            
+            Generated at: ${data.generated_at}`;
+            
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: body
+            });
