@@ -131,13 +131,13 @@ export function EnvironmentList({
                   </TableCell>
                   <TableCell className="text-center">
                     {onDelete && (
-                      <button
+                      <Button
                         aria-label={`删除${template.name}`}
-                        className="text-sm text-[var(--danger)] hover:underline"
                         onClick={() => onDelete(template.id)}
+                        variant="danger"
                       >
                         删除
-                      </button>
+                      </Button>
                     )}
                   </TableCell>
                 </TableRow>
