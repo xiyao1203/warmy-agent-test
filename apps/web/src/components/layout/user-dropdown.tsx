@@ -1,6 +1,7 @@
 "use client";
 
 import { LogOut, Settings, User } from "lucide-react";
+import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 
 type UserDropdownProps = {
@@ -9,13 +10,20 @@ type UserDropdownProps = {
   onLogout: () => void;
 };
 
-export function UserDropdown({ displayName, email, onLogout }: UserDropdownProps) {
+export function UserDropdown({
+  displayName,
+  email,
+  onLogout,
+}: UserDropdownProps) {
   const [open, setOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
         setOpen(false);
       }
     }
@@ -43,34 +51,44 @@ export function UserDropdown({ displayName, email, onLogout }: UserDropdownProps
 
       {open && (
         <div
-          className="absolute right-0 top-full z-50 mt-1 min-w-[12rem] rounded-lg border border-[var(--border)] bg-[var(--surface)] py-1 shadow-lg"
+          className="absolute right-0 top-full z-50 mt-1 min-w-[14rem] rounded-lg border border-[var(--border)] bg-[var(--surface)] py-1 shadow-lg"
           role="menu"
         >
-          <div className="border-b border-[var(--border)] px-3 py-2">
-            <p className="text-sm font-medium">{displayName}</p>
-            <p className="text-xs text-[var(--text-muted)]">{email}</p>
+          <div className="border-b border-[var(--border)] px-4 py-3">
+            <p className="text-sm font-semibold">{displayName}</p>
+            <p className="mt-0.5 text-xs text-[var(--text-muted)]">{email}</p>
           </div>
-          <button
-            className="flex w-full items-center gap-2 px-3 py-2 text-sm text-[var(--text-muted)] transition-colors hover:bg-[var(--surface-subtle)] hover:text-[var(--text)]"
+          <Link
+            className="flex items-center gap-3 px-4 py-2.5 text-sm transition-colors hover:bg-[var(--surface-subtle)]"
+            href="/profile"
             onClick={() => setOpen(false)}
             role="menuitem"
-            type="button"
           >
-            <User className="size-4" />
-            个人资料
-          </button>
-          <button
-            className="flex w-full items-center gap-2 px-3 py-2 text-sm text-[var(--text-muted)] transition-colors hover:bg-[var(--surface-subtle)] hover:text-[var(--text)]"
+            <User className="size-4 text-[var(--text-muted)]" />
+            <div>
+              <p className="font-medium">个人资料</p>
+              <p className="text-xs text-[var(--text-muted)]">
+                管理您的个人信息
+              </p>
+            </div>
+          </Link>
+          <Link
+            className="flex items-center gap-3 px-4 py-2.5 text-sm transition-colors hover:bg-[var(--surface-subtle)]"
+            href="/settings"
             onClick={() => setOpen(false)}
             role="menuitem"
-            type="button"
           >
-            <Settings className="size-4" />
-            设置
-          </button>
+            <Settings className="size-4 text-[var(--text-muted)]" />
+            <div>
+              <p className="font-medium">设置</p>
+              <p className="text-xs text-[var(--text-muted)]">
+                偏好设置与账号安全
+              </p>
+            </div>
+          </Link>
           <div className="border-t border-[var(--border)]" />
           <button
-            className="flex w-full items-center gap-2 px-3 py-2 text-sm text-[var(--error)] transition-colors hover:bg-[var(--error-subtle)]"
+            className="flex w-full items-center gap-3 px-4 py-2.5 text-sm text-[var(--error)] transition-colors hover:bg-[var(--error-subtle)]"
             onClick={() => {
               setOpen(false);
               onLogout();
@@ -79,7 +97,12 @@ export function UserDropdown({ displayName, email, onLogout }: UserDropdownProps
             type="button"
           >
             <LogOut className="size-4" />
-            退出登录
+            <div>
+              <p className="font-medium">退出登录</p>
+              <p className="text-xs text-[var(--text-muted)]">
+                安全退出当前账号
+              </p>
+            </div>
           </button>
         </div>
       )}
