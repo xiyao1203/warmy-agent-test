@@ -18,6 +18,7 @@ import { Button } from "@/components/ui/button";
 
 import type { ArtifactItem } from "./api";
 import { artifactDownloadUrl, uploadArtifact } from "./api";
+import { ReportDownloadButton } from "./report-download-button";
 import { StatusBadge } from "./run-center";
 import { TraceTimeline, TraceTree, type TraceSpan } from "./trace-tree";
 
@@ -71,6 +72,7 @@ export function RunDetail({
         </div>
         <div className="flex items-center gap-2">
           <StatusBadge status={run.status} />
+          <ReportDownloadButton projectId={projectId} runId={run.id} />
           <Button
             disabled={!canCancel || cancelling}
             loading={cancelling}

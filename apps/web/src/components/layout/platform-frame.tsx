@@ -2,12 +2,14 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { usePathname, useRouter } from "next/navigation";
-import type { ReactNode } from "react";
+import { type ReactNode, useCallback, useEffect, useState } from "react";
 
 import { getCurrentUser } from "@/features/auth";
 import { listProjects } from "@/features/projects";
 
 import { AppShell } from "./app-shell";
+
+const PROJECT_STORAGE_KEY = "agenttest_current_project_id";
 
 export function PlatformFrame({ children }: { children: ReactNode }) {
   const pathname = usePathname();
@@ -18,7 +20,43 @@ export function PlatformFrame({ children }: { children: ReactNode }) {
     queryFn: listProjects,
     queryKey: ["projects"],
   });
-  const currentProjectId = pathname.match(/^\/projects\/([^/]+)/)?.[1];
+
+  // 从 URL 获取项目 ID
+  const urlProjectId = pathname.match(/^\/projects\/([^/]+)/)?.[1];
+
+  // 管理当前项目 ID（优先使用 URL，其次 localStorage，最后默认第一个）
+  const [storedProjectId, setStoredProjectId] = useState<string | undefined>(
+    () => {
+      if (typeof window !== "undefined") {
+        return localStorage.getItem(PROJECT_STORAGE_KEY) ?? undefined;
+      }
+      return undefined;
+    }
+  );
+
+  // URL 有项目 ID 时，同步到 localStorage
+  useEffect(() => {
+    if (urlProjectId) {
+      localStorage.setItem(PROJECT_STORAGE_KEY, urlProjectId);
+      setStoredProjectId(urlProjectId);
+    }
+  }, [urlProjectId]);
+
+  // 计算当前项目 ID
+  const projects = projectsQuery.data ?? [];
+  const currentProjectId =
+    urlProjectId ??
+    storedProjectId ??
+    (projects.length > 0 ? projects[0].id : undefined);
+
+  const handleProjectSelect = useCallback(
+    (projectId: string) => {
+      localStorage.setItem(PROJECT_STORAGE_KEY, projectId);
+      setStoredProjectId(projectId);
+      router.push(`/projects/${projectId}/overview`);
+    },
+    [router]
+  );
 
   if (userQuery.isPending || projectsQuery.isPending) {
     return (
@@ -50,10 +88,8 @@ export function PlatformFrame({ children }: { children: ReactNode }) {
   return (
     <AppShell
       currentProjectId={currentProjectId}
-      onProjectSelect={(projectId) =>
-        router.push(`/projects/${projectId}/overview`)
-      }
-      projects={projectsQuery.data}
+      onProjectSelect={handleProjectSelect}
+      projects={projects}
       user={userQuery.data}
     >
       {children}
