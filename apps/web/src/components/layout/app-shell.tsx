@@ -32,6 +32,7 @@ import { ProjectSwitcher } from "@/features/projects";
 import { Tooltip } from "@/components/uiverse";
 import { canManageUsers } from "@/lib/permissions";
 
+import { HelpDropdown } from "./help-dropdown";
 import { UserDropdown } from "./user-dropdown";
 
 type AppShellProps = {
@@ -86,15 +87,7 @@ export function AppShell({
           />
         </label>
         <div className="flex items-center justify-end gap-2">
-          <Tooltip content="帮助中心">
-            <button
-              aria-label="帮助"
-              className="grid size-8 place-items-center rounded-[var(--radius-sm)] text-[var(--text-muted)] transition-colors hover:bg-[var(--surface-subtle)] hover:text-[var(--text)]"
-              type="button"
-            >
-              <HelpCircle aria-hidden="true" className="size-4" />
-            </button>
-          </Tooltip>
+          <HelpDropdown />
           <Tooltip content="通知中心">
             <button
               aria-label="通知"
