@@ -8,6 +8,7 @@ export const DropdownMenuTrigger = DropdownMenuPrimitive.Trigger;
 
 export function DropdownMenuContent({
   className = "",
+  side = "bottom",
   sideOffset = 6,
   ...props
 }: ComponentProps<typeof DropdownMenuPrimitive.Content>) {
@@ -15,6 +16,7 @@ export function DropdownMenuContent({
     <DropdownMenuPrimitive.Portal>
       <DropdownMenuPrimitive.Content
         className={`z-50 min-w-40 rounded-[var(--radius-sm)] border border-[var(--border)] bg-[var(--surface)] p-1 shadow-[var(--shadow-overlay)] ${className}`}
+        side={side}
         sideOffset={sideOffset}
         {...props}
       />
