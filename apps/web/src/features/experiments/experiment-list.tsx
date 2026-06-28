@@ -181,6 +181,18 @@ function ExperimentCard({
             tone="neutral"
             value={`${summary.avg_duration_delta_ms ?? 0}ms`}
           />
+          <SummaryChip
+            icon={<Minus className="size-3.5" />}
+            label="P50耗时差"
+            tone="neutral"
+            value={`${summary.p50_duration_delta_ms ?? 0}ms`}
+          />
+          <SummaryChip
+            icon={<Minus className="size-3.5" />}
+            label="P95耗时差"
+            tone="neutral"
+            value={`${summary.p95_duration_delta_ms ?? 0}ms`}
+          />
         </div>
       ) : null}
       {(exp.result_json as Record<string, unknown>).case_diffs ? (
