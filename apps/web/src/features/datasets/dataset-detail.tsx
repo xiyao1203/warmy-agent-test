@@ -6,7 +6,7 @@ import type {
   DatasetVersionResponse,
   TestCaseResponse,
 } from "@warmy/generated-api-client";
-import { CheckSquare, Square, Trash2 } from "lucide-react";
+import { CheckSquare, Eye, Square, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useCallback, useMemo, useState } from "react";
 
@@ -24,6 +24,8 @@ import {
 } from "@/components/ui/table";
 
 import { ImportWizard } from "./import-wizard";
+import { TestCaseDetail } from "./test-case-detail";
+import { TestCaseEditor } from "./test-case-editor";
 
 type DatasetDetailProps = {
   dataset: DatasetResponse;
@@ -43,6 +45,7 @@ export function DatasetDetail({
   dataset,
   loading = false,
   onDeleteCases,
+  onCreateCase,
   onRefresh,
   projectId,
   versions = [],
@@ -50,6 +53,8 @@ export function DatasetDetail({
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [search, setSearch] = useState("");
   const [deleting, setDeleting] = useState(false);
+  const [viewingCase, setViewingCase] = useState<TestCaseResponse | null>(null);
+  const [editingCase, setEditingCase] = useState<TestCaseResponse | null>(null);
 
   const filteredCases = useMemo(() => {
     if (!search.trim()) return cases;
@@ -199,6 +204,7 @@ export function DatasetDetail({
                   <TableHead className="w-32 text-center">优先级</TableHead>
                   <TableHead className="w-32 text-center">风险等级</TableHead>
                   <TableHead className="w-40 text-center">执行模式</TableHead>
+                  <TableHead className="w-20 text-center">操作</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -245,6 +251,17 @@ export function DatasetDetail({
                     <TableCell className="text-center text-sm text-[var(--text-muted)]">
                       {c.execution_mode === "api" ? "API" : "浏览器"}
                     </TableCell>
+                    <TableCell className="text-center">
+                      <div className="flex justify-center gap-1">
+                        <Button
+                          aria-label="查看详情"
+                          onClick={() => setViewingCase(c)}
+                          variant="ghost"
+                        >
+                          <Eye className="size-4" />
+                        </Button>
+                      </div>
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
@@ -252,6 +269,15 @@ export function DatasetDetail({
           </div>
         )}
       </section>
+
+      {/* ── 详情抽屉 ────────────────────────────────────────────────────── */}
+      {viewingCase && (
+        <TestCaseDetail
+          caseItem={viewingCase}
+          open={true}
+          onClose={() => setViewingCase(null)}
+        />
+      )}
     </div>
   );
 }
