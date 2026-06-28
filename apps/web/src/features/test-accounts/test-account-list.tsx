@@ -1,0 +1,325 @@
+"use client";
+
+import { Eye, EyeOff, Key, Plus, Shield, Trash2, User } from "lucide-react";
+import { useState } from "react";
+
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { EmptyState } from "@/components/ui/empty-state";
+import { Input } from "@/components/ui/input";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+
+type TestAccount = {
+  id: string;
+  name: string;
+  username: string;
+  credential_masked: string;
+  account_type: string;
+  enabled: boolean;
+  description?: string | null;
+  created_at: string;
+};
+
+type TestAccountListProps = {
+  accounts?: TestAccount[];
+  loading?: boolean;
+  onCreate?: (payload: {
+    name: string;
+    username: string;
+    credential_encrypted: string;
+    account_type: string;
+    description?: string;
+  }) => Promise<unknown>;
+  onDelete?: (accountId: string) => Promise<unknown>;
+  onToggleEnabled?: (accountId: string, enabled: boolean) => Promise<unknown>;
+  projectId: string;
+};
+
+const typeLabels: Record<string, string> = {
+  user: "普通用户",
+  admin: "管理员",
+  service: "服务账号",
+  api: "API 账号",
+};
+
+export function TestAccountList({
+  accounts = [],
+  loading = false,
+  onCreate,
+  onDelete,
+  onToggleEnabled,
+  projectId,
+}: TestAccountListProps) {
+  const [showCreate, setShowCreate] = useState(false);
+
+  if (loading) {
+    return (
+      <div className="grid min-h-[200px] place-items-center text-sm">
+        <p className="text-[var(--text-muted)]">正在加载测试账号…</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="mt-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-lg font-semibold">测试账号</h2>
+          <p className="mt-1 text-sm text-[var(--text-muted)]">
+            管理用于测试的账号凭证，凭证已加密存储。
+          </p>
+        </div>
+        {onCreate && (
+          <CreateAccountDialog onCreate={onCreate} />
+        )}
+      </div>
+
+      <section className="mt-4 overflow-hidden rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--surface)]">
+        {!accounts.length ? (
+          <EmptyState
+            description="创建测试账号后，可在测试计划中引用。"
+            title="暂无测试账号"
+          />
+        ) : (
+          <Table>
+            <TableHeader className="bg-[var(--surface-subtle)]">
+              <TableRow>
+                <TableHead>账号信息</TableHead>
+                <TableHead className="w-32 text-center">类型</TableHead>
+                <TableHead className="w-40 text-center">凭证（掩码）</TableHead>
+                <TableHead className="w-24 text-center">状态</TableHead>
+                <TableHead className="w-32 text-center">操作</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {accounts.map((account) => (
+                <TableRow
+                  className="transition-colors hover:bg-[var(--surface-subtle)]"
+                  key={account.id}
+                >
+                  <TableCell>
+                    <div className="flex items-center gap-3">
+                      <span className="grid size-8 shrink-0 place-items-center rounded-[var(--radius-sm)] bg-[var(--surface-subtle)]">
+                        <User aria-hidden="true" className="size-4" />
+                      </span>
+                      <div>
+                        <p className="font-medium">{account.name}</p>
+                        <p className="mt-0.5 text-xs text-[var(--text-muted)]">
+                          {account.username}
+                        </p>
+                      </div>
+                    </div>
+                  </TableCell>
+                  <TableCell className="text-center">
+                    <Badge>{typeLabels[account.account_type] ?? account.account_type}</Badge>
+                  </TableCell>
+                  <TableCell className="text-center">
+                    <code className="rounded bg-[var(--surface-subtle)] px-2 py-1 text-xs">
+                      {account.credential_masked}
+                    </code>
+                  </TableCell>
+                  <TableCell className="text-center">
+                    <Badge tone={account.enabled ? "success" : "neutral"}>
+                      {account.enabled ? "启用" : "禁用"}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="text-center">
+                    <div className="flex justify-center gap-1">
+                      {onToggleEnabled && (
+                        <Button
+                          aria-label={account.enabled ? "禁用" : "启用"}
+                          onClick={() => onToggleEnabled(account.id, !account.enabled)}
+                          variant="ghost"
+                        >
+                          {account.enabled ? (
+                            <EyeOff className="size-4" />
+                          ) : (
+                            <Eye className="size-4" />
+                          )}
+                        </Button>
+                      )}
+                      {onDelete && (
+                        <Button
+                          aria-label={`删除${account.name}`}
+                          onClick={() => onDelete(account.id)}
+                          variant="ghost"
+                        >
+                          <Trash2 className="size-4 text-[var(--danger)]" />
+                        </Button>
+                      )}
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        )}
+      </section>
+    </div>
+  );
+}
+
+/* ── 创建账号对话框 ────────────────────────────────────────────────── */
+
+function CreateAccountDialog({
+  onCreate,
+}: {
+  onCreate: (payload: {
+    name: string;
+    username: string;
+    credential_encrypted: string;
+    account_type: string;
+    description?: string;
+  }) => Promise<unknown>;
+}) {
+  const [open, setOpen] = useState(false);
+  const [name, setName] = useState("");
+  const [username, setUsername] = useState("");
+  const [credential, setCredential] = useState("");
+  const [accountType, setAccountType] = useState("user");
+  const [description, setDescription] = useState("");
+  const [showCredential, setShowCredential] = useState(false);
+  const [error, setError] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+
+  async function submit() {
+    if (!name.trim() || !username.trim() || !credential.trim()) {
+      setError("请填写必填字段");
+      return;
+    }
+    setSubmitting(true);
+    try {
+      await onCreate({
+        name: name.trim(),
+        username: username.trim(),
+        credential_encrypted: credential.trim(),
+        account_type: accountType,
+        description: description.trim() || undefined,
+      });
+      setOpen(false);
+      resetForm();
+    } catch {
+      setError("创建失败，请检查输入后重试。");
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  function resetForm() {
+    setName("");
+    setUsername("");
+    setCredential("");
+    setAccountType("user");
+    setDescription("");
+    setError("");
+    setShowCredential(false);
+  }
+
+  return (
+    <Dialog
+      onOpenChange={(open) => {
+        setOpen(open);
+        if (!open) resetForm();
+      }}
+      open={open}
+    >
+      <DialogTrigger asChild>
+        <Button variant="primary">
+          <Plus aria-hidden="true" className="mr-1.5 size-4" />
+          创建测试账号
+        </Button>
+      </DialogTrigger>
+      <DialogContent>
+        <DialogTitle>创建测试账号</DialogTitle>
+        <DialogDescription>
+          凭证将加密存储，API 响应中仅显示掩码。
+        </DialogDescription>
+        <div className="mt-5 space-y-4">
+          <label className="block text-sm font-medium">
+            账号名称 <span className="text-[var(--danger)]">*</span>
+            <Input
+              className="mt-1.5"
+              onChange={(e) => setName(e.target.value)}
+              placeholder="如：测试管理员"
+              value={name}
+            />
+          </label>
+          <label className="block text-sm font-medium">
+            用户名 <span className="text-[var(--danger)]">*</span>
+            <Input
+              className="mt-1.5"
+              onChange={(e) => setUsername(e.target.value)}
+              placeholder="如：test_admin"
+              value={username}
+            />
+          </label>
+          <label className="block text-sm font-medium">
+            凭证（密码/Token） <span className="text-[var(--danger)]">*</span>
+            <div className="relative mt-1.5">
+              <Input
+                onChange={(e) => setCredential(e.target.value)}
+                placeholder="输入凭证"
+                type={showCredential ? "text" : "password"}
+                value={credential}
+              />
+              <button
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)]"
+                onClick={() => setShowCredential(!showCredential)}
+                type="button"
+              >
+                {showCredential ? (
+                  <EyeOff className="size-4" />
+                ) : (
+                  <Eye className="size-4" />
+                )}
+              </button>
+            </div>
+          </label>
+          <label className="block text-sm font-medium">
+            账号类型
+            <select
+              className="mt-1.5 h-9 w-full rounded-[var(--radius-sm)] border border-[var(--border)] bg-[var(--surface)] px-3"
+              onChange={(e) => setAccountType(e.target.value)}
+              value={accountType}
+            >
+              <option value="user">普通用户</option>
+              <option value="admin">管理员</option>
+              <option value="service">服务账号</option>
+              <option value="api">API 账号</option>
+            </select>
+          </label>
+          <label className="block text-sm font-medium">
+            描述
+            <Input
+              className="mt-1.5"
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="可选描述"
+              value={description}
+            />
+          </label>
+          {error && <p className="text-sm text-[var(--danger)]">{error}</p>}
+          <div className="flex justify-end gap-2 border-t border-[var(--border)] pt-4">
+            <Button onClick={() => setOpen(false)}>取消</Button>
+            <Button disabled={submitting} loading={submitting} onClick={submit} variant="primary">
+              创建账号
+            </Button>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
