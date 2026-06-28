@@ -17,6 +17,7 @@ import {
   DialogDescription,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Tooltip } from "@/components/uiverse";
 
 import { dryRunTestPlanVersion } from "./api";
 import {
@@ -120,30 +121,36 @@ export function TestPlanDetail({
               </div>
               {version.status === "draft" ? (
                 <div className="flex gap-2">
-                  <TestPlanVersionDialog
-                    agentVersions={agentVersions}
-                    datasetVersions={datasetVersions}
-                    environments={environments}
-                    onSubmit={(payload) => onUpdateVersion(version.id, payload)}
-                    triggerLabel={`编辑版本 v${version.version_number}`}
-                    version={version}
-                  />
-                  <Button
-                    aria-label={`试运行版本 v${version.version_number}`}
-                    disabled={dryRunLoading}
-                    onClick={() => handleDryRun(version.id)}
-                    variant="secondary"
-                  >
-                    <PlayCircle aria-hidden="true" className="size-4" />
-                    试运行
-                  </Button>
-                  <Button
-                    aria-label={`发布版本 v${version.version_number}`}
-                    onClick={() => setPublishVersion(version)}
-                    variant="primary"
-                  >
-                    发布
-                  </Button>
+                  <Tooltip content="编辑此草稿版本的配置">
+                    <TestPlanVersionDialog
+                      agentVersions={agentVersions}
+                      datasetVersions={datasetVersions}
+                      environments={environments}
+                      onSubmit={(payload) => onUpdateVersion(version.id, payload)}
+                      triggerLabel={`编辑版本 v${version.version_number}`}
+                      version={version}
+                    />
+                  </Tooltip>
+                  <Tooltip content="执行试运行，验证配置是否正确">
+                    <Button
+                      aria-label={`试运行版本 v${version.version_number}`}
+                      disabled={dryRunLoading}
+                      onClick={() => handleDryRun(version.id)}
+                      variant="secondary"
+                    >
+                      <PlayCircle aria-hidden="true" className="size-4" />
+                      试运行
+                    </Button>
+                  </Tooltip>
+                  <Tooltip content="发布此版本，发布后将锁定不可修改">
+                    <Button
+                      aria-label={`发布版本 v${version.version_number}`}
+                      onClick={() => setPublishVersion(version)}
+                      variant="primary"
+                    >
+                      发布
+                    </Button>
+                  </Tooltip>
                 </div>
               ) : null}
             </div>

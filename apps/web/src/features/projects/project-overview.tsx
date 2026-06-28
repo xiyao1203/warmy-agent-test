@@ -16,6 +16,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Skeleton, SkeletonText } from "@/components/uiverse";
+import { Tooltip } from "@/components/uiverse";
 
 type ProjectOverviewProps = {
   assetSummary?: {
@@ -46,7 +48,7 @@ export function ProjectOverview({
   user,
 }: ProjectOverviewProps) {
   if (loading) {
-    return <StatusPanel title="正在加载项目概览…" />;
+    return <LoadingSkeleton />;
   }
 
   if (error === "not-found") {
@@ -98,13 +100,25 @@ export function ProjectOverview({
       </header>
 
       <section className="grid grid-cols-3 border-b border-[var(--border)] py-5 max-[900px]:grid-cols-1 max-[900px]:gap-4">
-        <Metric icon={<Folder className="size-4" />} label="项目状态">
+        <Metric
+          icon={<Folder className="size-4" />}
+          label="项目状态"
+          tooltip="项目当前状态：活跃或已归档"
+        >
           {project.archived ? "已归档" : "活跃"}
         </Metric>
-        <Metric icon={<Users className="size-4" />} label="项目成员">
+        <Metric
+          icon={<Users className="size-4" />}
+          label="项目成员"
+          tooltip="项目成员数量和列表"
+        >
           {members.length} 位成员
         </Metric>
-        <Metric icon={<Archive className="size-4" />} label="测试资产">
+        <Metric
+          icon={<Archive className="size-4" />}
+          label="测试资产"
+          tooltip="项目中的 Agents、数据集和测试计划数量"
+        >
           <span className="flex flex-wrap gap-x-3 gap-y-1">
             <span>{assetSummary.agents} Agents</span>
             <span>{assetSummary.datasets} 数据集</span>
@@ -178,14 +192,18 @@ function Metric({
   children,
   icon,
   label,
+  tooltip,
 }: {
   children: ReactNode;
   icon: ReactNode;
   label: string;
+  tooltip?: string;
 }) {
   return (
     <div className="flex items-start gap-3 border-r border-[var(--border)] px-5 first:pl-0 last:border-r-0 max-[900px]:border-r-0 max-[900px]:px-0">
-      <span className="mt-0.5 text-[var(--text-muted)]">{icon}</span>
+      <Tooltip content={tooltip || label}>
+        <span className="mt-0.5 text-[var(--text-muted)]">{icon}</span>
+      </Tooltip>
       <div>
         <p className="text-xs text-[var(--text-muted)]">{label}</p>
         <p className="mt-1 text-sm font-medium">{children}</p>
@@ -210,6 +228,70 @@ function StatusPanel({
             {description}
           </p>
         ) : null}
+      </div>
+    </div>
+  );
+}
+
+function LoadingSkeleton() {
+  return (
+    <div className="mx-auto max-w-[1180px] px-6 py-6">
+      {/* Header skeleton */}
+      <div className="flex flex-wrap items-start justify-between gap-4 border-b border-[var(--border)] pb-5">
+        <div>
+          <Skeleton className="h-8 w-48" />
+          <Skeleton className="mt-2 h-4 w-32" />
+        </div>
+        <div className="text-right">
+          <Skeleton className="h-3 w-16" />
+          <Skeleton className="mt-1 h-4 w-12" />
+        </div>
+      </div>
+
+      {/* Metrics skeleton */}
+      <div className="grid grid-cols-3 border-b border-[var(--border)] py-5 max-[900px]:grid-cols-1 max-[900px]:gap-4">
+        <div className="flex items-start gap-3 border-r border-[var(--border)] px-5 first:pl-0 last:border-r-0 max-[900px]:border-r-0 max-[900px]:px-0">
+          <Skeleton className="size-4" />
+          <div>
+            <Skeleton className="h-3 w-12" />
+            <Skeleton className="mt-1 h-4 w-16" />
+          </div>
+        </div>
+        <div className="flex items-start gap-3 border-r border-[var(--border)] px-5 max-[900px]:border-r-0 max-[900px]:px-0">
+          <Skeleton className="size-4" />
+          <div>
+            <Skeleton className="h-3 w-12" />
+            <Skeleton className="mt-1 h-4 w-20" />
+          </div>
+        </div>
+        <div className="flex items-start gap-3 px-5 max-[900px]:px-0">
+          <Skeleton className="size-4" />
+          <div>
+            <Skeleton className="h-3 w-12" />
+            <Skeleton className="mt-1 h-4 w-40" />
+          </div>
+        </div>
+      </div>
+
+      {/* Content skeleton */}
+      <div className="grid grid-cols-[minmax(0,1.6fr)_minmax(18rem,0.7fr)] gap-6 py-6 max-[1000px]:grid-cols-1">
+        <div className="overflow-hidden rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--surface)]">
+          <div className="border-b border-[var(--border)] px-4 py-3">
+            <Skeleton className="h-4 w-20" />
+            <Skeleton className="mt-1 h-3 w-48" />
+          </div>
+          <div className="p-4">
+            <SkeletonText lines={3} />
+          </div>
+        </div>
+        <div className="rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--surface)]">
+          <div className="border-b border-[var(--border)] px-4 py-3">
+            <Skeleton className="h-4 w-20" />
+          </div>
+          <div className="p-4">
+            <SkeletonText lines={2} />
+          </div>
+        </div>
       </div>
     </div>
   );
