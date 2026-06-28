@@ -19,3 +19,8 @@ export { Spinner } from "./loaders/spinner";
 export { StatusIndicator } from "./feedback/status-indicator";
 export { Toast, useToast } from "./feedback/toast";
 export { Tooltip } from "./feedback/tooltip";
+export { TypingIndicator } from "./feedback/typing-indicator";
+
+// Chat
+export { ChatEmptyState } from "./chat/empty-state";
+export { MessageBubble } from "./chat/message-bubble";
