@@ -30,7 +30,7 @@ function renderWithQueryClient(ui: React.ReactElement) {
   });
 
   return render(
-    <QueryClientProvider client={queryClient}>{ui}</QueryClientProvider>
+    <QueryClientProvider client={queryClient}>{ui}</QueryClientProvider>,
   );
 }
 
@@ -45,24 +45,23 @@ describe("account settings sections", () => {
 
     expect(await screen.findByRole("button", { name: "深色" })).toHaveAttribute(
       "aria-pressed",
-      "true"
+      "true",
     );
     expect(screen.getByRole("button", { name: "English" })).toHaveAttribute(
       "aria-pressed",
-      "true"
+      "true",
     );
   });
 
   it("preserves accessible notification switch states", async () => {
     renderWithQueryClient(<NotificationsSection />);
 
-    expect(await screen.findByRole("switch", { name: "邮件通知" })).toHaveAttribute(
-      "aria-checked",
-      "false"
-    );
+    expect(
+      await screen.findByRole("switch", { name: "邮件通知" }),
+    ).toHaveAttribute("aria-checked", "false");
     expect(screen.getByRole("switch", { name: "推送通知" })).toHaveAttribute(
       "aria-checked",
-      "true"
+      "true",
     );
   });
 
@@ -71,7 +70,7 @@ describe("account settings sections", () => {
 
     expect(screen.getByText("暂未开放")).toBeInTheDocument();
     expect(
-      screen.queryByRole("button", { name: "删除账户" })
+      screen.queryByRole("button", { name: "删除账户" }),
     ).not.toBeInTheDocument();
   });
 });

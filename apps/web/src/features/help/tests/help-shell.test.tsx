@@ -28,16 +28,16 @@ describe("HelpShell", () => {
     render(
       <HelpShell>
         <p>教程内容</p>
-      </HelpShell>
+      </HelpShell>,
     );
 
     expect(screen.getByRole("link", { name: "返回应用" })).toHaveAttribute(
       "href",
-      "/projects"
+      "/projects",
     );
     expect(screen.getByRole("link", { name: "提交反馈" })).toHaveAttribute(
       "href",
-      "/feedback"
+      "/feedback",
     );
     expect(screen.getByText("教程内容")).toBeInTheDocument();
 
@@ -45,7 +45,7 @@ describe("HelpShell", () => {
       name: "帮助中心目录",
     });
     expect(
-      within(desktopNavigation).getByRole("link", { name: "教程" })
+      within(desktopNavigation).getByRole("link", { name: "教程" }),
     ).toHaveAttribute("aria-current", "page");
     expect(within(desktopNavigation).getAllByRole("link")).toHaveLength(6);
   });

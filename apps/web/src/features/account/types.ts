@@ -41,14 +41,11 @@ export const accountSections: ReadonlyArray<AccountNavItem> = [
 ];
 
 export function normalizeAccountSection(
-  value: string | null | undefined
+  value: string | null | undefined,
 ): AccountSection {
   return accountSections.some((section) => section.id === value)
     ? (value as AccountSection)
     : "profile";
 }
 
-export type EditableProfile = Pick<
-  UserResponse,
-  "display_name" | "email"
->;
+export type EditableProfile = Pick<UserResponse, "display_name" | "email">;

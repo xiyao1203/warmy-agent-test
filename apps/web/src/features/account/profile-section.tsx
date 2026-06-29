@@ -155,7 +155,11 @@ export function ProfileSection() {
             </p>
           </div>
           {!isEditing && (
-            <Button className="gap-2" onClick={startEditing} variant="secondary">
+            <Button
+              className="gap-2"
+              onClick={startEditing}
+              variant="secondary"
+            >
               <Edit2 className="size-4" />
               编辑资料
             </Button>
@@ -173,7 +177,10 @@ export function ProfileSection() {
               </div>
             )}
             <div>
-              <label className="mb-1.5 block text-sm font-medium" htmlFor="display_name">
+              <label
+                className="mb-1.5 block text-sm font-medium"
+                htmlFor="display_name"
+              >
                 显示名称
               </label>
               <div className="relative">
@@ -189,7 +196,10 @@ export function ProfileSection() {
               </div>
             </div>
             <div>
-              <label className="mb-1.5 block text-sm font-medium" htmlFor="email">
+              <label
+                className="mb-1.5 block text-sm font-medium"
+                htmlFor="email"
+              >
                 邮箱地址
               </label>
               <div className="relative">
@@ -206,7 +216,11 @@ export function ProfileSection() {
               </div>
             </div>
             <div className="flex flex-wrap gap-2 pt-1">
-              <Button className="gap-2" disabled={mutation.isPending} type="submit">
+              <Button
+                className="gap-2"
+                disabled={mutation.isPending}
+                type="submit"
+              >
                 <Save className="size-4" />
                 {mutation.isPending ? "保存中..." : "保存资料"}
               </Button>

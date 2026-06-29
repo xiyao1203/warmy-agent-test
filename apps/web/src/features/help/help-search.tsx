@@ -25,7 +25,7 @@ export function HelpSearch({ topics }: HelpSearchProps) {
         (topic) =>
           topic.title.toLocaleLowerCase().includes(normalizedQuery) ||
           topic.description.toLocaleLowerCase().includes(normalizedQuery) ||
-          topic.category.toLocaleLowerCase().includes(normalizedQuery)
+          topic.category.toLocaleLowerCase().includes(normalizedQuery),
       )
     : topics;
 
@@ -52,10 +52,7 @@ export function HelpSearch({ topics }: HelpSearchProps) {
       </div>
 
       {normalizedQuery && (
-        <p
-          aria-live="polite"
-          className="text-xs text-[var(--text-muted)]"
-        >
+        <p aria-live="polite" className="text-xs text-[var(--text-muted)]">
           找到 {filteredTopics.length} 条结果
         </p>
       )}
@@ -76,7 +73,10 @@ export function HelpSearch({ topics }: HelpSearchProps) {
             <span aria-hidden="true" className="text-[var(--border-strong)]">
               ·
             </span>
-            <Link className="text-[var(--primary)] hover:underline" href="/feedback">
+            <Link
+              className="text-[var(--primary)] hover:underline"
+              href="/feedback"
+            >
               提交反馈
             </Link>
           </div>

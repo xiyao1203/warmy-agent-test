@@ -30,7 +30,7 @@ function renderProfile() {
   return render(
     <QueryClientProvider client={queryClient}>
       <ProfileSection />
-    </QueryClientProvider>
+    </QueryClientProvider>,
   );
 }
 
@@ -45,13 +45,13 @@ describe("ProfileSection", () => {
     renderProfile();
 
     expect(
-      await screen.findByRole("heading", { name: "测试用户" })
+      await screen.findByRole("heading", { name: "测试用户" }),
     ).toBeInTheDocument();
     expect(screen.getAllByText("tester@example.com").length).toBeGreaterThan(0);
     expect(screen.getAllByText("开发").length).toBeGreaterThan(0);
     expect(screen.getAllByText("正常").length).toBeGreaterThan(0);
     expect(
-      screen.getByRole("button", { name: "编辑资料" })
+      screen.getByRole("button", { name: "编辑资料" }),
     ).toBeInTheDocument();
   });
 
@@ -81,7 +81,7 @@ describe("ProfileSection", () => {
     fireEvent.click(screen.getByRole("button", { name: "保存资料" }));
 
     expect(await screen.findByRole("alert")).toHaveTextContent(
-      "保存失败，请重试"
+      "保存失败，请重试",
     );
     fireEvent.click(screen.getByRole("button", { name: "保存资料" }));
 
@@ -93,7 +93,7 @@ describe("ProfileSection", () => {
         display_name: "新名称",
         email: "tester@example.com",
       },
-      expect.anything()
+      expect.anything(),
     );
   });
 });

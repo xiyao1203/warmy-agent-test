@@ -2,13 +2,7 @@
 
 import { useState, type FormEvent } from "react";
 import { useMutation } from "@tanstack/react-query";
-import {
-  Lock,
-  Shield,
-  Eye,
-  EyeOff,
-  Save,
-} from "lucide-react";
+import { Lock, Shield, Eye, EyeOff, Save } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -175,11 +169,7 @@ export function SecuritySection() {
             />
           </div>
 
-          <Button
-            className="gap-2"
-            disabled={mutation.isPending}
-            type="submit"
-          >
+          <Button className="gap-2" disabled={mutation.isPending} type="submit">
             <Save className="size-4" />
             {mutation.isPending ? "修改中..." : "修改密码"}
           </Button>

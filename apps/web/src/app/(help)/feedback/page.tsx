@@ -14,7 +14,9 @@ export default function FeedbackPage() {
             <MessageSquare className="size-4" />
           </span>
           <div>
-            <h1 className="text-2xl font-semibold tracking-tight">反馈与建议</h1>
+            <h1 className="text-2xl font-semibold tracking-tight">
+              反馈与建议
+            </h1>
             <p className="mt-2 text-sm leading-6 text-[var(--text-muted)]">
               报告问题时请说明发生场景、预期结果和实际表现，帮助我们更快定位。
             </p>

@@ -3,17 +3,45 @@ import { describe, expect, it, vi } from "vitest";
 
 // Mock next/link
 vi.mock("next/link", () => ({
-  default: ({ children, href, ...props }: { children: React.ReactNode; href: string; [key: string]: unknown }) => (
-    <a href={href} {...props}>{children}</a>
+  default: ({
+    children,
+    href,
+    ...props
+  }: {
+    children: React.ReactNode;
+    href: string;
+    [key: string]: unknown;
+  }) => (
+    <a href={href} {...props}>
+      {children}
+    </a>
   ),
 }));
 
 import { HelpSearch, type HelpTopic } from "../help-search";
 
 const topics: HelpTopic[] = [
-  { id: "1", title: "Agent 管理", description: "创建和管理测试 Agent", href: "#agents", category: "智能体" },
-  { id: "2", title: "数据集", description: "创建数据集和测试用例", href: "#datasets", category: "测试资产" },
-  { id: "3", title: "测试计划", description: "配置和运行测试计划", href: "#test-plans", category: "测试执行" },
+  {
+    id: "1",
+    title: "Agent 管理",
+    description: "创建和管理测试 Agent",
+    href: "#agents",
+    category: "智能体",
+  },
+  {
+    id: "2",
+    title: "数据集",
+    description: "创建数据集和测试用例",
+    href: "#datasets",
+    category: "测试资产",
+  },
+  {
+    id: "3",
+    title: "测试计划",
+    description: "配置和运行测试计划",
+    href: "#test-plans",
+    category: "测试执行",
+  },
 ];
 
 describe("HelpSearch", () => {
@@ -36,7 +64,7 @@ describe("HelpSearch", () => {
     expect(screen.queryByText("测试计划")).not.toBeInTheDocument();
     expect(screen.getByText("找到 1 条结果")).toBeInTheDocument();
     expect(
-      screen.getByRole("region", { name: "搜索结果" })
+      screen.getByRole("region", { name: "搜索结果" }),
     ).toBeInTheDocument();
   });
 
@@ -49,7 +77,7 @@ describe("HelpSearch", () => {
     expect(screen.getByText("没有找到相关内容")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "提交反馈" })).toHaveAttribute(
       "href",
-      "/feedback"
+      "/feedback",
     );
   });
 

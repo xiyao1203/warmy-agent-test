@@ -38,13 +38,17 @@ export default function ShortcutsPage() {
           键盘快捷键
         </h1>
         <p className="mt-2 text-sm leading-6 text-[var(--text-muted)]">
-          使用键盘完成常用导航和编辑操作。Windows 与 Linux 用户可将 ⌘ 替换为 Ctrl。
+          使用键盘完成常用导航和编辑操作。Windows 与 Linux 用户可将 ⌘ 替换为
+          Ctrl。
         </p>
       </header>
 
       <div className="space-y-6">
         {shortcutGroups.map((group) => (
-          <section aria-labelledby={`shortcut-${group.title}`} key={group.title}>
+          <section
+            aria-labelledby={`shortcut-${group.title}`}
+            key={group.title}
+          >
             <div className="mb-3 flex items-center gap-2">
               <Keyboard className="size-4 text-[var(--text-muted)]" />
               <h2

@@ -24,7 +24,7 @@ function NavigationLinks({ pathname }: { pathname: string }) {
           "flex shrink-0 items-center gap-2 rounded-[var(--radius-sm)] px-3 py-2 text-sm font-medium transition-colors",
           isActive
             ? "bg-[var(--surface-subtle)] text-[var(--text)]"
-            : "text-[var(--text-muted)] hover:bg-[var(--surface-subtle)] hover:text-[var(--text)]"
+            : "text-[var(--text-muted)] hover:bg-[var(--surface-subtle)] hover:text-[var(--text)]",
         )}
         href={href}
         key={href}
@@ -75,10 +75,7 @@ export function HelpShell({ children }: HelpShellProps) {
 
       <div className="mx-auto grid max-w-[1180px] grid-cols-1 lg:grid-cols-[12rem_minmax(0,1fr)]">
         <aside className="hidden border-r border-[var(--border)] px-4 py-8 lg:block">
-          <nav
-            aria-label="帮助中心目录"
-            className="sticky top-22 space-y-1"
-          >
+          <nav aria-label="帮助中心目录" className="sticky top-22 space-y-1">
             <NavigationLinks pathname={pathname} />
           </nav>
         </aside>

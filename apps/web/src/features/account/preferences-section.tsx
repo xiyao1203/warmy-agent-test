@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Monitor, Sun, Moon, Save, RotateCcw } from "lucide-react";
 
@@ -26,45 +26,40 @@ export function PreferencesSection() {
     queryFn: getUserSettings,
   });
 
-  const [theme, setTheme] = useState<string>("system");
-  const [language, setLanguage] = useState<string>("zh-CN");
-  const [hasChanges, setHasChanges] = useState(false);
-
-  useEffect(() => {
-    if (settings) {
-      setTheme(settings.theme);
-      setLanguage(settings.language);
-    }
-  }, [settings]);
+  const [themeDraft, setThemeDraft] = useState<
+    "system" | "light" | "dark" | null
+  >(null);
+  const [languageDraft, setLanguageDraft] = useState<"zh-CN" | "en" | null>(
+    null,
+  );
+  const theme = themeDraft ?? settings?.theme ?? "system";
+  const language = languageDraft ?? settings?.language ?? "zh-CN";
+  const hasChanges = themeDraft !== null || languageDraft !== null;
 
   const mutation = useMutation({
     mutationFn: updateUserSettings,
     onSuccess: (newSettings) => {
       queryClient.setQueryData(["userSettings"], newSettings);
-      setHasChanges(false);
+      setThemeDraft(null);
+      setLanguageDraft(null);
     },
   });
 
-  function handleThemeChange(newTheme: string) {
-    setTheme(newTheme);
-    setHasChanges(true);
+  function handleThemeChange(newTheme: "system" | "light" | "dark") {
+    setThemeDraft(newTheme);
   }
 
-  function handleLanguageChange(newLanguage: string) {
-    setLanguage(newLanguage);
-    setHasChanges(true);
+  function handleLanguageChange(newLanguage: "zh-CN" | "en") {
+    setLanguageDraft(newLanguage);
   }
 
   function handleReset() {
-    if (settings) {
-      setTheme(settings.theme);
-      setLanguage(settings.language);
-      setHasChanges(false);
-    }
+    setThemeDraft(null);
+    setLanguageDraft(null);
   }
 
   function handleSave() {
-    mutation.mutate({ theme: theme as "system" | "light" | "dark", language: language as "zh-CN" | "en" });
+    mutation.mutate({ theme, language });
   }
 
   if (isLoading) {

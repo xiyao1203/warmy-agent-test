@@ -2,12 +2,7 @@
 
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
-import {
-  User,
-  Settings,
-  Bell,
-  Shield,
-} from "lucide-react";
+import { User, Settings, Bell, Shield } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 import {
@@ -50,15 +45,13 @@ export function AccountCenter({ children }: AccountCenterProps) {
         >
           {accountSections.map((section) => (
             <Link
-              aria-current={
-                activeSection === section.id ? "page" : undefined
-              }
+              aria-current={activeSection === section.id ? "page" : undefined}
               key={section.id}
               className={cn(
                 "flex shrink-0 items-center gap-2 rounded-[var(--radius-sm)] px-3 py-2 text-sm font-medium transition-colors",
                 activeSection === section.id
                   ? "bg-[var(--surface-subtle)] text-[var(--text)]"
-                  : "text-[var(--text-muted)] hover:bg-[var(--surface-subtle)] hover:text-[var(--text)]"
+                  : "text-[var(--text-muted)] hover:bg-[var(--surface-subtle)] hover:text-[var(--text)]",
               )}
               href={section.href}
             >
@@ -72,15 +65,13 @@ export function AccountCenter({ children }: AccountCenterProps) {
           <nav className="sticky top-6 space-y-1" aria-label="账户设置导航">
             {accountSections.map((section) => (
               <Link
-                aria-current={
-                  activeSection === section.id ? "page" : undefined
-                }
+                aria-current={activeSection === section.id ? "page" : undefined}
                 key={section.id}
                 className={cn(
                   "flex items-start gap-3 rounded-[var(--radius-sm)] px-3 py-2.5 text-sm font-medium transition-colors",
                   activeSection === section.id
                     ? "bg-[var(--surface-subtle)] text-[var(--text)]"
-                    : "text-[var(--text-muted)] hover:bg-[var(--surface-subtle)] hover:text-[var(--text)]"
+                    : "text-[var(--text-muted)] hover:bg-[var(--surface-subtle)] hover:text-[var(--text)]",
                 )}
                 href={section.href}
               >

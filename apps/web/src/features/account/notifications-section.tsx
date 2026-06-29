@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Save } from "lucide-react";
 
@@ -57,34 +57,34 @@ export function NotificationsSection() {
     queryFn: getUserSettings,
   });
 
-  const [emailNotifications, setEmailNotifications] = useState(true);
-  const [pushNotifications, setPushNotifications] = useState(false);
-  const [testCompleteNotifications, setTestCompleteNotifications] =
-    useState(true);
-  const [hasChanges, setHasChanges] = useState(false);
-
-  useEffect(() => {
-    if (settings) {
-      setEmailNotifications(settings.email_notifications);
-      setPushNotifications(settings.push_notifications);
-      setTestCompleteNotifications(settings.test_complete_notifications);
-    }
-  }, [settings]);
+  const [emailDraft, setEmailDraft] = useState<boolean | null>(null);
+  const [pushDraft, setPushDraft] = useState<boolean | null>(null);
+  const [testCompleteDraft, setTestCompleteDraft] = useState<boolean | null>(
+    null,
+  );
+  const emailNotifications =
+    emailDraft ?? settings?.email_notifications ?? true;
+  const pushNotifications = pushDraft ?? settings?.push_notifications ?? false;
+  const testCompleteNotifications =
+    testCompleteDraft ?? settings?.test_complete_notifications ?? true;
+  const hasChanges =
+    emailDraft !== null || pushDraft !== null || testCompleteDraft !== null;
 
   const mutation = useMutation({
     mutationFn: updateUserSettings,
     onSuccess: (newSettings) => {
       queryClient.setQueryData(["userSettings"], newSettings);
-      setHasChanges(false);
+      setEmailDraft(null);
+      setPushDraft(null);
+      setTestCompleteDraft(null);
     },
   });
 
   function handleToggle(
-    setter: React.Dispatch<React.SetStateAction<boolean>>,
-    value: boolean
+    setter: React.Dispatch<React.SetStateAction<boolean | null>>,
+    value: boolean,
   ) {
     setter(value);
-    setHasChanges(true);
   }
 
   function handleSave() {
@@ -121,21 +121,19 @@ export function NotificationsSection() {
             description="接收测试结果、系统更新等邮件通知"
             enabled={emailNotifications}
             label="邮件通知"
-            onChange={(value) => handleToggle(setEmailNotifications, value)}
+            onChange={(value) => handleToggle(setEmailDraft, value)}
           />
           <NotificationToggle
             description="接收浏览器推送通知"
             enabled={pushNotifications}
             label="推送通知"
-            onChange={(value) => handleToggle(setPushNotifications, value)}
+            onChange={(value) => handleToggle(setPushDraft, value)}
           />
           <NotificationToggle
             description="测试计划执行完成后通知"
             enabled={testCompleteNotifications}
             label="测试完成通知"
-            onChange={(value) =>
-              handleToggle(setTestCompleteNotifications, value)
-            }
+            onChange={(value) => handleToggle(setTestCompleteDraft, value)}
           />
         </div>
       </section>

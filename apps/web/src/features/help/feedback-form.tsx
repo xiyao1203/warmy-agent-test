@@ -143,13 +143,13 @@ export function FeedbackForm() {
         </div>
       )}
 
-      <Button
-        className="gap-2"
-        disabled={mutation.isPending}
-        type="submit"
-      >
+      <Button className="gap-2" disabled={mutation.isPending} type="submit">
         <Send className="size-4" />
-        {mutation.isPending ? "提交中..." : mutation.isError ? "重新提交" : "提交反馈"}
+        {mutation.isPending
+          ? "提交中..."
+          : mutation.isError
+            ? "重新提交"
+            : "提交反馈"}
       </Button>
     </form>
   );

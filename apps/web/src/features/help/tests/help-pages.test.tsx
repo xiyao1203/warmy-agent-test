@@ -27,9 +27,11 @@ describe("help content pages", () => {
     render(<DocsPage />);
 
     expect(screen.getAllByRole("heading", { level: 1 })).toHaveLength(1);
-    expect(screen.getByRole("heading", { name: "帮助中心" })).toBeInTheDocument();
     expect(
-      screen.queryByRole("link", { name: "返回应用" })
+      screen.getByRole("heading", { name: "帮助中心" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("link", { name: "返回应用" }),
     ).not.toBeInTheDocument();
     expect(document.querySelector('a[href^="mailto:"]')).toBeNull();
     expect(screen.getByRole("searchbox")).toBeInTheDocument();
@@ -40,7 +42,7 @@ describe("help content pages", () => {
 
     expect(screen.getAllByRole("heading", { level: 1 })).toHaveLength(1);
     expect(
-      screen.queryByRole("link", { name: "返回应用" })
+      screen.queryByRole("link", { name: "返回应用" }),
     ).not.toBeInTheDocument();
     expect(screen.getAllByText("阅读指南")).toHaveLength(6);
     expect(screen.queryByText("🎬")).not.toBeInTheDocument();
@@ -51,9 +53,11 @@ describe("help content pages", () => {
 
     expect(screen.getAllByRole("heading", { level: 1 })).toHaveLength(1);
     expect(
-      screen.queryByRole("link", { name: "返回应用" })
+      screen.queryByRole("link", { name: "返回应用" }),
     ).not.toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "先定义测试目标" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: "先定义测试目标" }),
+    ).toBeInTheDocument();
   });
 
   it("renders shortcut groups with semantic keyboard keys", () => {
@@ -61,7 +65,7 @@ describe("help content pages", () => {
 
     expect(screen.getAllByRole("heading", { level: 1 })).toHaveLength(1);
     expect(
-      screen.queryByRole("link", { name: "返回应用" })
+      screen.queryByRole("link", { name: "返回应用" }),
     ).not.toBeInTheDocument();
     expect(container.querySelectorAll("kbd").length).toBeGreaterThan(0);
   });

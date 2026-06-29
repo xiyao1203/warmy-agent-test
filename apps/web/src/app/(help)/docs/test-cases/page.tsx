@@ -2,19 +2,23 @@ import { CheckCircle2, FileText, Lightbulb } from "lucide-react";
 
 const structureSteps = [
   {
-    description: "说明这条用例要验证的能力、风险或业务结果，避免一条用例覆盖多个互不相关的目标。",
+    description:
+      "说明这条用例要验证的能力、风险或业务结果，避免一条用例覆盖多个互不相关的目标。",
     title: "先定义测试目标",
   },
   {
-    description: "列出执行前必须存在的版本、环境、数据与权限条件，确保用例能够独立重放。",
+    description:
+      "列出执行前必须存在的版本、环境、数据与权限条件，确保用例能够独立重放。",
     title: "写清前置条件",
   },
   {
-    description: "提供 Agent 输入、工具约束和必要上下文，不用“正常处理”等模糊表达代替可验证要求。",
+    description:
+      "提供 Agent 输入、工具约束和必要上下文，不用“正常处理”等模糊表达代替可验证要求。",
     title: "组织输入与步骤",
   },
   {
-    description: "同时描述最终输出、关键工具调用、业务状态和安全边界，便于配置确定性断言与评分器。",
+    description:
+      "同时描述最终输出、关键工具调用、业务状态和安全边界，便于配置确定性断言与评分器。",
     title: "定义预期结果",
   },
 ] as const;
@@ -38,7 +42,8 @@ export default function TestCasesGuidePage() {
           测试用例编写指南
         </h1>
         <p className="mt-2 text-sm leading-6 text-[var(--text-muted)]">
-          把 Agent 的输入、过程、状态变化和最终输出拆成可以稳定执行与复核的结构化用例。
+          把 Agent
+          的输入、过程、状态变化和最终输出拆成可以稳定执行与复核的结构化用例。
         </p>
       </header>
 
@@ -76,7 +81,10 @@ export default function TestCasesGuidePage() {
         </div>
         <ul className="divide-y divide-[var(--border)]">
           {bestPractices.map((practice) => (
-            <li className="flex items-start gap-3 px-4 py-3 text-sm" key={practice}>
+            <li
+              className="flex items-start gap-3 px-4 py-3 text-sm"
+              key={practice}
+            >
               <CheckCircle2 className="mt-0.5 size-4 shrink-0 text-[var(--success)]" />
               {practice}
             </li>

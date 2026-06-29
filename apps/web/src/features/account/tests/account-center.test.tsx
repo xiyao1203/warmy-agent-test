@@ -11,8 +11,18 @@ vi.mock("next/navigation", () => ({
 
 // Mock next/link
 vi.mock("next/link", () => ({
-  default: ({ children, href, ...props }: { children: React.ReactNode; href: string; [key: string]: unknown }) => (
-    <a href={href} {...props}>{children}</a>
+  default: ({
+    children,
+    href,
+    ...props
+  }: {
+    children: React.ReactNode;
+    href: string;
+    [key: string]: unknown;
+  }) => (
+    <a href={href} {...props}>
+      {children}
+    </a>
   ),
 }));
 
@@ -24,18 +34,20 @@ describe("AccountCenter", () => {
     render(
       <AccountCenter>
         <div>Test content</div>
-      </AccountCenter>
+      </AccountCenter>,
     );
 
     expect(screen.getByText("账户中心")).toBeInTheDocument();
-    expect(screen.getByText("管理您的个人信息、偏好设置和安全选项")).toBeInTheDocument();
+    expect(
+      screen.getByText("管理您的个人信息、偏好设置和安全选项"),
+    ).toBeInTheDocument();
   });
 
   it("renders all navigation sections", () => {
     render(
       <AccountCenter>
         <div>Test content</div>
-      </AccountCenter>
+      </AccountCenter>,
     );
 
     expect(screen.getAllByRole("link", { name: /个人资料/ })).toHaveLength(2);
@@ -48,7 +60,7 @@ describe("AccountCenter", () => {
     render(
       <AccountCenter>
         <div data-testid="child-content">Test content</div>
-      </AccountCenter>
+      </AccountCenter>,
     );
 
     expect(screen.getByTestId("child-content")).toBeInTheDocument();
@@ -60,7 +72,7 @@ describe("AccountCenter", () => {
     render(
       <AccountCenter>
         <div>Test content</div>
-      </AccountCenter>
+      </AccountCenter>,
     );
 
     for (const link of screen.getAllByRole("link", { name: /个人资料/ })) {
