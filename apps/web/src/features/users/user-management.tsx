@@ -181,7 +181,7 @@ export function UserManagement({
           />
         ) : (
           <Table>
-            <TableHeader>
+            <TableHeader className="bg-[var(--surface-subtle)]">
               <TableRow>
                 <TableHead>用户</TableHead>
                 <TableHead>系统角色</TableHead>

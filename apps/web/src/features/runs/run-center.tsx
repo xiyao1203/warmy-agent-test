@@ -165,6 +165,19 @@ export function RunCenter({
         </div>
         {!filteredRuns.length ? (
           <EmptyState
+            action={
+              runs.length ? (
+                <Button
+                  onClick={() => {
+                    setQuery("");
+                    setStatusFilter("all");
+                  }}
+                  variant="secondary"
+                >
+                  清除筛选
+                </Button>
+              ) : undefined
+            }
             description={
               runs.length
                 ? "换个关键词或状态筛选再试试。"
@@ -174,7 +187,7 @@ export function RunCenter({
           />
         ) : (
           <Table>
-            <TableHeader>
+            <TableHeader className="bg-[var(--surface-subtle)]">
               <TableRow>
                 <TableHead>运行</TableHead>
                 <TableHead>状态</TableHead>

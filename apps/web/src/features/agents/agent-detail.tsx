@@ -26,6 +26,7 @@ import {
   DialogDescription,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Skeleton } from "@/components/uiverse";
 
 import { AgentVersionDialog } from "./agent-version-dialog";
 import { VersionDetailDrawer } from "./version-detail-drawer";
@@ -68,10 +69,24 @@ export function AgentDetail({
   versions = [],
 }: AgentDetailProps) {
   const [publishVersion, setPublishVersion] = useState<AgentVersionResponse>();
+  const [publishing, setPublishing] = useState(false);
   const [selectedVersion, setSelectedVersion] = useState<AgentVersionResponse | null>(null);
   const [activeTab, setActiveTab] = useState<TabKey>("versions");
 
-  if (loading) return <div className="p-6">正在加载 Agent 详情…</div>;
+  if (loading) {
+    return (
+      <div className="min-w-0 px-6 py-6">
+        <Skeleton className="mb-2 h-8 w-48" />
+        <Skeleton className="mb-6 h-4 w-64" />
+        <div className="flex gap-2">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <Skeleton key={i} className="h-9 w-24" />
+          ))}
+        </div>
+        <Skeleton className="mt-5 h-64 rounded-[var(--radius-md)]" />
+      </div>
+    );
+  }
 
   const publishedVersions = versions.filter((v) => v.status === "published");
   const latestPublished = publishedVersions[0];
@@ -155,12 +170,19 @@ export function AgentDetail({
           <DialogTitle>发布 Agent 版本</DialogTitle>
           <DialogDescription>发布后该版本将不可编辑。</DialogDescription>
           <div className="mt-5 flex justify-end gap-2">
-            <Button onClick={() => setPublishVersion(undefined)}>取消</Button>
+            <Button disabled={publishing} onClick={() => setPublishVersion(undefined)}>取消</Button>
             <Button
+              disabled={publishing}
+              loading={publishing}
               onClick={async () => {
                 if (!publishVersion) return;
-                await onPublish(publishVersion.id);
-                setPublishVersion(undefined);
+                setPublishing(true);
+                try {
+                  await onPublish(publishVersion.id);
+                  setPublishVersion(undefined);
+                } finally {
+                  setPublishing(false);
+                }
               }}
               variant="primary"
             >

@@ -49,6 +49,7 @@ export function TestPlanDetail({
 }) {
   const [publishVersion, setPublishVersion] =
     useState<TestPlanVersionResponse>();
+  const [publishing, setPublishing] = useState(false);
   const [dryRunResult, setDryRunResult] = useState<Record<string, unknown> | null>(null);
   const [dryRunLoading, setDryRunLoading] = useState(false);
 
@@ -167,12 +168,19 @@ export function TestPlanDetail({
           <DialogTitle>发布测试计划版本</DialogTitle>
           <DialogDescription>发布后计划版本将不可编辑。</DialogDescription>
           <div className="mt-5 flex justify-end gap-2">
-            <Button onClick={() => setPublishVersion(undefined)}>取消</Button>
+            <Button disabled={publishing} onClick={() => setPublishVersion(undefined)}>取消</Button>
             <Button
+              disabled={publishing}
+              loading={publishing}
               onClick={async () => {
                 if (!publishVersion) return;
-                await onPublish(publishVersion.id);
-                setPublishVersion(undefined);
+                setPublishing(true);
+                try {
+                  await onPublish(publishVersion.id);
+                  setPublishVersion(undefined);
+                } finally {
+                  setPublishing(false);
+                }
               }}
               variant="primary"
             >
