@@ -11,6 +11,18 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 
+import { HelpSearch } from "@/features/help";
+import type { HelpTopic } from "@/features/help";
+
+const helpTopics: HelpTopic[] = [
+  { id: "agents", title: "Agent 管理", description: "创建和管理测试 Agent，配置连接参数，发布不可变版本", href: "#agents", category: "智能体" },
+  { id: "datasets", title: "数据集与用例", description: "创建数据集，批量导入测试用例，管理版本和标签", href: "#datasets", category: "测试资产" },
+  { id: "test-plans", title: "测试计划", description: "组合 Agent、数据集和环境，配置执行策略和门禁规则", href: "#test-plans", category: "测试执行" },
+  { id: "security", title: "安全测试", description: "配置安全扫描规则，检测敏感信息泄露和权限问题", href: "#security", category: "安全" },
+  { id: "quickstart", title: "快速开始", description: "按照步骤快速体验平台核心功能", href: "#quickstart", category: "入门" },
+  { id: "faq", title: "常见问题", description: "快速找到常见问题的解答", href: "#faq", category: "入门" },
+];
+
 const features = [
   {
     description: "创建和管理测试 Agent，配置连接参数，发布不可变版本",
@@ -95,25 +107,7 @@ export default function DocsPage() {
               </div>
             </div>
             <div className="hidden w-80 shrink-0 rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4 shadow-lg lg:block">
-              <div className="flex items-center gap-2 rounded-md border border-[var(--border)] bg-[var(--surface-subtle)] px-3 py-2">
-                <Search className="size-4 text-[var(--text-muted)]" />
-                <span className="text-sm text-[var(--text-muted)]">
-                  搜索文档...
-                </span>
-              </div>
-              <div className="mt-4 space-y-2">
-                {quickLinks.map((link, i) => (
-                  <a
-                    className="block rounded-md px-3 py-2 text-sm transition-colors hover:bg-[var(--surface-subtle)]"
-                    href={link.href}
-                    key={i}
-                  >
-                    <p className="text-[var(--text-muted)]">
-                      {link.description}
-                    </p>
-                  </a>
-                ))}
-              </div>
+              <HelpSearch topics={helpTopics} />
             </div>
           </div>
         </div>

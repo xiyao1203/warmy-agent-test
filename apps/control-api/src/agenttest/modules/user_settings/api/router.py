@@ -5,11 +5,16 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Protocol
 
-from fastapi import APIRouter, Request, Response
+from fastapi import APIRouter, Header, Request
 from fastapi.responses import JSONResponse
 
 from agenttest.bootstrap.settings import Settings
-from agenttest.modules.identity.api.router import authentication_required, problem_response
+from agenttest.modules.identity.api.router import (
+    CsrfExecutor,
+    authentication_required,
+    problem_response,
+    validate_csrf,
+)
 from agenttest.modules.identity.application.queries.current_user import InvalidSessionError
 from agenttest.modules.identity.domain.entities import User
 from agenttest.modules.user_settings.api.schemas import (
@@ -47,6 +52,7 @@ class UserSettingsApiDependencies:
     current_user: CurrentUserExecutor
     get_settings: GetSettingsExecutor
     update_settings: UpdateSettingsExecutor
+    csrf: CsrfExecutor
     uow_factory: UnitOfWorkFactory = null_uow_factory
 
 
@@ -76,10 +82,19 @@ def create_user_settings_router(
     async def update_settings(
         request: Request,
         payload: UpdateSettingsRequest,
+        x_csrf_token: str | None = Header(default=None),
     ) -> UserSettingsResponse | JSONResponse:
         session_token = request.cookies.get(settings.session_cookie_name)
         if not session_token:
             return authentication_required()
+        csrf_error = await validate_csrf(
+            request=request,
+            session_token=session_token,
+            csrf_header=x_csrf_token,
+            csrf=dependencies.csrf,
+        )
+        if csrf_error is not None:
+            return csrf_error
         try:
             user = await dependencies.current_user.execute(session_token)
         except InvalidSessionError:

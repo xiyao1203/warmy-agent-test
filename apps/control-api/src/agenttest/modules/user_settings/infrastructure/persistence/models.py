@@ -7,7 +7,7 @@ from uuid import UUID
 from sqlalchemy import Boolean, String
 from sqlalchemy.orm import Mapped, mapped_column
 
-from agenttest.shared.infrastructure.persistence.base import Base
+from agenttest.shared.infrastructure.database import Base
 
 
 class UserSettingsModel(Base):

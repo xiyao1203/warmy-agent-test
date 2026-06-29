@@ -15,7 +15,6 @@ from agenttest.modules.feedback.api.schemas import (
     FeedbackResponse,
     FeedbackType,
 )
-from agenttest.modules.identity.api.router import authentication_required
 from agenttest.modules.identity.application.queries.current_user import InvalidSessionError
 from agenttest.modules.identity.domain.entities import User
 from agenttest.shared.application.uow import UnitOfWorkFactory, null_uow_factory

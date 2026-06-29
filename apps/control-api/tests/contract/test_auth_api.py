@@ -61,18 +61,46 @@ class StubCsrfValidator:
             raise InvalidSessionError
 
 
+class StubUpdateProfile:
+    def __init__(self) -> None:
+        self.calls: list[tuple[str, str]] = []
+
+    async def execute(self, user: User, display_name: str, email: Email) -> User:
+        self.calls.append((display_name, email.value))
+        user.update_profile(email=email, display_name=display_name, role=user.role)
+        return user
+
+
+class StubChangePassword:
+    def __init__(self) -> None:
+        self.calls: list[tuple[str, str]] = []
+
+    async def execute(
+        self,
+        user: User,
+        current_password: str,
+        new_password: str,
+    ) -> None:
+        del user
+        self.calls.append((current_password, new_password))
+
+
 def auth_dependencies(
     *,
     login: StubLogin | None = None,
     current_user: StubCurrentUser | None = None,
     logout: StubLogout | None = None,
     csrf: StubCsrfValidator | None = None,
+    update_profile: StubUpdateProfile | None = None,
+    change_password: StubChangePassword | None = None,
 ) -> AuthApiDependencies:
     return AuthApiDependencies(
         login=login or StubLogin(),
         current_user=current_user or StubCurrentUser(),
         logout=logout or StubLogout(),
         csrf=csrf or StubCsrfValidator(),
+        update_profile=update_profile or StubUpdateProfile(),
+        change_password=change_password or StubChangePassword(),
     )
 
 
@@ -80,7 +108,7 @@ def test_login_sets_secure_session_and_csrf_cookies() -> None:
     user = create_user()
     client = TestClient(
         create_app(
-            settings=Settings(),
+            settings=Settings(environment="production"),
             auth_dependencies=auth_dependencies(
                 login=StubLogin(
                     LoginResult(
@@ -170,3 +198,60 @@ def test_logout_requires_csrf_and_clears_cookies() -> None:
     assert logout.revoked_token == "session-token"
     set_cookies = response.headers.get_list("set-cookie")
     assert sum("Max-Age=0" in cookie for cookie in set_cookies) == 2
+
+
+def test_profile_update_requires_csrf_and_returns_updated_user() -> None:
+    user = create_user()
+    updater = StubUpdateProfile()
+    client = TestClient(
+        create_app(
+            auth_dependencies=auth_dependencies(
+                current_user=StubCurrentUser(user),
+                update_profile=updater,
+            )
+        ),
+        base_url="https://testserver",
+    )
+    client.cookies.set("agenttest_session", "session-token")
+    client.cookies.set("agenttest_csrf", "csrf-token")
+    payload = {"display_name": "Updated User", "email": "updated@example.com"}
+
+    missing_csrf = client.patch("/api/v1/auth/me", json=payload)
+    response = client.patch(
+        "/api/v1/auth/me",
+        json=payload,
+        headers={"X-CSRF-Token": "csrf-token"},
+    )
+
+    assert missing_csrf.status_code == 403
+    assert response.status_code == 200
+    assert response.json()["display_name"] == "Updated User"
+    assert updater.calls == [("Updated User", "updated@example.com")]
+
+
+def test_change_password_requires_csrf() -> None:
+    user = create_user()
+    changer = StubChangePassword()
+    client = TestClient(
+        create_app(
+            auth_dependencies=auth_dependencies(
+                current_user=StubCurrentUser(user),
+                change_password=changer,
+            )
+        ),
+        base_url="https://testserver",
+    )
+    client.cookies.set("agenttest_session", "session-token")
+    client.cookies.set("agenttest_csrf", "csrf-token")
+    payload = {"current_password": "current-password", "new_password": "new-password"}
+
+    missing_csrf = client.post("/api/v1/auth/change-password", json=payload)
+    response = client.post(
+        "/api/v1/auth/change-password",
+        json=payload,
+        headers={"X-CSRF-Token": "csrf-token"},
+    )
+
+    assert missing_csrf.status_code == 403
+    assert response.status_code == 204
+    assert changer.calls == [("current-password", "new-password")]

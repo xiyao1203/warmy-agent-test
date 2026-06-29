@@ -60,7 +60,7 @@ export function UserDropdown({
           </div>
           <Link
             className="flex items-center gap-3 px-4 py-2.5 text-sm transition-colors hover:bg-[var(--surface-subtle)]"
-            href="/profile"
+            href="/account?section=profile"
             onClick={() => setOpen(false)}
             role="menuitem"
           >
@@ -74,7 +74,7 @@ export function UserDropdown({
           </Link>
           <Link
             className="flex items-center gap-3 px-4 py-2.5 text-sm transition-colors hover:bg-[var(--surface-subtle)]"
-            href="/settings"
+            href="/account?section=preferences"
             onClick={() => setOpen(false)}
             role="menuitem"
           >

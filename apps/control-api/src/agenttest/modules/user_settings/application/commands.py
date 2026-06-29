@@ -37,7 +37,12 @@ class UpdateUserSettingsHandler:
             settings.update_theme(theme)
         if language is not None:
             settings.update_language(language)
-        if any(v is not None for v in [email_notifications, push_notifications, test_complete_notifications]):
+        notification_values = (
+            email_notifications,
+            push_notifications,
+            test_complete_notifications,
+        )
+        if any(value is not None for value in notification_values):
             settings.update_notifications(
                 email=email_notifications,
                 push=push_notifications,

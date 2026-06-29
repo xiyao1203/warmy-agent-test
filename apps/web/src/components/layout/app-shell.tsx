@@ -33,6 +33,7 @@ import { Tooltip } from "@/components/uiverse";
 import { canManageUsers } from "@/lib/permissions";
 
 import { HelpDropdown } from "./help-dropdown";
+import { NotificationDropdown } from "./notification-dropdown";
 import { UserDropdown } from "./user-dropdown";
 
 type AppShellProps = {
@@ -88,15 +89,7 @@ export function AppShell({
         </label>
         <div className="flex items-center justify-end gap-2">
           <HelpDropdown />
-          <Tooltip content="通知中心">
-            <button
-              aria-label="通知"
-              className="grid size-8 place-items-center rounded-[var(--radius-sm)] text-[var(--text-muted)] transition-colors hover:bg-[var(--surface-subtle)] hover:text-[var(--text)]"
-              type="button"
-            >
-              <Bell aria-hidden="true" className="size-4" />
-            </button>
-          </Tooltip>
+          <NotificationDropdown />
           <UserDropdown
             displayName={user.display_name}
             email={user.email}
