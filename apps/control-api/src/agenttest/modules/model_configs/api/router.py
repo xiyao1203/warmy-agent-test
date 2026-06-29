@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 from dataclasses import asdict
 from typing import Protocol
 from uuid import UUID
@@ -36,6 +37,7 @@ from .schemas import (
 )
 
 CSRF_COOKIE_NAME = "agenttest_csrf"
+logger = logging.getLogger(__name__)
 
 
 class CurrentUserExecutor(Protocol):
@@ -219,7 +221,13 @@ def create_model_config_router(
             return problem(404, "Asset not found", "Model configuration was not found")
         except PermissionError:
             return problem(403, "Permission denied", "Project editor access is required")
+        except (ConnectionError, TimeoutError, ValueError) as error:
+            logger.warning("Model connection test failed: %s", error)
+            return problem(
+                503, "Model connection failed", "Model Runner or provider is unavailable"
+            )
         except Exception:
+            logger.exception("Unexpected error during model connection test")
             return problem(
                 503, "Model connection failed", "Model Runner or provider is unavailable"
             )
@@ -293,7 +301,11 @@ def create_model_config_router(
             return problem(422, "Invalid judge result", str(error))
         except PermissionError:
             return problem(403, "Permission denied", "Project editor access is required")
+        except (ConnectionError, TimeoutError, ValueError) as error:
+            logger.warning("Model text judge failed: %s", error)
+            return problem(503, "Model judge failed", "Model Runner or provider is unavailable")
         except Exception:
+            logger.exception("Unexpected error during text judge")
             return problem(503, "Model judge failed", "Model Runner or provider is unavailable")
         return asdict(result)
 
@@ -328,7 +340,11 @@ def create_model_config_router(
             return problem(422, "Invalid judge result", str(error))
         except PermissionError:
             return problem(403, "Permission denied", "Project editor access is required")
+        except (ConnectionError, TimeoutError) as error:
+            logger.warning("Model vision judge failed: %s", error)
+            return problem(503, "Model judge failed", "Model Runner or provider is unavailable")
         except Exception:
+            logger.exception("Unexpected error during vision judge")
             return problem(503, "Model judge failed", "Model Runner or provider is unavailable")
         return asdict(result)
 
