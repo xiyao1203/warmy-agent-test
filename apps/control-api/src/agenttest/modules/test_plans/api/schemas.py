@@ -27,10 +27,13 @@ class TestPlanConfigRequest(BaseModel):
     runs_per_case: int = Field(default=1, ge=1)
     concurrency: int = Field(default=1, ge=1)
     timeout: int = Field(default=300, gt=0)
+    max_retries: int = Field(default=0, ge=0)
     retry_policy: dict[str, object] = Field(default_factory=dict)
     scorers: list[dict[str, object]] = Field(default_factory=list)
     pass_threshold: float = Field(default=1.0, ge=0.0, le=1.0)
     cost_budget: float | None = Field(default=None, ge=0.0)
+    baseline_run_id: str | None = None
+    release_gate: dict[str, object] = Field(default_factory=dict)
 
     def to_domain(self) -> TestPlanConfig:
         return TestPlanConfig(**self.model_dump())

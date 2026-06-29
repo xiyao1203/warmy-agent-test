@@ -1423,6 +1423,10 @@ export type TestPlanConfigRequest = {
    */
   timeout?: number;
   /**
+   * Max Retries
+   */
+  max_retries?: number;
+  /**
    * Retry Policy
    */
   retry_policy?: {
@@ -1442,6 +1446,16 @@ export type TestPlanConfigRequest = {
    * Cost Budget
    */
   cost_budget?: number | null;
+  /**
+   * Baseline Run Id
+   */
+  baseline_run_id?: string | null;
+  /**
+   * Release Gate
+   */
+  release_gate?: {
+    [key: string]: unknown;
+  };
 };
 
 /**
