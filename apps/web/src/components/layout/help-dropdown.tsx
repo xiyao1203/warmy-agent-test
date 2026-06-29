@@ -123,7 +123,7 @@ export function HelpDropdown() {
           </a>
           <a
             className="flex items-center gap-2 px-4 py-2 text-sm text-[var(--text-muted)] transition-colors hover:bg-[var(--surface-subtle)] hover:text-[var(--text)]"
-            href="https://github.com/xiyao1203/warmy-agent-test/releases"
+            href="https://github.com/xiyao1203/warmy-agent-test/blob/main/CHANGELOG.md"
             onClick={() => setOpen(false)}
             rel="noopener noreferrer"
             target="_blank"
