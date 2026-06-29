@@ -110,7 +110,7 @@ export function HelpDropdown() {
           </div>
           <a
             className="flex items-center gap-2 px-4 py-2 text-sm text-[var(--text-muted)] transition-colors hover:bg-[var(--surface-subtle)] hover:text-[var(--text)]"
-            href="https://github.com/your-repo"
+            href="https://github.com/xiyao1203/warmy-agent-test"
             onClick={() => setOpen(false)}
             rel="noopener noreferrer"
             target="_blank"
@@ -123,7 +123,7 @@ export function HelpDropdown() {
           </a>
           <a
             className="flex items-center gap-2 px-4 py-2 text-sm text-[var(--text-muted)] transition-colors hover:bg-[var(--surface-subtle)] hover:text-[var(--text)]"
-            href="https://github.com/your-repo/releases"
+            href="https://github.com/xiyao1203/warmy-agent-test/releases"
             onClick={() => setOpen(false)}
             rel="noopener noreferrer"
             target="_blank"
