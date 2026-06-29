@@ -5,6 +5,7 @@ import { useCallback, useEffect, useState } from "react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { ListCard, ListCardMeta } from "@/components/ui/list-card";
 import {
   Dialog,
   DialogContent,
@@ -12,6 +13,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { Tooltip } from "@/components/uiverse";
 
 import type { GateItem, GateResult } from "./api";
 import { createGate, deleteGate, evaluateGate, listGates } from "./api";
@@ -146,61 +148,67 @@ function GateCard({
   result?: GateResult;
 }) {
   return (
-    <li className="rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--surface)] px-5 py-4">
-      <div className="flex items-center justify-between gap-4">
-        <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-2">
-            <h2 className="text-sm font-semibold">{gate.name}</h2>
-            {gate.enabled ? (
-              <Badge tone="success">已启用</Badge>
-            ) : (
-              <Badge tone="warning">已禁用</Badge>
-            )}
-          </div>
-          <p className="mt-1 text-xs text-[var(--text-muted)]">
-            通过率 ≥ {(gate.success_rate_threshold * 100).toFixed(0)}% ·
-            安全评分 ≥ {gate.security_threshold.toFixed(1)}
-            {gate.cost_limit != null ? ` · 成本 ≤ ${gate.cost_limit}` : ""}
-            {gate.critical_cases.length > 0
-              ? ` · 关键用例 ${gate.critical_cases.length} 个`
-              : ""}
-          </p>
-        </div>
-        <div className="flex shrink-0 items-center gap-1.5">
+    <ListCard
+      actions={
+        <>
           <Button onClick={onEvaluate} variant="ghost">
             评估
           </Button>
-          <Button onClick={onDelete} variant="ghost">
-            <Trash2 className="size-4 text-[var(--danger)]" />
-          </Button>
-        </div>
-      </div>
-      {result ? (
-        <div
-          className={`mt-3 rounded border p-3 text-sm ${
-            result.passed
-              ? "border-[var(--success)] bg-[var(--success-subtle)]"
-              : "border-[var(--danger)] bg-[var(--danger-subtle)]"
-          }`}
-        >
-          <div className="flex items-center gap-2 font-medium">
-            {result.passed ? (
-              <CheckCircle2 className="size-4 text-[var(--success)]" />
-            ) : (
-              <XCircle className="size-4 text-[var(--danger)]" />
-            )}
-            {result.passed ? "门禁通过" : "门禁未通过"}
-          </div>
-          {result.failures.length > 0 ? (
-            <ul className="mt-2 list-disc pl-5 text-xs text-[var(--danger)]">
-              {result.failures.map((f, i) => (
-                <li key={i}>{f}</li>
-              ))}
-            </ul>
+          <Tooltip content="删除门禁">
+            <Button aria-label={`删除门禁 ${gate.name}`} onClick={onDelete} variant="ghost">
+              <Trash2 className="size-4 text-[var(--danger)]" />
+            </Button>
+          </Tooltip>
+        </>
+      }
+      badge={
+        gate.enabled ? (
+          <Badge tone="success">已启用</Badge>
+        ) : (
+          <Badge tone="warning">已禁用</Badge>
+        )
+      }
+      description={`通过率 ≥ ${(gate.success_rate_threshold * 100).toFixed(0)}%`}
+      footer={
+        <>
+          <ListCardMeta
+            items={
+              [
+                `安全评分 ≥ ${gate.security_threshold.toFixed(1)}`,
+                gate.cost_limit != null ? `成本 ≤ ${gate.cost_limit}` : undefined,
+                gate.critical_cases.length > 0 ? `关键用例 ${gate.critical_cases.length} 个` : undefined,
+              ]
+            }
+          />
+          {result ? (
+            <div
+              className={`mt-3 rounded border p-3 text-sm ${
+                result.passed
+                  ? "border-[var(--success)] bg-[var(--success-subtle)]"
+                  : "border-[var(--danger)] bg-[var(--danger-subtle)]"
+              }`}
+            >
+              <div className="flex items-center gap-2 font-medium">
+                {result.passed ? (
+                  <CheckCircle2 className="size-4 text-[var(--success)]" />
+                ) : (
+                  <XCircle className="size-4 text-[var(--danger)]" />
+                )}
+                {result.passed ? "门禁通过" : "门禁未通过"}
+              </div>
+              {result.failures.length > 0 ? (
+                <ul className="mt-2 list-disc pl-5 text-xs text-[var(--danger)]">
+                  {result.failures.map((f, i) => (
+                    <li key={i}>{f}</li>
+                  ))}
+                </ul>
+              ) : null}
+            </div>
           ) : null}
-        </div>
-      ) : null}
-    </li>
+        </>
+      }
+      title={gate.name}
+    />
   );
 }
 

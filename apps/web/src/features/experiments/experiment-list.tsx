@@ -20,6 +20,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { ListCard, ListCardMeta } from "@/components/ui/list-card";
 
 import type { ExperimentItem } from "./api";
 import { createExperiment, listExperiments, runExperiment } from "./api";
@@ -141,21 +142,9 @@ function ExperimentCard({
     | undefined;
 
   return (
-    <li className="rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--surface)] px-5 py-4">
-      <div className="flex items-center justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-2">
-            <h2 className="text-sm font-semibold">{exp.name}</h2>
-            <Badge tone={STATUS_TONES[exp.status] ?? "neutral"}>
-              {exp.status}
-            </Badge>
-          </div>
-          <p className="mt-1 text-xs text-[var(--text-muted)]">
-            A: {exp.run_a_id.slice(0, 8)} · B: {exp.run_b_id.slice(0, 8)}
-            {exp.description ? ` · ${exp.description}` : ""}
-          </p>
-        </div>
-        {exp.status === "pending" ? (
+    <ListCard
+      actions={
+        exp.status === "pending" ? (
           <Button
             disabled={running}
             loading={running}
@@ -172,106 +161,114 @@ function ExperimentCard({
             <PlayCircle aria-hidden="true" className="mr-1.5 size-4" />
             执行对比
           </Button>
-        ) : null}
-      </div>
-      {summary ? (
-        <div className="mt-4 flex flex-wrap gap-4 text-xs">
-          <SummaryChip
-            icon={<ArrowUpRight className="size-3.5" />}
-            label="提升"
-            tone="success"
-            value={String(summary.improved ?? 0)}
-          />
-          <SummaryChip
-            icon={<ArrowDownRight className="size-3.5" />}
-            label="退化"
-            tone="danger"
-            value={String(summary.degraded ?? 0)}
-          />
-          <SummaryChip
-            icon={<Equal className="size-3.5" />}
-            label="无变化"
-            tone="neutral"
-            value={String(summary.unchanged ?? 0)}
-          />
-          <SummaryChip
-            icon={<Minus className="size-3.5" />}
-            label="平均耗时差"
-            tone="neutral"
-            value={`${summary.avg_duration_delta_ms ?? 0}ms`}
-          />
-          <SummaryChip
-            icon={<Minus className="size-3.5" />}
-            label="P50耗时差"
-            tone="neutral"
-            value={`${summary.p50_duration_delta_ms ?? 0}ms`}
-          />
-          <SummaryChip
-            icon={<Minus className="size-3.5" />}
-            label="P95耗时差"
-            tone="neutral"
-            value={`${summary.p95_duration_delta_ms ?? 0}ms`}
-          />
-        </div>
-      ) : null}
-      {(exp.result_json as Record<string, unknown>).case_diffs ? (
-        <details className="mt-4">
-          <summary className="cursor-pointer text-xs font-medium text-[var(--text-muted)]">
-            查看逐用例对比
-          </summary>
-          <div className="mt-2 overflow-auto">
-            <table className="w-full text-xs">
-              <thead>
-                <tr className="border-b border-[var(--border)] text-left text-[var(--text-muted)]">
-                  <th className="pb-1.5 pr-3">用例</th>
-                  <th className="pb-1.5 pr-3">状态 A</th>
-                  <th className="pb-1.5 pr-3">状态 B</th>
-                  <th className="pb-1.5 pr-3">耗时差</th>
-                  <th className="pb-1.5">分类</th>
-                </tr>
-              </thead>
-              <tbody>
-                {(
-                  (exp.result_json as Record<string, unknown>)
-                    .case_diffs as Record<string, unknown>[]
-                ).map((d, i) => (
-                  <tr
-                    className="border-b border-[var(--border)] last:border-0"
-                    key={i}
-                  >
-                    <td className="py-1.5 pr-3 font-mono">
-                      {String(d.test_case_id).slice(0, 8)}
-                    </td>
-                    <td className="py-1.5 pr-3">{String(d.status_a ?? "-")}</td>
-                    <td className="py-1.5 pr-3">{String(d.status_b ?? "-")}</td>
-                    <td className="py-1.5 pr-3">
-                      {String(d.duration_delta_ms)}ms
-                    </td>
-                    <td className="py-1.5">
-                      <Badge
-                        tone={
-                          d.category === "degraded"
-                            ? "danger"
-                            : d.category === "improved"
-                              ? "success"
-                              : "neutral"
-                        }
+        ) : undefined
+      }
+      badge={<Badge tone={STATUS_TONES[exp.status] ?? "neutral"}>{exp.status}</Badge>}
+      description={`A: ${exp.run_a_id.slice(0, 8)} · B: ${exp.run_b_id.slice(0, 8)}`}
+      footer={
+        <>
+          <ListCardMeta items={[exp.description ?? undefined]} />
+          {summary ? (
+            <div className="mt-4 flex flex-wrap gap-4 text-xs">
+              <SummaryChip
+                icon={<ArrowUpRight className="size-3.5" />}
+                label="提升"
+                tone="success"
+                value={String(summary.improved ?? 0)}
+              />
+              <SummaryChip
+                icon={<ArrowDownRight className="size-3.5" />}
+                label="退化"
+                tone="danger"
+                value={String(summary.degraded ?? 0)}
+              />
+              <SummaryChip
+                icon={<Equal className="size-3.5" />}
+                label="无变化"
+                tone="neutral"
+                value={String(summary.unchanged ?? 0)}
+              />
+              <SummaryChip
+                icon={<Minus className="size-3.5" />}
+                label="平均耗时差"
+                tone="neutral"
+                value={`${summary.avg_duration_delta_ms ?? 0}ms`}
+              />
+              <SummaryChip
+                icon={<Minus className="size-3.5" />}
+                label="P50耗时差"
+                tone="neutral"
+                value={`${summary.p50_duration_delta_ms ?? 0}ms`}
+              />
+              <SummaryChip
+                icon={<Minus className="size-3.5" />}
+                label="P95耗时差"
+                tone="neutral"
+                value={`${summary.p95_duration_delta_ms ?? 0}ms`}
+              />
+            </div>
+          ) : null}
+          {(exp.result_json as Record<string, unknown>).case_diffs ? (
+            <details className="mt-4">
+              <summary className="cursor-pointer text-xs font-medium text-[var(--text-muted)]">
+                查看逐用例对比
+              </summary>
+              <div className="mt-2 overflow-auto">
+                <table className="w-full text-xs">
+                  <thead>
+                    <tr className="border-b border-[var(--border)] text-left text-[var(--text-muted)]">
+                      <th className="pb-1.5 pr-3">用例</th>
+                      <th className="pb-1.5 pr-3">状态 A</th>
+                      <th className="pb-1.5 pr-3">状态 B</th>
+                      <th className="pb-1.5 pr-3">耗时差</th>
+                      <th className="pb-1.5">分类</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {(
+                      (exp.result_json as Record<string, unknown>)
+                        .case_diffs as Record<string, unknown>[]
+                    ).map((d, i) => (
+                      <tr
+                        className="border-b border-[var(--border)] last:border-0"
+                        key={i}
                       >
-                        {d.category === "degraded"
-                          ? "退化"
-                          : d.category === "improved"
-                            ? "提升"
-                            : "无变化"}
-                      </Badge>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </details>
-      ) : null}
-    </li>
+                        <td className="py-1.5 pr-3 font-mono">
+                          {String(d.test_case_id).slice(0, 8)}
+                        </td>
+                        <td className="py-1.5 pr-3">{String(d.status_a ?? "-")}</td>
+                        <td className="py-1.5 pr-3">{String(d.status_b ?? "-")}</td>
+                        <td className="py-1.5 pr-3">
+                          {String(d.duration_delta_ms)}ms
+                        </td>
+                        <td className="py-1.5">
+                          <Badge
+                            tone={
+                              d.category === "degraded"
+                                ? "danger"
+                                : d.category === "improved"
+                                  ? "success"
+                                  : "neutral"
+                            }
+                          >
+                            {d.category === "degraded"
+                              ? "退化"
+                              : d.category === "improved"
+                                ? "提升"
+                                : "无变化"}
+                          </Badge>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </details>
+          ) : null}
+        </>
+      }
+      title={exp.name}
+    />
   );
 }
 
