@@ -25,7 +25,7 @@ import {
   Users,
 } from "lucide-react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import type { ReactNode } from "react";
 
 import { logout } from "@/features/auth";
@@ -54,6 +54,7 @@ export function AppShell({
   user,
   workspaceMode = "management",
 }: AppShellProps) {
+  const router = useRouter();
   const projectHref = currentProjectId
     ? `/projects/${currentProjectId}/overview`
     : "/projects";
@@ -95,7 +96,11 @@ export function AppShell({
           <UserDropdown
             displayName={user.display_name}
             email={user.email}
-            onLogout={logout}
+            onLogout={async () => {
+              await logout();
+              router.push("/login");
+              router.refresh();
+            }}
           />
         </div>
       </header>
