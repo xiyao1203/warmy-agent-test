@@ -1,9 +1,7 @@
 import type { ReactNode } from "react";
 
+import { HelpShell } from "@/features/help";
+
 export default function HelpLayout({ children }: { children: ReactNode }) {
-  return (
-    <div className="min-h-screen bg-[var(--background)]">
-      {children}
-    </div>
-  );
+  return <HelpShell>{children}</HelpShell>;
 }

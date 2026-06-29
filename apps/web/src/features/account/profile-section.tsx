@@ -1,17 +1,36 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { User, Mail, Save, X, Edit2 } from "lucide-react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import type { UserResponse } from "@warmy/generated-api-client";
+import { CheckCircle2, Edit2, Mail, Save, User, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
 import { getCurrentUser, updateProfile } from "./api";
 
+const roleLabels: Record<UserResponse["role"], string> = {
+  super_admin: "超级管理员",
+  developer: "开发",
+  tester: "测试",
+  reviewer: "审核者",
+  viewer: "只读",
+};
+
+const statusLabels: Record<UserResponse["status"], string> = {
+  active: "正常",
+  disabled: "已禁用",
+};
+
 export function ProfileSection() {
   const queryClient = useQueryClient();
-  const { data: user, isLoading } = useQuery({
+  const {
+    data: user,
+    isError: isUserError,
+    isLoading,
+    refetch,
+  } = useQuery({
     queryKey: ["currentUser"],
     queryFn: getCurrentUser,
   });
@@ -38,59 +57,103 @@ export function ProfileSection() {
       setDisplayName(user.display_name || "");
       setEmail(user.email || "");
     }
+    mutation.reset();
     setIsEditing(true);
     setError("");
   }
 
   function cancelEditing() {
+    mutation.reset();
     setIsEditing(false);
     setError("");
   }
 
   function handleSubmit(event: FormEvent) {
     event.preventDefault();
-    mutation.mutate({ display_name: displayName, email });
+    const nextDisplayName = displayName.trim();
+    const nextEmail = email.trim();
+
+    if (!nextDisplayName || !nextEmail) {
+      setError("请填写显示名称和邮箱地址");
+      return;
+    }
+
+    setError("");
+    mutation.mutate({ display_name: nextDisplayName, email: nextEmail });
   }
 
   if (isLoading) {
     return (
-      <div className="rounded-lg border border-[var(--border)] bg-[var(--card)] p-6">
-        <div className="animate-pulse space-y-4">
-          <div className="h-4 w-24 rounded bg-[var(--muted)]" />
-          <div className="h-10 w-full rounded bg-[var(--muted)]" />
-          <div className="h-10 w-full rounded bg-[var(--muted)]" />
+      <div
+        aria-label="正在加载个人资料"
+        className="overflow-hidden rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--surface)]"
+        role="status"
+      >
+        <div className="animate-pulse space-y-5 p-5">
+          <div className="flex items-center gap-4">
+            <div className="size-12 rounded-full bg-[var(--surface-subtle)]" />
+            <div className="space-y-2">
+              <div className="h-4 w-32 rounded bg-[var(--surface-subtle)]" />
+              <div className="h-3 w-48 rounded bg-[var(--surface-subtle)]" />
+            </div>
+          </div>
+          <div className="h-28 rounded bg-[var(--surface-subtle)]" />
         </div>
       </div>
     );
   }
 
-  if (!user) {
+  if (isUserError || !user) {
     return (
-      <div className="rounded-lg border border-[var(--border)] bg-[var(--card)] p-6">
-        <p className="text-[var(--text-muted)]">无法加载用户信息</p>
+      <div className="rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--surface)] p-6 text-center">
+        <p className="text-sm font-medium">无法加载个人资料</p>
+        <p className="mt-1 text-sm text-[var(--text-muted)]">
+          请检查网络连接后重试。
+        </p>
+        <Button className="mt-4" onClick={() => refetch()} variant="secondary">
+          重新加载
+        </Button>
       </div>
     );
   }
+
+  const displayLabel = user.display_name || "未设置名称";
 
   return (
-    <div className="space-y-6">
-      {/* Profile Header */}
-      <div className="rounded-lg border border-[var(--border)] bg-[var(--card)] p-6">
-        <div className="flex items-center gap-4">
-          <div className="flex size-16 items-center justify-center rounded-full bg-[var(--primary)] text-2xl font-bold text-[var(--primary-fg)]">
-            {user.display_name?.[0] || user.email[0].toUpperCase()}
+    <div className="space-y-5">
+      <section className="rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--surface)] p-5">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex min-w-0 items-center gap-4">
+            <div className="flex size-12 shrink-0 items-center justify-center rounded-full bg-[var(--accent-subtle)] text-base font-semibold text-[var(--accent)]">
+              {(user.display_name?.[0] || user.email[0]).toUpperCase()}
+            </div>
+            <div className="min-w-0">
+              <h2 className="truncate text-lg font-semibold">{displayLabel}</h2>
+              <p className="truncate text-sm text-[var(--text-muted)]">
+                {user.email}
+              </p>
+            </div>
           </div>
-          <div>
-            <h2 className="text-xl font-semibold">{user.display_name || "未设置名称"}</h2>
-            <p className="text-sm text-[var(--text-muted)]">{user.email}</p>
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="rounded-full border border-[var(--border)] bg-[var(--surface-subtle)] px-2.5 py-1 text-xs font-medium text-[var(--text-muted)]">
+              {roleLabels[user.role]}
+            </span>
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-[var(--border)] px-2.5 py-1 text-xs font-medium">
+              <CheckCircle2 className="size-3.5 text-[var(--success)]" />
+              {statusLabels[user.status]}
+            </span>
           </div>
         </div>
-      </div>
+      </section>
 
-      {/* Profile Form */}
-      <div className="rounded-lg border border-[var(--border)] bg-[var(--card)] p-6">
-        <div className="mb-4 flex items-center justify-between">
-          <h3 className="text-lg font-medium">基本信息</h3>
+      <section className="overflow-hidden rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--surface)]">
+        <div className="flex items-center justify-between gap-4 border-b border-[var(--border)] px-4 py-3">
+          <div>
+            <h3 className="text-sm font-semibold">基本资料</h3>
+            <p className="mt-0.5 text-xs text-[var(--text-muted)]">
+              用于平台内身份展示和账户登录。
+            </p>
+          </div>
           {!isEditing && (
             <Button
               className="gap-2"
@@ -103,14 +166,16 @@ export function ProfileSection() {
           )}
         </div>
 
-        {error && (
-          <div className="mb-4 rounded-md bg-[var(--danger-subtle)] p-3 text-sm text-[var(--danger)]">
-            {error}
-          </div>
-        )}
-
         {isEditing ? (
-          <form className="space-y-4" onSubmit={handleSubmit}>
+          <form className="space-y-4 p-4" onSubmit={handleSubmit}>
+            {error && (
+              <div
+                className="rounded-[var(--radius-sm)] bg-[var(--danger-subtle)] p-3 text-sm text-[var(--danger)]"
+                role="alert"
+              >
+                {error}
+              </div>
+            )}
             <div>
               <label
                 className="mb-1.5 block text-sm font-medium"
@@ -122,14 +187,14 @@ export function ProfileSection() {
                 <User className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-[var(--text-muted)]" />
                 <Input
                   className="pl-10"
+                  disabled={mutation.isPending}
                   id="display_name"
-                  onChange={(e) => setDisplayName(e.target.value)}
+                  onChange={(event) => setDisplayName(event.target.value)}
                   placeholder="输入显示名称"
                   value={displayName}
                 />
               </div>
             </div>
-
             <div>
               <label
                 className="mb-1.5 block text-sm font-medium"
@@ -141,16 +206,16 @@ export function ProfileSection() {
                 <Mail className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-[var(--text-muted)]" />
                 <Input
                   className="pl-10"
+                  disabled={mutation.isPending}
                   id="email"
-                  onChange={(e) => setEmail(e.target.value)}
+                  onChange={(event) => setEmail(event.target.value)}
                   placeholder="输入邮箱地址"
                   type="email"
                   value={email}
                 />
               </div>
             </div>
-
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2 pt-1">
               <Button
                 className="gap-2"
                 disabled={mutation.isPending}
@@ -161,6 +226,7 @@ export function ProfileSection() {
               </Button>
               <Button
                 className="gap-2"
+                disabled={mutation.isPending}
                 onClick={cancelEditing}
                 type="button"
                 variant="secondary"
@@ -171,41 +237,51 @@ export function ProfileSection() {
             </div>
           </form>
         ) : (
-          <div className="space-y-4">
-            <div className="flex items-center gap-3 rounded-md border border-[var(--border)] p-3">
-              <User className="size-5 text-[var(--text-muted)]" />
-              <div>
-                <p className="text-xs text-[var(--text-muted)]">显示名称</p>
-                <p className="font-medium">{user.display_name || "未设置"}</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-3 rounded-md border border-[var(--border)] p-3">
-              <Mail className="size-5 text-[var(--text-muted)]" />
-              <div>
-                <p className="text-xs text-[var(--text-muted)]">邮箱地址</p>
-                <p className="font-medium">{user.email}</p>
-              </div>
-            </div>
-          </div>
+          <dl className="divide-y divide-[var(--border)]">
+            <ProfileRow label="显示名称" value={displayLabel} />
+            <ProfileRow label="登录邮箱" value={user.email} />
+          </dl>
         )}
-      </div>
+      </section>
 
-      {/* Account Info */}
-      <div className="rounded-lg border border-[var(--border)] bg-[var(--card)] p-6">
-        <h3 className="mb-4 text-lg font-medium">账户信息</h3>
-        <div className="space-y-3">
-          <div className="flex items-center justify-between">
-            <span className="text-sm text-[var(--text-muted)]">用户 ID</span>
-            <code className="rounded bg-[var(--muted)] px-2 py-1 text-xs">
-              {user.id}
-            </code>
-          </div>
-          <div className="flex items-center justify-between">
-            <span className="text-sm text-[var(--text-muted)]">角色</span>
-            <span className="text-sm font-medium">{user.role}</span>
-          </div>
+      <section className="overflow-hidden rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--surface)]">
+        <div className="border-b border-[var(--border)] px-4 py-3">
+          <h3 className="text-sm font-semibold">账户信息</h3>
+          <p className="mt-0.5 text-xs text-[var(--text-muted)]">
+            系统分配的身份与访问状态。
+          </p>
         </div>
-      </div>
+        <dl className="divide-y divide-[var(--border)]">
+          <ProfileRow code label="用户 ID" value={user.id} />
+          <ProfileRow label="系统角色" value={roleLabels[user.role]} />
+          <ProfileRow label="账户状态" value={statusLabels[user.status]} />
+        </dl>
+      </section>
+    </div>
+  );
+}
+
+function ProfileRow({
+  code = false,
+  label,
+  value,
+}: {
+  code?: boolean;
+  label: string;
+  value: string;
+}) {
+  return (
+    <div className="grid gap-1 px-4 py-3 sm:grid-cols-[9rem_minmax(0,1fr)] sm:items-center">
+      <dt className="text-sm text-[var(--text-muted)]">{label}</dt>
+      <dd
+        className={
+          code
+            ? "break-all font-mono text-xs text-[var(--text)]"
+            : "break-words text-sm font-medium"
+        }
+      >
+        {value}
+      </dd>
     </div>
   );
 }

@@ -2,14 +2,7 @@
 
 import { useState, type FormEvent } from "react";
 import { useMutation } from "@tanstack/react-query";
-import {
-  Lock,
-  Shield,
-  AlertTriangle,
-  Eye,
-  EyeOff,
-  Save,
-} from "lucide-react";
+import { Lock, Shield, Eye, EyeOff, Save } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -67,22 +60,32 @@ export function SecuritySection() {
   }
 
   return (
-    <div className="space-y-6">
-      {/* Password Change */}
-      <div className="rounded-lg border border-[var(--border)] bg-[var(--card)] p-6">
-        <div className="mb-4 flex items-center gap-2">
-          <Lock className="size-5" />
-          <h3 className="text-lg font-medium">修改密码</h3>
+    <div className="space-y-5">
+      <section className="rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--surface)] p-4 sm:p-5">
+        <div className="mb-4 flex items-start gap-3 border-b border-[var(--border)] pb-4">
+          <Lock className="mt-0.5 size-4 text-[var(--text-muted)]" />
+          <div>
+            <h3 className="text-sm font-semibold">修改密码</h3>
+            <p className="mt-1 text-xs text-[var(--text-muted)]">
+              使用当前密码验证身份后设置新密码。
+            </p>
+          </div>
         </div>
 
         {error && (
-          <div className="mb-4 rounded-md bg-[var(--danger-subtle)] p-3 text-sm text-[var(--danger)]">
+          <div
+            className="mb-4 rounded-md bg-[var(--danger-subtle)] p-3 text-sm text-[var(--danger)]"
+            role="alert"
+          >
             {error}
           </div>
         )}
 
         {success && (
-          <div className="mb-4 rounded-md bg-[var(--success-subtle)] p-3 text-sm text-[var(--success)]">
+          <div
+            className="mb-4 rounded-md bg-[var(--success-subtle)] p-3 text-sm text-[var(--success)]"
+            role="status"
+          >
             密码修改成功
           </div>
         )}
@@ -166,44 +169,29 @@ export function SecuritySection() {
             />
           </div>
 
-          <Button
-            className="gap-2"
-            disabled={mutation.isPending}
-            type="submit"
-          >
+          <Button className="gap-2" disabled={mutation.isPending} type="submit">
             <Save className="size-4" />
             {mutation.isPending ? "修改中..." : "修改密码"}
           </Button>
         </form>
-      </div>
+      </section>
 
-      {/* Two-Factor Authentication */}
-      <div className="rounded-lg border border-[var(--border)] bg-[var(--card)] p-6">
-        <div className="mb-4 flex items-center gap-2">
-          <Shield className="size-5" />
-          <h3 className="text-lg font-medium">两步验证</h3>
+      <section className="rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--surface)] p-4 sm:p-5">
+        <div className="flex items-start justify-between gap-4">
+          <div className="flex items-start gap-3">
+            <Shield className="mt-0.5 size-4 text-[var(--text-muted)]" />
+            <div>
+              <h3 className="text-sm font-semibold">两步验证</h3>
+              <p className="mt-1 text-xs leading-5 text-[var(--text-muted)]">
+                当前账户暂不支持手机验证码或身份验证器绑定。
+              </p>
+            </div>
+          </div>
+          <span className="shrink-0 rounded-full bg-[var(--surface-subtle)] px-2.5 py-1 text-xs font-medium text-[var(--text-muted)]">
+            暂未开放
+          </span>
         </div>
-        <div className="rounded-md bg-[var(--muted)] p-4">
-          <p className="text-sm text-[var(--text-muted)]">
-            两步验证功能即将推出，届时您可以通过手机验证码或身份验证器应用增强账户安全性。
-          </p>
-        </div>
-      </div>
-
-      {/* Danger Zone */}
-      <div className="rounded-lg border border-[var(--danger)] bg-[var(--card)] p-6">
-        <div className="mb-4 flex items-center gap-2">
-          <AlertTriangle className="size-5 text-[var(--danger)]" />
-          <h3 className="text-lg font-medium text-[var(--danger)]">危险区域</h3>
-        </div>
-        <p className="mb-4 text-sm text-[var(--text-muted)]">
-          删除账户后，所有数据将被永久删除且无法恢复。请谨慎操作。
-        </p>
-        <Button className="gap-2" variant="danger">
-          <AlertTriangle className="size-4" />
-          删除账户
-        </Button>
-      </div>
+      </section>
     </div>
   );
 }

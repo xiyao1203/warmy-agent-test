@@ -2,15 +2,14 @@
 
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
-import {
-  User,
-  Settings,
-  Bell,
-  Shield,
-} from "lucide-react";
+import { User, Settings, Bell, Shield } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-import { accountSections, type AccountSection } from "./types";
+import {
+  accountSections,
+  normalizeAccountSection,
+  type AccountSection,
+} from "./types";
 
 const sectionIcons: Record<AccountSection, React.ReactNode> = {
   profile: <User className="size-4" />,
@@ -25,31 +24,34 @@ interface AccountCenterProps {
 
 export function AccountCenter({ children }: AccountCenterProps) {
   const searchParams = useSearchParams();
-  const activeSection = (searchParams.get("section") || "profile") as AccountSection;
+  const activeSection = normalizeAccountSection(searchParams.get("section"));
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-6 sm:px-6 lg:px-8">
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold tracking-tight">账户中心</h1>
-        <p className="mt-1 text-sm text-[var(--text-muted)]">
+    <div className="mx-auto max-w-[1040px] px-4 py-8 sm:px-6 lg:py-10">
+      <div className="mb-7 border-b border-[var(--border)] pb-6">
+        <p className="mb-2 text-sm font-medium text-[var(--text-muted)]">
+          账户与偏好
+        </p>
+        <h1 className="text-2xl font-semibold tracking-tight">账户中心</h1>
+        <p className="mt-2 text-sm text-[var(--text-muted)]">
           管理您的个人信息、偏好设置和安全选项
         </p>
       </div>
 
-      <div className="flex flex-col gap-6 lg:grid lg:grid-cols-[13rem_minmax(0,1fr)]">
-        {/* Mobile: scrollable horizontal nav */}
+      <div className="flex min-w-0 flex-col gap-6 lg:grid lg:grid-cols-[12rem_minmax(0,1fr)] lg:gap-8">
         <nav
-          className="flex gap-2 overflow-x-auto pb-2 lg:hidden"
-          aria-label="账户设置导航"
+          aria-label="账户设置移动导航"
+          className="flex gap-1 overflow-x-auto border-b border-[var(--border)] pb-2 lg:hidden"
         >
           {accountSections.map((section) => (
             <Link
+              aria-current={activeSection === section.id ? "page" : undefined}
               key={section.id}
               className={cn(
-                "flex shrink-0 items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+                "flex shrink-0 items-center gap-2 rounded-[var(--radius-sm)] px-3 py-2 text-sm font-medium transition-colors",
                 activeSection === section.id
-                  ? "bg-[var(--primary)] text-[var(--primary-fg)]"
-                  : "text-[var(--text-muted)] hover:bg-[var(--accent)] hover:text-[var(--text)]"
+                  ? "bg-[var(--surface-subtle)] text-[var(--text)]"
+                  : "text-[var(--text-muted)] hover:bg-[var(--surface-subtle)] hover:text-[var(--text)]",
               )}
               href={section.href}
             >
@@ -59,24 +61,24 @@ export function AccountCenter({ children }: AccountCenterProps) {
           ))}
         </nav>
 
-        {/* Desktop: vertical sidebar */}
         <aside className="hidden lg:block">
           <nav className="sticky top-6 space-y-1" aria-label="账户设置导航">
             {accountSections.map((section) => (
               <Link
+                aria-current={activeSection === section.id ? "page" : undefined}
                 key={section.id}
                 className={cn(
-                  "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
+                  "flex items-start gap-3 rounded-[var(--radius-sm)] px-3 py-2.5 text-sm font-medium transition-colors",
                   activeSection === section.id
-                    ? "bg-[var(--primary)] text-[var(--primary-fg)]"
-                    : "text-[var(--text-muted)] hover:bg-[var(--accent)] hover:text-[var(--text)]"
+                    ? "bg-[var(--surface-subtle)] text-[var(--text)]"
+                    : "text-[var(--text-muted)] hover:bg-[var(--surface-subtle)] hover:text-[var(--text)]",
                 )}
                 href={section.href}
               >
-                {sectionIcons[section.id]}
-                <div>
+                <span className="mt-0.5">{sectionIcons[section.id]}</span>
+                <div className="min-w-0">
                   <div>{section.label}</div>
-                  <div className="text-xs font-normal opacity-70">
+                  <div className="mt-0.5 text-xs font-normal leading-4 text-[var(--text-subtle)]">
                     {section.description}
                   </div>
                 </div>
@@ -85,7 +87,6 @@ export function AccountCenter({ children }: AccountCenterProps) {
           </nav>
         </aside>
 
-        {/* Main content */}
         <main className="min-w-0 overflow-x-hidden">{children}</main>
       </div>
     </div>

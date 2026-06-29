@@ -32,7 +32,7 @@ export function FeedbackForm() {
       setError("");
     },
     onError: () => {
-      setError("提交失败，请重试");
+      setError("提交失败，请稍后重试。");
     },
   });
 
@@ -135,18 +135,21 @@ export function FeedbackForm() {
       </div>
 
       {error && (
-        <div className="rounded-md bg-[var(--danger-subtle)] p-3 text-sm text-[var(--danger)]">
+        <div
+          className="rounded-md bg-[var(--danger-subtle)] p-3 text-sm text-[var(--danger)]"
+          role="alert"
+        >
           {error}
         </div>
       )}
 
-      <Button
-        className="gap-2"
-        disabled={mutation.isPending}
-        type="submit"
-      >
+      <Button className="gap-2" disabled={mutation.isPending} type="submit">
         <Send className="size-4" />
-        {mutation.isPending ? "提交中..." : mutation.isError ? "重新提交" : "提交反馈"}
+        {mutation.isPending
+          ? "提交中..."
+          : mutation.isError
+            ? "重新提交"
+            : "提交反馈"}
       </Button>
     </form>
   );

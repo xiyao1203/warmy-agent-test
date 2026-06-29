@@ -26,46 +26,40 @@ export function PreferencesSection() {
     queryFn: getUserSettings,
   });
 
-  const [theme, setTheme] = useState<string>("system");
-  const [language, setLanguage] = useState<string>("zh-CN");
-  const [hasChanges, setHasChanges] = useState(false);
-
-  // Initialize state from server data
-  useState(() => {
-    if (settings) {
-      setTheme(settings.theme);
-      setLanguage(settings.language);
-    }
-  });
+  const [themeDraft, setThemeDraft] = useState<
+    "system" | "light" | "dark" | null
+  >(null);
+  const [languageDraft, setLanguageDraft] = useState<"zh-CN" | "en" | null>(
+    null,
+  );
+  const theme = themeDraft ?? settings?.theme ?? "system";
+  const language = languageDraft ?? settings?.language ?? "zh-CN";
+  const hasChanges = themeDraft !== null || languageDraft !== null;
 
   const mutation = useMutation({
     mutationFn: updateUserSettings,
     onSuccess: (newSettings) => {
       queryClient.setQueryData(["userSettings"], newSettings);
-      setHasChanges(false);
+      setThemeDraft(null);
+      setLanguageDraft(null);
     },
   });
 
-  function handleThemeChange(newTheme: string) {
-    setTheme(newTheme);
-    setHasChanges(true);
+  function handleThemeChange(newTheme: "system" | "light" | "dark") {
+    setThemeDraft(newTheme);
   }
 
-  function handleLanguageChange(newLanguage: string) {
-    setLanguage(newLanguage);
-    setHasChanges(true);
+  function handleLanguageChange(newLanguage: "zh-CN" | "en") {
+    setLanguageDraft(newLanguage);
   }
 
   function handleReset() {
-    if (settings) {
-      setTheme(settings.theme);
-      setLanguage(settings.language);
-      setHasChanges(false);
-    }
+    setThemeDraft(null);
+    setLanguageDraft(null);
   }
 
   function handleSave() {
-    mutation.mutate({ theme: theme as "system" | "light" | "dark", language: language as "zh-CN" | "en" });
+    mutation.mutate({ theme, language });
   }
 
   if (isLoading) {
@@ -81,50 +75,61 @@ export function PreferencesSection() {
   }
 
   return (
-    <div className="space-y-6">
-      {/* Theme Selection */}
-      <div className="rounded-lg border border-[var(--border)] bg-[var(--card)] p-6">
-        <h3 className="mb-4 text-lg font-medium">外观主题</h3>
-        <div className="grid grid-cols-3 gap-3">
+    <div className="space-y-5">
+      <section className="rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--surface)] p-4 sm:p-5">
+        <div className="mb-4">
+          <h3 className="text-sm font-semibold">外观主题</h3>
+          <p className="mt-1 text-xs text-[var(--text-muted)]">
+            选择平台界面的显示方式。
+          </p>
+        </div>
+        <div className="grid gap-2 sm:grid-cols-3">
           {themes.map(({ id, label, icon: Icon }) => (
             <button
+              aria-pressed={theme === id}
               key={id}
-              className={`flex flex-col items-center gap-2 rounded-lg border-2 p-4 transition-colors ${
+              className={`flex items-center justify-center gap-2 rounded-[var(--radius-sm)] border p-3 transition-colors ${
                 theme === id
-                  ? "border-[var(--primary)] bg-[var(--primary-subtle)]"
-                  : "border-[var(--border)] hover:border-[var(--primary)]"
+                  ? "border-[var(--accent)] bg-[var(--accent-subtle)]"
+                  : "border-[var(--border)] hover:bg-[var(--surface-subtle)]"
               }`}
               onClick={() => handleThemeChange(id)}
+              type="button"
             >
-              <Icon className="size-6" />
+              <Icon className="size-4" />
               <span className="text-sm font-medium">{label}</span>
             </button>
           ))}
         </div>
-      </div>
+      </section>
 
-      {/* Language Selection */}
-      <div className="rounded-lg border border-[var(--border)] bg-[var(--card)] p-6">
-        <h3 className="mb-4 text-lg font-medium">语言设置</h3>
+      <section className="rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--surface)] p-4 sm:p-5">
+        <div className="mb-4">
+          <h3 className="text-sm font-semibold">语言设置</h3>
+          <p className="mt-1 text-xs text-[var(--text-muted)]">
+            设置界面和系统消息使用的语言。
+          </p>
+        </div>
         <div className="grid grid-cols-2 gap-3">
           {languages.map(({ id, label }) => (
             <button
+              aria-pressed={language === id}
               key={id}
-              className={`flex items-center justify-center gap-2 rounded-lg border-2 p-4 transition-colors ${
+              className={`flex items-center justify-center gap-2 rounded-[var(--radius-sm)] border p-3 transition-colors ${
                 language === id
-                  ? "border-[var(--primary)] bg-[var(--primary-subtle)]"
-                  : "border-[var(--border)] hover:border-[var(--primary)]"
+                  ? "border-[var(--accent)] bg-[var(--accent-subtle)]"
+                  : "border-[var(--border)] hover:bg-[var(--surface-subtle)]"
               }`}
               onClick={() => handleLanguageChange(id)}
+              type="button"
             >
               <span className="text-sm font-medium">{label}</span>
             </button>
           ))}
         </div>
-      </div>
+      </section>
 
-      {/* Actions */}
-      <div className="flex gap-2">
+      <div className="flex flex-wrap gap-2">
         <Button
           className="gap-2"
           disabled={!hasChanges || mutation.isPending}
@@ -145,7 +150,10 @@ export function PreferencesSection() {
       </div>
 
       {mutation.isError && (
-        <div className="rounded-md bg-[var(--danger-subtle)] p-3 text-sm text-[var(--danger)]">
+        <div
+          className="rounded-md bg-[var(--danger-subtle)] p-3 text-sm text-[var(--danger)]"
+          role="alert"
+        >
           保存失败，请重试
         </div>
       )}

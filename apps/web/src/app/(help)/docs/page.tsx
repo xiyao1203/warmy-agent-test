@@ -1,277 +1,246 @@
 import {
-  ArrowLeft,
+  ArrowRight,
   BookOpen,
+  ChevronDown,
   FileText,
-  FlaskConical,
+  GraduationCap,
+  Keyboard,
   MessageSquare,
-  PlayCircle,
-  Search,
-  Shield,
-  Zap,
+  Rocket,
 } from "lucide-react";
 import Link from "next/link";
 
-import { HelpSearch } from "@/features/help";
-import type { HelpTopic } from "@/features/help";
+import { HelpSearch, type HelpTopic } from "@/features/help";
 
 const helpTopics: HelpTopic[] = [
-  { id: "agents", title: "Agent 管理", description: "创建和管理测试 Agent，配置连接参数，发布不可变版本", href: "#agents", category: "智能体" },
-  { id: "datasets", title: "数据集与用例", description: "创建数据集，批量导入测试用例，管理版本和标签", href: "#datasets", category: "测试资产" },
-  { id: "test-plans", title: "测试计划", description: "组合 Agent、数据集和环境，配置执行策略和门禁规则", href: "#test-plans", category: "测试执行" },
-  { id: "security", title: "安全测试", description: "配置安全扫描规则，检测敏感信息泄露和权限问题", href: "#security", category: "安全" },
-  { id: "quickstart", title: "快速开始", description: "按照步骤快速体验平台核心功能", href: "#quickstart", category: "入门" },
-  { id: "faq", title: "常见问题", description: "快速找到常见问题的解答", href: "#faq", category: "入门" },
-];
-
-const features = [
   {
-    description: "创建和管理测试 Agent，配置连接参数，发布不可变版本",
-    gradient: "from-blue-500 to-cyan-500",
-    href: "#agents",
-    icon: <FlaskConical className="size-5" />,
-    title: "Agent 管理",
+    id: "quickstart",
+    title: "快速开始",
+    description: "从创建项目到完成第一次测试运行",
+    href: "/docs#quickstart",
+    category: "入门",
   },
   {
-    description: "创建数据集，批量导入测试用例，管理版本和标签",
-    gradient: "from-purple-500 to-pink-500",
-    href: "#datasets",
-    icon: <FileText className="size-5" />,
-    title: "数据集与用例",
+    id: "test-cases",
+    title: "测试用例指南",
+    description: "编写清晰、可重复执行的 Agent 测试用例",
+    href: "/docs/test-cases",
+    category: "测试资产",
   },
   {
-    description: "组合 Agent、数据集和环境，配置执行策略和门禁规则",
-    gradient: "from-orange-500 to-red-500",
-    href: "#test-plans",
-    icon: <PlayCircle className="size-5" />,
-    title: "测试计划",
+    id: "tutorials",
+    title: "产品教程",
+    description: "按主题了解 Agent、数据集、测试计划和报告",
+    href: "/docs/tutorials",
+    category: "教程",
   },
   {
-    description: "配置安全扫描规则，检测敏感信息泄露和权限问题",
-    gradient: "from-green-500 to-emerald-500",
-    href: "#security",
-    icon: <Shield className="size-5" />,
-    title: "安全测试",
+    id: "shortcuts",
+    title: "键盘快捷键",
+    description: "使用键盘完成常用导航和编辑操作",
+    href: "/docs/shortcuts",
+    category: "效率",
+  },
+  {
+    id: "feedback",
+    title: "反馈与建议",
+    description: "报告问题或告诉我们你希望改进的地方",
+    href: "/feedback",
+    category: "支持",
   },
 ];
 
-const quickLinks = [
-  { description: "如何创建第一个 Agent？", href: "#quickstart" },
-  { description: "如何导入测试用例？", href: "#import" },
-  { description: "如何配置测试环境？", href: "#environment" },
-  { description: "如何查看测试报告？", href: "#reports" },
+const topicCards = [
+  {
+    description: "从测试目标拆解到可验证的输入、步骤和预期结果。",
+    href: "/docs/test-cases",
+    icon: FileText,
+    label: "编写测试用例",
+  },
+  {
+    description: "按模块阅读核心能力说明，建立完整的平台操作路径。",
+    href: "/docs/tutorials",
+    icon: GraduationCap,
+    label: "浏览产品教程",
+  },
+  {
+    description: "查看平台支持的导航、编辑和列表操作快捷键。",
+    href: "/docs/shortcuts",
+    icon: Keyboard,
+    label: "掌握快捷键",
+  },
+  {
+    description: "提交问题、体验建议或新的功能需求。",
+    href: "/feedback",
+    icon: MessageSquare,
+    label: "联系产品团队",
+  },
 ];
+
+const quickstartSteps = [
+  ["创建项目", "定义测试资产、成员和环境的隔离边界。"],
+  ["接入 Agent", "填写连接信息并发布一个不可变版本。"],
+  ["准备测试用例", "创建数据集，录入输入、断言和预期结果。"],
+  ["配置测试计划", "选择 Agent、数据集、环境和评分器。"],
+  ["运行并分析", "查看运行状态、Trace、评分和失败证据。"],
+] as const;
+
+const faqs = [
+  [
+    "如何批量导入测试用例？",
+    "在数据集详情中使用导入功能，按页面提供的模板准备结构化用例数据。导入前先校验必填字段和用例唯一标识。",
+  ],
+  [
+    "Agent 版本发布后还能修改吗？",
+    "不能。已发布版本保持不可变，以确保历史运行可重现。需要调整时请创建并发布新版本。",
+  ],
+  [
+    "测试环境和凭证如何管理？",
+    "在环境与凭证页面创建环境模板。普通成员可以在授权范围内执行任务，但不能读取凭证明文。",
+  ],
+  [
+    "在哪里定位失败原因？",
+    "从运行详情进入结果工作台，结合用例输入输出、Agent Trace、评分证据和产物定位失败步骤。",
+  ],
+] as const;
 
 export default function DocsPage() {
   return (
-    <div className="min-h-screen bg-[var(--background)]">
-      {/* 顶部导航栏 */}
-      <header className="sticky top-0 z-50 border-b border-[var(--border)] bg-[var(--surface)]/80 backdrop-blur-sm">
-        <div className="mx-auto flex h-14 max-w-[1100px] items-center justify-between px-6">
-          <Link
-            className="flex items-center gap-2 text-sm font-semibold transition-colors hover:text-[var(--accent)]"
-            href="/projects"
-          >
-            <ArrowLeft className="size-4" />
-            返回应用
-          </Link>
-          <span className="text-sm font-semibold">帮助中心</span>
-          <div className="w-20" />
+    <div className="space-y-12">
+      <header className="max-w-3xl">
+        <div className="mb-3 flex items-center gap-2 text-sm font-medium text-[var(--text-muted)]">
+          <BookOpen className="size-4" />
+          文档与指南
         </div>
+        <h1 className="text-2xl font-semibold tracking-tight">帮助中心</h1>
+        <p className="mt-2 text-sm leading-6 text-[var(--text-muted)]">
+          查找平台使用说明、测试实践和常见问题，快速完成从 Agent
+          接入到结果分析的完整流程。
+        </p>
       </header>
 
-      {/* Hero Section */}
-      <div className="border-b border-[var(--border)] bg-gradient-to-b from-[var(--accent-subtle)] to-transparent">
-        <div className="mx-auto max-w-[1100px] px-6 py-12">
-          <div className="flex items-start justify-between gap-8">
-            <div>
-              <h1 className="text-3xl font-bold tracking-tight">帮助文档</h1>
-              <p className="mt-3 text-lg text-[var(--text-muted)]">
-                欢迎使用 Agent Test
-                平台，这里可以帮助您快速上手并深入了解产品功能。
-              </p>
-              <div className="mt-6 flex gap-3">
-                <a
-                  className="inline-flex items-center gap-2 rounded-lg bg-[var(--accent)] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[var(--accent-strong)]"
-                  href="#quickstart"
-                >
-                  <Zap className="size-4" />
-                  快速开始
-                </a>
-                <a
-                  className="inline-flex items-center gap-2 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-4 py-2 text-sm font-medium transition-colors hover:bg-[var(--surface-subtle)]"
-                  href="#features"
-                >
-                  <BookOpen className="size-4" />
-                  功能介绍
-                </a>
-              </div>
-            </div>
-            <div className="hidden w-80 shrink-0 rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4 shadow-lg lg:block">
-              <HelpSearch topics={helpTopics} />
-            </div>
+      <section aria-labelledby="help-search-title" className="space-y-4">
+        <div>
+          <h2 className="text-base font-semibold" id="help-search-title">
+            从哪里开始？
+          </h2>
+          <p className="mt-1 text-sm text-[var(--text-muted)]">
+            搜索主题、功能或操作名称。
+          </p>
+        </div>
+        <HelpSearch topics={helpTopics} />
+      </section>
+
+      <section aria-labelledby="topics-title">
+        <div className="mb-4">
+          <h2 className="text-base font-semibold" id="topics-title">
+            浏览主题
+          </h2>
+          <p className="mt-1 text-sm text-[var(--text-muted)]">
+            选择最接近当前任务的指南。
+          </p>
+        </div>
+        <div className="overflow-hidden rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--surface)]">
+          {topicCards.map(({ description, href, icon: Icon, label }, index) => (
+            <Link
+              className="group flex items-start gap-3 px-4 py-4 transition-colors hover:bg-[var(--surface-subtle)]"
+              href={href}
+              key={href}
+            >
+              <span className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-[var(--radius-sm)] border border-[var(--border)] bg-[var(--background)] text-[var(--text-muted)]">
+                <Icon className="size-4" />
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="text-sm font-medium">{label}</span>
+                <span className="mt-1 block text-sm leading-5 text-[var(--text-muted)]">
+                  {description}
+                </span>
+              </span>
+              <ArrowRight className="mt-1 size-4 shrink-0 text-[var(--text-subtle)] transition-transform group-hover:translate-x-0.5 group-hover:text-[var(--text)]" />
+              {index < topicCards.length - 1 && (
+                <span className="sr-only">下一主题</span>
+              )}
+            </Link>
+          ))}
+        </div>
+      </section>
+
+      <section aria-labelledby="quickstart-title" id="quickstart">
+        <div className="mb-4 flex items-start gap-3">
+          <span className="flex size-8 shrink-0 items-center justify-center rounded-[var(--radius-sm)] bg-[var(--accent-subtle)] text-[var(--accent)]">
+            <Rocket className="size-4" />
+          </span>
+          <div>
+            <h2 className="text-base font-semibold" id="quickstart-title">
+              推荐上手路径
+            </h2>
+            <p className="mt-1 text-sm text-[var(--text-muted)]">
+              按顺序完成以下步骤，建立第一条可复现的测试链路。
+            </p>
           </div>
         </div>
-      </div>
-
-      <div className="mx-auto max-w-[1100px] px-6 py-10">
-        {/* Features Section */}
-        <section id="features">
-          <h2 className="mb-2 text-xl font-semibold">功能模块</h2>
-          <p className="mb-6 text-sm text-[var(--text-muted)]">
-            了解平台各功能模块的使用方法
-          </p>
-          <div className="grid gap-4 sm:grid-cols-2">
-            {features.map((feature) => (
-              <a
-                className="group flex items-start gap-4 rounded-xl border border-[var(--border)] bg-[var(--surface)] p-5 transition-all hover:border-[var(--accent)] hover:shadow-md"
-                href={feature.href}
-                key={feature.title}
-              >
-                <div
-                  className={`flex size-10 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br ${feature.gradient} text-white`}
-                >
-                  {feature.icon}
-                </div>
-                <div>
-                  <h3 className="font-semibold group-hover:text-[var(--accent)]">
-                    {feature.title}
-                  </h3>
-                  <p className="mt-1 text-sm text-[var(--text-muted)]">
-                    {feature.description}
-                  </p>
-                </div>
-              </a>
-            ))}
-          </div>
-        </section>
-
-        {/* Quick Start Section */}
-        <section className="mt-12" id="quickstart">
-          <h2 className="mb-2 text-xl font-semibold">快速开始</h2>
-          <p className="mb-6 text-sm text-[var(--text-muted)]">
-            按照以下步骤，快速体验平台核心功能
-          </p>
-          <div className="space-y-6">
-            {[
-              {
-                content:
-                  "在顶部导航栏的项目选择器中，点击「创建项目」按钮，输入项目名称和描述即可创建新项目。",
-                step: 1,
-                title: "创建项目",
-              },
-              {
-                content:
-                  "进入左侧导航「智能体」页面，点击「创建 Agent」按钮。填写 Agent 名称、类型和连接配置。",
-                step: 2,
-                title: "配置 Agent",
-              },
-              {
-                content:
-                  "进入「测试用例」页面，创建数据集后可通过 Excel 或 JSON 格式批量导入测试用例。",
-                step: 3,
-                title: "导入测试用例",
-              },
-              {
-                content:
-                  "进入「测试计划」页面，选择已发布的 Agent 和数据集版本，配置执行参数后即可启动测试。",
-                step: 4,
-                title: "创建并运行测试",
-              },
-              {
-                content:
-                  "在「测试执行」页面查看运行状态，点击运行 ID 进入详情页查看 Trace、截图和评分结果。",
-                step: 5,
-                title: "查看测试报告",
-              },
-            ].map((item) => (
-              <div
-                className="flex gap-4 rounded-xl border border-[var(--border)] bg-[var(--surface)] p-5"
-                key={item.step}
-              >
-                <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-[var(--accent)] text-sm font-bold text-white">
-                  {item.step}
-                </div>
-                <div>
-                  <h3 className="font-semibold">{item.title}</h3>
-                  <p className="mt-1 text-sm text-[var(--text-muted)]">
-                    {item.content}
-                  </p>
-                </div>
+        <ol className="overflow-hidden rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--surface)]">
+          {quickstartSteps.map(([title, description], index) => (
+            <li
+              className="flex gap-4 border-b border-[var(--border)] px-4 py-4 last:border-b-0"
+              key={title}
+            >
+              <span className="flex size-6 shrink-0 items-center justify-center rounded-full border border-[var(--border-strong)] text-xs font-semibold text-[var(--text-muted)]">
+                {index + 1}
+              </span>
+              <div>
+                <h3 className="text-sm font-medium">{title}</h3>
+                <p className="mt-1 text-sm leading-5 text-[var(--text-muted)]">
+                  {description}
+                </p>
               </div>
-            ))}
-          </div>
-        </section>
+            </li>
+          ))}
+        </ol>
+      </section>
 
-        {/* FAQ Section */}
-        <section className="mt-12" id="faq">
-          <h2 className="mb-2 text-xl font-semibold">常见问题</h2>
-          <p className="mb-6 text-sm text-[var(--text-muted)]">
-            快速找到常见问题的解答
+      <section aria-labelledby="faq-title" id="faq">
+        <div className="mb-4">
+          <h2 className="text-base font-semibold" id="faq-title">
+            常见问题
+          </h2>
+          <p className="mt-1 text-sm text-[var(--text-muted)]">
+            开始配置和运行测试时最常遇到的问题。
           </p>
-          <div className="space-y-3">
-            {[
-              {
-                answer:
-                  "在测试用例页面，选择数据集后点击「导入」按钮，支持 Excel (.xlsx) 和 JSON 两种格式。请参考测试指南了解模板格式。",
-                question: "如何批量导入测试用例？",
-              },
-              {
-                answer:
-                  "Agent 版本一旦发布即为不可变状态，无法直接修改。如需更新，请创建新版本并发布。",
-                question: "Agent 版本可以修改吗？",
-              },
-              {
-                answer:
-                  "在环境与凭证页面，可以创建环境模板并配置变量。测试计划执行时会自动注入对应环境的变量。",
-                question: "如何配置测试环境变量？",
-              },
-              {
-                answer:
-                  "测试报告支持导出为 HTML 和 PDF 格式。在运行详情页，点击右上角「导出报告」按钮即可。",
-                question: "如何导出测试报告？",
-              },
-            ].map((item, i) => (
-              <details
-                className="group rounded-xl border border-[var(--border)] bg-[var(--surface)]"
-                key={i}
-              >
-                <summary className="flex cursor-pointer items-center justify-between px-5 py-4 text-sm font-medium transition-colors hover:bg-[var(--surface-subtle)] group-open:rounded-b-none">
-                  {item.question}
-                  <span className="text-[var(--text-muted)] transition-transform group-open:rotate-180">
-                    ▼
-                  </span>
-                </summary>
-                <div className="border-t border-[var(--border)] px-5 py-4 text-sm text-[var(--text-muted)]">
-                  {item.answer}
-                </div>
-              </details>
-            ))}
-          </div>
-        </section>
+        </div>
+        <div className="overflow-hidden rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--surface)]">
+          {faqs.map(([question, answer]) => (
+            <details
+              className="group border-b border-[var(--border)] last:border-b-0"
+              key={question}
+            >
+              <summary className="flex cursor-pointer list-none items-center justify-between gap-4 px-4 py-4 text-sm font-medium hover:bg-[var(--surface-subtle)]">
+                {question}
+                <ChevronDown className="size-4 shrink-0 text-[var(--text-muted)] transition-transform group-open:rotate-180" />
+              </summary>
+              <p className="border-t border-[var(--border)] px-4 py-4 text-sm leading-6 text-[var(--text-muted)]">
+                {answer}
+              </p>
+            </details>
+          ))}
+        </div>
+      </section>
 
-        {/* Contact Section */}
-        <section className="mt-12 rounded-xl border border-[var(--accent)] bg-[var(--accent-subtle)] p-8 text-center">
-          <MessageSquare className="mx-auto size-10 text-[var(--accent)]" />
-          <h2 className="mt-4 text-xl font-semibold">还需要帮助？</h2>
-          <p className="mt-2 text-sm text-[var(--text-muted)]">
-            如果您没有找到想要的答案，欢迎提交反馈或联系技术支持
+      <section className="flex flex-col gap-4 rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--surface-subtle)] p-5 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h2 className="text-sm font-semibold">没有找到需要的内容？</h2>
+          <p className="mt-1 text-sm text-[var(--text-muted)]">
+            提交问题或建议，我们会把高频问题补充到帮助中心。
           </p>
-          <div className="mt-6 flex justify-center gap-3">
-            <Link
-              className="inline-flex items-center gap-2 rounded-lg bg-[var(--accent)] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[var(--accent-strong)]"
-              href="/feedback"
-            >
-              提交反馈
-            </Link>
-            <a
-              className="inline-flex items-center gap-2 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-4 py-2 text-sm font-medium transition-colors hover:bg-[var(--surface-subtle)]"
-              href="mailto:support@example.com"
-            >
-              联系支持
-            </a>
-          </div>
-        </section>
-      </div>
+        </div>
+        <Link
+          className="inline-flex shrink-0 items-center justify-center gap-2 rounded-[var(--radius-sm)] bg-[var(--accent)] px-3 py-2 text-sm font-medium text-white hover:bg-[var(--accent-strong)]"
+          href="/feedback"
+        >
+          <MessageSquare className="size-4" />
+          提交反馈
+        </Link>
+      </section>
     </div>
   );
 }
