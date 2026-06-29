@@ -1184,6 +1184,8 @@ Workspace
     ├── Agent
     │   └── AgentVersion
     ├── EnvironmentTemplate
+    ├── ModelConfiguration
+    │   └── ProjectModelDefault（测试 Agent / 文本裁判 / 视觉裁判）
     ├── Dataset
     │   └── DatasetVersion
     │       └── TestCase
@@ -1430,6 +1432,8 @@ PENDING
 
 ### 19.4 过程与结果
 
+- 项目成员可配置 OpenAI-Compatible 模型，API Key 加密保存且普通 API 永不返回明文。
+- 测试 Agent、文本裁判和视觉裁判分别使用项目显式选择的默认模型；未配置或调用失败时明确报错，不生成 Mock 或占位结果。
 - 能保存模型调用、工具调用和主要执行步骤。
 - 能获取并展示画布 JSON、节点、连线和截图。
 - 能判断关键节点、连接、工具和状态是否符合预期。

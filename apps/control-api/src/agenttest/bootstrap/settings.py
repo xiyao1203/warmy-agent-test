@@ -17,6 +17,7 @@ class Settings(BaseSettings):
 
     本地开发默认使用 SQLite 以降低环境依赖。
     """
+
     model_config = SettingsConfigDict(
         env_prefix="AGENTTEST_",
         env_file=".env",
@@ -35,6 +36,9 @@ class Settings(BaseSettings):
     temporal_address: str | None = None
     temporal_namespace: str = "default"
     temporal_task_queue: str = "agenttest-api-runner"
+    model_runner_task_queue: str = "agenttest-model-runner"
+    model_credential_key: str | None = None
+    model_allow_private_network: bool = False
 
 
 @lru_cache

@@ -22,7 +22,9 @@ def alembic_config(*, database_url: str | None = None) -> Config:
 
 def test_initial_migration_generates_expected_postgresql_schema() -> None:
     output = StringIO()
-    config = alembic_config()
+    config = alembic_config(
+        database_url="postgresql+asyncpg://agenttest:agenttest@localhost/agenttest"
+    )
     config.output_buffer = output
 
     command.upgrade(config, "head", sql=True)
@@ -44,6 +46,10 @@ def test_initial_migration_generates_expected_postgresql_schema() -> None:
     assert "ix_user_sessions_user_expires" in sql
     assert "ix_projects_created_at_desc" in sql
     assert "ix_audit_logs_project_created_at_desc" in sql
+    assert "model_configurations" in sql
+    assert "project_model_defaults" in sql
+    assert "uq_model_configs_project_name" in sql
+    assert "uq_project_model_defaults_project_purpose" in sql
 
 
 @pytest.mark.skipif(
@@ -55,11 +61,11 @@ def test_empty_database_upgrade_and_revision_cycle() -> None:
     config = alembic_config(database_url=database_url)
 
     command.upgrade(config, "head")
-    assert run(current_revision(database_url)) == "0001"
+    assert run(current_revision(database_url)) == "0009"
 
     command.downgrade(config, "base")
     command.upgrade(config, "head")
-    assert run(current_revision(database_url)) == "0001"
+    assert run(current_revision(database_url)) == "0009"
 
 
 async def current_revision(database_url: str) -> str:

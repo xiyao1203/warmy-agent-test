@@ -7,6 +7,7 @@ dependencies = [
   "argon2-cffi",
   "aiosqlite",
   "asyncpg",
+  "cryptography==49.0.0",
   "fastapi",
   "httpx",
   "opentelemetry-api",
@@ -14,6 +15,7 @@ dependencies = [
   "pydantic-settings",
   "sqlalchemy[asyncio]",
   "structlog",
+  "temporalio==1.29.0",
   "uvicorn[standard]",
 ]
 

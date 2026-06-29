@@ -15,6 +15,7 @@ import {
   KeyRound,
   LayoutDashboard,
   MessageSquareText,
+  Cpu,
   PlayCircle,
   Scale,
   Search,
@@ -57,7 +58,8 @@ export function AppShell({
     ? `/projects/${currentProjectId}/overview`
     : "/projects";
 
-  const activeProjectId = currentProjectId || (projects.length > 0 ? projects[0].id : null);
+  const activeProjectId =
+    currentProjectId || (projects.length > 0 ? projects[0].id : null);
 
   return (
     <div className="min-h-screen bg-[var(--background)] text-[var(--text)]">
@@ -120,10 +122,7 @@ export function AppShell({
                 <ProjectNavLink
                   href={`/projects/${activeProjectId}/datasets`}
                   icon={
-                    <Database
-                      aria-hidden="true"
-                      className="size-4 shrink-0"
-                    />
+                    <Database aria-hidden="true" className="size-4 shrink-0" />
                   }
                   label="测试用例"
                 />
@@ -150,20 +149,19 @@ export function AppShell({
                 <ProjectNavLink
                   href={`/projects/${activeProjectId}/environments`}
                   icon={
-                    <KeyRound
-                      aria-hidden="true"
-                      className="size-4 shrink-0"
-                    />
+                    <KeyRound aria-hidden="true" className="size-4 shrink-0" />
                   }
                   label="环境与凭证"
                 />
                 <ProjectNavLink
+                  href={`/projects/${activeProjectId}/models`}
+                  icon={<Cpu aria-hidden="true" className="size-4 shrink-0" />}
+                  label="模型配置"
+                />
+                <ProjectNavLink
                   href={`/projects/${activeProjectId}/scorers`}
                   icon={
-                    <Scale
-                      aria-hidden="true"
-                      className="size-4 shrink-0"
-                    />
+                    <Scale aria-hidden="true" className="size-4 shrink-0" />
                   }
                   label="评分器"
                 />
@@ -190,10 +188,7 @@ export function AppShell({
                 <ProjectNavLink
                   href={`/projects/${activeProjectId}/security`}
                   icon={
-                    <Shield
-                      aria-hidden="true"
-                      className="size-4 shrink-0"
-                    />
+                    <Shield aria-hidden="true" className="size-4 shrink-0" />
                   }
                   label="安全测试"
                 />
@@ -210,10 +205,7 @@ export function AppShell({
                 <ProjectNavLink
                   href={`/projects/${activeProjectId}/test-agent`}
                   icon={
-                    <Sparkles
-                      aria-hidden="true"
-                      className="size-4 shrink-0"
-                    />
+                    <Sparkles aria-hidden="true" className="size-4 shrink-0" />
                   }
                   label="测试 Agent"
                 />

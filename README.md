@@ -72,12 +72,26 @@ uv run agenttest-admin create-super-admin --email admin@example.com --name Admin
 ### 5. 启动后端 API
 
 ```bash
-uv run uvicorn agenttest.main:app --reload --port 8181
+export AGENTTEST_TEMPORAL_ADDRESS=localhost:7233
+export AGENTTEST_MODEL_CREDENTIAL_KEY="$(python -c 'import base64,secrets; print(base64.urlsafe_b64encode(secrets.token_bytes(32)).decode())')"
+uv run uvicorn agenttest.main:app --app-dir apps/control-api/src --reload --port 8181
 ```
 
 API 文档：`http://localhost:8181/docs`
 
-### 6. 启动前端
+同一部署的 Control API 与 Model Runner 必须使用相同的 `AGENTTEST_MODEL_CREDENTIAL_KEY`。该值是项目模型凭证的加密主密钥，不能提交到仓库；轮换前必须执行凭证重加密。
+
+### 6. 启动 Model Runner
+
+```bash
+export AGENTTEST_TEMPORAL_ADDRESS=localhost:7233
+uv run python -m agenttest_model_runner.main
+```
+
+Model Runner 不连接业务数据库，只从 Temporal 接收当前调用所需的加密快照。
+如确需连接本机 Ollama 等私网模型，显式设置 `AGENTTEST_MODEL_ALLOW_PRIVATE_NETWORK=true`；默认关闭以防止 SSRF。
+
+### 7. 启动前端
 
 ```bash
 pnpm --filter @warmy/web dev --port 5175
@@ -85,7 +99,7 @@ pnpm --filter @warmy/web dev --port 5175
 
 前端地址：`http://localhost:5175`
 
-### 7. 登录
+### 8. 登录
 
 使用步骤 4 创建的管理员账号登录。首次登录会提示修改密码（如已设置 `must_change_password`）。
 
@@ -147,4 +161,3 @@ codex --ask-for-approval never "请列出你加载的项目指令，并用不超
 ## GitHub
 
 仓库：<https://github.com/xiyao1203/warmy-agent-test>
-

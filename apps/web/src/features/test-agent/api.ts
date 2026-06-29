@@ -16,6 +16,15 @@ export type ChatResponse = {
   status: string;
 };
 
+export class TestAgentApiError extends Error {
+  constructor(
+    public status: number,
+    message: string,
+  ) {
+    super(message);
+  }
+}
+
 export type PlaywrightAgentRequest = {
   agent_type: "planner" | "generator" | "healer";
   prompt: string;
@@ -52,7 +61,13 @@ export async function sendChatMessage(
       body: JSON.stringify({ message, session_id: sessionId }),
     },
   );
-  if (!res.ok) throw new Error("Failed to send message");
+  if (!res.ok) {
+    const body = (await res.json().catch(() => ({}))) as { detail?: string };
+    throw new TestAgentApiError(
+      res.status,
+      body.detail ?? "测试 Agent 调用失败",
+    );
+  }
   return res.json() as Promise<ChatResponse>;
 }
 

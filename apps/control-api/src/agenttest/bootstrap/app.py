@@ -125,6 +125,13 @@ from agenttest.modules.identity.infrastructure.persistence.repositories import (
     SqlAlchemySessionRepository,
     SqlAlchemyUserRepository,
 )
+from agenttest.modules.model_configs.api.router import create_model_config_router
+from agenttest.modules.model_configs.application.service import ModelConfigService
+from agenttest.modules.model_configs.infrastructure.credentials import AesGcmCredentialCipher
+from agenttest.modules.model_configs.infrastructure.persistence.repositories import (
+    SqlAlchemyModelConfigRepository,
+)
+from agenttest.modules.model_configs.infrastructure.temporal_invoker import TemporalModelInvoker
 from agenttest.modules.projects.api.router import (
     ProjectApiDependencies,
     create_project_router,
@@ -300,9 +307,7 @@ def create_app(
         ),
         prefix="/api/v1",
     )
-    test_plans = test_plan_dependencies or build_test_plan_dependencies(
-        resolved_settings
-    )
+    test_plans = test_plan_dependencies or build_test_plan_dependencies(resolved_settings)
     app.include_router(
         create_test_plan_router(
             test_plans,
@@ -312,12 +317,25 @@ def create_app(
         ),
         prefix="/api/v1",
     )
-    environments = environment_dependencies or build_environment_dependencies(
-        resolved_settings
-    )
+    environments = environment_dependencies or build_environment_dependencies(resolved_settings)
     app.include_router(
         create_environment_router(
             environments,
+            current_user=dependencies.current_user,
+            csrf=dependencies.csrf,
+            settings=resolved_settings,
+        ),
+        prefix="/api/v1",
+    )
+    app.include_router(
+        create_model_config_router(
+            service=build_model_config_service(resolved_settings),
+            invoker=TemporalModelInvoker(
+                address=resolved_settings.temporal_address,
+                namespace=resolved_settings.temporal_namespace,
+                task_queue=resolved_settings.model_runner_task_queue,
+                allow_private_network=resolved_settings.model_allow_private_network,
+            ),
             current_user=dependencies.current_user,
             csrf=dependencies.csrf,
             settings=resolved_settings,
@@ -889,6 +907,29 @@ def build_environment_dependencies(settings: Settings) -> EnvironmentApiDependen
     )
 
 
+class _UnavailableCredentialCipher:
+    """在部署未配置主密钥时拒绝保存凭证。"""
+
+    def encrypt(self, value: str) -> str:
+        del value
+        raise ValueError("部署未配置 AGENTTEST_MODEL_CREDENTIAL_KEY")
+
+
+def build_model_config_service(settings: Settings) -> ModelConfigService:
+    """构建项目模型配置应用服务。"""
+
+    engine = create_database_engine(str(settings.database_url))
+    session_factory = create_session_factory(engine)
+    repository = SqlAlchemyModelConfigRepository(session_factory)
+    projects = SqlAlchemyProjectRepository(session_factory)
+    cipher = (
+        AesGcmCredentialCipher(settings.model_credential_key)
+        if settings.model_credential_key
+        else _UnavailableCredentialCipher()
+    )
+    return ModelConfigService(repository, ProjectAccessAdapter(projects), cipher)
+
+
 def build_run_dependencies(settings: Settings) -> RunApiDependencies:
     engine = create_database_engine(str(settings.database_url))
     session_factory = create_session_factory(engine)
@@ -1316,6 +1357,7 @@ def _register_experiment_endpoints(
             )
             if result.scalar() is None:
                 from fastapi import HTTPException
+
                 raise HTTPException(status_code=404, detail="Project not found")
 
     async def actor_for(request: Request):
@@ -1358,6 +1400,7 @@ def _register_review_endpoints(
             )
             if result.scalar() is None:
                 from fastapi import HTTPException
+
                 raise HTTPException(status_code=404, detail="Project not found")
 
     async def actor_for(request: Request):
@@ -1400,6 +1443,7 @@ def _register_security_scan_endpoints(
             )
             if result.scalar() is None:
                 from fastapi import HTTPException
+
                 raise HTTPException(status_code=404, detail="Project not found")
 
     async def actor_for(request: Request):
@@ -1442,8 +1486,10 @@ def _register_gate_endpoints(
             )
             if result.scalar() is None:
                 from fastapi import HTTPException
+
                 raise HTTPException(
-                    status_code=404, detail="Project not found",
+                    status_code=404,
+                    detail="Project not found",
                 )
 
     async def actor_for(request: Request):
@@ -1467,7 +1513,11 @@ def _register_test_agent_endpoints(
     auth_deps,
 ) -> None:
     """注册测试 Agent 对话 API。"""
+    from agenttest.modules.model_configs.infrastructure.temporal_invoker import (
+        TemporalModelInvoker,
+    )
     from agenttest.modules.test_agent.api.router import create_test_agent_router
+    from agenttest.modules.test_agent.application.model_planner import ModelTestPlanGenerator
     from agenttest.shared.infrastructure.database import (
         create_database_engine,
         create_session_factory,
@@ -1486,8 +1536,10 @@ def _register_test_agent_endpoints(
             )
             if result.scalar() is None:
                 from fastapi import HTTPException
+
                 raise HTTPException(
-                    status_code=404, detail="Project not found",
+                    status_code=404,
+                    detail="Project not found",
                 )
 
     async def actor_for(request: Request):
@@ -1501,6 +1553,15 @@ def _register_test_agent_endpoints(
         actor_for=actor_for,
         check_project=check_project,
         settings=settings,
+        plan_generator=ModelTestPlanGenerator(
+            build_model_config_service(settings),
+            TemporalModelInvoker(
+                address=settings.temporal_address,
+                namespace=settings.temporal_namespace,
+                task_queue=settings.model_runner_task_queue,
+                allow_private_network=settings.model_allow_private_network,
+            ),
+        ),
     )
     app.include_router(router, prefix="/api/v1")
 
@@ -1532,8 +1593,10 @@ def _register_test_account_endpoints(
             )
             if result.scalar() is None:
                 from fastapi import HTTPException
+
                 raise HTTPException(
-                    status_code=404, detail="Project not found",
+                    status_code=404,
+                    detail="Project not found",
                 )
 
     async def actor_for(request: Request):
@@ -1576,8 +1639,10 @@ def _register_run_stream_endpoints(
             )
             if result.scalar() is None:
                 from fastapi import HTTPException
+
                 raise HTTPException(
-                    status_code=404, detail="Project not found",
+                    status_code=404,
+                    detail="Project not found",
                 )
 
     async def actor_for(request: Request):
