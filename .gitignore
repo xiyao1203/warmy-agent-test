@@ -12,6 +12,7 @@
 .idea/
 .vscode/
 .codex-log/
+.superpowers/
 .worktrees/
 .tools/
 
