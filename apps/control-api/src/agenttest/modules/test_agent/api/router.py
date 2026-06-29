@@ -9,15 +9,22 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
 from agenttest.modules.identity.public import InvalidSessionError
-from agenttest.modules.projects.public import ProjectNotFoundError
+from agenttest.modules.model_configs.public import (
+    ModelDefaultMissingError,
+    ModelRuntimeUnavailableError,
+)
+from agenttest.modules.projects.public import ProjectId, ProjectNotFoundError
 from agenttest.modules.test_agent.adapters.playwright_agents import (
     AgentType,
     create_playwright_agent_adapter,
 )
+from agenttest.modules.test_agent.application.model_planner import (
+    InvalidModelPlanError,
+    ModelTestPlanGenerator,
+)
 from agenttest.modules.test_agent.domain.entities import (
     ChatSession,
 )
-from agenttest.modules.test_agent.llm_adapters import create_llm_adapter
 from agenttest.shared.api.auth_guard import require_actor, require_writer
 
 
@@ -32,6 +39,7 @@ class ConfirmRequest(BaseModel):
 
 class PlaywrightAgentRequest(BaseModel):
     """Playwright Agent 请求。"""
+
     agent_type: str  # planner | generator | healer
     prompt: str
     seed_test: str | None = None
@@ -41,7 +49,12 @@ class PlaywrightAgentRequest(BaseModel):
 
 
 def create_test_agent_router(
-    *, session_factory, actor_for, check_project, settings,
+    *,
+    session_factory,
+    actor_for,
+    check_project,
+    settings,
+    plan_generator: ModelTestPlanGenerator,
 ) -> APIRouter:
     router = APIRouter(
         prefix="/projects/{project_id}/test-agent",
@@ -50,7 +63,6 @@ def create_test_agent_router(
 
     # In-memory session store (production should use DB)
     _sessions: dict[str, ChatSession] = {}
-    _llm = create_llm_adapter()
     _playwright_adapter = create_playwright_agent_adapter()
     # 任务存储
     _tasks: dict[str, dict] = {}
@@ -64,7 +76,10 @@ def create_test_agent_router(
     ):
         """发送自然语言指令，返回 Agent 回复和计划草稿。"""
         actor = await require_writer(
-            request, actor_for, settings, x_csrf_token,
+            request,
+            actor_for,
+            settings,
+            x_csrf_token,
         )
         if isinstance(actor, JSONResponse):
             return actor
@@ -72,11 +87,13 @@ def create_test_agent_router(
             await check_project(project_id)
         except ProjectNotFoundError:
             return JSONResponse(
-                status_code=404, content={"detail": "项目不存在"},
+                status_code=404,
+                content={"detail": "项目不存在"},
             )
         except InvalidSessionError:
             return JSONResponse(
-                status_code=401, content={"detail": "认证失败"},
+                status_code=401,
+                content={"detail": "认证失败"},
             )
 
         # Get or create session
@@ -89,8 +106,21 @@ def create_test_agent_router(
 
         session.add_user_message(body.message)
 
-        # Generate plan via LLM adapter (OpenAI or Mock fallback)
-        plan_draft = await _llm.generate_plan(body.message)
+        try:
+            plan_draft = await plan_generator.generate(
+                actor,
+                ProjectId(project_id),
+                body.message,
+            )
+        except ModelDefaultMissingError:
+            return JSONResponse(
+                status_code=409,
+                content={"detail": "项目尚未配置测试 Agent 默认模型"},
+            )
+        except InvalidModelPlanError as error:
+            return JSONResponse(status_code=422, content={"detail": str(error)})
+        except ModelRuntimeUnavailableError as error:
+            return JSONResponse(status_code=503, content={"detail": str(error)})
         response_text = (
             f"已为您生成测试计划草稿。包含 {plan_draft.get('estimated_cases', 0)} "
             f"个用例，预计执行 {plan_draft.get('estimated_duration_min', 0)} 分钟。"
@@ -120,7 +150,10 @@ def create_test_agent_router(
     ):
         """确认执行测试计划。"""
         actor = await require_writer(
-            request, actor_for, settings, x_csrf_token,
+            request,
+            actor_for,
+            settings,
+            x_csrf_token,
         )
         if isinstance(actor, JSONResponse):
             return actor
@@ -128,21 +161,25 @@ def create_test_agent_router(
             await check_project(project_id)
         except ProjectNotFoundError:
             return JSONResponse(
-                status_code=404, content={"detail": "项目不存在"},
+                status_code=404,
+                content={"detail": "项目不存在"},
             )
         except InvalidSessionError:
             return JSONResponse(
-                status_code=401, content={"detail": "认证失败"},
+                status_code=401,
+                content={"detail": "认证失败"},
             )
 
         session = _sessions.get(body.session_id)
         if session is None:
             return JSONResponse(
-                status_code=404, content={"detail": "会话不存在"},
+                status_code=404,
+                content={"detail": "会话不存在"},
             )
         if session.project_id != project_id:
             return JSONResponse(
-                status_code=404, content={"detail": "会话不存在"},
+                status_code=404,
+                content={"detail": "会话不存在"},
             )
 
         try:
@@ -174,7 +211,8 @@ def create_test_agent_router(
         session = _sessions.get(session_id)
         if session is None or session.project_id != project_id:
             return JSONResponse(
-                status_code=404, content={"detail": "会话不存在"},
+                status_code=404,
+                content={"detail": "会话不存在"},
             )
 
         return {
@@ -208,7 +246,10 @@ def create_test_agent_router(
         - healer: 修复失败测试
         """
         actor = await require_writer(
-            request, actor_for, settings, x_csrf_token,
+            request,
+            actor_for,
+            settings,
+            x_csrf_token,
         )
         if isinstance(actor, JSONResponse):
             return actor
@@ -216,11 +257,13 @@ def create_test_agent_router(
             await check_project(project_id)
         except ProjectNotFoundError:
             return JSONResponse(
-                status_code=404, content={"detail": "项目不存在"},
+                status_code=404,
+                content={"detail": "项目不存在"},
             )
         except InvalidSessionError:
             return JSONResponse(
-                status_code=401, content={"detail": "认证失败"},
+                status_code=401,
+                content={"detail": "认证失败"},
             )
 
         # 根据 agent 类型执行
@@ -283,7 +326,8 @@ def create_test_agent_router(
         task = _tasks.get(task_id)
         if task is None or task.get("project_id") != str(project_id):
             return JSONResponse(
-                status_code=404, content={"detail": "任务不存在"},
+                status_code=404,
+                content={"detail": "任务不存在"},
             )
 
         return task
@@ -298,10 +342,7 @@ def create_test_agent_router(
         if isinstance(actor, JSONResponse):
             return actor
 
-        project_tasks = [
-            t for t in _tasks.values()
-            if t.get("project_id") == str(project_id)
-        ]
+        project_tasks = [t for t in _tasks.values() if t.get("project_id") == str(project_id)]
 
         return {"tasks": project_tasks, "total": len(project_tasks)}
 

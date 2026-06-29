@@ -1,6 +1,19 @@
 """Scorer 模块公开接口。"""
 
-from agenttest.modules.scorers.domain.entities import Scorer, ScorerId
-from agenttest.modules.scorers.domain.value_objects import ScorerResult, ScorerType
+from .application.model_judge import (
+    InvalidJudgeResultError,
+    ModelJudge,
+    ModelJudgeResult,
+)
+from .domain.entities import Scorer, ScorerId
+from .domain.value_objects import ScorerResult, ScorerType
 
-__all__ = ["Scorer", "ScorerId", "ScorerResult", "ScorerType"]
+__all__ = [
+    "InvalidJudgeResultError",
+    "ModelJudge",
+    "ModelJudgeResult",
+    "Scorer",
+    "ScorerId",
+    "ScorerResult",
+    "ScorerType",
+]

@@ -12,6 +12,7 @@ members = [
   "apps/control-api",
   "apps/admin-cli",
   "workers/api-runner",
+  "workers/model-runner",
   "plugins/canvas-agent",
 ]
 

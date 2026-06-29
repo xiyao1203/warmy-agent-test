@@ -17,9 +17,17 @@ export type AgentConfigRequest = {
    */
   code_version?: string | null;
   /**
+   * Cost Limit
+   */
+  cost_limit?: number | null;
+  /**
    * Git Commit
    */
   git_commit?: string | null;
+  /**
+   * Max Steps
+   */
+  max_steps?: number | null;
   /**
    * Model
    */
@@ -35,23 +43,15 @@ export type AgentConfigRequest = {
    */
   system_prompt?: string | null;
   /**
+   * Timeout
+   */
+  timeout?: number;
+  /**
    * Tools
    */
   tools?: Array<{
     [key: string]: string;
   }>;
-  /**
-   * Timeout
-   */
-  timeout?: number;
-  /**
-   * Max Steps
-   */
-  max_steps?: number | null;
-  /**
-   * Cost Limit
-   */
-  cost_limit?: number | null;
 };
 
 /**
@@ -72,47 +72,47 @@ export type AgentListResponse = {
  * AgentResponse
  */
 export type AgentResponse = {
-  /**
-   * Id
-   */
-  id: string;
-  /**
-   * Project Id
-   */
-  project_id: string;
-  /**
-   * Name
-   */
-  name: string;
-  /**
-   * Description
-   */
-  description: string | null;
   agent_type: AgentType;
   /**
-   * Created By
+   * Baseline Version Id
    */
-  created_by: string;
-  /**
-   * Updated By
-   */
-  updated_by: string;
+  baseline_version_id?: string | null;
   /**
    * Created At
    */
   created_at: string;
   /**
-   * Updated At
+   * Created By
    */
-  updated_at: string;
+  created_by: string;
   /**
    * Current Version Id
    */
   current_version_id?: string | null;
   /**
-   * Baseline Version Id
+   * Description
    */
-  baseline_version_id?: string | null;
+  description: string | null;
+  /**
+   * Id
+   */
+  id: string;
+  /**
+   * Name
+   */
+  name: string;
+  /**
+   * Project Id
+   */
+  project_id: string;
+  /**
+   * Updated At
+   */
+  updated_at: string;
+  /**
+   * Updated By
+   */
+  updated_by: string;
 };
 
 /**
@@ -140,18 +140,9 @@ export type AgentVersionListResponse = {
  */
 export type AgentVersionResponse = {
   /**
-   * Id
-   */
-  id: string;
-  /**
    * Agent Id
    */
   agent_id: string;
-  /**
-   * Version Number
-   */
-  version_number: number;
-  status: AgenttestModulesAgentsDomainValueObjectsVersionStatus;
   /**
    * Config
    */
@@ -159,27 +150,54 @@ export type AgentVersionResponse = {
     [key: string]: unknown;
   };
   /**
+   * Created At
+   */
+  created_at: string;
+  /**
    * Created By
    */
   created_by: string;
   /**
-   * Created At
+   * Id
    */
-  created_at: string;
+  id: string;
+  /**
+   * Published At
+   */
+  published_at: string | null;
+  status: AgenttestModulesAgentsDomainValueObjectsVersionStatus;
   /**
    * Updated At
    */
   updated_at: string;
   /**
-   * Published At
+   * Version Number
    */
-  published_at: string | null;
+  version_number: number;
 };
 
 /**
  * ApplyRunCaseResultRequest
  */
 export type ApplyRunCaseResultRequest = {
+  /**
+   * Duration Ms
+   */
+  duration_ms?: number | null;
+  /**
+   * Error Message
+   */
+  error_message?: string | null;
+  /**
+   * Error Type
+   */
+  error_type?: string | null;
+  /**
+   * Output
+   */
+  output?: {
+    [key: string]: unknown;
+  } | null;
   /**
    * Run Case Id
    */
@@ -189,29 +207,11 @@ export type ApplyRunCaseResultRequest = {
    */
   status: string;
   /**
-   * Output
-   */
-  output?: {
-    [key: string]: unknown;
-  } | null;
-  /**
    * Trace
    */
   trace?: Array<{
     [key: string]: unknown;
   }>;
-  /**
-   * Error Type
-   */
-  error_type?: string | null;
-  /**
-   * Error Message
-   */
-  error_message?: string | null;
-  /**
-   * Duration Ms
-   */
-  duration_ms?: number | null;
 };
 
 /**
@@ -229,29 +229,13 @@ export type ApplyRunResultRequest = {
  */
 export type AuditEntryResponse = {
   /**
-   * Id
-   */
-  id: string;
-  /**
-   * Actor User Id
-   */
-  actor_user_id: string | null;
-  /**
    * Action
    */
   action: string;
   /**
-   * Object Type
+   * Actor User Id
    */
-  object_type: string;
-  /**
-   * Object Id
-   */
-  object_id: string | null;
-  /**
-   * Project Id
-   */
-  project_id: string | null;
+  actor_user_id: string | null;
   /**
    * Changes
    */
@@ -259,13 +243,29 @@ export type AuditEntryResponse = {
     [key: string]: unknown;
   };
   /**
-   * Source Ip
-   */
-  source_ip: string | null;
-  /**
    * Created At
    */
   created_at: string;
+  /**
+   * Id
+   */
+  id: string;
+  /**
+   * Object Id
+   */
+  object_id: string | null;
+  /**
+   * Object Type
+   */
+  object_type: string;
+  /**
+   * Project Id
+   */
+  project_id: string | null;
+  /**
+   * Source Ip
+   */
+  source_ip: string | null;
 };
 
 /**
@@ -283,13 +283,13 @@ export type AuditListResponse = {
  */
 export type AutoEnqueueRequest = {
   /**
-   * Run Id
-   */
-  run_id: string;
-  /**
    * Confidence Threshold
    */
   confidence_threshold?: number;
+  /**
+   * Run Id
+   */
+  run_id: string;
 };
 
 /**
@@ -335,6 +335,18 @@ export type ConfirmRequest = {
  */
 export type CreateAccountRequest = {
   /**
+   * Account Type
+   */
+  account_type?: string;
+  /**
+   * Credential Encrypted
+   */
+  credential_encrypted: string;
+  /**
+   * Description
+   */
+  description?: string | null;
+  /**
    * Name
    */
   name: string;
@@ -342,33 +354,21 @@ export type CreateAccountRequest = {
    * Username
    */
   username: string;
-  /**
-   * Credential Encrypted
-   */
-  credential_encrypted: string;
-  /**
-   * Account Type
-   */
-  account_type?: string;
-  /**
-   * Description
-   */
-  description?: string | null;
 };
 
 /**
  * CreateAgentRequest
  */
 export type CreateAgentRequest = {
-  /**
-   * Name
-   */
-  name: string;
   agent_type: AgentType;
   /**
    * Description
    */
   description?: string | null;
+  /**
+   * Name
+   */
+  name: string;
 };
 
 /**
@@ -383,24 +383,19 @@ export type CreateAgentVersionRequest = {
  */
 export type CreateDatasetRequest = {
   /**
-   * Name
-   */
-  name: string;
-  /**
    * Description
    */
   description?: string | null;
+  /**
+   * Name
+   */
+  name: string;
 };
 
 /**
  * CreateEnvironmentTemplateRequest
  */
 export type CreateEnvironmentTemplateRequest = {
-  /**
-   * Name
-   */
-  name: string;
-  template_type: TemplateType;
   /**
    * Config
    */
@@ -411,12 +406,21 @@ export type CreateEnvironmentTemplateRequest = {
    * Description
    */
   description?: string | null;
+  /**
+   * Name
+   */
+  name: string;
+  template_type: TemplateType;
 };
 
 /**
  * CreateExperimentRequest
  */
 export type CreateExperimentRequest = {
+  /**
+   * Description
+   */
+  description?: string | null;
   /**
    * Name
    */
@@ -429,10 +433,6 @@ export type CreateExperimentRequest = {
    * Run B Id
    */
   run_b_id: string;
-  /**
-   * Description
-   */
-  description?: string | null;
 };
 
 /**
@@ -441,19 +441,19 @@ export type CreateExperimentRequest = {
  * 创建反馈请求。
  */
 export type CreateFeedbackRequest = {
-  type: FeedbackType;
   /**
-   * Title
+   * Contact
    */
-  title: string;
+  contact?: string | null;
   /**
    * Description
    */
   description: string;
   /**
-   * Contact
+   * Title
    */
-  contact?: string | null;
+  title: string;
+  type: FeedbackType;
 };
 
 /**
@@ -461,25 +461,53 @@ export type CreateFeedbackRequest = {
  */
 export type CreateGateRequest = {
   /**
-   * Name
+   * Cost Limit
    */
-  name: string;
-  /**
-   * Success Rate Threshold
-   */
-  success_rate_threshold?: number;
+  cost_limit?: number | null;
   /**
    * Critical Cases
    */
   critical_cases?: Array<string>;
   /**
-   * Cost Limit
+   * Name
    */
-  cost_limit?: number | null;
+  name: string;
   /**
    * Security Threshold
    */
   security_threshold?: number;
+  /**
+   * Success Rate Threshold
+   */
+  success_rate_threshold?: number;
+};
+
+/**
+ * CreateModelConfigRequest
+ *
+ * 创建模型配置请求。
+ */
+export type CreateModelConfigRequest = {
+  /**
+   * Api Key
+   */
+  api_key: string;
+  /**
+   * Base Url
+   */
+  base_url: string;
+  /**
+   * Model Name
+   */
+  model_name: string;
+  /**
+   * Name
+   */
+  name: string;
+  /**
+   * Supports Vision
+   */
+  supports_vision?: boolean;
 };
 
 /**
@@ -487,29 +515,29 @@ export type CreateGateRequest = {
  */
 export type CreatePolicyRequest = {
   /**
-   * Name
+   * Blocked Tools
    */
-  name: string;
+  blocked_tools?: Array<string>;
+  /**
+   * Enabled
+   */
+  enabled?: boolean;
   /**
    * Max Steps
    */
   max_steps?: number;
   /**
-   * Timeout Seconds
+   * Name
    */
-  timeout_seconds?: number;
-  /**
-   * Blocked Tools
-   */
-  blocked_tools?: Array<string>;
+  name: string;
   /**
    * Require Confirmation
    */
   require_confirmation?: boolean;
   /**
-   * Enabled
+   * Timeout Seconds
    */
-  enabled?: boolean;
+  timeout_seconds?: number;
 };
 
 /**
@@ -537,22 +565,6 @@ export type CreateRunRequest = {
  */
 export type CreateScorerRequest = {
   /**
-   * Name
-   */
-  name: string;
-  /**
-   * Scorer Type
-   */
-  scorer_type: string;
-  /**
-   * Weight
-   */
-  weight?: number;
-  /**
-   * Threshold
-   */
-  threshold?: number;
-  /**
    * Config Json
    */
   config_json?: {
@@ -562,6 +574,22 @@ export type CreateScorerRequest = {
    * Description
    */
   description?: string | null;
+  /**
+   * Name
+   */
+  name: string;
+  /**
+   * Scorer Type
+   */
+  scorer_type: string;
+  /**
+   * Threshold
+   */
+  threshold?: number;
+  /**
+   * Weight
+   */
+  weight?: number;
 };
 
 /**
@@ -569,28 +597,22 @@ export type CreateScorerRequest = {
  */
 export type CreateTestCaseRequest = {
   /**
-   * Name
-   */
-  name: string;
-  /**
-   * Input
-   */
-  input: {
-    [key: string]: unknown;
-  };
-  execution_mode: ExecutionMode;
-  /**
    * Assertions
    */
   assertions?: Array<{
     [key: string]: unknown;
   }>;
   /**
-   * Scorers
+   * Difficulty
    */
-  scorers?: Array<{
+  difficulty?: string | null;
+  execution_mode: ExecutionMode;
+  /**
+   * Expected Outcome
+   */
+  expected_outcome?: {
     [key: string]: unknown;
-  }>;
+  } | null;
   /**
    * Initial State
    */
@@ -598,11 +620,27 @@ export type CreateTestCaseRequest = {
     [key: string]: unknown;
   } | null;
   /**
-   * Expected Outcome
+   * Input
    */
-  expected_outcome?: {
+  input: {
     [key: string]: unknown;
-  } | null;
+  };
+  /**
+   * Name
+   */
+  name: string;
+  priority?: Priority | null;
+  risk_level?: RiskLevel | null;
+  /**
+   * Scenario
+   */
+  scenario?: string | null;
+  /**
+   * Scorers
+   */
+  scorers?: Array<{
+    [key: string]: unknown;
+  }>;
   /**
    * Security Policies
    */
@@ -613,16 +651,6 @@ export type CreateTestCaseRequest = {
    * Tags
    */
   tags?: Array<string>;
-  /**
-   * Scenario
-   */
-  scenario?: string | null;
-  priority?: Priority | null;
-  risk_level?: RiskLevel | null;
-  /**
-   * Difficulty
-   */
-  difficulty?: string | null;
   test_group?: TestGroup | null;
 };
 
@@ -631,24 +659,24 @@ export type CreateTestCaseRequest = {
  */
 export type CreateTestPlanRequest = {
   /**
-   * Name
-   */
-  name: string;
-  /**
    * Description
    */
   description?: string | null;
+  /**
+   * Name
+   */
+  name: string;
 };
 
 /**
  * CreateTestPlanVersionRequest
  */
 export type CreateTestPlanVersionRequest = {
-  config: TestPlanConfigRequest;
   /**
    * Agent Version Id
    */
   agent_version_id?: string | null;
+  config: TestPlanConfigRequest;
   /**
    * Dataset Version Id
    */
@@ -664,18 +692,18 @@ export type CreateTestPlanVersionRequest = {
  */
 export type CreateUserRequest = {
   /**
+   * Display Name
+   */
+  display_name: string;
+  /**
    * Email
    */
   email: string;
   /**
-   * Display Name
-   */
-  display_name: string;
-  role: SystemRole;
-  /**
    * Initial Password
    */
   initial_password: string;
+  role: SystemRole;
 };
 
 /**
@@ -697,37 +725,37 @@ export type DatasetListResponse = {
  */
 export type DatasetResponse = {
   /**
-   * Id
+   * Created At
    */
-  id: string;
-  /**
-   * Project Id
-   */
-  project_id: string;
-  /**
-   * Name
-   */
-  name: string;
-  /**
-   * Description
-   */
-  description: string | null;
+  created_at: string;
   /**
    * Created By
    */
   created_by: string;
   /**
-   * Updated By
+   * Description
    */
-  updated_by: string;
+  description: string | null;
   /**
-   * Created At
+   * Id
    */
-  created_at: string;
+  id: string;
+  /**
+   * Name
+   */
+  name: string;
+  /**
+   * Project Id
+   */
+  project_id: string;
   /**
    * Updated At
    */
   updated_at: string;
+  /**
+   * Updated By
+   */
+  updated_by: string;
 };
 
 /**
@@ -745,34 +773,34 @@ export type DatasetVersionListResponse = {
  */
 export type DatasetVersionResponse = {
   /**
-   * Id
+   * Created At
    */
-  id: string;
-  /**
-   * Dataset Id
-   */
-  dataset_id: string;
-  /**
-   * Version Number
-   */
-  version_number: number;
-  status: AgenttestModulesDatasetsDomainValueObjectsVersionStatus;
+  created_at: string;
   /**
    * Created By
    */
   created_by: string;
   /**
-   * Created At
+   * Dataset Id
    */
-  created_at: string;
+  dataset_id: string;
+  /**
+   * Id
+   */
+  id: string;
+  /**
+   * Published At
+   */
+  published_at: string | null;
+  status: AgenttestModulesDatasetsDomainValueObjectsVersionStatus;
   /**
    * Updated At
    */
   updated_at: string;
   /**
-   * Published At
+   * Version Number
    */
-  published_at: string | null;
+  version_number: number;
 };
 
 /**
@@ -794,36 +822,36 @@ export type EnvironmentTemplateListResponse = {
  */
 export type EnvironmentTemplateResponse = {
   /**
-   * Id
-   */
-  id: string;
-  /**
-   * Project Id
-   */
-  project_id: string;
-  /**
-   * Name
-   */
-  name: string;
-  template_type: TemplateType;
-  /**
    * Config
    */
   config: {
     [key: string]: unknown;
   };
   /**
-   * Description
+   * Created At
    */
-  description: string | null;
+  created_at: string;
   /**
    * Created By
    */
   created_by: string;
   /**
-   * Created At
+   * Description
    */
-  created_at: string;
+  description: string | null;
+  /**
+   * Id
+   */
+  id: string;
+  /**
+   * Name
+   */
+  name: string;
+  /**
+   * Project Id
+   */
+  project_id: string;
+  template_type: TemplateType;
   /**
    * Updated At
    */
@@ -835,6 +863,10 @@ export type EnvironmentTemplateResponse = {
  */
 export type EvaluateGateRequest = {
   /**
+   * Actual Cost
+   */
+  actual_cost?: number | null;
+  /**
    * Actual Pass Rate
    */
   actual_pass_rate: number;
@@ -842,10 +874,6 @@ export type EvaluateGateRequest = {
    * Critical Passed
    */
   critical_passed: boolean;
-  /**
-   * Actual Cost
-   */
-  actual_cost?: number | null;
   /**
    * Security Score
    */
@@ -874,13 +902,13 @@ export type ExemptRequest = {
  */
 export type ExportTestCasesResponse = {
   /**
-   * Format
-   */
-  format: "json" | "jsonl" | "csv";
-  /**
    * Content
    */
   content: string;
+  /**
+   * Format
+   */
+  format: "json" | "jsonl" | "csv";
 };
 
 /**
@@ -890,30 +918,30 @@ export type ExportTestCasesResponse = {
  */
 export type FeedbackResponse = {
   /**
-   * Id
+   * Contact
    */
-  id: string;
-  type: FeedbackType;
+  contact: string | null;
   /**
-   * Title
+   * Created At
    */
-  title: string;
+  created_at: string;
   /**
    * Description
    */
   description: string;
   /**
-   * Contact
+   * Id
    */
-  contact: string | null;
+  id: string;
+  /**
+   * Title
+   */
+  title: string;
+  type: FeedbackType;
   /**
    * User Id
    */
   user_id: string | null;
-  /**
-   * Created At
-   */
-  created_at: string;
 };
 
 /**
@@ -956,13 +984,13 @@ export type HealthResponse = {
  */
 export type ImportTestCasesRequest = {
   /**
-   * Format
-   */
-  format: "json" | "jsonl" | "csv";
-  /**
    * Content
    */
   content: string;
+  /**
+   * Format
+   */
+  format: "json" | "jsonl" | "csv";
 };
 
 /**
@@ -1001,6 +1029,113 @@ export type LoginRequest = {
 };
 
 /**
+ * ModelConfigListResponse
+ *
+ * 模型配置列表响应。
+ */
+export type ModelConfigListResponse = {
+  /**
+   * Items
+   */
+  items: Array<ModelConfigResponse>;
+};
+
+/**
+ * ModelConfigResponse
+ *
+ * 不包含凭证明文或密文的模型配置响应。
+ */
+export type ModelConfigResponse = {
+  /**
+   * Api Key Hint
+   */
+  api_key_hint: string;
+  /**
+   * Base Url
+   */
+  base_url: string;
+  /**
+   * Created At
+   */
+  created_at: string;
+  /**
+   * Enabled
+   */
+  enabled: boolean;
+  /**
+   * Has Api Key
+   */
+  has_api_key: boolean;
+  /**
+   * Id
+   */
+  id: string;
+  /**
+   * Model Name
+   */
+  model_name: string;
+  /**
+   * Name
+   */
+  name: string;
+  /**
+   * Provider Type
+   */
+  provider_type: string;
+  /**
+   * Supports Text
+   */
+  supports_text: boolean;
+  /**
+   * Supports Vision
+   */
+  supports_vision: boolean;
+  /**
+   * Updated At
+   */
+  updated_at: string;
+};
+
+/**
+ * ModelDefaultListResponse
+ *
+ * 项目默认模型列表响应。
+ */
+export type ModelDefaultListResponse = {
+  /**
+   * Items
+   */
+  items: Array<ModelDefaultResponse>;
+};
+
+/**
+ * ModelDefaultResponse
+ *
+ * 项目默认模型响应。
+ */
+export type ModelDefaultResponse = {
+  /**
+   * Model Config Id
+   */
+  model_config_id: string;
+  /**
+   * Purpose
+   */
+  purpose: string;
+  /**
+   * Updated At
+   */
+  updated_at: string;
+};
+
+/**
+ * ModelPurpose
+ *
+ * 项目默认模型的使用场景。
+ */
+export type ModelPurpose = "test_agent_chat" | "text_judge" | "vision_judge";
+
+/**
  * PlaywrightAgentRequest
  *
  * Playwright Agent 请求。
@@ -1011,6 +1146,14 @@ export type PlaywrightAgentRequest = {
    */
   agent_type: string;
   /**
+   * Plan Path
+   */
+  plan_path?: string | null;
+  /**
+   * Prd Path
+   */
+  prd_path?: string | null;
+  /**
    * Prompt
    */
   prompt: string;
@@ -1018,14 +1161,6 @@ export type PlaywrightAgentRequest = {
    * Seed Test
    */
   seed_test?: string | null;
-  /**
-   * Prd Path
-   */
-  prd_path?: string | null;
-  /**
-   * Plan Path
-   */
-  plan_path?: string | null;
   /**
    * Test Name
    */
@@ -1053,22 +1188,22 @@ export type ProjectListResponse = {
  * ProjectMemberRequest
  */
 export type ProjectMemberRequest = {
+  role: ProjectMemberRole;
   /**
    * User Id
    */
   user_id: string;
-  role: ProjectMemberRole;
 };
 
 /**
  * ProjectMemberResponse
  */
 export type ProjectMemberResponse = {
+  role: ProjectMemberRole;
   /**
    * User Id
    */
   user_id: string;
-  role: ProjectMemberRole;
 };
 
 /**
@@ -1098,6 +1233,10 @@ export type ProjectMembersResponse = {
  */
 export type ProjectResponse = {
   /**
+   * Archived
+   */
+  archived: boolean;
+  /**
    * Id
    */
   id: string;
@@ -1105,10 +1244,6 @@ export type ProjectResponse = {
    * Name
    */
   name: string;
-  /**
-   * Archived
-   */
-  archived: boolean;
 };
 
 /**
@@ -1153,21 +1288,25 @@ export type RunCaseListResponse = {
  */
 export type RunCaseResponse = {
   /**
+   * Duration Ms
+   */
+  duration_ms: number | null;
+  /**
+   * Error Message
+   */
+  error_message: string | null;
+  /**
+   * Error Type
+   */
+  error_type: string | null;
+  /**
    * Id
    */
   id: string;
   /**
-   * Test Case Id
-   */
-  test_case_id: string;
-  /**
    * Name
    */
   name: string;
-  /**
-   * Status
-   */
-  status: string;
   /**
    * Output
    */
@@ -1175,23 +1314,19 @@ export type RunCaseResponse = {
     [key: string]: unknown;
   } | null;
   /**
+   * Status
+   */
+  status: string;
+  /**
+   * Test Case Id
+   */
+  test_case_id: string;
+  /**
    * Trace
    */
   trace: Array<{
     [key: string]: unknown;
   }>;
-  /**
-   * Error Type
-   */
-  error_type: string | null;
-  /**
-   * Error Message
-   */
-  error_message: string | null;
-  /**
-   * Duration Ms
-   */
-  duration_ms: number | null;
 };
 
 /**
@@ -1209,67 +1344,63 @@ export type RunListResponse = {
  */
 export type RunResponse = {
   /**
-   * Id
-   */
-  id: string;
-  /**
-   * Project Id
-   */
-  project_id: string;
-  /**
-   * Test Plan Version Id
-   */
-  test_plan_version_id: string;
-  /**
-   * Status
-   */
-  status: string;
-  /**
-   * Total Cases
-   */
-  total_cases: number;
-  /**
-   * Passed Cases
-   */
-  passed_cases: number;
-  /**
-   * Failed Cases
-   */
-  failed_cases: number;
-  /**
-   * Error Cases
-   */
-  error_cases: number;
-  /**
    * Cancelled Cases
    */
   cancelled_cases: number;
   /**
-   * Workflow Id
+   * Completed At
    */
-  workflow_id: string | null;
+  completed_at: string | null;
   /**
    * Created At
    */
   created_at: string;
   /**
+   * Error Cases
+   */
+  error_cases: number;
+  /**
+   * Failed Cases
+   */
+  failed_cases: number;
+  /**
+   * Id
+   */
+  id: string;
+  /**
+   * Passed Cases
+   */
+  passed_cases: number;
+  /**
+   * Project Id
+   */
+  project_id: string;
+  /**
    * Started At
    */
   started_at: string | null;
   /**
-   * Completed At
+   * Status
    */
-  completed_at: string | null;
+  status: string;
+  /**
+   * Test Plan Version Id
+   */
+  test_plan_version_id: string;
+  /**
+   * Total Cases
+   */
+  total_cases: number;
+  /**
+   * Workflow Id
+   */
+  workflow_id: string | null;
 };
 
 /**
  * ScoreReviewRequest
  */
 export type ScoreReviewRequest = {
-  /**
-   * Score
-   */
-  score: number;
   /**
    * Opinion
    */
@@ -1280,6 +1411,22 @@ export type ScoreReviewRequest = {
   rubric_scores?: {
     [key: string]: number;
   } | null;
+  /**
+   * Score
+   */
+  score: number;
+};
+
+/**
+ * SetModelDefaultRequest
+ *
+ * 设置项目默认模型请求。
+ */
+export type SetModelDefaultRequest = {
+  /**
+   * Model Config Id
+   */
+  model_config_id: string;
 };
 
 /**
@@ -1318,42 +1465,24 @@ export type TestCaseListResponse = {
  */
 export type TestCaseResponse = {
   /**
-   * Id
-   */
-  id: string;
-  /**
-   * Dataset Version Id
-   */
-  dataset_version_id: string;
-  /**
-   * Name
-   */
-  name: string;
-  /**
-   * Input
-   */
-  input: {
-    [key: string]: unknown;
-  };
-  execution_mode: ExecutionMode;
-  /**
    * Assertions
    */
   assertions: Array<{
     [key: string]: unknown;
   }>;
   /**
-   * Scorers
+   * Created At
    */
-  scorers: Array<{
-    [key: string]: unknown;
-  }>;
+  created_at: string | null;
   /**
-   * Initial State
+   * Dataset Version Id
    */
-  initial_state: {
-    [key: string]: unknown;
-  } | null;
+  dataset_version_id: string;
+  /**
+   * Difficulty
+   */
+  difficulty: string | null;
+  execution_mode: ExecutionMode;
   /**
    * Expected Outcome
    */
@@ -1361,34 +1490,52 @@ export type TestCaseResponse = {
     [key: string]: unknown;
   } | null;
   /**
+   * Id
+   */
+  id: string;
+  /**
+   * Initial State
+   */
+  initial_state: {
+    [key: string]: unknown;
+  } | null;
+  /**
+   * Input
+   */
+  input: {
+    [key: string]: unknown;
+  };
+  /**
+   * Name
+   */
+  name: string;
+  priority: Priority | null;
+  risk_level: RiskLevel | null;
+  /**
+   * Scenario
+   */
+  scenario: string | null;
+  /**
+   * Scorers
+   */
+  scorers: Array<{
+    [key: string]: unknown;
+  }>;
+  /**
    * Security Policies
    */
   security_policies: Array<{
     [key: string]: unknown;
   }>;
   /**
-   * Tags
-   */
-  tags: Array<string>;
-  /**
-   * Scenario
-   */
-  scenario: string | null;
-  priority: Priority | null;
-  risk_level: RiskLevel | null;
-  /**
-   * Difficulty
-   */
-  difficulty: string | null;
-  test_group: TestGroup | null;
-  /**
    * Sort Order
    */
   sort_order: number;
   /**
-   * Created At
+   * Tags
    */
-  created_at: string | null;
+  tags: Array<string>;
+  test_group: TestGroup | null;
   /**
    * Updated At
    */
@@ -1411,21 +1558,31 @@ export type TestPlanConfigRequest = {
    */
   api_browser_ratio?: number;
   /**
-   * Runs Per Case
+   * Baseline Run Id
    */
-  runs_per_case?: number;
+  baseline_run_id?: string | null;
   /**
    * Concurrency
    */
   concurrency?: number;
   /**
-   * Timeout
+   * Cost Budget
    */
-  timeout?: number;
+  cost_budget?: number | null;
   /**
    * Max Retries
    */
   max_retries?: number;
+  /**
+   * Pass Threshold
+   */
+  pass_threshold?: number;
+  /**
+   * Release Gate
+   */
+  release_gate?: {
+    [key: string]: unknown;
+  };
   /**
    * Retry Policy
    */
@@ -1433,29 +1590,19 @@ export type TestPlanConfigRequest = {
     [key: string]: unknown;
   };
   /**
+   * Runs Per Case
+   */
+  runs_per_case?: number;
+  /**
    * Scorers
    */
   scorers?: Array<{
     [key: string]: unknown;
   }>;
   /**
-   * Pass Threshold
+   * Timeout
    */
-  pass_threshold?: number;
-  /**
-   * Cost Budget
-   */
-  cost_budget?: number | null;
-  /**
-   * Baseline Run Id
-   */
-  baseline_run_id?: string | null;
-  /**
-   * Release Gate
-   */
-  release_gate?: {
-    [key: string]: unknown;
-  };
+  timeout?: number;
 };
 
 /**
@@ -1477,37 +1624,37 @@ export type TestPlanListResponse = {
  */
 export type TestPlanResponse = {
   /**
-   * Id
+   * Created At
    */
-  id: string;
-  /**
-   * Project Id
-   */
-  project_id: string;
-  /**
-   * Name
-   */
-  name: string;
-  /**
-   * Description
-   */
-  description: string | null;
+  created_at: string;
   /**
    * Created By
    */
   created_by: string;
   /**
-   * Updated By
+   * Description
    */
-  updated_by: string;
+  description: string | null;
   /**
-   * Created At
+   * Id
    */
-  created_at: string;
+  id: string;
+  /**
+   * Name
+   */
+  name: string;
+  /**
+   * Project Id
+   */
+  project_id: string;
   /**
    * Updated At
    */
   updated_at: string;
+  /**
+   * Updated By
+   */
+  updated_by: string;
 };
 
 /**
@@ -1525,18 +1672,9 @@ export type TestPlanVersionListResponse = {
  */
 export type TestPlanVersionResponse = {
   /**
-   * Id
+   * Agent Version Id
    */
-  id: string;
-  /**
-   * Test Plan Id
-   */
-  test_plan_id: string;
-  /**
-   * Version Number
-   */
-  version_number: number;
-  status: AgenttestModulesTestPlansDomainValueObjectsVersionStatus;
+  agent_version_id: string | null;
   /**
    * Config
    */
@@ -1544,9 +1682,13 @@ export type TestPlanVersionResponse = {
     [key: string]: unknown;
   };
   /**
-   * Agent Version Id
+   * Created At
    */
-  agent_version_id: string | null;
+  created_at: string;
+  /**
+   * Created By
+   */
+  created_by: string;
   /**
    * Dataset Version Id
    */
@@ -1556,21 +1698,46 @@ export type TestPlanVersionResponse = {
    */
   environment_template_id: string | null;
   /**
-   * Created By
+   * Id
    */
-  created_by: string;
+  id: string;
   /**
-   * Created At
+   * Published At
    */
-  created_at: string;
+  published_at: string | null;
+  status: AgenttestModulesTestPlansDomainValueObjectsVersionStatus;
+  /**
+   * Test Plan Id
+   */
+  test_plan_id: string;
   /**
    * Updated At
    */
   updated_at: string;
   /**
-   * Published At
+   * Version Number
    */
-  published_at: string | null;
+  version_number: number;
+};
+
+/**
+ * TextJudgeRequest
+ *
+ * 文本裁判测试请求。
+ */
+export type TextJudgeRequest = {
+  /**
+   * Input Text
+   */
+  input_text: string;
+  /**
+   * Output Text
+   */
+  output_text: string;
+  /**
+   * Rubric
+   */
+  rubric: string;
 };
 
 /**
@@ -1585,14 +1752,6 @@ export type Theme = "system" | "light" | "dark";
  */
 export type UpdateAccountRequest = {
   /**
-   * Name
-   */
-  name?: string | null;
-  /**
-   * Username
-   */
-  username?: string | null;
-  /**
    * Credential Encrypted
    */
   credential_encrypted?: string | null;
@@ -1604,6 +1763,14 @@ export type UpdateAccountRequest = {
    * Enabled
    */
   enabled?: boolean | null;
+  /**
+   * Name
+   */
+  name?: string | null;
+  /**
+   * Username
+   */
+  username?: string | null;
 };
 
 /**
@@ -1611,13 +1778,13 @@ export type UpdateAccountRequest = {
  */
 export type UpdateAgentRequest = {
   /**
-   * Name
-   */
-  name?: string | null;
-  /**
    * Description
    */
   description?: string | null;
+  /**
+   * Name
+   */
+  name?: string | null;
 };
 
 /**
@@ -1632,23 +1799,19 @@ export type UpdateAgentVersionRequest = {
  */
 export type UpdateDatasetRequest = {
   /**
-   * Name
-   */
-  name?: string | null;
-  /**
    * Description
    */
   description?: string | null;
+  /**
+   * Name
+   */
+  name?: string | null;
 };
 
 /**
  * UpdateEnvironmentTemplateRequest
  */
 export type UpdateEnvironmentTemplateRequest = {
-  /**
-   * Name
-   */
-  name?: string | null;
   /**
    * Config
    */
@@ -1659,6 +1822,42 @@ export type UpdateEnvironmentTemplateRequest = {
    * Description
    */
   description?: string | null;
+  /**
+   * Name
+   */
+  name?: string | null;
+};
+
+/**
+ * UpdateModelConfigRequest
+ *
+ * 更新模型配置请求；空 API Key 表示保留。
+ */
+export type UpdateModelConfigRequest = {
+  /**
+   * Api Key
+   */
+  api_key?: string | null;
+  /**
+   * Base Url
+   */
+  base_url?: string | null;
+  /**
+   * Enabled
+   */
+  enabled?: boolean | null;
+  /**
+   * Model Name
+   */
+  model_name?: string | null;
+  /**
+   * Name
+   */
+  name?: string | null;
+  /**
+   * Supports Vision
+   */
+  supports_vision?: boolean | null;
 };
 
 /**
@@ -1666,31 +1865,19 @@ export type UpdateEnvironmentTemplateRequest = {
  */
 export type UpdateProfileRequest = {
   /**
-   * Email
-   */
-  email: string;
-  /**
    * Display Name
    */
   display_name: string;
+  /**
+   * Email
+   */
+  email: string;
 };
 
 /**
  * UpdateScorerRequest
  */
 export type UpdateScorerRequest = {
-  /**
-   * Name
-   */
-  name?: string | null;
-  /**
-   * Weight
-   */
-  weight?: number | null;
-  /**
-   * Threshold
-   */
-  threshold?: number | null;
   /**
    * Config Json
    */
@@ -1705,6 +1892,18 @@ export type UpdateScorerRequest = {
    * Enabled
    */
   enabled?: boolean | null;
+  /**
+   * Name
+   */
+  name?: string | null;
+  /**
+   * Threshold
+   */
+  threshold?: number | null;
+  /**
+   * Weight
+   */
+  weight?: number | null;
 };
 
 /**
@@ -1713,12 +1912,11 @@ export type UpdateScorerRequest = {
  * 更新设置请求。
  */
 export type UpdateSettingsRequest = {
-  theme?: Theme | null;
-  language?: Language | null;
   /**
    * Email Notifications
    */
   email_notifications?: boolean | null;
+  language?: Language | null;
   /**
    * Push Notifications
    */
@@ -1727,6 +1925,7 @@ export type UpdateSettingsRequest = {
    * Test Complete Notifications
    */
   test_complete_notifications?: boolean | null;
+  theme?: Theme | null;
 };
 
 /**
@@ -1734,34 +1933,16 @@ export type UpdateSettingsRequest = {
  */
 export type UpdateTestCaseRequest = {
   /**
-   * Name
-   */
-  name?: string | null;
-  /**
-   * Input
-   */
-  input?: {
-    [key: string]: unknown;
-  } | null;
-  execution_mode?: ExecutionMode | null;
-  /**
    * Assertions
    */
   assertions?: Array<{
     [key: string]: unknown;
   }> | null;
   /**
-   * Scorers
+   * Difficulty
    */
-  scorers?: Array<{
-    [key: string]: unknown;
-  }> | null;
-  /**
-   * Initial State
-   */
-  initial_state?: {
-    [key: string]: unknown;
-  } | null;
+  difficulty?: string | null;
+  execution_mode?: ExecutionMode | null;
   /**
    * Expected Outcome
    */
@@ -1769,30 +1950,48 @@ export type UpdateTestCaseRequest = {
     [key: string]: unknown;
   } | null;
   /**
+   * Initial State
+   */
+  initial_state?: {
+    [key: string]: unknown;
+  } | null;
+  /**
+   * Input
+   */
+  input?: {
+    [key: string]: unknown;
+  } | null;
+  /**
+   * Name
+   */
+  name?: string | null;
+  priority?: Priority | null;
+  risk_level?: RiskLevel | null;
+  /**
+   * Scenario
+   */
+  scenario?: string | null;
+  /**
+   * Scorers
+   */
+  scorers?: Array<{
+    [key: string]: unknown;
+  }> | null;
+  /**
    * Security Policies
    */
   security_policies?: Array<{
     [key: string]: unknown;
   }> | null;
   /**
-   * Tags
-   */
-  tags?: Array<string> | null;
-  /**
-   * Scenario
-   */
-  scenario?: string | null;
-  priority?: Priority | null;
-  risk_level?: RiskLevel | null;
-  /**
-   * Difficulty
-   */
-  difficulty?: string | null;
-  test_group?: TestGroup | null;
-  /**
    * Sort Order
    */
   sort_order?: number | null;
+  /**
+   * Tags
+   */
+  tags?: Array<string> | null;
+  test_group?: TestGroup | null;
 };
 
 /**
@@ -1800,24 +1999,24 @@ export type UpdateTestCaseRequest = {
  */
 export type UpdateTestPlanRequest = {
   /**
-   * Name
-   */
-  name?: string | null;
-  /**
    * Description
    */
   description?: string | null;
+  /**
+   * Name
+   */
+  name?: string | null;
 };
 
 /**
  * UpdateTestPlanVersionRequest
  */
 export type UpdateTestPlanVersionRequest = {
-  config?: TestPlanConfigRequest | null;
   /**
    * Agent Version Id
    */
   agent_version_id?: string | null;
+  config?: TestPlanConfigRequest | null;
   /**
    * Dataset Version Id
    */
@@ -1833,13 +2032,13 @@ export type UpdateTestPlanVersionRequest = {
  */
 export type UpdateUserRequest = {
   /**
-   * Email
-   */
-  email: string;
-  /**
    * Display Name
    */
   display_name: string;
+  /**
+   * Email
+   */
+  email: string;
   role?: SystemRole | null;
 };
 
@@ -1862,23 +2061,23 @@ export type UserPageResponse = {
  */
 export type UserResponse = {
   /**
-   * Id
+   * Display Name
    */
-  id: string;
+  display_name: string;
   /**
    * Email
    */
   email: string;
   /**
-   * Display Name
+   * Id
    */
-  display_name: string;
-  role: SystemRole;
-  status: UserStatus;
+  id: string;
   /**
    * Must Change Password
    */
   must_change_password: boolean;
+  role: SystemRole;
+  status: UserStatus;
 };
 
 /**
@@ -1887,12 +2086,11 @@ export type UserResponse = {
  * 用户设置响应。
  */
 export type UserSettingsResponse = {
-  theme: Theme;
-  language: Language;
   /**
    * Email Notifications
    */
   email_notifications: boolean;
+  language: Language;
   /**
    * Push Notifications
    */
@@ -1901,6 +2099,7 @@ export type UserSettingsResponse = {
    * Test Complete Notifications
    */
   test_complete_notifications: boolean;
+  theme: Theme;
 };
 
 /**
@@ -1913,6 +2112,16 @@ export type UserStatus = "active" | "disabled";
  */
 export type ValidationError = {
   /**
+   * Context
+   */
+  ctx?: {
+    [key: string]: unknown;
+  };
+  /**
+   * Input
+   */
+  input?: unknown;
+  /**
    * Location
    */
   loc: Array<string | number>;
@@ -1924,16 +2133,26 @@ export type ValidationError = {
    * Error Type
    */
   type: string;
+};
+
+/**
+ * VisionJudgeRequest
+ *
+ * 视觉裁判测试请求。
+ */
+export type VisionJudgeRequest = {
   /**
-   * Input
+   * Image Data Url
    */
-  input?: unknown;
+  image_data_url: string;
   /**
-   * Context
+   * Prompt
    */
-  ctx?: {
-    [key: string]: unknown;
-  };
+  prompt: string;
+  /**
+   * Rubric
+   */
+  rubric: string;
 };
 
 /**
@@ -1964,22 +2183,38 @@ export type AgenttestModulesTestPlansDomainValueObjectsVersionStatus =
   | "draft"
   | "published";
 
-export type HealthApiV1HealthGetData = {
-  body?: never;
+export type ChangePasswordApiV1AuthChangePasswordPostData = {
+  body: ChangePasswordRequest;
+  headers?: {
+    /**
+     * X-Csrf-Token
+     */
+    "x-csrf-token"?: string | null;
+  };
   path?: never;
   query?: never;
-  url: "/api/v1/health";
+  url: "/api/v1/auth/change-password";
 };
 
-export type HealthApiV1HealthGetResponses = {
+export type ChangePasswordApiV1AuthChangePasswordPostErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type ChangePasswordApiV1AuthChangePasswordPostError =
+  ChangePasswordApiV1AuthChangePasswordPostErrors[keyof ChangePasswordApiV1AuthChangePasswordPostErrors];
+
+export type ChangePasswordApiV1AuthChangePasswordPostResponses = {
   /**
    * Successful Response
    */
-  200: HealthResponse;
+  204: void;
 };
 
-export type HealthApiV1HealthGetResponse =
-  HealthApiV1HealthGetResponses[keyof HealthApiV1HealthGetResponses];
+export type ChangePasswordApiV1AuthChangePasswordPostResponse =
+  ChangePasswordApiV1AuthChangePasswordPostResponses[keyof ChangePasswordApiV1AuthChangePasswordPostResponses];
 
 export type LoginApiV1AuthLoginPostData = {
   body: LoginRequest;
@@ -2007,6 +2242,39 @@ export type LoginApiV1AuthLoginPostResponses = {
 
 export type LoginApiV1AuthLoginPostResponse =
   LoginApiV1AuthLoginPostResponses[keyof LoginApiV1AuthLoginPostResponses];
+
+export type LogoutApiV1AuthLogoutPostData = {
+  body?: never;
+  headers?: {
+    /**
+     * X-Csrf-Token
+     */
+    "x-csrf-token"?: string | null;
+  };
+  path?: never;
+  query?: never;
+  url: "/api/v1/auth/logout";
+};
+
+export type LogoutApiV1AuthLogoutPostErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type LogoutApiV1AuthLogoutPostError =
+  LogoutApiV1AuthLogoutPostErrors[keyof LogoutApiV1AuthLogoutPostErrors];
+
+export type LogoutApiV1AuthLogoutPostResponses = {
+  /**
+   * Successful Response
+   */
+  204: void;
+};
+
+export type LogoutApiV1AuthLogoutPostResponse =
+  LogoutApiV1AuthLogoutPostResponses[keyof LogoutApiV1AuthLogoutPostResponses];
 
 export type CurrentUserApiV1AuthMeGetData = {
   body?: never;
@@ -2058,362 +2326,49 @@ export type UpdateProfileApiV1AuthMePatchResponses = {
 export type UpdateProfileApiV1AuthMePatchResponse =
   UpdateProfileApiV1AuthMePatchResponses[keyof UpdateProfileApiV1AuthMePatchResponses];
 
-export type ChangePasswordApiV1AuthChangePasswordPostData = {
-  body: ChangePasswordRequest;
-  headers?: {
-    /**
-     * X-Csrf-Token
-     */
-    "x-csrf-token"?: string | null;
-  };
+export type CreateFeedbackApiV1FeedbackPostData = {
+  body: CreateFeedbackRequest;
   path?: never;
   query?: never;
-  url: "/api/v1/auth/change-password";
+  url: "/api/v1/feedback";
 };
 
-export type ChangePasswordApiV1AuthChangePasswordPostErrors = {
+export type CreateFeedbackApiV1FeedbackPostErrors = {
   /**
    * Validation Error
    */
   422: HttpValidationError;
 };
 
-export type ChangePasswordApiV1AuthChangePasswordPostError =
-  ChangePasswordApiV1AuthChangePasswordPostErrors[keyof ChangePasswordApiV1AuthChangePasswordPostErrors];
+export type CreateFeedbackApiV1FeedbackPostError =
+  CreateFeedbackApiV1FeedbackPostErrors[keyof CreateFeedbackApiV1FeedbackPostErrors];
 
-export type ChangePasswordApiV1AuthChangePasswordPostResponses = {
+export type CreateFeedbackApiV1FeedbackPostResponses = {
   /**
    * Successful Response
    */
-  204: void;
+  201: FeedbackResponse;
 };
 
-export type ChangePasswordApiV1AuthChangePasswordPostResponse =
-  ChangePasswordApiV1AuthChangePasswordPostResponses[keyof ChangePasswordApiV1AuthChangePasswordPostResponses];
+export type CreateFeedbackApiV1FeedbackPostResponse =
+  CreateFeedbackApiV1FeedbackPostResponses[keyof CreateFeedbackApiV1FeedbackPostResponses];
 
-export type LogoutApiV1AuthLogoutPostData = {
-  body?: never;
-  headers?: {
-    /**
-     * X-Csrf-Token
-     */
-    "x-csrf-token"?: string | null;
-  };
-  path?: never;
-  query?: never;
-  url: "/api/v1/auth/logout";
-};
-
-export type LogoutApiV1AuthLogoutPostErrors = {
-  /**
-   * Validation Error
-   */
-  422: HttpValidationError;
-};
-
-export type LogoutApiV1AuthLogoutPostError =
-  LogoutApiV1AuthLogoutPostErrors[keyof LogoutApiV1AuthLogoutPostErrors];
-
-export type LogoutApiV1AuthLogoutPostResponses = {
-  /**
-   * Successful Response
-   */
-  204: void;
-};
-
-export type LogoutApiV1AuthLogoutPostResponse =
-  LogoutApiV1AuthLogoutPostResponses[keyof LogoutApiV1AuthLogoutPostResponses];
-
-export type ListUsersApiV1SystemUsersGetData = {
+export type HealthApiV1HealthGetData = {
   body?: never;
   path?: never;
-  query?: {
-    /**
-     * Cursor
-     */
-    cursor?: string | null;
-    /**
-     * Limit
-     */
-    limit?: number;
-  };
-  url: "/api/v1/system/users";
-};
-
-export type ListUsersApiV1SystemUsersGetErrors = {
-  /**
-   * Validation Error
-   */
-  422: HttpValidationError;
-};
-
-export type ListUsersApiV1SystemUsersGetError =
-  ListUsersApiV1SystemUsersGetErrors[keyof ListUsersApiV1SystemUsersGetErrors];
-
-export type ListUsersApiV1SystemUsersGetResponses = {
-  /**
-   * Successful Response
-   */
-  200: UserPageResponse;
-};
-
-export type ListUsersApiV1SystemUsersGetResponse =
-  ListUsersApiV1SystemUsersGetResponses[keyof ListUsersApiV1SystemUsersGetResponses];
-
-export type CreateUserApiV1SystemUsersPostData = {
-  body: CreateUserRequest;
-  headers?: {
-    /**
-     * X-Csrf-Token
-     */
-    "x-csrf-token"?: string | null;
-  };
-  path?: never;
   query?: never;
-  url: "/api/v1/system/users";
+  url: "/api/v1/health";
 };
 
-export type CreateUserApiV1SystemUsersPostErrors = {
-  /**
-   * Validation Error
-   */
-  422: HttpValidationError;
-};
-
-export type CreateUserApiV1SystemUsersPostError =
-  CreateUserApiV1SystemUsersPostErrors[keyof CreateUserApiV1SystemUsersPostErrors];
-
-export type CreateUserApiV1SystemUsersPostResponses = {
+export type HealthApiV1HealthGetResponses = {
   /**
    * Successful Response
    */
-  201: UserResponse;
+  200: HealthResponse;
 };
 
-export type CreateUserApiV1SystemUsersPostResponse =
-  CreateUserApiV1SystemUsersPostResponses[keyof CreateUserApiV1SystemUsersPostResponses];
-
-export type DeleteUserApiV1SystemUsersUserIdDeleteData = {
-  body?: never;
-  headers?: {
-    /**
-     * X-Csrf-Token
-     */
-    "x-csrf-token"?: string | null;
-  };
-  path: {
-    /**
-     * User Id
-     */
-    user_id: string;
-  };
-  query?: never;
-  url: "/api/v1/system/users/{user_id}";
-};
-
-export type DeleteUserApiV1SystemUsersUserIdDeleteErrors = {
-  /**
-   * Validation Error
-   */
-  422: HttpValidationError;
-};
-
-export type DeleteUserApiV1SystemUsersUserIdDeleteError =
-  DeleteUserApiV1SystemUsersUserIdDeleteErrors[keyof DeleteUserApiV1SystemUsersUserIdDeleteErrors];
-
-export type DeleteUserApiV1SystemUsersUserIdDeleteResponses = {
-  /**
-   * Successful Response
-   */
-  204: void;
-};
-
-export type DeleteUserApiV1SystemUsersUserIdDeleteResponse =
-  DeleteUserApiV1SystemUsersUserIdDeleteResponses[keyof DeleteUserApiV1SystemUsersUserIdDeleteResponses];
-
-export type GetUserApiV1SystemUsersUserIdGetData = {
-  body?: never;
-  path: {
-    /**
-     * User Id
-     */
-    user_id: string;
-  };
-  query?: never;
-  url: "/api/v1/system/users/{user_id}";
-};
-
-export type GetUserApiV1SystemUsersUserIdGetErrors = {
-  /**
-   * Validation Error
-   */
-  422: HttpValidationError;
-};
-
-export type GetUserApiV1SystemUsersUserIdGetError =
-  GetUserApiV1SystemUsersUserIdGetErrors[keyof GetUserApiV1SystemUsersUserIdGetErrors];
-
-export type GetUserApiV1SystemUsersUserIdGetResponses = {
-  /**
-   * Successful Response
-   */
-  200: UserResponse;
-};
-
-export type GetUserApiV1SystemUsersUserIdGetResponse =
-  GetUserApiV1SystemUsersUserIdGetResponses[keyof GetUserApiV1SystemUsersUserIdGetResponses];
-
-export type UpdateUserApiV1SystemUsersUserIdPatchData = {
-  body: UpdateUserRequest;
-  headers?: {
-    /**
-     * X-Csrf-Token
-     */
-    "x-csrf-token"?: string | null;
-  };
-  path: {
-    /**
-     * User Id
-     */
-    user_id: string;
-  };
-  query?: never;
-  url: "/api/v1/system/users/{user_id}";
-};
-
-export type UpdateUserApiV1SystemUsersUserIdPatchErrors = {
-  /**
-   * Validation Error
-   */
-  422: HttpValidationError;
-};
-
-export type UpdateUserApiV1SystemUsersUserIdPatchError =
-  UpdateUserApiV1SystemUsersUserIdPatchErrors[keyof UpdateUserApiV1SystemUsersUserIdPatchErrors];
-
-export type UpdateUserApiV1SystemUsersUserIdPatchResponses = {
-  /**
-   * Successful Response
-   */
-  200: UserResponse;
-};
-
-export type UpdateUserApiV1SystemUsersUserIdPatchResponse =
-  UpdateUserApiV1SystemUsersUserIdPatchResponses[keyof UpdateUserApiV1SystemUsersUserIdPatchResponses];
-
-export type ResetPasswordApiV1SystemUsersUserIdResetPasswordPostData = {
-  body: ResetPasswordRequest;
-  headers?: {
-    /**
-     * X-Csrf-Token
-     */
-    "x-csrf-token"?: string | null;
-  };
-  path: {
-    /**
-     * User Id
-     */
-    user_id: string;
-  };
-  query?: never;
-  url: "/api/v1/system/users/{user_id}/reset-password";
-};
-
-export type ResetPasswordApiV1SystemUsersUserIdResetPasswordPostErrors = {
-  /**
-   * Validation Error
-   */
-  422: HttpValidationError;
-};
-
-export type ResetPasswordApiV1SystemUsersUserIdResetPasswordPostError =
-  ResetPasswordApiV1SystemUsersUserIdResetPasswordPostErrors[keyof ResetPasswordApiV1SystemUsersUserIdResetPasswordPostErrors];
-
-export type ResetPasswordApiV1SystemUsersUserIdResetPasswordPostResponses = {
-  /**
-   * Successful Response
-   */
-  204: void;
-};
-
-export type ResetPasswordApiV1SystemUsersUserIdResetPasswordPostResponse =
-  ResetPasswordApiV1SystemUsersUserIdResetPasswordPostResponses[keyof ResetPasswordApiV1SystemUsersUserIdResetPasswordPostResponses];
-
-export type DisableUserApiV1SystemUsersUserIdDisablePostData = {
-  body?: never;
-  headers?: {
-    /**
-     * X-Csrf-Token
-     */
-    "x-csrf-token"?: string | null;
-  };
-  path: {
-    /**
-     * User Id
-     */
-    user_id: string;
-  };
-  query?: never;
-  url: "/api/v1/system/users/{user_id}/disable";
-};
-
-export type DisableUserApiV1SystemUsersUserIdDisablePostErrors = {
-  /**
-   * Validation Error
-   */
-  422: HttpValidationError;
-};
-
-export type DisableUserApiV1SystemUsersUserIdDisablePostError =
-  DisableUserApiV1SystemUsersUserIdDisablePostErrors[keyof DisableUserApiV1SystemUsersUserIdDisablePostErrors];
-
-export type DisableUserApiV1SystemUsersUserIdDisablePostResponses = {
-  /**
-   * Successful Response
-   */
-  200: UserResponse;
-};
-
-export type DisableUserApiV1SystemUsersUserIdDisablePostResponse =
-  DisableUserApiV1SystemUsersUserIdDisablePostResponses[keyof DisableUserApiV1SystemUsersUserIdDisablePostResponses];
-
-export type EnableUserApiV1SystemUsersUserIdEnablePostData = {
-  body?: never;
-  headers?: {
-    /**
-     * X-Csrf-Token
-     */
-    "x-csrf-token"?: string | null;
-  };
-  path: {
-    /**
-     * User Id
-     */
-    user_id: string;
-  };
-  query?: never;
-  url: "/api/v1/system/users/{user_id}/enable";
-};
-
-export type EnableUserApiV1SystemUsersUserIdEnablePostErrors = {
-  /**
-   * Validation Error
-   */
-  422: HttpValidationError;
-};
-
-export type EnableUserApiV1SystemUsersUserIdEnablePostError =
-  EnableUserApiV1SystemUsersUserIdEnablePostErrors[keyof EnableUserApiV1SystemUsersUserIdEnablePostErrors];
-
-export type EnableUserApiV1SystemUsersUserIdEnablePostResponses = {
-  /**
-   * Successful Response
-   */
-  200: UserResponse;
-};
-
-export type EnableUserApiV1SystemUsersUserIdEnablePostResponse =
-  EnableUserApiV1SystemUsersUserIdEnablePostResponses[keyof EnableUserApiV1SystemUsersUserIdEnablePostResponses];
+export type HealthApiV1HealthGetResponse =
+  HealthApiV1HealthGetResponses[keyof HealthApiV1HealthGetResponses];
 
 export type ListProjectsApiV1ProjectsGetData = {
   body?: never;
@@ -2534,267 +2489,6 @@ export type RenameProjectApiV1ProjectsProjectIdPatchResponses = {
 
 export type RenameProjectApiV1ProjectsProjectIdPatchResponse =
   RenameProjectApiV1ProjectsProjectIdPatchResponses[keyof RenameProjectApiV1ProjectsProjectIdPatchResponses];
-
-export type ArchiveProjectApiV1ProjectsProjectIdArchivePostData = {
-  body?: never;
-  headers?: {
-    /**
-     * X-Csrf-Token
-     */
-    "x-csrf-token"?: string | null;
-  };
-  path: {
-    /**
-     * Project Id
-     */
-    project_id: string;
-  };
-  query?: never;
-  url: "/api/v1/projects/{project_id}/archive";
-};
-
-export type ArchiveProjectApiV1ProjectsProjectIdArchivePostErrors = {
-  /**
-   * Validation Error
-   */
-  422: HttpValidationError;
-};
-
-export type ArchiveProjectApiV1ProjectsProjectIdArchivePostError =
-  ArchiveProjectApiV1ProjectsProjectIdArchivePostErrors[keyof ArchiveProjectApiV1ProjectsProjectIdArchivePostErrors];
-
-export type ArchiveProjectApiV1ProjectsProjectIdArchivePostResponses = {
-  /**
-   * Successful Response
-   */
-  200: ProjectResponse;
-};
-
-export type ArchiveProjectApiV1ProjectsProjectIdArchivePostResponse =
-  ArchiveProjectApiV1ProjectsProjectIdArchivePostResponses[keyof ArchiveProjectApiV1ProjectsProjectIdArchivePostResponses];
-
-export type ListMembersApiV1ProjectsProjectIdMembersGetData = {
-  body?: never;
-  path: {
-    /**
-     * Project Id
-     */
-    project_id: string;
-  };
-  query?: never;
-  url: "/api/v1/projects/{project_id}/members";
-};
-
-export type ListMembersApiV1ProjectsProjectIdMembersGetErrors = {
-  /**
-   * Validation Error
-   */
-  422: HttpValidationError;
-};
-
-export type ListMembersApiV1ProjectsProjectIdMembersGetError =
-  ListMembersApiV1ProjectsProjectIdMembersGetErrors[keyof ListMembersApiV1ProjectsProjectIdMembersGetErrors];
-
-export type ListMembersApiV1ProjectsProjectIdMembersGetResponses = {
-  /**
-   * Successful Response
-   */
-  200: ProjectMembersResponse;
-};
-
-export type ListMembersApiV1ProjectsProjectIdMembersGetResponse =
-  ListMembersApiV1ProjectsProjectIdMembersGetResponses[keyof ListMembersApiV1ProjectsProjectIdMembersGetResponses];
-
-export type AddMemberApiV1ProjectsProjectIdMembersPostData = {
-  body: ProjectMemberRequest;
-  headers?: {
-    /**
-     * X-Csrf-Token
-     */
-    "x-csrf-token"?: string | null;
-  };
-  path: {
-    /**
-     * Project Id
-     */
-    project_id: string;
-  };
-  query?: never;
-  url: "/api/v1/projects/{project_id}/members";
-};
-
-export type AddMemberApiV1ProjectsProjectIdMembersPostErrors = {
-  /**
-   * Validation Error
-   */
-  422: HttpValidationError;
-};
-
-export type AddMemberApiV1ProjectsProjectIdMembersPostError =
-  AddMemberApiV1ProjectsProjectIdMembersPostErrors[keyof AddMemberApiV1ProjectsProjectIdMembersPostErrors];
-
-export type AddMemberApiV1ProjectsProjectIdMembersPostResponses = {
-  /**
-   * Successful Response
-   */
-  200: ProjectMembersResponse;
-};
-
-export type AddMemberApiV1ProjectsProjectIdMembersPostResponse =
-  AddMemberApiV1ProjectsProjectIdMembersPostResponses[keyof AddMemberApiV1ProjectsProjectIdMembersPostResponses];
-
-export type RemoveMemberApiV1ProjectsProjectIdMembersUserIdDeleteData = {
-  body?: never;
-  headers?: {
-    /**
-     * X-Csrf-Token
-     */
-    "x-csrf-token"?: string | null;
-  };
-  path: {
-    /**
-     * Project Id
-     */
-    project_id: string;
-    /**
-     * User Id
-     */
-    user_id: string;
-  };
-  query?: never;
-  url: "/api/v1/projects/{project_id}/members/{user_id}";
-};
-
-export type RemoveMemberApiV1ProjectsProjectIdMembersUserIdDeleteErrors = {
-  /**
-   * Validation Error
-   */
-  422: HttpValidationError;
-};
-
-export type RemoveMemberApiV1ProjectsProjectIdMembersUserIdDeleteError =
-  RemoveMemberApiV1ProjectsProjectIdMembersUserIdDeleteErrors[keyof RemoveMemberApiV1ProjectsProjectIdMembersUserIdDeleteErrors];
-
-export type RemoveMemberApiV1ProjectsProjectIdMembersUserIdDeleteResponses = {
-  /**
-   * Successful Response
-   */
-  204: void;
-};
-
-export type RemoveMemberApiV1ProjectsProjectIdMembersUserIdDeleteResponse =
-  RemoveMemberApiV1ProjectsProjectIdMembersUserIdDeleteResponses[keyof RemoveMemberApiV1ProjectsProjectIdMembersUserIdDeleteResponses];
-
-export type UpdateMemberApiV1ProjectsProjectIdMembersUserIdPatchData = {
-  body: ProjectMemberUpdateRequest;
-  headers?: {
-    /**
-     * X-Csrf-Token
-     */
-    "x-csrf-token"?: string | null;
-  };
-  path: {
-    /**
-     * Project Id
-     */
-    project_id: string;
-    /**
-     * User Id
-     */
-    user_id: string;
-  };
-  query?: never;
-  url: "/api/v1/projects/{project_id}/members/{user_id}";
-};
-
-export type UpdateMemberApiV1ProjectsProjectIdMembersUserIdPatchErrors = {
-  /**
-   * Validation Error
-   */
-  422: HttpValidationError;
-};
-
-export type UpdateMemberApiV1ProjectsProjectIdMembersUserIdPatchError =
-  UpdateMemberApiV1ProjectsProjectIdMembersUserIdPatchErrors[keyof UpdateMemberApiV1ProjectsProjectIdMembersUserIdPatchErrors];
-
-export type UpdateMemberApiV1ProjectsProjectIdMembersUserIdPatchResponses = {
-  /**
-   * Successful Response
-   */
-  200: ProjectMembersResponse;
-};
-
-export type UpdateMemberApiV1ProjectsProjectIdMembersUserIdPatchResponse =
-  UpdateMemberApiV1ProjectsProjectIdMembersUserIdPatchResponses[keyof UpdateMemberApiV1ProjectsProjectIdMembersUserIdPatchResponses];
-
-export type GlobalAuditApiV1SystemAuditGetData = {
-  body?: never;
-  path?: never;
-  query?: {
-    /**
-     * Limit
-     */
-    limit?: number;
-  };
-  url: "/api/v1/system/audit";
-};
-
-export type GlobalAuditApiV1SystemAuditGetErrors = {
-  /**
-   * Validation Error
-   */
-  422: HttpValidationError;
-};
-
-export type GlobalAuditApiV1SystemAuditGetError =
-  GlobalAuditApiV1SystemAuditGetErrors[keyof GlobalAuditApiV1SystemAuditGetErrors];
-
-export type GlobalAuditApiV1SystemAuditGetResponses = {
-  /**
-   * Successful Response
-   */
-  200: AuditListResponse;
-};
-
-export type GlobalAuditApiV1SystemAuditGetResponse =
-  GlobalAuditApiV1SystemAuditGetResponses[keyof GlobalAuditApiV1SystemAuditGetResponses];
-
-export type ProjectAuditApiV1ProjectsProjectIdAuditGetData = {
-  body?: never;
-  path: {
-    /**
-     * Project Id
-     */
-    project_id: string;
-  };
-  query?: {
-    /**
-     * Limit
-     */
-    limit?: number;
-  };
-  url: "/api/v1/projects/{project_id}/audit";
-};
-
-export type ProjectAuditApiV1ProjectsProjectIdAuditGetErrors = {
-  /**
-   * Validation Error
-   */
-  422: HttpValidationError;
-};
-
-export type ProjectAuditApiV1ProjectsProjectIdAuditGetError =
-  ProjectAuditApiV1ProjectsProjectIdAuditGetErrors[keyof ProjectAuditApiV1ProjectsProjectIdAuditGetErrors];
-
-export type ProjectAuditApiV1ProjectsProjectIdAuditGetResponses = {
-  /**
-   * Successful Response
-   */
-  200: AuditListResponse;
-};
-
-export type ProjectAuditApiV1ProjectsProjectIdAuditGetResponse =
-  ProjectAuditApiV1ProjectsProjectIdAuditGetResponses[keyof ProjectAuditApiV1ProjectsProjectIdAuditGetResponses];
 
 export type ListAgentsApiV1ProjectsProjectIdAgentsGetData = {
   body?: never;
@@ -3217,6 +2911,96 @@ export type PublishVersionApiV1ProjectsProjectIdAgentsAgentIdVersionsVersionIdPu
 export type PublishVersionApiV1ProjectsProjectIdAgentsAgentIdVersionsVersionIdPublishPostResponse =
   PublishVersionApiV1ProjectsProjectIdAgentsAgentIdVersionsVersionIdPublishPostResponses[keyof PublishVersionApiV1ProjectsProjectIdAgentsAgentIdVersionsVersionIdPublishPostResponses];
 
+export type SetBaselineVersionEndpointApiV1ProjectsProjectIdAgentsAgentIdBaselineVersionPatchData =
+  {
+    body?: never;
+    headers?: {
+      /**
+       * X-Csrf-Token
+       */
+      "x-csrf-token"?: string | null;
+    };
+    path: {
+      /**
+       * Project Id
+       */
+      project_id: string;
+      /**
+       * Agent Id
+       */
+      agent_id: string;
+    };
+    query?: never;
+    url: "/api/v1/projects/{project_id}/agents{agent_id}/baseline-version";
+  };
+
+export type SetBaselineVersionEndpointApiV1ProjectsProjectIdAgentsAgentIdBaselineVersionPatchErrors =
+  {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+  };
+
+export type SetBaselineVersionEndpointApiV1ProjectsProjectIdAgentsAgentIdBaselineVersionPatchError =
+  SetBaselineVersionEndpointApiV1ProjectsProjectIdAgentsAgentIdBaselineVersionPatchErrors[keyof SetBaselineVersionEndpointApiV1ProjectsProjectIdAgentsAgentIdBaselineVersionPatchErrors];
+
+export type SetBaselineVersionEndpointApiV1ProjectsProjectIdAgentsAgentIdBaselineVersionPatchResponses =
+  {
+    /**
+     * Successful Response
+     */
+    200: AgentResponse;
+  };
+
+export type SetBaselineVersionEndpointApiV1ProjectsProjectIdAgentsAgentIdBaselineVersionPatchResponse =
+  SetBaselineVersionEndpointApiV1ProjectsProjectIdAgentsAgentIdBaselineVersionPatchResponses[keyof SetBaselineVersionEndpointApiV1ProjectsProjectIdAgentsAgentIdBaselineVersionPatchResponses];
+
+export type SetCurrentVersionEndpointApiV1ProjectsProjectIdAgentsAgentIdCurrentVersionPatchData =
+  {
+    body?: never;
+    headers?: {
+      /**
+       * X-Csrf-Token
+       */
+      "x-csrf-token"?: string | null;
+    };
+    path: {
+      /**
+       * Project Id
+       */
+      project_id: string;
+      /**
+       * Agent Id
+       */
+      agent_id: string;
+    };
+    query?: never;
+    url: "/api/v1/projects/{project_id}/agents{agent_id}/current-version";
+  };
+
+export type SetCurrentVersionEndpointApiV1ProjectsProjectIdAgentsAgentIdCurrentVersionPatchErrors =
+  {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+  };
+
+export type SetCurrentVersionEndpointApiV1ProjectsProjectIdAgentsAgentIdCurrentVersionPatchError =
+  SetCurrentVersionEndpointApiV1ProjectsProjectIdAgentsAgentIdCurrentVersionPatchErrors[keyof SetCurrentVersionEndpointApiV1ProjectsProjectIdAgentsAgentIdCurrentVersionPatchErrors];
+
+export type SetCurrentVersionEndpointApiV1ProjectsProjectIdAgentsAgentIdCurrentVersionPatchResponses =
+  {
+    /**
+     * Successful Response
+     */
+    200: AgentResponse;
+  };
+
+export type SetCurrentVersionEndpointApiV1ProjectsProjectIdAgentsAgentIdCurrentVersionPatchResponse =
+  SetCurrentVersionEndpointApiV1ProjectsProjectIdAgentsAgentIdCurrentVersionPatchResponses[keyof SetCurrentVersionEndpointApiV1ProjectsProjectIdAgentsAgentIdCurrentVersionPatchResponses];
+
 export type DiffVersionsApiV1ProjectsProjectIdAgentsAgentIdVersionsV1IdDiffV2IdGetData =
   {
     body?: never;
@@ -3268,30 +3052,62 @@ export type DiffVersionsApiV1ProjectsProjectIdAgentsAgentIdVersionsV1IdDiffV2IdG
 export type DiffVersionsApiV1ProjectsProjectIdAgentsAgentIdVersionsV1IdDiffV2IdGetResponse =
   DiffVersionsApiV1ProjectsProjectIdAgentsAgentIdVersionsV1IdDiffV2IdGetResponses[keyof DiffVersionsApiV1ProjectsProjectIdAgentsAgentIdVersionsV1IdDiffV2IdGetResponses];
 
-export type SetCurrentVersionEndpointApiV1ProjectsProjectIdAgentsAgentIdCurrentVersionPatchData =
+export type ArchiveProjectApiV1ProjectsProjectIdArchivePostData = {
+  body?: never;
+  headers?: {
+    /**
+     * X-Csrf-Token
+     */
+    "x-csrf-token"?: string | null;
+  };
+  path: {
+    /**
+     * Project Id
+     */
+    project_id: string;
+  };
+  query?: never;
+  url: "/api/v1/projects/{project_id}/archive";
+};
+
+export type ArchiveProjectApiV1ProjectsProjectIdArchivePostErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type ArchiveProjectApiV1ProjectsProjectIdArchivePostError =
+  ArchiveProjectApiV1ProjectsProjectIdArchivePostErrors[keyof ArchiveProjectApiV1ProjectsProjectIdArchivePostErrors];
+
+export type ArchiveProjectApiV1ProjectsProjectIdArchivePostResponses = {
+  /**
+   * Successful Response
+   */
+  200: ProjectResponse;
+};
+
+export type ArchiveProjectApiV1ProjectsProjectIdArchivePostResponse =
+  ArchiveProjectApiV1ProjectsProjectIdArchivePostResponses[keyof ArchiveProjectApiV1ProjectsProjectIdArchivePostResponses];
+
+export type DownloadArtifactApiV1ProjectsProjectIdArtifactsArtifactIdDownloadGetData =
   {
     body?: never;
-    headers?: {
-      /**
-       * X-Csrf-Token
-       */
-      "x-csrf-token"?: string | null;
-    };
     path: {
       /**
        * Project Id
        */
       project_id: string;
       /**
-       * Agent Id
+       * Artifact Id
        */
-      agent_id: string;
+      artifact_id: string;
     };
     query?: never;
-    url: "/api/v1/projects/{project_id}/agents{agent_id}/current-version";
+    url: "/api/v1/projects/{project_id}/artifacts/{artifact_id}/download";
   };
 
-export type SetCurrentVersionEndpointApiV1ProjectsProjectIdAgentsAgentIdCurrentVersionPatchErrors =
+export type DownloadArtifactApiV1ProjectsProjectIdArtifactsArtifactIdDownloadGetErrors =
   {
     /**
      * Validation Error
@@ -3299,64 +3115,53 @@ export type SetCurrentVersionEndpointApiV1ProjectsProjectIdAgentsAgentIdCurrentV
     422: HttpValidationError;
   };
 
-export type SetCurrentVersionEndpointApiV1ProjectsProjectIdAgentsAgentIdCurrentVersionPatchError =
-  SetCurrentVersionEndpointApiV1ProjectsProjectIdAgentsAgentIdCurrentVersionPatchErrors[keyof SetCurrentVersionEndpointApiV1ProjectsProjectIdAgentsAgentIdCurrentVersionPatchErrors];
+export type DownloadArtifactApiV1ProjectsProjectIdArtifactsArtifactIdDownloadGetError =
+  DownloadArtifactApiV1ProjectsProjectIdArtifactsArtifactIdDownloadGetErrors[keyof DownloadArtifactApiV1ProjectsProjectIdArtifactsArtifactIdDownloadGetErrors];
 
-export type SetCurrentVersionEndpointApiV1ProjectsProjectIdAgentsAgentIdCurrentVersionPatchResponses =
+export type DownloadArtifactApiV1ProjectsProjectIdArtifactsArtifactIdDownloadGetResponses =
   {
     /**
      * Successful Response
      */
-    200: AgentResponse;
+    200: unknown;
   };
 
-export type SetCurrentVersionEndpointApiV1ProjectsProjectIdAgentsAgentIdCurrentVersionPatchResponse =
-  SetCurrentVersionEndpointApiV1ProjectsProjectIdAgentsAgentIdCurrentVersionPatchResponses[keyof SetCurrentVersionEndpointApiV1ProjectsProjectIdAgentsAgentIdCurrentVersionPatchResponses];
-
-export type SetBaselineVersionEndpointApiV1ProjectsProjectIdAgentsAgentIdBaselineVersionPatchData =
-  {
-    body?: never;
-    headers?: {
-      /**
-       * X-Csrf-Token
-       */
-      "x-csrf-token"?: string | null;
-    };
-    path: {
-      /**
-       * Project Id
-       */
-      project_id: string;
-      /**
-       * Agent Id
-       */
-      agent_id: string;
-    };
-    query?: never;
-    url: "/api/v1/projects/{project_id}/agents{agent_id}/baseline-version";
-  };
-
-export type SetBaselineVersionEndpointApiV1ProjectsProjectIdAgentsAgentIdBaselineVersionPatchErrors =
-  {
+export type ProjectAuditApiV1ProjectsProjectIdAuditGetData = {
+  body?: never;
+  path: {
     /**
-     * Validation Error
+     * Project Id
      */
-    422: HttpValidationError;
+    project_id: string;
   };
-
-export type SetBaselineVersionEndpointApiV1ProjectsProjectIdAgentsAgentIdBaselineVersionPatchError =
-  SetBaselineVersionEndpointApiV1ProjectsProjectIdAgentsAgentIdBaselineVersionPatchErrors[keyof SetBaselineVersionEndpointApiV1ProjectsProjectIdAgentsAgentIdBaselineVersionPatchErrors];
-
-export type SetBaselineVersionEndpointApiV1ProjectsProjectIdAgentsAgentIdBaselineVersionPatchResponses =
-  {
+  query?: {
     /**
-     * Successful Response
+     * Limit
      */
-    200: AgentResponse;
+    limit?: number;
   };
+  url: "/api/v1/projects/{project_id}/audit";
+};
 
-export type SetBaselineVersionEndpointApiV1ProjectsProjectIdAgentsAgentIdBaselineVersionPatchResponse =
-  SetBaselineVersionEndpointApiV1ProjectsProjectIdAgentsAgentIdBaselineVersionPatchResponses[keyof SetBaselineVersionEndpointApiV1ProjectsProjectIdAgentsAgentIdBaselineVersionPatchResponses];
+export type ProjectAuditApiV1ProjectsProjectIdAuditGetErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type ProjectAuditApiV1ProjectsProjectIdAuditGetError =
+  ProjectAuditApiV1ProjectsProjectIdAuditGetErrors[keyof ProjectAuditApiV1ProjectsProjectIdAuditGetErrors];
+
+export type ProjectAuditApiV1ProjectsProjectIdAuditGetResponses = {
+  /**
+   * Successful Response
+   */
+  200: AuditListResponse;
+};
+
+export type ProjectAuditApiV1ProjectsProjectIdAuditGetResponse =
+  ProjectAuditApiV1ProjectsProjectIdAuditGetResponses[keyof ProjectAuditApiV1ProjectsProjectIdAuditGetResponses];
 
 export type ListDatasetsApiV1ProjectsProjectIdDatasetsGetData = {
   body?: never;
@@ -3686,55 +3491,6 @@ export type GetVersionApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdGe
 export type GetVersionApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdGetResponse =
   GetVersionApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdGetResponses[keyof GetVersionApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdGetResponses];
 
-export type PublishVersionApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdPublishPostData =
-  {
-    body?: never;
-    headers?: {
-      /**
-       * X-Csrf-Token
-       */
-      "x-csrf-token"?: string | null;
-    };
-    path: {
-      /**
-       * Project Id
-       */
-      project_id: string;
-      /**
-       * Dataset Id
-       */
-      dataset_id: string;
-      /**
-       * Version Id
-       */
-      version_id: string;
-    };
-    query?: never;
-    url: "/api/v1/projects/{project_id}/datasets/{dataset_id}/versions/{version_id}/publish";
-  };
-
-export type PublishVersionApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdPublishPostErrors =
-  {
-    /**
-     * Validation Error
-     */
-    422: HttpValidationError;
-  };
-
-export type PublishVersionApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdPublishPostError =
-  PublishVersionApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdPublishPostErrors[keyof PublishVersionApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdPublishPostErrors];
-
-export type PublishVersionApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdPublishPostResponses =
-  {
-    /**
-     * Successful Response
-     */
-    200: DatasetVersionResponse;
-  };
-
-export type PublishVersionApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdPublishPostResponse =
-  PublishVersionApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdPublishPostResponses[keyof PublishVersionApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdPublishPostResponses];
-
 export type ListCasesApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdCasesGetData =
   {
     body?: never;
@@ -3942,6 +3698,54 @@ export type UpdateCaseApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdCa
 export type UpdateCaseApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdCasesCaseIdPatchResponse =
   UpdateCaseApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdCasesCaseIdPatchResponses[keyof UpdateCaseApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdCasesCaseIdPatchResponses];
 
+export type ExportCasesApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdExportGetData =
+  {
+    body?: never;
+    path: {
+      /**
+       * Project Id
+       */
+      project_id: string;
+      /**
+       * Dataset Id
+       */
+      dataset_id: string;
+      /**
+       * Version Id
+       */
+      version_id: string;
+    };
+    query?: {
+      /**
+       * Format
+       */
+      format?: "json" | "jsonl" | "csv";
+    };
+    url: "/api/v1/projects/{project_id}/datasets/{dataset_id}/versions/{version_id}/export";
+  };
+
+export type ExportCasesApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdExportGetErrors =
+  {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+  };
+
+export type ExportCasesApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdExportGetError =
+  ExportCasesApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdExportGetErrors[keyof ExportCasesApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdExportGetErrors];
+
+export type ExportCasesApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdExportGetResponses =
+  {
+    /**
+     * Successful Response
+     */
+    200: ExportTestCasesResponse;
+  };
+
+export type ExportCasesApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdExportGetResponse =
+  ExportCasesApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdExportGetResponses[keyof ExportCasesApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdExportGetResponses];
+
 export type ImportCasesApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdImportPostData =
   {
     body: ImportTestCasesRequest;
@@ -3991,9 +3795,15 @@ export type ImportCasesApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdI
 export type ImportCasesApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdImportPostResponse =
   ImportCasesApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdImportPostResponses[keyof ImportCasesApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdImportPostResponses];
 
-export type ExportCasesApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdExportGetData =
+export type PublishVersionApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdPublishPostData =
   {
     body?: never;
+    headers?: {
+      /**
+       * X-Csrf-Token
+       */
+      "x-csrf-token"?: string | null;
+    };
     path: {
       /**
        * Project Id
@@ -4008,16 +3818,11 @@ export type ExportCasesApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdE
        */
       version_id: string;
     };
-    query?: {
-      /**
-       * Format
-       */
-      format?: "json" | "jsonl" | "csv";
-    };
-    url: "/api/v1/projects/{project_id}/datasets/{dataset_id}/versions/{version_id}/export";
+    query?: never;
+    url: "/api/v1/projects/{project_id}/datasets/{dataset_id}/versions/{version_id}/publish";
   };
 
-export type ExportCasesApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdExportGetErrors =
+export type PublishVersionApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdPublishPostErrors =
   {
     /**
      * Validation Error
@@ -4025,19 +3830,19 @@ export type ExportCasesApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdE
     422: HttpValidationError;
   };
 
-export type ExportCasesApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdExportGetError =
-  ExportCasesApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdExportGetErrors[keyof ExportCasesApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdExportGetErrors];
+export type PublishVersionApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdPublishPostError =
+  PublishVersionApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdPublishPostErrors[keyof PublishVersionApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdPublishPostErrors];
 
-export type ExportCasesApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdExportGetResponses =
+export type PublishVersionApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdPublishPostResponses =
   {
     /**
      * Successful Response
      */
-    200: ExportTestCasesResponse;
+    200: DatasetVersionResponse;
   };
 
-export type ExportCasesApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdExportGetResponse =
-  ExportCasesApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdExportGetResponses[keyof ExportCasesApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdExportGetResponses];
+export type PublishVersionApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdPublishPostResponse =
+  PublishVersionApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdPublishPostResponses[keyof PublishVersionApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdPublishPostResponses];
 
 export type BatchDeleteCasesApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdCasesBatchDeletePostData =
   {
@@ -4144,6 +3949,2674 @@ export type GenerateFromRunEndpointApiV1ProjectsProjectIdDatasetsDatasetIdVersio
 
 export type GenerateFromRunEndpointApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdGenerateFromRunPostResponse =
   GenerateFromRunEndpointApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdGenerateFromRunPostResponses[keyof GenerateFromRunEndpointApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdGenerateFromRunPostResponses];
+
+export type ListTemplatesApiV1ProjectsProjectIdEnvironmentTemplatesGetData = {
+  body?: never;
+  path: {
+    /**
+     * Project Id
+     */
+    project_id: string;
+  };
+  query?: {
+    /**
+     * Limit
+     */
+    limit?: number;
+    /**
+     * Cursor
+     */
+    cursor?: string | null;
+  };
+  url: "/api/v1/projects/{project_id}/environment-templates";
+};
+
+export type ListTemplatesApiV1ProjectsProjectIdEnvironmentTemplatesGetErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type ListTemplatesApiV1ProjectsProjectIdEnvironmentTemplatesGetError =
+  ListTemplatesApiV1ProjectsProjectIdEnvironmentTemplatesGetErrors[keyof ListTemplatesApiV1ProjectsProjectIdEnvironmentTemplatesGetErrors];
+
+export type ListTemplatesApiV1ProjectsProjectIdEnvironmentTemplatesGetResponses =
+  {
+    /**
+     * Successful Response
+     */
+    200: EnvironmentTemplateListResponse;
+  };
+
+export type ListTemplatesApiV1ProjectsProjectIdEnvironmentTemplatesGetResponse =
+  ListTemplatesApiV1ProjectsProjectIdEnvironmentTemplatesGetResponses[keyof ListTemplatesApiV1ProjectsProjectIdEnvironmentTemplatesGetResponses];
+
+export type CreateTemplateApiV1ProjectsProjectIdEnvironmentTemplatesPostData = {
+  body: CreateEnvironmentTemplateRequest;
+  headers?: {
+    /**
+     * X-Csrf-Token
+     */
+    "x-csrf-token"?: string | null;
+  };
+  path: {
+    /**
+     * Project Id
+     */
+    project_id: string;
+  };
+  query?: never;
+  url: "/api/v1/projects/{project_id}/environment-templates";
+};
+
+export type CreateTemplateApiV1ProjectsProjectIdEnvironmentTemplatesPostErrors =
+  {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+  };
+
+export type CreateTemplateApiV1ProjectsProjectIdEnvironmentTemplatesPostError =
+  CreateTemplateApiV1ProjectsProjectIdEnvironmentTemplatesPostErrors[keyof CreateTemplateApiV1ProjectsProjectIdEnvironmentTemplatesPostErrors];
+
+export type CreateTemplateApiV1ProjectsProjectIdEnvironmentTemplatesPostResponses =
+  {
+    /**
+     * Successful Response
+     */
+    201: EnvironmentTemplateResponse;
+  };
+
+export type CreateTemplateApiV1ProjectsProjectIdEnvironmentTemplatesPostResponse =
+  CreateTemplateApiV1ProjectsProjectIdEnvironmentTemplatesPostResponses[keyof CreateTemplateApiV1ProjectsProjectIdEnvironmentTemplatesPostResponses];
+
+export type DeleteTemplateApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdDeleteData =
+  {
+    body?: never;
+    headers?: {
+      /**
+       * X-Csrf-Token
+       */
+      "x-csrf-token"?: string | null;
+    };
+    path: {
+      /**
+       * Project Id
+       */
+      project_id: string;
+      /**
+       * Template Id
+       */
+      template_id: string;
+    };
+    query?: never;
+    url: "/api/v1/projects/{project_id}/environment-templates/{template_id}";
+  };
+
+export type DeleteTemplateApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdDeleteErrors =
+  {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+  };
+
+export type DeleteTemplateApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdDeleteError =
+  DeleteTemplateApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdDeleteErrors[keyof DeleteTemplateApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdDeleteErrors];
+
+export type DeleteTemplateApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdDeleteResponses =
+  {
+    /**
+     * Successful Response
+     */
+    204: void;
+  };
+
+export type DeleteTemplateApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdDeleteResponse =
+  DeleteTemplateApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdDeleteResponses[keyof DeleteTemplateApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdDeleteResponses];
+
+export type GetTemplateApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdGetData =
+  {
+    body?: never;
+    path: {
+      /**
+       * Project Id
+       */
+      project_id: string;
+      /**
+       * Template Id
+       */
+      template_id: string;
+    };
+    query?: never;
+    url: "/api/v1/projects/{project_id}/environment-templates/{template_id}";
+  };
+
+export type GetTemplateApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdGetErrors =
+  {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+  };
+
+export type GetTemplateApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdGetError =
+  GetTemplateApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdGetErrors[keyof GetTemplateApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdGetErrors];
+
+export type GetTemplateApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdGetResponses =
+  {
+    /**
+     * Successful Response
+     */
+    200: EnvironmentTemplateResponse;
+  };
+
+export type GetTemplateApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdGetResponse =
+  GetTemplateApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdGetResponses[keyof GetTemplateApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdGetResponses];
+
+export type UpdateTemplateApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdPatchData =
+  {
+    body: UpdateEnvironmentTemplateRequest;
+    headers?: {
+      /**
+       * X-Csrf-Token
+       */
+      "x-csrf-token"?: string | null;
+    };
+    path: {
+      /**
+       * Project Id
+       */
+      project_id: string;
+      /**
+       * Template Id
+       */
+      template_id: string;
+    };
+    query?: never;
+    url: "/api/v1/projects/{project_id}/environment-templates/{template_id}";
+  };
+
+export type UpdateTemplateApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdPatchErrors =
+  {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+  };
+
+export type UpdateTemplateApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdPatchError =
+  UpdateTemplateApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdPatchErrors[keyof UpdateTemplateApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdPatchErrors];
+
+export type UpdateTemplateApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdPatchResponses =
+  {
+    /**
+     * Successful Response
+     */
+    200: EnvironmentTemplateResponse;
+  };
+
+export type UpdateTemplateApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdPatchResponse =
+  UpdateTemplateApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdPatchResponses[keyof UpdateTemplateApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdPatchResponses];
+
+export type ListSnapshotsApiV1ProjectsProjectIdEnvironmentsTemplateIdSnapshotsGetData =
+  {
+    body?: never;
+    path: {
+      /**
+       * Project Id
+       */
+      project_id: string;
+      /**
+       * Template Id
+       */
+      template_id: string;
+    };
+    query?: never;
+    url: "/api/v1/projects/{project_id}/environments/{template_id}/snapshots";
+  };
+
+export type ListSnapshotsApiV1ProjectsProjectIdEnvironmentsTemplateIdSnapshotsGetErrors =
+  {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+  };
+
+export type ListSnapshotsApiV1ProjectsProjectIdEnvironmentsTemplateIdSnapshotsGetError =
+  ListSnapshotsApiV1ProjectsProjectIdEnvironmentsTemplateIdSnapshotsGetErrors[keyof ListSnapshotsApiV1ProjectsProjectIdEnvironmentsTemplateIdSnapshotsGetErrors];
+
+export type ListSnapshotsApiV1ProjectsProjectIdEnvironmentsTemplateIdSnapshotsGetResponses =
+  {
+    /**
+     * Successful Response
+     */
+    200: unknown;
+  };
+
+export type CreateSnapshotApiV1ProjectsProjectIdEnvironmentsTemplateIdSnapshotsPostData =
+  {
+    body?: never;
+    headers?: {
+      /**
+       * X-Csrf-Token
+       */
+      "x-csrf-token"?: string | null;
+    };
+    path: {
+      /**
+       * Project Id
+       */
+      project_id: string;
+      /**
+       * Template Id
+       */
+      template_id: string;
+    };
+    query?: never;
+    url: "/api/v1/projects/{project_id}/environments/{template_id}/snapshots";
+  };
+
+export type CreateSnapshotApiV1ProjectsProjectIdEnvironmentsTemplateIdSnapshotsPostErrors =
+  {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+  };
+
+export type CreateSnapshotApiV1ProjectsProjectIdEnvironmentsTemplateIdSnapshotsPostError =
+  CreateSnapshotApiV1ProjectsProjectIdEnvironmentsTemplateIdSnapshotsPostErrors[keyof CreateSnapshotApiV1ProjectsProjectIdEnvironmentsTemplateIdSnapshotsPostErrors];
+
+export type CreateSnapshotApiV1ProjectsProjectIdEnvironmentsTemplateIdSnapshotsPostResponses =
+  {
+    /**
+     * Successful Response
+     */
+    200: unknown;
+  };
+
+export type DeleteSnapshotApiV1ProjectsProjectIdEnvironmentsTemplateIdSnapshotsSnapshotIdDeleteData =
+  {
+    body?: never;
+    headers?: {
+      /**
+       * X-Csrf-Token
+       */
+      "x-csrf-token"?: string | null;
+    };
+    path: {
+      /**
+       * Project Id
+       */
+      project_id: string;
+      /**
+       * Template Id
+       */
+      template_id: string;
+      /**
+       * Snapshot Id
+       */
+      snapshot_id: string;
+    };
+    query?: never;
+    url: "/api/v1/projects/{project_id}/environments/{template_id}/snapshots/{snapshot_id}";
+  };
+
+export type DeleteSnapshotApiV1ProjectsProjectIdEnvironmentsTemplateIdSnapshotsSnapshotIdDeleteErrors =
+  {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+  };
+
+export type DeleteSnapshotApiV1ProjectsProjectIdEnvironmentsTemplateIdSnapshotsSnapshotIdDeleteError =
+  DeleteSnapshotApiV1ProjectsProjectIdEnvironmentsTemplateIdSnapshotsSnapshotIdDeleteErrors[keyof DeleteSnapshotApiV1ProjectsProjectIdEnvironmentsTemplateIdSnapshotsSnapshotIdDeleteErrors];
+
+export type DeleteSnapshotApiV1ProjectsProjectIdEnvironmentsTemplateIdSnapshotsSnapshotIdDeleteResponses =
+  {
+    /**
+     * Successful Response
+     */
+    200: unknown;
+  };
+
+export type RestoreSnapshotApiV1ProjectsProjectIdEnvironmentsTemplateIdSnapshotsSnapshotIdRestorePostData =
+  {
+    body?: never;
+    headers?: {
+      /**
+       * X-Csrf-Token
+       */
+      "x-csrf-token"?: string | null;
+    };
+    path: {
+      /**
+       * Project Id
+       */
+      project_id: string;
+      /**
+       * Template Id
+       */
+      template_id: string;
+      /**
+       * Snapshot Id
+       */
+      snapshot_id: string;
+    };
+    query?: never;
+    url: "/api/v1/projects/{project_id}/environments/{template_id}/snapshots/{snapshot_id}/restore";
+  };
+
+export type RestoreSnapshotApiV1ProjectsProjectIdEnvironmentsTemplateIdSnapshotsSnapshotIdRestorePostErrors =
+  {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+  };
+
+export type RestoreSnapshotApiV1ProjectsProjectIdEnvironmentsTemplateIdSnapshotsSnapshotIdRestorePostError =
+  RestoreSnapshotApiV1ProjectsProjectIdEnvironmentsTemplateIdSnapshotsSnapshotIdRestorePostErrors[keyof RestoreSnapshotApiV1ProjectsProjectIdEnvironmentsTemplateIdSnapshotsSnapshotIdRestorePostErrors];
+
+export type RestoreSnapshotApiV1ProjectsProjectIdEnvironmentsTemplateIdSnapshotsSnapshotIdRestorePostResponses =
+  {
+    /**
+     * Successful Response
+     */
+    200: unknown;
+  };
+
+export type ListExperimentsApiV1ProjectsProjectIdExperimentsGetData = {
+  body?: never;
+  path: {
+    /**
+     * Project Id
+     */
+    project_id: string;
+  };
+  query?: {
+    /**
+     * Limit
+     */
+    limit?: number;
+    /**
+     * Offset
+     */
+    offset?: number;
+  };
+  url: "/api/v1/projects/{project_id}/experiments";
+};
+
+export type ListExperimentsApiV1ProjectsProjectIdExperimentsGetErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type ListExperimentsApiV1ProjectsProjectIdExperimentsGetError =
+  ListExperimentsApiV1ProjectsProjectIdExperimentsGetErrors[keyof ListExperimentsApiV1ProjectsProjectIdExperimentsGetErrors];
+
+export type ListExperimentsApiV1ProjectsProjectIdExperimentsGetResponses = {
+  /**
+   * Successful Response
+   */
+  200: unknown;
+};
+
+export type CreateExperimentApiV1ProjectsProjectIdExperimentsPostData = {
+  body: CreateExperimentRequest;
+  headers?: {
+    /**
+     * X-Csrf-Token
+     */
+    "x-csrf-token"?: string | null;
+  };
+  path: {
+    /**
+     * Project Id
+     */
+    project_id: string;
+  };
+  query?: never;
+  url: "/api/v1/projects/{project_id}/experiments";
+};
+
+export type CreateExperimentApiV1ProjectsProjectIdExperimentsPostErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type CreateExperimentApiV1ProjectsProjectIdExperimentsPostError =
+  CreateExperimentApiV1ProjectsProjectIdExperimentsPostErrors[keyof CreateExperimentApiV1ProjectsProjectIdExperimentsPostErrors];
+
+export type CreateExperimentApiV1ProjectsProjectIdExperimentsPostResponses = {
+  /**
+   * Successful Response
+   */
+  200: unknown;
+};
+
+export type GetStatisticsApiV1ProjectsProjectIdExperimentsStatisticsGetData = {
+  body?: never;
+  path: {
+    /**
+     * Project Id
+     */
+    project_id: string;
+  };
+  query?: {
+    /**
+     * Run Id
+     */
+    run_id?: string | null;
+    /**
+     * Experiment Id
+     */
+    experiment_id?: string | null;
+  };
+  url: "/api/v1/projects/{project_id}/experiments/statistics";
+};
+
+export type GetStatisticsApiV1ProjectsProjectIdExperimentsStatisticsGetErrors =
+  {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+  };
+
+export type GetStatisticsApiV1ProjectsProjectIdExperimentsStatisticsGetError =
+  GetStatisticsApiV1ProjectsProjectIdExperimentsStatisticsGetErrors[keyof GetStatisticsApiV1ProjectsProjectIdExperimentsStatisticsGetErrors];
+
+export type GetStatisticsApiV1ProjectsProjectIdExperimentsStatisticsGetResponses =
+  {
+    /**
+     * Successful Response
+     */
+    200: unknown;
+  };
+
+export type GetExperimentApiV1ProjectsProjectIdExperimentsExperimentIdGetData =
+  {
+    body?: never;
+    path: {
+      /**
+       * Project Id
+       */
+      project_id: string;
+      /**
+       * Experiment Id
+       */
+      experiment_id: string;
+    };
+    query?: never;
+    url: "/api/v1/projects/{project_id}/experiments/{experiment_id}";
+  };
+
+export type GetExperimentApiV1ProjectsProjectIdExperimentsExperimentIdGetErrors =
+  {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+  };
+
+export type GetExperimentApiV1ProjectsProjectIdExperimentsExperimentIdGetError =
+  GetExperimentApiV1ProjectsProjectIdExperimentsExperimentIdGetErrors[keyof GetExperimentApiV1ProjectsProjectIdExperimentsExperimentIdGetErrors];
+
+export type GetExperimentApiV1ProjectsProjectIdExperimentsExperimentIdGetResponses =
+  {
+    /**
+     * Successful Response
+     */
+    200: unknown;
+  };
+
+export type RunExperimentApiV1ProjectsProjectIdExperimentsExperimentIdRunPostData =
+  {
+    body?: never;
+    headers?: {
+      /**
+       * X-Csrf-Token
+       */
+      "x-csrf-token"?: string | null;
+    };
+    path: {
+      /**
+       * Project Id
+       */
+      project_id: string;
+      /**
+       * Experiment Id
+       */
+      experiment_id: string;
+    };
+    query?: never;
+    url: "/api/v1/projects/{project_id}/experiments/{experiment_id}/run";
+  };
+
+export type RunExperimentApiV1ProjectsProjectIdExperimentsExperimentIdRunPostErrors =
+  {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+  };
+
+export type RunExperimentApiV1ProjectsProjectIdExperimentsExperimentIdRunPostError =
+  RunExperimentApiV1ProjectsProjectIdExperimentsExperimentIdRunPostErrors[keyof RunExperimentApiV1ProjectsProjectIdExperimentsExperimentIdRunPostErrors];
+
+export type RunExperimentApiV1ProjectsProjectIdExperimentsExperimentIdRunPostResponses =
+  {
+    /**
+     * Successful Response
+     */
+    200: unknown;
+  };
+
+export type ListGatesApiV1ProjectsProjectIdGatesGetData = {
+  body?: never;
+  path: {
+    /**
+     * Project Id
+     */
+    project_id: string;
+  };
+  query?: never;
+  url: "/api/v1/projects/{project_id}/gates";
+};
+
+export type ListGatesApiV1ProjectsProjectIdGatesGetErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type ListGatesApiV1ProjectsProjectIdGatesGetError =
+  ListGatesApiV1ProjectsProjectIdGatesGetErrors[keyof ListGatesApiV1ProjectsProjectIdGatesGetErrors];
+
+export type ListGatesApiV1ProjectsProjectIdGatesGetResponses = {
+  /**
+   * Successful Response
+   */
+  200: unknown;
+};
+
+export type CreateGateApiV1ProjectsProjectIdGatesPostData = {
+  body: CreateGateRequest;
+  headers?: {
+    /**
+     * X-Csrf-Token
+     */
+    "x-csrf-token"?: string | null;
+  };
+  path: {
+    /**
+     * Project Id
+     */
+    project_id: string;
+  };
+  query?: never;
+  url: "/api/v1/projects/{project_id}/gates";
+};
+
+export type CreateGateApiV1ProjectsProjectIdGatesPostErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type CreateGateApiV1ProjectsProjectIdGatesPostError =
+  CreateGateApiV1ProjectsProjectIdGatesPostErrors[keyof CreateGateApiV1ProjectsProjectIdGatesPostErrors];
+
+export type CreateGateApiV1ProjectsProjectIdGatesPostResponses = {
+  /**
+   * Successful Response
+   */
+  200: unknown;
+};
+
+export type DeleteGateApiV1ProjectsProjectIdGatesGateIdDeleteData = {
+  body?: never;
+  headers?: {
+    /**
+     * X-Csrf-Token
+     */
+    "x-csrf-token"?: string | null;
+  };
+  path: {
+    /**
+     * Project Id
+     */
+    project_id: string;
+    /**
+     * Gate Id
+     */
+    gate_id: string;
+  };
+  query?: never;
+  url: "/api/v1/projects/{project_id}/gates/{gate_id}";
+};
+
+export type DeleteGateApiV1ProjectsProjectIdGatesGateIdDeleteErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type DeleteGateApiV1ProjectsProjectIdGatesGateIdDeleteError =
+  DeleteGateApiV1ProjectsProjectIdGatesGateIdDeleteErrors[keyof DeleteGateApiV1ProjectsProjectIdGatesGateIdDeleteErrors];
+
+export type DeleteGateApiV1ProjectsProjectIdGatesGateIdDeleteResponses = {
+  /**
+   * Successful Response
+   */
+  200: unknown;
+};
+
+export type GetGateApiV1ProjectsProjectIdGatesGateIdGetData = {
+  body?: never;
+  path: {
+    /**
+     * Project Id
+     */
+    project_id: string;
+    /**
+     * Gate Id
+     */
+    gate_id: string;
+  };
+  query?: never;
+  url: "/api/v1/projects/{project_id}/gates/{gate_id}";
+};
+
+export type GetGateApiV1ProjectsProjectIdGatesGateIdGetErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type GetGateApiV1ProjectsProjectIdGatesGateIdGetError =
+  GetGateApiV1ProjectsProjectIdGatesGateIdGetErrors[keyof GetGateApiV1ProjectsProjectIdGatesGateIdGetErrors];
+
+export type GetGateApiV1ProjectsProjectIdGatesGateIdGetResponses = {
+  /**
+   * Successful Response
+   */
+  200: unknown;
+};
+
+export type EvaluateGateApiV1ProjectsProjectIdGatesGateIdEvaluatePostData = {
+  body: EvaluateGateRequest;
+  headers?: {
+    /**
+     * X-Csrf-Token
+     */
+    "x-csrf-token"?: string | null;
+  };
+  path: {
+    /**
+     * Project Id
+     */
+    project_id: string;
+    /**
+     * Gate Id
+     */
+    gate_id: string;
+  };
+  query?: never;
+  url: "/api/v1/projects/{project_id}/gates/{gate_id}/evaluate";
+};
+
+export type EvaluateGateApiV1ProjectsProjectIdGatesGateIdEvaluatePostErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type EvaluateGateApiV1ProjectsProjectIdGatesGateIdEvaluatePostError =
+  EvaluateGateApiV1ProjectsProjectIdGatesGateIdEvaluatePostErrors[keyof EvaluateGateApiV1ProjectsProjectIdGatesGateIdEvaluatePostErrors];
+
+export type EvaluateGateApiV1ProjectsProjectIdGatesGateIdEvaluatePostResponses =
+  {
+    /**
+     * Successful Response
+     */
+    200: unknown;
+  };
+
+export type ExemptGateApiV1ProjectsProjectIdGatesGateIdExemptPostData = {
+  body: ExemptRequest;
+  headers?: {
+    /**
+     * X-Csrf-Token
+     */
+    "x-csrf-token"?: string | null;
+  };
+  path: {
+    /**
+     * Project Id
+     */
+    project_id: string;
+    /**
+     * Gate Id
+     */
+    gate_id: string;
+  };
+  query?: never;
+  url: "/api/v1/projects/{project_id}/gates/{gate_id}/exempt";
+};
+
+export type ExemptGateApiV1ProjectsProjectIdGatesGateIdExemptPostErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type ExemptGateApiV1ProjectsProjectIdGatesGateIdExemptPostError =
+  ExemptGateApiV1ProjectsProjectIdGatesGateIdExemptPostErrors[keyof ExemptGateApiV1ProjectsProjectIdGatesGateIdExemptPostErrors];
+
+export type ExemptGateApiV1ProjectsProjectIdGatesGateIdExemptPostResponses = {
+  /**
+   * Successful Response
+   */
+  200: unknown;
+};
+
+export type ListMembersApiV1ProjectsProjectIdMembersGetData = {
+  body?: never;
+  path: {
+    /**
+     * Project Id
+     */
+    project_id: string;
+  };
+  query?: never;
+  url: "/api/v1/projects/{project_id}/members";
+};
+
+export type ListMembersApiV1ProjectsProjectIdMembersGetErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type ListMembersApiV1ProjectsProjectIdMembersGetError =
+  ListMembersApiV1ProjectsProjectIdMembersGetErrors[keyof ListMembersApiV1ProjectsProjectIdMembersGetErrors];
+
+export type ListMembersApiV1ProjectsProjectIdMembersGetResponses = {
+  /**
+   * Successful Response
+   */
+  200: ProjectMembersResponse;
+};
+
+export type ListMembersApiV1ProjectsProjectIdMembersGetResponse =
+  ListMembersApiV1ProjectsProjectIdMembersGetResponses[keyof ListMembersApiV1ProjectsProjectIdMembersGetResponses];
+
+export type AddMemberApiV1ProjectsProjectIdMembersPostData = {
+  body: ProjectMemberRequest;
+  headers?: {
+    /**
+     * X-Csrf-Token
+     */
+    "x-csrf-token"?: string | null;
+  };
+  path: {
+    /**
+     * Project Id
+     */
+    project_id: string;
+  };
+  query?: never;
+  url: "/api/v1/projects/{project_id}/members";
+};
+
+export type AddMemberApiV1ProjectsProjectIdMembersPostErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type AddMemberApiV1ProjectsProjectIdMembersPostError =
+  AddMemberApiV1ProjectsProjectIdMembersPostErrors[keyof AddMemberApiV1ProjectsProjectIdMembersPostErrors];
+
+export type AddMemberApiV1ProjectsProjectIdMembersPostResponses = {
+  /**
+   * Successful Response
+   */
+  200: ProjectMembersResponse;
+};
+
+export type AddMemberApiV1ProjectsProjectIdMembersPostResponse =
+  AddMemberApiV1ProjectsProjectIdMembersPostResponses[keyof AddMemberApiV1ProjectsProjectIdMembersPostResponses];
+
+export type RemoveMemberApiV1ProjectsProjectIdMembersUserIdDeleteData = {
+  body?: never;
+  headers?: {
+    /**
+     * X-Csrf-Token
+     */
+    "x-csrf-token"?: string | null;
+  };
+  path: {
+    /**
+     * Project Id
+     */
+    project_id: string;
+    /**
+     * User Id
+     */
+    user_id: string;
+  };
+  query?: never;
+  url: "/api/v1/projects/{project_id}/members/{user_id}";
+};
+
+export type RemoveMemberApiV1ProjectsProjectIdMembersUserIdDeleteErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type RemoveMemberApiV1ProjectsProjectIdMembersUserIdDeleteError =
+  RemoveMemberApiV1ProjectsProjectIdMembersUserIdDeleteErrors[keyof RemoveMemberApiV1ProjectsProjectIdMembersUserIdDeleteErrors];
+
+export type RemoveMemberApiV1ProjectsProjectIdMembersUserIdDeleteResponses = {
+  /**
+   * Successful Response
+   */
+  204: void;
+};
+
+export type RemoveMemberApiV1ProjectsProjectIdMembersUserIdDeleteResponse =
+  RemoveMemberApiV1ProjectsProjectIdMembersUserIdDeleteResponses[keyof RemoveMemberApiV1ProjectsProjectIdMembersUserIdDeleteResponses];
+
+export type UpdateMemberApiV1ProjectsProjectIdMembersUserIdPatchData = {
+  body: ProjectMemberUpdateRequest;
+  headers?: {
+    /**
+     * X-Csrf-Token
+     */
+    "x-csrf-token"?: string | null;
+  };
+  path: {
+    /**
+     * Project Id
+     */
+    project_id: string;
+    /**
+     * User Id
+     */
+    user_id: string;
+  };
+  query?: never;
+  url: "/api/v1/projects/{project_id}/members/{user_id}";
+};
+
+export type UpdateMemberApiV1ProjectsProjectIdMembersUserIdPatchErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type UpdateMemberApiV1ProjectsProjectIdMembersUserIdPatchError =
+  UpdateMemberApiV1ProjectsProjectIdMembersUserIdPatchErrors[keyof UpdateMemberApiV1ProjectsProjectIdMembersUserIdPatchErrors];
+
+export type UpdateMemberApiV1ProjectsProjectIdMembersUserIdPatchResponses = {
+  /**
+   * Successful Response
+   */
+  200: ProjectMembersResponse;
+};
+
+export type UpdateMemberApiV1ProjectsProjectIdMembersUserIdPatchResponse =
+  UpdateMemberApiV1ProjectsProjectIdMembersUserIdPatchResponses[keyof UpdateMemberApiV1ProjectsProjectIdMembersUserIdPatchResponses];
+
+export type ListConfigsApiV1ProjectsProjectIdModelConfigsGetData = {
+  body?: never;
+  path: {
+    /**
+     * Project Id
+     */
+    project_id: string;
+  };
+  query?: never;
+  url: "/api/v1/projects/{project_id}/model-configs";
+};
+
+export type ListConfigsApiV1ProjectsProjectIdModelConfigsGetErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type ListConfigsApiV1ProjectsProjectIdModelConfigsGetError =
+  ListConfigsApiV1ProjectsProjectIdModelConfigsGetErrors[keyof ListConfigsApiV1ProjectsProjectIdModelConfigsGetErrors];
+
+export type ListConfigsApiV1ProjectsProjectIdModelConfigsGetResponses = {
+  /**
+   * Successful Response
+   */
+  200: ModelConfigListResponse;
+};
+
+export type ListConfigsApiV1ProjectsProjectIdModelConfigsGetResponse =
+  ListConfigsApiV1ProjectsProjectIdModelConfigsGetResponses[keyof ListConfigsApiV1ProjectsProjectIdModelConfigsGetResponses];
+
+export type CreateConfigApiV1ProjectsProjectIdModelConfigsPostData = {
+  body: CreateModelConfigRequest;
+  headers?: {
+    /**
+     * X-Csrf-Token
+     */
+    "x-csrf-token"?: string | null;
+  };
+  path: {
+    /**
+     * Project Id
+     */
+    project_id: string;
+  };
+  query?: never;
+  url: "/api/v1/projects/{project_id}/model-configs";
+};
+
+export type CreateConfigApiV1ProjectsProjectIdModelConfigsPostErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type CreateConfigApiV1ProjectsProjectIdModelConfigsPostError =
+  CreateConfigApiV1ProjectsProjectIdModelConfigsPostErrors[keyof CreateConfigApiV1ProjectsProjectIdModelConfigsPostErrors];
+
+export type CreateConfigApiV1ProjectsProjectIdModelConfigsPostResponses = {
+  /**
+   * Successful Response
+   */
+  201: ModelConfigResponse;
+};
+
+export type CreateConfigApiV1ProjectsProjectIdModelConfigsPostResponse =
+  CreateConfigApiV1ProjectsProjectIdModelConfigsPostResponses[keyof CreateConfigApiV1ProjectsProjectIdModelConfigsPostResponses];
+
+export type DeleteConfigApiV1ProjectsProjectIdModelConfigsModelConfigIdDeleteData =
+  {
+    body?: never;
+    headers?: {
+      /**
+       * X-Csrf-Token
+       */
+      "x-csrf-token"?: string | null;
+    };
+    path: {
+      /**
+       * Project Id
+       */
+      project_id: string;
+      /**
+       * Model Config Id
+       */
+      model_config_id: string;
+    };
+    query?: never;
+    url: "/api/v1/projects/{project_id}/model-configs/{model_config_id}";
+  };
+
+export type DeleteConfigApiV1ProjectsProjectIdModelConfigsModelConfigIdDeleteErrors =
+  {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+  };
+
+export type DeleteConfigApiV1ProjectsProjectIdModelConfigsModelConfigIdDeleteError =
+  DeleteConfigApiV1ProjectsProjectIdModelConfigsModelConfigIdDeleteErrors[keyof DeleteConfigApiV1ProjectsProjectIdModelConfigsModelConfigIdDeleteErrors];
+
+export type DeleteConfigApiV1ProjectsProjectIdModelConfigsModelConfigIdDeleteResponses =
+  {
+    /**
+     * Successful Response
+     */
+    204: void;
+  };
+
+export type DeleteConfigApiV1ProjectsProjectIdModelConfigsModelConfigIdDeleteResponse =
+  DeleteConfigApiV1ProjectsProjectIdModelConfigsModelConfigIdDeleteResponses[keyof DeleteConfigApiV1ProjectsProjectIdModelConfigsModelConfigIdDeleteResponses];
+
+export type GetConfigApiV1ProjectsProjectIdModelConfigsModelConfigIdGetData = {
+  body?: never;
+  path: {
+    /**
+     * Project Id
+     */
+    project_id: string;
+    /**
+     * Model Config Id
+     */
+    model_config_id: string;
+  };
+  query?: never;
+  url: "/api/v1/projects/{project_id}/model-configs/{model_config_id}";
+};
+
+export type GetConfigApiV1ProjectsProjectIdModelConfigsModelConfigIdGetErrors =
+  {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+  };
+
+export type GetConfigApiV1ProjectsProjectIdModelConfigsModelConfigIdGetError =
+  GetConfigApiV1ProjectsProjectIdModelConfigsModelConfigIdGetErrors[keyof GetConfigApiV1ProjectsProjectIdModelConfigsModelConfigIdGetErrors];
+
+export type GetConfigApiV1ProjectsProjectIdModelConfigsModelConfigIdGetResponses =
+  {
+    /**
+     * Successful Response
+     */
+    200: ModelConfigResponse;
+  };
+
+export type GetConfigApiV1ProjectsProjectIdModelConfigsModelConfigIdGetResponse =
+  GetConfigApiV1ProjectsProjectIdModelConfigsModelConfigIdGetResponses[keyof GetConfigApiV1ProjectsProjectIdModelConfigsModelConfigIdGetResponses];
+
+export type UpdateConfigApiV1ProjectsProjectIdModelConfigsModelConfigIdPatchData =
+  {
+    body: UpdateModelConfigRequest;
+    headers?: {
+      /**
+       * X-Csrf-Token
+       */
+      "x-csrf-token"?: string | null;
+    };
+    path: {
+      /**
+       * Project Id
+       */
+      project_id: string;
+      /**
+       * Model Config Id
+       */
+      model_config_id: string;
+    };
+    query?: never;
+    url: "/api/v1/projects/{project_id}/model-configs/{model_config_id}";
+  };
+
+export type UpdateConfigApiV1ProjectsProjectIdModelConfigsModelConfigIdPatchErrors =
+  {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+  };
+
+export type UpdateConfigApiV1ProjectsProjectIdModelConfigsModelConfigIdPatchError =
+  UpdateConfigApiV1ProjectsProjectIdModelConfigsModelConfigIdPatchErrors[keyof UpdateConfigApiV1ProjectsProjectIdModelConfigsModelConfigIdPatchErrors];
+
+export type UpdateConfigApiV1ProjectsProjectIdModelConfigsModelConfigIdPatchResponses =
+  {
+    /**
+     * Successful Response
+     */
+    200: ModelConfigResponse;
+  };
+
+export type UpdateConfigApiV1ProjectsProjectIdModelConfigsModelConfigIdPatchResponse =
+  UpdateConfigApiV1ProjectsProjectIdModelConfigsModelConfigIdPatchResponses[keyof UpdateConfigApiV1ProjectsProjectIdModelConfigsModelConfigIdPatchResponses];
+
+export type TestConnectionApiV1ProjectsProjectIdModelConfigsModelConfigIdTestConnectionPostData =
+  {
+    body?: never;
+    headers?: {
+      /**
+       * X-Csrf-Token
+       */
+      "x-csrf-token"?: string | null;
+    };
+    path: {
+      /**
+       * Project Id
+       */
+      project_id: string;
+      /**
+       * Model Config Id
+       */
+      model_config_id: string;
+    };
+    query?: never;
+    url: "/api/v1/projects/{project_id}/model-configs/{model_config_id}/test-connection";
+  };
+
+export type TestConnectionApiV1ProjectsProjectIdModelConfigsModelConfigIdTestConnectionPostErrors =
+  {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+  };
+
+export type TestConnectionApiV1ProjectsProjectIdModelConfigsModelConfigIdTestConnectionPostError =
+  TestConnectionApiV1ProjectsProjectIdModelConfigsModelConfigIdTestConnectionPostErrors[keyof TestConnectionApiV1ProjectsProjectIdModelConfigsModelConfigIdTestConnectionPostErrors];
+
+export type TestConnectionApiV1ProjectsProjectIdModelConfigsModelConfigIdTestConnectionPostResponses =
+  {
+    /**
+     * Successful Response
+     */
+    200: unknown;
+  };
+
+export type ListDefaultsApiV1ProjectsProjectIdModelDefaultsGetData = {
+  body?: never;
+  path: {
+    /**
+     * Project Id
+     */
+    project_id: string;
+  };
+  query?: never;
+  url: "/api/v1/projects/{project_id}/model-defaults";
+};
+
+export type ListDefaultsApiV1ProjectsProjectIdModelDefaultsGetErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type ListDefaultsApiV1ProjectsProjectIdModelDefaultsGetError =
+  ListDefaultsApiV1ProjectsProjectIdModelDefaultsGetErrors[keyof ListDefaultsApiV1ProjectsProjectIdModelDefaultsGetErrors];
+
+export type ListDefaultsApiV1ProjectsProjectIdModelDefaultsGetResponses = {
+  /**
+   * Successful Response
+   */
+  200: ModelDefaultListResponse;
+};
+
+export type ListDefaultsApiV1ProjectsProjectIdModelDefaultsGetResponse =
+  ListDefaultsApiV1ProjectsProjectIdModelDefaultsGetResponses[keyof ListDefaultsApiV1ProjectsProjectIdModelDefaultsGetResponses];
+
+export type SetDefaultApiV1ProjectsProjectIdModelDefaultsPurposePutData = {
+  body: SetModelDefaultRequest;
+  headers?: {
+    /**
+     * X-Csrf-Token
+     */
+    "x-csrf-token"?: string | null;
+  };
+  path: {
+    /**
+     * Project Id
+     */
+    project_id: string;
+    purpose: ModelPurpose;
+  };
+  query?: never;
+  url: "/api/v1/projects/{project_id}/model-defaults/{purpose}";
+};
+
+export type SetDefaultApiV1ProjectsProjectIdModelDefaultsPurposePutErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type SetDefaultApiV1ProjectsProjectIdModelDefaultsPurposePutError =
+  SetDefaultApiV1ProjectsProjectIdModelDefaultsPurposePutErrors[keyof SetDefaultApiV1ProjectsProjectIdModelDefaultsPurposePutErrors];
+
+export type SetDefaultApiV1ProjectsProjectIdModelDefaultsPurposePutResponses = {
+  /**
+   * Successful Response
+   */
+  200: ModelDefaultResponse;
+};
+
+export type SetDefaultApiV1ProjectsProjectIdModelDefaultsPurposePutResponse =
+  SetDefaultApiV1ProjectsProjectIdModelDefaultsPurposePutResponses[keyof SetDefaultApiV1ProjectsProjectIdModelDefaultsPurposePutResponses];
+
+export type JudgeTextApiV1ProjectsProjectIdModelJudgesTextPostData = {
+  body: TextJudgeRequest;
+  headers?: {
+    /**
+     * X-Csrf-Token
+     */
+    "x-csrf-token"?: string | null;
+  };
+  path: {
+    /**
+     * Project Id
+     */
+    project_id: string;
+  };
+  query?: never;
+  url: "/api/v1/projects/{project_id}/model-judges/text";
+};
+
+export type JudgeTextApiV1ProjectsProjectIdModelJudgesTextPostErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type JudgeTextApiV1ProjectsProjectIdModelJudgesTextPostError =
+  JudgeTextApiV1ProjectsProjectIdModelJudgesTextPostErrors[keyof JudgeTextApiV1ProjectsProjectIdModelJudgesTextPostErrors];
+
+export type JudgeTextApiV1ProjectsProjectIdModelJudgesTextPostResponses = {
+  /**
+   * Successful Response
+   */
+  200: unknown;
+};
+
+export type JudgeVisionApiV1ProjectsProjectIdModelJudgesVisionPostData = {
+  body: VisionJudgeRequest;
+  headers?: {
+    /**
+     * X-Csrf-Token
+     */
+    "x-csrf-token"?: string | null;
+  };
+  path: {
+    /**
+     * Project Id
+     */
+    project_id: string;
+  };
+  query?: never;
+  url: "/api/v1/projects/{project_id}/model-judges/vision";
+};
+
+export type JudgeVisionApiV1ProjectsProjectIdModelJudgesVisionPostErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type JudgeVisionApiV1ProjectsProjectIdModelJudgesVisionPostError =
+  JudgeVisionApiV1ProjectsProjectIdModelJudgesVisionPostErrors[keyof JudgeVisionApiV1ProjectsProjectIdModelJudgesVisionPostErrors];
+
+export type JudgeVisionApiV1ProjectsProjectIdModelJudgesVisionPostResponses = {
+  /**
+   * Successful Response
+   */
+  200: unknown;
+};
+
+export type ListReviewsApiV1ProjectsProjectIdReviewsGetData = {
+  body?: never;
+  path: {
+    /**
+     * Project Id
+     */
+    project_id: string;
+  };
+  query?: {
+    /**
+     * Status
+     */
+    status?: string | null;
+    /**
+     * Limit
+     */
+    limit?: number;
+    /**
+     * Offset
+     */
+    offset?: number;
+  };
+  url: "/api/v1/projects/{project_id}/reviews";
+};
+
+export type ListReviewsApiV1ProjectsProjectIdReviewsGetErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type ListReviewsApiV1ProjectsProjectIdReviewsGetError =
+  ListReviewsApiV1ProjectsProjectIdReviewsGetErrors[keyof ListReviewsApiV1ProjectsProjectIdReviewsGetErrors];
+
+export type ListReviewsApiV1ProjectsProjectIdReviewsGetResponses = {
+  /**
+   * Successful Response
+   */
+  200: unknown;
+};
+
+export type AutoEnqueueApiV1ProjectsProjectIdReviewsAutoEnqueuePostData = {
+  body: AutoEnqueueRequest;
+  headers?: {
+    /**
+     * X-Csrf-Token
+     */
+    "x-csrf-token"?: string | null;
+  };
+  path: {
+    /**
+     * Project Id
+     */
+    project_id: string;
+  };
+  query?: never;
+  url: "/api/v1/projects/{project_id}/reviews/auto-enqueue";
+};
+
+export type AutoEnqueueApiV1ProjectsProjectIdReviewsAutoEnqueuePostErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type AutoEnqueueApiV1ProjectsProjectIdReviewsAutoEnqueuePostError =
+  AutoEnqueueApiV1ProjectsProjectIdReviewsAutoEnqueuePostErrors[keyof AutoEnqueueApiV1ProjectsProjectIdReviewsAutoEnqueuePostErrors];
+
+export type AutoEnqueueApiV1ProjectsProjectIdReviewsAutoEnqueuePostResponses = {
+  /**
+   * Successful Response
+   */
+  200: unknown;
+};
+
+export type ReviewStatsApiV1ProjectsProjectIdReviewsStatsGetData = {
+  body?: never;
+  path: {
+    /**
+     * Project Id
+     */
+    project_id: string;
+  };
+  query?: never;
+  url: "/api/v1/projects/{project_id}/reviews/stats";
+};
+
+export type ReviewStatsApiV1ProjectsProjectIdReviewsStatsGetErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type ReviewStatsApiV1ProjectsProjectIdReviewsStatsGetError =
+  ReviewStatsApiV1ProjectsProjectIdReviewsStatsGetErrors[keyof ReviewStatsApiV1ProjectsProjectIdReviewsStatsGetErrors];
+
+export type ReviewStatsApiV1ProjectsProjectIdReviewsStatsGetResponses = {
+  /**
+   * Successful Response
+   */
+  200: unknown;
+};
+
+export type RejectReviewApiV1ProjectsProjectIdReviewsTaskIdRejectPostData = {
+  body?: never;
+  headers?: {
+    /**
+     * X-Csrf-Token
+     */
+    "x-csrf-token"?: string | null;
+  };
+  path: {
+    /**
+     * Project Id
+     */
+    project_id: string;
+    /**
+     * Task Id
+     */
+    task_id: string;
+  };
+  query?: {
+    /**
+     * Opinion
+     */
+    opinion?: string | null;
+  };
+  url: "/api/v1/projects/{project_id}/reviews/{task_id}/reject";
+};
+
+export type RejectReviewApiV1ProjectsProjectIdReviewsTaskIdRejectPostErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type RejectReviewApiV1ProjectsProjectIdReviewsTaskIdRejectPostError =
+  RejectReviewApiV1ProjectsProjectIdReviewsTaskIdRejectPostErrors[keyof RejectReviewApiV1ProjectsProjectIdReviewsTaskIdRejectPostErrors];
+
+export type RejectReviewApiV1ProjectsProjectIdReviewsTaskIdRejectPostResponses =
+  {
+    /**
+     * Successful Response
+     */
+    200: unknown;
+  };
+
+export type ScoreReviewApiV1ProjectsProjectIdReviewsTaskIdScorePostData = {
+  body: ScoreReviewRequest;
+  headers?: {
+    /**
+     * X-Csrf-Token
+     */
+    "x-csrf-token"?: string | null;
+  };
+  path: {
+    /**
+     * Project Id
+     */
+    project_id: string;
+    /**
+     * Task Id
+     */
+    task_id: string;
+  };
+  query?: never;
+  url: "/api/v1/projects/{project_id}/reviews/{task_id}/score";
+};
+
+export type ScoreReviewApiV1ProjectsProjectIdReviewsTaskIdScorePostErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type ScoreReviewApiV1ProjectsProjectIdReviewsTaskIdScorePostError =
+  ScoreReviewApiV1ProjectsProjectIdReviewsTaskIdScorePostErrors[keyof ScoreReviewApiV1ProjectsProjectIdReviewsTaskIdScorePostErrors];
+
+export type ScoreReviewApiV1ProjectsProjectIdReviewsTaskIdScorePostResponses = {
+  /**
+   * Successful Response
+   */
+  200: unknown;
+};
+
+export type SkipReviewApiV1ProjectsProjectIdReviewsTaskIdSkipPostData = {
+  body?: never;
+  headers?: {
+    /**
+     * X-Csrf-Token
+     */
+    "x-csrf-token"?: string | null;
+  };
+  path: {
+    /**
+     * Project Id
+     */
+    project_id: string;
+    /**
+     * Task Id
+     */
+    task_id: string;
+  };
+  query?: never;
+  url: "/api/v1/projects/{project_id}/reviews/{task_id}/skip";
+};
+
+export type SkipReviewApiV1ProjectsProjectIdReviewsTaskIdSkipPostErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type SkipReviewApiV1ProjectsProjectIdReviewsTaskIdSkipPostError =
+  SkipReviewApiV1ProjectsProjectIdReviewsTaskIdSkipPostErrors[keyof SkipReviewApiV1ProjectsProjectIdReviewsTaskIdSkipPostErrors];
+
+export type SkipReviewApiV1ProjectsProjectIdReviewsTaskIdSkipPostResponses = {
+  /**
+   * Successful Response
+   */
+  200: unknown;
+};
+
+export type ListRunsApiV1ProjectsProjectIdRunsGetData = {
+  body?: never;
+  path: {
+    /**
+     * Project Id
+     */
+    project_id: string;
+  };
+  query?: {
+    /**
+     * Limit
+     */
+    limit?: number;
+  };
+  url: "/api/v1/projects/{project_id}/runs";
+};
+
+export type ListRunsApiV1ProjectsProjectIdRunsGetErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type ListRunsApiV1ProjectsProjectIdRunsGetError =
+  ListRunsApiV1ProjectsProjectIdRunsGetErrors[keyof ListRunsApiV1ProjectsProjectIdRunsGetErrors];
+
+export type ListRunsApiV1ProjectsProjectIdRunsGetResponses = {
+  /**
+   * Successful Response
+   */
+  200: RunListResponse;
+};
+
+export type ListRunsApiV1ProjectsProjectIdRunsGetResponse =
+  ListRunsApiV1ProjectsProjectIdRunsGetResponses[keyof ListRunsApiV1ProjectsProjectIdRunsGetResponses];
+
+export type CreateRunApiV1ProjectsProjectIdRunsPostData = {
+  body: CreateRunRequest;
+  headers?: {
+    /**
+     * Idempotency-Key
+     */
+    "Idempotency-Key"?: string | null;
+    /**
+     * X-Csrf-Token
+     */
+    "x-csrf-token"?: string | null;
+  };
+  path: {
+    /**
+     * Project Id
+     */
+    project_id: string;
+  };
+  query?: never;
+  url: "/api/v1/projects/{project_id}/runs";
+};
+
+export type CreateRunApiV1ProjectsProjectIdRunsPostErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type CreateRunApiV1ProjectsProjectIdRunsPostError =
+  CreateRunApiV1ProjectsProjectIdRunsPostErrors[keyof CreateRunApiV1ProjectsProjectIdRunsPostErrors];
+
+export type CreateRunApiV1ProjectsProjectIdRunsPostResponses = {
+  /**
+   * Successful Response
+   */
+  201: RunResponse;
+};
+
+export type CreateRunApiV1ProjectsProjectIdRunsPostResponse =
+  CreateRunApiV1ProjectsProjectIdRunsPostResponses[keyof CreateRunApiV1ProjectsProjectIdRunsPostResponses];
+
+export type DiffRunsApiV1ProjectsProjectIdRunsRunAIdDiffRunBIdGetData = {
+  body?: never;
+  path: {
+    /**
+     * Project Id
+     */
+    project_id: string;
+    /**
+     * Run A Id
+     */
+    run_a_id: string;
+    /**
+     * Run B Id
+     */
+    run_b_id: string;
+  };
+  query?: never;
+  url: "/api/v1/projects/{project_id}/runs/{run_a_id}/diff/{run_b_id}";
+};
+
+export type DiffRunsApiV1ProjectsProjectIdRunsRunAIdDiffRunBIdGetErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type DiffRunsApiV1ProjectsProjectIdRunsRunAIdDiffRunBIdGetError =
+  DiffRunsApiV1ProjectsProjectIdRunsRunAIdDiffRunBIdGetErrors[keyof DiffRunsApiV1ProjectsProjectIdRunsRunAIdDiffRunBIdGetErrors];
+
+export type DiffRunsApiV1ProjectsProjectIdRunsRunAIdDiffRunBIdGetResponses = {
+  /**
+   * Successful Response
+   */
+  200: unknown;
+};
+
+export type GetRunApiV1ProjectsProjectIdRunsRunIdGetData = {
+  body?: never;
+  path: {
+    /**
+     * Project Id
+     */
+    project_id: string;
+    /**
+     * Run Id
+     */
+    run_id: string;
+  };
+  query?: never;
+  url: "/api/v1/projects/{project_id}/runs/{run_id}";
+};
+
+export type GetRunApiV1ProjectsProjectIdRunsRunIdGetErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type GetRunApiV1ProjectsProjectIdRunsRunIdGetError =
+  GetRunApiV1ProjectsProjectIdRunsRunIdGetErrors[keyof GetRunApiV1ProjectsProjectIdRunsRunIdGetErrors];
+
+export type GetRunApiV1ProjectsProjectIdRunsRunIdGetResponses = {
+  /**
+   * Successful Response
+   */
+  200: RunResponse;
+};
+
+export type GetRunApiV1ProjectsProjectIdRunsRunIdGetResponse =
+  GetRunApiV1ProjectsProjectIdRunsRunIdGetResponses[keyof GetRunApiV1ProjectsProjectIdRunsRunIdGetResponses];
+
+export type ListArtifactsApiV1ProjectsProjectIdRunsRunIdArtifactsGetData = {
+  body?: never;
+  path: {
+    /**
+     * Project Id
+     */
+    project_id: string;
+    /**
+     * Run Id
+     */
+    run_id: string;
+  };
+  query?: never;
+  url: "/api/v1/projects/{project_id}/runs/{run_id}/artifacts";
+};
+
+export type ListArtifactsApiV1ProjectsProjectIdRunsRunIdArtifactsGetErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type ListArtifactsApiV1ProjectsProjectIdRunsRunIdArtifactsGetError =
+  ListArtifactsApiV1ProjectsProjectIdRunsRunIdArtifactsGetErrors[keyof ListArtifactsApiV1ProjectsProjectIdRunsRunIdArtifactsGetErrors];
+
+export type ListArtifactsApiV1ProjectsProjectIdRunsRunIdArtifactsGetResponses =
+  {
+    /**
+     * Successful Response
+     */
+    200: unknown;
+  };
+
+export type UploadArtifactApiV1ProjectsProjectIdRunsRunIdArtifactsPostData = {
+  body?: never;
+  path: {
+    /**
+     * Project Id
+     */
+    project_id: string;
+    /**
+     * Run Id
+     */
+    run_id: string;
+  };
+  query?: never;
+  url: "/api/v1/projects/{project_id}/runs/{run_id}/artifacts";
+};
+
+export type UploadArtifactApiV1ProjectsProjectIdRunsRunIdArtifactsPostErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type UploadArtifactApiV1ProjectsProjectIdRunsRunIdArtifactsPostError =
+  UploadArtifactApiV1ProjectsProjectIdRunsRunIdArtifactsPostErrors[keyof UploadArtifactApiV1ProjectsProjectIdRunsRunIdArtifactsPostErrors];
+
+export type UploadArtifactApiV1ProjectsProjectIdRunsRunIdArtifactsPostResponses =
+  {
+    /**
+     * Successful Response
+     */
+    200: unknown;
+  };
+
+export type CancelRunApiV1ProjectsProjectIdRunsRunIdCancelPostData = {
+  body?: never;
+  headers?: {
+    /**
+     * X-Csrf-Token
+     */
+    "x-csrf-token"?: string | null;
+  };
+  path: {
+    /**
+     * Project Id
+     */
+    project_id: string;
+    /**
+     * Run Id
+     */
+    run_id: string;
+  };
+  query?: never;
+  url: "/api/v1/projects/{project_id}/runs/{run_id}/cancel";
+};
+
+export type CancelRunApiV1ProjectsProjectIdRunsRunIdCancelPostErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type CancelRunApiV1ProjectsProjectIdRunsRunIdCancelPostError =
+  CancelRunApiV1ProjectsProjectIdRunsRunIdCancelPostErrors[keyof CancelRunApiV1ProjectsProjectIdRunsRunIdCancelPostErrors];
+
+export type CancelRunApiV1ProjectsProjectIdRunsRunIdCancelPostResponses = {
+  /**
+   * Successful Response
+   */
+  200: RunResponse;
+};
+
+export type CancelRunApiV1ProjectsProjectIdRunsRunIdCancelPostResponse =
+  CancelRunApiV1ProjectsProjectIdRunsRunIdCancelPostResponses[keyof CancelRunApiV1ProjectsProjectIdRunsRunIdCancelPostResponses];
+
+export type ListCasesApiV1ProjectsProjectIdRunsRunIdCasesGetData = {
+  body?: never;
+  path: {
+    /**
+     * Project Id
+     */
+    project_id: string;
+    /**
+     * Run Id
+     */
+    run_id: string;
+  };
+  query?: never;
+  url: "/api/v1/projects/{project_id}/runs/{run_id}/cases";
+};
+
+export type ListCasesApiV1ProjectsProjectIdRunsRunIdCasesGetErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type ListCasesApiV1ProjectsProjectIdRunsRunIdCasesGetError =
+  ListCasesApiV1ProjectsProjectIdRunsRunIdCasesGetErrors[keyof ListCasesApiV1ProjectsProjectIdRunsRunIdCasesGetErrors];
+
+export type ListCasesApiV1ProjectsProjectIdRunsRunIdCasesGetResponses = {
+  /**
+   * Successful Response
+   */
+  200: RunCaseListResponse;
+};
+
+export type ListCasesApiV1ProjectsProjectIdRunsRunIdCasesGetResponse =
+  ListCasesApiV1ProjectsProjectIdRunsRunIdCasesGetResponses[keyof ListCasesApiV1ProjectsProjectIdRunsRunIdCasesGetResponses];
+
+export type EventsApiV1ProjectsProjectIdRunsRunIdEventsGetData = {
+  body?: never;
+  path: {
+    /**
+     * Project Id
+     */
+    project_id: string;
+    /**
+     * Run Id
+     */
+    run_id: string;
+  };
+  query?: never;
+  url: "/api/v1/projects/{project_id}/runs/{run_id}/events";
+};
+
+export type EventsApiV1ProjectsProjectIdRunsRunIdEventsGetErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type EventsApiV1ProjectsProjectIdRunsRunIdEventsGetError =
+  EventsApiV1ProjectsProjectIdRunsRunIdEventsGetErrors[keyof EventsApiV1ProjectsProjectIdRunsRunIdEventsGetErrors];
+
+export type EventsApiV1ProjectsProjectIdRunsRunIdEventsGetResponses = {
+  /**
+   * Successful Response
+   */
+  200: unknown;
+};
+
+export type ApplyResultApiV1ProjectsProjectIdRunsRunIdResultPostData = {
+  body: ApplyRunResultRequest;
+  headers?: {
+    /**
+     * X-Internal-Token
+     */
+    "x-internal-token"?: string | null;
+  };
+  path: {
+    /**
+     * Project Id
+     */
+    project_id: string;
+    /**
+     * Run Id
+     */
+    run_id: string;
+  };
+  query?: never;
+  url: "/api/v1/projects/{project_id}/runs/{run_id}/result";
+};
+
+export type ApplyResultApiV1ProjectsProjectIdRunsRunIdResultPostErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type ApplyResultApiV1ProjectsProjectIdRunsRunIdResultPostError =
+  ApplyResultApiV1ProjectsProjectIdRunsRunIdResultPostErrors[keyof ApplyResultApiV1ProjectsProjectIdRunsRunIdResultPostErrors];
+
+export type ApplyResultApiV1ProjectsProjectIdRunsRunIdResultPostResponses = {
+  /**
+   * Successful Response
+   */
+  200: RunResponse;
+};
+
+export type ApplyResultApiV1ProjectsProjectIdRunsRunIdResultPostResponse =
+  ApplyResultApiV1ProjectsProjectIdRunsRunIdResultPostResponses[keyof ApplyResultApiV1ProjectsProjectIdRunsRunIdResultPostResponses];
+
+export type StreamRunProgressApiV1ProjectsProjectIdRunsRunIdStreamGetData = {
+  body?: never;
+  path: {
+    /**
+     * Project Id
+     */
+    project_id: string;
+    /**
+     * Run Id
+     */
+    run_id: string;
+  };
+  query?: never;
+  url: "/api/v1/projects/{project_id}/runs/{run_id}/stream";
+};
+
+export type StreamRunProgressApiV1ProjectsProjectIdRunsRunIdStreamGetErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type StreamRunProgressApiV1ProjectsProjectIdRunsRunIdStreamGetError =
+  StreamRunProgressApiV1ProjectsProjectIdRunsRunIdStreamGetErrors[keyof StreamRunProgressApiV1ProjectsProjectIdRunsRunIdStreamGetErrors];
+
+export type StreamRunProgressApiV1ProjectsProjectIdRunsRunIdStreamGetResponses =
+  {
+    /**
+     * Successful Response
+     */
+    200: unknown;
+  };
+
+export type ListScorersApiV1ProjectsProjectIdScorersGetData = {
+  body?: never;
+  path: {
+    /**
+     * Project Id
+     */
+    project_id: string;
+  };
+  query?: {
+    /**
+     * Limit
+     */
+    limit?: number;
+    /**
+     * Offset
+     */
+    offset?: number;
+  };
+  url: "/api/v1/projects/{project_id}/scorers";
+};
+
+export type ListScorersApiV1ProjectsProjectIdScorersGetErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type ListScorersApiV1ProjectsProjectIdScorersGetError =
+  ListScorersApiV1ProjectsProjectIdScorersGetErrors[keyof ListScorersApiV1ProjectsProjectIdScorersGetErrors];
+
+export type ListScorersApiV1ProjectsProjectIdScorersGetResponses = {
+  /**
+   * Successful Response
+   */
+  200: unknown;
+};
+
+export type CreateScorerApiV1ProjectsProjectIdScorersPostData = {
+  body: CreateScorerRequest;
+  headers?: {
+    /**
+     * X-Csrf-Token
+     */
+    "x-csrf-token"?: string | null;
+  };
+  path: {
+    /**
+     * Project Id
+     */
+    project_id: string;
+  };
+  query?: never;
+  url: "/api/v1/projects/{project_id}/scorers";
+};
+
+export type CreateScorerApiV1ProjectsProjectIdScorersPostErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type CreateScorerApiV1ProjectsProjectIdScorersPostError =
+  CreateScorerApiV1ProjectsProjectIdScorersPostErrors[keyof CreateScorerApiV1ProjectsProjectIdScorersPostErrors];
+
+export type CreateScorerApiV1ProjectsProjectIdScorersPostResponses = {
+  /**
+   * Successful Response
+   */
+  200: unknown;
+};
+
+export type DeleteScorerApiV1ProjectsProjectIdScorersScorerIdDeleteData = {
+  body?: never;
+  headers?: {
+    /**
+     * X-Csrf-Token
+     */
+    "x-csrf-token"?: string | null;
+  };
+  path: {
+    /**
+     * Project Id
+     */
+    project_id: string;
+    /**
+     * Scorer Id
+     */
+    scorer_id: string;
+  };
+  query?: never;
+  url: "/api/v1/projects/{project_id}/scorers/{scorer_id}";
+};
+
+export type DeleteScorerApiV1ProjectsProjectIdScorersScorerIdDeleteErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type DeleteScorerApiV1ProjectsProjectIdScorersScorerIdDeleteError =
+  DeleteScorerApiV1ProjectsProjectIdScorersScorerIdDeleteErrors[keyof DeleteScorerApiV1ProjectsProjectIdScorersScorerIdDeleteErrors];
+
+export type DeleteScorerApiV1ProjectsProjectIdScorersScorerIdDeleteResponses = {
+  /**
+   * Successful Response
+   */
+  200: unknown;
+};
+
+export type GetScorerApiV1ProjectsProjectIdScorersScorerIdGetData = {
+  body?: never;
+  path: {
+    /**
+     * Project Id
+     */
+    project_id: string;
+    /**
+     * Scorer Id
+     */
+    scorer_id: string;
+  };
+  query?: never;
+  url: "/api/v1/projects/{project_id}/scorers/{scorer_id}";
+};
+
+export type GetScorerApiV1ProjectsProjectIdScorersScorerIdGetErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type GetScorerApiV1ProjectsProjectIdScorersScorerIdGetError =
+  GetScorerApiV1ProjectsProjectIdScorersScorerIdGetErrors[keyof GetScorerApiV1ProjectsProjectIdScorersScorerIdGetErrors];
+
+export type GetScorerApiV1ProjectsProjectIdScorersScorerIdGetResponses = {
+  /**
+   * Successful Response
+   */
+  200: unknown;
+};
+
+export type UpdateScorerApiV1ProjectsProjectIdScorersScorerIdPatchData = {
+  body: UpdateScorerRequest;
+  headers?: {
+    /**
+     * X-Csrf-Token
+     */
+    "x-csrf-token"?: string | null;
+  };
+  path: {
+    /**
+     * Project Id
+     */
+    project_id: string;
+    /**
+     * Scorer Id
+     */
+    scorer_id: string;
+  };
+  query?: never;
+  url: "/api/v1/projects/{project_id}/scorers/{scorer_id}";
+};
+
+export type UpdateScorerApiV1ProjectsProjectIdScorersScorerIdPatchErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type UpdateScorerApiV1ProjectsProjectIdScorersScorerIdPatchError =
+  UpdateScorerApiV1ProjectsProjectIdScorersScorerIdPatchErrors[keyof UpdateScorerApiV1ProjectsProjectIdScorersScorerIdPatchErrors];
+
+export type UpdateScorerApiV1ProjectsProjectIdScorersScorerIdPatchResponses = {
+  /**
+   * Successful Response
+   */
+  200: unknown;
+};
+
+export type ListPoliciesApiV1ProjectsProjectIdSecurityPoliciesGetData = {
+  body?: never;
+  path: {
+    /**
+     * Project Id
+     */
+    project_id: string;
+  };
+  query?: never;
+  url: "/api/v1/projects/{project_id}/security/policies";
+};
+
+export type ListPoliciesApiV1ProjectsProjectIdSecurityPoliciesGetErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type ListPoliciesApiV1ProjectsProjectIdSecurityPoliciesGetError =
+  ListPoliciesApiV1ProjectsProjectIdSecurityPoliciesGetErrors[keyof ListPoliciesApiV1ProjectsProjectIdSecurityPoliciesGetErrors];
+
+export type ListPoliciesApiV1ProjectsProjectIdSecurityPoliciesGetResponses = {
+  /**
+   * Successful Response
+   */
+  200: unknown;
+};
+
+export type CreatePolicyApiV1ProjectsProjectIdSecurityPoliciesPostData = {
+  body: CreatePolicyRequest;
+  headers?: {
+    /**
+     * X-Csrf-Token
+     */
+    "x-csrf-token"?: string | null;
+  };
+  path: {
+    /**
+     * Project Id
+     */
+    project_id: string;
+  };
+  query?: never;
+  url: "/api/v1/projects/{project_id}/security/policies";
+};
+
+export type CreatePolicyApiV1ProjectsProjectIdSecurityPoliciesPostErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type CreatePolicyApiV1ProjectsProjectIdSecurityPoliciesPostError =
+  CreatePolicyApiV1ProjectsProjectIdSecurityPoliciesPostErrors[keyof CreatePolicyApiV1ProjectsProjectIdSecurityPoliciesPostErrors];
+
+export type CreatePolicyApiV1ProjectsProjectIdSecurityPoliciesPostResponses = {
+  /**
+   * Successful Response
+   */
+  200: unknown;
+};
+
+export type ListScansApiV1ProjectsProjectIdSecurityScansGetData = {
+  body?: never;
+  path: {
+    /**
+     * Project Id
+     */
+    project_id: string;
+  };
+  query?: {
+    /**
+     * Limit
+     */
+    limit?: number;
+  };
+  url: "/api/v1/projects/{project_id}/security/scans";
+};
+
+export type ListScansApiV1ProjectsProjectIdSecurityScansGetErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type ListScansApiV1ProjectsProjectIdSecurityScansGetError =
+  ListScansApiV1ProjectsProjectIdSecurityScansGetErrors[keyof ListScansApiV1ProjectsProjectIdSecurityScansGetErrors];
+
+export type ListScansApiV1ProjectsProjectIdSecurityScansGetResponses = {
+  /**
+   * Successful Response
+   */
+  200: unknown;
+};
+
+export type TriggerScanApiV1ProjectsProjectIdSecurityScansPostData = {
+  body?: never;
+  headers?: {
+    /**
+     * X-Csrf-Token
+     */
+    "x-csrf-token"?: string | null;
+  };
+  path: {
+    /**
+     * Project Id
+     */
+    project_id: string;
+  };
+  query?: never;
+  url: "/api/v1/projects/{project_id}/security/scans";
+};
+
+export type TriggerScanApiV1ProjectsProjectIdSecurityScansPostErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type TriggerScanApiV1ProjectsProjectIdSecurityScansPostError =
+  TriggerScanApiV1ProjectsProjectIdSecurityScansPostErrors[keyof TriggerScanApiV1ProjectsProjectIdSecurityScansPostErrors];
+
+export type TriggerScanApiV1ProjectsProjectIdSecurityScansPostResponses = {
+  /**
+   * Successful Response
+   */
+  200: unknown;
+};
+
+export type GetScanApiV1ProjectsProjectIdSecurityScansScanIdGetData = {
+  body?: never;
+  path: {
+    /**
+     * Project Id
+     */
+    project_id: string;
+    /**
+     * Scan Id
+     */
+    scan_id: string;
+  };
+  query?: never;
+  url: "/api/v1/projects/{project_id}/security/scans/{scan_id}";
+};
+
+export type GetScanApiV1ProjectsProjectIdSecurityScansScanIdGetErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type GetScanApiV1ProjectsProjectIdSecurityScansScanIdGetError =
+  GetScanApiV1ProjectsProjectIdSecurityScansScanIdGetErrors[keyof GetScanApiV1ProjectsProjectIdSecurityScansScanIdGetErrors];
+
+export type GetScanApiV1ProjectsProjectIdSecurityScansScanIdGetResponses = {
+  /**
+   * Successful Response
+   */
+  200: unknown;
+};
+
+export type ListAccountsApiV1ProjectsProjectIdTestAccountsGetData = {
+  body?: never;
+  path: {
+    /**
+     * Project Id
+     */
+    project_id: string;
+  };
+  query?: never;
+  url: "/api/v1/projects/{project_id}/test-accounts";
+};
+
+export type ListAccountsApiV1ProjectsProjectIdTestAccountsGetErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type ListAccountsApiV1ProjectsProjectIdTestAccountsGetError =
+  ListAccountsApiV1ProjectsProjectIdTestAccountsGetErrors[keyof ListAccountsApiV1ProjectsProjectIdTestAccountsGetErrors];
+
+export type ListAccountsApiV1ProjectsProjectIdTestAccountsGetResponses = {
+  /**
+   * Successful Response
+   */
+  200: unknown;
+};
+
+export type CreateAccountApiV1ProjectsProjectIdTestAccountsPostData = {
+  body: CreateAccountRequest;
+  headers?: {
+    /**
+     * X-Csrf-Token
+     */
+    "x-csrf-token"?: string | null;
+  };
+  path: {
+    /**
+     * Project Id
+     */
+    project_id: string;
+  };
+  query?: never;
+  url: "/api/v1/projects/{project_id}/test-accounts";
+};
+
+export type CreateAccountApiV1ProjectsProjectIdTestAccountsPostErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type CreateAccountApiV1ProjectsProjectIdTestAccountsPostError =
+  CreateAccountApiV1ProjectsProjectIdTestAccountsPostErrors[keyof CreateAccountApiV1ProjectsProjectIdTestAccountsPostErrors];
+
+export type CreateAccountApiV1ProjectsProjectIdTestAccountsPostResponses = {
+  /**
+   * Successful Response
+   */
+  200: unknown;
+};
+
+export type DeleteAccountApiV1ProjectsProjectIdTestAccountsAccountIdDeleteData =
+  {
+    body?: never;
+    headers?: {
+      /**
+       * X-Csrf-Token
+       */
+      "x-csrf-token"?: string | null;
+    };
+    path: {
+      /**
+       * Project Id
+       */
+      project_id: string;
+      /**
+       * Account Id
+       */
+      account_id: string;
+    };
+    query?: never;
+    url: "/api/v1/projects/{project_id}/test-accounts/{account_id}";
+  };
+
+export type DeleteAccountApiV1ProjectsProjectIdTestAccountsAccountIdDeleteErrors =
+  {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+  };
+
+export type DeleteAccountApiV1ProjectsProjectIdTestAccountsAccountIdDeleteError =
+  DeleteAccountApiV1ProjectsProjectIdTestAccountsAccountIdDeleteErrors[keyof DeleteAccountApiV1ProjectsProjectIdTestAccountsAccountIdDeleteErrors];
+
+export type DeleteAccountApiV1ProjectsProjectIdTestAccountsAccountIdDeleteResponses =
+  {
+    /**
+     * Successful Response
+     */
+    200: unknown;
+  };
+
+export type UpdateAccountApiV1ProjectsProjectIdTestAccountsAccountIdPatchData =
+  {
+    body: UpdateAccountRequest;
+    headers?: {
+      /**
+       * X-Csrf-Token
+       */
+      "x-csrf-token"?: string | null;
+    };
+    path: {
+      /**
+       * Project Id
+       */
+      project_id: string;
+      /**
+       * Account Id
+       */
+      account_id: string;
+    };
+    query?: never;
+    url: "/api/v1/projects/{project_id}/test-accounts/{account_id}";
+  };
+
+export type UpdateAccountApiV1ProjectsProjectIdTestAccountsAccountIdPatchErrors =
+  {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+  };
+
+export type UpdateAccountApiV1ProjectsProjectIdTestAccountsAccountIdPatchError =
+  UpdateAccountApiV1ProjectsProjectIdTestAccountsAccountIdPatchErrors[keyof UpdateAccountApiV1ProjectsProjectIdTestAccountsAccountIdPatchErrors];
+
+export type UpdateAccountApiV1ProjectsProjectIdTestAccountsAccountIdPatchResponses =
+  {
+    /**
+     * Successful Response
+     */
+    200: unknown;
+  };
+
+export type ChatApiV1ProjectsProjectIdTestAgentChatPostData = {
+  body: ChatRequest;
+  headers?: {
+    /**
+     * X-Csrf-Token
+     */
+    "x-csrf-token"?: string | null;
+  };
+  path: {
+    /**
+     * Project Id
+     */
+    project_id: string;
+  };
+  query?: never;
+  url: "/api/v1/projects/{project_id}/test-agent/chat";
+};
+
+export type ChatApiV1ProjectsProjectIdTestAgentChatPostErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type ChatApiV1ProjectsProjectIdTestAgentChatPostError =
+  ChatApiV1ProjectsProjectIdTestAgentChatPostErrors[keyof ChatApiV1ProjectsProjectIdTestAgentChatPostErrors];
+
+export type ChatApiV1ProjectsProjectIdTestAgentChatPostResponses = {
+  /**
+   * Successful Response
+   */
+  200: unknown;
+};
+
+export type ConfirmApiV1ProjectsProjectIdTestAgentConfirmPostData = {
+  body: ConfirmRequest;
+  headers?: {
+    /**
+     * X-Csrf-Token
+     */
+    "x-csrf-token"?: string | null;
+  };
+  path: {
+    /**
+     * Project Id
+     */
+    project_id: string;
+  };
+  query?: never;
+  url: "/api/v1/projects/{project_id}/test-agent/confirm";
+};
+
+export type ConfirmApiV1ProjectsProjectIdTestAgentConfirmPostErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type ConfirmApiV1ProjectsProjectIdTestAgentConfirmPostError =
+  ConfirmApiV1ProjectsProjectIdTestAgentConfirmPostErrors[keyof ConfirmApiV1ProjectsProjectIdTestAgentConfirmPostErrors];
+
+export type ConfirmApiV1ProjectsProjectIdTestAgentConfirmPostResponses = {
+  /**
+   * Successful Response
+   */
+  200: unknown;
+};
+
+export type ExecutePlaywrightAgentApiV1ProjectsProjectIdTestAgentPlaywrightExecutePostData =
+  {
+    body: PlaywrightAgentRequest;
+    headers?: {
+      /**
+       * X-Csrf-Token
+       */
+      "x-csrf-token"?: string | null;
+    };
+    path: {
+      /**
+       * Project Id
+       */
+      project_id: string;
+    };
+    query?: never;
+    url: "/api/v1/projects/{project_id}/test-agent/playwright/execute";
+  };
+
+export type ExecutePlaywrightAgentApiV1ProjectsProjectIdTestAgentPlaywrightExecutePostErrors =
+  {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+  };
+
+export type ExecutePlaywrightAgentApiV1ProjectsProjectIdTestAgentPlaywrightExecutePostError =
+  ExecutePlaywrightAgentApiV1ProjectsProjectIdTestAgentPlaywrightExecutePostErrors[keyof ExecutePlaywrightAgentApiV1ProjectsProjectIdTestAgentPlaywrightExecutePostErrors];
+
+export type ExecutePlaywrightAgentApiV1ProjectsProjectIdTestAgentPlaywrightExecutePostResponses =
+  {
+    /**
+     * Successful Response
+     */
+    200: unknown;
+  };
+
+export type ListPlaywrightTasksApiV1ProjectsProjectIdTestAgentPlaywrightTasksGetData =
+  {
+    body?: never;
+    path: {
+      /**
+       * Project Id
+       */
+      project_id: string;
+    };
+    query?: never;
+    url: "/api/v1/projects/{project_id}/test-agent/playwright/tasks";
+  };
+
+export type ListPlaywrightTasksApiV1ProjectsProjectIdTestAgentPlaywrightTasksGetErrors =
+  {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+  };
+
+export type ListPlaywrightTasksApiV1ProjectsProjectIdTestAgentPlaywrightTasksGetError =
+  ListPlaywrightTasksApiV1ProjectsProjectIdTestAgentPlaywrightTasksGetErrors[keyof ListPlaywrightTasksApiV1ProjectsProjectIdTestAgentPlaywrightTasksGetErrors];
+
+export type ListPlaywrightTasksApiV1ProjectsProjectIdTestAgentPlaywrightTasksGetResponses =
+  {
+    /**
+     * Successful Response
+     */
+    200: unknown;
+  };
+
+export type GetPlaywrightTaskApiV1ProjectsProjectIdTestAgentPlaywrightTasksTaskIdGetData =
+  {
+    body?: never;
+    path: {
+      /**
+       * Project Id
+       */
+      project_id: string;
+      /**
+       * Task Id
+       */
+      task_id: string;
+    };
+    query?: never;
+    url: "/api/v1/projects/{project_id}/test-agent/playwright/tasks/{task_id}";
+  };
+
+export type GetPlaywrightTaskApiV1ProjectsProjectIdTestAgentPlaywrightTasksTaskIdGetErrors =
+  {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+  };
+
+export type GetPlaywrightTaskApiV1ProjectsProjectIdTestAgentPlaywrightTasksTaskIdGetError =
+  GetPlaywrightTaskApiV1ProjectsProjectIdTestAgentPlaywrightTasksTaskIdGetErrors[keyof GetPlaywrightTaskApiV1ProjectsProjectIdTestAgentPlaywrightTasksTaskIdGetErrors];
+
+export type GetPlaywrightTaskApiV1ProjectsProjectIdTestAgentPlaywrightTasksTaskIdGetResponses =
+  {
+    /**
+     * Successful Response
+     */
+    200: unknown;
+  };
+
+export type GetSessionApiV1ProjectsProjectIdTestAgentSessionsSessionIdGetData =
+  {
+    body?: never;
+    path: {
+      /**
+       * Project Id
+       */
+      project_id: string;
+      /**
+       * Session Id
+       */
+      session_id: string;
+    };
+    query?: never;
+    url: "/api/v1/projects/{project_id}/test-agent/sessions/{session_id}";
+  };
+
+export type GetSessionApiV1ProjectsProjectIdTestAgentSessionsSessionIdGetErrors =
+  {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+  };
+
+export type GetSessionApiV1ProjectsProjectIdTestAgentSessionsSessionIdGetError =
+  GetSessionApiV1ProjectsProjectIdTestAgentSessionsSessionIdGetErrors[keyof GetSessionApiV1ProjectsProjectIdTestAgentSessionsSessionIdGetErrors];
+
+export type GetSessionApiV1ProjectsProjectIdTestAgentSessionsSessionIdGetResponses =
+  {
+    /**
+     * Successful Response
+     */
+    200: unknown;
+  };
 
 export type ListPlansApiV1ProjectsProjectIdTestPlansGetData = {
   body?: never;
@@ -4520,6 +6993,52 @@ export type UpdateVersionApiV1ProjectsProjectIdTestPlansPlanIdVersionsVersionIdP
 export type UpdateVersionApiV1ProjectsProjectIdTestPlansPlanIdVersionsVersionIdPatchResponse =
   UpdateVersionApiV1ProjectsProjectIdTestPlansPlanIdVersionsVersionIdPatchResponses[keyof UpdateVersionApiV1ProjectsProjectIdTestPlansPlanIdVersionsVersionIdPatchResponses];
 
+export type DryRunApiV1ProjectsProjectIdTestPlansPlanIdVersionsVersionIdDryRunPostData =
+  {
+    body?: never;
+    headers?: {
+      /**
+       * X-Csrf-Token
+       */
+      "x-csrf-token"?: string | null;
+    };
+    path: {
+      /**
+       * Project Id
+       */
+      project_id: string;
+      /**
+       * Plan Id
+       */
+      plan_id: string;
+      /**
+       * Version Id
+       */
+      version_id: string;
+    };
+    query?: never;
+    url: "/api/v1/projects/{project_id}/test-plans/{plan_id}/versions/{version_id}/dry-run";
+  };
+
+export type DryRunApiV1ProjectsProjectIdTestPlansPlanIdVersionsVersionIdDryRunPostErrors =
+  {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+  };
+
+export type DryRunApiV1ProjectsProjectIdTestPlansPlanIdVersionsVersionIdDryRunPostError =
+  DryRunApiV1ProjectsProjectIdTestPlansPlanIdVersionsVersionIdDryRunPostErrors[keyof DryRunApiV1ProjectsProjectIdTestPlansPlanIdVersionsVersionIdDryRunPostErrors];
+
+export type DryRunApiV1ProjectsProjectIdTestPlansPlanIdVersionsVersionIdDryRunPostResponses =
+  {
+    /**
+     * Successful Response
+     */
+    200: unknown;
+  };
+
 export type PublishVersionApiV1ProjectsProjectIdTestPlansPlanIdVersionsVersionIdPublishPostData =
   {
     body?: never;
@@ -4569,369 +7088,108 @@ export type PublishVersionApiV1ProjectsProjectIdTestPlansPlanIdVersionsVersionId
 export type PublishVersionApiV1ProjectsProjectIdTestPlansPlanIdVersionsVersionIdPublishPostResponse =
   PublishVersionApiV1ProjectsProjectIdTestPlansPlanIdVersionsVersionIdPublishPostResponses[keyof PublishVersionApiV1ProjectsProjectIdTestPlansPlanIdVersionsVersionIdPublishPostResponses];
 
-export type ListTemplatesApiV1ProjectsProjectIdEnvironmentTemplatesGetData = {
+export type GlobalAuditApiV1SystemAuditGetData = {
   body?: never;
-  path: {
-    /**
-     * Project Id
-     */
-    project_id: string;
-  };
+  path?: never;
   query?: {
     /**
      * Limit
      */
     limit?: number;
+  };
+  url: "/api/v1/system/audit";
+};
+
+export type GlobalAuditApiV1SystemAuditGetErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type GlobalAuditApiV1SystemAuditGetError =
+  GlobalAuditApiV1SystemAuditGetErrors[keyof GlobalAuditApiV1SystemAuditGetErrors];
+
+export type GlobalAuditApiV1SystemAuditGetResponses = {
+  /**
+   * Successful Response
+   */
+  200: AuditListResponse;
+};
+
+export type GlobalAuditApiV1SystemAuditGetResponse =
+  GlobalAuditApiV1SystemAuditGetResponses[keyof GlobalAuditApiV1SystemAuditGetResponses];
+
+export type ListUsersApiV1SystemUsersGetData = {
+  body?: never;
+  path?: never;
+  query?: {
     /**
      * Cursor
      */
     cursor?: string | null;
-  };
-  url: "/api/v1/projects/{project_id}/environment-templates";
-};
-
-export type ListTemplatesApiV1ProjectsProjectIdEnvironmentTemplatesGetErrors = {
-  /**
-   * Validation Error
-   */
-  422: HttpValidationError;
-};
-
-export type ListTemplatesApiV1ProjectsProjectIdEnvironmentTemplatesGetError =
-  ListTemplatesApiV1ProjectsProjectIdEnvironmentTemplatesGetErrors[keyof ListTemplatesApiV1ProjectsProjectIdEnvironmentTemplatesGetErrors];
-
-export type ListTemplatesApiV1ProjectsProjectIdEnvironmentTemplatesGetResponses =
-  {
-    /**
-     * Successful Response
-     */
-    200: EnvironmentTemplateListResponse;
-  };
-
-export type ListTemplatesApiV1ProjectsProjectIdEnvironmentTemplatesGetResponse =
-  ListTemplatesApiV1ProjectsProjectIdEnvironmentTemplatesGetResponses[keyof ListTemplatesApiV1ProjectsProjectIdEnvironmentTemplatesGetResponses];
-
-export type CreateTemplateApiV1ProjectsProjectIdEnvironmentTemplatesPostData = {
-  body: CreateEnvironmentTemplateRequest;
-  headers?: {
-    /**
-     * X-Csrf-Token
-     */
-    "x-csrf-token"?: string | null;
-  };
-  path: {
-    /**
-     * Project Id
-     */
-    project_id: string;
-  };
-  query?: never;
-  url: "/api/v1/projects/{project_id}/environment-templates";
-};
-
-export type CreateTemplateApiV1ProjectsProjectIdEnvironmentTemplatesPostErrors =
-  {
-    /**
-     * Validation Error
-     */
-    422: HttpValidationError;
-  };
-
-export type CreateTemplateApiV1ProjectsProjectIdEnvironmentTemplatesPostError =
-  CreateTemplateApiV1ProjectsProjectIdEnvironmentTemplatesPostErrors[keyof CreateTemplateApiV1ProjectsProjectIdEnvironmentTemplatesPostErrors];
-
-export type CreateTemplateApiV1ProjectsProjectIdEnvironmentTemplatesPostResponses =
-  {
-    /**
-     * Successful Response
-     */
-    201: EnvironmentTemplateResponse;
-  };
-
-export type CreateTemplateApiV1ProjectsProjectIdEnvironmentTemplatesPostResponse =
-  CreateTemplateApiV1ProjectsProjectIdEnvironmentTemplatesPostResponses[keyof CreateTemplateApiV1ProjectsProjectIdEnvironmentTemplatesPostResponses];
-
-export type DeleteTemplateApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdDeleteData =
-  {
-    body?: never;
-    headers?: {
-      /**
-       * X-Csrf-Token
-       */
-      "x-csrf-token"?: string | null;
-    };
-    path: {
-      /**
-       * Project Id
-       */
-      project_id: string;
-      /**
-       * Template Id
-       */
-      template_id: string;
-    };
-    query?: never;
-    url: "/api/v1/projects/{project_id}/environment-templates/{template_id}";
-  };
-
-export type DeleteTemplateApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdDeleteErrors =
-  {
-    /**
-     * Validation Error
-     */
-    422: HttpValidationError;
-  };
-
-export type DeleteTemplateApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdDeleteError =
-  DeleteTemplateApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdDeleteErrors[keyof DeleteTemplateApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdDeleteErrors];
-
-export type DeleteTemplateApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdDeleteResponses =
-  {
-    /**
-     * Successful Response
-     */
-    204: void;
-  };
-
-export type DeleteTemplateApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdDeleteResponse =
-  DeleteTemplateApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdDeleteResponses[keyof DeleteTemplateApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdDeleteResponses];
-
-export type GetTemplateApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdGetData =
-  {
-    body?: never;
-    path: {
-      /**
-       * Project Id
-       */
-      project_id: string;
-      /**
-       * Template Id
-       */
-      template_id: string;
-    };
-    query?: never;
-    url: "/api/v1/projects/{project_id}/environment-templates/{template_id}";
-  };
-
-export type GetTemplateApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdGetErrors =
-  {
-    /**
-     * Validation Error
-     */
-    422: HttpValidationError;
-  };
-
-export type GetTemplateApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdGetError =
-  GetTemplateApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdGetErrors[keyof GetTemplateApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdGetErrors];
-
-export type GetTemplateApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdGetResponses =
-  {
-    /**
-     * Successful Response
-     */
-    200: EnvironmentTemplateResponse;
-  };
-
-export type GetTemplateApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdGetResponse =
-  GetTemplateApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdGetResponses[keyof GetTemplateApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdGetResponses];
-
-export type UpdateTemplateApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdPatchData =
-  {
-    body: UpdateEnvironmentTemplateRequest;
-    headers?: {
-      /**
-       * X-Csrf-Token
-       */
-      "x-csrf-token"?: string | null;
-    };
-    path: {
-      /**
-       * Project Id
-       */
-      project_id: string;
-      /**
-       * Template Id
-       */
-      template_id: string;
-    };
-    query?: never;
-    url: "/api/v1/projects/{project_id}/environment-templates/{template_id}";
-  };
-
-export type UpdateTemplateApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdPatchErrors =
-  {
-    /**
-     * Validation Error
-     */
-    422: HttpValidationError;
-  };
-
-export type UpdateTemplateApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdPatchError =
-  UpdateTemplateApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdPatchErrors[keyof UpdateTemplateApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdPatchErrors];
-
-export type UpdateTemplateApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdPatchResponses =
-  {
-    /**
-     * Successful Response
-     */
-    200: EnvironmentTemplateResponse;
-  };
-
-export type UpdateTemplateApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdPatchResponse =
-  UpdateTemplateApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdPatchResponses[keyof UpdateTemplateApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdPatchResponses];
-
-export type ListRunsApiV1ProjectsProjectIdRunsGetData = {
-  body?: never;
-  path: {
-    /**
-     * Project Id
-     */
-    project_id: string;
-  };
-  query?: {
     /**
      * Limit
      */
     limit?: number;
   };
-  url: "/api/v1/projects/{project_id}/runs";
+  url: "/api/v1/system/users";
 };
 
-export type ListRunsApiV1ProjectsProjectIdRunsGetErrors = {
+export type ListUsersApiV1SystemUsersGetErrors = {
   /**
    * Validation Error
    */
   422: HttpValidationError;
 };
 
-export type ListRunsApiV1ProjectsProjectIdRunsGetError =
-  ListRunsApiV1ProjectsProjectIdRunsGetErrors[keyof ListRunsApiV1ProjectsProjectIdRunsGetErrors];
+export type ListUsersApiV1SystemUsersGetError =
+  ListUsersApiV1SystemUsersGetErrors[keyof ListUsersApiV1SystemUsersGetErrors];
 
-export type ListRunsApiV1ProjectsProjectIdRunsGetResponses = {
+export type ListUsersApiV1SystemUsersGetResponses = {
   /**
    * Successful Response
    */
-  200: RunListResponse;
+  200: UserPageResponse;
 };
 
-export type ListRunsApiV1ProjectsProjectIdRunsGetResponse =
-  ListRunsApiV1ProjectsProjectIdRunsGetResponses[keyof ListRunsApiV1ProjectsProjectIdRunsGetResponses];
+export type ListUsersApiV1SystemUsersGetResponse =
+  ListUsersApiV1SystemUsersGetResponses[keyof ListUsersApiV1SystemUsersGetResponses];
 
-export type CreateRunApiV1ProjectsProjectIdRunsPostData = {
-  body: CreateRunRequest;
+export type CreateUserApiV1SystemUsersPostData = {
+  body: CreateUserRequest;
   headers?: {
-    /**
-     * Idempotency-Key
-     */
-    "Idempotency-Key"?: string | null;
     /**
      * X-Csrf-Token
      */
     "x-csrf-token"?: string | null;
   };
-  path: {
-    /**
-     * Project Id
-     */
-    project_id: string;
-  };
+  path?: never;
   query?: never;
-  url: "/api/v1/projects/{project_id}/runs";
+  url: "/api/v1/system/users";
 };
 
-export type CreateRunApiV1ProjectsProjectIdRunsPostErrors = {
+export type CreateUserApiV1SystemUsersPostErrors = {
   /**
    * Validation Error
    */
   422: HttpValidationError;
 };
 
-export type CreateRunApiV1ProjectsProjectIdRunsPostError =
-  CreateRunApiV1ProjectsProjectIdRunsPostErrors[keyof CreateRunApiV1ProjectsProjectIdRunsPostErrors];
+export type CreateUserApiV1SystemUsersPostError =
+  CreateUserApiV1SystemUsersPostErrors[keyof CreateUserApiV1SystemUsersPostErrors];
 
-export type CreateRunApiV1ProjectsProjectIdRunsPostResponses = {
+export type CreateUserApiV1SystemUsersPostResponses = {
   /**
    * Successful Response
    */
-  201: RunResponse;
+  201: UserResponse;
 };
 
-export type CreateRunApiV1ProjectsProjectIdRunsPostResponse =
-  CreateRunApiV1ProjectsProjectIdRunsPostResponses[keyof CreateRunApiV1ProjectsProjectIdRunsPostResponses];
+export type CreateUserApiV1SystemUsersPostResponse =
+  CreateUserApiV1SystemUsersPostResponses[keyof CreateUserApiV1SystemUsersPostResponses];
 
-export type GetRunApiV1ProjectsProjectIdRunsRunIdGetData = {
-  body?: never;
-  path: {
-    /**
-     * Project Id
-     */
-    project_id: string;
-    /**
-     * Run Id
-     */
-    run_id: string;
-  };
-  query?: never;
-  url: "/api/v1/projects/{project_id}/runs/{run_id}";
-};
-
-export type GetRunApiV1ProjectsProjectIdRunsRunIdGetErrors = {
-  /**
-   * Validation Error
-   */
-  422: HttpValidationError;
-};
-
-export type GetRunApiV1ProjectsProjectIdRunsRunIdGetError =
-  GetRunApiV1ProjectsProjectIdRunsRunIdGetErrors[keyof GetRunApiV1ProjectsProjectIdRunsRunIdGetErrors];
-
-export type GetRunApiV1ProjectsProjectIdRunsRunIdGetResponses = {
-  /**
-   * Successful Response
-   */
-  200: RunResponse;
-};
-
-export type GetRunApiV1ProjectsProjectIdRunsRunIdGetResponse =
-  GetRunApiV1ProjectsProjectIdRunsRunIdGetResponses[keyof GetRunApiV1ProjectsProjectIdRunsRunIdGetResponses];
-
-export type ListCasesApiV1ProjectsProjectIdRunsRunIdCasesGetData = {
-  body?: never;
-  path: {
-    /**
-     * Project Id
-     */
-    project_id: string;
-    /**
-     * Run Id
-     */
-    run_id: string;
-  };
-  query?: never;
-  url: "/api/v1/projects/{project_id}/runs/{run_id}/cases";
-};
-
-export type ListCasesApiV1ProjectsProjectIdRunsRunIdCasesGetErrors = {
-  /**
-   * Validation Error
-   */
-  422: HttpValidationError;
-};
-
-export type ListCasesApiV1ProjectsProjectIdRunsRunIdCasesGetError =
-  ListCasesApiV1ProjectsProjectIdRunsRunIdCasesGetErrors[keyof ListCasesApiV1ProjectsProjectIdRunsRunIdCasesGetErrors];
-
-export type ListCasesApiV1ProjectsProjectIdRunsRunIdCasesGetResponses = {
-  /**
-   * Successful Response
-   */
-  200: RunCaseListResponse;
-};
-
-export type ListCasesApiV1ProjectsProjectIdRunsRunIdCasesGetResponse =
-  ListCasesApiV1ProjectsProjectIdRunsRunIdCasesGetResponses[keyof ListCasesApiV1ProjectsProjectIdRunsRunIdCasesGetResponses];
-
-export type CancelRunApiV1ProjectsProjectIdRunsRunIdCancelPostData = {
+export type DeleteUserApiV1SystemUsersUserIdDeleteData = {
   body?: never;
   headers?: {
     /**
@@ -4941,112 +7199,217 @@ export type CancelRunApiV1ProjectsProjectIdRunsRunIdCancelPostData = {
   };
   path: {
     /**
-     * Project Id
+     * User Id
      */
-    project_id: string;
-    /**
-     * Run Id
-     */
-    run_id: string;
+    user_id: string;
   };
   query?: never;
-  url: "/api/v1/projects/{project_id}/runs/{run_id}/cancel";
+  url: "/api/v1/system/users/{user_id}";
 };
 
-export type CancelRunApiV1ProjectsProjectIdRunsRunIdCancelPostErrors = {
+export type DeleteUserApiV1SystemUsersUserIdDeleteErrors = {
   /**
    * Validation Error
    */
   422: HttpValidationError;
 };
 
-export type CancelRunApiV1ProjectsProjectIdRunsRunIdCancelPostError =
-  CancelRunApiV1ProjectsProjectIdRunsRunIdCancelPostErrors[keyof CancelRunApiV1ProjectsProjectIdRunsRunIdCancelPostErrors];
+export type DeleteUserApiV1SystemUsersUserIdDeleteError =
+  DeleteUserApiV1SystemUsersUserIdDeleteErrors[keyof DeleteUserApiV1SystemUsersUserIdDeleteErrors];
 
-export type CancelRunApiV1ProjectsProjectIdRunsRunIdCancelPostResponses = {
+export type DeleteUserApiV1SystemUsersUserIdDeleteResponses = {
   /**
    * Successful Response
    */
-  200: RunResponse;
+  204: void;
 };
 
-export type CancelRunApiV1ProjectsProjectIdRunsRunIdCancelPostResponse =
-  CancelRunApiV1ProjectsProjectIdRunsRunIdCancelPostResponses[keyof CancelRunApiV1ProjectsProjectIdRunsRunIdCancelPostResponses];
+export type DeleteUserApiV1SystemUsersUserIdDeleteResponse =
+  DeleteUserApiV1SystemUsersUserIdDeleteResponses[keyof DeleteUserApiV1SystemUsersUserIdDeleteResponses];
 
-export type EventsApiV1ProjectsProjectIdRunsRunIdEventsGetData = {
+export type GetUserApiV1SystemUsersUserIdGetData = {
   body?: never;
   path: {
     /**
-     * Project Id
+     * User Id
      */
-    project_id: string;
-    /**
-     * Run Id
-     */
-    run_id: string;
+    user_id: string;
   };
   query?: never;
-  url: "/api/v1/projects/{project_id}/runs/{run_id}/events";
+  url: "/api/v1/system/users/{user_id}";
 };
 
-export type EventsApiV1ProjectsProjectIdRunsRunIdEventsGetErrors = {
+export type GetUserApiV1SystemUsersUserIdGetErrors = {
   /**
    * Validation Error
    */
   422: HttpValidationError;
 };
 
-export type EventsApiV1ProjectsProjectIdRunsRunIdEventsGetError =
-  EventsApiV1ProjectsProjectIdRunsRunIdEventsGetErrors[keyof EventsApiV1ProjectsProjectIdRunsRunIdEventsGetErrors];
+export type GetUserApiV1SystemUsersUserIdGetError =
+  GetUserApiV1SystemUsersUserIdGetErrors[keyof GetUserApiV1SystemUsersUserIdGetErrors];
 
-export type EventsApiV1ProjectsProjectIdRunsRunIdEventsGetResponses = {
+export type GetUserApiV1SystemUsersUserIdGetResponses = {
   /**
    * Successful Response
    */
-  200: unknown;
+  200: UserResponse;
 };
 
-export type ApplyResultApiV1ProjectsProjectIdRunsRunIdResultPostData = {
-  body: ApplyRunResultRequest;
+export type GetUserApiV1SystemUsersUserIdGetResponse =
+  GetUserApiV1SystemUsersUserIdGetResponses[keyof GetUserApiV1SystemUsersUserIdGetResponses];
+
+export type UpdateUserApiV1SystemUsersUserIdPatchData = {
+  body: UpdateUserRequest;
   headers?: {
     /**
-     * X-Internal-Token
+     * X-Csrf-Token
      */
-    "x-internal-token"?: string | null;
+    "x-csrf-token"?: string | null;
   };
   path: {
     /**
-     * Project Id
+     * User Id
      */
-    project_id: string;
-    /**
-     * Run Id
-     */
-    run_id: string;
+    user_id: string;
   };
   query?: never;
-  url: "/api/v1/projects/{project_id}/runs/{run_id}/result";
+  url: "/api/v1/system/users/{user_id}";
 };
 
-export type ApplyResultApiV1ProjectsProjectIdRunsRunIdResultPostErrors = {
+export type UpdateUserApiV1SystemUsersUserIdPatchErrors = {
   /**
    * Validation Error
    */
   422: HttpValidationError;
 };
 
-export type ApplyResultApiV1ProjectsProjectIdRunsRunIdResultPostError =
-  ApplyResultApiV1ProjectsProjectIdRunsRunIdResultPostErrors[keyof ApplyResultApiV1ProjectsProjectIdRunsRunIdResultPostErrors];
+export type UpdateUserApiV1SystemUsersUserIdPatchError =
+  UpdateUserApiV1SystemUsersUserIdPatchErrors[keyof UpdateUserApiV1SystemUsersUserIdPatchErrors];
 
-export type ApplyResultApiV1ProjectsProjectIdRunsRunIdResultPostResponses = {
+export type UpdateUserApiV1SystemUsersUserIdPatchResponses = {
   /**
    * Successful Response
    */
-  200: RunResponse;
+  200: UserResponse;
 };
 
-export type ApplyResultApiV1ProjectsProjectIdRunsRunIdResultPostResponse =
-  ApplyResultApiV1ProjectsProjectIdRunsRunIdResultPostResponses[keyof ApplyResultApiV1ProjectsProjectIdRunsRunIdResultPostResponses];
+export type UpdateUserApiV1SystemUsersUserIdPatchResponse =
+  UpdateUserApiV1SystemUsersUserIdPatchResponses[keyof UpdateUserApiV1SystemUsersUserIdPatchResponses];
+
+export type DisableUserApiV1SystemUsersUserIdDisablePostData = {
+  body?: never;
+  headers?: {
+    /**
+     * X-Csrf-Token
+     */
+    "x-csrf-token"?: string | null;
+  };
+  path: {
+    /**
+     * User Id
+     */
+    user_id: string;
+  };
+  query?: never;
+  url: "/api/v1/system/users/{user_id}/disable";
+};
+
+export type DisableUserApiV1SystemUsersUserIdDisablePostErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type DisableUserApiV1SystemUsersUserIdDisablePostError =
+  DisableUserApiV1SystemUsersUserIdDisablePostErrors[keyof DisableUserApiV1SystemUsersUserIdDisablePostErrors];
+
+export type DisableUserApiV1SystemUsersUserIdDisablePostResponses = {
+  /**
+   * Successful Response
+   */
+  200: UserResponse;
+};
+
+export type DisableUserApiV1SystemUsersUserIdDisablePostResponse =
+  DisableUserApiV1SystemUsersUserIdDisablePostResponses[keyof DisableUserApiV1SystemUsersUserIdDisablePostResponses];
+
+export type EnableUserApiV1SystemUsersUserIdEnablePostData = {
+  body?: never;
+  headers?: {
+    /**
+     * X-Csrf-Token
+     */
+    "x-csrf-token"?: string | null;
+  };
+  path: {
+    /**
+     * User Id
+     */
+    user_id: string;
+  };
+  query?: never;
+  url: "/api/v1/system/users/{user_id}/enable";
+};
+
+export type EnableUserApiV1SystemUsersUserIdEnablePostErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type EnableUserApiV1SystemUsersUserIdEnablePostError =
+  EnableUserApiV1SystemUsersUserIdEnablePostErrors[keyof EnableUserApiV1SystemUsersUserIdEnablePostErrors];
+
+export type EnableUserApiV1SystemUsersUserIdEnablePostResponses = {
+  /**
+   * Successful Response
+   */
+  200: UserResponse;
+};
+
+export type EnableUserApiV1SystemUsersUserIdEnablePostResponse =
+  EnableUserApiV1SystemUsersUserIdEnablePostResponses[keyof EnableUserApiV1SystemUsersUserIdEnablePostResponses];
+
+export type ResetPasswordApiV1SystemUsersUserIdResetPasswordPostData = {
+  body: ResetPasswordRequest;
+  headers?: {
+    /**
+     * X-Csrf-Token
+     */
+    "x-csrf-token"?: string | null;
+  };
+  path: {
+    /**
+     * User Id
+     */
+    user_id: string;
+  };
+  query?: never;
+  url: "/api/v1/system/users/{user_id}/reset-password";
+};
+
+export type ResetPasswordApiV1SystemUsersUserIdResetPasswordPostErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type ResetPasswordApiV1SystemUsersUserIdResetPasswordPostError =
+  ResetPasswordApiV1SystemUsersUserIdResetPasswordPostErrors[keyof ResetPasswordApiV1SystemUsersUserIdResetPasswordPostErrors];
+
+export type ResetPasswordApiV1SystemUsersUserIdResetPasswordPostResponses = {
+  /**
+   * Successful Response
+   */
+  204: void;
+};
+
+export type ResetPasswordApiV1SystemUsersUserIdResetPasswordPostResponse =
+  ResetPasswordApiV1SystemUsersUserIdResetPasswordPostResponses[keyof ResetPasswordApiV1SystemUsersUserIdResetPasswordPostResponses];
 
 export type GetSettingsApiV1UsersMeSettingsGetData = {
   body?: never;
@@ -5097,1766 +7460,3 @@ export type UpdateSettingsApiV1UsersMeSettingsPatchResponses = {
 
 export type UpdateSettingsApiV1UsersMeSettingsPatchResponse =
   UpdateSettingsApiV1UsersMeSettingsPatchResponses[keyof UpdateSettingsApiV1UsersMeSettingsPatchResponses];
-
-export type CreateFeedbackApiV1FeedbackPostData = {
-  body: CreateFeedbackRequest;
-  path?: never;
-  query?: never;
-  url: "/api/v1/feedback";
-};
-
-export type CreateFeedbackApiV1FeedbackPostErrors = {
-  /**
-   * Validation Error
-   */
-  422: HttpValidationError;
-};
-
-export type CreateFeedbackApiV1FeedbackPostError =
-  CreateFeedbackApiV1FeedbackPostErrors[keyof CreateFeedbackApiV1FeedbackPostErrors];
-
-export type CreateFeedbackApiV1FeedbackPostResponses = {
-  /**
-   * Successful Response
-   */
-  201: FeedbackResponse;
-};
-
-export type CreateFeedbackApiV1FeedbackPostResponse =
-  CreateFeedbackApiV1FeedbackPostResponses[keyof CreateFeedbackApiV1FeedbackPostResponses];
-
-export type ListArtifactsApiV1ProjectsProjectIdRunsRunIdArtifactsGetData = {
-  body?: never;
-  path: {
-    /**
-     * Project Id
-     */
-    project_id: string;
-    /**
-     * Run Id
-     */
-    run_id: string;
-  };
-  query?: never;
-  url: "/api/v1/projects/{project_id}/runs/{run_id}/artifacts";
-};
-
-export type ListArtifactsApiV1ProjectsProjectIdRunsRunIdArtifactsGetErrors = {
-  /**
-   * Validation Error
-   */
-  422: HttpValidationError;
-};
-
-export type ListArtifactsApiV1ProjectsProjectIdRunsRunIdArtifactsGetError =
-  ListArtifactsApiV1ProjectsProjectIdRunsRunIdArtifactsGetErrors[keyof ListArtifactsApiV1ProjectsProjectIdRunsRunIdArtifactsGetErrors];
-
-export type ListArtifactsApiV1ProjectsProjectIdRunsRunIdArtifactsGetResponses =
-  {
-    /**
-     * Successful Response
-     */
-    200: unknown;
-  };
-
-export type UploadArtifactApiV1ProjectsProjectIdRunsRunIdArtifactsPostData = {
-  body?: never;
-  path: {
-    /**
-     * Project Id
-     */
-    project_id: string;
-    /**
-     * Run Id
-     */
-    run_id: string;
-  };
-  query?: never;
-  url: "/api/v1/projects/{project_id}/runs/{run_id}/artifacts";
-};
-
-export type UploadArtifactApiV1ProjectsProjectIdRunsRunIdArtifactsPostErrors = {
-  /**
-   * Validation Error
-   */
-  422: HttpValidationError;
-};
-
-export type UploadArtifactApiV1ProjectsProjectIdRunsRunIdArtifactsPostError =
-  UploadArtifactApiV1ProjectsProjectIdRunsRunIdArtifactsPostErrors[keyof UploadArtifactApiV1ProjectsProjectIdRunsRunIdArtifactsPostErrors];
-
-export type UploadArtifactApiV1ProjectsProjectIdRunsRunIdArtifactsPostResponses =
-  {
-    /**
-     * Successful Response
-     */
-    200: unknown;
-  };
-
-export type DownloadArtifactApiV1ProjectsProjectIdArtifactsArtifactIdDownloadGetData =
-  {
-    body?: never;
-    path: {
-      /**
-       * Project Id
-       */
-      project_id: string;
-      /**
-       * Artifact Id
-       */
-      artifact_id: string;
-    };
-    query?: never;
-    url: "/api/v1/projects/{project_id}/artifacts/{artifact_id}/download";
-  };
-
-export type DownloadArtifactApiV1ProjectsProjectIdArtifactsArtifactIdDownloadGetErrors =
-  {
-    /**
-     * Validation Error
-     */
-    422: HttpValidationError;
-  };
-
-export type DownloadArtifactApiV1ProjectsProjectIdArtifactsArtifactIdDownloadGetError =
-  DownloadArtifactApiV1ProjectsProjectIdArtifactsArtifactIdDownloadGetErrors[keyof DownloadArtifactApiV1ProjectsProjectIdArtifactsArtifactIdDownloadGetErrors];
-
-export type DownloadArtifactApiV1ProjectsProjectIdArtifactsArtifactIdDownloadGetResponses =
-  {
-    /**
-     * Successful Response
-     */
-    200: unknown;
-  };
-
-export type ListPoliciesApiV1ProjectsProjectIdSecurityPoliciesGetData = {
-  body?: never;
-  path: {
-    /**
-     * Project Id
-     */
-    project_id: string;
-  };
-  query?: never;
-  url: "/api/v1/projects/{project_id}/security/policies";
-};
-
-export type ListPoliciesApiV1ProjectsProjectIdSecurityPoliciesGetErrors = {
-  /**
-   * Validation Error
-   */
-  422: HttpValidationError;
-};
-
-export type ListPoliciesApiV1ProjectsProjectIdSecurityPoliciesGetError =
-  ListPoliciesApiV1ProjectsProjectIdSecurityPoliciesGetErrors[keyof ListPoliciesApiV1ProjectsProjectIdSecurityPoliciesGetErrors];
-
-export type ListPoliciesApiV1ProjectsProjectIdSecurityPoliciesGetResponses = {
-  /**
-   * Successful Response
-   */
-  200: unknown;
-};
-
-export type CreatePolicyApiV1ProjectsProjectIdSecurityPoliciesPostData = {
-  body: CreatePolicyRequest;
-  headers?: {
-    /**
-     * X-Csrf-Token
-     */
-    "x-csrf-token"?: string | null;
-  };
-  path: {
-    /**
-     * Project Id
-     */
-    project_id: string;
-  };
-  query?: never;
-  url: "/api/v1/projects/{project_id}/security/policies";
-};
-
-export type CreatePolicyApiV1ProjectsProjectIdSecurityPoliciesPostErrors = {
-  /**
-   * Validation Error
-   */
-  422: HttpValidationError;
-};
-
-export type CreatePolicyApiV1ProjectsProjectIdSecurityPoliciesPostError =
-  CreatePolicyApiV1ProjectsProjectIdSecurityPoliciesPostErrors[keyof CreatePolicyApiV1ProjectsProjectIdSecurityPoliciesPostErrors];
-
-export type CreatePolicyApiV1ProjectsProjectIdSecurityPoliciesPostResponses = {
-  /**
-   * Successful Response
-   */
-  200: unknown;
-};
-
-export type ListSnapshotsApiV1ProjectsProjectIdEnvironmentsTemplateIdSnapshotsGetData =
-  {
-    body?: never;
-    path: {
-      /**
-       * Project Id
-       */
-      project_id: string;
-      /**
-       * Template Id
-       */
-      template_id: string;
-    };
-    query?: never;
-    url: "/api/v1/projects/{project_id}/environments/{template_id}/snapshots";
-  };
-
-export type ListSnapshotsApiV1ProjectsProjectIdEnvironmentsTemplateIdSnapshotsGetErrors =
-  {
-    /**
-     * Validation Error
-     */
-    422: HttpValidationError;
-  };
-
-export type ListSnapshotsApiV1ProjectsProjectIdEnvironmentsTemplateIdSnapshotsGetError =
-  ListSnapshotsApiV1ProjectsProjectIdEnvironmentsTemplateIdSnapshotsGetErrors[keyof ListSnapshotsApiV1ProjectsProjectIdEnvironmentsTemplateIdSnapshotsGetErrors];
-
-export type ListSnapshotsApiV1ProjectsProjectIdEnvironmentsTemplateIdSnapshotsGetResponses =
-  {
-    /**
-     * Successful Response
-     */
-    200: unknown;
-  };
-
-export type CreateSnapshotApiV1ProjectsProjectIdEnvironmentsTemplateIdSnapshotsPostData =
-  {
-    body?: never;
-    headers?: {
-      /**
-       * X-Csrf-Token
-       */
-      "x-csrf-token"?: string | null;
-    };
-    path: {
-      /**
-       * Project Id
-       */
-      project_id: string;
-      /**
-       * Template Id
-       */
-      template_id: string;
-    };
-    query?: never;
-    url: "/api/v1/projects/{project_id}/environments/{template_id}/snapshots";
-  };
-
-export type CreateSnapshotApiV1ProjectsProjectIdEnvironmentsTemplateIdSnapshotsPostErrors =
-  {
-    /**
-     * Validation Error
-     */
-    422: HttpValidationError;
-  };
-
-export type CreateSnapshotApiV1ProjectsProjectIdEnvironmentsTemplateIdSnapshotsPostError =
-  CreateSnapshotApiV1ProjectsProjectIdEnvironmentsTemplateIdSnapshotsPostErrors[keyof CreateSnapshotApiV1ProjectsProjectIdEnvironmentsTemplateIdSnapshotsPostErrors];
-
-export type CreateSnapshotApiV1ProjectsProjectIdEnvironmentsTemplateIdSnapshotsPostResponses =
-  {
-    /**
-     * Successful Response
-     */
-    200: unknown;
-  };
-
-export type RestoreSnapshotApiV1ProjectsProjectIdEnvironmentsTemplateIdSnapshotsSnapshotIdRestorePostData =
-  {
-    body?: never;
-    headers?: {
-      /**
-       * X-Csrf-Token
-       */
-      "x-csrf-token"?: string | null;
-    };
-    path: {
-      /**
-       * Project Id
-       */
-      project_id: string;
-      /**
-       * Template Id
-       */
-      template_id: string;
-      /**
-       * Snapshot Id
-       */
-      snapshot_id: string;
-    };
-    query?: never;
-    url: "/api/v1/projects/{project_id}/environments/{template_id}/snapshots/{snapshot_id}/restore";
-  };
-
-export type RestoreSnapshotApiV1ProjectsProjectIdEnvironmentsTemplateIdSnapshotsSnapshotIdRestorePostErrors =
-  {
-    /**
-     * Validation Error
-     */
-    422: HttpValidationError;
-  };
-
-export type RestoreSnapshotApiV1ProjectsProjectIdEnvironmentsTemplateIdSnapshotsSnapshotIdRestorePostError =
-  RestoreSnapshotApiV1ProjectsProjectIdEnvironmentsTemplateIdSnapshotsSnapshotIdRestorePostErrors[keyof RestoreSnapshotApiV1ProjectsProjectIdEnvironmentsTemplateIdSnapshotsSnapshotIdRestorePostErrors];
-
-export type RestoreSnapshotApiV1ProjectsProjectIdEnvironmentsTemplateIdSnapshotsSnapshotIdRestorePostResponses =
-  {
-    /**
-     * Successful Response
-     */
-    200: unknown;
-  };
-
-export type DeleteSnapshotApiV1ProjectsProjectIdEnvironmentsTemplateIdSnapshotsSnapshotIdDeleteData =
-  {
-    body?: never;
-    headers?: {
-      /**
-       * X-Csrf-Token
-       */
-      "x-csrf-token"?: string | null;
-    };
-    path: {
-      /**
-       * Project Id
-       */
-      project_id: string;
-      /**
-       * Template Id
-       */
-      template_id: string;
-      /**
-       * Snapshot Id
-       */
-      snapshot_id: string;
-    };
-    query?: never;
-    url: "/api/v1/projects/{project_id}/environments/{template_id}/snapshots/{snapshot_id}";
-  };
-
-export type DeleteSnapshotApiV1ProjectsProjectIdEnvironmentsTemplateIdSnapshotsSnapshotIdDeleteErrors =
-  {
-    /**
-     * Validation Error
-     */
-    422: HttpValidationError;
-  };
-
-export type DeleteSnapshotApiV1ProjectsProjectIdEnvironmentsTemplateIdSnapshotsSnapshotIdDeleteError =
-  DeleteSnapshotApiV1ProjectsProjectIdEnvironmentsTemplateIdSnapshotsSnapshotIdDeleteErrors[keyof DeleteSnapshotApiV1ProjectsProjectIdEnvironmentsTemplateIdSnapshotsSnapshotIdDeleteErrors];
-
-export type DeleteSnapshotApiV1ProjectsProjectIdEnvironmentsTemplateIdSnapshotsSnapshotIdDeleteResponses =
-  {
-    /**
-     * Successful Response
-     */
-    200: unknown;
-  };
-
-export type DryRunApiV1ProjectsProjectIdTestPlansPlanIdVersionsVersionIdDryRunPostData =
-  {
-    body?: never;
-    headers?: {
-      /**
-       * X-Csrf-Token
-       */
-      "x-csrf-token"?: string | null;
-    };
-    path: {
-      /**
-       * Project Id
-       */
-      project_id: string;
-      /**
-       * Plan Id
-       */
-      plan_id: string;
-      /**
-       * Version Id
-       */
-      version_id: string;
-    };
-    query?: never;
-    url: "/api/v1/projects/{project_id}/test-plans/{plan_id}/versions/{version_id}/dry-run";
-  };
-
-export type DryRunApiV1ProjectsProjectIdTestPlansPlanIdVersionsVersionIdDryRunPostErrors =
-  {
-    /**
-     * Validation Error
-     */
-    422: HttpValidationError;
-  };
-
-export type DryRunApiV1ProjectsProjectIdTestPlansPlanIdVersionsVersionIdDryRunPostError =
-  DryRunApiV1ProjectsProjectIdTestPlansPlanIdVersionsVersionIdDryRunPostErrors[keyof DryRunApiV1ProjectsProjectIdTestPlansPlanIdVersionsVersionIdDryRunPostErrors];
-
-export type DryRunApiV1ProjectsProjectIdTestPlansPlanIdVersionsVersionIdDryRunPostResponses =
-  {
-    /**
-     * Successful Response
-     */
-    200: unknown;
-  };
-
-export type DiffRunsApiV1ProjectsProjectIdRunsRunAIdDiffRunBIdGetData = {
-  body?: never;
-  path: {
-    /**
-     * Project Id
-     */
-    project_id: string;
-    /**
-     * Run A Id
-     */
-    run_a_id: string;
-    /**
-     * Run B Id
-     */
-    run_b_id: string;
-  };
-  query?: never;
-  url: "/api/v1/projects/{project_id}/runs/{run_a_id}/diff/{run_b_id}";
-};
-
-export type DiffRunsApiV1ProjectsProjectIdRunsRunAIdDiffRunBIdGetErrors = {
-  /**
-   * Validation Error
-   */
-  422: HttpValidationError;
-};
-
-export type DiffRunsApiV1ProjectsProjectIdRunsRunAIdDiffRunBIdGetError =
-  DiffRunsApiV1ProjectsProjectIdRunsRunAIdDiffRunBIdGetErrors[keyof DiffRunsApiV1ProjectsProjectIdRunsRunAIdDiffRunBIdGetErrors];
-
-export type DiffRunsApiV1ProjectsProjectIdRunsRunAIdDiffRunBIdGetResponses = {
-  /**
-   * Successful Response
-   */
-  200: unknown;
-};
-
-export type ListScorersApiV1ProjectsProjectIdScorersGetData = {
-  body?: never;
-  path: {
-    /**
-     * Project Id
-     */
-    project_id: string;
-  };
-  query?: {
-    /**
-     * Limit
-     */
-    limit?: number;
-    /**
-     * Offset
-     */
-    offset?: number;
-  };
-  url: "/api/v1/projects/{project_id}/scorers";
-};
-
-export type ListScorersApiV1ProjectsProjectIdScorersGetErrors = {
-  /**
-   * Validation Error
-   */
-  422: HttpValidationError;
-};
-
-export type ListScorersApiV1ProjectsProjectIdScorersGetError =
-  ListScorersApiV1ProjectsProjectIdScorersGetErrors[keyof ListScorersApiV1ProjectsProjectIdScorersGetErrors];
-
-export type ListScorersApiV1ProjectsProjectIdScorersGetResponses = {
-  /**
-   * Successful Response
-   */
-  200: unknown;
-};
-
-export type CreateScorerApiV1ProjectsProjectIdScorersPostData = {
-  body: CreateScorerRequest;
-  headers?: {
-    /**
-     * X-Csrf-Token
-     */
-    "x-csrf-token"?: string | null;
-  };
-  path: {
-    /**
-     * Project Id
-     */
-    project_id: string;
-  };
-  query?: never;
-  url: "/api/v1/projects/{project_id}/scorers";
-};
-
-export type CreateScorerApiV1ProjectsProjectIdScorersPostErrors = {
-  /**
-   * Validation Error
-   */
-  422: HttpValidationError;
-};
-
-export type CreateScorerApiV1ProjectsProjectIdScorersPostError =
-  CreateScorerApiV1ProjectsProjectIdScorersPostErrors[keyof CreateScorerApiV1ProjectsProjectIdScorersPostErrors];
-
-export type CreateScorerApiV1ProjectsProjectIdScorersPostResponses = {
-  /**
-   * Successful Response
-   */
-  200: unknown;
-};
-
-export type DeleteScorerApiV1ProjectsProjectIdScorersScorerIdDeleteData = {
-  body?: never;
-  headers?: {
-    /**
-     * X-Csrf-Token
-     */
-    "x-csrf-token"?: string | null;
-  };
-  path: {
-    /**
-     * Project Id
-     */
-    project_id: string;
-    /**
-     * Scorer Id
-     */
-    scorer_id: string;
-  };
-  query?: never;
-  url: "/api/v1/projects/{project_id}/scorers/{scorer_id}";
-};
-
-export type DeleteScorerApiV1ProjectsProjectIdScorersScorerIdDeleteErrors = {
-  /**
-   * Validation Error
-   */
-  422: HttpValidationError;
-};
-
-export type DeleteScorerApiV1ProjectsProjectIdScorersScorerIdDeleteError =
-  DeleteScorerApiV1ProjectsProjectIdScorersScorerIdDeleteErrors[keyof DeleteScorerApiV1ProjectsProjectIdScorersScorerIdDeleteErrors];
-
-export type DeleteScorerApiV1ProjectsProjectIdScorersScorerIdDeleteResponses = {
-  /**
-   * Successful Response
-   */
-  200: unknown;
-};
-
-export type GetScorerApiV1ProjectsProjectIdScorersScorerIdGetData = {
-  body?: never;
-  path: {
-    /**
-     * Project Id
-     */
-    project_id: string;
-    /**
-     * Scorer Id
-     */
-    scorer_id: string;
-  };
-  query?: never;
-  url: "/api/v1/projects/{project_id}/scorers/{scorer_id}";
-};
-
-export type GetScorerApiV1ProjectsProjectIdScorersScorerIdGetErrors = {
-  /**
-   * Validation Error
-   */
-  422: HttpValidationError;
-};
-
-export type GetScorerApiV1ProjectsProjectIdScorersScorerIdGetError =
-  GetScorerApiV1ProjectsProjectIdScorersScorerIdGetErrors[keyof GetScorerApiV1ProjectsProjectIdScorersScorerIdGetErrors];
-
-export type GetScorerApiV1ProjectsProjectIdScorersScorerIdGetResponses = {
-  /**
-   * Successful Response
-   */
-  200: unknown;
-};
-
-export type UpdateScorerApiV1ProjectsProjectIdScorersScorerIdPatchData = {
-  body: UpdateScorerRequest;
-  headers?: {
-    /**
-     * X-Csrf-Token
-     */
-    "x-csrf-token"?: string | null;
-  };
-  path: {
-    /**
-     * Project Id
-     */
-    project_id: string;
-    /**
-     * Scorer Id
-     */
-    scorer_id: string;
-  };
-  query?: never;
-  url: "/api/v1/projects/{project_id}/scorers/{scorer_id}";
-};
-
-export type UpdateScorerApiV1ProjectsProjectIdScorersScorerIdPatchErrors = {
-  /**
-   * Validation Error
-   */
-  422: HttpValidationError;
-};
-
-export type UpdateScorerApiV1ProjectsProjectIdScorersScorerIdPatchError =
-  UpdateScorerApiV1ProjectsProjectIdScorersScorerIdPatchErrors[keyof UpdateScorerApiV1ProjectsProjectIdScorersScorerIdPatchErrors];
-
-export type UpdateScorerApiV1ProjectsProjectIdScorersScorerIdPatchResponses = {
-  /**
-   * Successful Response
-   */
-  200: unknown;
-};
-
-export type ListExperimentsApiV1ProjectsProjectIdExperimentsGetData = {
-  body?: never;
-  path: {
-    /**
-     * Project Id
-     */
-    project_id: string;
-  };
-  query?: {
-    /**
-     * Limit
-     */
-    limit?: number;
-    /**
-     * Offset
-     */
-    offset?: number;
-  };
-  url: "/api/v1/projects/{project_id}/experiments";
-};
-
-export type ListExperimentsApiV1ProjectsProjectIdExperimentsGetErrors = {
-  /**
-   * Validation Error
-   */
-  422: HttpValidationError;
-};
-
-export type ListExperimentsApiV1ProjectsProjectIdExperimentsGetError =
-  ListExperimentsApiV1ProjectsProjectIdExperimentsGetErrors[keyof ListExperimentsApiV1ProjectsProjectIdExperimentsGetErrors];
-
-export type ListExperimentsApiV1ProjectsProjectIdExperimentsGetResponses = {
-  /**
-   * Successful Response
-   */
-  200: unknown;
-};
-
-export type CreateExperimentApiV1ProjectsProjectIdExperimentsPostData = {
-  body: CreateExperimentRequest;
-  headers?: {
-    /**
-     * X-Csrf-Token
-     */
-    "x-csrf-token"?: string | null;
-  };
-  path: {
-    /**
-     * Project Id
-     */
-    project_id: string;
-  };
-  query?: never;
-  url: "/api/v1/projects/{project_id}/experiments";
-};
-
-export type CreateExperimentApiV1ProjectsProjectIdExperimentsPostErrors = {
-  /**
-   * Validation Error
-   */
-  422: HttpValidationError;
-};
-
-export type CreateExperimentApiV1ProjectsProjectIdExperimentsPostError =
-  CreateExperimentApiV1ProjectsProjectIdExperimentsPostErrors[keyof CreateExperimentApiV1ProjectsProjectIdExperimentsPostErrors];
-
-export type CreateExperimentApiV1ProjectsProjectIdExperimentsPostResponses = {
-  /**
-   * Successful Response
-   */
-  200: unknown;
-};
-
-export type GetExperimentApiV1ProjectsProjectIdExperimentsExperimentIdGetData =
-  {
-    body?: never;
-    path: {
-      /**
-       * Project Id
-       */
-      project_id: string;
-      /**
-       * Experiment Id
-       */
-      experiment_id: string;
-    };
-    query?: never;
-    url: "/api/v1/projects/{project_id}/experiments/{experiment_id}";
-  };
-
-export type GetExperimentApiV1ProjectsProjectIdExperimentsExperimentIdGetErrors =
-  {
-    /**
-     * Validation Error
-     */
-    422: HttpValidationError;
-  };
-
-export type GetExperimentApiV1ProjectsProjectIdExperimentsExperimentIdGetError =
-  GetExperimentApiV1ProjectsProjectIdExperimentsExperimentIdGetErrors[keyof GetExperimentApiV1ProjectsProjectIdExperimentsExperimentIdGetErrors];
-
-export type GetExperimentApiV1ProjectsProjectIdExperimentsExperimentIdGetResponses =
-  {
-    /**
-     * Successful Response
-     */
-    200: unknown;
-  };
-
-export type RunExperimentApiV1ProjectsProjectIdExperimentsExperimentIdRunPostData =
-  {
-    body?: never;
-    headers?: {
-      /**
-       * X-Csrf-Token
-       */
-      "x-csrf-token"?: string | null;
-    };
-    path: {
-      /**
-       * Project Id
-       */
-      project_id: string;
-      /**
-       * Experiment Id
-       */
-      experiment_id: string;
-    };
-    query?: never;
-    url: "/api/v1/projects/{project_id}/experiments/{experiment_id}/run";
-  };
-
-export type RunExperimentApiV1ProjectsProjectIdExperimentsExperimentIdRunPostErrors =
-  {
-    /**
-     * Validation Error
-     */
-    422: HttpValidationError;
-  };
-
-export type RunExperimentApiV1ProjectsProjectIdExperimentsExperimentIdRunPostError =
-  RunExperimentApiV1ProjectsProjectIdExperimentsExperimentIdRunPostErrors[keyof RunExperimentApiV1ProjectsProjectIdExperimentsExperimentIdRunPostErrors];
-
-export type RunExperimentApiV1ProjectsProjectIdExperimentsExperimentIdRunPostResponses =
-  {
-    /**
-     * Successful Response
-     */
-    200: unknown;
-  };
-
-export type GetStatisticsApiV1ProjectsProjectIdExperimentsStatisticsGetData = {
-  body?: never;
-  path: {
-    /**
-     * Project Id
-     */
-    project_id: string;
-  };
-  query?: {
-    /**
-     * Run Id
-     */
-    run_id?: string | null;
-    /**
-     * Experiment Id
-     */
-    experiment_id?: string | null;
-  };
-  url: "/api/v1/projects/{project_id}/experiments/statistics";
-};
-
-export type GetStatisticsApiV1ProjectsProjectIdExperimentsStatisticsGetErrors =
-  {
-    /**
-     * Validation Error
-     */
-    422: HttpValidationError;
-  };
-
-export type GetStatisticsApiV1ProjectsProjectIdExperimentsStatisticsGetError =
-  GetStatisticsApiV1ProjectsProjectIdExperimentsStatisticsGetErrors[keyof GetStatisticsApiV1ProjectsProjectIdExperimentsStatisticsGetErrors];
-
-export type GetStatisticsApiV1ProjectsProjectIdExperimentsStatisticsGetResponses =
-  {
-    /**
-     * Successful Response
-     */
-    200: unknown;
-  };
-
-export type ListReviewsApiV1ProjectsProjectIdReviewsGetData = {
-  body?: never;
-  path: {
-    /**
-     * Project Id
-     */
-    project_id: string;
-  };
-  query?: {
-    /**
-     * Status
-     */
-    status?: string | null;
-    /**
-     * Limit
-     */
-    limit?: number;
-    /**
-     * Offset
-     */
-    offset?: number;
-  };
-  url: "/api/v1/projects/{project_id}/reviews";
-};
-
-export type ListReviewsApiV1ProjectsProjectIdReviewsGetErrors = {
-  /**
-   * Validation Error
-   */
-  422: HttpValidationError;
-};
-
-export type ListReviewsApiV1ProjectsProjectIdReviewsGetError =
-  ListReviewsApiV1ProjectsProjectIdReviewsGetErrors[keyof ListReviewsApiV1ProjectsProjectIdReviewsGetErrors];
-
-export type ListReviewsApiV1ProjectsProjectIdReviewsGetResponses = {
-  /**
-   * Successful Response
-   */
-  200: unknown;
-};
-
-export type ReviewStatsApiV1ProjectsProjectIdReviewsStatsGetData = {
-  body?: never;
-  path: {
-    /**
-     * Project Id
-     */
-    project_id: string;
-  };
-  query?: never;
-  url: "/api/v1/projects/{project_id}/reviews/stats";
-};
-
-export type ReviewStatsApiV1ProjectsProjectIdReviewsStatsGetErrors = {
-  /**
-   * Validation Error
-   */
-  422: HttpValidationError;
-};
-
-export type ReviewStatsApiV1ProjectsProjectIdReviewsStatsGetError =
-  ReviewStatsApiV1ProjectsProjectIdReviewsStatsGetErrors[keyof ReviewStatsApiV1ProjectsProjectIdReviewsStatsGetErrors];
-
-export type ReviewStatsApiV1ProjectsProjectIdReviewsStatsGetResponses = {
-  /**
-   * Successful Response
-   */
-  200: unknown;
-};
-
-export type AutoEnqueueApiV1ProjectsProjectIdReviewsAutoEnqueuePostData = {
-  body: AutoEnqueueRequest;
-  headers?: {
-    /**
-     * X-Csrf-Token
-     */
-    "x-csrf-token"?: string | null;
-  };
-  path: {
-    /**
-     * Project Id
-     */
-    project_id: string;
-  };
-  query?: never;
-  url: "/api/v1/projects/{project_id}/reviews/auto-enqueue";
-};
-
-export type AutoEnqueueApiV1ProjectsProjectIdReviewsAutoEnqueuePostErrors = {
-  /**
-   * Validation Error
-   */
-  422: HttpValidationError;
-};
-
-export type AutoEnqueueApiV1ProjectsProjectIdReviewsAutoEnqueuePostError =
-  AutoEnqueueApiV1ProjectsProjectIdReviewsAutoEnqueuePostErrors[keyof AutoEnqueueApiV1ProjectsProjectIdReviewsAutoEnqueuePostErrors];
-
-export type AutoEnqueueApiV1ProjectsProjectIdReviewsAutoEnqueuePostResponses = {
-  /**
-   * Successful Response
-   */
-  200: unknown;
-};
-
-export type ScoreReviewApiV1ProjectsProjectIdReviewsTaskIdScorePostData = {
-  body: ScoreReviewRequest;
-  headers?: {
-    /**
-     * X-Csrf-Token
-     */
-    "x-csrf-token"?: string | null;
-  };
-  path: {
-    /**
-     * Project Id
-     */
-    project_id: string;
-    /**
-     * Task Id
-     */
-    task_id: string;
-  };
-  query?: never;
-  url: "/api/v1/projects/{project_id}/reviews/{task_id}/score";
-};
-
-export type ScoreReviewApiV1ProjectsProjectIdReviewsTaskIdScorePostErrors = {
-  /**
-   * Validation Error
-   */
-  422: HttpValidationError;
-};
-
-export type ScoreReviewApiV1ProjectsProjectIdReviewsTaskIdScorePostError =
-  ScoreReviewApiV1ProjectsProjectIdReviewsTaskIdScorePostErrors[keyof ScoreReviewApiV1ProjectsProjectIdReviewsTaskIdScorePostErrors];
-
-export type ScoreReviewApiV1ProjectsProjectIdReviewsTaskIdScorePostResponses = {
-  /**
-   * Successful Response
-   */
-  200: unknown;
-};
-
-export type RejectReviewApiV1ProjectsProjectIdReviewsTaskIdRejectPostData = {
-  body?: never;
-  headers?: {
-    /**
-     * X-Csrf-Token
-     */
-    "x-csrf-token"?: string | null;
-  };
-  path: {
-    /**
-     * Project Id
-     */
-    project_id: string;
-    /**
-     * Task Id
-     */
-    task_id: string;
-  };
-  query?: {
-    /**
-     * Opinion
-     */
-    opinion?: string | null;
-  };
-  url: "/api/v1/projects/{project_id}/reviews/{task_id}/reject";
-};
-
-export type RejectReviewApiV1ProjectsProjectIdReviewsTaskIdRejectPostErrors = {
-  /**
-   * Validation Error
-   */
-  422: HttpValidationError;
-};
-
-export type RejectReviewApiV1ProjectsProjectIdReviewsTaskIdRejectPostError =
-  RejectReviewApiV1ProjectsProjectIdReviewsTaskIdRejectPostErrors[keyof RejectReviewApiV1ProjectsProjectIdReviewsTaskIdRejectPostErrors];
-
-export type RejectReviewApiV1ProjectsProjectIdReviewsTaskIdRejectPostResponses =
-  {
-    /**
-     * Successful Response
-     */
-    200: unknown;
-  };
-
-export type SkipReviewApiV1ProjectsProjectIdReviewsTaskIdSkipPostData = {
-  body?: never;
-  headers?: {
-    /**
-     * X-Csrf-Token
-     */
-    "x-csrf-token"?: string | null;
-  };
-  path: {
-    /**
-     * Project Id
-     */
-    project_id: string;
-    /**
-     * Task Id
-     */
-    task_id: string;
-  };
-  query?: never;
-  url: "/api/v1/projects/{project_id}/reviews/{task_id}/skip";
-};
-
-export type SkipReviewApiV1ProjectsProjectIdReviewsTaskIdSkipPostErrors = {
-  /**
-   * Validation Error
-   */
-  422: HttpValidationError;
-};
-
-export type SkipReviewApiV1ProjectsProjectIdReviewsTaskIdSkipPostError =
-  SkipReviewApiV1ProjectsProjectIdReviewsTaskIdSkipPostErrors[keyof SkipReviewApiV1ProjectsProjectIdReviewsTaskIdSkipPostErrors];
-
-export type SkipReviewApiV1ProjectsProjectIdReviewsTaskIdSkipPostResponses = {
-  /**
-   * Successful Response
-   */
-  200: unknown;
-};
-
-export type ListScansApiV1ProjectsProjectIdSecurityScansGetData = {
-  body?: never;
-  path: {
-    /**
-     * Project Id
-     */
-    project_id: string;
-  };
-  query?: {
-    /**
-     * Limit
-     */
-    limit?: number;
-  };
-  url: "/api/v1/projects/{project_id}/security/scans";
-};
-
-export type ListScansApiV1ProjectsProjectIdSecurityScansGetErrors = {
-  /**
-   * Validation Error
-   */
-  422: HttpValidationError;
-};
-
-export type ListScansApiV1ProjectsProjectIdSecurityScansGetError =
-  ListScansApiV1ProjectsProjectIdSecurityScansGetErrors[keyof ListScansApiV1ProjectsProjectIdSecurityScansGetErrors];
-
-export type ListScansApiV1ProjectsProjectIdSecurityScansGetResponses = {
-  /**
-   * Successful Response
-   */
-  200: unknown;
-};
-
-export type TriggerScanApiV1ProjectsProjectIdSecurityScansPostData = {
-  body?: never;
-  headers?: {
-    /**
-     * X-Csrf-Token
-     */
-    "x-csrf-token"?: string | null;
-  };
-  path: {
-    /**
-     * Project Id
-     */
-    project_id: string;
-  };
-  query?: never;
-  url: "/api/v1/projects/{project_id}/security/scans";
-};
-
-export type TriggerScanApiV1ProjectsProjectIdSecurityScansPostErrors = {
-  /**
-   * Validation Error
-   */
-  422: HttpValidationError;
-};
-
-export type TriggerScanApiV1ProjectsProjectIdSecurityScansPostError =
-  TriggerScanApiV1ProjectsProjectIdSecurityScansPostErrors[keyof TriggerScanApiV1ProjectsProjectIdSecurityScansPostErrors];
-
-export type TriggerScanApiV1ProjectsProjectIdSecurityScansPostResponses = {
-  /**
-   * Successful Response
-   */
-  200: unknown;
-};
-
-export type GetScanApiV1ProjectsProjectIdSecurityScansScanIdGetData = {
-  body?: never;
-  path: {
-    /**
-     * Project Id
-     */
-    project_id: string;
-    /**
-     * Scan Id
-     */
-    scan_id: string;
-  };
-  query?: never;
-  url: "/api/v1/projects/{project_id}/security/scans/{scan_id}";
-};
-
-export type GetScanApiV1ProjectsProjectIdSecurityScansScanIdGetErrors = {
-  /**
-   * Validation Error
-   */
-  422: HttpValidationError;
-};
-
-export type GetScanApiV1ProjectsProjectIdSecurityScansScanIdGetError =
-  GetScanApiV1ProjectsProjectIdSecurityScansScanIdGetErrors[keyof GetScanApiV1ProjectsProjectIdSecurityScansScanIdGetErrors];
-
-export type GetScanApiV1ProjectsProjectIdSecurityScansScanIdGetResponses = {
-  /**
-   * Successful Response
-   */
-  200: unknown;
-};
-
-export type ListGatesApiV1ProjectsProjectIdGatesGetData = {
-  body?: never;
-  path: {
-    /**
-     * Project Id
-     */
-    project_id: string;
-  };
-  query?: never;
-  url: "/api/v1/projects/{project_id}/gates";
-};
-
-export type ListGatesApiV1ProjectsProjectIdGatesGetErrors = {
-  /**
-   * Validation Error
-   */
-  422: HttpValidationError;
-};
-
-export type ListGatesApiV1ProjectsProjectIdGatesGetError =
-  ListGatesApiV1ProjectsProjectIdGatesGetErrors[keyof ListGatesApiV1ProjectsProjectIdGatesGetErrors];
-
-export type ListGatesApiV1ProjectsProjectIdGatesGetResponses = {
-  /**
-   * Successful Response
-   */
-  200: unknown;
-};
-
-export type CreateGateApiV1ProjectsProjectIdGatesPostData = {
-  body: CreateGateRequest;
-  headers?: {
-    /**
-     * X-Csrf-Token
-     */
-    "x-csrf-token"?: string | null;
-  };
-  path: {
-    /**
-     * Project Id
-     */
-    project_id: string;
-  };
-  query?: never;
-  url: "/api/v1/projects/{project_id}/gates";
-};
-
-export type CreateGateApiV1ProjectsProjectIdGatesPostErrors = {
-  /**
-   * Validation Error
-   */
-  422: HttpValidationError;
-};
-
-export type CreateGateApiV1ProjectsProjectIdGatesPostError =
-  CreateGateApiV1ProjectsProjectIdGatesPostErrors[keyof CreateGateApiV1ProjectsProjectIdGatesPostErrors];
-
-export type CreateGateApiV1ProjectsProjectIdGatesPostResponses = {
-  /**
-   * Successful Response
-   */
-  200: unknown;
-};
-
-export type DeleteGateApiV1ProjectsProjectIdGatesGateIdDeleteData = {
-  body?: never;
-  headers?: {
-    /**
-     * X-Csrf-Token
-     */
-    "x-csrf-token"?: string | null;
-  };
-  path: {
-    /**
-     * Project Id
-     */
-    project_id: string;
-    /**
-     * Gate Id
-     */
-    gate_id: string;
-  };
-  query?: never;
-  url: "/api/v1/projects/{project_id}/gates/{gate_id}";
-};
-
-export type DeleteGateApiV1ProjectsProjectIdGatesGateIdDeleteErrors = {
-  /**
-   * Validation Error
-   */
-  422: HttpValidationError;
-};
-
-export type DeleteGateApiV1ProjectsProjectIdGatesGateIdDeleteError =
-  DeleteGateApiV1ProjectsProjectIdGatesGateIdDeleteErrors[keyof DeleteGateApiV1ProjectsProjectIdGatesGateIdDeleteErrors];
-
-export type DeleteGateApiV1ProjectsProjectIdGatesGateIdDeleteResponses = {
-  /**
-   * Successful Response
-   */
-  200: unknown;
-};
-
-export type GetGateApiV1ProjectsProjectIdGatesGateIdGetData = {
-  body?: never;
-  path: {
-    /**
-     * Project Id
-     */
-    project_id: string;
-    /**
-     * Gate Id
-     */
-    gate_id: string;
-  };
-  query?: never;
-  url: "/api/v1/projects/{project_id}/gates/{gate_id}";
-};
-
-export type GetGateApiV1ProjectsProjectIdGatesGateIdGetErrors = {
-  /**
-   * Validation Error
-   */
-  422: HttpValidationError;
-};
-
-export type GetGateApiV1ProjectsProjectIdGatesGateIdGetError =
-  GetGateApiV1ProjectsProjectIdGatesGateIdGetErrors[keyof GetGateApiV1ProjectsProjectIdGatesGateIdGetErrors];
-
-export type GetGateApiV1ProjectsProjectIdGatesGateIdGetResponses = {
-  /**
-   * Successful Response
-   */
-  200: unknown;
-};
-
-export type EvaluateGateApiV1ProjectsProjectIdGatesGateIdEvaluatePostData = {
-  body: EvaluateGateRequest;
-  headers?: {
-    /**
-     * X-Csrf-Token
-     */
-    "x-csrf-token"?: string | null;
-  };
-  path: {
-    /**
-     * Project Id
-     */
-    project_id: string;
-    /**
-     * Gate Id
-     */
-    gate_id: string;
-  };
-  query?: never;
-  url: "/api/v1/projects/{project_id}/gates/{gate_id}/evaluate";
-};
-
-export type EvaluateGateApiV1ProjectsProjectIdGatesGateIdEvaluatePostErrors = {
-  /**
-   * Validation Error
-   */
-  422: HttpValidationError;
-};
-
-export type EvaluateGateApiV1ProjectsProjectIdGatesGateIdEvaluatePostError =
-  EvaluateGateApiV1ProjectsProjectIdGatesGateIdEvaluatePostErrors[keyof EvaluateGateApiV1ProjectsProjectIdGatesGateIdEvaluatePostErrors];
-
-export type EvaluateGateApiV1ProjectsProjectIdGatesGateIdEvaluatePostResponses =
-  {
-    /**
-     * Successful Response
-     */
-    200: unknown;
-  };
-
-export type ExemptGateApiV1ProjectsProjectIdGatesGateIdExemptPostData = {
-  body: ExemptRequest;
-  headers?: {
-    /**
-     * X-Csrf-Token
-     */
-    "x-csrf-token"?: string | null;
-  };
-  path: {
-    /**
-     * Project Id
-     */
-    project_id: string;
-    /**
-     * Gate Id
-     */
-    gate_id: string;
-  };
-  query?: never;
-  url: "/api/v1/projects/{project_id}/gates/{gate_id}/exempt";
-};
-
-export type ExemptGateApiV1ProjectsProjectIdGatesGateIdExemptPostErrors = {
-  /**
-   * Validation Error
-   */
-  422: HttpValidationError;
-};
-
-export type ExemptGateApiV1ProjectsProjectIdGatesGateIdExemptPostError =
-  ExemptGateApiV1ProjectsProjectIdGatesGateIdExemptPostErrors[keyof ExemptGateApiV1ProjectsProjectIdGatesGateIdExemptPostErrors];
-
-export type ExemptGateApiV1ProjectsProjectIdGatesGateIdExemptPostResponses = {
-  /**
-   * Successful Response
-   */
-  200: unknown;
-};
-
-export type ChatApiV1ProjectsProjectIdTestAgentChatPostData = {
-  body: ChatRequest;
-  headers?: {
-    /**
-     * X-Csrf-Token
-     */
-    "x-csrf-token"?: string | null;
-  };
-  path: {
-    /**
-     * Project Id
-     */
-    project_id: string;
-  };
-  query?: never;
-  url: "/api/v1/projects/{project_id}/test-agent/chat";
-};
-
-export type ChatApiV1ProjectsProjectIdTestAgentChatPostErrors = {
-  /**
-   * Validation Error
-   */
-  422: HttpValidationError;
-};
-
-export type ChatApiV1ProjectsProjectIdTestAgentChatPostError =
-  ChatApiV1ProjectsProjectIdTestAgentChatPostErrors[keyof ChatApiV1ProjectsProjectIdTestAgentChatPostErrors];
-
-export type ChatApiV1ProjectsProjectIdTestAgentChatPostResponses = {
-  /**
-   * Successful Response
-   */
-  200: unknown;
-};
-
-export type ConfirmApiV1ProjectsProjectIdTestAgentConfirmPostData = {
-  body: ConfirmRequest;
-  headers?: {
-    /**
-     * X-Csrf-Token
-     */
-    "x-csrf-token"?: string | null;
-  };
-  path: {
-    /**
-     * Project Id
-     */
-    project_id: string;
-  };
-  query?: never;
-  url: "/api/v1/projects/{project_id}/test-agent/confirm";
-};
-
-export type ConfirmApiV1ProjectsProjectIdTestAgentConfirmPostErrors = {
-  /**
-   * Validation Error
-   */
-  422: HttpValidationError;
-};
-
-export type ConfirmApiV1ProjectsProjectIdTestAgentConfirmPostError =
-  ConfirmApiV1ProjectsProjectIdTestAgentConfirmPostErrors[keyof ConfirmApiV1ProjectsProjectIdTestAgentConfirmPostErrors];
-
-export type ConfirmApiV1ProjectsProjectIdTestAgentConfirmPostResponses = {
-  /**
-   * Successful Response
-   */
-  200: unknown;
-};
-
-export type GetSessionApiV1ProjectsProjectIdTestAgentSessionsSessionIdGetData =
-  {
-    body?: never;
-    path: {
-      /**
-       * Project Id
-       */
-      project_id: string;
-      /**
-       * Session Id
-       */
-      session_id: string;
-    };
-    query?: never;
-    url: "/api/v1/projects/{project_id}/test-agent/sessions/{session_id}";
-  };
-
-export type GetSessionApiV1ProjectsProjectIdTestAgentSessionsSessionIdGetErrors =
-  {
-    /**
-     * Validation Error
-     */
-    422: HttpValidationError;
-  };
-
-export type GetSessionApiV1ProjectsProjectIdTestAgentSessionsSessionIdGetError =
-  GetSessionApiV1ProjectsProjectIdTestAgentSessionsSessionIdGetErrors[keyof GetSessionApiV1ProjectsProjectIdTestAgentSessionsSessionIdGetErrors];
-
-export type GetSessionApiV1ProjectsProjectIdTestAgentSessionsSessionIdGetResponses =
-  {
-    /**
-     * Successful Response
-     */
-    200: unknown;
-  };
-
-export type ExecutePlaywrightAgentApiV1ProjectsProjectIdTestAgentPlaywrightExecutePostData =
-  {
-    body: PlaywrightAgentRequest;
-    headers?: {
-      /**
-       * X-Csrf-Token
-       */
-      "x-csrf-token"?: string | null;
-    };
-    path: {
-      /**
-       * Project Id
-       */
-      project_id: string;
-    };
-    query?: never;
-    url: "/api/v1/projects/{project_id}/test-agent/playwright/execute";
-  };
-
-export type ExecutePlaywrightAgentApiV1ProjectsProjectIdTestAgentPlaywrightExecutePostErrors =
-  {
-    /**
-     * Validation Error
-     */
-    422: HttpValidationError;
-  };
-
-export type ExecutePlaywrightAgentApiV1ProjectsProjectIdTestAgentPlaywrightExecutePostError =
-  ExecutePlaywrightAgentApiV1ProjectsProjectIdTestAgentPlaywrightExecutePostErrors[keyof ExecutePlaywrightAgentApiV1ProjectsProjectIdTestAgentPlaywrightExecutePostErrors];
-
-export type ExecutePlaywrightAgentApiV1ProjectsProjectIdTestAgentPlaywrightExecutePostResponses =
-  {
-    /**
-     * Successful Response
-     */
-    200: unknown;
-  };
-
-export type GetPlaywrightTaskApiV1ProjectsProjectIdTestAgentPlaywrightTasksTaskIdGetData =
-  {
-    body?: never;
-    path: {
-      /**
-       * Project Id
-       */
-      project_id: string;
-      /**
-       * Task Id
-       */
-      task_id: string;
-    };
-    query?: never;
-    url: "/api/v1/projects/{project_id}/test-agent/playwright/tasks/{task_id}";
-  };
-
-export type GetPlaywrightTaskApiV1ProjectsProjectIdTestAgentPlaywrightTasksTaskIdGetErrors =
-  {
-    /**
-     * Validation Error
-     */
-    422: HttpValidationError;
-  };
-
-export type GetPlaywrightTaskApiV1ProjectsProjectIdTestAgentPlaywrightTasksTaskIdGetError =
-  GetPlaywrightTaskApiV1ProjectsProjectIdTestAgentPlaywrightTasksTaskIdGetErrors[keyof GetPlaywrightTaskApiV1ProjectsProjectIdTestAgentPlaywrightTasksTaskIdGetErrors];
-
-export type GetPlaywrightTaskApiV1ProjectsProjectIdTestAgentPlaywrightTasksTaskIdGetResponses =
-  {
-    /**
-     * Successful Response
-     */
-    200: unknown;
-  };
-
-export type ListPlaywrightTasksApiV1ProjectsProjectIdTestAgentPlaywrightTasksGetData =
-  {
-    body?: never;
-    path: {
-      /**
-       * Project Id
-       */
-      project_id: string;
-    };
-    query?: never;
-    url: "/api/v1/projects/{project_id}/test-agent/playwright/tasks";
-  };
-
-export type ListPlaywrightTasksApiV1ProjectsProjectIdTestAgentPlaywrightTasksGetErrors =
-  {
-    /**
-     * Validation Error
-     */
-    422: HttpValidationError;
-  };
-
-export type ListPlaywrightTasksApiV1ProjectsProjectIdTestAgentPlaywrightTasksGetError =
-  ListPlaywrightTasksApiV1ProjectsProjectIdTestAgentPlaywrightTasksGetErrors[keyof ListPlaywrightTasksApiV1ProjectsProjectIdTestAgentPlaywrightTasksGetErrors];
-
-export type ListPlaywrightTasksApiV1ProjectsProjectIdTestAgentPlaywrightTasksGetResponses =
-  {
-    /**
-     * Successful Response
-     */
-    200: unknown;
-  };
-
-export type ListAccountsApiV1ProjectsProjectIdTestAccountsGetData = {
-  body?: never;
-  path: {
-    /**
-     * Project Id
-     */
-    project_id: string;
-  };
-  query?: never;
-  url: "/api/v1/projects/{project_id}/test-accounts";
-};
-
-export type ListAccountsApiV1ProjectsProjectIdTestAccountsGetErrors = {
-  /**
-   * Validation Error
-   */
-  422: HttpValidationError;
-};
-
-export type ListAccountsApiV1ProjectsProjectIdTestAccountsGetError =
-  ListAccountsApiV1ProjectsProjectIdTestAccountsGetErrors[keyof ListAccountsApiV1ProjectsProjectIdTestAccountsGetErrors];
-
-export type ListAccountsApiV1ProjectsProjectIdTestAccountsGetResponses = {
-  /**
-   * Successful Response
-   */
-  200: unknown;
-};
-
-export type CreateAccountApiV1ProjectsProjectIdTestAccountsPostData = {
-  body: CreateAccountRequest;
-  headers?: {
-    /**
-     * X-Csrf-Token
-     */
-    "x-csrf-token"?: string | null;
-  };
-  path: {
-    /**
-     * Project Id
-     */
-    project_id: string;
-  };
-  query?: never;
-  url: "/api/v1/projects/{project_id}/test-accounts";
-};
-
-export type CreateAccountApiV1ProjectsProjectIdTestAccountsPostErrors = {
-  /**
-   * Validation Error
-   */
-  422: HttpValidationError;
-};
-
-export type CreateAccountApiV1ProjectsProjectIdTestAccountsPostError =
-  CreateAccountApiV1ProjectsProjectIdTestAccountsPostErrors[keyof CreateAccountApiV1ProjectsProjectIdTestAccountsPostErrors];
-
-export type CreateAccountApiV1ProjectsProjectIdTestAccountsPostResponses = {
-  /**
-   * Successful Response
-   */
-  200: unknown;
-};
-
-export type DeleteAccountApiV1ProjectsProjectIdTestAccountsAccountIdDeleteData =
-  {
-    body?: never;
-    headers?: {
-      /**
-       * X-Csrf-Token
-       */
-      "x-csrf-token"?: string | null;
-    };
-    path: {
-      /**
-       * Project Id
-       */
-      project_id: string;
-      /**
-       * Account Id
-       */
-      account_id: string;
-    };
-    query?: never;
-    url: "/api/v1/projects/{project_id}/test-accounts/{account_id}";
-  };
-
-export type DeleteAccountApiV1ProjectsProjectIdTestAccountsAccountIdDeleteErrors =
-  {
-    /**
-     * Validation Error
-     */
-    422: HttpValidationError;
-  };
-
-export type DeleteAccountApiV1ProjectsProjectIdTestAccountsAccountIdDeleteError =
-  DeleteAccountApiV1ProjectsProjectIdTestAccountsAccountIdDeleteErrors[keyof DeleteAccountApiV1ProjectsProjectIdTestAccountsAccountIdDeleteErrors];
-
-export type DeleteAccountApiV1ProjectsProjectIdTestAccountsAccountIdDeleteResponses =
-  {
-    /**
-     * Successful Response
-     */
-    200: unknown;
-  };
-
-export type UpdateAccountApiV1ProjectsProjectIdTestAccountsAccountIdPatchData =
-  {
-    body: UpdateAccountRequest;
-    headers?: {
-      /**
-       * X-Csrf-Token
-       */
-      "x-csrf-token"?: string | null;
-    };
-    path: {
-      /**
-       * Project Id
-       */
-      project_id: string;
-      /**
-       * Account Id
-       */
-      account_id: string;
-    };
-    query?: never;
-    url: "/api/v1/projects/{project_id}/test-accounts/{account_id}";
-  };
-
-export type UpdateAccountApiV1ProjectsProjectIdTestAccountsAccountIdPatchErrors =
-  {
-    /**
-     * Validation Error
-     */
-    422: HttpValidationError;
-  };
-
-export type UpdateAccountApiV1ProjectsProjectIdTestAccountsAccountIdPatchError =
-  UpdateAccountApiV1ProjectsProjectIdTestAccountsAccountIdPatchErrors[keyof UpdateAccountApiV1ProjectsProjectIdTestAccountsAccountIdPatchErrors];
-
-export type UpdateAccountApiV1ProjectsProjectIdTestAccountsAccountIdPatchResponses =
-  {
-    /**
-     * Successful Response
-     */
-    200: unknown;
-  };
-
-export type StreamRunProgressApiV1ProjectsProjectIdRunsRunIdStreamGetData = {
-  body?: never;
-  path: {
-    /**
-     * Project Id
-     */
-    project_id: string;
-    /**
-     * Run Id
-     */
-    run_id: string;
-  };
-  query?: never;
-  url: "/api/v1/projects/{project_id}/runs/{run_id}/stream";
-};
-
-export type StreamRunProgressApiV1ProjectsProjectIdRunsRunIdStreamGetErrors = {
-  /**
-   * Validation Error
-   */
-  422: HttpValidationError;
-};
-
-export type StreamRunProgressApiV1ProjectsProjectIdRunsRunIdStreamGetError =
-  StreamRunProgressApiV1ProjectsProjectIdRunsRunIdStreamGetErrors[keyof StreamRunProgressApiV1ProjectsProjectIdRunsRunIdStreamGetErrors];
-
-export type StreamRunProgressApiV1ProjectsProjectIdRunsRunIdStreamGetResponses =
-  {
-    /**
-     * Successful Response
-     */
-    200: unknown;
-  };

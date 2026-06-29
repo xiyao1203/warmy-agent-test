@@ -16,6 +16,7 @@ import {
   XCircle,
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -28,7 +29,12 @@ import type {
   PlaywrightAgentTask,
   PlaywrightAgentRequest,
 } from "./api";
-import { confirmPlan, sendChatMessage, executePlaywrightAgent } from "./api";
+import {
+  confirmPlan,
+  sendChatMessage,
+  executePlaywrightAgent,
+  TestAgentApiError,
+} from "./api";
 
 export function TestAgentChat({ projectId }: { projectId: string }) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -39,6 +45,10 @@ export function TestAgentChat({ projectId }: { projectId: string }) {
   );
   const [status, setStatus] = useState("active");
   const [sending, setSending] = useState(false);
+  const [chatError, setChatError] = useState<{
+    message: string;
+    needsModel: boolean;
+  } | null>(null);
   const [confirming, setConfirming] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -54,6 +64,7 @@ export function TestAgentChat({ projectId }: { projectId: string }) {
     const msg = input.trim();
     setInput("");
     setSending(true);
+    setChatError(null);
     try {
       const res: ChatResponse = await sendChatMessage(
         projectId,
@@ -66,15 +77,12 @@ export function TestAgentChat({ projectId }: { projectId: string }) {
         Object.keys(res.plan_draft).length > 0 ? res.plan_draft : null,
       );
       setStatus(res.status);
-    } catch {
-      setMessages((prev) => [
-        ...prev,
-        {
-          role: "assistant",
-          content: "抱歉，处理失败，请重试。",
-          timestamp: new Date().toISOString(),
-        },
-      ]);
+    } catch (error) {
+      setInput(msg);
+      setChatError({
+        message: error instanceof Error ? error.message : "处理失败，请重试。",
+        needsModel: error instanceof TestAgentApiError && error.status === 409,
+      });
     } finally {
       setSending(false);
     }
@@ -194,6 +202,19 @@ export function TestAgentChat({ projectId }: { projectId: string }) {
             </Button>
           </Tooltip>
         </div>
+        {chatError ? (
+          <div
+            className="mx-auto mt-2 flex max-w-2xl items-center justify-between gap-3 rounded-[var(--radius-sm)] border border-[var(--danger)] bg-[var(--danger-subtle)] px-3 py-2 text-sm text-[var(--danger)]"
+            role="alert"
+          >
+            <span>{chatError.message}</span>
+            {chatError.needsModel ? (
+              <Button asChild variant="secondary">
+                <Link href={`/projects/${projectId}/models`}>配置模型</Link>
+              </Button>
+            ) : null}
+          </div>
+        ) : null}
       </div>
     </div>
   );
@@ -400,7 +421,11 @@ export function PlaywrightAgentPanel({ projectId }: { projectId: string }) {
       )}
 
       {/* Execute Button */}
-      <Tooltip content={executing ? "正在执行中..." : `执行 ${agentLabels[agentType]} Agent`}>
+      <Tooltip
+        content={
+          executing ? "正在执行中..." : `执行 ${agentLabels[agentType]} Agent`
+        }
+      >
         <Button
           className="w-full"
           disabled={executing || !prompt.trim()}
@@ -408,18 +433,18 @@ export function PlaywrightAgentPanel({ projectId }: { projectId: string }) {
           onClick={handleExecute}
           variant="primary"
         >
-        {executing ? (
-          <>
-            <Loader2 className="mr-1.5 size-4 animate-spin" />
-            执行中...
-          </>
-        ) : (
-          <>
-            <Play className="mr-1.5 size-4" />
-            执行 {agentLabels[agentType]}
-          </>
-        )}
-      </Button>
+          {executing ? (
+            <>
+              <Loader2 className="mr-1.5 size-4 animate-spin" />
+              执行中...
+            </>
+          ) : (
+            <>
+              <Play className="mr-1.5 size-4" />
+              执行 {agentLabels[agentType]}
+            </>
+          )}
+        </Button>
       </Tooltip>
 
       {/* Error Display */}
