@@ -1,9 +1,12 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
-// Mock next/navigation
+const { searchParamsState } = vi.hoisted(() => ({
+  searchParamsState: { value: "section=profile" },
+}));
+
 vi.mock("next/navigation", () => ({
-  useSearchParams: () => new URLSearchParams("section=profile"),
+  useSearchParams: () => new URLSearchParams(searchParamsState.value),
 }));
 
 // Mock next/link
@@ -14,6 +17,7 @@ vi.mock("next/link", () => ({
 }));
 
 import { AccountCenter } from "../account-center";
+import { normalizeAccountSection } from "../types";
 
 describe("AccountCenter", () => {
   it("renders the account center title", () => {
@@ -34,10 +38,10 @@ describe("AccountCenter", () => {
       </AccountCenter>
     );
 
-    expect(screen.getByText("个人资料")).toBeInTheDocument();
-    expect(screen.getByText("偏好设置")).toBeInTheDocument();
-    expect(screen.getByText("通知设置")).toBeInTheDocument();
-    expect(screen.getByText("账号安全")).toBeInTheDocument();
+    expect(screen.getAllByRole("link", { name: /个人资料/ })).toHaveLength(2);
+    expect(screen.getAllByRole("link", { name: /偏好设置/ })).toHaveLength(2);
+    expect(screen.getAllByRole("link", { name: /通知设置/ })).toHaveLength(2);
+    expect(screen.getAllByRole("link", { name: /账号安全/ })).toHaveLength(2);
   });
 
   it("renders children content", () => {
@@ -48,5 +52,25 @@ describe("AccountCenter", () => {
     );
 
     expect(screen.getByTestId("child-content")).toBeInTheDocument();
+  });
+
+  it("falls back to profile when the section query is invalid", () => {
+    searchParamsState.value = "section=unknown";
+
+    render(
+      <AccountCenter>
+        <div>Test content</div>
+      </AccountCenter>
+    );
+
+    for (const link of screen.getAllByRole("link", { name: /个人资料/ })) {
+      expect(link).toHaveAttribute("aria-current", "page");
+    }
+  });
+
+  it("normalizes known and unknown account sections", () => {
+    expect(normalizeAccountSection("security")).toBe("security");
+    expect(normalizeAccountSection("unknown")).toBe("profile");
+    expect(normalizeAccountSection(null)).toBe("profile");
   });
 });

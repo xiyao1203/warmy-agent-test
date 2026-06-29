@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Bell, Mail, Save } from "lucide-react";
+import { Save } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 
@@ -22,10 +22,12 @@ function NotificationToggle({
   onChange,
 }: NotificationToggleProps) {
   return (
-    <div className="flex items-center justify-between rounded-lg border border-[var(--border)] p-4">
-      <div>
-        <p className="font-medium">{label}</p>
-        <p className="text-sm text-[var(--text-muted)]">{description}</p>
+    <div className="flex items-center justify-between gap-5 px-4 py-4">
+      <div className="min-w-0">
+        <p className="text-sm font-medium">{label}</p>
+        <p className="mt-1 text-xs leading-5 text-[var(--text-muted)]">
+          {description}
+        </p>
       </div>
       <button
         aria-checked={enabled}
@@ -106,10 +108,15 @@ export function NotificationsSection() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="rounded-lg border border-[var(--border)] bg-[var(--card)] p-6">
-        <h3 className="mb-4 text-lg font-medium">通知偏好</h3>
-        <div className="space-y-3">
+    <div className="space-y-5">
+      <section className="overflow-hidden rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--surface)]">
+        <div className="border-b border-[var(--border)] px-4 py-3">
+          <h3 className="text-sm font-semibold">通知偏好</h3>
+          <p className="mt-0.5 text-xs text-[var(--text-muted)]">
+            选择需要接收的测试和系统消息。
+          </p>
+        </div>
+        <div className="divide-y divide-[var(--border)]">
           <NotificationToggle
             description="接收测试结果、系统更新等邮件通知"
             enabled={emailNotifications}
@@ -131,7 +138,7 @@ export function NotificationsSection() {
             }
           />
         </div>
-      </div>
+      </section>
 
       <div className="flex gap-2">
         <Button
@@ -145,7 +152,10 @@ export function NotificationsSection() {
       </div>
 
       {mutation.isError && (
-        <div className="rounded-md bg-[var(--danger-subtle)] p-3 text-sm text-[var(--danger)]">
+        <div
+          className="rounded-md bg-[var(--danger-subtle)] p-3 text-sm text-[var(--danger)]"
+          role="alert"
+        >
           保存失败，请重试
         </div>
       )}
