@@ -9,6 +9,7 @@ import {
   MessageSquare,
   Video,
 } from "lucide-react";
+import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 
 export function HelpDropdown() {
@@ -84,12 +85,11 @@ export function HelpDropdown() {
             </p>
           </div>
           {menuItems.map((item) => (
-            <a
+            <Link
               className="flex items-start gap-3 px-4 py-2.5 text-sm transition-colors hover:bg-[var(--surface-subtle)]"
               href={item.href}
               key={item.label}
               onClick={() => setOpen(false)}
-              target="_blank"
             >
               <span className="mt-0.5 text-[var(--text-muted)]">
                 {item.icon}
@@ -100,7 +100,7 @@ export function HelpDropdown() {
                   {item.description}
                 </p>
               </div>
-            </a>
+            </Link>
           ))}
           <div className="border-t border-[var(--border)]" />
           <div className="px-4 py-2">
