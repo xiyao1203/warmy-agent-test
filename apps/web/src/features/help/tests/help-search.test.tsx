@@ -34,6 +34,10 @@ describe("HelpSearch", () => {
     expect(screen.getByText("Agent 管理")).toBeInTheDocument();
     expect(screen.queryByText("数据集")).not.toBeInTheDocument();
     expect(screen.queryByText("测试计划")).not.toBeInTheDocument();
+    expect(screen.getByText("找到 1 条结果")).toBeInTheDocument();
+    expect(
+      screen.getByRole("region", { name: "搜索结果" })
+    ).toBeInTheDocument();
   });
 
   it("shows empty state when no topics match", () => {
@@ -43,6 +47,10 @@ describe("HelpSearch", () => {
     fireEvent.change(searchInput, { target: { value: "不存在的内容" } });
 
     expect(screen.getByText("没有找到相关内容")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "提交反馈" })).toHaveAttribute(
+      "href",
+      "/feedback"
+    );
   });
 
   it("clears search when clicking clear button", () => {

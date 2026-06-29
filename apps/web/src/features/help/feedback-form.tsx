@@ -32,7 +32,7 @@ export function FeedbackForm() {
       setError("");
     },
     onError: () => {
-      setError("提交失败，请重试");
+      setError("提交失败，请稍后重试。");
     },
   });
 
@@ -135,7 +135,10 @@ export function FeedbackForm() {
       </div>
 
       {error && (
-        <div className="rounded-md bg-[var(--danger-subtle)] p-3 text-sm text-[var(--danger)]">
+        <div
+          className="rounded-md bg-[var(--danger-subtle)] p-3 text-sm text-[var(--danger)]"
+          role="alert"
+        >
           {error}
         </div>
       )}

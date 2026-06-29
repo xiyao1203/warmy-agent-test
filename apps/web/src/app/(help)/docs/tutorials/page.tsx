@@ -1,105 +1,95 @@
-import { ArrowLeft, Play, Video } from "lucide-react";
-import Link from "next/link";
+import {
+  Bot,
+  Database,
+  FileChartColumn,
+  KeyRound,
+  ListChecks,
+  ShieldCheck,
+} from "lucide-react";
 
 const tutorials = [
   {
-    description: "了解如何创建和配置测试 Agent，包括连接参数设置和版本发布",
-    duration: "5:30",
-    thumbnail: "🎬",
-    title: "Agent 创建与配置",
+    description: "配置连接参数、验证连通性，并发布一个不可变 Agent 版本。",
+    duration: "约 6 分钟",
+    icon: Bot,
+    title: "Agent 创建与版本发布",
   },
   {
-    description: "学习如何创建数据集、批量导入测试用例和管理版本",
-    duration: "8:15",
-    thumbnail: "📋",
-    title: "数据集管理入门",
+    description: "组织数据集、批量导入测试用例，并管理可复现的资产版本。",
+    duration: "约 8 分钟",
+    icon: Database,
+    title: "数据集与测试用例",
   },
   {
-    description: "掌握测试计划的创建、配置和执行流程",
-    duration: "6:45",
-    thumbnail: "🚀",
-    title: "测试计划执行",
+    description: "组合 Agent、数据集、环境和评分器，形成可运行的测试计划。",
+    duration: "约 7 分钟",
+    icon: ListChecks,
+    title: "测试计划配置",
   },
   {
-    description: "了解如何查看测试报告、分析 Trace 和定位问题",
-    duration: "10:20",
-    thumbnail: "📊",
-    title: "测试报告分析",
+    description: "阅读运行状态、Agent Trace、评分证据和失败分类。",
+    duration: "约 10 分钟",
+    icon: FileChartColumn,
+    title: "结果与报告分析",
   },
   {
-    description: "学习如何配置环境模板和管理测试凭证",
-    duration: "4:50",
-    thumbnail: "🔧",
-    title: "环境配置指南",
+    description: "创建隔离的测试环境，安全管理变量与项目凭证。",
+    duration: "约 5 分钟",
+    icon: KeyRound,
+    title: "环境与凭证",
   },
   {
-    description: "了解如何使用安全测试功能检测敏感信息泄露",
-    duration: "7:00",
-    thumbnail: "🛡️",
+    description: "配置安全规则，识别敏感信息泄露、越权和高风险工具调用。",
+    duration: "约 7 分钟",
+    icon: ShieldCheck,
     title: "安全测试入门",
   },
-];
+] as const;
 
 export default function TutorialsPage() {
   return (
-    <div className="min-h-screen bg-[var(--background)]">
-      {/* 顶部导航栏 */}
-      <header className="sticky top-0 z-50 border-b border-[var(--border)] bg-[var(--surface)]/80 backdrop-blur-sm">
-        <div className="mx-auto flex h-14 max-w-[900px] items-center justify-between px-6">
-          <Link
-            className="flex items-center gap-2 text-sm font-semibold transition-colors hover:text-[var(--accent)]"
-            href="/projects"
-          >
-            <ArrowLeft className="size-4" />
-            返回应用
-          </Link>
-          <span className="text-sm font-semibold">帮助中心</span>
-          <div className="w-20" />
-        </div>
+    <div className="space-y-8">
+      <header className="max-w-3xl">
+        <p className="text-sm font-medium text-[var(--text-muted)]">
+          帮助中心 / 教程
+        </p>
+        <h1 className="mt-2 text-2xl font-semibold tracking-tight">产品教程</h1>
+        <p className="mt-2 text-sm leading-6 text-[var(--text-muted)]">
+          按工作流程阅读平台核心能力。当前提供图文指南，不展示尚未接入的视频播放入口。
+        </p>
       </header>
 
-      <div className="mx-auto max-w-[900px] px-6 py-8">
-        <header className="mb-8">
-          <div className="flex items-center gap-3">
-            <Video className="size-8 text-[var(--accent)]" />
-            <div>
-              <h1 className="text-2xl font-semibold tracking-tight">
-                视频教程
-              </h1>
-              <p className="mt-1 text-sm text-[var(--text-muted)]">
-                通过视频快速学习平台的核心功能
-              </p>
-            </div>
-          </div>
-        </header>
-
-        <div className="grid gap-4 sm:grid-cols-2">
-          {tutorials.map((tutorial, i) => (
-            <div
-              className="group cursor-pointer rounded-xl border border-[var(--border)] bg-[var(--surface)] transition-all hover:border-[var(--accent)] hover:shadow-md"
-              key={i}
+      <section aria-labelledby="tutorial-list-title">
+        <h2 className="sr-only" id="tutorial-list-title">
+          教程目录
+        </h2>
+        <div className="overflow-hidden rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--surface)]">
+          {tutorials.map(({ description, duration, icon: Icon, title }) => (
+            <article
+              className="flex items-start gap-4 border-b border-[var(--border)] px-4 py-4 last:border-b-0 sm:px-5"
+              key={title}
             >
-              <div className="flex h-32 items-center justify-center rounded-t-xl bg-[var(--surface-subtle)] text-4xl">
-                {tutorial.thumbnail}
-              </div>
-              <div className="p-4">
-                <div className="flex items-center justify-between">
-                  <h3 className="font-semibold group-hover:text-[var(--accent)]">
-                    {tutorial.title}
-                  </h3>
-                  <span className="flex items-center gap-1 text-xs text-[var(--text-muted)]">
-                    <Play className="size-3" />
-                    {tutorial.duration}
+              <span className="flex size-9 shrink-0 items-center justify-center rounded-[var(--radius-sm)] border border-[var(--border)] bg-[var(--background)] text-[var(--text-muted)]">
+                <Icon className="size-4" />
+              </span>
+              <div className="min-w-0 flex-1">
+                <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                  <h3 className="text-sm font-semibold">{title}</h3>
+                  <span className="text-xs text-[var(--text-subtle)]">
+                    {duration}
                   </span>
                 </div>
-                <p className="mt-2 text-sm text-[var(--text-muted)]">
-                  {tutorial.description}
+                <p className="mt-1 text-sm leading-5 text-[var(--text-muted)]">
+                  {description}
                 </p>
               </div>
-            </div>
+              <span className="shrink-0 rounded-full bg-[var(--surface-subtle)] px-2 py-1 text-xs font-medium text-[var(--text-muted)]">
+                阅读指南
+              </span>
+            </article>
           ))}
         </div>
-      </div>
+      </section>
     </div>
   );
 }

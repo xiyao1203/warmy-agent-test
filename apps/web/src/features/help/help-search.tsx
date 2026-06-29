@@ -18,13 +18,14 @@ interface HelpSearchProps {
 
 export function HelpSearch({ topics }: HelpSearchProps) {
   const [query, setQuery] = useState("");
+  const normalizedQuery = query.trim().toLocaleLowerCase();
 
-  const filteredTopics = query
+  const filteredTopics = normalizedQuery
     ? topics.filter(
         (topic) =>
-          topic.title.toLowerCase().includes(query.toLowerCase()) ||
-          topic.description.toLowerCase().includes(query.toLowerCase()) ||
-          topic.category.toLowerCase().includes(query.toLowerCase())
+          topic.title.toLocaleLowerCase().includes(normalizedQuery) ||
+          topic.description.toLocaleLowerCase().includes(normalizedQuery) ||
+          topic.category.toLocaleLowerCase().includes(normalizedQuery)
       )
     : topics;
 
@@ -50,21 +51,42 @@ export function HelpSearch({ topics }: HelpSearchProps) {
         )}
       </div>
 
+      {normalizedQuery && (
+        <p
+          aria-live="polite"
+          className="text-xs text-[var(--text-muted)]"
+        >
+          找到 {filteredTopics.length} 条结果
+        </p>
+      )}
+
       {filteredTopics.length === 0 ? (
         <div className="rounded-lg border border-[var(--border)] bg-[var(--card)] p-8 text-center">
           <Search className="mx-auto size-8 text-[var(--text-muted)]" />
           <p className="mt-3 text-sm text-[var(--text-muted)]">
             没有找到相关内容
           </p>
-          <button
-            className="mt-2 text-sm text-[var(--primary)] hover:underline"
-            onClick={() => setQuery("")}
-          >
-            清空搜索
-          </button>
+          <div className="mt-3 flex items-center justify-center gap-3 text-sm">
+            <button
+              className="text-[var(--primary)] hover:underline"
+              onClick={() => setQuery("")}
+            >
+              清空搜索
+            </button>
+            <span aria-hidden="true" className="text-[var(--border-strong)]">
+              ·
+            </span>
+            <Link className="text-[var(--primary)] hover:underline" href="/feedback">
+              提交反馈
+            </Link>
+          </div>
         </div>
       ) : (
-        <div className="grid gap-3 sm:grid-cols-2">
+        <div
+          aria-label="搜索结果"
+          className="grid gap-3 sm:grid-cols-2"
+          role="region"
+        >
           {filteredTopics.map((topic) => (
             <Link
               key={topic.id}
