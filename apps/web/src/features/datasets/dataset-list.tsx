@@ -32,6 +32,7 @@ import {
   tableActionCellClass,
   tableActionHeadClass,
 } from "@/components/ui/table-actions";
+import { Skeleton, Tooltip } from "@/components/uiverse";
 
 export function DatasetList({
   datasets = [],
@@ -48,7 +49,7 @@ export function DatasetList({
   onDelete?: (datasetId: string) => Promise<unknown>;
   projectId: string;
 }) {
-  if (loading) return <StatusPanel title="正在加载数据集…" />;
+  if (loading) return <DatasetListSkeleton />;
   if (error === "not-found") {
     return <StatusPanel title="项目不存在或你无权访问" />;
   }
@@ -66,8 +67,12 @@ export function DatasetList({
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <ImportWizard />
-          <CreateDatasetDialog onCreate={onCreate} />
+          <Tooltip content="从文件导入测试用例">
+            <ImportWizard />
+          </Tooltip>
+          <Tooltip content="创建新的数据集">
+            <CreateDatasetDialog onCreate={onCreate} />
+          </Tooltip>
         </div>
       </header>
       <section className="mt-5 overflow-hidden rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--surface)]">
@@ -277,6 +282,37 @@ function StatusPanel({ title }: { title: string }) {
           请稍后刷新重试，或联系超级管理员。
         </p>
       </div>
+    </div>
+  );
+}
+
+function DatasetListSkeleton() {
+  return (
+    <div className="min-w-0 px-6 py-6">
+      {/* Header skeleton */}
+      <header className="flex items-start justify-between gap-4 border-b border-[var(--border)] pb-5">
+        <div>
+          <Skeleton className="h-8 w-40" />
+          <Skeleton className="mt-2 h-4 w-56" />
+        </div>
+        <Skeleton className="h-9 w-24" />
+      </header>
+
+      {/* Table skeleton */}
+      <section className="mt-5 overflow-hidden rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--surface)]">
+        <div className="p-4">
+          <div className="space-y-4">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <div key={i} className="flex items-center gap-4">
+                <Skeleton className="h-4 w-40" />
+                <Skeleton className="h-4 w-24" />
+                <Skeleton className="h-4 w-20" />
+                <Skeleton className="ml-auto h-4 w-16" />
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
     </div>
   );
 }

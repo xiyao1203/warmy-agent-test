@@ -20,6 +20,7 @@ import { useEffect, useRef, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { ChatEmptyState, TypingIndicator, Tooltip } from "@/components/uiverse";
 
 import type {
   ChatMessage,
@@ -131,20 +132,29 @@ export function TestAgentChat({ projectId }: { projectId: string }) {
       {/* Messages */}
       <div ref={scrollRef} className="flex-1 overflow-y-auto px-6 py-4">
         {messages.length === 0 ? (
-          <div className="flex h-full flex-col items-center justify-center">
-            <Bot className="size-12 text-[var(--text-muted)]" />
-            <p className="mt-4 text-sm font-medium text-[var(--text-muted)]">
-              告诉我您想测试什么
-            </p>
-            <p className="mt-1 text-xs text-[var(--text-muted)]">
-              例如：&ldquo;测试登录流程，使用 admin 账号&rdquo;
-            </p>
-          </div>
+          <ChatEmptyState
+            onSuggestionClick={(suggestion) => {
+              setInput(suggestion);
+            }}
+            suggestions={[
+              "测试登录流程，使用 admin 账号",
+              "验证用户注册表单的必填字段",
+              "检查购物车添加和删除功能",
+            ]}
+          />
         ) : (
           <div className="mx-auto max-w-2xl space-y-4">
             {messages.map((msg, i) => (
               <MessageBubble key={i} message={msg} />
             ))}
+            {sending ? (
+              <div className="flex gap-3">
+                <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-[var(--surface-subtle)]">
+                  <Bot className="size-4" />
+                </div>
+                <TypingIndicator />
+              </div>
+            ) : null}
             {planDraft ? (
               <PlanCard
                 onConfirm={handleConfirm}
@@ -173,14 +183,16 @@ export function TestAgentChat({ projectId }: { projectId: string }) {
             placeholder="描述您的测试需求..."
             value={input}
           />
-          <Button
-            disabled={sending || !input.trim() || status === "completed"}
-            loading={sending}
-            onClick={handleSend}
-            variant="primary"
-          >
-            <Send className="size-4" />
-          </Button>
+          <Tooltip content="发送消息 (Enter)">
+            <Button
+              disabled={sending || !input.trim() || status === "completed"}
+              loading={sending}
+              onClick={handleSend}
+              variant="primary"
+            >
+              <Send className="size-4" />
+            </Button>
+          </Tooltip>
         </div>
       </div>
     </div>
@@ -388,13 +400,14 @@ export function PlaywrightAgentPanel({ projectId }: { projectId: string }) {
       )}
 
       {/* Execute Button */}
-      <Button
-        className="w-full"
-        disabled={executing || !prompt.trim()}
-        loading={executing}
-        onClick={handleExecute}
-        variant="primary"
-      >
+      <Tooltip content={executing ? "正在执行中..." : `执行 ${agentLabels[agentType]} Agent`}>
+        <Button
+          className="w-full"
+          disabled={executing || !prompt.trim()}
+          loading={executing}
+          onClick={handleExecute}
+          variant="primary"
+        >
         {executing ? (
           <>
             <Loader2 className="mr-1.5 size-4 animate-spin" />
@@ -407,6 +420,7 @@ export function PlaywrightAgentPanel({ projectId }: { projectId: string }) {
           </>
         )}
       </Button>
+      </Tooltip>
 
       {/* Error Display */}
       {error && (

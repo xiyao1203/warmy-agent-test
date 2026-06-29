@@ -1,11 +1,17 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 
 import { LoginForm } from "./login-form";
 
 export function LoginScreen({ returnTo }: { returnTo?: string }) {
   const router = useRouter();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   return (
     <main className="grid min-h-screen lg:grid-cols-2">
@@ -46,7 +52,7 @@ export function LoginScreen({ returnTo }: { returnTo?: string }) {
 
       {/* 右侧登录表单 */}
       <section className="flex items-center justify-center px-6 py-14 lg:px-16">
-        <div className="w-full max-w-[400px]">
+        <div className={`w-full max-w-[400px] transition-all duration-700 ${mounted ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0"}`}>
           {/* 移动端品牌标识 */}
           <div className="mb-10 lg:hidden">
             <p className="text-sm font-semibold tracking-wide text-[var(--accent)]">

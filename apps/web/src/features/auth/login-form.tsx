@@ -6,6 +6,7 @@ import type { LoginRequest, UserResponse } from "@warmy/generated-api-client";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PulseButton } from "@/components/uiverse";
 
 import { login } from "./api";
 import { safeReturnTo } from "./session";
@@ -166,14 +167,13 @@ export function LoginForm({
         ) : null}
       </div>
 
-      <Button
+      <PulseButton
         className="mt-2 w-full"
         loading={pending}
         type="submit"
-        variant="primary"
       >
         {pending ? "正在登录…" : "登录"}
-      </Button>
+      </PulseButton>
     </form>
   );
 }

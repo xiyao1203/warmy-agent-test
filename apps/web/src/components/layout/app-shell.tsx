@@ -24,10 +24,16 @@ import {
   Users,
 } from "lucide-react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
 
+import { logout } from "@/features/auth";
 import { ProjectSwitcher } from "@/features/projects";
+import { Tooltip } from "@/components/uiverse";
 import { canManageUsers } from "@/lib/permissions";
+
+import { HelpDropdown } from "./help-dropdown";
+import { UserDropdown } from "./user-dropdown";
 
 type AppShellProps = {
   children: ReactNode;
@@ -81,35 +87,21 @@ export function AppShell({
           />
         </label>
         <div className="flex items-center justify-end gap-2">
-          <button
-            aria-label="帮助"
-            className="grid size-8 place-items-center rounded-[var(--radius-sm)] text-[var(--text-muted)] hover:bg-[var(--surface-subtle)] hover:text-[var(--text)]"
-            type="button"
-          >
-            <HelpCircle aria-hidden="true" className="size-4" />
-          </button>
-          <button
-            aria-label="通知"
-            className="grid size-8 place-items-center rounded-[var(--radius-sm)] text-[var(--text-muted)] hover:bg-[var(--surface-subtle)] hover:text-[var(--text)]"
-            type="button"
-          >
-            <Bell aria-hidden="true" className="size-4" />
-          </button>
-          <button
-            aria-label={`当前用户：${user.display_name}`}
-            className="flex h-8 shrink-0 items-center gap-2 rounded-[var(--radius-sm)] px-2 text-sm hover:bg-[var(--surface-subtle)]"
-            title={`${user.display_name} · ${user.email}`}
-            type="button"
-          >
-            <span className="grid size-7 place-items-center rounded-full bg-[var(--accent)] text-xs font-semibold text-white">
-              {user.display_name.slice(0, 1).toUpperCase()}
-            </span>
-            <span className="max-[900px]:hidden">{user.display_name}</span>
-            <ChevronDown
-              aria-hidden="true"
-              className="size-3 text-[var(--text-muted)] max-[900px]:hidden"
-            />
-          </button>
+          <HelpDropdown />
+          <Tooltip content="通知中心">
+            <button
+              aria-label="通知"
+              className="grid size-8 place-items-center rounded-[var(--radius-sm)] text-[var(--text-muted)] transition-colors hover:bg-[var(--surface-subtle)] hover:text-[var(--text)]"
+              type="button"
+            >
+              <Bell aria-hidden="true" className="size-4" />
+            </button>
+          </Tooltip>
+          <UserDropdown
+            displayName={user.display_name}
+            email={user.email}
+            onLogout={logout}
+          />
         </div>
       </header>
       <div
@@ -124,14 +116,7 @@ export function AppShell({
             项目导航
           </p>
           <nav aria-label="项目导航" className="space-y-1">
-            <Link
-              className="flex h-9 items-center gap-3 rounded-[var(--radius-sm)] px-3 text-sm text-[var(--text-muted)] hover:bg-[var(--surface-subtle)] hover:text-[var(--text)] max-[1279px]:justify-center max-[1279px]:px-0"
-              href={projectHref}
-              title="概览"
-            >
-              <LayoutDashboard aria-hidden="true" className="size-4 shrink-0" />
-              <span className="max-[1279px]:sr-only">概览</span>
-            </Link>
+            <OverviewNavLink href={projectHref} />
             {activeProjectId ? (
               <>
                 <ProjectNavLink
@@ -267,6 +252,26 @@ export function AppShell({
   );
 }
 
+function OverviewNavLink({ href }: { href: string }) {
+  const pathname = usePathname();
+  const isActive = pathname === href;
+
+  return (
+    <Link
+      className={`flex h-9 items-center gap-3 rounded-[var(--radius-sm)] px-3 text-sm transition-colors max-[1279px]:justify-center max-[1279px]:px-0 ${
+        isActive
+          ? "bg-[var(--accent-subtle)] font-medium text-[var(--accent)]"
+          : "text-[var(--text-muted)] hover:bg-[var(--surface-subtle)] hover:text-[var(--text)]"
+      }`}
+      href={href}
+      title="概览"
+    >
+      <LayoutDashboard aria-hidden="true" className="size-4 shrink-0" />
+      <span className="max-[1279px]:sr-only">概览</span>
+    </Link>
+  );
+}
+
 function ProjectNavLink({
   href,
   icon,
@@ -276,9 +281,16 @@ function ProjectNavLink({
   icon: ReactNode;
   label: string;
 }) {
+  const pathname = usePathname();
+  const isActive = pathname === href || pathname.startsWith(href + "/");
+
   return (
     <Link
-      className="flex h-9 items-center gap-3 rounded-[var(--radius-sm)] px-3 text-sm text-[var(--text-muted)] hover:bg-[var(--surface-subtle)] hover:text-[var(--text)] max-[1279px]:justify-center max-[1279px]:px-0"
+      className={`flex h-9 items-center gap-3 rounded-[var(--radius-sm)] px-3 text-sm transition-colors max-[1279px]:justify-center max-[1279px]:px-0 ${
+        isActive
+          ? "bg-[var(--accent-subtle)] font-medium text-[var(--accent)]"
+          : "text-[var(--text-muted)] hover:bg-[var(--surface-subtle)] hover:text-[var(--text)]"
+      }`}
       href={href}
       title={label}
     >

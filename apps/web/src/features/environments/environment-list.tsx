@@ -26,6 +26,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Skeleton, Tooltip } from "@/components/uiverse";
 
 type EnvironmentListProps = {
   environments?: EnvironmentTemplateResponse[];
@@ -49,11 +50,7 @@ export function EnvironmentList({
   onDelete,
 }: EnvironmentListProps) {
   if (loading) {
-    return (
-      <div className="grid min-h-[calc(100vh-3rem)] place-items-center text-sm">
-        <p className="text-[var(--text-muted)]">正在加载环境模板…</p>
-      </div>
-    );
+    return <EnvironmentListSkeleton />;
   }
   if (error === "not-found") {
     return (
@@ -134,13 +131,13 @@ export function EnvironmentList({
                   </TableCell>
                   <TableCell className="text-center">
                     {onDelete && (
-                      <button
+                      <Button
                         aria-label={`删除${template.name}`}
-                        className="text-sm text-[var(--danger)] hover:underline"
                         onClick={() => onDelete(template.id)}
+                        variant="danger"
                       >
                         删除
-                      </button>
+                      </Button>
                     )}
                   </TableCell>
                 </TableRow>
@@ -241,5 +238,35 @@ function CreateTemplateDialog({
         </div>
       </DialogContent>
     </Dialog>
+  );
+}
+
+function EnvironmentListSkeleton() {
+  return (
+    <div className="min-w-0 px-6 py-6">
+      {/* Header skeleton */}
+      <header className="flex items-start justify-between gap-4 border-b border-[var(--border)] pb-5">
+        <div>
+          <Skeleton className="h-8 w-40" />
+          <Skeleton className="mt-2 h-4 w-56" />
+        </div>
+        <Skeleton className="h-9 w-28" />
+      </header>
+
+      {/* Table skeleton */}
+      <section className="mt-5 overflow-hidden rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--surface)]">
+        <div className="p-4">
+          <div className="space-y-4">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <div key={i} className="flex items-center gap-4">
+                <Skeleton className="h-4 w-32" />
+                <Skeleton className="h-4 w-20" />
+                <Skeleton className="ml-auto h-4 w-16" />
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+    </div>
   );
 }

@@ -15,6 +15,8 @@ import { useRef, useState } from "react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Skeleton, SkeletonText } from "@/components/uiverse";
+import { Tooltip } from "@/components/uiverse";
 
 import type { ArtifactItem } from "./api";
 import { artifactDownloadUrl, uploadArtifact } from "./api";
@@ -45,11 +47,7 @@ export function RunDetail({
   const [cancelling, setCancelling] = useState(false);
   const [activeTab, setActiveTab] = useState<"overview" | "cases" | "trace" | "artifacts">("overview");
   if (loading || !run) {
-    return (
-      <div className="grid min-h-[calc(100vh-3rem)] place-items-center text-sm">
-        正在加载运行详情…
-      </div>
-    );
+    return <RunDetailSkeleton />;
   }
   const canCancel = run.status === "queued" || run.status === "running";
   const finishedCases =
@@ -72,22 +70,26 @@ export function RunDetail({
         </div>
         <div className="flex items-center gap-2">
           <StatusBadge status={run.status} />
-          <ReportDownloadButton projectId={projectId} runId={run.id} />
-          <Button
-            disabled={!canCancel || cancelling}
-            loading={cancelling}
-            onClick={async () => {
-              setCancelling(true);
-              try {
-                await onCancel();
-              } finally {
-                setCancelling(false);
-              }
-            }}
-          >
-            <Square aria-hidden="true" className="mr-1.5 size-4" />
-            取消运行
-          </Button>
+          <Tooltip content="下载测试报告（JSON/JUnit/HTML）">
+            <ReportDownloadButton projectId={projectId} runId={run.id} />
+          </Tooltip>
+          <Tooltip content={canCancel ? "取消正在运行的测试" : "只有排队中或运行中的任务才能取消"}>
+            <Button
+              disabled={!canCancel || cancelling}
+              loading={cancelling}
+              onClick={async () => {
+                setCancelling(true);
+                try {
+                  await onCancel();
+                } finally {
+                  setCancelling(false);
+                }
+              }}
+            >
+              <Square aria-hidden="true" className="mr-1.5 size-4" />
+              取消运行
+            </Button>
+          </Tooltip>
         </div>
       </header>
       {/* Tabs */}
@@ -370,4 +372,48 @@ function formatBytes(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`;
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+function RunDetailSkeleton() {
+  return (
+    <div className="min-w-0 bg-[var(--background)] px-6 py-6">
+      {/* Header skeleton */}
+      <header className="flex flex-wrap items-start justify-between gap-4 border-b border-[var(--border)] pb-5">
+        <div>
+          <Skeleton className="h-3 w-16" />
+          <Skeleton className="mt-1 h-8 w-32" />
+          <Skeleton className="mt-2 h-4 w-48" />
+        </div>
+        <div className="flex items-center gap-2">
+          <Skeleton className="h-6 w-20" />
+          <Skeleton className="h-8 w-24" />
+          <Skeleton className="h-8 w-20" />
+        </div>
+      </header>
+
+      {/* Summary skeleton */}
+      <dl className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+        {Array.from({ length: 6 }).map((_, i) => (
+          <div key={i} className="rounded-[var(--radius-sm)] border border-[var(--border)] p-3">
+            <Skeleton className="h-3 w-12" />
+            <Skeleton className="mt-1 h-7 w-16" />
+          </div>
+        ))}
+      </dl>
+
+      {/* Tabs skeleton */}
+      <div className="mt-6 border-b border-[var(--border)]">
+        <div className="flex gap-4">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <Skeleton key={i} className="h-8 w-16" />
+          ))}
+        </div>
+      </div>
+
+      {/* Content skeleton */}
+      <div className="mt-6">
+        <SkeletonText lines={5} />
+      </div>
+    </div>
+  );
 }

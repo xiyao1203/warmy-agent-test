@@ -33,6 +33,7 @@ import {
   tableActionCellClass,
   tableActionHeadClass,
 } from "@/components/ui/table-actions";
+import { Skeleton, SkeletonText, Tooltip } from "@/components/uiverse";
 
 type AgentListProps = {
   agents?: AgentResponse[];
@@ -56,7 +57,7 @@ export function AgentList({
   onDelete,
   projectId,
 }: AgentListProps) {
-  if (loading) return <StatusPanel title="正在加载 Agent…" />;
+  if (loading) return <AgentListSkeleton />;
   if (error === "not-found") {
     return <StatusPanel title="项目不存在或你无权访问" />;
   }
@@ -73,7 +74,9 @@ export function AgentList({
             管理待测 Agent、连接配置和不可变发布版本。
           </p>
         </div>
-        <CreateAgentDialog onCreate={onCreate} />
+        <Tooltip content="创建新的 Agent 配置">
+          <CreateAgentDialog onCreate={onCreate} />
+        </Tooltip>
       </header>
       <section className="mt-5 overflow-hidden rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--surface)]">
         {!agents.length ? (
@@ -302,6 +305,37 @@ function StatusPanel({ title }: { title: string }) {
           请稍后刷新重试，或联系超级管理员。
         </p>
       </div>
+    </div>
+  );
+}
+
+function AgentListSkeleton() {
+  return (
+    <div className="min-w-0 px-6 py-6">
+      {/* Header skeleton */}
+      <header className="flex items-start justify-between gap-4 border-b border-[var(--border)] pb-5">
+        <div>
+          <Skeleton className="h-8 w-48" />
+          <Skeleton className="mt-2 h-4 w-64" />
+        </div>
+        <Skeleton className="h-9 w-24" />
+      </header>
+
+      {/* Table skeleton */}
+      <section className="mt-5 overflow-hidden rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--surface)]">
+        <div className="p-4">
+          <div className="space-y-4">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <div key={i} className="flex items-center gap-4">
+                <Skeleton className="h-4 w-32" />
+                <Skeleton className="h-4 w-24" />
+                <Skeleton className="h-4 w-20" />
+                <Skeleton className="ml-auto h-4 w-16" />
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
     </div>
   );
 }
