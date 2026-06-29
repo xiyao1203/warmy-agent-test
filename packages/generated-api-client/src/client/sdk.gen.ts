@@ -21,24 +21,60 @@ import type {
   ArchiveProjectApiV1ProjectsProjectIdArchivePostData,
   ArchiveProjectApiV1ProjectsProjectIdArchivePostErrors,
   ArchiveProjectApiV1ProjectsProjectIdArchivePostResponses,
+  AutoEnqueueApiV1ProjectsProjectIdReviewsAutoEnqueuePostData,
+  AutoEnqueueApiV1ProjectsProjectIdReviewsAutoEnqueuePostErrors,
+  AutoEnqueueApiV1ProjectsProjectIdReviewsAutoEnqueuePostResponses,
+  BatchDeleteCasesApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdCasesBatchDeletePostData,
+  BatchDeleteCasesApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdCasesBatchDeletePostErrors,
+  BatchDeleteCasesApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdCasesBatchDeletePostResponses,
   CancelRunApiV1ProjectsProjectIdRunsRunIdCancelPostData,
   CancelRunApiV1ProjectsProjectIdRunsRunIdCancelPostErrors,
   CancelRunApiV1ProjectsProjectIdRunsRunIdCancelPostResponses,
+  ChangePasswordApiV1AuthChangePasswordPostData,
+  ChangePasswordApiV1AuthChangePasswordPostErrors,
+  ChangePasswordApiV1AuthChangePasswordPostResponses,
+  ChatApiV1ProjectsProjectIdTestAgentChatPostData,
+  ChatApiV1ProjectsProjectIdTestAgentChatPostErrors,
+  ChatApiV1ProjectsProjectIdTestAgentChatPostResponses,
+  ConfirmApiV1ProjectsProjectIdTestAgentConfirmPostData,
+  ConfirmApiV1ProjectsProjectIdTestAgentConfirmPostErrors,
+  ConfirmApiV1ProjectsProjectIdTestAgentConfirmPostResponses,
+  CreateAccountApiV1ProjectsProjectIdTestAccountsPostData,
+  CreateAccountApiV1ProjectsProjectIdTestAccountsPostErrors,
+  CreateAccountApiV1ProjectsProjectIdTestAccountsPostResponses,
   CreateAgentApiV1ProjectsProjectIdAgentsPostData,
   CreateAgentApiV1ProjectsProjectIdAgentsPostErrors,
   CreateAgentApiV1ProjectsProjectIdAgentsPostResponses,
   CreateDatasetApiV1ProjectsProjectIdDatasetsPostData,
   CreateDatasetApiV1ProjectsProjectIdDatasetsPostErrors,
   CreateDatasetApiV1ProjectsProjectIdDatasetsPostResponses,
+  CreateExperimentApiV1ProjectsProjectIdExperimentsPostData,
+  CreateExperimentApiV1ProjectsProjectIdExperimentsPostErrors,
+  CreateExperimentApiV1ProjectsProjectIdExperimentsPostResponses,
+  CreateFeedbackApiV1FeedbackPostData,
+  CreateFeedbackApiV1FeedbackPostErrors,
+  CreateFeedbackApiV1FeedbackPostResponses,
+  CreateGateApiV1ProjectsProjectIdGatesPostData,
+  CreateGateApiV1ProjectsProjectIdGatesPostErrors,
+  CreateGateApiV1ProjectsProjectIdGatesPostResponses,
   CreatePlanApiV1ProjectsProjectIdTestPlansPostData,
   CreatePlanApiV1ProjectsProjectIdTestPlansPostErrors,
   CreatePlanApiV1ProjectsProjectIdTestPlansPostResponses,
+  CreatePolicyApiV1ProjectsProjectIdSecurityPoliciesPostData,
+  CreatePolicyApiV1ProjectsProjectIdSecurityPoliciesPostErrors,
+  CreatePolicyApiV1ProjectsProjectIdSecurityPoliciesPostResponses,
   CreateProjectApiV1ProjectsPostData,
   CreateProjectApiV1ProjectsPostErrors,
   CreateProjectApiV1ProjectsPostResponses,
   CreateRunApiV1ProjectsProjectIdRunsPostData,
   CreateRunApiV1ProjectsProjectIdRunsPostErrors,
   CreateRunApiV1ProjectsProjectIdRunsPostResponses,
+  CreateScorerApiV1ProjectsProjectIdScorersPostData,
+  CreateScorerApiV1ProjectsProjectIdScorersPostErrors,
+  CreateScorerApiV1ProjectsProjectIdScorersPostResponses,
+  CreateSnapshotApiV1ProjectsProjectIdEnvironmentsTemplateIdSnapshotsPostData,
+  CreateSnapshotApiV1ProjectsProjectIdEnvironmentsTemplateIdSnapshotsPostErrors,
+  CreateSnapshotApiV1ProjectsProjectIdEnvironmentsTemplateIdSnapshotsPostResponses,
   CreateTemplateApiV1ProjectsProjectIdEnvironmentTemplatesPostData,
   CreateTemplateApiV1ProjectsProjectIdEnvironmentTemplatesPostErrors,
   CreateTemplateApiV1ProjectsProjectIdEnvironmentTemplatesPostResponses,
@@ -56,42 +92,110 @@ import type {
   CreateVersionApiV1ProjectsProjectIdTestPlansPlanIdVersionsPostResponses,
   CurrentUserApiV1AuthMeGetData,
   CurrentUserApiV1AuthMeGetResponses,
+  DeleteAccountApiV1ProjectsProjectIdTestAccountsAccountIdDeleteData,
+  DeleteAccountApiV1ProjectsProjectIdTestAccountsAccountIdDeleteErrors,
+  DeleteAccountApiV1ProjectsProjectIdTestAccountsAccountIdDeleteResponses,
+  DeleteAgentApiV1ProjectsProjectIdAgentsAgentIdDeleteData,
+  DeleteAgentApiV1ProjectsProjectIdAgentsAgentIdDeleteErrors,
+  DeleteAgentApiV1ProjectsProjectIdAgentsAgentIdDeleteResponses,
   DeleteCaseApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdCasesCaseIdDeleteData,
   DeleteCaseApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdCasesCaseIdDeleteErrors,
   DeleteCaseApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdCasesCaseIdDeleteResponses,
+  DeleteDatasetApiV1ProjectsProjectIdDatasetsDatasetIdDeleteData,
+  DeleteDatasetApiV1ProjectsProjectIdDatasetsDatasetIdDeleteErrors,
+  DeleteDatasetApiV1ProjectsProjectIdDatasetsDatasetIdDeleteResponses,
+  DeleteGateApiV1ProjectsProjectIdGatesGateIdDeleteData,
+  DeleteGateApiV1ProjectsProjectIdGatesGateIdDeleteErrors,
+  DeleteGateApiV1ProjectsProjectIdGatesGateIdDeleteResponses,
+  DeleteScorerApiV1ProjectsProjectIdScorersScorerIdDeleteData,
+  DeleteScorerApiV1ProjectsProjectIdScorersScorerIdDeleteErrors,
+  DeleteScorerApiV1ProjectsProjectIdScorersScorerIdDeleteResponses,
+  DeleteSnapshotApiV1ProjectsProjectIdEnvironmentsTemplateIdSnapshotsSnapshotIdDeleteData,
+  DeleteSnapshotApiV1ProjectsProjectIdEnvironmentsTemplateIdSnapshotsSnapshotIdDeleteErrors,
+  DeleteSnapshotApiV1ProjectsProjectIdEnvironmentsTemplateIdSnapshotsSnapshotIdDeleteResponses,
   DeleteTemplateApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdDeleteData,
   DeleteTemplateApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdDeleteErrors,
   DeleteTemplateApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdDeleteResponses,
+  DeleteTestPlanApiV1ProjectsProjectIdTestPlansPlanIdDeleteData,
+  DeleteTestPlanApiV1ProjectsProjectIdTestPlansPlanIdDeleteErrors,
+  DeleteTestPlanApiV1ProjectsProjectIdTestPlansPlanIdDeleteResponses,
   DeleteUserApiV1SystemUsersUserIdDeleteData,
   DeleteUserApiV1SystemUsersUserIdDeleteErrors,
   DeleteUserApiV1SystemUsersUserIdDeleteResponses,
+  DiffRunsApiV1ProjectsProjectIdRunsRunAIdDiffRunBIdGetData,
+  DiffRunsApiV1ProjectsProjectIdRunsRunAIdDiffRunBIdGetErrors,
+  DiffRunsApiV1ProjectsProjectIdRunsRunAIdDiffRunBIdGetResponses,
+  DiffVersionsApiV1ProjectsProjectIdAgentsAgentIdVersionsV1IdDiffV2IdGetData,
+  DiffVersionsApiV1ProjectsProjectIdAgentsAgentIdVersionsV1IdDiffV2IdGetErrors,
+  DiffVersionsApiV1ProjectsProjectIdAgentsAgentIdVersionsV1IdDiffV2IdGetResponses,
   DisableUserApiV1SystemUsersUserIdDisablePostData,
   DisableUserApiV1SystemUsersUserIdDisablePostErrors,
   DisableUserApiV1SystemUsersUserIdDisablePostResponses,
+  DownloadArtifactApiV1ProjectsProjectIdArtifactsArtifactIdDownloadGetData,
+  DownloadArtifactApiV1ProjectsProjectIdArtifactsArtifactIdDownloadGetErrors,
+  DownloadArtifactApiV1ProjectsProjectIdArtifactsArtifactIdDownloadGetResponses,
+  DryRunApiV1ProjectsProjectIdTestPlansPlanIdVersionsVersionIdDryRunPostData,
+  DryRunApiV1ProjectsProjectIdTestPlansPlanIdVersionsVersionIdDryRunPostErrors,
+  DryRunApiV1ProjectsProjectIdTestPlansPlanIdVersionsVersionIdDryRunPostResponses,
   EnableUserApiV1SystemUsersUserIdEnablePostData,
   EnableUserApiV1SystemUsersUserIdEnablePostErrors,
   EnableUserApiV1SystemUsersUserIdEnablePostResponses,
+  EvaluateGateApiV1ProjectsProjectIdGatesGateIdEvaluatePostData,
+  EvaluateGateApiV1ProjectsProjectIdGatesGateIdEvaluatePostErrors,
+  EvaluateGateApiV1ProjectsProjectIdGatesGateIdEvaluatePostResponses,
   EventsApiV1ProjectsProjectIdRunsRunIdEventsGetData,
   EventsApiV1ProjectsProjectIdRunsRunIdEventsGetErrors,
   EventsApiV1ProjectsProjectIdRunsRunIdEventsGetResponses,
+  ExecutePlaywrightAgentApiV1ProjectsProjectIdTestAgentPlaywrightExecutePostData,
+  ExecutePlaywrightAgentApiV1ProjectsProjectIdTestAgentPlaywrightExecutePostErrors,
+  ExecutePlaywrightAgentApiV1ProjectsProjectIdTestAgentPlaywrightExecutePostResponses,
+  ExemptGateApiV1ProjectsProjectIdGatesGateIdExemptPostData,
+  ExemptGateApiV1ProjectsProjectIdGatesGateIdExemptPostErrors,
+  ExemptGateApiV1ProjectsProjectIdGatesGateIdExemptPostResponses,
   ExportCasesApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdExportGetData,
   ExportCasesApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdExportGetErrors,
   ExportCasesApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdExportGetResponses,
+  GenerateFromRunEndpointApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdGenerateFromRunPostData,
+  GenerateFromRunEndpointApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdGenerateFromRunPostErrors,
+  GenerateFromRunEndpointApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdGenerateFromRunPostResponses,
   GetAgentApiV1ProjectsProjectIdAgentsAgentIdGetData,
   GetAgentApiV1ProjectsProjectIdAgentsAgentIdGetErrors,
   GetAgentApiV1ProjectsProjectIdAgentsAgentIdGetResponses,
   GetDatasetApiV1ProjectsProjectIdDatasetsDatasetIdGetData,
   GetDatasetApiV1ProjectsProjectIdDatasetsDatasetIdGetErrors,
   GetDatasetApiV1ProjectsProjectIdDatasetsDatasetIdGetResponses,
+  GetExperimentApiV1ProjectsProjectIdExperimentsExperimentIdGetData,
+  GetExperimentApiV1ProjectsProjectIdExperimentsExperimentIdGetErrors,
+  GetExperimentApiV1ProjectsProjectIdExperimentsExperimentIdGetResponses,
+  GetGateApiV1ProjectsProjectIdGatesGateIdGetData,
+  GetGateApiV1ProjectsProjectIdGatesGateIdGetErrors,
+  GetGateApiV1ProjectsProjectIdGatesGateIdGetResponses,
   GetPlanApiV1ProjectsProjectIdTestPlansPlanIdGetData,
   GetPlanApiV1ProjectsProjectIdTestPlansPlanIdGetErrors,
   GetPlanApiV1ProjectsProjectIdTestPlansPlanIdGetResponses,
+  GetPlaywrightTaskApiV1ProjectsProjectIdTestAgentPlaywrightTasksTaskIdGetData,
+  GetPlaywrightTaskApiV1ProjectsProjectIdTestAgentPlaywrightTasksTaskIdGetErrors,
+  GetPlaywrightTaskApiV1ProjectsProjectIdTestAgentPlaywrightTasksTaskIdGetResponses,
   GetProjectApiV1ProjectsProjectIdGetData,
   GetProjectApiV1ProjectsProjectIdGetErrors,
   GetProjectApiV1ProjectsProjectIdGetResponses,
   GetRunApiV1ProjectsProjectIdRunsRunIdGetData,
   GetRunApiV1ProjectsProjectIdRunsRunIdGetErrors,
   GetRunApiV1ProjectsProjectIdRunsRunIdGetResponses,
+  GetScanApiV1ProjectsProjectIdSecurityScansScanIdGetData,
+  GetScanApiV1ProjectsProjectIdSecurityScansScanIdGetErrors,
+  GetScanApiV1ProjectsProjectIdSecurityScansScanIdGetResponses,
+  GetScorerApiV1ProjectsProjectIdScorersScorerIdGetData,
+  GetScorerApiV1ProjectsProjectIdScorersScorerIdGetErrors,
+  GetScorerApiV1ProjectsProjectIdScorersScorerIdGetResponses,
+  GetSessionApiV1ProjectsProjectIdTestAgentSessionsSessionIdGetData,
+  GetSessionApiV1ProjectsProjectIdTestAgentSessionsSessionIdGetErrors,
+  GetSessionApiV1ProjectsProjectIdTestAgentSessionsSessionIdGetResponses,
+  GetSettingsApiV1UsersMeSettingsGetData,
+  GetSettingsApiV1UsersMeSettingsGetResponses,
+  GetStatisticsApiV1ProjectsProjectIdExperimentsStatisticsGetData,
+  GetStatisticsApiV1ProjectsProjectIdExperimentsStatisticsGetErrors,
+  GetStatisticsApiV1ProjectsProjectIdExperimentsStatisticsGetResponses,
   GetTemplateApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdGetData,
   GetTemplateApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdGetErrors,
   GetTemplateApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdGetResponses,
@@ -115,9 +219,15 @@ import type {
   ImportCasesApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdImportPostData,
   ImportCasesApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdImportPostErrors,
   ImportCasesApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdImportPostResponses,
+  ListAccountsApiV1ProjectsProjectIdTestAccountsGetData,
+  ListAccountsApiV1ProjectsProjectIdTestAccountsGetErrors,
+  ListAccountsApiV1ProjectsProjectIdTestAccountsGetResponses,
   ListAgentsApiV1ProjectsProjectIdAgentsGetData,
   ListAgentsApiV1ProjectsProjectIdAgentsGetErrors,
   ListAgentsApiV1ProjectsProjectIdAgentsGetResponses,
+  ListArtifactsApiV1ProjectsProjectIdRunsRunIdArtifactsGetData,
+  ListArtifactsApiV1ProjectsProjectIdRunsRunIdArtifactsGetErrors,
+  ListArtifactsApiV1ProjectsProjectIdRunsRunIdArtifactsGetResponses,
   ListCasesApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdCasesGetData,
   ListCasesApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdCasesGetErrors,
   ListCasesApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdCasesGetResponses,
@@ -127,17 +237,41 @@ import type {
   ListDatasetsApiV1ProjectsProjectIdDatasetsGetData,
   ListDatasetsApiV1ProjectsProjectIdDatasetsGetErrors,
   ListDatasetsApiV1ProjectsProjectIdDatasetsGetResponses,
+  ListExperimentsApiV1ProjectsProjectIdExperimentsGetData,
+  ListExperimentsApiV1ProjectsProjectIdExperimentsGetErrors,
+  ListExperimentsApiV1ProjectsProjectIdExperimentsGetResponses,
+  ListGatesApiV1ProjectsProjectIdGatesGetData,
+  ListGatesApiV1ProjectsProjectIdGatesGetErrors,
+  ListGatesApiV1ProjectsProjectIdGatesGetResponses,
   ListMembersApiV1ProjectsProjectIdMembersGetData,
   ListMembersApiV1ProjectsProjectIdMembersGetErrors,
   ListMembersApiV1ProjectsProjectIdMembersGetResponses,
   ListPlansApiV1ProjectsProjectIdTestPlansGetData,
   ListPlansApiV1ProjectsProjectIdTestPlansGetErrors,
   ListPlansApiV1ProjectsProjectIdTestPlansGetResponses,
+  ListPlaywrightTasksApiV1ProjectsProjectIdTestAgentPlaywrightTasksGetData,
+  ListPlaywrightTasksApiV1ProjectsProjectIdTestAgentPlaywrightTasksGetErrors,
+  ListPlaywrightTasksApiV1ProjectsProjectIdTestAgentPlaywrightTasksGetResponses,
+  ListPoliciesApiV1ProjectsProjectIdSecurityPoliciesGetData,
+  ListPoliciesApiV1ProjectsProjectIdSecurityPoliciesGetErrors,
+  ListPoliciesApiV1ProjectsProjectIdSecurityPoliciesGetResponses,
   ListProjectsApiV1ProjectsGetData,
   ListProjectsApiV1ProjectsGetResponses,
+  ListReviewsApiV1ProjectsProjectIdReviewsGetData,
+  ListReviewsApiV1ProjectsProjectIdReviewsGetErrors,
+  ListReviewsApiV1ProjectsProjectIdReviewsGetResponses,
   ListRunsApiV1ProjectsProjectIdRunsGetData,
   ListRunsApiV1ProjectsProjectIdRunsGetErrors,
   ListRunsApiV1ProjectsProjectIdRunsGetResponses,
+  ListScansApiV1ProjectsProjectIdSecurityScansGetData,
+  ListScansApiV1ProjectsProjectIdSecurityScansGetErrors,
+  ListScansApiV1ProjectsProjectIdSecurityScansGetResponses,
+  ListScorersApiV1ProjectsProjectIdScorersGetData,
+  ListScorersApiV1ProjectsProjectIdScorersGetErrors,
+  ListScorersApiV1ProjectsProjectIdScorersGetResponses,
+  ListSnapshotsApiV1ProjectsProjectIdEnvironmentsTemplateIdSnapshotsGetData,
+  ListSnapshotsApiV1ProjectsProjectIdEnvironmentsTemplateIdSnapshotsGetErrors,
+  ListSnapshotsApiV1ProjectsProjectIdEnvironmentsTemplateIdSnapshotsGetResponses,
   ListTemplatesApiV1ProjectsProjectIdEnvironmentTemplatesGetData,
   ListTemplatesApiV1ProjectsProjectIdEnvironmentTemplatesGetErrors,
   ListTemplatesApiV1ProjectsProjectIdEnvironmentTemplatesGetResponses,
@@ -171,6 +305,9 @@ import type {
   PublishVersionApiV1ProjectsProjectIdTestPlansPlanIdVersionsVersionIdPublishPostData,
   PublishVersionApiV1ProjectsProjectIdTestPlansPlanIdVersionsVersionIdPublishPostErrors,
   PublishVersionApiV1ProjectsProjectIdTestPlansPlanIdVersionsVersionIdPublishPostResponses,
+  RejectReviewApiV1ProjectsProjectIdReviewsTaskIdRejectPostData,
+  RejectReviewApiV1ProjectsProjectIdReviewsTaskIdRejectPostErrors,
+  RejectReviewApiV1ProjectsProjectIdReviewsTaskIdRejectPostResponses,
   RemoveMemberApiV1ProjectsProjectIdMembersUserIdDeleteData,
   RemoveMemberApiV1ProjectsProjectIdMembersUserIdDeleteErrors,
   RemoveMemberApiV1ProjectsProjectIdMembersUserIdDeleteResponses,
@@ -180,6 +317,36 @@ import type {
   ResetPasswordApiV1SystemUsersUserIdResetPasswordPostData,
   ResetPasswordApiV1SystemUsersUserIdResetPasswordPostErrors,
   ResetPasswordApiV1SystemUsersUserIdResetPasswordPostResponses,
+  RestoreSnapshotApiV1ProjectsProjectIdEnvironmentsTemplateIdSnapshotsSnapshotIdRestorePostData,
+  RestoreSnapshotApiV1ProjectsProjectIdEnvironmentsTemplateIdSnapshotsSnapshotIdRestorePostErrors,
+  RestoreSnapshotApiV1ProjectsProjectIdEnvironmentsTemplateIdSnapshotsSnapshotIdRestorePostResponses,
+  ReviewStatsApiV1ProjectsProjectIdReviewsStatsGetData,
+  ReviewStatsApiV1ProjectsProjectIdReviewsStatsGetErrors,
+  ReviewStatsApiV1ProjectsProjectIdReviewsStatsGetResponses,
+  RunExperimentApiV1ProjectsProjectIdExperimentsExperimentIdRunPostData,
+  RunExperimentApiV1ProjectsProjectIdExperimentsExperimentIdRunPostErrors,
+  RunExperimentApiV1ProjectsProjectIdExperimentsExperimentIdRunPostResponses,
+  ScoreReviewApiV1ProjectsProjectIdReviewsTaskIdScorePostData,
+  ScoreReviewApiV1ProjectsProjectIdReviewsTaskIdScorePostErrors,
+  ScoreReviewApiV1ProjectsProjectIdReviewsTaskIdScorePostResponses,
+  SetBaselineVersionEndpointApiV1ProjectsProjectIdAgentsAgentIdBaselineVersionPatchData,
+  SetBaselineVersionEndpointApiV1ProjectsProjectIdAgentsAgentIdBaselineVersionPatchErrors,
+  SetBaselineVersionEndpointApiV1ProjectsProjectIdAgentsAgentIdBaselineVersionPatchResponses,
+  SetCurrentVersionEndpointApiV1ProjectsProjectIdAgentsAgentIdCurrentVersionPatchData,
+  SetCurrentVersionEndpointApiV1ProjectsProjectIdAgentsAgentIdCurrentVersionPatchErrors,
+  SetCurrentVersionEndpointApiV1ProjectsProjectIdAgentsAgentIdCurrentVersionPatchResponses,
+  SkipReviewApiV1ProjectsProjectIdReviewsTaskIdSkipPostData,
+  SkipReviewApiV1ProjectsProjectIdReviewsTaskIdSkipPostErrors,
+  SkipReviewApiV1ProjectsProjectIdReviewsTaskIdSkipPostResponses,
+  StreamRunProgressApiV1ProjectsProjectIdRunsRunIdStreamGetData,
+  StreamRunProgressApiV1ProjectsProjectIdRunsRunIdStreamGetErrors,
+  StreamRunProgressApiV1ProjectsProjectIdRunsRunIdStreamGetResponses,
+  TriggerScanApiV1ProjectsProjectIdSecurityScansPostData,
+  TriggerScanApiV1ProjectsProjectIdSecurityScansPostErrors,
+  TriggerScanApiV1ProjectsProjectIdSecurityScansPostResponses,
+  UpdateAccountApiV1ProjectsProjectIdTestAccountsAccountIdPatchData,
+  UpdateAccountApiV1ProjectsProjectIdTestAccountsAccountIdPatchErrors,
+  UpdateAccountApiV1ProjectsProjectIdTestAccountsAccountIdPatchResponses,
   UpdateAgentApiV1ProjectsProjectIdAgentsAgentIdPatchData,
   UpdateAgentApiV1ProjectsProjectIdAgentsAgentIdPatchErrors,
   UpdateAgentApiV1ProjectsProjectIdAgentsAgentIdPatchResponses,
@@ -195,6 +362,15 @@ import type {
   UpdatePlanApiV1ProjectsProjectIdTestPlansPlanIdPatchData,
   UpdatePlanApiV1ProjectsProjectIdTestPlansPlanIdPatchErrors,
   UpdatePlanApiV1ProjectsProjectIdTestPlansPlanIdPatchResponses,
+  UpdateProfileApiV1AuthMePatchData,
+  UpdateProfileApiV1AuthMePatchErrors,
+  UpdateProfileApiV1AuthMePatchResponses,
+  UpdateScorerApiV1ProjectsProjectIdScorersScorerIdPatchData,
+  UpdateScorerApiV1ProjectsProjectIdScorersScorerIdPatchErrors,
+  UpdateScorerApiV1ProjectsProjectIdScorersScorerIdPatchResponses,
+  UpdateSettingsApiV1UsersMeSettingsPatchData,
+  UpdateSettingsApiV1UsersMeSettingsPatchErrors,
+  UpdateSettingsApiV1UsersMeSettingsPatchResponses,
   UpdateTemplateApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdPatchData,
   UpdateTemplateApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdPatchErrors,
   UpdateTemplateApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdPatchResponses,
@@ -207,6 +383,9 @@ import type {
   UpdateVersionApiV1ProjectsProjectIdTestPlansPlanIdVersionsVersionIdPatchData,
   UpdateVersionApiV1ProjectsProjectIdTestPlansPlanIdVersionsVersionIdPatchErrors,
   UpdateVersionApiV1ProjectsProjectIdTestPlansPlanIdVersionsVersionIdPatchResponses,
+  UploadArtifactApiV1ProjectsProjectIdRunsRunIdArtifactsPostData,
+  UploadArtifactApiV1ProjectsProjectIdRunsRunIdArtifactsPostErrors,
+  UploadArtifactApiV1ProjectsProjectIdRunsRunIdArtifactsPostResponses,
 } from "./types.gen";
 
 export type Options<
@@ -226,6 +405,18 @@ export type Options<
    */
   meta?: keyof ClientMeta extends never ? Record<string, unknown> : ClientMeta;
 };
+
+/**
+ * Health
+ */
+export const healthApiV1HealthGet = <ThrowOnError extends boolean = false>(
+  options?: Options<HealthApiV1HealthGetData, ThrowOnError>,
+): RequestResult<HealthApiV1HealthGetResponses, unknown, ThrowOnError> =>
+  (options?.client ?? client).get<
+    HealthApiV1HealthGetResponses,
+    unknown,
+    ThrowOnError
+  >({ url: "/api/v1/health", ...options });
 
 /**
  * Login
@@ -251,6 +442,68 @@ export const loginApiV1AuthLoginPost = <ThrowOnError extends boolean = false>(
   });
 
 /**
+ * Current User
+ */
+export const currentUserApiV1AuthMeGet = <ThrowOnError extends boolean = false>(
+  options?: Options<CurrentUserApiV1AuthMeGetData, ThrowOnError>,
+): RequestResult<CurrentUserApiV1AuthMeGetResponses, unknown, ThrowOnError> =>
+  (options?.client ?? client).get<
+    CurrentUserApiV1AuthMeGetResponses,
+    unknown,
+    ThrowOnError
+  >({ url: "/api/v1/auth/me", ...options });
+
+/**
+ * Update Profile
+ */
+export const updateProfileApiV1AuthMePatch = <
+  ThrowOnError extends boolean = false,
+>(
+  options: Options<UpdateProfileApiV1AuthMePatchData, ThrowOnError>,
+): RequestResult<
+  UpdateProfileApiV1AuthMePatchResponses,
+  UpdateProfileApiV1AuthMePatchErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).patch<
+    UpdateProfileApiV1AuthMePatchResponses,
+    UpdateProfileApiV1AuthMePatchErrors,
+    ThrowOnError
+  >({
+    url: "/api/v1/auth/me",
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...options.headers,
+    },
+  });
+
+/**
+ * Change Password
+ */
+export const changePasswordApiV1AuthChangePasswordPost = <
+  ThrowOnError extends boolean = false,
+>(
+  options: Options<ChangePasswordApiV1AuthChangePasswordPostData, ThrowOnError>,
+): RequestResult<
+  ChangePasswordApiV1AuthChangePasswordPostResponses,
+  ChangePasswordApiV1AuthChangePasswordPostErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).post<
+    ChangePasswordApiV1AuthChangePasswordPostResponses,
+    ChangePasswordApiV1AuthChangePasswordPostErrors,
+    ThrowOnError
+  >({
+    url: "/api/v1/auth/change-password",
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...options.headers,
+    },
+  });
+
+/**
  * Logout
  */
 export const logoutApiV1AuthLogoutPost = <ThrowOnError extends boolean = false>(
@@ -267,28 +520,178 @@ export const logoutApiV1AuthLogoutPost = <ThrowOnError extends boolean = false>(
   >({ url: "/api/v1/auth/logout", ...options });
 
 /**
- * Current User
+ * List Users
  */
-export const currentUserApiV1AuthMeGet = <ThrowOnError extends boolean = false>(
-  options?: Options<CurrentUserApiV1AuthMeGetData, ThrowOnError>,
-): RequestResult<CurrentUserApiV1AuthMeGetResponses, unknown, ThrowOnError> =>
+export const listUsersApiV1SystemUsersGet = <
+  ThrowOnError extends boolean = false,
+>(
+  options?: Options<ListUsersApiV1SystemUsersGetData, ThrowOnError>,
+): RequestResult<
+  ListUsersApiV1SystemUsersGetResponses,
+  ListUsersApiV1SystemUsersGetErrors,
+  ThrowOnError
+> =>
   (options?.client ?? client).get<
-    CurrentUserApiV1AuthMeGetResponses,
-    unknown,
+    ListUsersApiV1SystemUsersGetResponses,
+    ListUsersApiV1SystemUsersGetErrors,
     ThrowOnError
-  >({ url: "/api/v1/auth/me", ...options });
+  >({ url: "/api/v1/system/users", ...options });
 
 /**
- * Health
+ * Create User
  */
-export const healthApiV1HealthGet = <ThrowOnError extends boolean = false>(
-  options?: Options<HealthApiV1HealthGetData, ThrowOnError>,
-): RequestResult<HealthApiV1HealthGetResponses, unknown, ThrowOnError> =>
-  (options?.client ?? client).get<
-    HealthApiV1HealthGetResponses,
-    unknown,
+export const createUserApiV1SystemUsersPost = <
+  ThrowOnError extends boolean = false,
+>(
+  options: Options<CreateUserApiV1SystemUsersPostData, ThrowOnError>,
+): RequestResult<
+  CreateUserApiV1SystemUsersPostResponses,
+  CreateUserApiV1SystemUsersPostErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).post<
+    CreateUserApiV1SystemUsersPostResponses,
+    CreateUserApiV1SystemUsersPostErrors,
     ThrowOnError
-  >({ url: "/api/v1/health", ...options });
+  >({
+    url: "/api/v1/system/users",
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...options.headers,
+    },
+  });
+
+/**
+ * Delete User
+ */
+export const deleteUserApiV1SystemUsersUserIdDelete = <
+  ThrowOnError extends boolean = false,
+>(
+  options: Options<DeleteUserApiV1SystemUsersUserIdDeleteData, ThrowOnError>,
+): RequestResult<
+  DeleteUserApiV1SystemUsersUserIdDeleteResponses,
+  DeleteUserApiV1SystemUsersUserIdDeleteErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).delete<
+    DeleteUserApiV1SystemUsersUserIdDeleteResponses,
+    DeleteUserApiV1SystemUsersUserIdDeleteErrors,
+    ThrowOnError
+  >({ url: "/api/v1/system/users/{user_id}", ...options });
+
+/**
+ * Get User
+ */
+export const getUserApiV1SystemUsersUserIdGet = <
+  ThrowOnError extends boolean = false,
+>(
+  options: Options<GetUserApiV1SystemUsersUserIdGetData, ThrowOnError>,
+): RequestResult<
+  GetUserApiV1SystemUsersUserIdGetResponses,
+  GetUserApiV1SystemUsersUserIdGetErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).get<
+    GetUserApiV1SystemUsersUserIdGetResponses,
+    GetUserApiV1SystemUsersUserIdGetErrors,
+    ThrowOnError
+  >({ url: "/api/v1/system/users/{user_id}", ...options });
+
+/**
+ * Update User
+ */
+export const updateUserApiV1SystemUsersUserIdPatch = <
+  ThrowOnError extends boolean = false,
+>(
+  options: Options<UpdateUserApiV1SystemUsersUserIdPatchData, ThrowOnError>,
+): RequestResult<
+  UpdateUserApiV1SystemUsersUserIdPatchResponses,
+  UpdateUserApiV1SystemUsersUserIdPatchErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).patch<
+    UpdateUserApiV1SystemUsersUserIdPatchResponses,
+    UpdateUserApiV1SystemUsersUserIdPatchErrors,
+    ThrowOnError
+  >({
+    url: "/api/v1/system/users/{user_id}",
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...options.headers,
+    },
+  });
+
+/**
+ * Reset Password
+ */
+export const resetPasswordApiV1SystemUsersUserIdResetPasswordPost = <
+  ThrowOnError extends boolean = false,
+>(
+  options: Options<
+    ResetPasswordApiV1SystemUsersUserIdResetPasswordPostData,
+    ThrowOnError
+  >,
+): RequestResult<
+  ResetPasswordApiV1SystemUsersUserIdResetPasswordPostResponses,
+  ResetPasswordApiV1SystemUsersUserIdResetPasswordPostErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).post<
+    ResetPasswordApiV1SystemUsersUserIdResetPasswordPostResponses,
+    ResetPasswordApiV1SystemUsersUserIdResetPasswordPostErrors,
+    ThrowOnError
+  >({
+    url: "/api/v1/system/users/{user_id}/reset-password",
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...options.headers,
+    },
+  });
+
+/**
+ * Disable User
+ */
+export const disableUserApiV1SystemUsersUserIdDisablePost = <
+  ThrowOnError extends boolean = false,
+>(
+  options: Options<
+    DisableUserApiV1SystemUsersUserIdDisablePostData,
+    ThrowOnError
+  >,
+): RequestResult<
+  DisableUserApiV1SystemUsersUserIdDisablePostResponses,
+  DisableUserApiV1SystemUsersUserIdDisablePostErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).post<
+    DisableUserApiV1SystemUsersUserIdDisablePostResponses,
+    DisableUserApiV1SystemUsersUserIdDisablePostErrors,
+    ThrowOnError
+  >({ url: "/api/v1/system/users/{user_id}/disable", ...options });
+
+/**
+ * Enable User
+ */
+export const enableUserApiV1SystemUsersUserIdEnablePost = <
+  ThrowOnError extends boolean = false,
+>(
+  options: Options<
+    EnableUserApiV1SystemUsersUserIdEnablePostData,
+    ThrowOnError
+  >,
+): RequestResult<
+  EnableUserApiV1SystemUsersUserIdEnablePostResponses,
+  EnableUserApiV1SystemUsersUserIdEnablePostErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).post<
+    EnableUserApiV1SystemUsersUserIdEnablePostResponses,
+    EnableUserApiV1SystemUsersUserIdEnablePostErrors,
+    ThrowOnError
+  >({ url: "/api/v1/system/users/{user_id}/enable", ...options });
 
 /**
  * List Projects
@@ -377,6 +780,164 @@ export const renameProjectApiV1ProjectsProjectIdPatch = <
   });
 
 /**
+ * Archive Project
+ */
+export const archiveProjectApiV1ProjectsProjectIdArchivePost = <
+  ThrowOnError extends boolean = false,
+>(
+  options: Options<
+    ArchiveProjectApiV1ProjectsProjectIdArchivePostData,
+    ThrowOnError
+  >,
+): RequestResult<
+  ArchiveProjectApiV1ProjectsProjectIdArchivePostResponses,
+  ArchiveProjectApiV1ProjectsProjectIdArchivePostErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).post<
+    ArchiveProjectApiV1ProjectsProjectIdArchivePostResponses,
+    ArchiveProjectApiV1ProjectsProjectIdArchivePostErrors,
+    ThrowOnError
+  >({ url: "/api/v1/projects/{project_id}/archive", ...options });
+
+/**
+ * List Members
+ */
+export const listMembersApiV1ProjectsProjectIdMembersGet = <
+  ThrowOnError extends boolean = false,
+>(
+  options: Options<
+    ListMembersApiV1ProjectsProjectIdMembersGetData,
+    ThrowOnError
+  >,
+): RequestResult<
+  ListMembersApiV1ProjectsProjectIdMembersGetResponses,
+  ListMembersApiV1ProjectsProjectIdMembersGetErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).get<
+    ListMembersApiV1ProjectsProjectIdMembersGetResponses,
+    ListMembersApiV1ProjectsProjectIdMembersGetErrors,
+    ThrowOnError
+  >({ url: "/api/v1/projects/{project_id}/members", ...options });
+
+/**
+ * Add Member
+ */
+export const addMemberApiV1ProjectsProjectIdMembersPost = <
+  ThrowOnError extends boolean = false,
+>(
+  options: Options<
+    AddMemberApiV1ProjectsProjectIdMembersPostData,
+    ThrowOnError
+  >,
+): RequestResult<
+  AddMemberApiV1ProjectsProjectIdMembersPostResponses,
+  AddMemberApiV1ProjectsProjectIdMembersPostErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).post<
+    AddMemberApiV1ProjectsProjectIdMembersPostResponses,
+    AddMemberApiV1ProjectsProjectIdMembersPostErrors,
+    ThrowOnError
+  >({
+    url: "/api/v1/projects/{project_id}/members",
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...options.headers,
+    },
+  });
+
+/**
+ * Remove Member
+ */
+export const removeMemberApiV1ProjectsProjectIdMembersUserIdDelete = <
+  ThrowOnError extends boolean = false,
+>(
+  options: Options<
+    RemoveMemberApiV1ProjectsProjectIdMembersUserIdDeleteData,
+    ThrowOnError
+  >,
+): RequestResult<
+  RemoveMemberApiV1ProjectsProjectIdMembersUserIdDeleteResponses,
+  RemoveMemberApiV1ProjectsProjectIdMembersUserIdDeleteErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).delete<
+    RemoveMemberApiV1ProjectsProjectIdMembersUserIdDeleteResponses,
+    RemoveMemberApiV1ProjectsProjectIdMembersUserIdDeleteErrors,
+    ThrowOnError
+  >({ url: "/api/v1/projects/{project_id}/members/{user_id}", ...options });
+
+/**
+ * Update Member
+ */
+export const updateMemberApiV1ProjectsProjectIdMembersUserIdPatch = <
+  ThrowOnError extends boolean = false,
+>(
+  options: Options<
+    UpdateMemberApiV1ProjectsProjectIdMembersUserIdPatchData,
+    ThrowOnError
+  >,
+): RequestResult<
+  UpdateMemberApiV1ProjectsProjectIdMembersUserIdPatchResponses,
+  UpdateMemberApiV1ProjectsProjectIdMembersUserIdPatchErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).patch<
+    UpdateMemberApiV1ProjectsProjectIdMembersUserIdPatchResponses,
+    UpdateMemberApiV1ProjectsProjectIdMembersUserIdPatchErrors,
+    ThrowOnError
+  >({
+    url: "/api/v1/projects/{project_id}/members/{user_id}",
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...options.headers,
+    },
+  });
+
+/**
+ * Global Audit
+ */
+export const globalAuditApiV1SystemAuditGet = <
+  ThrowOnError extends boolean = false,
+>(
+  options?: Options<GlobalAuditApiV1SystemAuditGetData, ThrowOnError>,
+): RequestResult<
+  GlobalAuditApiV1SystemAuditGetResponses,
+  GlobalAuditApiV1SystemAuditGetErrors,
+  ThrowOnError
+> =>
+  (options?.client ?? client).get<
+    GlobalAuditApiV1SystemAuditGetResponses,
+    GlobalAuditApiV1SystemAuditGetErrors,
+    ThrowOnError
+  >({ url: "/api/v1/system/audit", ...options });
+
+/**
+ * Project Audit
+ */
+export const projectAuditApiV1ProjectsProjectIdAuditGet = <
+  ThrowOnError extends boolean = false,
+>(
+  options: Options<
+    ProjectAuditApiV1ProjectsProjectIdAuditGetData,
+    ThrowOnError
+  >,
+): RequestResult<
+  ProjectAuditApiV1ProjectsProjectIdAuditGetResponses,
+  ProjectAuditApiV1ProjectsProjectIdAuditGetErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).get<
+    ProjectAuditApiV1ProjectsProjectIdAuditGetResponses,
+    ProjectAuditApiV1ProjectsProjectIdAuditGetErrors,
+    ThrowOnError
+  >({ url: "/api/v1/projects/{project_id}/audit", ...options });
+
+/**
  * List Agents
  */
 export const listAgentsApiV1ProjectsProjectIdAgentsGet = <
@@ -421,6 +982,27 @@ export const createAgentApiV1ProjectsProjectIdAgentsPost = <
       ...options.headers,
     },
   });
+
+/**
+ * Delete Agent
+ */
+export const deleteAgentApiV1ProjectsProjectIdAgentsAgentIdDelete = <
+  ThrowOnError extends boolean = false,
+>(
+  options: Options<
+    DeleteAgentApiV1ProjectsProjectIdAgentsAgentIdDeleteData,
+    ThrowOnError
+  >,
+): RequestResult<
+  DeleteAgentApiV1ProjectsProjectIdAgentsAgentIdDeleteResponses,
+  DeleteAgentApiV1ProjectsProjectIdAgentsAgentIdDeleteErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).delete<
+    DeleteAgentApiV1ProjectsProjectIdAgentsAgentIdDeleteResponses,
+    DeleteAgentApiV1ProjectsProjectIdAgentsAgentIdDeleteErrors,
+    ThrowOnError
+  >({ url: "/api/v1/projects/{project_id}/agents/{agent_id}", ...options });
 
 /**
  * Get Agent
@@ -597,46 +1179,73 @@ export const publishVersionApiV1ProjectsProjectIdAgentsAgentIdVersionsVersionIdP
     });
 
 /**
- * Archive Project
+ * Diff Versions
  */
-export const archiveProjectApiV1ProjectsProjectIdArchivePost = <
-  ThrowOnError extends boolean = false,
->(
-  options: Options<
-    ArchiveProjectApiV1ProjectsProjectIdArchivePostData,
+export const diffVersionsApiV1ProjectsProjectIdAgentsAgentIdVersionsV1IdDiffV2IdGet =
+  <ThrowOnError extends boolean = false>(
+    options: Options<
+      DiffVersionsApiV1ProjectsProjectIdAgentsAgentIdVersionsV1IdDiffV2IdGetData,
+      ThrowOnError
+    >,
+  ): RequestResult<
+    DiffVersionsApiV1ProjectsProjectIdAgentsAgentIdVersionsV1IdDiffV2IdGetResponses,
+    DiffVersionsApiV1ProjectsProjectIdAgentsAgentIdVersionsV1IdDiffV2IdGetErrors,
     ThrowOnError
-  >,
-): RequestResult<
-  ArchiveProjectApiV1ProjectsProjectIdArchivePostResponses,
-  ArchiveProjectApiV1ProjectsProjectIdArchivePostErrors,
-  ThrowOnError
-> =>
-  (options.client ?? client).post<
-    ArchiveProjectApiV1ProjectsProjectIdArchivePostResponses,
-    ArchiveProjectApiV1ProjectsProjectIdArchivePostErrors,
-    ThrowOnError
-  >({ url: "/api/v1/projects/{project_id}/archive", ...options });
+  > =>
+    (options.client ?? client).get<
+      DiffVersionsApiV1ProjectsProjectIdAgentsAgentIdVersionsV1IdDiffV2IdGetResponses,
+      DiffVersionsApiV1ProjectsProjectIdAgentsAgentIdVersionsV1IdDiffV2IdGetErrors,
+      ThrowOnError
+    >({
+      url: "/api/v1/projects/{project_id}/agents{agent_id}/versions/{v1_id}/diff/{v2_id}",
+      ...options,
+    });
 
 /**
- * Project Audit
+ * Set Current Version Endpoint
  */
-export const projectAuditApiV1ProjectsProjectIdAuditGet = <
-  ThrowOnError extends boolean = false,
->(
-  options: Options<
-    ProjectAuditApiV1ProjectsProjectIdAuditGetData,
+export const setCurrentVersionEndpointApiV1ProjectsProjectIdAgentsAgentIdCurrentVersionPatch =
+  <ThrowOnError extends boolean = false>(
+    options: Options<
+      SetCurrentVersionEndpointApiV1ProjectsProjectIdAgentsAgentIdCurrentVersionPatchData,
+      ThrowOnError
+    >,
+  ): RequestResult<
+    SetCurrentVersionEndpointApiV1ProjectsProjectIdAgentsAgentIdCurrentVersionPatchResponses,
+    SetCurrentVersionEndpointApiV1ProjectsProjectIdAgentsAgentIdCurrentVersionPatchErrors,
     ThrowOnError
-  >,
-): RequestResult<
-  ProjectAuditApiV1ProjectsProjectIdAuditGetResponses,
-  ProjectAuditApiV1ProjectsProjectIdAuditGetErrors,
-  ThrowOnError
-> =>
-  (options.client ?? client).get<
-    ProjectAuditApiV1ProjectsProjectIdAuditGetResponses,
-    ProjectAuditApiV1ProjectsProjectIdAuditGetErrors,
+  > =>
+    (options.client ?? client).patch<
+      SetCurrentVersionEndpointApiV1ProjectsProjectIdAgentsAgentIdCurrentVersionPatchResponses,
+      SetCurrentVersionEndpointApiV1ProjectsProjectIdAgentsAgentIdCurrentVersionPatchErrors,
+      ThrowOnError
+    >({
+      url: "/api/v1/projects/{project_id}/agents{agent_id}/current-version",
+      ...options,
+    });
+
+/**
+ * Set Baseline Version Endpoint
+ */
+export const setBaselineVersionEndpointApiV1ProjectsProjectIdAgentsAgentIdBaselineVersionPatch =
+  <ThrowOnError extends boolean = false>(
+    options: Options<
+      SetBaselineVersionEndpointApiV1ProjectsProjectIdAgentsAgentIdBaselineVersionPatchData,
+      ThrowOnError
+    >,
+  ): RequestResult<
+    SetBaselineVersionEndpointApiV1ProjectsProjectIdAgentsAgentIdBaselineVersionPatchResponses,
+    SetBaselineVersionEndpointApiV1ProjectsProjectIdAgentsAgentIdBaselineVersionPatchErrors,
     ThrowOnError
-  >({ url: "/api/v1/projects/{project_id}/audit", ...options });
+  > =>
+    (options.client ?? client).patch<
+      SetBaselineVersionEndpointApiV1ProjectsProjectIdAgentsAgentIdBaselineVersionPatchResponses,
+      SetBaselineVersionEndpointApiV1ProjectsProjectIdAgentsAgentIdBaselineVersionPatchErrors,
+      ThrowOnError
+    >({
+      url: "/api/v1/projects/{project_id}/agents{agent_id}/baseline-version",
+      ...options,
+    });
 
 /**
  * List Datasets
@@ -686,6 +1295,27 @@ export const createDatasetApiV1ProjectsProjectIdDatasetsPost = <
       ...options.headers,
     },
   });
+
+/**
+ * Delete Dataset
+ */
+export const deleteDatasetApiV1ProjectsProjectIdDatasetsDatasetIdDelete = <
+  ThrowOnError extends boolean = false,
+>(
+  options: Options<
+    DeleteDatasetApiV1ProjectsProjectIdDatasetsDatasetIdDeleteData,
+    ThrowOnError
+  >,
+): RequestResult<
+  DeleteDatasetApiV1ProjectsProjectIdDatasetsDatasetIdDeleteResponses,
+  DeleteDatasetApiV1ProjectsProjectIdDatasetsDatasetIdDeleteErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).delete<
+    DeleteDatasetApiV1ProjectsProjectIdDatasetsDatasetIdDeleteResponses,
+    DeleteDatasetApiV1ProjectsProjectIdDatasetsDatasetIdDeleteErrors,
+    ThrowOnError
+  >({ url: "/api/v1/projects/{project_id}/datasets/{dataset_id}", ...options });
 
 /**
  * Get Dataset
@@ -807,6 +1437,29 @@ export const getVersionApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdG
     });
 
 /**
+ * Publish Version
+ */
+export const publishVersionApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdPublishPost =
+  <ThrowOnError extends boolean = false>(
+    options: Options<
+      PublishVersionApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdPublishPostData,
+      ThrowOnError
+    >,
+  ): RequestResult<
+    PublishVersionApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdPublishPostResponses,
+    PublishVersionApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdPublishPostErrors,
+    ThrowOnError
+  > =>
+    (options.client ?? client).post<
+      PublishVersionApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdPublishPostResponses,
+      PublishVersionApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdPublishPostErrors,
+      ThrowOnError
+    >({
+      url: "/api/v1/projects/{project_id}/datasets/{dataset_id}/versions/{version_id}/publish",
+      ...options,
+    });
+
+/**
  * List Cases
  */
 export const listCasesApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdCasesGet =
@@ -907,29 +1560,6 @@ export const updateCaseApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdC
     });
 
 /**
- * Export Cases
- */
-export const exportCasesApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdExportGet =
-  <ThrowOnError extends boolean = false>(
-    options: Options<
-      ExportCasesApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdExportGetData,
-      ThrowOnError
-    >,
-  ): RequestResult<
-    ExportCasesApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdExportGetResponses,
-    ExportCasesApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdExportGetErrors,
-    ThrowOnError
-  > =>
-    (options.client ?? client).get<
-      ExportCasesApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdExportGetResponses,
-      ExportCasesApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdExportGetErrors,
-      ThrowOnError
-    >({
-      url: "/api/v1/projects/{project_id}/datasets/{dataset_id}/versions/{version_id}/export",
-      ...options,
-    });
-
-/**
  * Import Cases
  */
 export const importCasesApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdImportPost =
@@ -957,399 +1587,77 @@ export const importCasesApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionId
     });
 
 /**
- * Publish Version
+ * Export Cases
  */
-export const publishVersionApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdPublishPost =
+export const exportCasesApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdExportGet =
   <ThrowOnError extends boolean = false>(
     options: Options<
-      PublishVersionApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdPublishPostData,
+      ExportCasesApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdExportGetData,
       ThrowOnError
     >,
   ): RequestResult<
-    PublishVersionApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdPublishPostResponses,
-    PublishVersionApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdPublishPostErrors,
-    ThrowOnError
-  > =>
-    (options.client ?? client).post<
-      PublishVersionApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdPublishPostResponses,
-      PublishVersionApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdPublishPostErrors,
-      ThrowOnError
-    >({
-      url: "/api/v1/projects/{project_id}/datasets/{dataset_id}/versions/{version_id}/publish",
-      ...options,
-    });
-
-/**
- * List Templates
- */
-export const listTemplatesApiV1ProjectsProjectIdEnvironmentTemplatesGet = <
-  ThrowOnError extends boolean = false,
->(
-  options: Options<
-    ListTemplatesApiV1ProjectsProjectIdEnvironmentTemplatesGetData,
-    ThrowOnError
-  >,
-): RequestResult<
-  ListTemplatesApiV1ProjectsProjectIdEnvironmentTemplatesGetResponses,
-  ListTemplatesApiV1ProjectsProjectIdEnvironmentTemplatesGetErrors,
-  ThrowOnError
-> =>
-  (options.client ?? client).get<
-    ListTemplatesApiV1ProjectsProjectIdEnvironmentTemplatesGetResponses,
-    ListTemplatesApiV1ProjectsProjectIdEnvironmentTemplatesGetErrors,
-    ThrowOnError
-  >({ url: "/api/v1/projects/{project_id}/environment-templates", ...options });
-
-/**
- * Create Template
- */
-export const createTemplateApiV1ProjectsProjectIdEnvironmentTemplatesPost = <
-  ThrowOnError extends boolean = false,
->(
-  options: Options<
-    CreateTemplateApiV1ProjectsProjectIdEnvironmentTemplatesPostData,
-    ThrowOnError
-  >,
-): RequestResult<
-  CreateTemplateApiV1ProjectsProjectIdEnvironmentTemplatesPostResponses,
-  CreateTemplateApiV1ProjectsProjectIdEnvironmentTemplatesPostErrors,
-  ThrowOnError
-> =>
-  (options.client ?? client).post<
-    CreateTemplateApiV1ProjectsProjectIdEnvironmentTemplatesPostResponses,
-    CreateTemplateApiV1ProjectsProjectIdEnvironmentTemplatesPostErrors,
-    ThrowOnError
-  >({
-    url: "/api/v1/projects/{project_id}/environment-templates",
-    ...options,
-    headers: {
-      "Content-Type": "application/json",
-      ...options.headers,
-    },
-  });
-
-/**
- * Delete Template
- */
-export const deleteTemplateApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdDelete =
-  <ThrowOnError extends boolean = false>(
-    options: Options<
-      DeleteTemplateApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdDeleteData,
-      ThrowOnError
-    >,
-  ): RequestResult<
-    DeleteTemplateApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdDeleteResponses,
-    DeleteTemplateApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdDeleteErrors,
-    ThrowOnError
-  > =>
-    (options.client ?? client).delete<
-      DeleteTemplateApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdDeleteResponses,
-      DeleteTemplateApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdDeleteErrors,
-      ThrowOnError
-    >({
-      url: "/api/v1/projects/{project_id}/environment-templates/{template_id}",
-      ...options,
-    });
-
-/**
- * Get Template
- */
-export const getTemplateApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdGet =
-  <ThrowOnError extends boolean = false>(
-    options: Options<
-      GetTemplateApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdGetData,
-      ThrowOnError
-    >,
-  ): RequestResult<
-    GetTemplateApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdGetResponses,
-    GetTemplateApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdGetErrors,
+    ExportCasesApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdExportGetResponses,
+    ExportCasesApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdExportGetErrors,
     ThrowOnError
   > =>
     (options.client ?? client).get<
-      GetTemplateApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdGetResponses,
-      GetTemplateApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdGetErrors,
+      ExportCasesApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdExportGetResponses,
+      ExportCasesApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdExportGetErrors,
       ThrowOnError
     >({
-      url: "/api/v1/projects/{project_id}/environment-templates/{template_id}",
+      url: "/api/v1/projects/{project_id}/datasets/{dataset_id}/versions/{version_id}/export",
       ...options,
     });
 
 /**
- * Update Template
+ * Batch Delete Cases
+ *
+ * 批量删除用例（从 request body 读取 case_ids）。
  */
-export const updateTemplateApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdPatch =
+export const batchDeleteCasesApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdCasesBatchDeletePost =
   <ThrowOnError extends boolean = false>(
     options: Options<
-      UpdateTemplateApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdPatchData,
+      BatchDeleteCasesApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdCasesBatchDeletePostData,
       ThrowOnError
     >,
   ): RequestResult<
-    UpdateTemplateApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdPatchResponses,
-    UpdateTemplateApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdPatchErrors,
+    BatchDeleteCasesApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdCasesBatchDeletePostResponses,
+    BatchDeleteCasesApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdCasesBatchDeletePostErrors,
     ThrowOnError
   > =>
-    (options.client ?? client).patch<
-      UpdateTemplateApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdPatchResponses,
-      UpdateTemplateApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdPatchErrors,
+    (options.client ?? client).post<
+      BatchDeleteCasesApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdCasesBatchDeletePostResponses,
+      BatchDeleteCasesApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdCasesBatchDeletePostErrors,
       ThrowOnError
     >({
-      url: "/api/v1/projects/{project_id}/environment-templates/{template_id}",
+      url: "/api/v1/projects/{project_id}/datasets{dataset_id}/versions/{version_id}/cases/batch-delete",
       ...options,
-      headers: {
-        "Content-Type": "application/json",
-        ...options.headers,
-      },
     });
 
 /**
- * List Members
+ * Generate From Run Endpoint
+ *
+ * 从失败运行生成测试用例。
  */
-export const listMembersApiV1ProjectsProjectIdMembersGet = <
-  ThrowOnError extends boolean = false,
->(
-  options: Options<
-    ListMembersApiV1ProjectsProjectIdMembersGetData,
+export const generateFromRunEndpointApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdGenerateFromRunPost =
+  <ThrowOnError extends boolean = false>(
+    options: Options<
+      GenerateFromRunEndpointApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdGenerateFromRunPostData,
+      ThrowOnError
+    >,
+  ): RequestResult<
+    GenerateFromRunEndpointApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdGenerateFromRunPostResponses,
+    GenerateFromRunEndpointApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdGenerateFromRunPostErrors,
     ThrowOnError
-  >,
-): RequestResult<
-  ListMembersApiV1ProjectsProjectIdMembersGetResponses,
-  ListMembersApiV1ProjectsProjectIdMembersGetErrors,
-  ThrowOnError
-> =>
-  (options.client ?? client).get<
-    ListMembersApiV1ProjectsProjectIdMembersGetResponses,
-    ListMembersApiV1ProjectsProjectIdMembersGetErrors,
-    ThrowOnError
-  >({ url: "/api/v1/projects/{project_id}/members", ...options });
-
-/**
- * Add Member
- */
-export const addMemberApiV1ProjectsProjectIdMembersPost = <
-  ThrowOnError extends boolean = false,
->(
-  options: Options<
-    AddMemberApiV1ProjectsProjectIdMembersPostData,
-    ThrowOnError
-  >,
-): RequestResult<
-  AddMemberApiV1ProjectsProjectIdMembersPostResponses,
-  AddMemberApiV1ProjectsProjectIdMembersPostErrors,
-  ThrowOnError
-> =>
-  (options.client ?? client).post<
-    AddMemberApiV1ProjectsProjectIdMembersPostResponses,
-    AddMemberApiV1ProjectsProjectIdMembersPostErrors,
-    ThrowOnError
-  >({
-    url: "/api/v1/projects/{project_id}/members",
-    ...options,
-    headers: {
-      "Content-Type": "application/json",
-      ...options.headers,
-    },
-  });
-
-/**
- * Remove Member
- */
-export const removeMemberApiV1ProjectsProjectIdMembersUserIdDelete = <
-  ThrowOnError extends boolean = false,
->(
-  options: Options<
-    RemoveMemberApiV1ProjectsProjectIdMembersUserIdDeleteData,
-    ThrowOnError
-  >,
-): RequestResult<
-  RemoveMemberApiV1ProjectsProjectIdMembersUserIdDeleteResponses,
-  RemoveMemberApiV1ProjectsProjectIdMembersUserIdDeleteErrors,
-  ThrowOnError
-> =>
-  (options.client ?? client).delete<
-    RemoveMemberApiV1ProjectsProjectIdMembersUserIdDeleteResponses,
-    RemoveMemberApiV1ProjectsProjectIdMembersUserIdDeleteErrors,
-    ThrowOnError
-  >({ url: "/api/v1/projects/{project_id}/members/{user_id}", ...options });
-
-/**
- * Update Member
- */
-export const updateMemberApiV1ProjectsProjectIdMembersUserIdPatch = <
-  ThrowOnError extends boolean = false,
->(
-  options: Options<
-    UpdateMemberApiV1ProjectsProjectIdMembersUserIdPatchData,
-    ThrowOnError
-  >,
-): RequestResult<
-  UpdateMemberApiV1ProjectsProjectIdMembersUserIdPatchResponses,
-  UpdateMemberApiV1ProjectsProjectIdMembersUserIdPatchErrors,
-  ThrowOnError
-> =>
-  (options.client ?? client).patch<
-    UpdateMemberApiV1ProjectsProjectIdMembersUserIdPatchResponses,
-    UpdateMemberApiV1ProjectsProjectIdMembersUserIdPatchErrors,
-    ThrowOnError
-  >({
-    url: "/api/v1/projects/{project_id}/members/{user_id}",
-    ...options,
-    headers: {
-      "Content-Type": "application/json",
-      ...options.headers,
-    },
-  });
-
-/**
- * List Runs
- */
-export const listRunsApiV1ProjectsProjectIdRunsGet = <
-  ThrowOnError extends boolean = false,
->(
-  options: Options<ListRunsApiV1ProjectsProjectIdRunsGetData, ThrowOnError>,
-): RequestResult<
-  ListRunsApiV1ProjectsProjectIdRunsGetResponses,
-  ListRunsApiV1ProjectsProjectIdRunsGetErrors,
-  ThrowOnError
-> =>
-  (options.client ?? client).get<
-    ListRunsApiV1ProjectsProjectIdRunsGetResponses,
-    ListRunsApiV1ProjectsProjectIdRunsGetErrors,
-    ThrowOnError
-  >({ url: "/api/v1/projects/{project_id}/runs", ...options });
-
-/**
- * Create Run
- */
-export const createRunApiV1ProjectsProjectIdRunsPost = <
-  ThrowOnError extends boolean = false,
->(
-  options: Options<CreateRunApiV1ProjectsProjectIdRunsPostData, ThrowOnError>,
-): RequestResult<
-  CreateRunApiV1ProjectsProjectIdRunsPostResponses,
-  CreateRunApiV1ProjectsProjectIdRunsPostErrors,
-  ThrowOnError
-> =>
-  (options.client ?? client).post<
-    CreateRunApiV1ProjectsProjectIdRunsPostResponses,
-    CreateRunApiV1ProjectsProjectIdRunsPostErrors,
-    ThrowOnError
-  >({
-    url: "/api/v1/projects/{project_id}/runs",
-    ...options,
-    headers: {
-      "Content-Type": "application/json",
-      ...options.headers,
-    },
-  });
-
-/**
- * Get Run
- */
-export const getRunApiV1ProjectsProjectIdRunsRunIdGet = <
-  ThrowOnError extends boolean = false,
->(
-  options: Options<GetRunApiV1ProjectsProjectIdRunsRunIdGetData, ThrowOnError>,
-): RequestResult<
-  GetRunApiV1ProjectsProjectIdRunsRunIdGetResponses,
-  GetRunApiV1ProjectsProjectIdRunsRunIdGetErrors,
-  ThrowOnError
-> =>
-  (options.client ?? client).get<
-    GetRunApiV1ProjectsProjectIdRunsRunIdGetResponses,
-    GetRunApiV1ProjectsProjectIdRunsRunIdGetErrors,
-    ThrowOnError
-  >({ url: "/api/v1/projects/{project_id}/runs/{run_id}", ...options });
-
-/**
- * Cancel Run
- */
-export const cancelRunApiV1ProjectsProjectIdRunsRunIdCancelPost = <
-  ThrowOnError extends boolean = false,
->(
-  options: Options<
-    CancelRunApiV1ProjectsProjectIdRunsRunIdCancelPostData,
-    ThrowOnError
-  >,
-): RequestResult<
-  CancelRunApiV1ProjectsProjectIdRunsRunIdCancelPostResponses,
-  CancelRunApiV1ProjectsProjectIdRunsRunIdCancelPostErrors,
-  ThrowOnError
-> =>
-  (options.client ?? client).post<
-    CancelRunApiV1ProjectsProjectIdRunsRunIdCancelPostResponses,
-    CancelRunApiV1ProjectsProjectIdRunsRunIdCancelPostErrors,
-    ThrowOnError
-  >({ url: "/api/v1/projects/{project_id}/runs/{run_id}/cancel", ...options });
-
-/**
- * List Cases
- */
-export const listCasesApiV1ProjectsProjectIdRunsRunIdCasesGet = <
-  ThrowOnError extends boolean = false,
->(
-  options: Options<
-    ListCasesApiV1ProjectsProjectIdRunsRunIdCasesGetData,
-    ThrowOnError
-  >,
-): RequestResult<
-  ListCasesApiV1ProjectsProjectIdRunsRunIdCasesGetResponses,
-  ListCasesApiV1ProjectsProjectIdRunsRunIdCasesGetErrors,
-  ThrowOnError
-> =>
-  (options.client ?? client).get<
-    ListCasesApiV1ProjectsProjectIdRunsRunIdCasesGetResponses,
-    ListCasesApiV1ProjectsProjectIdRunsRunIdCasesGetErrors,
-    ThrowOnError
-  >({ url: "/api/v1/projects/{project_id}/runs/{run_id}/cases", ...options });
-
-/**
- * Events
- */
-export const eventsApiV1ProjectsProjectIdRunsRunIdEventsGet = <
-  ThrowOnError extends boolean = false,
->(
-  options: Options<
-    EventsApiV1ProjectsProjectIdRunsRunIdEventsGetData,
-    ThrowOnError
-  >,
-): RequestResult<
-  EventsApiV1ProjectsProjectIdRunsRunIdEventsGetResponses,
-  EventsApiV1ProjectsProjectIdRunsRunIdEventsGetErrors,
-  ThrowOnError
-> =>
-  (options.client ?? client).get<
-    EventsApiV1ProjectsProjectIdRunsRunIdEventsGetResponses,
-    EventsApiV1ProjectsProjectIdRunsRunIdEventsGetErrors,
-    ThrowOnError
-  >({ url: "/api/v1/projects/{project_id}/runs/{run_id}/events", ...options });
-
-/**
- * Apply Result
- */
-export const applyResultApiV1ProjectsProjectIdRunsRunIdResultPost = <
-  ThrowOnError extends boolean = false,
->(
-  options: Options<
-    ApplyResultApiV1ProjectsProjectIdRunsRunIdResultPostData,
-    ThrowOnError
-  >,
-): RequestResult<
-  ApplyResultApiV1ProjectsProjectIdRunsRunIdResultPostResponses,
-  ApplyResultApiV1ProjectsProjectIdRunsRunIdResultPostErrors,
-  ThrowOnError
-> =>
-  (options.client ?? client).post<
-    ApplyResultApiV1ProjectsProjectIdRunsRunIdResultPostResponses,
-    ApplyResultApiV1ProjectsProjectIdRunsRunIdResultPostErrors,
-    ThrowOnError
-  >({
-    url: "/api/v1/projects/{project_id}/runs/{run_id}/result",
-    ...options,
-    headers: {
-      "Content-Type": "application/json",
-      ...options.headers,
-    },
-  });
+  > =>
+    (options.client ?? client).post<
+      GenerateFromRunEndpointApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdGenerateFromRunPostResponses,
+      GenerateFromRunEndpointApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdGenerateFromRunPostErrors,
+      ThrowOnError
+    >({
+      url: "/api/v1/projects/{project_id}/datasets{dataset_id}/versions/{version_id}/generate-from-run",
+      ...options,
+    });
 
 /**
  * List Plans
@@ -1399,6 +1707,27 @@ export const createPlanApiV1ProjectsProjectIdTestPlansPost = <
       ...options.headers,
     },
   });
+
+/**
+ * Delete Test Plan
+ */
+export const deleteTestPlanApiV1ProjectsProjectIdTestPlansPlanIdDelete = <
+  ThrowOnError extends boolean = false,
+>(
+  options: Options<
+    DeleteTestPlanApiV1ProjectsProjectIdTestPlansPlanIdDeleteData,
+    ThrowOnError
+  >,
+): RequestResult<
+  DeleteTestPlanApiV1ProjectsProjectIdTestPlansPlanIdDeleteResponses,
+  DeleteTestPlanApiV1ProjectsProjectIdTestPlansPlanIdDeleteErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).delete<
+    DeleteTestPlanApiV1ProjectsProjectIdTestPlansPlanIdDeleteResponses,
+    DeleteTestPlanApiV1ProjectsProjectIdTestPlansPlanIdDeleteErrors,
+    ThrowOnError
+  >({ url: "/api/v1/projects/{project_id}/test-plans/{plan_id}", ...options });
 
 /**
  * Get Plan
@@ -1575,120 +1904,315 @@ export const publishVersionApiV1ProjectsProjectIdTestPlansPlanIdVersionsVersionI
     });
 
 /**
- * Global Audit
+ * List Templates
  */
-export const globalAuditApiV1SystemAuditGet = <
+export const listTemplatesApiV1ProjectsProjectIdEnvironmentTemplatesGet = <
   ThrowOnError extends boolean = false,
 >(
-  options?: Options<GlobalAuditApiV1SystemAuditGetData, ThrowOnError>,
-): RequestResult<
-  GlobalAuditApiV1SystemAuditGetResponses,
-  GlobalAuditApiV1SystemAuditGetErrors,
-  ThrowOnError
-> =>
-  (options?.client ?? client).get<
-    GlobalAuditApiV1SystemAuditGetResponses,
-    GlobalAuditApiV1SystemAuditGetErrors,
+  options: Options<
+    ListTemplatesApiV1ProjectsProjectIdEnvironmentTemplatesGetData,
     ThrowOnError
-  >({ url: "/api/v1/system/audit", ...options });
-
-/**
- * List Users
- */
-export const listUsersApiV1SystemUsersGet = <
-  ThrowOnError extends boolean = false,
->(
-  options?: Options<ListUsersApiV1SystemUsersGetData, ThrowOnError>,
+  >,
 ): RequestResult<
-  ListUsersApiV1SystemUsersGetResponses,
-  ListUsersApiV1SystemUsersGetErrors,
-  ThrowOnError
-> =>
-  (options?.client ?? client).get<
-    ListUsersApiV1SystemUsersGetResponses,
-    ListUsersApiV1SystemUsersGetErrors,
-    ThrowOnError
-  >({ url: "/api/v1/system/users", ...options });
-
-/**
- * Create User
- */
-export const createUserApiV1SystemUsersPost = <
-  ThrowOnError extends boolean = false,
->(
-  options: Options<CreateUserApiV1SystemUsersPostData, ThrowOnError>,
-): RequestResult<
-  CreateUserApiV1SystemUsersPostResponses,
-  CreateUserApiV1SystemUsersPostErrors,
-  ThrowOnError
-> =>
-  (options.client ?? client).post<
-    CreateUserApiV1SystemUsersPostResponses,
-    CreateUserApiV1SystemUsersPostErrors,
-    ThrowOnError
-  >({
-    url: "/api/v1/system/users",
-    ...options,
-    headers: {
-      "Content-Type": "application/json",
-      ...options.headers,
-    },
-  });
-
-/**
- * Delete User
- */
-export const deleteUserApiV1SystemUsersUserIdDelete = <
-  ThrowOnError extends boolean = false,
->(
-  options: Options<DeleteUserApiV1SystemUsersUserIdDeleteData, ThrowOnError>,
-): RequestResult<
-  DeleteUserApiV1SystemUsersUserIdDeleteResponses,
-  DeleteUserApiV1SystemUsersUserIdDeleteErrors,
-  ThrowOnError
-> =>
-  (options.client ?? client).delete<
-    DeleteUserApiV1SystemUsersUserIdDeleteResponses,
-    DeleteUserApiV1SystemUsersUserIdDeleteErrors,
-    ThrowOnError
-  >({ url: "/api/v1/system/users/{user_id}", ...options });
-
-/**
- * Get User
- */
-export const getUserApiV1SystemUsersUserIdGet = <
-  ThrowOnError extends boolean = false,
->(
-  options: Options<GetUserApiV1SystemUsersUserIdGetData, ThrowOnError>,
-): RequestResult<
-  GetUserApiV1SystemUsersUserIdGetResponses,
-  GetUserApiV1SystemUsersUserIdGetErrors,
+  ListTemplatesApiV1ProjectsProjectIdEnvironmentTemplatesGetResponses,
+  ListTemplatesApiV1ProjectsProjectIdEnvironmentTemplatesGetErrors,
   ThrowOnError
 > =>
   (options.client ?? client).get<
-    GetUserApiV1SystemUsersUserIdGetResponses,
-    GetUserApiV1SystemUsersUserIdGetErrors,
+    ListTemplatesApiV1ProjectsProjectIdEnvironmentTemplatesGetResponses,
+    ListTemplatesApiV1ProjectsProjectIdEnvironmentTemplatesGetErrors,
     ThrowOnError
-  >({ url: "/api/v1/system/users/{user_id}", ...options });
+  >({ url: "/api/v1/projects/{project_id}/environment-templates", ...options });
 
 /**
- * Update User
+ * Create Template
  */
-export const updateUserApiV1SystemUsersUserIdPatch = <
+export const createTemplateApiV1ProjectsProjectIdEnvironmentTemplatesPost = <
   ThrowOnError extends boolean = false,
 >(
-  options: Options<UpdateUserApiV1SystemUsersUserIdPatchData, ThrowOnError>,
+  options: Options<
+    CreateTemplateApiV1ProjectsProjectIdEnvironmentTemplatesPostData,
+    ThrowOnError
+  >,
 ): RequestResult<
-  UpdateUserApiV1SystemUsersUserIdPatchResponses,
-  UpdateUserApiV1SystemUsersUserIdPatchErrors,
+  CreateTemplateApiV1ProjectsProjectIdEnvironmentTemplatesPostResponses,
+  CreateTemplateApiV1ProjectsProjectIdEnvironmentTemplatesPostErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).post<
+    CreateTemplateApiV1ProjectsProjectIdEnvironmentTemplatesPostResponses,
+    CreateTemplateApiV1ProjectsProjectIdEnvironmentTemplatesPostErrors,
+    ThrowOnError
+  >({
+    url: "/api/v1/projects/{project_id}/environment-templates",
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...options.headers,
+    },
+  });
+
+/**
+ * Delete Template
+ */
+export const deleteTemplateApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdDelete =
+  <ThrowOnError extends boolean = false>(
+    options: Options<
+      DeleteTemplateApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdDeleteData,
+      ThrowOnError
+    >,
+  ): RequestResult<
+    DeleteTemplateApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdDeleteResponses,
+    DeleteTemplateApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdDeleteErrors,
+    ThrowOnError
+  > =>
+    (options.client ?? client).delete<
+      DeleteTemplateApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdDeleteResponses,
+      DeleteTemplateApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdDeleteErrors,
+      ThrowOnError
+    >({
+      url: "/api/v1/projects/{project_id}/environment-templates/{template_id}",
+      ...options,
+    });
+
+/**
+ * Get Template
+ */
+export const getTemplateApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdGet =
+  <ThrowOnError extends boolean = false>(
+    options: Options<
+      GetTemplateApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdGetData,
+      ThrowOnError
+    >,
+  ): RequestResult<
+    GetTemplateApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdGetResponses,
+    GetTemplateApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdGetErrors,
+    ThrowOnError
+  > =>
+    (options.client ?? client).get<
+      GetTemplateApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdGetResponses,
+      GetTemplateApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdGetErrors,
+      ThrowOnError
+    >({
+      url: "/api/v1/projects/{project_id}/environment-templates/{template_id}",
+      ...options,
+    });
+
+/**
+ * Update Template
+ */
+export const updateTemplateApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdPatch =
+  <ThrowOnError extends boolean = false>(
+    options: Options<
+      UpdateTemplateApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdPatchData,
+      ThrowOnError
+    >,
+  ): RequestResult<
+    UpdateTemplateApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdPatchResponses,
+    UpdateTemplateApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdPatchErrors,
+    ThrowOnError
+  > =>
+    (options.client ?? client).patch<
+      UpdateTemplateApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdPatchResponses,
+      UpdateTemplateApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdPatchErrors,
+      ThrowOnError
+    >({
+      url: "/api/v1/projects/{project_id}/environment-templates/{template_id}",
+      ...options,
+      headers: {
+        "Content-Type": "application/json",
+        ...options.headers,
+      },
+    });
+
+/**
+ * List Runs
+ */
+export const listRunsApiV1ProjectsProjectIdRunsGet = <
+  ThrowOnError extends boolean = false,
+>(
+  options: Options<ListRunsApiV1ProjectsProjectIdRunsGetData, ThrowOnError>,
+): RequestResult<
+  ListRunsApiV1ProjectsProjectIdRunsGetResponses,
+  ListRunsApiV1ProjectsProjectIdRunsGetErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).get<
+    ListRunsApiV1ProjectsProjectIdRunsGetResponses,
+    ListRunsApiV1ProjectsProjectIdRunsGetErrors,
+    ThrowOnError
+  >({ url: "/api/v1/projects/{project_id}/runs", ...options });
+
+/**
+ * Create Run
+ */
+export const createRunApiV1ProjectsProjectIdRunsPost = <
+  ThrowOnError extends boolean = false,
+>(
+  options: Options<CreateRunApiV1ProjectsProjectIdRunsPostData, ThrowOnError>,
+): RequestResult<
+  CreateRunApiV1ProjectsProjectIdRunsPostResponses,
+  CreateRunApiV1ProjectsProjectIdRunsPostErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).post<
+    CreateRunApiV1ProjectsProjectIdRunsPostResponses,
+    CreateRunApiV1ProjectsProjectIdRunsPostErrors,
+    ThrowOnError
+  >({
+    url: "/api/v1/projects/{project_id}/runs",
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...options.headers,
+    },
+  });
+
+/**
+ * Get Run
+ */
+export const getRunApiV1ProjectsProjectIdRunsRunIdGet = <
+  ThrowOnError extends boolean = false,
+>(
+  options: Options<GetRunApiV1ProjectsProjectIdRunsRunIdGetData, ThrowOnError>,
+): RequestResult<
+  GetRunApiV1ProjectsProjectIdRunsRunIdGetResponses,
+  GetRunApiV1ProjectsProjectIdRunsRunIdGetErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).get<
+    GetRunApiV1ProjectsProjectIdRunsRunIdGetResponses,
+    GetRunApiV1ProjectsProjectIdRunsRunIdGetErrors,
+    ThrowOnError
+  >({ url: "/api/v1/projects/{project_id}/runs/{run_id}", ...options });
+
+/**
+ * List Cases
+ */
+export const listCasesApiV1ProjectsProjectIdRunsRunIdCasesGet = <
+  ThrowOnError extends boolean = false,
+>(
+  options: Options<
+    ListCasesApiV1ProjectsProjectIdRunsRunIdCasesGetData,
+    ThrowOnError
+  >,
+): RequestResult<
+  ListCasesApiV1ProjectsProjectIdRunsRunIdCasesGetResponses,
+  ListCasesApiV1ProjectsProjectIdRunsRunIdCasesGetErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).get<
+    ListCasesApiV1ProjectsProjectIdRunsRunIdCasesGetResponses,
+    ListCasesApiV1ProjectsProjectIdRunsRunIdCasesGetErrors,
+    ThrowOnError
+  >({ url: "/api/v1/projects/{project_id}/runs/{run_id}/cases", ...options });
+
+/**
+ * Cancel Run
+ */
+export const cancelRunApiV1ProjectsProjectIdRunsRunIdCancelPost = <
+  ThrowOnError extends boolean = false,
+>(
+  options: Options<
+    CancelRunApiV1ProjectsProjectIdRunsRunIdCancelPostData,
+    ThrowOnError
+  >,
+): RequestResult<
+  CancelRunApiV1ProjectsProjectIdRunsRunIdCancelPostResponses,
+  CancelRunApiV1ProjectsProjectIdRunsRunIdCancelPostErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).post<
+    CancelRunApiV1ProjectsProjectIdRunsRunIdCancelPostResponses,
+    CancelRunApiV1ProjectsProjectIdRunsRunIdCancelPostErrors,
+    ThrowOnError
+  >({ url: "/api/v1/projects/{project_id}/runs/{run_id}/cancel", ...options });
+
+/**
+ * Events
+ */
+export const eventsApiV1ProjectsProjectIdRunsRunIdEventsGet = <
+  ThrowOnError extends boolean = false,
+>(
+  options: Options<
+    EventsApiV1ProjectsProjectIdRunsRunIdEventsGetData,
+    ThrowOnError
+  >,
+): RequestResult<
+  EventsApiV1ProjectsProjectIdRunsRunIdEventsGetResponses,
+  EventsApiV1ProjectsProjectIdRunsRunIdEventsGetErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).get<
+    EventsApiV1ProjectsProjectIdRunsRunIdEventsGetResponses,
+    EventsApiV1ProjectsProjectIdRunsRunIdEventsGetErrors,
+    ThrowOnError
+  >({ url: "/api/v1/projects/{project_id}/runs/{run_id}/events", ...options });
+
+/**
+ * Apply Result
+ */
+export const applyResultApiV1ProjectsProjectIdRunsRunIdResultPost = <
+  ThrowOnError extends boolean = false,
+>(
+  options: Options<
+    ApplyResultApiV1ProjectsProjectIdRunsRunIdResultPostData,
+    ThrowOnError
+  >,
+): RequestResult<
+  ApplyResultApiV1ProjectsProjectIdRunsRunIdResultPostResponses,
+  ApplyResultApiV1ProjectsProjectIdRunsRunIdResultPostErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).post<
+    ApplyResultApiV1ProjectsProjectIdRunsRunIdResultPostResponses,
+    ApplyResultApiV1ProjectsProjectIdRunsRunIdResultPostErrors,
+    ThrowOnError
+  >({
+    url: "/api/v1/projects/{project_id}/runs/{run_id}/result",
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...options.headers,
+    },
+  });
+
+/**
+ * Get Settings
+ */
+export const getSettingsApiV1UsersMeSettingsGet = <
+  ThrowOnError extends boolean = false,
+>(
+  options?: Options<GetSettingsApiV1UsersMeSettingsGetData, ThrowOnError>,
+): RequestResult<
+  GetSettingsApiV1UsersMeSettingsGetResponses,
+  unknown,
+  ThrowOnError
+> =>
+  (options?.client ?? client).get<
+    GetSettingsApiV1UsersMeSettingsGetResponses,
+    unknown,
+    ThrowOnError
+  >({ url: "/api/v1/users/me/settings", ...options });
+
+/**
+ * Update Settings
+ */
+export const updateSettingsApiV1UsersMeSettingsPatch = <
+  ThrowOnError extends boolean = false,
+>(
+  options: Options<UpdateSettingsApiV1UsersMeSettingsPatchData, ThrowOnError>,
+): RequestResult<
+  UpdateSettingsApiV1UsersMeSettingsPatchResponses,
+  UpdateSettingsApiV1UsersMeSettingsPatchErrors,
   ThrowOnError
 > =>
   (options.client ?? client).patch<
-    UpdateUserApiV1SystemUsersUserIdPatchResponses,
-    UpdateUserApiV1SystemUsersUserIdPatchErrors,
+    UpdateSettingsApiV1UsersMeSettingsPatchResponses,
+    UpdateSettingsApiV1UsersMeSettingsPatchErrors,
     ThrowOnError
   >({
-    url: "/api/v1/system/users/{user_id}",
+    url: "/api/v1/users/me/settings",
     ...options,
     headers: {
       "Content-Type": "application/json",
@@ -1697,71 +2221,1193 @@ export const updateUserApiV1SystemUsersUserIdPatch = <
   });
 
 /**
- * Disable User
+ * Create Feedback
  */
-export const disableUserApiV1SystemUsersUserIdDisablePost = <
+export const createFeedbackApiV1FeedbackPost = <
   ThrowOnError extends boolean = false,
 >(
-  options: Options<
-    DisableUserApiV1SystemUsersUserIdDisablePostData,
-    ThrowOnError
-  >,
+  options: Options<CreateFeedbackApiV1FeedbackPostData, ThrowOnError>,
 ): RequestResult<
-  DisableUserApiV1SystemUsersUserIdDisablePostResponses,
-  DisableUserApiV1SystemUsersUserIdDisablePostErrors,
+  CreateFeedbackApiV1FeedbackPostResponses,
+  CreateFeedbackApiV1FeedbackPostErrors,
   ThrowOnError
 > =>
   (options.client ?? client).post<
-    DisableUserApiV1SystemUsersUserIdDisablePostResponses,
-    DisableUserApiV1SystemUsersUserIdDisablePostErrors,
-    ThrowOnError
-  >({ url: "/api/v1/system/users/{user_id}/disable", ...options });
-
-/**
- * Enable User
- */
-export const enableUserApiV1SystemUsersUserIdEnablePost = <
-  ThrowOnError extends boolean = false,
->(
-  options: Options<
-    EnableUserApiV1SystemUsersUserIdEnablePostData,
-    ThrowOnError
-  >,
-): RequestResult<
-  EnableUserApiV1SystemUsersUserIdEnablePostResponses,
-  EnableUserApiV1SystemUsersUserIdEnablePostErrors,
-  ThrowOnError
-> =>
-  (options.client ?? client).post<
-    EnableUserApiV1SystemUsersUserIdEnablePostResponses,
-    EnableUserApiV1SystemUsersUserIdEnablePostErrors,
-    ThrowOnError
-  >({ url: "/api/v1/system/users/{user_id}/enable", ...options });
-
-/**
- * Reset Password
- */
-export const resetPasswordApiV1SystemUsersUserIdResetPasswordPost = <
-  ThrowOnError extends boolean = false,
->(
-  options: Options<
-    ResetPasswordApiV1SystemUsersUserIdResetPasswordPostData,
-    ThrowOnError
-  >,
-): RequestResult<
-  ResetPasswordApiV1SystemUsersUserIdResetPasswordPostResponses,
-  ResetPasswordApiV1SystemUsersUserIdResetPasswordPostErrors,
-  ThrowOnError
-> =>
-  (options.client ?? client).post<
-    ResetPasswordApiV1SystemUsersUserIdResetPasswordPostResponses,
-    ResetPasswordApiV1SystemUsersUserIdResetPasswordPostErrors,
+    CreateFeedbackApiV1FeedbackPostResponses,
+    CreateFeedbackApiV1FeedbackPostErrors,
     ThrowOnError
   >({
-    url: "/api/v1/system/users/{user_id}/reset-password",
+    url: "/api/v1/feedback",
     ...options,
     headers: {
       "Content-Type": "application/json",
       ...options.headers,
     },
   });
+
+/**
+ * 列出产物
+ */
+export const listArtifactsApiV1ProjectsProjectIdRunsRunIdArtifactsGet = <
+  ThrowOnError extends boolean = false,
+>(
+  options: Options<
+    ListArtifactsApiV1ProjectsProjectIdRunsRunIdArtifactsGetData,
+    ThrowOnError
+  >,
+): RequestResult<
+  ListArtifactsApiV1ProjectsProjectIdRunsRunIdArtifactsGetResponses,
+  ListArtifactsApiV1ProjectsProjectIdRunsRunIdArtifactsGetErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).get<
+    ListArtifactsApiV1ProjectsProjectIdRunsRunIdArtifactsGetResponses,
+    ListArtifactsApiV1ProjectsProjectIdRunsRunIdArtifactsGetErrors,
+    ThrowOnError
+  >({
+    url: "/api/v1/projects/{project_id}/runs/{run_id}/artifacts",
+    ...options,
+  });
+
+/**
+ * 上传产物
+ */
+export const uploadArtifactApiV1ProjectsProjectIdRunsRunIdArtifactsPost = <
+  ThrowOnError extends boolean = false,
+>(
+  options: Options<
+    UploadArtifactApiV1ProjectsProjectIdRunsRunIdArtifactsPostData,
+    ThrowOnError
+  >,
+): RequestResult<
+  UploadArtifactApiV1ProjectsProjectIdRunsRunIdArtifactsPostResponses,
+  UploadArtifactApiV1ProjectsProjectIdRunsRunIdArtifactsPostErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).post<
+    UploadArtifactApiV1ProjectsProjectIdRunsRunIdArtifactsPostResponses,
+    UploadArtifactApiV1ProjectsProjectIdRunsRunIdArtifactsPostErrors,
+    ThrowOnError
+  >({
+    url: "/api/v1/projects/{project_id}/runs/{run_id}/artifacts",
+    ...options,
+  });
+
+/**
+ * 下载产物
+ */
+export const downloadArtifactApiV1ProjectsProjectIdArtifactsArtifactIdDownloadGet =
+  <ThrowOnError extends boolean = false>(
+    options: Options<
+      DownloadArtifactApiV1ProjectsProjectIdArtifactsArtifactIdDownloadGetData,
+      ThrowOnError
+    >,
+  ): RequestResult<
+    DownloadArtifactApiV1ProjectsProjectIdArtifactsArtifactIdDownloadGetResponses,
+    DownloadArtifactApiV1ProjectsProjectIdArtifactsArtifactIdDownloadGetErrors,
+    ThrowOnError
+  > =>
+    (options.client ?? client).get<
+      DownloadArtifactApiV1ProjectsProjectIdArtifactsArtifactIdDownloadGetResponses,
+      DownloadArtifactApiV1ProjectsProjectIdArtifactsArtifactIdDownloadGetErrors,
+      ThrowOnError
+    >({
+      url: "/api/v1/projects/{project_id}/artifacts/{artifact_id}/download",
+      ...options,
+    });
+
+/**
+ * List Policies
+ */
+export const listPoliciesApiV1ProjectsProjectIdSecurityPoliciesGet = <
+  ThrowOnError extends boolean = false,
+>(
+  options: Options<
+    ListPoliciesApiV1ProjectsProjectIdSecurityPoliciesGetData,
+    ThrowOnError
+  >,
+): RequestResult<
+  ListPoliciesApiV1ProjectsProjectIdSecurityPoliciesGetResponses,
+  ListPoliciesApiV1ProjectsProjectIdSecurityPoliciesGetErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).get<
+    ListPoliciesApiV1ProjectsProjectIdSecurityPoliciesGetResponses,
+    ListPoliciesApiV1ProjectsProjectIdSecurityPoliciesGetErrors,
+    ThrowOnError
+  >({ url: "/api/v1/projects/{project_id}/security/policies", ...options });
+
+/**
+ * Create Policy
+ */
+export const createPolicyApiV1ProjectsProjectIdSecurityPoliciesPost = <
+  ThrowOnError extends boolean = false,
+>(
+  options: Options<
+    CreatePolicyApiV1ProjectsProjectIdSecurityPoliciesPostData,
+    ThrowOnError
+  >,
+): RequestResult<
+  CreatePolicyApiV1ProjectsProjectIdSecurityPoliciesPostResponses,
+  CreatePolicyApiV1ProjectsProjectIdSecurityPoliciesPostErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).post<
+    CreatePolicyApiV1ProjectsProjectIdSecurityPoliciesPostResponses,
+    CreatePolicyApiV1ProjectsProjectIdSecurityPoliciesPostErrors,
+    ThrowOnError
+  >({
+    url: "/api/v1/projects/{project_id}/security/policies",
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...options.headers,
+    },
+  });
+
+/**
+ * List Snapshots
+ */
+export const listSnapshotsApiV1ProjectsProjectIdEnvironmentsTemplateIdSnapshotsGet =
+  <ThrowOnError extends boolean = false>(
+    options: Options<
+      ListSnapshotsApiV1ProjectsProjectIdEnvironmentsTemplateIdSnapshotsGetData,
+      ThrowOnError
+    >,
+  ): RequestResult<
+    ListSnapshotsApiV1ProjectsProjectIdEnvironmentsTemplateIdSnapshotsGetResponses,
+    ListSnapshotsApiV1ProjectsProjectIdEnvironmentsTemplateIdSnapshotsGetErrors,
+    ThrowOnError
+  > =>
+    (options.client ?? client).get<
+      ListSnapshotsApiV1ProjectsProjectIdEnvironmentsTemplateIdSnapshotsGetResponses,
+      ListSnapshotsApiV1ProjectsProjectIdEnvironmentsTemplateIdSnapshotsGetErrors,
+      ThrowOnError
+    >({
+      url: "/api/v1/projects/{project_id}/environments/{template_id}/snapshots",
+      ...options,
+    });
+
+/**
+ * Create Snapshot
+ */
+export const createSnapshotApiV1ProjectsProjectIdEnvironmentsTemplateIdSnapshotsPost =
+  <ThrowOnError extends boolean = false>(
+    options: Options<
+      CreateSnapshotApiV1ProjectsProjectIdEnvironmentsTemplateIdSnapshotsPostData,
+      ThrowOnError
+    >,
+  ): RequestResult<
+    CreateSnapshotApiV1ProjectsProjectIdEnvironmentsTemplateIdSnapshotsPostResponses,
+    CreateSnapshotApiV1ProjectsProjectIdEnvironmentsTemplateIdSnapshotsPostErrors,
+    ThrowOnError
+  > =>
+    (options.client ?? client).post<
+      CreateSnapshotApiV1ProjectsProjectIdEnvironmentsTemplateIdSnapshotsPostResponses,
+      CreateSnapshotApiV1ProjectsProjectIdEnvironmentsTemplateIdSnapshotsPostErrors,
+      ThrowOnError
+    >({
+      url: "/api/v1/projects/{project_id}/environments/{template_id}/snapshots",
+      ...options,
+    });
+
+/**
+ * Restore Snapshot
+ */
+export const restoreSnapshotApiV1ProjectsProjectIdEnvironmentsTemplateIdSnapshotsSnapshotIdRestorePost =
+  <ThrowOnError extends boolean = false>(
+    options: Options<
+      RestoreSnapshotApiV1ProjectsProjectIdEnvironmentsTemplateIdSnapshotsSnapshotIdRestorePostData,
+      ThrowOnError
+    >,
+  ): RequestResult<
+    RestoreSnapshotApiV1ProjectsProjectIdEnvironmentsTemplateIdSnapshotsSnapshotIdRestorePostResponses,
+    RestoreSnapshotApiV1ProjectsProjectIdEnvironmentsTemplateIdSnapshotsSnapshotIdRestorePostErrors,
+    ThrowOnError
+  > =>
+    (options.client ?? client).post<
+      RestoreSnapshotApiV1ProjectsProjectIdEnvironmentsTemplateIdSnapshotsSnapshotIdRestorePostResponses,
+      RestoreSnapshotApiV1ProjectsProjectIdEnvironmentsTemplateIdSnapshotsSnapshotIdRestorePostErrors,
+      ThrowOnError
+    >({
+      url: "/api/v1/projects/{project_id}/environments/{template_id}/snapshots/{snapshot_id}/restore",
+      ...options,
+    });
+
+/**
+ * Delete Snapshot
+ */
+export const deleteSnapshotApiV1ProjectsProjectIdEnvironmentsTemplateIdSnapshotsSnapshotIdDelete =
+  <ThrowOnError extends boolean = false>(
+    options: Options<
+      DeleteSnapshotApiV1ProjectsProjectIdEnvironmentsTemplateIdSnapshotsSnapshotIdDeleteData,
+      ThrowOnError
+    >,
+  ): RequestResult<
+    DeleteSnapshotApiV1ProjectsProjectIdEnvironmentsTemplateIdSnapshotsSnapshotIdDeleteResponses,
+    DeleteSnapshotApiV1ProjectsProjectIdEnvironmentsTemplateIdSnapshotsSnapshotIdDeleteErrors,
+    ThrowOnError
+  > =>
+    (options.client ?? client).delete<
+      DeleteSnapshotApiV1ProjectsProjectIdEnvironmentsTemplateIdSnapshotsSnapshotIdDeleteResponses,
+      DeleteSnapshotApiV1ProjectsProjectIdEnvironmentsTemplateIdSnapshotsSnapshotIdDeleteErrors,
+      ThrowOnError
+    >({
+      url: "/api/v1/projects/{project_id}/environments/{template_id}/snapshots/{snapshot_id}",
+      ...options,
+    });
+
+/**
+ * Dry Run
+ *
+ * 试运行：预览测试计划版本的执行参数。
+ */
+export const dryRunApiV1ProjectsProjectIdTestPlansPlanIdVersionsVersionIdDryRunPost =
+  <ThrowOnError extends boolean = false>(
+    options: Options<
+      DryRunApiV1ProjectsProjectIdTestPlansPlanIdVersionsVersionIdDryRunPostData,
+      ThrowOnError
+    >,
+  ): RequestResult<
+    DryRunApiV1ProjectsProjectIdTestPlansPlanIdVersionsVersionIdDryRunPostResponses,
+    DryRunApiV1ProjectsProjectIdTestPlansPlanIdVersionsVersionIdDryRunPostErrors,
+    ThrowOnError
+  > =>
+    (options.client ?? client).post<
+      DryRunApiV1ProjectsProjectIdTestPlansPlanIdVersionsVersionIdDryRunPostResponses,
+      DryRunApiV1ProjectsProjectIdTestPlansPlanIdVersionsVersionIdDryRunPostErrors,
+      ThrowOnError
+    >({
+      url: "/api/v1/projects/{project_id}/test-plans/{plan_id}/versions/{version_id}/dry-run",
+      ...options,
+    });
+
+/**
+ * Diff Runs
+ */
+export const diffRunsApiV1ProjectsProjectIdRunsRunAIdDiffRunBIdGet = <
+  ThrowOnError extends boolean = false,
+>(
+  options: Options<
+    DiffRunsApiV1ProjectsProjectIdRunsRunAIdDiffRunBIdGetData,
+    ThrowOnError
+  >,
+): RequestResult<
+  DiffRunsApiV1ProjectsProjectIdRunsRunAIdDiffRunBIdGetResponses,
+  DiffRunsApiV1ProjectsProjectIdRunsRunAIdDiffRunBIdGetErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).get<
+    DiffRunsApiV1ProjectsProjectIdRunsRunAIdDiffRunBIdGetResponses,
+    DiffRunsApiV1ProjectsProjectIdRunsRunAIdDiffRunBIdGetErrors,
+    ThrowOnError
+  >({
+    url: "/api/v1/projects/{project_id}/runs/{run_a_id}/diff/{run_b_id}",
+    ...options,
+  });
+
+/**
+ * List Scorers
+ */
+export const listScorersApiV1ProjectsProjectIdScorersGet = <
+  ThrowOnError extends boolean = false,
+>(
+  options: Options<
+    ListScorersApiV1ProjectsProjectIdScorersGetData,
+    ThrowOnError
+  >,
+): RequestResult<
+  ListScorersApiV1ProjectsProjectIdScorersGetResponses,
+  ListScorersApiV1ProjectsProjectIdScorersGetErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).get<
+    ListScorersApiV1ProjectsProjectIdScorersGetResponses,
+    ListScorersApiV1ProjectsProjectIdScorersGetErrors,
+    ThrowOnError
+  >({ url: "/api/v1/projects/{project_id}/scorers", ...options });
+
+/**
+ * Create Scorer
+ */
+export const createScorerApiV1ProjectsProjectIdScorersPost = <
+  ThrowOnError extends boolean = false,
+>(
+  options: Options<
+    CreateScorerApiV1ProjectsProjectIdScorersPostData,
+    ThrowOnError
+  >,
+): RequestResult<
+  CreateScorerApiV1ProjectsProjectIdScorersPostResponses,
+  CreateScorerApiV1ProjectsProjectIdScorersPostErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).post<
+    CreateScorerApiV1ProjectsProjectIdScorersPostResponses,
+    CreateScorerApiV1ProjectsProjectIdScorersPostErrors,
+    ThrowOnError
+  >({
+    url: "/api/v1/projects/{project_id}/scorers",
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...options.headers,
+    },
+  });
+
+/**
+ * Delete Scorer
+ */
+export const deleteScorerApiV1ProjectsProjectIdScorersScorerIdDelete = <
+  ThrowOnError extends boolean = false,
+>(
+  options: Options<
+    DeleteScorerApiV1ProjectsProjectIdScorersScorerIdDeleteData,
+    ThrowOnError
+  >,
+): RequestResult<
+  DeleteScorerApiV1ProjectsProjectIdScorersScorerIdDeleteResponses,
+  DeleteScorerApiV1ProjectsProjectIdScorersScorerIdDeleteErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).delete<
+    DeleteScorerApiV1ProjectsProjectIdScorersScorerIdDeleteResponses,
+    DeleteScorerApiV1ProjectsProjectIdScorersScorerIdDeleteErrors,
+    ThrowOnError
+  >({ url: "/api/v1/projects/{project_id}/scorers/{scorer_id}", ...options });
+
+/**
+ * Get Scorer
+ */
+export const getScorerApiV1ProjectsProjectIdScorersScorerIdGet = <
+  ThrowOnError extends boolean = false,
+>(
+  options: Options<
+    GetScorerApiV1ProjectsProjectIdScorersScorerIdGetData,
+    ThrowOnError
+  >,
+): RequestResult<
+  GetScorerApiV1ProjectsProjectIdScorersScorerIdGetResponses,
+  GetScorerApiV1ProjectsProjectIdScorersScorerIdGetErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).get<
+    GetScorerApiV1ProjectsProjectIdScorersScorerIdGetResponses,
+    GetScorerApiV1ProjectsProjectIdScorersScorerIdGetErrors,
+    ThrowOnError
+  >({ url: "/api/v1/projects/{project_id}/scorers/{scorer_id}", ...options });
+
+/**
+ * Update Scorer
+ */
+export const updateScorerApiV1ProjectsProjectIdScorersScorerIdPatch = <
+  ThrowOnError extends boolean = false,
+>(
+  options: Options<
+    UpdateScorerApiV1ProjectsProjectIdScorersScorerIdPatchData,
+    ThrowOnError
+  >,
+): RequestResult<
+  UpdateScorerApiV1ProjectsProjectIdScorersScorerIdPatchResponses,
+  UpdateScorerApiV1ProjectsProjectIdScorersScorerIdPatchErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).patch<
+    UpdateScorerApiV1ProjectsProjectIdScorersScorerIdPatchResponses,
+    UpdateScorerApiV1ProjectsProjectIdScorersScorerIdPatchErrors,
+    ThrowOnError
+  >({
+    url: "/api/v1/projects/{project_id}/scorers/{scorer_id}",
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...options.headers,
+    },
+  });
+
+/**
+ * List Experiments
+ */
+export const listExperimentsApiV1ProjectsProjectIdExperimentsGet = <
+  ThrowOnError extends boolean = false,
+>(
+  options: Options<
+    ListExperimentsApiV1ProjectsProjectIdExperimentsGetData,
+    ThrowOnError
+  >,
+): RequestResult<
+  ListExperimentsApiV1ProjectsProjectIdExperimentsGetResponses,
+  ListExperimentsApiV1ProjectsProjectIdExperimentsGetErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).get<
+    ListExperimentsApiV1ProjectsProjectIdExperimentsGetResponses,
+    ListExperimentsApiV1ProjectsProjectIdExperimentsGetErrors,
+    ThrowOnError
+  >({ url: "/api/v1/projects/{project_id}/experiments", ...options });
+
+/**
+ * Create Experiment
+ */
+export const createExperimentApiV1ProjectsProjectIdExperimentsPost = <
+  ThrowOnError extends boolean = false,
+>(
+  options: Options<
+    CreateExperimentApiV1ProjectsProjectIdExperimentsPostData,
+    ThrowOnError
+  >,
+): RequestResult<
+  CreateExperimentApiV1ProjectsProjectIdExperimentsPostResponses,
+  CreateExperimentApiV1ProjectsProjectIdExperimentsPostErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).post<
+    CreateExperimentApiV1ProjectsProjectIdExperimentsPostResponses,
+    CreateExperimentApiV1ProjectsProjectIdExperimentsPostErrors,
+    ThrowOnError
+  >({
+    url: "/api/v1/projects/{project_id}/experiments",
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...options.headers,
+    },
+  });
+
+/**
+ * Get Experiment
+ */
+export const getExperimentApiV1ProjectsProjectIdExperimentsExperimentIdGet = <
+  ThrowOnError extends boolean = false,
+>(
+  options: Options<
+    GetExperimentApiV1ProjectsProjectIdExperimentsExperimentIdGetData,
+    ThrowOnError
+  >,
+): RequestResult<
+  GetExperimentApiV1ProjectsProjectIdExperimentsExperimentIdGetResponses,
+  GetExperimentApiV1ProjectsProjectIdExperimentsExperimentIdGetErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).get<
+    GetExperimentApiV1ProjectsProjectIdExperimentsExperimentIdGetResponses,
+    GetExperimentApiV1ProjectsProjectIdExperimentsExperimentIdGetErrors,
+    ThrowOnError
+  >({
+    url: "/api/v1/projects/{project_id}/experiments/{experiment_id}",
+    ...options,
+  });
+
+/**
+ * Run Experiment
+ *
+ * 执行对比实验：逐用例对比 + 统计。
+ */
+export const runExperimentApiV1ProjectsProjectIdExperimentsExperimentIdRunPost =
+  <ThrowOnError extends boolean = false>(
+    options: Options<
+      RunExperimentApiV1ProjectsProjectIdExperimentsExperimentIdRunPostData,
+      ThrowOnError
+    >,
+  ): RequestResult<
+    RunExperimentApiV1ProjectsProjectIdExperimentsExperimentIdRunPostResponses,
+    RunExperimentApiV1ProjectsProjectIdExperimentsExperimentIdRunPostErrors,
+    ThrowOnError
+  > =>
+    (options.client ?? client).post<
+      RunExperimentApiV1ProjectsProjectIdExperimentsExperimentIdRunPostResponses,
+      RunExperimentApiV1ProjectsProjectIdExperimentsExperimentIdRunPostErrors,
+      ThrowOnError
+    >({
+      url: "/api/v1/projects/{project_id}/experiments/{experiment_id}/run",
+      ...options,
+    });
+
+/**
+ * Get Statistics
+ *
+ * 获取运行统计或实验对比统计。
+ */
+export const getStatisticsApiV1ProjectsProjectIdExperimentsStatisticsGet = <
+  ThrowOnError extends boolean = false,
+>(
+  options: Options<
+    GetStatisticsApiV1ProjectsProjectIdExperimentsStatisticsGetData,
+    ThrowOnError
+  >,
+): RequestResult<
+  GetStatisticsApiV1ProjectsProjectIdExperimentsStatisticsGetResponses,
+  GetStatisticsApiV1ProjectsProjectIdExperimentsStatisticsGetErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).get<
+    GetStatisticsApiV1ProjectsProjectIdExperimentsStatisticsGetResponses,
+    GetStatisticsApiV1ProjectsProjectIdExperimentsStatisticsGetErrors,
+    ThrowOnError
+  >({
+    url: "/api/v1/projects/{project_id}/experiments/statistics",
+    ...options,
+  });
+
+/**
+ * List Reviews
+ */
+export const listReviewsApiV1ProjectsProjectIdReviewsGet = <
+  ThrowOnError extends boolean = false,
+>(
+  options: Options<
+    ListReviewsApiV1ProjectsProjectIdReviewsGetData,
+    ThrowOnError
+  >,
+): RequestResult<
+  ListReviewsApiV1ProjectsProjectIdReviewsGetResponses,
+  ListReviewsApiV1ProjectsProjectIdReviewsGetErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).get<
+    ListReviewsApiV1ProjectsProjectIdReviewsGetResponses,
+    ListReviewsApiV1ProjectsProjectIdReviewsGetErrors,
+    ThrowOnError
+  >({ url: "/api/v1/projects/{project_id}/reviews", ...options });
+
+/**
+ * Review Stats
+ *
+ * 审核一致性统计。
+ */
+export const reviewStatsApiV1ProjectsProjectIdReviewsStatsGet = <
+  ThrowOnError extends boolean = false,
+>(
+  options: Options<
+    ReviewStatsApiV1ProjectsProjectIdReviewsStatsGetData,
+    ThrowOnError
+  >,
+): RequestResult<
+  ReviewStatsApiV1ProjectsProjectIdReviewsStatsGetResponses,
+  ReviewStatsApiV1ProjectsProjectIdReviewsStatsGetErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).get<
+    ReviewStatsApiV1ProjectsProjectIdReviewsStatsGetResponses,
+    ReviewStatsApiV1ProjectsProjectIdReviewsStatsGetErrors,
+    ThrowOnError
+  >({ url: "/api/v1/projects/{project_id}/reviews/stats", ...options });
+
+/**
+ * Auto Enqueue
+ *
+ * 将低置信度用例自动入队。
+ */
+export const autoEnqueueApiV1ProjectsProjectIdReviewsAutoEnqueuePost = <
+  ThrowOnError extends boolean = false,
+>(
+  options: Options<
+    AutoEnqueueApiV1ProjectsProjectIdReviewsAutoEnqueuePostData,
+    ThrowOnError
+  >,
+): RequestResult<
+  AutoEnqueueApiV1ProjectsProjectIdReviewsAutoEnqueuePostResponses,
+  AutoEnqueueApiV1ProjectsProjectIdReviewsAutoEnqueuePostErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).post<
+    AutoEnqueueApiV1ProjectsProjectIdReviewsAutoEnqueuePostResponses,
+    AutoEnqueueApiV1ProjectsProjectIdReviewsAutoEnqueuePostErrors,
+    ThrowOnError
+  >({
+    url: "/api/v1/projects/{project_id}/reviews/auto-enqueue",
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...options.headers,
+    },
+  });
+
+/**
+ * Score Review
+ *
+ * 人工评分。
+ */
+export const scoreReviewApiV1ProjectsProjectIdReviewsTaskIdScorePost = <
+  ThrowOnError extends boolean = false,
+>(
+  options: Options<
+    ScoreReviewApiV1ProjectsProjectIdReviewsTaskIdScorePostData,
+    ThrowOnError
+  >,
+): RequestResult<
+  ScoreReviewApiV1ProjectsProjectIdReviewsTaskIdScorePostResponses,
+  ScoreReviewApiV1ProjectsProjectIdReviewsTaskIdScorePostErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).post<
+    ScoreReviewApiV1ProjectsProjectIdReviewsTaskIdScorePostResponses,
+    ScoreReviewApiV1ProjectsProjectIdReviewsTaskIdScorePostErrors,
+    ThrowOnError
+  >({
+    url: "/api/v1/projects/{project_id}/reviews/{task_id}/score",
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...options.headers,
+    },
+  });
+
+/**
+ * Reject Review
+ *
+ * 拒绝审核。
+ */
+export const rejectReviewApiV1ProjectsProjectIdReviewsTaskIdRejectPost = <
+  ThrowOnError extends boolean = false,
+>(
+  options: Options<
+    RejectReviewApiV1ProjectsProjectIdReviewsTaskIdRejectPostData,
+    ThrowOnError
+  >,
+): RequestResult<
+  RejectReviewApiV1ProjectsProjectIdReviewsTaskIdRejectPostResponses,
+  RejectReviewApiV1ProjectsProjectIdReviewsTaskIdRejectPostErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).post<
+    RejectReviewApiV1ProjectsProjectIdReviewsTaskIdRejectPostResponses,
+    RejectReviewApiV1ProjectsProjectIdReviewsTaskIdRejectPostErrors,
+    ThrowOnError
+  >({
+    url: "/api/v1/projects/{project_id}/reviews/{task_id}/reject",
+    ...options,
+  });
+
+/**
+ * Skip Review
+ *
+ * 跳过审核。
+ */
+export const skipReviewApiV1ProjectsProjectIdReviewsTaskIdSkipPost = <
+  ThrowOnError extends boolean = false,
+>(
+  options: Options<
+    SkipReviewApiV1ProjectsProjectIdReviewsTaskIdSkipPostData,
+    ThrowOnError
+  >,
+): RequestResult<
+  SkipReviewApiV1ProjectsProjectIdReviewsTaskIdSkipPostResponses,
+  SkipReviewApiV1ProjectsProjectIdReviewsTaskIdSkipPostErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).post<
+    SkipReviewApiV1ProjectsProjectIdReviewsTaskIdSkipPostResponses,
+    SkipReviewApiV1ProjectsProjectIdReviewsTaskIdSkipPostErrors,
+    ThrowOnError
+  >({
+    url: "/api/v1/projects/{project_id}/reviews/{task_id}/skip",
+    ...options,
+  });
+
+/**
+ * List Scans
+ */
+export const listScansApiV1ProjectsProjectIdSecurityScansGet = <
+  ThrowOnError extends boolean = false,
+>(
+  options: Options<
+    ListScansApiV1ProjectsProjectIdSecurityScansGetData,
+    ThrowOnError
+  >,
+): RequestResult<
+  ListScansApiV1ProjectsProjectIdSecurityScansGetResponses,
+  ListScansApiV1ProjectsProjectIdSecurityScansGetErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).get<
+    ListScansApiV1ProjectsProjectIdSecurityScansGetResponses,
+    ListScansApiV1ProjectsProjectIdSecurityScansGetErrors,
+    ThrowOnError
+  >({ url: "/api/v1/projects/{project_id}/security/scans", ...options });
+
+/**
+ * Trigger Scan
+ *
+ * 触发安全扫描。
+ */
+export const triggerScanApiV1ProjectsProjectIdSecurityScansPost = <
+  ThrowOnError extends boolean = false,
+>(
+  options: Options<
+    TriggerScanApiV1ProjectsProjectIdSecurityScansPostData,
+    ThrowOnError
+  >,
+): RequestResult<
+  TriggerScanApiV1ProjectsProjectIdSecurityScansPostResponses,
+  TriggerScanApiV1ProjectsProjectIdSecurityScansPostErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).post<
+    TriggerScanApiV1ProjectsProjectIdSecurityScansPostResponses,
+    TriggerScanApiV1ProjectsProjectIdSecurityScansPostErrors,
+    ThrowOnError
+  >({ url: "/api/v1/projects/{project_id}/security/scans", ...options });
+
+/**
+ * Get Scan
+ */
+export const getScanApiV1ProjectsProjectIdSecurityScansScanIdGet = <
+  ThrowOnError extends boolean = false,
+>(
+  options: Options<
+    GetScanApiV1ProjectsProjectIdSecurityScansScanIdGetData,
+    ThrowOnError
+  >,
+): RequestResult<
+  GetScanApiV1ProjectsProjectIdSecurityScansScanIdGetResponses,
+  GetScanApiV1ProjectsProjectIdSecurityScansScanIdGetErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).get<
+    GetScanApiV1ProjectsProjectIdSecurityScansScanIdGetResponses,
+    GetScanApiV1ProjectsProjectIdSecurityScansScanIdGetErrors,
+    ThrowOnError
+  >({
+    url: "/api/v1/projects/{project_id}/security/scans/{scan_id}",
+    ...options,
+  });
+
+/**
+ * List Gates
+ */
+export const listGatesApiV1ProjectsProjectIdGatesGet = <
+  ThrowOnError extends boolean = false,
+>(
+  options: Options<ListGatesApiV1ProjectsProjectIdGatesGetData, ThrowOnError>,
+): RequestResult<
+  ListGatesApiV1ProjectsProjectIdGatesGetResponses,
+  ListGatesApiV1ProjectsProjectIdGatesGetErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).get<
+    ListGatesApiV1ProjectsProjectIdGatesGetResponses,
+    ListGatesApiV1ProjectsProjectIdGatesGetErrors,
+    ThrowOnError
+  >({ url: "/api/v1/projects/{project_id}/gates", ...options });
+
+/**
+ * Create Gate
+ */
+export const createGateApiV1ProjectsProjectIdGatesPost = <
+  ThrowOnError extends boolean = false,
+>(
+  options: Options<CreateGateApiV1ProjectsProjectIdGatesPostData, ThrowOnError>,
+): RequestResult<
+  CreateGateApiV1ProjectsProjectIdGatesPostResponses,
+  CreateGateApiV1ProjectsProjectIdGatesPostErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).post<
+    CreateGateApiV1ProjectsProjectIdGatesPostResponses,
+    CreateGateApiV1ProjectsProjectIdGatesPostErrors,
+    ThrowOnError
+  >({
+    url: "/api/v1/projects/{project_id}/gates",
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...options.headers,
+    },
+  });
+
+/**
+ * Delete Gate
+ */
+export const deleteGateApiV1ProjectsProjectIdGatesGateIdDelete = <
+  ThrowOnError extends boolean = false,
+>(
+  options: Options<
+    DeleteGateApiV1ProjectsProjectIdGatesGateIdDeleteData,
+    ThrowOnError
+  >,
+): RequestResult<
+  DeleteGateApiV1ProjectsProjectIdGatesGateIdDeleteResponses,
+  DeleteGateApiV1ProjectsProjectIdGatesGateIdDeleteErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).delete<
+    DeleteGateApiV1ProjectsProjectIdGatesGateIdDeleteResponses,
+    DeleteGateApiV1ProjectsProjectIdGatesGateIdDeleteErrors,
+    ThrowOnError
+  >({ url: "/api/v1/projects/{project_id}/gates/{gate_id}", ...options });
+
+/**
+ * Get Gate
+ */
+export const getGateApiV1ProjectsProjectIdGatesGateIdGet = <
+  ThrowOnError extends boolean = false,
+>(
+  options: Options<
+    GetGateApiV1ProjectsProjectIdGatesGateIdGetData,
+    ThrowOnError
+  >,
+): RequestResult<
+  GetGateApiV1ProjectsProjectIdGatesGateIdGetResponses,
+  GetGateApiV1ProjectsProjectIdGatesGateIdGetErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).get<
+    GetGateApiV1ProjectsProjectIdGatesGateIdGetResponses,
+    GetGateApiV1ProjectsProjectIdGatesGateIdGetErrors,
+    ThrowOnError
+  >({ url: "/api/v1/projects/{project_id}/gates/{gate_id}", ...options });
+
+/**
+ * Evaluate Gate
+ *
+ * 评估门禁是否通过。
+ */
+export const evaluateGateApiV1ProjectsProjectIdGatesGateIdEvaluatePost = <
+  ThrowOnError extends boolean = false,
+>(
+  options: Options<
+    EvaluateGateApiV1ProjectsProjectIdGatesGateIdEvaluatePostData,
+    ThrowOnError
+  >,
+): RequestResult<
+  EvaluateGateApiV1ProjectsProjectIdGatesGateIdEvaluatePostResponses,
+  EvaluateGateApiV1ProjectsProjectIdGatesGateIdEvaluatePostErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).post<
+    EvaluateGateApiV1ProjectsProjectIdGatesGateIdEvaluatePostResponses,
+    EvaluateGateApiV1ProjectsProjectIdGatesGateIdEvaluatePostErrors,
+    ThrowOnError
+  >({
+    url: "/api/v1/projects/{project_id}/gates/{gate_id}/evaluate",
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...options.headers,
+    },
+  });
+
+/**
+ * Exempt Gate
+ *
+ * 临时豁免门禁（记录审计日志）。
+ */
+export const exemptGateApiV1ProjectsProjectIdGatesGateIdExemptPost = <
+  ThrowOnError extends boolean = false,
+>(
+  options: Options<
+    ExemptGateApiV1ProjectsProjectIdGatesGateIdExemptPostData,
+    ThrowOnError
+  >,
+): RequestResult<
+  ExemptGateApiV1ProjectsProjectIdGatesGateIdExemptPostResponses,
+  ExemptGateApiV1ProjectsProjectIdGatesGateIdExemptPostErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).post<
+    ExemptGateApiV1ProjectsProjectIdGatesGateIdExemptPostResponses,
+    ExemptGateApiV1ProjectsProjectIdGatesGateIdExemptPostErrors,
+    ThrowOnError
+  >({
+    url: "/api/v1/projects/{project_id}/gates/{gate_id}/exempt",
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...options.headers,
+    },
+  });
+
+/**
+ * Chat
+ *
+ * 发送自然语言指令，返回 Agent 回复和计划草稿。
+ */
+export const chatApiV1ProjectsProjectIdTestAgentChatPost = <
+  ThrowOnError extends boolean = false,
+>(
+  options: Options<
+    ChatApiV1ProjectsProjectIdTestAgentChatPostData,
+    ThrowOnError
+  >,
+): RequestResult<
+  ChatApiV1ProjectsProjectIdTestAgentChatPostResponses,
+  ChatApiV1ProjectsProjectIdTestAgentChatPostErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).post<
+    ChatApiV1ProjectsProjectIdTestAgentChatPostResponses,
+    ChatApiV1ProjectsProjectIdTestAgentChatPostErrors,
+    ThrowOnError
+  >({
+    url: "/api/v1/projects/{project_id}/test-agent/chat",
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...options.headers,
+    },
+  });
+
+/**
+ * Confirm
+ *
+ * 确认执行测试计划。
+ */
+export const confirmApiV1ProjectsProjectIdTestAgentConfirmPost = <
+  ThrowOnError extends boolean = false,
+>(
+  options: Options<
+    ConfirmApiV1ProjectsProjectIdTestAgentConfirmPostData,
+    ThrowOnError
+  >,
+): RequestResult<
+  ConfirmApiV1ProjectsProjectIdTestAgentConfirmPostResponses,
+  ConfirmApiV1ProjectsProjectIdTestAgentConfirmPostErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).post<
+    ConfirmApiV1ProjectsProjectIdTestAgentConfirmPostResponses,
+    ConfirmApiV1ProjectsProjectIdTestAgentConfirmPostErrors,
+    ThrowOnError
+  >({
+    url: "/api/v1/projects/{project_id}/test-agent/confirm",
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...options.headers,
+    },
+  });
+
+/**
+ * Get Session
+ *
+ * 获取会话详情。
+ */
+export const getSessionApiV1ProjectsProjectIdTestAgentSessionsSessionIdGet = <
+  ThrowOnError extends boolean = false,
+>(
+  options: Options<
+    GetSessionApiV1ProjectsProjectIdTestAgentSessionsSessionIdGetData,
+    ThrowOnError
+  >,
+): RequestResult<
+  GetSessionApiV1ProjectsProjectIdTestAgentSessionsSessionIdGetResponses,
+  GetSessionApiV1ProjectsProjectIdTestAgentSessionsSessionIdGetErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).get<
+    GetSessionApiV1ProjectsProjectIdTestAgentSessionsSessionIdGetResponses,
+    GetSessionApiV1ProjectsProjectIdTestAgentSessionsSessionIdGetErrors,
+    ThrowOnError
+  >({
+    url: "/api/v1/projects/{project_id}/test-agent/sessions/{session_id}",
+    ...options,
+  });
+
+/**
+ * Execute Playwright Agent
+ *
+ * 执行 Playwright Test Agent。
+ *
+ * 支持三种 Agent：
+ * - planner: 生成测试计划
+ * - generator: 生成测试代码
+ * - healer: 修复失败测试
+ */
+export const executePlaywrightAgentApiV1ProjectsProjectIdTestAgentPlaywrightExecutePost =
+  <ThrowOnError extends boolean = false>(
+    options: Options<
+      ExecutePlaywrightAgentApiV1ProjectsProjectIdTestAgentPlaywrightExecutePostData,
+      ThrowOnError
+    >,
+  ): RequestResult<
+    ExecutePlaywrightAgentApiV1ProjectsProjectIdTestAgentPlaywrightExecutePostResponses,
+    ExecutePlaywrightAgentApiV1ProjectsProjectIdTestAgentPlaywrightExecutePostErrors,
+    ThrowOnError
+  > =>
+    (options.client ?? client).post<
+      ExecutePlaywrightAgentApiV1ProjectsProjectIdTestAgentPlaywrightExecutePostResponses,
+      ExecutePlaywrightAgentApiV1ProjectsProjectIdTestAgentPlaywrightExecutePostErrors,
+      ThrowOnError
+    >({
+      url: "/api/v1/projects/{project_id}/test-agent/playwright/execute",
+      ...options,
+      headers: {
+        "Content-Type": "application/json",
+        ...options.headers,
+      },
+    });
+
+/**
+ * Get Playwright Task
+ *
+ * 获取 Playwright Agent 任务状态。
+ */
+export const getPlaywrightTaskApiV1ProjectsProjectIdTestAgentPlaywrightTasksTaskIdGet =
+  <ThrowOnError extends boolean = false>(
+    options: Options<
+      GetPlaywrightTaskApiV1ProjectsProjectIdTestAgentPlaywrightTasksTaskIdGetData,
+      ThrowOnError
+    >,
+  ): RequestResult<
+    GetPlaywrightTaskApiV1ProjectsProjectIdTestAgentPlaywrightTasksTaskIdGetResponses,
+    GetPlaywrightTaskApiV1ProjectsProjectIdTestAgentPlaywrightTasksTaskIdGetErrors,
+    ThrowOnError
+  > =>
+    (options.client ?? client).get<
+      GetPlaywrightTaskApiV1ProjectsProjectIdTestAgentPlaywrightTasksTaskIdGetResponses,
+      GetPlaywrightTaskApiV1ProjectsProjectIdTestAgentPlaywrightTasksTaskIdGetErrors,
+      ThrowOnError
+    >({
+      url: "/api/v1/projects/{project_id}/test-agent/playwright/tasks/{task_id}",
+      ...options,
+    });
+
+/**
+ * List Playwright Tasks
+ *
+ * 列出项目所有 Playwright Agent 任务。
+ */
+export const listPlaywrightTasksApiV1ProjectsProjectIdTestAgentPlaywrightTasksGet =
+  <ThrowOnError extends boolean = false>(
+    options: Options<
+      ListPlaywrightTasksApiV1ProjectsProjectIdTestAgentPlaywrightTasksGetData,
+      ThrowOnError
+    >,
+  ): RequestResult<
+    ListPlaywrightTasksApiV1ProjectsProjectIdTestAgentPlaywrightTasksGetResponses,
+    ListPlaywrightTasksApiV1ProjectsProjectIdTestAgentPlaywrightTasksGetErrors,
+    ThrowOnError
+  > =>
+    (options.client ?? client).get<
+      ListPlaywrightTasksApiV1ProjectsProjectIdTestAgentPlaywrightTasksGetResponses,
+      ListPlaywrightTasksApiV1ProjectsProjectIdTestAgentPlaywrightTasksGetErrors,
+      ThrowOnError
+    >({
+      url: "/api/v1/projects/{project_id}/test-agent/playwright/tasks",
+      ...options,
+    });
+
+/**
+ * List Accounts
+ */
+export const listAccountsApiV1ProjectsProjectIdTestAccountsGet = <
+  ThrowOnError extends boolean = false,
+>(
+  options: Options<
+    ListAccountsApiV1ProjectsProjectIdTestAccountsGetData,
+    ThrowOnError
+  >,
+): RequestResult<
+  ListAccountsApiV1ProjectsProjectIdTestAccountsGetResponses,
+  ListAccountsApiV1ProjectsProjectIdTestAccountsGetErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).get<
+    ListAccountsApiV1ProjectsProjectIdTestAccountsGetResponses,
+    ListAccountsApiV1ProjectsProjectIdTestAccountsGetErrors,
+    ThrowOnError
+  >({ url: "/api/v1/projects/{project_id}/test-accounts", ...options });
+
+/**
+ * Create Account
+ */
+export const createAccountApiV1ProjectsProjectIdTestAccountsPost = <
+  ThrowOnError extends boolean = false,
+>(
+  options: Options<
+    CreateAccountApiV1ProjectsProjectIdTestAccountsPostData,
+    ThrowOnError
+  >,
+): RequestResult<
+  CreateAccountApiV1ProjectsProjectIdTestAccountsPostResponses,
+  CreateAccountApiV1ProjectsProjectIdTestAccountsPostErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).post<
+    CreateAccountApiV1ProjectsProjectIdTestAccountsPostResponses,
+    CreateAccountApiV1ProjectsProjectIdTestAccountsPostErrors,
+    ThrowOnError
+  >({
+    url: "/api/v1/projects/{project_id}/test-accounts",
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...options.headers,
+    },
+  });
+
+/**
+ * Delete Account
+ */
+export const deleteAccountApiV1ProjectsProjectIdTestAccountsAccountIdDelete = <
+  ThrowOnError extends boolean = false,
+>(
+  options: Options<
+    DeleteAccountApiV1ProjectsProjectIdTestAccountsAccountIdDeleteData,
+    ThrowOnError
+  >,
+): RequestResult<
+  DeleteAccountApiV1ProjectsProjectIdTestAccountsAccountIdDeleteResponses,
+  DeleteAccountApiV1ProjectsProjectIdTestAccountsAccountIdDeleteErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).delete<
+    DeleteAccountApiV1ProjectsProjectIdTestAccountsAccountIdDeleteResponses,
+    DeleteAccountApiV1ProjectsProjectIdTestAccountsAccountIdDeleteErrors,
+    ThrowOnError
+  >({
+    url: "/api/v1/projects/{project_id}/test-accounts/{account_id}",
+    ...options,
+  });
+
+/**
+ * Update Account
+ */
+export const updateAccountApiV1ProjectsProjectIdTestAccountsAccountIdPatch = <
+  ThrowOnError extends boolean = false,
+>(
+  options: Options<
+    UpdateAccountApiV1ProjectsProjectIdTestAccountsAccountIdPatchData,
+    ThrowOnError
+  >,
+): RequestResult<
+  UpdateAccountApiV1ProjectsProjectIdTestAccountsAccountIdPatchResponses,
+  UpdateAccountApiV1ProjectsProjectIdTestAccountsAccountIdPatchErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).patch<
+    UpdateAccountApiV1ProjectsProjectIdTestAccountsAccountIdPatchResponses,
+    UpdateAccountApiV1ProjectsProjectIdTestAccountsAccountIdPatchErrors,
+    ThrowOnError
+  >({
+    url: "/api/v1/projects/{project_id}/test-accounts/{account_id}",
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...options.headers,
+    },
+  });
+
+/**
+ * Stream Run Progress
+ *
+ * SSE 端点：实时推送运行进度。
+ */
+export const streamRunProgressApiV1ProjectsProjectIdRunsRunIdStreamGet = <
+  ThrowOnError extends boolean = false,
+>(
+  options: Options<
+    StreamRunProgressApiV1ProjectsProjectIdRunsRunIdStreamGetData,
+    ThrowOnError
+  >,
+): RequestResult<
+  StreamRunProgressApiV1ProjectsProjectIdRunsRunIdStreamGetResponses,
+  StreamRunProgressApiV1ProjectsProjectIdRunsRunIdStreamGetErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).get<
+    StreamRunProgressApiV1ProjectsProjectIdRunsRunIdStreamGetResponses,
+    StreamRunProgressApiV1ProjectsProjectIdRunsRunIdStreamGetErrors,
+    ThrowOnError
+  >({ url: "/api/v1/projects/{project_id}/runs/{run_id}/stream", ...options });
