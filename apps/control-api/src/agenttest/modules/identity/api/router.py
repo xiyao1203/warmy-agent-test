@@ -1,18 +1,24 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Protocol
 
 from fastapi import APIRouter, Header, Request, Response
 from fastapi.responses import JSONResponse
 
 from agenttest.bootstrap.settings import Settings
-from agenttest.modules.identity.api.schemas import LoginRequest, UserResponse
+from agenttest.modules.identity.api.schemas import (
+    ChangePasswordRequest,
+    LoginRequest,
+    UpdateProfileRequest,
+    UserResponse,
+)
 from agenttest.modules.identity.application.commands.login import (
     InvalidCredentialsError,
     LoginCommand,
     LoginResult,
 )
+from agenttest.modules.identity.application.errors import DuplicateEmailError
 from agenttest.modules.identity.application.queries.current_user import InvalidSessionError
 from agenttest.modules.identity.domain.entities import User
 from agenttest.modules.identity.domain.value_objects import Email
@@ -38,12 +44,42 @@ class CsrfExecutor(Protocol):
     async def execute(self, session_token: str, csrf_token: str) -> None: ...
 
 
+class UpdateProfileExecutor(Protocol):
+    async def execute(self, user: User, display_name: str, email: Email) -> User: ...
+
+
+class ChangePasswordExecutor(Protocol):
+    async def execute(
+        self,
+        user: User,
+        current_password: str,
+        new_password: str,
+    ) -> None: ...
+
+
+class UnavailableUpdateProfile:
+    async def execute(self, user: User, display_name: str, email: Email) -> User:
+        raise RuntimeError("Profile updates are not configured")
+
+
+class UnavailableChangePassword:
+    async def execute(
+        self,
+        user: User,
+        current_password: str,
+        new_password: str,
+    ) -> None:
+        raise RuntimeError("Password changes are not configured")
+
+
 @dataclass(frozen=True, slots=True)
 class AuthApiDependencies:
     login: LoginExecutor
     current_user: CurrentUserExecutor
     logout: LogoutExecutor
     csrf: CsrfExecutor
+    update_profile: UpdateProfileExecutor = field(default_factory=UnavailableUpdateProfile)
+    change_password: ChangePasswordExecutor = field(default_factory=UnavailableChangePassword)
     uow_factory: UnitOfWorkFactory = null_uow_factory
 
 
@@ -97,6 +133,88 @@ def create_auth_router(
             return authentication_required()
         return UserResponse.from_domain(user)
 
+    @router.patch("/me", response_model=UserResponse)
+    async def update_profile(
+        request: Request,
+        payload: UpdateProfileRequest,
+        x_csrf_token: str | None = Header(default=None),
+    ) -> UserResponse | JSONResponse:
+        session_token = request.cookies.get(settings.session_cookie_name)
+        if not session_token:
+            return authentication_required()
+        csrf_error = await validate_csrf(
+            request=request,
+            session_token=session_token,
+            csrf_header=x_csrf_token,
+            csrf=dependencies.csrf,
+        )
+        if csrf_error is not None:
+            return csrf_error
+        try:
+            user = await dependencies.current_user.execute(session_token)
+            async with dependencies.uow_factory():
+                updated_user = await dependencies.update_profile.execute(
+                    user=user,
+                    display_name=payload.display_name,
+                    email=Email(payload.email),
+                )
+        except InvalidSessionError:
+            return authentication_required()
+        except DuplicateEmailError:
+            return problem_response(
+                status=409,
+                title="Email already in use",
+                detail="The email address is already assigned to another user",
+            )
+        except ValueError as error:
+            return problem_response(
+                status=400,
+                title="Validation error",
+                detail=str(error),
+            )
+        return UserResponse.from_domain(updated_user)
+
+    @router.post("/change-password", status_code=204)
+    async def change_password(
+        request: Request,
+        payload: ChangePasswordRequest,
+        x_csrf_token: str | None = Header(default=None),
+    ) -> Response:
+        session_token = request.cookies.get(settings.session_cookie_name)
+        if not session_token:
+            return authentication_required()
+        csrf_error = await validate_csrf(
+            request=request,
+            session_token=session_token,
+            csrf_header=x_csrf_token,
+            csrf=dependencies.csrf,
+        )
+        if csrf_error is not None:
+            return csrf_error
+        try:
+            user = await dependencies.current_user.execute(session_token)
+            async with dependencies.uow_factory():
+                await dependencies.change_password.execute(
+                    user=user,
+                    current_password=payload.current_password,
+                    new_password=payload.new_password,
+                )
+        except InvalidSessionError:
+            return authentication_required()
+        except InvalidCredentialsError:
+            return problem_response(
+                status=400,
+                title="Password change failed",
+                detail="Current password is incorrect",
+            )
+        except ValueError as error:
+            return problem_response(
+                status=400,
+                title="Validation error",
+                detail=str(error),
+            )
+        return Response(status_code=204)
+
     @router.post("/logout", status_code=204)
     async def logout(
         request: Request,
@@ -148,6 +266,31 @@ def authentication_required() -> JSONResponse:
         title="Authentication required",
         detail="A valid session is required",
     )
+
+
+async def validate_csrf(
+    *,
+    request: Request,
+    session_token: str,
+    csrf_header: str | None,
+    csrf: CsrfExecutor,
+) -> JSONResponse | None:
+    csrf_cookie = request.cookies.get(CSRF_COOKIE_NAME)
+    if not csrf_header or not csrf_cookie or csrf_header != csrf_cookie:
+        return problem_response(
+            status=403,
+            title="CSRF validation failed",
+            detail="A valid CSRF token is required",
+        )
+    try:
+        await csrf.execute(session_token, csrf_header)
+    except InvalidSessionError:
+        return problem_response(
+            status=403,
+            title="CSRF validation failed",
+            detail="A valid CSRF token is required",
+        )
+    return None
 
 
 def problem_response(*, status: int, title: str, detail: str) -> JSONResponse:

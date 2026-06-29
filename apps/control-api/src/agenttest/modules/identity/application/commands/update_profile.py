@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
-
 from agenttest.modules.identity.application.errors import DuplicateEmailError
 from agenttest.modules.identity.application.ports import UserAdminRepository
 from agenttest.modules.identity.domain.entities import User

@@ -80,6 +80,14 @@ from agenttest.modules.environments.application.queries import (
 from agenttest.modules.environments.infrastructure.persistence.repositories import (
     SqlAlchemyEnvironmentTemplateRepository,
 )
+from agenttest.modules.feedback.api.router import (
+    FeedbackApiDependencies,
+    create_feedback_router,
+)
+from agenttest.modules.feedback.application.commands import CreateFeedbackHandler
+from agenttest.modules.feedback.infrastructure.persistence.repositories import (
+    SqlAlchemyFeedbackRepository,
+)
 from agenttest.modules.identity.api.admin_router import (
     AdminApiDependencies,
     create_admin_router,
@@ -88,6 +96,9 @@ from agenttest.modules.identity.api.router import (
     AuthApiDependencies,
     create_auth_router,
 )
+from agenttest.modules.identity.application.commands.change_password import (
+    ChangePasswordHandler,
+)
 from agenttest.modules.identity.application.commands.create_user import CreateUserHandler
 from agenttest.modules.identity.application.commands.login import LoginHandler
 from agenttest.modules.identity.application.commands.logout import LogoutHandler
@@ -95,6 +106,9 @@ from agenttest.modules.identity.application.commands.reset_password import Reset
 from agenttest.modules.identity.application.commands.set_user_status import (
     DeleteUserHandler,
     SetUserStatusHandler,
+)
+from agenttest.modules.identity.application.commands.update_profile import (
+    UpdateProfileHandler,
 )
 from agenttest.modules.identity.application.commands.update_user import UpdateUserHandler
 from agenttest.modules.identity.application.queries.current_user import (
@@ -172,6 +186,17 @@ from agenttest.modules.test_plans.infrastructure.persistence.repositories import
     SqlAlchemyTestPlanRepository,
     SqlAlchemyTestPlanVersionRepository,
 )
+from agenttest.modules.user_settings.api.router import (
+    UserSettingsApiDependencies,
+    create_user_settings_router,
+)
+from agenttest.modules.user_settings.application.commands import (
+    UpdateUserSettingsHandler,
+)
+from agenttest.modules.user_settings.application.queries import GetUserSettingsHandler
+from agenttest.modules.user_settings.infrastructure.persistence.repositories import (
+    SqlAlchemyUserSettingsRepository,
+)
 from agenttest.shared.domain.clock import SystemClock
 from agenttest.shared.infrastructure.database import (
     SqlAlchemyUnitOfWork,
@@ -191,6 +216,8 @@ def create_app(
     test_plan_dependencies: TestPlanApiDependencies | None = None,
     environment_dependencies: EnvironmentApiDependencies | None = None,
     run_dependencies: RunApiDependencies | None = None,
+    user_settings_dependencies: UserSettingsApiDependencies | None = None,
+    feedback_dependencies: FeedbackApiDependencies | None = None,
 ) -> FastAPI:
     resolved_settings = settings or get_settings()
     app = FastAPI(
@@ -305,6 +332,18 @@ def create_app(
             csrf=dependencies.csrf,
             settings=resolved_settings,
         ),
+        prefix="/api/v1",
+    )
+    user_settings = user_settings_dependencies or build_user_settings_dependencies(
+        resolved_settings
+    )
+    app.include_router(
+        create_user_settings_router(user_settings, resolved_settings),
+        prefix="/api/v1",
+    )
+    feedback = feedback_dependencies or build_feedback_dependencies(resolved_settings)
+    app.include_router(
+        create_feedback_router(feedback, resolved_settings),
         prefix="/api/v1",
     )
 
@@ -499,6 +538,44 @@ def build_auth_dependencies(settings: Settings) -> AuthApiDependencies:
         current_user=CurrentUserQuery(users=users, sessions=sessions, clock=clock),
         logout=LogoutHandler(sessions=sessions, clock=clock, audit=audit),
         csrf=CsrfValidator(sessions=sessions, clock=clock),
+        update_profile=UpdateProfileHandler(users=users),
+        change_password=ChangePasswordHandler(
+            credentials=credentials,
+            password_hasher=Argon2PasswordHasher(),
+        ),
+        uow_factory=lambda: SqlAlchemyUnitOfWork(session_factory),
+    )
+
+
+def build_user_settings_dependencies(settings: Settings) -> UserSettingsApiDependencies:
+    engine = create_database_engine(str(settings.database_url))
+    session_factory = create_session_factory(engine)
+    users = SqlAlchemyUserRepository(session_factory)
+    sessions = SqlAlchemySessionRepository(session_factory)
+    clock = SystemClock()
+    repository = SqlAlchemyUserSettingsRepository(session_factory)
+    return UserSettingsApiDependencies(
+        current_user=CurrentUserQuery(users=users, sessions=sessions, clock=clock),
+        get_settings=GetUserSettingsHandler(repository=repository),
+        update_settings=UpdateUserSettingsHandler(repository=repository),
+        csrf=CsrfValidator(sessions=sessions, clock=clock),
+        uow_factory=lambda: SqlAlchemyUnitOfWork(session_factory),
+    )
+
+
+def build_feedback_dependencies(settings: Settings) -> FeedbackApiDependencies:
+    engine = create_database_engine(str(settings.database_url))
+    session_factory = create_session_factory(engine)
+    users = SqlAlchemyUserRepository(session_factory)
+    sessions = SqlAlchemySessionRepository(session_factory)
+    repository = SqlAlchemyFeedbackRepository(session_factory)
+    return FeedbackApiDependencies(
+        current_user=CurrentUserQuery(
+            users=users,
+            sessions=sessions,
+            clock=SystemClock(),
+        ),
+        create_feedback=CreateFeedbackHandler(repository=repository),
         uow_factory=lambda: SqlAlchemyUnitOfWork(session_factory),
     )
 

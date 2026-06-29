@@ -5,31 +5,32 @@ from __future__ import annotations
 from uuid import UUID
 
 from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from agenttest.modules.user_settings.domain.entities import UserSettings
 from agenttest.modules.user_settings.domain.value_objects import Language, Theme
 from agenttest.modules.user_settings.infrastructure.persistence.models import UserSettingsModel
+from agenttest.shared.infrastructure.database import session_scope, transaction_scope
 
 
 class SqlAlchemyUserSettingsRepository:
     """基于 SQLAlchemy 的用户设置仓储。"""
 
-    def __init__(self, session: AsyncSession) -> None:
-        self._session = session
+    def __init__(self, session_factory: async_sessionmaker[AsyncSession]) -> None:
+        self._session_factory = session_factory
 
     async def get_by_user_id(self, user_id: UUID) -> UserSettings | None:
         stmt = select(UserSettingsModel).where(UserSettingsModel.user_id == user_id)
-        result = await self._session.execute(stmt)
-        model = result.scalar_one_or_none()
+        async with session_scope(self._session_factory) as session:
+            model = await session.scalar(stmt)
         if model is None:
             return None
         return self._to_domain(model)
 
     async def save(self, settings: UserSettings) -> None:
         model = self._to_model(settings)
-        await self._session.merge(model)
-        await self._session.flush()
+        async with transaction_scope(self._session_factory) as session:
+            await session.merge(model)
 
     def _to_domain(self, model: UserSettingsModel) -> UserSettings:
         return UserSettings(

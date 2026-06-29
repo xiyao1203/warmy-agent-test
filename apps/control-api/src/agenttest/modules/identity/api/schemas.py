@@ -55,6 +55,20 @@ class UpdateUserRequest(BaseModel):
     role: SystemRole | None = None
 
 
+class UpdateProfileRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    email: str = Field(min_length=3, max_length=320)
+    display_name: str = Field(min_length=1, max_length=200)
+
+
+class ChangePasswordRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    current_password: str = Field(min_length=1, max_length=1024)
+    new_password: str = Field(min_length=8, max_length=1024)
+
+
 class ResetPasswordRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
