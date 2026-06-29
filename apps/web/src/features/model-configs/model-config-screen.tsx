@@ -45,29 +45,8 @@ export function ModelConfigScreen({ projectId }: { projectId: string }) {
   }, [projectId]);
 
   useEffect(() => {
-    let active = true;
-    void Promise.all([
-      listModelConfigs(projectId),
-      listModelDefaults(projectId),
-    ])
-      .then(([nextModels, nextDefaults]) => {
-        if (!active) return;
-        setModels(nextModels);
-        setDefaults(nextDefaults);
-        setError("");
-      })
-      .catch(() => {
-        if (active) {
-          setError("请刷新重试；若持续失败，请检查项目权限或 Control API。");
-        }
-      })
-      .finally(() => {
-        if (active) setLoading(false);
-      });
-    return () => {
-      active = false;
-    };
-  }, [projectId]);
+    void reload();
+  }, [reload]);
 
   return (
     <ModelConfigList

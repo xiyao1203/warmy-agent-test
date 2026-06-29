@@ -11,6 +11,7 @@ from pydantic import BaseModel, Field, ValidationError
 from agenttest.modules.identity.public import User
 from agenttest.modules.model_configs.public import (
     InvocationMessage,
+    InvocationResult,
     ModelConfiguration,
     ModelInvoker,
     ModelPurpose,
@@ -101,7 +102,11 @@ class ModelJudge:
         result = await self._invoke(config, [InvocationMessage(role="user", content=content)])
         return self._result(config, result)
 
-    async def _invoke(self, config: ModelConfiguration, messages: list[InvocationMessage]):
+    async def _invoke(
+        self,
+        config: ModelConfiguration,
+        messages: list[InvocationMessage],
+    ) -> InvocationResult:
         system = InvocationMessage(
             role="system",
             content=(
@@ -118,7 +123,7 @@ class ModelJudge:
         )
 
     @staticmethod
-    def _result(config: ModelConfiguration, invocation) -> ModelJudgeResult:
+    def _result(config: ModelConfiguration, invocation: InvocationResult) -> ModelJudgeResult:
         try:
             payload = JudgePayload.model_validate(json.loads(invocation.content))
         except (json.JSONDecodeError, ValidationError) as error:
