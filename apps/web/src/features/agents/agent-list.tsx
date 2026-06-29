@@ -41,6 +41,7 @@ type AgentListProps = {
   loading?: boolean;
   onCreate?: (payload: CreateAgentRequest) => Promise<unknown>;
   onDelete?: (agentId: string) => Promise<unknown>;
+  onRetry?: () => void;
   projectId: string;
 };
 
@@ -55,6 +56,7 @@ export function AgentList({
   loading = false,
   onCreate = async () => undefined,
   onDelete,
+  onRetry,
   projectId,
 }: AgentListProps) {
   if (loading) return <AgentListSkeleton />;
@@ -62,7 +64,7 @@ export function AgentList({
     return <StatusPanel title="项目不存在或你无权访问" />;
   }
   if (error === "service") {
-    return <StatusPanel title="Agent 列表暂时不可用" />;
+    return <StatusPanel onRetry={onRetry} title="Agent 列表暂时不可用" />;
   }
 
   return (
@@ -296,7 +298,7 @@ function ConfirmDeleteButton({
   );
 }
 
-function StatusPanel({ title }: { title: string }) {
+function StatusPanel({ onRetry, title }: { onRetry?: () => void; title: string }) {
   return (
     <div className="grid min-h-[calc(100vh-3rem)] place-items-center px-6 text-center">
       <div>
@@ -304,6 +306,11 @@ function StatusPanel({ title }: { title: string }) {
         <p className="mt-2 max-w-md text-sm leading-6 text-[var(--text-muted)]">
           请稍后刷新重试，或联系超级管理员。
         </p>
+        {onRetry ? (
+          <Button className="mt-4" onClick={onRetry} variant="secondary">
+            重试
+          </Button>
+        ) : null}
       </div>
     </div>
   );

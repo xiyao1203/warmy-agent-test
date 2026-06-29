@@ -22,6 +22,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Skeleton } from "@/components/uiverse";
 
 import { ImportWizard } from "./import-wizard";
 import { TestCaseDetail } from "./test-case-detail";
@@ -93,8 +94,12 @@ export function DatasetDetail({
 
   if (loading) {
     return (
-      <div className="grid min-h-[calc(100vh-3rem)] place-items-center text-sm">
-        正在加载数据集…
+      <div className="min-w-0 px-6 py-6">
+        <Skeleton className="mb-2 h-4 w-24" />
+        <Skeleton className="mb-1 h-8 w-48" />
+        <Skeleton className="mb-6 h-4 w-64" />
+        <Skeleton className="mb-4 h-10 w-full max-w-xs" />
+        <Skeleton className="h-64 rounded-[var(--radius-md)]" />
       </div>
     );
   }
