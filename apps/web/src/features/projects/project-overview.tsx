@@ -137,7 +137,7 @@ export function ProjectOverview({
           </div>
           {members.length ? (
             <Table>
-              <TableHeader>
+              <TableHeader className="bg-[var(--surface-subtle)]">
                 <TableRow>
                   <TableHead>成员标识</TableHead>
                   <TableHead>项目角色</TableHead>
