@@ -78,6 +78,8 @@ class SqlAlchemyChatSessionRepository(ChatSessionRepository):
                     updated_at=session.updated_at,
                 )
                 database.add(model)
+                # Flush to ensure session exists before adding messages
+                await database.flush()
             else:
                 if model.project_id != session.project_id:
                     raise ValueError("Session project cannot change")

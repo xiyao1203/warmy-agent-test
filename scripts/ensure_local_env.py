@@ -5,6 +5,21 @@ from __future__ import annotations
 from base64 import urlsafe_b64encode
 from os import chmod, urandom
 from pathlib import Path
+import subprocess
+
+
+def is_docker_running() -> bool:
+    """Check if Docker is running and PostgreSQL container is available."""
+    try:
+        result = subprocess.run(
+            ["docker", "ps", "--filter", "name=postgresql", "--format", "{{.Names}}"],
+            capture_output=True,
+            text=True,
+            timeout=5,
+        )
+        return "postgresql" in result.stdout
+    except (subprocess.SubprocessError, FileNotFoundError):
+        return False
 
 
 def ensure_local_env(env_file: Path) -> None:
@@ -24,6 +39,13 @@ def ensure_local_env(env_file: Path) -> None:
         additions.append("AGENTTEST_SESSION_COOKIE_SECURE=false")
     if "AGENTTEST_TEMPORAL_ADDRESS" not in configured:
         additions.append("AGENTTEST_TEMPORAL_ADDRESS=localhost:7233")
+    # Configure database URL based on Docker availability
+    if "AGENTTEST_DATABASE_URL" not in configured:
+        if is_docker_running():
+            additions.append("AGENTTEST_DATABASE_URL=postgresql+asyncpg://agenttest:agenttest-local@localhost:5432/agenttest")
+        else:
+            # Use SQLite as fallback when Docker is not available
+            additions.append("AGENTTEST_DATABASE_URL=sqlite+aiosqlite:///data/local.db")
 
     if additions:
         separator = "" if not content or content.endswith("\n") else "\n"
