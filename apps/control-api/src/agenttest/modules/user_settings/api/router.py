@@ -9,14 +9,14 @@ from fastapi import APIRouter, Header, Request
 from fastapi.responses import JSONResponse
 
 from agenttest.bootstrap.settings import Settings
-from agenttest.modules.identity.api.router import (
+from agenttest.modules.identity.public import (
     CsrfExecutor,
+    InvalidSessionError,
+    User,
     authentication_required,
     problem_response,
     validate_csrf,
 )
-from agenttest.modules.identity.application.queries.current_user import InvalidSessionError
-from agenttest.modules.identity.domain.entities import User
 from agenttest.modules.user_settings.api.schemas import (
     UpdateSettingsRequest,
     UserSettingsResponse,

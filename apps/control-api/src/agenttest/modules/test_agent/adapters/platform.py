@@ -7,63 +7,44 @@ from uuid import UUID, uuid4
 
 from pydantic import BaseModel
 
-from agenttest.modules.agents.application.commands import (
+from agenttest.modules.agents.public import (
+    AgentType,
+    AgentVersionId,
     CreateAgentCommand,
     PublishAgentVersionCommand,
 )
-from agenttest.modules.agents.domain.entities import AgentVersionId
-from agenttest.modules.agents.domain.value_objects import AgentType
-from agenttest.modules.datasets.application.commands import (
+from agenttest.modules.datasets.public import (
     AddTestCaseCommand,
     CreateDatasetCommand,
     CreateDatasetVersionCommand,
+    DatasetVersionId,
+    ExecutionMode,
     PublishDatasetVersionCommand,
 )
-from agenttest.modules.datasets.domain.entities import DatasetVersionId
-from agenttest.modules.datasets.domain.value_objects import ExecutionMode
-from agenttest.modules.environments.application.commands import (
+from agenttest.modules.environments.public import (
     CreateEnvironmentTemplateCommand,
+    TemplateType,
 )
-from agenttest.modules.environments.domain.value_objects import TemplateType
-from agenttest.modules.experiments.domain.entities import Experiment, ExperimentId
-from agenttest.modules.experiments.infrastructure.persistence.repositories import (
-    SqlAlchemyExperimentRepository,
+from agenttest.modules.experiments.public import Experiment, ExperimentId
+from agenttest.modules.gates.public import ReleaseGateId
+from agenttest.modules.runs.public import CreateRunCommand, RunId
+from agenttest.modules.scorers.public import Scorer, ScorerId, ScorerType
+from agenttest.modules.security.public import (
+    ScanStatus,
+    SecurityScan,
+    create_scanner,
+    validate_agent_endpoint,
 )
-from agenttest.modules.gates.domain.entities import ReleaseGateId
-from agenttest.modules.gates.infrastructure.persistence.repositories import (
-    SqlAlchemyReleaseGateRepository,
-)
-from agenttest.modules.reviews.infrastructure.persistence.repositories import (
-    SqlAlchemyReviewTaskRepository,
-)
-from agenttest.modules.runs.application.commands import CreateRunCommand
-from agenttest.modules.runs.domain.entities import RunId
-from agenttest.modules.scorers.domain.entities import Scorer, ScorerId
-from agenttest.modules.scorers.domain.value_objects import ScorerType
-from agenttest.modules.scorers.infrastructure.persistence.repositories import (
-    SqlAlchemyScorerRepository,
-)
-from agenttest.modules.security.adapters import create_scanner
-from agenttest.modules.security.domain.models import ScanStatus, SecurityScan
-from agenttest.modules.security.domain.targets import validate_agent_endpoint
-from agenttest.modules.security.infrastructure.repositories import (
-    SqlAlchemySecurityScanRepository,
-)
-from agenttest.modules.test_accounts.domain.entities import TestAccountId
-from agenttest.modules.test_accounts.infrastructure.persistence.repositories import (
-    SqlAlchemyTestAccountRepository,
-)
+from agenttest.modules.test_accounts.public import TestAccountId
 from agenttest.modules.test_agent.application.orchestrator import OrchestrationContext
-from agenttest.modules.test_plans.application.commands import (
+from agenttest.modules.test_plans.public import (
     CreateTestPlanCommand,
     CreateTestPlanVersionCommand,
-    PublishTestPlanVersionCommand,
-)
-from agenttest.modules.test_plans.domain.entities import (
     EnvironmentTemplateId,
+    PublishTestPlanVersionCommand,
+    TestPlanConfig,
     TestPlanVersionId,
 )
-from agenttest.modules.test_plans.domain.value_objects import TestPlanConfig
 
 
 class HandlerPlatformGateway:
@@ -75,7 +56,12 @@ class HandlerPlatformGateway:
         environments,
         plans,
         runs,
-        session_factory,
+        scorers,
+        experiments,
+        reviews,
+        gates,
+        security,
+        accounts,
         promptfoo_bin: str,
         allow_private_security_targets: bool,
     ) -> None:
@@ -84,12 +70,12 @@ class HandlerPlatformGateway:
         self._environments = environments
         self._plans = plans
         self._runs = runs
-        self._scorers = SqlAlchemyScorerRepository(session_factory)
-        self._experiments = SqlAlchemyExperimentRepository(session_factory)
-        self._reviews = SqlAlchemyReviewTaskRepository(session_factory)
-        self._gates = SqlAlchemyReleaseGateRepository(session_factory)
-        self._security = SqlAlchemySecurityScanRepository(session_factory)
-        self._accounts = SqlAlchemyTestAccountRepository(session_factory)
+        self._scorers = scorers
+        self._experiments = experiments
+        self._reviews = reviews
+        self._gates = gates
+        self._security = security
+        self._accounts = accounts
         self._promptfoo_bin = promptfoo_bin
         self._allow_private_security_targets = allow_private_security_targets
 

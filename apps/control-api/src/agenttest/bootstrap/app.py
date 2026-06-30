@@ -1539,8 +1539,26 @@ def _register_test_agent_endpoints(
     auth_deps,
 ) -> None:
     """注册测试 Agent 对话 API。"""
+    from agenttest.modules.experiments.infrastructure.persistence.repositories import (
+        SqlAlchemyExperimentRepository,
+    )
+    from agenttest.modules.gates.infrastructure.persistence.repositories import (
+        SqlAlchemyReleaseGateRepository,
+    )
     from agenttest.modules.model_configs.infrastructure.temporal_invoker import (
         TemporalModelInvoker,
+    )
+    from agenttest.modules.reviews.infrastructure.persistence.repositories import (
+        SqlAlchemyReviewTaskRepository,
+    )
+    from agenttest.modules.scorers.infrastructure.persistence.repositories import (
+        SqlAlchemyScorerRepository,
+    )
+    from agenttest.modules.security.infrastructure.repositories import (
+        SqlAlchemySecurityScanRepository,
+    )
+    from agenttest.modules.test_accounts.infrastructure.persistence.repositories import (
+        SqlAlchemyTestAccountRepository,
     )
     from agenttest.modules.test_agent.adapters.platform import HandlerPlatformGateway
     from agenttest.modules.test_agent.api.router import create_test_agent_router
@@ -1574,7 +1592,12 @@ def _register_test_agent_endpoints(
             environments=build_environment_dependencies(settings),
             plans=build_test_plan_dependencies(settings),
             runs=build_run_dependencies(settings),
-            session_factory=session_factory,
+            scorers=SqlAlchemyScorerRepository(session_factory),
+            experiments=SqlAlchemyExperimentRepository(session_factory),
+            reviews=SqlAlchemyReviewTaskRepository(session_factory),
+            gates=SqlAlchemyReleaseGateRepository(session_factory),
+            security=SqlAlchemySecurityScanRepository(session_factory),
+            accounts=SqlAlchemyTestAccountRepository(session_factory),
             promptfoo_bin=settings.promptfoo_bin,
             allow_private_security_targets=settings.security_scan_allow_private_network,
         )

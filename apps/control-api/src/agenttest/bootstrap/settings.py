@@ -20,7 +20,7 @@ class Settings(BaseSettings):
 
     model_config = SettingsConfigDict(
         env_prefix="AGENTTEST_",
-        env_file=".env",
+        env_file=None,
         extra="ignore",
     )
 
@@ -55,4 +55,4 @@ class Settings(BaseSettings):
 
 @lru_cache
 def get_settings() -> Settings:
-    return Settings()
+    return Settings(_env_file=".env")

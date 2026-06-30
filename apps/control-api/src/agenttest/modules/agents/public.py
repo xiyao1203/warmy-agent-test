@@ -5,6 +5,10 @@ Other modules must only import from this file when referencing agents.
 
 from __future__ import annotations
 
+from agenttest.modules.agents.application.commands import (
+    CreateAgentCommand,
+    PublishAgentVersionCommand,
+)
 from agenttest.modules.agents.domain.entities import (
     Agent,
     AgentId,
@@ -25,6 +29,8 @@ __all__ = [
     "AgentVersion",
     "AgentVersionId",
     "AgentVersionRef",
+    "CreateAgentCommand",
+    "PublishAgentVersionCommand",
     "VersionStatus",
 ]
 

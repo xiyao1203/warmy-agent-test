@@ -282,7 +282,10 @@ def create_experiment_router(
                     "degradation": degradations,
                 }
             else:
-                return JSONResponse(status_code=422, content={"detail": "run_id 或 experiment_id 必须提供一个"})
+                return JSONResponse(
+                    status_code=422,
+                    content={"detail": "run_id 或 experiment_id 必须提供一个"},
+                )
 
     return router
 

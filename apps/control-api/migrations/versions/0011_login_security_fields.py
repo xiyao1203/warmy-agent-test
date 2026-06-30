@@ -17,16 +17,13 @@ depends_on: str | Sequence[str] | None = None
 
 
 def upgrade() -> None:
-    # Check if columns already exist before adding (handles partial migration states)
-    conn = op.get_bind()
-    inspector = sa.inspect(conn)
-    existing_columns = {col['name'] for col in inspector.get_columns('users')}
-
-    if 'failed_login_count' not in existing_columns:
-        op.add_column('users', sa.Column('failed_login_count', sa.Integer(), nullable=False, server_default='0'))
-
-    if 'locked_until' not in existing_columns:
-        op.add_column('users', sa.Column('locked_until', sa.DateTime(timezone=True), nullable=True))
+    op.add_column(
+        "users",
+        sa.Column("failed_login_count", sa.Integer(), nullable=False, server_default="0"),
+    )
+    op.add_column(
+        "users", sa.Column("locked_until", sa.DateTime(timezone=True), nullable=True)
+    )
 
 
 def downgrade() -> None:
