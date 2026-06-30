@@ -72,6 +72,7 @@ class CreateRunHandler:
         existing = await self._runs.get_by_idempotency_key(command.project_id, key)
         if existing is not None:
             return CreateRunResult(run=existing, created=False)
+        await self._orchestrator.ensure_available()
         definition = await self._source.load(
             command.project_id,
             command.test_plan_version_id,

@@ -5,6 +5,7 @@ from uuid import uuid4
 import pytest
 from agenttest.modules.identity.public import UserId
 from agenttest.modules.projects.public import ProjectId
+from agenttest.modules.runs.application.ports import RunRuntimeUnavailableError
 from agenttest.modules.runs.domain.entities import Run, RunCase, RunCaseId, RunId
 from agenttest.modules.runs.infrastructure.temporal_orchestrator import (
     RUN_WORKFLOW_NAME,
@@ -28,9 +29,7 @@ class FakeTemporalClient:
         self.requested_workflow_id: str | None = None
 
     async def start_workflow(self, workflow: str, payload: dict[str, object], **kwargs):
-        self.started.append(
-            {"workflow": workflow, "payload": payload, "kwargs": kwargs}
-        )
+        self.started.append({"workflow": workflow, "payload": payload, "kwargs": kwargs})
         return self.handle
 
     def get_workflow_handle(self, workflow_id: str) -> FakeWorkflowHandle:
@@ -114,3 +113,11 @@ async def test_temporal_orchestrator_signals_cancel_when_workflow_exists() -> No
 
     assert client.requested_workflow_id == workflow_id
     assert client.handle.signals == ["cancel"]
+
+
+@pytest.mark.asyncio
+async def test_temporal_readiness_uses_stable_runtime_error() -> None:
+    orchestrator = TemporalRunOrchestrator(task_queue="agenttest-api-runner")
+
+    with pytest.raises(RunRuntimeUnavailableError, match="Run execution runtime"):
+        await orchestrator.ensure_available()

@@ -4,6 +4,16 @@ type ApiErrorShape = {
   title?: string;
 };
 
+export class ApiProblemError extends Error {
+  constructor(
+    message: string,
+    public readonly status: number,
+  ) {
+    super(message);
+    this.name = "ApiProblemError";
+  }
+}
+
 export type UiProblem =
   | "authentication"
   | "conflict"
@@ -21,4 +31,28 @@ export function problemKind(error: unknown): UiProblem {
   if (problem?.status === 409) return "conflict";
   if (problem?.status === 422) return "validation";
   return "service";
+}
+
+export function problemMessage(error: unknown, fallback: string): string {
+  const problem = error as ApiErrorShape | undefined;
+  if (typeof problem?.detail === "string" && problem.detail.trim()) {
+    return problem.detail;
+  }
+  if (error instanceof Error && error.message.trim()) {
+    return error.message;
+  }
+  return fallback;
+}
+
+export async function responseProblem(
+  response: Response,
+  fallback: string,
+): Promise<ApiProblemError> {
+  let body: unknown;
+  try {
+    body = await response.json();
+  } catch {
+    body = undefined;
+  }
+  return new ApiProblemError(problemMessage(body, fallback), response.status);
 }

@@ -42,6 +42,18 @@ _TEXT_RULES = {
     ),
     "empty response on upstream failure": re.compile(r"if\s*\(!?res\.ok\)\s*return\s*\[\]"),
     "placeholder authenticated user": re.compile(r"placeholderUser"),
+    "broad authentication exception masking": re.compile(
+        r"except\s*\([^\n)]*InvalidSessionError[^\n)]*Exception[^\n)]*\)"
+    ),
+    "broad not-found exception masking": re.compile(
+        r"except\s*\([^\n)]*(?:NotFoundError)[^\n)]*Exception[^\n)]*\)"
+    ),
+    "successful local execution fallback": re.compile(
+        r"return\s+f?[\"']run-\{run\.run_id\.value\}[\"']"
+    ),
+    "generic frontend API error": re.compile(
+        r"if\s*\(!?\w+\.ok\)\s*throw\s+new\s+Error\([\"']Failed\s"
+    ),
 }
 
 _ROOTS = (

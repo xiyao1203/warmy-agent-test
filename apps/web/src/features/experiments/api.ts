@@ -1,5 +1,6 @@
 import { CONTROL_API_URL as API_BASE } from "@/lib/api/base-url";
 import { csrfHeaders } from "@/lib/api/csrf";
+import { responseProblem } from "@/lib/api/problem";
 
 export type ExperimentItem = {
   id: string;
@@ -19,7 +20,7 @@ export async function listExperiments(projectId: string) {
     `${API_BASE}/api/v1/projects/${projectId}/experiments?limit=100`,
     { credentials: "include" },
   );
-  if (!res.ok) throw new Error("Failed to list experiments");
+  if (!res.ok) throw await responseProblem(res, "加载实验失败");
   const data = await res.json();
   return data.items as ExperimentItem[];
 }
@@ -45,7 +46,7 @@ export async function createExperiment(
       body: JSON.stringify(payload),
     },
   );
-  if (!res.ok) throw new Error("Failed to create experiment");
+  if (!res.ok) throw await responseProblem(res, "创建实验失败");
   return res.json() as Promise<ExperimentItem>;
 }
 
@@ -54,7 +55,7 @@ export async function getExperiment(projectId: string, experimentId: string) {
     `${API_BASE}/api/v1/projects/${projectId}/experiments/${experimentId}`,
     { credentials: "include" },
   );
-  if (!res.ok) throw new Error("Failed to get experiment");
+  if (!res.ok) throw await responseProblem(res, "加载实验详情失败");
   return res.json() as Promise<ExperimentItem>;
 }
 
@@ -67,6 +68,6 @@ export async function runExperiment(projectId: string, experimentId: string) {
       credentials: "include",
     },
   );
-  if (!res.ok) throw new Error("Failed to run experiment");
+  if (!res.ok) throw await responseProblem(res, "运行实验失败");
   return res.json() as Promise<ExperimentItem>;
 }

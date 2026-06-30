@@ -12,13 +12,18 @@ from agenttest.modules.runs.application.commands import (
     CancelRunHandler,
     CreateRunHandler,
 )
-from agenttest.modules.runs.application.ports import RunDefinition, RunDefinitionCase
+from agenttest.modules.runs.application.ports import (
+    RunDefinition,
+    RunDefinitionCase,
+    RunRuntimeUnavailableError,
+)
 from agenttest.modules.runs.application.queries import (
     GetRunHandler,
     ListRunCasesHandler,
     ListRunsHandler,
 )
 from agenttest.modules.runs.domain.entities import Run, RunCase, RunId
+from agenttest.modules.runs.infrastructure.orchestrator import LocalRunOrchestrator
 from agenttest.modules.test_plans.public import TestPlanVersionId
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
@@ -101,12 +106,18 @@ class StubOrchestrator:
     def __init__(self) -> None:
         self.started: list[RunId] = []
         self.cancelled: list[RunId] = []
+        self.cancel_unavailable = False
+
+    async def ensure_available(self) -> None:
+        return None
 
     async def start(self, run: Run, cases: list[RunCase]) -> str:
         self.started.append(run.run_id)
         return f"run-{run.run_id.value}"
 
     async def cancel(self, run: Run) -> None:
+        if self.cancel_unavailable:
+            raise RunRuntimeUnavailableError("Run execution runtime is unavailable")
         self.cancelled.append(run.run_id)
 
 
@@ -136,17 +147,18 @@ def client_for(
     *,
     role: SystemRole = SystemRole.DEVELOPER,
     member: bool = True,
-) -> tuple[TestClient, ProjectId, StubOrchestrator]:
+    orchestrator: StubOrchestrator | LocalRunOrchestrator | None = None,
+) -> tuple[TestClient, ProjectId, StubOrchestrator | LocalRunOrchestrator, InMemoryRunRepository]:
     project_id = ProjectId.new()
     repo = InMemoryRunRepository()
     access = StubProjectAccess(project_id, member=member)
-    orchestrator = StubOrchestrator()
+    selected_orchestrator = orchestrator or StubOrchestrator()
     dependencies = RunApiDependencies(
         create_run=CreateRunHandler(
             runs=repo,
             source=StubRunSource(),
             project_access=access,
-            orchestrator=orchestrator,
+            orchestrator=selected_orchestrator,
         ),
         list_runs=ListRunsHandler(runs=repo, project_access=access),
         get_run=GetRunHandler(runs=repo, project_access=access),
@@ -154,7 +166,7 @@ def client_for(
         cancel_run=CancelRunHandler(
             runs=repo,
             project_access=access,
-            orchestrator=orchestrator,
+            orchestrator=selected_orchestrator,
         ),
         apply_result=ApplyRunResultHandler(runs=repo),
     )
@@ -168,14 +180,18 @@ def client_for(
         ),
         prefix="/api/v1",
     )
-    client = TestClient(app, base_url="https://testserver")
+    client = TestClient(
+        app,
+        base_url="https://testserver",
+        raise_server_exceptions=False,
+    )
     client.cookies.set("agenttest_session", "session-token")
     client.cookies.set("agenttest_csrf", "csrf-token")
-    return client, project_id, orchestrator
+    return client, project_id, selected_orchestrator, repo
 
 
 def test_create_is_idempotent_and_can_be_cancelled() -> None:
-    client, project_id, orchestrator = client_for()
+    client, project_id, orchestrator, _ = client_for()
     version_id = uuid4()
     headers = {"X-CSRF-Token": "csrf-token", "Idempotency-Key": "release-42"}
     first = client.post(
@@ -204,7 +220,7 @@ def test_create_is_idempotent_and_can_be_cancelled() -> None:
 
 
 def test_run_list_and_cases_are_project_scoped() -> None:
-    client, project_id, _ = client_for()
+    client, project_id, _, _ = client_for()
     created = client.post(
         f"/api/v1/projects/{project_id.value}/runs",
         headers={
@@ -227,7 +243,7 @@ def test_run_list_and_cases_are_project_scoped() -> None:
 
 
 def test_read_only_user_cannot_create_run() -> None:
-    client, project_id, _ = client_for(role=SystemRole.VIEWER)
+    client, project_id, _, _ = client_for(role=SystemRole.VIEWER)
     response = client.post(
         f"/api/v1/projects/{project_id.value}/runs",
         headers={"X-CSRF-Token": "csrf-token", "Idempotency-Key": "denied"},
@@ -237,7 +253,7 @@ def test_read_only_user_cannot_create_run() -> None:
 
 
 def test_internal_result_callback_updates_run_and_cases() -> None:
-    client, project_id, _ = client_for()
+    client, project_id, _, _ = client_for()
     created = client.post(
         f"/api/v1/projects/{project_id.value}/runs",
         headers={
@@ -277,7 +293,7 @@ def test_internal_result_callback_updates_run_and_cases() -> None:
 
 
 def test_internal_result_callback_requires_token() -> None:
-    client, project_id, _ = client_for()
+    client, project_id, _, _ = client_for()
     created = client.post(
         f"/api/v1/projects/{project_id.value}/runs",
         headers={
@@ -294,3 +310,42 @@ def test_internal_result_callback_requires_token() -> None:
     )
 
     assert response.status_code == 403
+
+
+def test_create_run_fails_closed_when_execution_runtime_is_unavailable() -> None:
+    client, project_id, _, repository = client_for(orchestrator=LocalRunOrchestrator())
+
+    response = client.post(
+        f"/api/v1/projects/{project_id.value}/runs",
+        headers={
+            "X-CSRF-Token": "csrf-token",
+            "Idempotency-Key": "runtime-unavailable",
+        },
+        json={"test_plan_version_id": str(uuid4())},
+    )
+
+    assert response.status_code == 503
+    assert response.json()["detail"] == "Run execution runtime is unavailable"
+    assert repository.runs == {}
+
+
+def test_cancel_run_reports_unavailable_execution_runtime() -> None:
+    client, project_id, orchestrator, _ = client_for()
+    created = client.post(
+        f"/api/v1/projects/{project_id.value}/runs",
+        headers={
+            "X-CSRF-Token": "csrf-token",
+            "Idempotency-Key": "cancel-runtime-unavailable",
+        },
+        json={"test_plan_version_id": str(uuid4())},
+    )
+    assert isinstance(orchestrator, StubOrchestrator)
+    orchestrator.cancel_unavailable = True
+
+    response = client.post(
+        f"/api/v1/projects/{project_id.value}/runs/{created.json()['id']}/cancel",
+        headers={"X-CSRF-Token": "csrf-token"},
+    )
+
+    assert response.status_code == 503
+    assert response.json()["detail"] == "Run execution runtime is unavailable"

@@ -16,6 +16,12 @@ def test_settings_web_origin_default() -> None:
     assert "localhost:5175" in str(settings.web_origin)
 
 
+def test_local_settings_allow_http_session_cookie() -> None:
+    settings = Settings()
+
+    assert settings.session_cookie_secure is False
+
+
 def test_production_rejects_local_internal_token() -> None:
     with pytest.raises(ValidationError):
         Settings(environment="production", internal_api_token="local-internal-token")

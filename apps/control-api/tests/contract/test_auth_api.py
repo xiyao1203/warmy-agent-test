@@ -111,6 +111,7 @@ def test_login_sets_secure_session_and_csrf_cookies() -> None:
             settings=Settings(
                 environment="production",
                 internal_api_token="test-production-internal-token",
+                session_cookie_secure=True,
             ),
             auth_dependencies=auth_dependencies(
                 login=StubLogin(

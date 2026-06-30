@@ -36,7 +36,7 @@ def create_trace_diff_router(
             return actor
         try:
             await check_project(project_id)
-        except (ProjectNotFoundError, Exception):
+        except ProjectNotFoundError:
             return JSONResponse(status_code=404, content={"detail": "项目不存在"})
 
         async with session_factory() as session:
@@ -52,10 +52,10 @@ def create_trace_diff_router(
             cases_b = await _get_run_cases_summary(session, run_b_id)
 
             case_map_a: dict[str, dict[str, str | int | None]] = {
-                c["test_case_id"]: c for c in cases_a  # type: ignore[misc]
+                str(c["test_case_id"]): c for c in cases_a
             }
             case_map_b: dict[str, dict[str, str | int | None]] = {
-                c["test_case_id"]: c for c in cases_b  # type: ignore[misc]
+                str(c["test_case_id"]): c for c in cases_b
             }
             all_case_ids: list[str] = sorted(set(case_map_a) | set(case_map_b))
 
@@ -104,7 +104,9 @@ def create_trace_diff_router(
 
 
 async def _get_run_summary(
-    session, run_id: UUID, project_id: UUID,
+    session,
+    run_id: UUID,
+    project_id: UUID,
 ) -> dict[str, object] | None:
     """获取运行摘要，校验 project_id 归属。"""
     result = await session.execute(
@@ -132,7 +134,8 @@ async def _get_run_summary(
 
 
 async def _get_run_cases_summary(
-    session, run_id: UUID,
+    session,
+    run_id: UUID,
 ) -> list[dict[str, str | int | None]]:
     result = await session.execute(
         text(

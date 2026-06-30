@@ -1,5 +1,6 @@
 import { CONTROL_API_URL as API_BASE } from "@/lib/api/base-url";
 import { csrfHeaders } from "@/lib/api/csrf";
+import { responseProblem } from "@/lib/api/problem";
 
 export type ReviewTask = {
   id: string;
@@ -23,7 +24,7 @@ export async function listReviews(projectId: string, status?: string) {
     `${API_BASE}/api/v1/projects/${projectId}/reviews?${params}`,
     { credentials: "include" },
   );
-  if (!res.ok) throw new Error("Failed to list reviews");
+  if (!res.ok) throw await responseProblem(res, "加载审核任务失败");
   const data = await res.json();
   return data.items as ReviewTask[];
 }
@@ -49,7 +50,7 @@ export async function scoreReview(
       body: JSON.stringify(payload),
     },
   );
-  if (!res.ok) throw new Error("Failed to score review");
+  if (!res.ok) throw await responseProblem(res, "提交审核评分失败");
   return res.json() as Promise<ReviewTask>;
 }
 
@@ -67,7 +68,7 @@ export async function rejectReview(
       credentials: "include",
     },
   );
-  if (!res.ok) throw new Error("Failed to reject review");
+  if (!res.ok) throw await responseProblem(res, "拒绝审核任务失败");
   return res.json() as Promise<ReviewTask>;
 }
 
@@ -80,6 +81,6 @@ export async function skipReview(projectId: string, taskId: string) {
       credentials: "include",
     },
   );
-  if (!res.ok) throw new Error("Failed to skip review");
+  if (!res.ok) throw await responseProblem(res, "跳过审核任务失败");
   return res.json() as Promise<ReviewTask>;
 }

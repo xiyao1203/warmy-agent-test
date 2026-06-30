@@ -28,7 +28,7 @@ async def require_actor(request: Request, actor_for, settings):
         return authentication_required()
     try:
         return await actor_for(request)
-    except (InvalidSessionError, Exception):
+    except InvalidSessionError:
         return authentication_required()
 
 

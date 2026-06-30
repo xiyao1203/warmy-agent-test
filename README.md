@@ -72,24 +72,39 @@ uv run agenttest-admin create-super-admin --email admin@example.com --name Admin
 ### 5. 启动后端 API
 
 ```bash
+uv run python scripts/ensure_local_env.py
 export AGENTTEST_TEMPORAL_ADDRESS=localhost:7233
-export AGENTTEST_MODEL_CREDENTIAL_KEY="$(python -c 'import base64,secrets; print(base64.urlsafe_b64encode(secrets.token_bytes(32)).decode())')"
 uv run uvicorn agenttest.main:app --app-dir apps/control-api/src --reload --port 8181
 ```
 
 API 文档：`http://localhost:8181/docs`
 
-同一部署的 Control API 与 Model Runner 必须使用相同的 `AGENTTEST_MODEL_CREDENTIAL_KEY`。该值是项目模型凭证的加密主密钥，不能提交到仓库；轮换前必须执行凭证重加密。
+本地初始化脚本会在 Git 忽略且权限为 `0600` 的 `.env` 中生成稳定的 `AGENTTEST_MODEL_CREDENTIAL_KEY`，并允许 localhost HTTP 使用会话 Cookie。非本地部署必须通过安全配置系统提供主密钥并启用 Secure Cookie；轮换主密钥前必须执行凭证重加密。
 
 ### 6. 启动 Model Runner
 
 ```bash
+set -a
+source .env
+set +a
 export AGENTTEST_TEMPORAL_ADDRESS=localhost:7233
 uv run python -m agenttest_model_runner.main
 ```
 
 Model Runner 不连接业务数据库，只从 Temporal 接收当前调用所需的加密快照。
 如确需连接本机 Ollama 等私网模型，显式设置 `AGENTTEST_MODEL_ALLOW_PRIVATE_NETWORK=true`；默认关闭以防止 SSRF。
+未配置或无法连接 Temporal/Model Runner 时，模型测试、Agent 对话和 Run 启动会返回明确的 `503`，不会创建模拟结果或假 Workflow。
+
+### 7. 启动 API Runner
+
+```bash
+set -a
+source .env
+set +a
+uv run python -m agenttest_api_runner.main
+```
+
+API Runner 消费 `agenttest-api-runner` 任务队列，执行真实 Agent HTTP 请求、浏览器采集和结果回传。它不连接业务数据库。
 
 ### 运行时配置说明
 
@@ -98,7 +113,7 @@ Model Runner 不连接业务数据库，只从 Temporal 接收当前调用所需
 - Compose 文件中的默认账号仅用于本地开发。非本地环境必须设置独立的数据库、对象存储、内部 API Token 和会话配置，禁止沿用仓库默认值。
 - Agent 测试和模型评分只使用项目级模型配置及加密凭证；未配置可用模型时会明确失败，不生成模拟结果。
 
-### 7. 启动前端
+### 8. 启动前端
 
 ```bash
 pnpm --filter @warmy/web dev --port 5175
@@ -106,7 +121,7 @@ pnpm --filter @warmy/web dev --port 5175
 
 前端地址：`http://localhost:5175`
 
-### 8. 登录
+### 9. 登录
 
 使用步骤 4 创建的管理员账号登录。首次登录会提示修改密码（如已设置 `must_change_password`）。
 

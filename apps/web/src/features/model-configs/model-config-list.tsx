@@ -27,6 +27,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { problemMessage } from "@/lib/api/problem";
 
 type Props = {
   defaults: ModelDefaultResponse[];
@@ -69,10 +70,10 @@ export function ModelConfigList(props: Props) {
         ...current,
         [id]: `连接成功 · ${result.latency_ms} ms`,
       }));
-    } catch {
+    } catch (error) {
       setConnection((current) => ({
         ...current,
-        [id]: "连接失败，请检查地址、模型 ID 和 API Key",
+        [id]: problemMessage(error, "连接失败，请检查地址、模型 ID 和 API Key"),
       }));
     } finally {
       setBusy(null);
@@ -292,8 +293,8 @@ function ModelDialog({
         });
       }
       onClose();
-    } catch {
-      setError("保存失败，请检查字段或项目权限。");
+    } catch (error) {
+      setError(problemMessage(error, "保存失败，请检查字段或项目权限。"));
     } finally {
       setSubmitting(false);
     }
