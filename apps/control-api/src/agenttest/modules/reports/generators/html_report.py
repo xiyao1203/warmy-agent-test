@@ -3,7 +3,8 @@
 from __future__ import annotations
 
 import html
-from datetime import datetime
+from datetime import UTC, datetime
+from typing import Any
 
 
 class HtmlReportGenerator:
@@ -12,7 +13,7 @@ class HtmlReportGenerator:
     生成人类可读的 HTML 报告。
     """
 
-    def generate(self, run_data: dict[str, object]) -> str:
+    def generate(self, run_data: dict[str, Any]) -> str:
         """生成 HTML 报告。
 
         Args:
@@ -47,7 +48,12 @@ class HtmlReportGenerator:
   <meta charset="UTF-8">
   <title>测试报告 - {html.escape(str(run_id))}</title>
   <style>
-    body {{ font-family: -apple-system, sans-serif; max-width: 1200px; margin: 0 auto; padding: 20px; }}
+    body {{
+      font-family: -apple-system, sans-serif;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+    }}
     .summary {{ display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin: 20px 0; }}
     .card {{ padding: 20px; border-radius: 8px; text-align: center; }}
     .card.total {{ background: #e3f2fd; }}
@@ -99,7 +105,7 @@ class HtmlReportGenerator:
   </table>
   
   <p style="margin-top: 40px; color: #999;">
-    生成时间: {datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")} UTC
+    生成时间: {datetime.now(UTC).strftime("%Y-%m-%d %H:%M:%S")} UTC
   </p>
 </body>
 </html>"""

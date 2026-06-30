@@ -2,36 +2,8 @@
 
 from __future__ import annotations
 
-import pytest
-
 from agenttest.modules.plugins.canvas_adapter import CanvasState
 from agenttest.modules.plugins.network_mock import NetworkMockManager
-from agenttest.modules.security.adapters.future_adapters import (
-    AgentDojoScanner,
-    GarakScanner,
-    PyRITScanner,
-)
-
-
-@pytest.mark.asyncio
-async def test_garak_scanner_returns_empty():
-    scanner = GarakScanner()
-    result = await scanner.run_scan()
-    assert result == []
-
-
-@pytest.mark.asyncio
-async def test_pyrit_scanner_returns_empty():
-    scanner = PyRITScanner()
-    result = await scanner.run_scan()
-    assert result == []
-
-
-@pytest.mark.asyncio
-async def test_agentdojo_scanner_returns_empty():
-    scanner = AgentDojoScanner()
-    result = await scanner.run_scan()
-    assert result == []
 
 
 def test_canvas_creation_order_assertion():

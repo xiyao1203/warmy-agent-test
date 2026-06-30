@@ -2,10 +2,9 @@
 
 from __future__ import annotations
 
-import html
-from datetime import datetime
-from xml.etree.ElementTree import Element, SubElement, tostring
+from typing import Any
 from xml.dom.minidom import parseString
+from xml.etree.ElementTree import Element, SubElement, tostring
 
 
 class JunitReportGenerator:
@@ -14,7 +13,7 @@ class JunitReportGenerator:
     生成 CI/CD 集成的 JUnit XML 格式。
     """
 
-    def generate(self, run_data: dict[str, object]) -> str:
+    def generate(self, run_data: dict[str, Any]) -> str:
         """生成 JUnit XML 报告。
 
         Args:

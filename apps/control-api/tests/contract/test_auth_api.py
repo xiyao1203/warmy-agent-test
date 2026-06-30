@@ -108,7 +108,10 @@ def test_login_sets_secure_session_and_csrf_cookies() -> None:
     user = create_user()
     client = TestClient(
         create_app(
-            settings=Settings(environment="production"),
+            settings=Settings(
+                environment="production",
+                internal_api_token="test-production-internal-token",
+            ),
             auth_dependencies=auth_dependencies(
                 login=StubLogin(
                     LoginResult(

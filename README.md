@@ -91,6 +91,13 @@ uv run python -m agenttest_model_runner.main
 Model Runner 不连接业务数据库，只从 Temporal 接收当前调用所需的加密快照。
 如确需连接本机 Ollama 等私网模型，显式设置 `AGENTTEST_MODEL_ALLOW_PRIVATE_NETWORK=true`；默认关闭以防止 SSRF。
 
+### 运行时配置说明
+
+- 浏览器端开发环境默认访问 `http://localhost:8181`；生产构建未设置 `VITE_API_BASE_URL` 时使用当前站点同源 API，不会回退到访问者本机。
+- 安全扫描调用已安装的 Promptfoo，可通过 `AGENTTEST_PROMPTFOO_BIN` 指定可执行文件。扫描目标必须由用户提交，默认拒绝本机和私网地址；仅在受控内网部署中显式设置 `AGENTTEST_SECURITY_SCAN_ALLOW_PRIVATE_NETWORK=true`。
+- Compose 文件中的默认账号仅用于本地开发。非本地环境必须设置独立的数据库、对象存储、内部 API Token 和会话配置，禁止沿用仓库默认值。
+- Agent 测试和模型评分只使用项目级模型配置及加密凭证；未配置可用模型时会明确失败，不生成模拟结果。
+
 ### 7. 启动前端
 
 ```bash

@@ -13,10 +13,8 @@ import {
 } from "@warmy/generated-api-client";
 
 import { apiClient } from "@/lib/api/client";
+import { CONTROL_API_URL as API_BASE } from "@/lib/api/base-url";
 import { csrfHeaders } from "@/lib/api/csrf";
-
-const API_BASE =
-  process.env.NEXT_PUBLIC_CONTROL_API_URL ?? "http://localhost:8181";
 
 export async function listTestPlans(projectId: string) {
   const { data } = await listPlansApiV1ProjectsProjectIdTestPlansGet({
@@ -59,10 +57,7 @@ export async function createTestPlan(
   return data;
 }
 
-export async function listTestPlanVersions(
-  projectId: string,
-  planId: string,
-) {
+export async function listTestPlanVersions(projectId: string, planId: string) {
   const { data } =
     await listVersionsApiV1ProjectsProjectIdTestPlansPlanIdVersionsGet({
       client: apiClient,
@@ -133,12 +128,13 @@ export async function publishTestPlanVersion(
 }
 
 export async function listEnvironmentTemplates(projectId: string) {
-  const { data } = await listTemplatesApiV1ProjectsProjectIdEnvironmentTemplatesGet({
-    client: apiClient,
-    path: { project_id: projectId },
-    query: { limit: 100 },
-    throwOnError: true,
-  });
+  const { data } =
+    await listTemplatesApiV1ProjectsProjectIdEnvironmentTemplatesGet({
+      client: apiClient,
+      path: { project_id: projectId },
+      query: { limit: 100 },
+      throwOnError: true,
+    });
   return data.items;
 }
 

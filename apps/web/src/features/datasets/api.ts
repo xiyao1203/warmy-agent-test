@@ -18,10 +18,8 @@ import {
 } from "@warmy/generated-api-client";
 
 import { apiClient } from "@/lib/api/client";
+import { CONTROL_API_URL as API_BASE } from "@/lib/api/base-url";
 import { csrfHeaders } from "@/lib/api/csrf";
-
-const API_BASE =
-  process.env.NEXT_PUBLIC_CONTROL_API_URL ?? "http://localhost:8181";
 
 export async function listDatasets(projectId: string) {
   const { data } = await listDatasetsApiV1ProjectsProjectIdDatasetsGet({
@@ -34,11 +32,14 @@ export async function listDatasets(projectId: string) {
 }
 
 export async function deleteDataset(projectId: string, datasetId: string) {
-  await fetch(`${API_BASE}/api/v1/projects/${projectId}/datasets/${datasetId}`, {
-    method: "DELETE",
-    headers: csrfHeaders() as Record<string, string>,
-    credentials: "include",
-  });
+  await fetch(
+    `${API_BASE}/api/v1/projects/${projectId}/datasets/${datasetId}`,
+    {
+      method: "DELETE",
+      headers: csrfHeaders() as Record<string, string>,
+      credentials: "include",
+    },
+  );
 }
 
 export async function getDataset(projectId: string, datasetId: string) {

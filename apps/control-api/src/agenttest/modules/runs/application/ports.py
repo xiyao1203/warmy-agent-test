@@ -65,7 +65,11 @@ class RunRepository(Protocol):
 
     async def save_result(self, run: Run, cases: list[RunCase]) -> None: ...
 
-    async def list_cases(self, run_id: RunId) -> list[RunCase]: ...
+    async def list_cases(
+        self,
+        project_id: ProjectId,
+        run_id: RunId,
+    ) -> list[RunCase]: ...
 
 
 class RunOrchestrator(Protocol):

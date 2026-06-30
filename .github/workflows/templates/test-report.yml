@@ -6,15 +6,27 @@ name: Generate Test Report
 on:
   workflow_call:
     inputs:
+      project_id:
+        description: "项目 ID"
+        required: true
+        type: string
       run_id:
-        description: '测试运行 ID'
+        description: "测试运行 ID"
         required: true
         type: string
       format:
-        description: '报告格式 (json|junit|html)'
+        description: "报告格式 (json|junit|html)"
         required: false
         type: string
-        default: 'junit'
+        default: "junit"
+      control_api_url:
+        description: "Control API 地址"
+        required: true
+        type: string
+    secrets:
+      session_cookie:
+        description: "只读报告账号的 AgentTest Session Cookie"
+        required: true
 
 jobs:
   generate-report:
@@ -26,7 +38,7 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.12'
+          python-version: "3.12"
 
       - name: Install dependencies
         run: |
@@ -37,12 +49,16 @@ jobs:
         id: report
         run: |
           REPORT_FORMAT=${{ inputs.format }}
+          PROJECT_ID=${{ inputs.project_id }}
           RUN_ID=${{ inputs.run_id }}
-          
+          CONTROL_API_URL=${{ inputs.control_api_url }}
+
           # 调用 API 生成报告
-          curl -s "http://localhost:8000/api/v1/reports/${RUN_ID}?format=${REPORT_FORMAT}" \
+          curl --fail --show-error --silent \
+            --cookie "agenttest_session=${{ secrets.session_cookie }}" \
+            "${CONTROL_API_URL}/api/v1/projects/${PROJECT_ID}/runs/${RUN_ID}/export?format=${REPORT_FORMAT}" \
             -o "report.${REPORT_FORMAT}"
-          
+
           echo "report_path=report.${REPORT_FORMAT}" >> $GITHUB_OUTPUT
 
       - name: Upload Report Artifact
@@ -55,29 +71,29 @@ jobs:
         if: inputs.format == 'junit'
         uses: mikepenz/action-junit-report@v4
         with:
-          report_paths: 'report.junit'
+          report_paths: "report.junit"
           check_name: Test Results
 
       - name: Comment PR
-        if: github.event_name == 'pull_request'
+        if: github.event_name == 'pull_request' && inputs.format == 'json'
         uses: actions/github-script@v7
         with:
           script: |
             const fs = require('fs');
             const report = fs.readFileSync('report.json', 'utf8');
             const data = JSON.parse(report);
-            
+
             const body = `## Test Report
-            
+
             | Metric | Value |
             |--------|-------|
             | Total | ${data.total_cases} |
             | Passed | ${data.passed_cases} |
             | Failed | ${data.failed_cases} |
-            | Pass Rate | ${(data.passed_cases / data.total_cases * 100).toFixed(1)}% |
-            
+            | Pass Rate | ${(data.passed_cases / Math.max(data.total_cases, 1) * 100).toFixed(1)}% |
+
             Generated at: ${data.generated_at}`;
-            
+
             github.rest.issues.createComment({
               issue_number: context.issue.number,
               owner: context.repo.owner,

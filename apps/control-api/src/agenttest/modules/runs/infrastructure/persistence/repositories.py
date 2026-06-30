@@ -123,10 +123,18 @@ class SqlAlchemyRunRepository:
                     )
                 )
 
-    async def list_cases(self, run_id: RunId) -> list[RunCase]:
+    async def list_cases(
+        self,
+        project_id: ProjectId,
+        run_id: RunId,
+    ) -> list[RunCase]:
         statement = (
             select(RunCaseModel)
-            .where(RunCaseModel.run_id == run_id.value)
+            .join(RunModel, RunModel.id == RunCaseModel.run_id)
+            .where(
+                RunCaseModel.run_id == run_id.value,
+                RunModel.project_id == project_id.value,
+            )
             .order_by(RunCaseModel.created_at)
         )
         async with session_scope(self._session_factory) as session:

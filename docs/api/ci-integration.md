@@ -82,7 +82,7 @@ jobs:
 ## API 端点
 
 ```
-GET /api/v1/projects/{project_id}/runs/{run_id}/reports/{format}
+GET /api/v1/projects/{project_id}/runs/{run_id}/export?format={format}
 ```
 
 **参数：**
@@ -92,13 +92,17 @@ GET /api/v1/projects/{project_id}/runs/{run_id}/reports/{format}
 
 **示例：**
 
+报告接口要求项目成员会话；CI 应使用专用只读账号的短期 Session Cookie，禁止提交到仓库。
+
 ```bash
 # 生成 JUnit 报告
-curl "http://localhost:8000/api/v1/projects/proj-1/runs/run-1/reports/junit" \
+curl "http://localhost:8181/api/v1/projects/proj-1/runs/run-1/export?format=junit" \
+  --cookie "agenttest_session=${AGENTTEST_REPORT_SESSION}" \
   -o report.xml
 
 # 生成 HTML 报告
-curl "http://localhost:8000/api/v1/projects/proj-1/runs/run-1/reports/html" \
+curl "http://localhost:8181/api/v1/projects/proj-1/runs/run-1/export?format=html" \
+  --cookie "agenttest_session=${AGENTTEST_REPORT_SESSION}" \
   -o report.html
 ```
 

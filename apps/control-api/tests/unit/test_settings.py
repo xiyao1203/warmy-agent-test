@@ -14,3 +14,17 @@ def test_settings_web_origin_default() -> None:
     """web_origin 默认为 localhost:5175。"""
     settings = Settings()
     assert "localhost:5175" in str(settings.web_origin)
+
+
+def test_production_rejects_local_internal_token() -> None:
+    with pytest.raises(ValidationError):
+        Settings(environment="production", internal_api_token="local-internal-token")
+
+
+def test_production_rejects_insecure_session_cookie() -> None:
+    with pytest.raises(ValidationError):
+        Settings(
+            environment="production",
+            internal_api_token="production-internal-token",
+            session_cookie_secure=False,
+        )
