@@ -70,7 +70,7 @@ class ModelTestPlanGenerator:
             "只返回 JSON 对象，字段必须为 name、description、estimated_cases、"
             "estimated_duration_min、scorers、agent_version_id、dataset_id、environment_id。\n"
             "estimated_cases 范围 1-500。\n"
-            "scorers 必须是字符串数组（如 [\"功能正确性\", \"性能\"]），不能是对象数组。\n"
+            'scorers 必须是字符串数组（如 ["功能正确性", "性能"]），不能是对象数组。\n'
             "不要输出 Markdown，只输出纯 JSON。"
         )
         result = await self._invoker.invoke(

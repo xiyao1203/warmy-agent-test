@@ -49,9 +49,7 @@ class CapabilityRegistry:
         except KeyError as error:
             raise KeyError(f"Unknown capability: {name}") from error
         if capability.child_agent != child_agent:
-            raise PermissionError(
-                f"Capability {name} is not allowed for child agent {child_agent}"
-            )
+            raise PermissionError(f"Capability {name} is not allowed for child agent {child_agent}")
         return capability, capability.input_model.model_validate(arguments)
 
     def describe_for(self, child_agent: str) -> list[dict[str, object]]:

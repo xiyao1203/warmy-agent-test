@@ -11,6 +11,10 @@ from agenttest.modules.test_agent.application.ports import (
     ChatSessionRepository,
     OrchestrationRepository,
 )
+from agenttest.modules.test_agent.application.target_chat import (
+    TargetChatSession,
+    TargetChatTurn,
+)
 from agenttest.modules.test_agent.domain.entities import (
     AgentConfirmation,
     AgentEvent,
@@ -25,6 +29,8 @@ from agenttest.modules.test_agent.domain.entities import (
     TaskStatus,
 )
 from agenttest.modules.test_agent.infrastructure.models import (
+    TargetAgentChatSessionModel,
+    TargetAgentChatTurnModel,
     TestAgentArtifactLinkModel,
     TestAgentConfirmationModel,
     TestAgentEventModel,
@@ -353,6 +359,97 @@ class SqlAlchemyOrchestrationRepository(OrchestrationRepository):
         ]
 
 
+class SqlAlchemyTargetChatRepository:
+    def __init__(self, session_factory: async_sessionmaker[AsyncSession]) -> None:
+        self._session_factory = session_factory
+
+    async def add_session(self, session: TargetChatSession) -> None:
+        async with transaction_scope(self._session_factory) as database:
+            database.add(
+                TargetAgentChatSessionModel(
+                    id=session.session_id,
+                    project_id=session.project_id,
+                    agent_version_id=session.agent_version_id,
+                    environment_template_id=session.environment_template_id,
+                    status=session.status,
+                    created_by=session.created_by,
+                    created_at=session.created_at,
+                    updated_at=session.updated_at,
+                )
+            )
+
+    async def get_session(
+        self, project_id: ProjectId, session_id: UUID
+    ) -> TargetChatSession | None:
+        statement = select(TargetAgentChatSessionModel).where(
+            TargetAgentChatSessionModel.project_id == project_id.value,
+            TargetAgentChatSessionModel.id == session_id,
+        )
+        turns_statement = (
+            select(TargetAgentChatTurnModel)
+            .where(
+                TargetAgentChatTurnModel.project_id == project_id.value,
+                TargetAgentChatTurnModel.session_id == session_id,
+            )
+            .order_by(TargetAgentChatTurnModel.sequence)
+        )
+        async with session_scope(self._session_factory) as database:
+            model = await database.scalar(statement)
+            if model is None:
+                return None
+            turns = list((await database.scalars(turns_statement)).all())
+        return TargetChatSession(
+            session_id=model.id,
+            project_id=model.project_id,
+            agent_version_id=model.agent_version_id,
+            environment_template_id=model.environment_template_id,
+            status=model.status,
+            created_by=model.created_by,
+            created_at=model.created_at,
+            updated_at=model.updated_at,
+            turns=[_target_turn_to_domain(item) for item in turns],
+        )
+
+    async def list_sessions(self, project_id: ProjectId) -> list[TargetChatSession]:
+        statement = (
+            select(TargetAgentChatSessionModel.id)
+            .where(TargetAgentChatSessionModel.project_id == project_id.value)
+            .order_by(TargetAgentChatSessionModel.updated_at.desc())
+        )
+        async with session_scope(self._session_factory) as database:
+            ids = list((await database.scalars(statement)).all())
+        result: list[TargetChatSession] = []
+        for session_id in ids:
+            item = await self.get_session(project_id, session_id)
+            if item is not None:
+                result.append(item)
+        return result
+
+    async def add_turn(self, turn: TargetChatTurn) -> None:
+        async with transaction_scope(self._session_factory) as database:
+            database.add(
+                TargetAgentChatTurnModel(
+                    id=turn.turn_id,
+                    project_id=turn.project_id,
+                    session_id=turn.session_id,
+                    sequence=turn.sequence,
+                    input=turn.input,
+                    output=turn.output,
+                    trace=turn.trace,
+                    scores=turn.scores,
+                    duration_ms=turn.duration_ms,
+                    token_usage=turn.token_usage,
+                    error=turn.error,
+                    created_at=turn.created_at,
+                )
+            )
+            await database.execute(
+                update(TargetAgentChatSessionModel)
+                .where(TargetAgentChatSessionModel.id == turn.session_id)
+                .values(updated_at=turn.created_at)
+            )
+
+
 def _task_to_model(task: AgentTask) -> TestAgentTaskModel:
     return TestAgentTaskModel(
         id=task.task_id,
@@ -388,4 +485,21 @@ def _task_to_domain(model: TestAgentTaskModel) -> AgentTask:
         error=dict(model.error) if model.error is not None else None,
         created_at=model.created_at,
         updated_at=model.updated_at,
+    )
+
+
+def _target_turn_to_domain(model: TargetAgentChatTurnModel) -> TargetChatTurn:
+    return TargetChatTurn(
+        turn_id=model.id,
+        project_id=model.project_id,
+        session_id=model.session_id,
+        sequence=model.sequence,
+        input=dict(model.input),
+        output=dict(model.output) if model.output is not None else None,
+        trace=list(model.trace) if model.trace is not None else None,
+        scores=list(model.scores) if model.scores is not None else None,
+        duration_ms=model.duration_ms,
+        token_usage=dict(model.token_usage) if model.token_usage is not None else None,
+        error=dict(model.error) if model.error is not None else None,
+        created_at=model.created_at,
     )

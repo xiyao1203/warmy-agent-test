@@ -34,6 +34,29 @@ export type AgentEvent = {
   payload: Record<string, unknown>;
 };
 
+export type TargetChatTurn = {
+  turn_id: string;
+  sequence: number;
+  input: Record<string, unknown>;
+  output: Record<string, unknown> | null;
+  trace: Array<Record<string, unknown>> | null;
+  scores: Array<Record<string, unknown>> | null;
+  duration_ms: number | null;
+  token_usage: Record<string, unknown> | null;
+  error: Record<string, unknown> | null;
+  created_at: string;
+};
+
+export type TargetChatSession = {
+  session_id: string;
+  agent_version_id: string;
+  environment_template_id: string | null;
+  status: string;
+  created_at: string;
+  updated_at: string;
+  turns: TargetChatTurn[];
+};
+
 export class TestAgentApiError extends Error {
   constructor(
     public status: number,
@@ -148,4 +171,46 @@ export function subscribeToSession(
   }
   source.onerror = () => onError?.();
   return () => source.close();
+}
+
+export function listTargetChats(projectId: string) {
+  return request<{ items: TargetChatSession[] }>(
+    `${base(projectId)}/target-chats`,
+  );
+}
+
+export function createTargetChat(
+  projectId: string,
+  agentVersionId: string,
+  environmentTemplateId?: string,
+) {
+  return request<TargetChatSession>(`${base(projectId)}/target-chats`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      ...(csrfHeaders() as Record<string, string>),
+    },
+    body: JSON.stringify({
+      agent_version_id: agentVersionId,
+      environment_template_id: environmentTemplateId || null,
+    }),
+  });
+}
+
+export function sendTargetMessage(
+  projectId: string,
+  sessionId: string,
+  message: string,
+) {
+  return request<TargetChatTurn>(
+    `${base(projectId)}/target-chats/${sessionId}/messages`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...(csrfHeaders() as Record<string, string>),
+      },
+      body: JSON.stringify({ message }),
+    },
+  );
 }

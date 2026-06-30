@@ -1544,14 +1544,20 @@ def _register_test_agent_endpoints(
     )
     from agenttest.modules.test_agent.adapters.platform import HandlerPlatformGateway
     from agenttest.modules.test_agent.api.router import create_test_agent_router
+    from agenttest.modules.test_agent.api.target_chat import create_target_chat_router
     from agenttest.modules.test_agent.application.conversation import SuperAgentConversation
     from agenttest.modules.test_agent.application.orchestrator import SuperAgentOrchestrator
     from agenttest.modules.test_agent.application.platform_catalog import (
         build_platform_registry,
     )
+    from agenttest.modules.test_agent.application.target_chat import TargetChatService
     from agenttest.modules.test_agent.infrastructure.repositories import (
         SqlAlchemyChatSessionRepository,
         SqlAlchemyOrchestrationRepository,
+        SqlAlchemyTargetChatRepository,
+    )
+    from agenttest.modules.test_agent.infrastructure.target_runtime import (
+        TemporalTargetAgentRuntime,
     )
     from agenttest.shared.infrastructure.database import (
         create_database_engine,
@@ -1579,12 +1585,10 @@ def _register_test_agent_endpoints(
 
         # Convert UUID to hex format (no hyphens) for SQLite compatibility
         if isinstance(project_id, str):
-            pid_str = project_id.replace('-', '')
+            pid_str = project_id.replace("-", "")
         else:
             pid_str = (
-                project_id.hex
-                if hasattr(project_id, "hex")
-                else str(project_id).replace("-", "")
+                project_id.hex if hasattr(project_id, "hex") else str(project_id).replace("-", "")
             )
 
         async with session_factory() as session:
@@ -1625,6 +1629,25 @@ def _register_test_agent_endpoints(
         agent_orchestrator=SuperAgentOrchestrator(registry, orchestration),
     )
     app.include_router(router, prefix="/api/v1")
+    target_repository = SqlAlchemyTargetChatRepository(session_factory)
+    app.include_router(
+        create_target_chat_router(
+            service=TargetChatService(
+                target_repository,
+                TemporalTargetAgentRuntime(
+                    address=settings.temporal_address,
+                    namespace=settings.temporal_namespace,
+                    task_queue=settings.temporal_task_queue,
+                ),
+            ),
+            repository=target_repository,
+            agents=build_agent_dependencies(settings),
+            environments=build_environment_dependencies(settings),
+            actor_for=actor_for,
+            settings=settings,
+        ),
+        prefix="/api/v1",
+    )
 
 
 def _register_test_account_endpoints(

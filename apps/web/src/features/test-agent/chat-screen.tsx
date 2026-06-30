@@ -25,8 +25,10 @@ import type {
 import { ContextPanel } from "./context-panel";
 import { ConfirmationCard } from "./confirmation-card";
 import { SessionList } from "./session-list";
+import { TargetChatScreen } from "./target-chat-screen";
 
 export function TestAgentChat({ projectId }: { projectId: string }) {
+  const [workspace, setWorkspace] = useState<"super" | "target">("super");
   const [sessions, setSessions] = useState<SessionSummary[]>([]);
   const [active, setActive] = useState<ChatResponse | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -41,7 +43,9 @@ export function TestAgentChat({ projectId }: { projectId: string }) {
 
   useEffect(() => {
     let alive = true;
-    const requested = new URLSearchParams(window.location.search).get("session");
+    const requested = new URLSearchParams(window.location.search).get(
+      "session",
+    );
     listSessions(projectId)
       .then(async (response) => {
         if (!alive) return;
@@ -53,7 +57,10 @@ export function TestAgentChat({ projectId }: { projectId: string }) {
         }
       })
       .catch((reason: unknown) => {
-        if (alive) setError(reason instanceof Error ? reason.message : "会话历史加载失败");
+        if (alive)
+          setError(
+            reason instanceof Error ? reason.message : "会话历史加载失败",
+          );
       })
       .finally(() => {
         if (alive) setLoadingHistory(false);
@@ -87,7 +94,8 @@ export function TestAgentChat({ projectId }: { projectId: string }) {
   }, [activeSessionId, projectId]);
 
   useEffect(() => {
-    if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    if (scrollRef.current)
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
   }, [messages, sending]);
 
   function applySession(session: ChatResponse) {
@@ -127,7 +135,11 @@ export function TestAgentChat({ projectId }: { projectId: string }) {
     setError(null);
     try {
       const session = active ?? (await newSession());
-      const response = await sendChatMessage(projectId, session.session_id, content);
+      const response = await sendChatMessage(
+        projectId,
+        session.session_id,
+        content,
+      );
       applySession(response);
       setSessions((current) => [
         response,
@@ -145,91 +157,151 @@ export function TestAgentChat({ projectId }: { projectId: string }) {
     }
   }
 
-  return (
-    <div className="grid h-[calc(100vh-3.5rem)] grid-cols-[16rem_minmax(0,1fr)_19rem] overflow-hidden max-[1100px]:grid-cols-[14rem_minmax(0,1fr)] max-[760px]:grid-cols-1">
-      <SessionList
-        activeId={active?.session_id ?? null}
-        items={sessions}
-        loading={loadingHistory}
-        onCreate={() => void newSession()}
-        onSelect={(id) => void selectSession(id)}
-      />
-
-      <main className="flex min-w-0 flex-col bg-[var(--background)]">
-        <header className="flex items-center gap-3 border-b border-[var(--border)] px-5 py-3">
-          <Sparkles className="size-5 text-[var(--accent)]" />
-          <div>
-            <h1 className="text-sm font-semibold">超级测试 Agent</h1>
-            <p className="text-xs text-[var(--text-muted)]">编排被测智能体、用例、执行、评测、安全与发布门禁</p>
-          </div>
-        </header>
-
-        <div className="min-h-0 flex-1 overflow-y-auto px-5 py-4" ref={scrollRef}>
-          {messages.length === 0 ? (
-            <ChatEmptyState
-              onSuggestionClick={setInput}
-              suggestions={[
-                "测试 Agent v2.3 并与 v2.2 做实验对比",
-                "为登录场景生成回归用例和测试计划",
-                "执行安全红队测试并评估发布门禁",
-              ]}
-            />
-          ) : (
-            <div className="mx-auto max-w-3xl space-y-4">
-              {messages.map((message, index) => (
-                <MessageBubble key={`${message.timestamp}:${index}`} message={message} />
-              ))}
-              {active
-                ? events
-                    .filter((event) => event.type === "tool.confirmation_required")
-                    .map((event) => (
-                      <ConfirmationCard
-                        event={event}
-                        key={`${event.id}:${String(event.payload.confirmation_id)}`}
-                        onDecided={() => void selectSession(active.session_id)}
-                        projectId={projectId}
-                        sessionId={active.session_id}
-                      />
-                    ))
-                : null}
-              {sending ? <TypingIndicator /> : null}
-            </div>
-          )}
-        </div>
-
-        <div className="border-t border-[var(--border)] p-4">
-          <div className="mx-auto flex max-w-3xl gap-2">
-            <Input
-              aria-label="对话输入"
-              className="flex-1"
-              disabled={sending}
-              onChange={(event) => setInput(event.target.value)}
-              onKeyDown={(event) => {
-                if (event.key === "Enter" && !event.shiftKey) {
-                  event.preventDefault();
-                  void handleSend();
-                }
-              }}
-              placeholder="向超级测试 Agent 描述目标…"
-              value={input}
-            />
-            <Button
-              aria-label="发送"
-              disabled={sending || !input.trim()}
-              loading={sending}
-              onClick={() => void handleSend()}
-              variant="primary"
-            >
-              <Send className="size-4" />
-            </Button>
-          </div>
-          {error ? <p className="mx-auto mt-2 max-w-3xl text-sm text-[var(--danger)]" role="alert">{error}</p> : null}
-        </div>
-      </main>
-
-      <div className="max-[1100px]:hidden">
-        <ContextPanel artifacts={artifacts} events={events} projectId={projectId} />
+  if (workspace === "target") {
+    return (
+      <div>
+        <WorkspaceTabs value={workspace} onChange={setWorkspace} />
+        <TargetChatScreen projectId={projectId} />
       </div>
+    );
+  }
+
+  return (
+    <div>
+      <WorkspaceTabs value={workspace} onChange={setWorkspace} />
+      <div className="grid h-[calc(100vh-3.5rem)] grid-cols-[16rem_minmax(0,1fr)_19rem] overflow-hidden max-[1100px]:grid-cols-[14rem_minmax(0,1fr)] max-[760px]:grid-cols-1">
+        <SessionList
+          activeId={active?.session_id ?? null}
+          items={sessions}
+          loading={loadingHistory}
+          onCreate={() => void newSession()}
+          onSelect={(id) => void selectSession(id)}
+        />
+
+        <main className="flex min-w-0 flex-col bg-[var(--background)]">
+          <header className="flex items-center gap-3 border-b border-[var(--border)] px-5 py-3">
+            <Sparkles className="size-5 text-[var(--accent)]" />
+            <div>
+              <h1 className="text-sm font-semibold">超级测试 Agent</h1>
+              <p className="text-xs text-[var(--text-muted)]">
+                编排被测智能体、用例、执行、评测、安全与发布门禁
+              </p>
+            </div>
+          </header>
+
+          <div
+            className="min-h-0 flex-1 overflow-y-auto px-5 py-4"
+            ref={scrollRef}
+          >
+            {messages.length === 0 ? (
+              <ChatEmptyState
+                onSuggestionClick={setInput}
+                suggestions={[
+                  "测试 Agent v2.3 并与 v2.2 做实验对比",
+                  "为登录场景生成回归用例和测试计划",
+                  "执行安全红队测试并评估发布门禁",
+                ]}
+              />
+            ) : (
+              <div className="mx-auto max-w-3xl space-y-4">
+                {messages.map((message, index) => (
+                  <MessageBubble
+                    key={`${message.timestamp}:${index}`}
+                    message={message}
+                  />
+                ))}
+                {active
+                  ? events
+                      .filter(
+                        (event) => event.type === "tool.confirmation_required",
+                      )
+                      .map((event) => (
+                        <ConfirmationCard
+                          event={event}
+                          key={`${event.id}:${String(event.payload.confirmation_id)}`}
+                          onDecided={() =>
+                            void selectSession(active.session_id)
+                          }
+                          projectId={projectId}
+                          sessionId={active.session_id}
+                        />
+                      ))
+                  : null}
+                {sending ? <TypingIndicator /> : null}
+              </div>
+            )}
+          </div>
+
+          <div className="border-t border-[var(--border)] p-4">
+            <div className="mx-auto flex max-w-3xl gap-2">
+              <Input
+                aria-label="对话输入"
+                className="flex-1"
+                disabled={sending}
+                onChange={(event) => setInput(event.target.value)}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter" && !event.shiftKey) {
+                    event.preventDefault();
+                    void handleSend();
+                  }
+                }}
+                placeholder="向超级测试 Agent 描述目标…"
+                value={input}
+              />
+              <Button
+                aria-label="发送"
+                disabled={sending || !input.trim()}
+                loading={sending}
+                onClick={() => void handleSend()}
+                variant="primary"
+              >
+                <Send className="size-4" />
+              </Button>
+            </div>
+            {error ? (
+              <p
+                className="mx-auto mt-2 max-w-3xl text-sm text-[var(--danger)]"
+                role="alert"
+              >
+                {error}
+              </p>
+            ) : null}
+          </div>
+        </main>
+
+        <div className="max-[1100px]:hidden">
+          <ContextPanel
+            artifacts={artifacts}
+            events={events}
+            projectId={projectId}
+          />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function WorkspaceTabs({
+  value,
+  onChange,
+}: {
+  value: "super" | "target";
+  onChange: (value: "super" | "target") => void;
+}) {
+  return (
+    <div className="flex h-12 items-end gap-1 border-b border-[var(--border)] px-4">
+      <Button
+        onClick={() => onChange("super")}
+        variant={value === "super" ? "primary" : "ghost"}
+      >
+        超级 Agent
+      </Button>
+      <Button
+        onClick={() => onChange("target")}
+        variant={value === "target" ? "primary" : "ghost"}
+      >
+        被测 Agent 对话
+      </Button>
     </div>
   );
 }
@@ -238,10 +310,14 @@ function MessageBubble({ message }: { message: ChatMessage }) {
   const user = message.role === "user";
   return (
     <div className={`flex gap-3 ${user ? "flex-row-reverse" : ""}`}>
-      <div className={`flex size-8 shrink-0 items-center justify-center rounded-full ${user ? "bg-[var(--accent)] text-white" : "bg-[var(--surface-subtle)]"}`}>
+      <div
+        className={`flex size-8 shrink-0 items-center justify-center rounded-full ${user ? "bg-[var(--accent)] text-white" : "bg-[var(--surface-subtle)]"}`}
+      >
         {user ? <User className="size-4" /> : <Bot className="size-4" />}
       </div>
-      <div className={`max-w-[82%] whitespace-pre-wrap rounded-lg px-4 py-2.5 text-sm ${user ? "bg-[var(--accent)] text-white" : "bg-[var(--surface)] text-[var(--text)] shadow-sm"}`}>
+      <div
+        className={`max-w-[82%] whitespace-pre-wrap rounded-lg px-4 py-2.5 text-sm ${user ? "bg-[var(--accent)] text-white" : "bg-[var(--surface)] text-[var(--text)] shadow-sm"}`}
+      >
         {message.content}
       </div>
     </div>

@@ -52,7 +52,4 @@ class ControlPlaneCallback:
 
 def _result_url(task: ResultCallbackTask) -> str:
     base = task.base_url.rstrip("/")
-    return (
-        f"{base}/api/v1/projects/{task.project_id}/runs/"
-        f"{task.result.run_id}/result"
-    )
+    return f"{base}/api/v1/projects/{task.project_id}/runs/{task.result.run_id}/result"

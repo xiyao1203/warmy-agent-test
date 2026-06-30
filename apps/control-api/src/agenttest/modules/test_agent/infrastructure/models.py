@@ -89,9 +89,7 @@ class TestAgentTaskModel(Base):
             name="fk_test_agent_tasks_parent",
         ),
         UniqueConstraint("project_id", "id", name="uq_test_agent_tasks_project_id"),
-        UniqueConstraint(
-            "project_id", "idempotency_key", name="uq_test_agent_tasks_idempotency"
-        ),
+        UniqueConstraint("project_id", "idempotency_key", name="uq_test_agent_tasks_idempotency"),
         Index("ix_test_agent_tasks_session_status", "project_id", "session_id", "status"),
     )
 

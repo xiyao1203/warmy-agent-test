@@ -89,9 +89,7 @@ class SuperAgentOrchestrator:
         *,
         approved: bool,
     ) -> AgentTask:
-        confirmation = await self._repository.get_confirmation(
-            context.project_id, confirmation_id
-        )
+        confirmation = await self._repository.get_confirmation(context.project_id, confirmation_id)
         if confirmation is None:
             raise ValueError("Confirmation does not exist in project")
         if confirmation.status is not ConfirmationStatus.PENDING:
@@ -110,9 +108,7 @@ class SuperAgentOrchestrator:
         await self._repository.save_confirmation(confirmation)
         task.approve()
         await self._repository.save_task(task)
-        capability, payload = self._registry.resolve(
-            task.child_agent, task.capability, task.input
-        )
+        capability, payload = self._registry.resolve(task.child_agent, task.capability, task.input)
         return await self._execute(context, task, capability, payload)
 
     async def _execute(self, context, task, capability, payload) -> AgentTask:
