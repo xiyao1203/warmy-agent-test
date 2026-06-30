@@ -1666,6 +1666,7 @@ def _register_test_agent_endpoints(
             repository=target_repository,
             agents=build_agent_dependencies(settings),
             environments=build_environment_dependencies(settings),
+            datasets=build_dataset_dependencies(settings),
             actor_for=actor_for,
             settings=settings,
         ),

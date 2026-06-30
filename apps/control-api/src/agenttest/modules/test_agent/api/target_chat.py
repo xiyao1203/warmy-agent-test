@@ -9,6 +9,11 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 
 from agenttest.modules.agents.public import AgentId, AgentVersionId
+from agenttest.modules.datasets.public import (
+    AddTestCaseCommand,
+    DatasetVersionId,
+    ExecutionMode,
+)
 from agenttest.modules.environments.public import EnvironmentTemplateId
 from agenttest.modules.projects.public import ProjectId
 from agenttest.modules.test_agent.application.target_chat import TargetChatService
@@ -24,8 +29,20 @@ class SendTargetMessageRequest(BaseModel):
     message: str = Field(min_length=1, max_length=20_000)
 
 
+class ConvertTurnRequest(BaseModel):
+    dataset_version_id: UUID
+    name: str = Field(min_length=1, max_length=200)
+
+
 def create_target_chat_router(
-    *, service: TargetChatService, repository, agents, environments, actor_for, settings
+    *,
+    service: TargetChatService,
+    repository,
+    agents,
+    environments,
+    datasets,
+    actor_for,
+    settings,
 ) -> APIRouter:
     router = APIRouter(
         prefix="/projects/{project_id}/test-agent/target-chats",
@@ -114,6 +131,48 @@ def create_target_chat_router(
         except Exception:
             return JSONResponse(status_code=502, content={"detail": "被测 Agent 调用失败"})
         return _turn(turn)
+
+    @router.post("/{session_id}/turns/{turn_id}/regression-cases", status_code=201)
+    async def convert_to_regression(
+        request: Request,
+        project_id: UUID,
+        session_id: UUID,
+        turn_id: UUID,
+        body: ConvertTurnRequest,
+        x_csrf_token: str | None = Header(default=None),
+    ):
+        actor = await require_writer(request, actor_for, settings, x_csrf_token)
+        if isinstance(actor, JSONResponse):
+            return actor
+        session = await repository.get_session(ProjectId(project_id), session_id)
+        if session is None:
+            return JSONResponse(status_code=404, content={"detail": "被测 Agent 会话不存在"})
+        turn = next((item for item in session.turns if item.turn_id == turn_id), None)
+        if turn is None or turn.output is None:
+            return JSONResponse(status_code=404, content={"detail": "可转换的对话轮次不存在"})
+        version = await datasets.get_version.execute(
+            actor, DatasetVersionId(body.dataset_version_id)
+        )
+        dataset = await datasets.get_dataset.execute(actor, version.dataset_id)
+        if dataset.project_id != ProjectId(project_id):
+            return JSONResponse(status_code=404, content={"detail": "数据集版本不存在"})
+        async with datasets.uow_factory():
+            case = await datasets.add_case.execute(
+                actor,
+                AddTestCaseCommand(
+                    dataset_version_id=version.version_id,
+                    name=body.name,
+                    input=dict(turn.input),
+                    execution_mode=ExecutionMode.API,
+                    expected_outcome=dict(turn.output),
+                    tags=["target-chat-regression"],
+                ),
+            )
+        return {
+            "test_case_id": str(case.case_id.value),
+            "dataset_version_id": str(version.version_id.value),
+            "source_turn_id": str(turn.turn_id),
+        }
 
     return router
 
