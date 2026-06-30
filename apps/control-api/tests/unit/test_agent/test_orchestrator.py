@@ -19,15 +19,29 @@ class Repo:
         self.events = []
         self.links = []
 
-    async def add_task(self, task): self.tasks[task.task_id] = task
-    async def get_task(self, project_id, task_id): return self.tasks.get(task_id)
-    async def save_task(self, task): self.tasks[task.task_id] = task
-    async def add_confirmation(self, value): self.confirmations[value.confirmation_id] = value
-    async def get_confirmation(self, project_id, value_id): return self.confirmations.get(value_id)
-    async def save_confirmation(self, value): self.confirmations[value.confirmation_id] = value
+    async def add_task(self, task):
+        self.tasks[task.task_id] = task
+
+    async def get_task(self, project_id, task_id):
+        return self.tasks.get(task_id)
+
+    async def save_task(self, task):
+        self.tasks[task.task_id] = task
+
+    async def add_confirmation(self, value):
+        self.confirmations[value.confirmation_id] = value
+
+    async def get_confirmation(self, project_id, value_id):
+        return self.confirmations.get(value_id)
+
+    async def save_confirmation(self, value):
+        self.confirmations[value.confirmation_id] = value
+
     async def append_event(self, project_id, session_id, event_type, payload):
         self.events.append((event_type, payload))
-    async def add_artifact_link(self, link): self.links.append(link)
+
+    async def add_artifact_link(self, link):
+        self.links.append(link)
 
 
 def actor() -> User:
@@ -51,9 +65,7 @@ async def test_high_impact_action_waits_for_confirmation_then_creates_real_link(
         artifact_id = uuid4()
         return {
             "run_id": str(artifact_id),
-            "artifacts": [
-                {"type": "run", "id": str(artifact_id), "relation": "created"}
-            ],
+            "artifacts": [{"type": "run", "id": str(artifact_id), "relation": "created"}],
         }
 
     repo = Repo()
@@ -82,9 +94,7 @@ async def test_high_impact_action_waits_for_confirmation_then_creates_real_link(
     assert task.status is TaskStatus.WAITING_CONFIRMATION
     confirmation_id = next(iter(repo.confirmations))
 
-    completed = await orchestrator.decide_confirmation(
-        context, confirmation_id, approved=True
-    )
+    completed = await orchestrator.decide_confirmation(context, confirmation_id, approved=True)
 
     assert completed.status is TaskStatus.COMPLETED
     assert repo.links[0].artifact_type == "run"

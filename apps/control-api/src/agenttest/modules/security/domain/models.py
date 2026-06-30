@@ -102,6 +102,7 @@ class FindingCategory(StrEnum):
 @dataclass(slots=True)
 class SecurityScan:
     """安全扫描实体。"""
+
     scan_id: UUID
     project_id: UUID
     status: ScanStatus

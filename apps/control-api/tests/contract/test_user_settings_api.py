@@ -59,14 +59,10 @@ class StubUpdateSettings:
             user_id=self.user.user_id.value,
             theme=theme or Theme.SYSTEM,
             language=language or Language.ZH_CN,
-            email_notifications=(
-                True if email_notifications is None else email_notifications
-            ),
+            email_notifications=(True if email_notifications is None else email_notifications),
             push_notifications=False if push_notifications is None else push_notifications,
             test_complete_notifications=(
-                True
-                if test_complete_notifications is None
-                else test_complete_notifications
+                True if test_complete_notifications is None else test_complete_notifications
             ),
         )
 

@@ -3,12 +3,14 @@ import { beforeEach, expect, test, vi } from "vitest";
 
 import { TestAgentChat } from "../chat-screen";
 
-const { listSessions, createSession, getSession, sendChatMessage } = vi.hoisted(() => ({
-  listSessions: vi.fn(),
-  createSession: vi.fn(),
-  getSession: vi.fn(),
-  sendChatMessage: vi.fn(),
-}));
+const { listSessions, createSession, getSession, sendChatMessage } = vi.hoisted(
+  () => ({
+    listSessions: vi.fn(),
+    createSession: vi.fn(),
+    getSession: vi.fn(),
+    sendChatMessage: vi.fn(),
+  }),
+);
 
 vi.mock("../api", async () => {
   const actual = await vi.importActual<typeof import("../api")>("../api");
@@ -53,7 +55,11 @@ beforeEach(() => {
     updated_at: "2026-06-30T00:00:00Z",
     messages: [
       { role: "user", content: "测试登录", timestamp: "2026-06-30T00:00:00Z" },
-      { role: "assistant", content: "请选择 Agent 版本", timestamp: "2026-06-30T00:00:01Z" },
+      {
+        role: "assistant",
+        content: "请选择 Agent 版本",
+        timestamp: "2026-06-30T00:00:01Z",
+      },
     ],
     artifacts: [],
     protocol_version: 2,
@@ -80,7 +86,11 @@ test("creates a durable session before the first message", async () => {
     updated_at: "2026-06-30T00:00:01Z",
     messages: [
       { role: "user", content: "你好", timestamp: "2026-06-30T00:00:00Z" },
-      { role: "assistant", content: "你想测试哪个 Agent？", timestamp: "2026-06-30T00:00:01Z" },
+      {
+        role: "assistant",
+        content: "你想测试哪个 Agent？",
+        timestamp: "2026-06-30T00:00:01Z",
+      },
     ],
     artifacts: [],
     protocol_version: 2,
@@ -94,6 +104,10 @@ test("creates a durable session before the first message", async () => {
   fireEvent.click(screen.getByRole("button", { name: "发送" }));
 
   await waitFor(() => expect(createSession).toHaveBeenCalledWith("project-1"));
-  expect(sendChatMessage).toHaveBeenCalledWith("project-1", "session-2", "你好");
+  expect(sendChatMessage).toHaveBeenCalledWith(
+    "project-1",
+    "session-2",
+    "你好",
+  );
   expect(await screen.findByText("你想测试哪个 Agent？")).toBeVisible();
 });

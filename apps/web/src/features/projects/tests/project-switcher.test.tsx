@@ -25,7 +25,9 @@ describe("ProjectSwitcher", () => {
     fireEvent.change(screen.getByPlaceholderText("搜索项目"), {
       target: { value: "项目 B" },
     });
-    expect(screen.queryByRole("option", { name: /项目 A/ })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("option", { name: /项目 A/ }),
+    ).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole("option", { name: /项目 B/ }));
     expect(onSelect).toHaveBeenCalledWith("project-b");
   });

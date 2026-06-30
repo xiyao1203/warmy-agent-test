@@ -20,10 +20,16 @@ def upgrade() -> None:
         sa.Column("max_steps", sa.Integer(), nullable=False, server_default="20"),
         sa.Column("timeout_seconds", sa.Integer(), nullable=False, server_default="300"),
         sa.Column("blocked_tools", sa.JSON(), nullable=False, server_default=sa.text("'[]'")),
-        sa.Column("require_confirmation", sa.Boolean(), nullable=False, server_default=sa.text("true")),
+        sa.Column(
+            "require_confirmation", sa.Boolean(), nullable=False, server_default=sa.text("true")
+        ),
         sa.Column("enabled", sa.Boolean(), nullable=False, server_default=sa.text("true")),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
-        sa.Column("updated_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
+        sa.Column(
+            "created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False
+        ),
+        sa.Column(
+            "updated_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False
+        ),
     )
 
 

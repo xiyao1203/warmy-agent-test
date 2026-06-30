@@ -19,9 +19,7 @@ from agenttest.shared.infrastructure.database import Base
 
 class AgentModel(Base):
     __tablename__ = "agents"
-    __table_args__ = (
-        Index("ix_agents_project_created_at", "project_id", text("created_at DESC")),
-    )
+    __table_args__ = (Index("ix_agents_project_created_at", "project_id", text("created_at DESC")),)
 
     id: Mapped[UUID] = mapped_column(primary_key=True)
     project_id: Mapped[UUID] = mapped_column(
@@ -57,9 +55,7 @@ class AgentVersionModel(Base):
     version_number: Mapped[int] = mapped_column(Integer)
     status: Mapped[str] = mapped_column(String(32))
     config: Mapped[dict] = mapped_column(JSONB)
-    published_at: Mapped[datetime | None] = mapped_column(
-        DateTime(timezone=True), nullable=True
-    )
+    published_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     created_by: Mapped[UUID] = mapped_column(ForeignKey("users.id"))

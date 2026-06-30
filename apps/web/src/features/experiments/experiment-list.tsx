@@ -163,7 +163,9 @@ function ExperimentCard({
           </Button>
         ) : undefined
       }
-      badge={<Badge tone={STATUS_TONES[exp.status] ?? "neutral"}>{exp.status}</Badge>}
+      badge={
+        <Badge tone={STATUS_TONES[exp.status] ?? "neutral"}>{exp.status}</Badge>
+      }
       description={`A: ${exp.run_a_id.slice(0, 8)} · B: ${exp.run_b_id.slice(0, 8)}`}
       footer={
         <>
@@ -236,8 +238,12 @@ function ExperimentCard({
                         <td className="py-1.5 pr-3 font-mono">
                           {String(d.test_case_id).slice(0, 8)}
                         </td>
-                        <td className="py-1.5 pr-3">{String(d.status_a ?? "-")}</td>
-                        <td className="py-1.5 pr-3">{String(d.status_b ?? "-")}</td>
+                        <td className="py-1.5 pr-3">
+                          {String(d.status_a ?? "-")}
+                        </td>
+                        <td className="py-1.5 pr-3">
+                          {String(d.status_b ?? "-")}
+                        </td>
                         <td className="py-1.5 pr-3">
                           {String(d.duration_delta_ms)}ms
                         </td>

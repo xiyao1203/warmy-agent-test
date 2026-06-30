@@ -9,7 +9,11 @@ type MessageBubbleProps = {
   animate?: boolean;
 };
 
-export function MessageBubble({ animate = true, content, role }: MessageBubbleProps) {
+export function MessageBubble({
+  animate = true,
+  content,
+  role,
+}: MessageBubbleProps) {
   const [visible, setVisible] = useState(!animate);
   const isUser = role === "user";
 

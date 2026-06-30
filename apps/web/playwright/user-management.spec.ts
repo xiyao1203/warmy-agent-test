@@ -65,11 +65,7 @@ test.describe("user management", () => {
     const adminRow = page.locator("tr", { hasText: "admin@example.com" });
     await adminRow.getByRole("button", { name: /查看/ }).click();
 
-    await expect(
-      page.getByText(/当前账号不能在此禁用或降权/),
-    ).toBeVisible();
-    await expect(
-      page.getByRole("button", { name: "禁用用户" }),
-    ).toHaveCount(0);
+    await expect(page.getByText(/当前账号不能在此禁用或降权/)).toBeVisible();
+    await expect(page.getByRole("button", { name: "禁用用户" })).toHaveCount(0);
   });
 });

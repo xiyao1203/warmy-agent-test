@@ -108,20 +108,24 @@ class SecurityScanModel(Base):
 
     id: Mapped[UUID] = mapped_column(primary_key=True)
     project_id: Mapped[UUID] = mapped_column(
-        ForeignKey("projects.id", ondelete="CASCADE"), nullable=False,
+        ForeignKey("projects.id", ondelete="CASCADE"),
+        nullable=False,
     )
     status: Mapped[str] = mapped_column(String(32), nullable=False, default="pending")
     scan_type: Mapped[str] = mapped_column(String(64), nullable=False, default="full")
     findings: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
     summary: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
     created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), nullable=False,
+        DateTime(timezone=True),
+        nullable=False,
     )
     updated_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), nullable=False,
+        DateTime(timezone=True),
+        nullable=False,
     )
     completed_at: Mapped[datetime | None] = mapped_column(
-        DateTime(timezone=True), nullable=True,
+        DateTime(timezone=True),
+        nullable=True,
     )
 
 
@@ -131,21 +135,25 @@ class SqlAlchemySecurityScanRepository:
 
     async def add(self, scan: SecurityScan) -> None:
         async with self._session_factory() as session:
-            session.add(SecurityScanModel(
-                id=scan.scan_id,
-                project_id=scan.project_id,
-                status=scan.status.value,
-                scan_type=scan.scan_type,
-                findings=scan.findings,
-                summary=scan.summary,
-                created_at=scan.created_at,
-                updated_at=scan.updated_at,
-                completed_at=scan.completed_at,
-            ))
+            session.add(
+                SecurityScanModel(
+                    id=scan.scan_id,
+                    project_id=scan.project_id,
+                    status=scan.status.value,
+                    scan_type=scan.scan_type,
+                    findings=scan.findings,
+                    summary=scan.summary,
+                    created_at=scan.created_at,
+                    updated_at=scan.updated_at,
+                    completed_at=scan.completed_at,
+                )
+            )
             await session.commit()
 
     async def get_by_id_and_project(
-        self, scan_id: UUID, project_id: UUID,
+        self,
+        scan_id: UUID,
+        project_id: UUID,
     ) -> SecurityScan | None:
         async with self._session_factory() as session:
             row = await session.get(SecurityScanModel, scan_id)
@@ -154,7 +162,10 @@ class SqlAlchemySecurityScanRepository:
             return _scan_to_domain(row)
 
     async def list_by_project(
-        self, project_id: UUID, *, limit: int = 50,
+        self,
+        project_id: UUID,
+        *,
+        limit: int = 50,
     ) -> list[SecurityScan]:
         async with self._session_factory() as session:
             stmt = (

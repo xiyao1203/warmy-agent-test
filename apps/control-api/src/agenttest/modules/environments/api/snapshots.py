@@ -50,7 +50,8 @@ def create_snapshot_router(
             return JSONResponse(status_code=401, content={"detail": "认证失败"})
 
         template = await repo.get_by_id_and_project(
-            EnvironmentTemplateId(template_id), Pid(project_id),
+            EnvironmentTemplateId(template_id),
+            Pid(project_id),
         )
         if template is None:
             return JSONResponse(status_code=404, content={"detail": "环境模板不存在"})
@@ -85,7 +86,8 @@ def create_snapshot_router(
             return JSONResponse(status_code=401, content={"detail": "认证失败"})
 
         template = await repo.get_by_id_and_project(
-            EnvironmentTemplateId(template_id), Pid(project_id),
+            EnvironmentTemplateId(template_id),
+            Pid(project_id),
         )
         if template is None:
             return JSONResponse(status_code=404, content={"detail": "环境模板不存在"})
@@ -117,7 +119,8 @@ def create_snapshot_router(
             return JSONResponse(status_code=401, content={"detail": "认证失败"})
 
         template = await repo.get_by_id_and_project(
-            EnvironmentTemplateId(template_id), Pid(project_id),
+            EnvironmentTemplateId(template_id),
+            Pid(project_id),
         )
         if template is None:
             return JSONResponse(status_code=404, content={"detail": "环境模板不存在"})
@@ -151,7 +154,8 @@ def create_snapshot_router(
             return JSONResponse(status_code=401, content={"detail": "认证失败"})
 
         template = await repo.get_by_id_and_project(
-            EnvironmentTemplateId(template_id), Pid(project_id),
+            EnvironmentTemplateId(template_id),
+            Pid(project_id),
         )
         if template is None:
             return JSONResponse(status_code=404, content={"detail": "环境模板不存在"})

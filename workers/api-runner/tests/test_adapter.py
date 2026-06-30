@@ -88,4 +88,3 @@ async def test_adapter_classifies_target_error() -> None:
             )
         )
     await client.aclose()
-

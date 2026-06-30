@@ -200,7 +200,9 @@ def upgrade() -> None:
         sa.Column("created_by", sa.Uuid(), nullable=False),
         sa.ForeignKeyConstraint(["test_plan_id"], ["test_plans.id"], ondelete="CASCADE"),
         sa.ForeignKeyConstraint(["agent_version_id"], ["agent_versions.id"], ondelete="SET NULL"),
-        sa.ForeignKeyConstraint(["dataset_version_id"], ["dataset_versions.id"], ondelete="SET NULL"),
+        sa.ForeignKeyConstraint(
+            ["dataset_version_id"], ["dataset_versions.id"], ondelete="SET NULL"
+        ),
         sa.ForeignKeyConstraint(
             ["environment_template_id"], ["environment_templates.id"], ondelete="SET NULL"
         ),
@@ -209,9 +211,7 @@ def upgrade() -> None:
             "status IN ('draft', 'published')",
             name="ck_test_plan_versions_status",
         ),
-        sa.UniqueConstraint(
-            "test_plan_id", "version_number", name="uq_test_plan_versions_number"
-        ),
+        sa.UniqueConstraint("test_plan_id", "version_number", name="uq_test_plan_versions_number"),
     )
 
 

@@ -79,10 +79,7 @@ export function useToast() {
   >([]);
 
   const addToast = useCallback((message: string, type: ToastType = "info") => {
-    setToasts((prev) => [
-      ...prev,
-      { id: Date.now(), message, type },
-    ]);
+    setToasts((prev) => [...prev, { id: Date.now(), message, type }]);
   }, []);
 
   const removeToast = useCallback((id: number) => {

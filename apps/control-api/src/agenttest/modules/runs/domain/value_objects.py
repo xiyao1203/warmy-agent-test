@@ -47,4 +47,3 @@ class RunErrorType(StrEnum):
     TRANSIENT = "TransientError"
     PLATFORM = "PlatformError"
     CANCELLED = "CancelledError"
-

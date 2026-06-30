@@ -85,7 +85,7 @@ describe("TraceTree", () => {
     // 检查状态标签 - 使用 getAllByText 因为可能有多个
     const okBadges = screen.getAllByText("ok");
     expect(okBadges.length).toBeGreaterThanOrEqual(3);
-    
+
     // error 状态在 error 事件类型和 status 中都会出现
     const errorElements = screen.getAllByText("error");
     expect(errorElements.length).toBeGreaterThanOrEqual(1);

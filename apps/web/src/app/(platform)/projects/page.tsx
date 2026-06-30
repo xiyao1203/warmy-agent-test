@@ -18,7 +18,11 @@ import { createProject, listProjects } from "@/features/projects";
 
 export default function ProjectsPage() {
   const router = useRouter();
-  const { data: projects, isSuccess, isLoading } = useQuery({
+  const {
+    data: projects,
+    isSuccess,
+    isLoading,
+  } = useQuery({
     queryFn: listProjects,
     queryKey: ["projects"],
   });
@@ -42,9 +46,7 @@ export default function ProjectsPage() {
       <div>
         <h1 className="text-base font-semibold">欢迎使用 AgentTest</h1>
         <p className="mt-2 text-sm text-[var(--text-muted)]">
-          {isSuccess
-            ? "请先创建一个项目以开始使用。"
-            : "正在加载…"}
+          {isSuccess ? "请先创建一个项目以开始使用。" : "正在加载…"}
         </p>
         <CreateProjectDialog
           onCreated={(id) => router.replace(`/projects/${id}/overview`)}

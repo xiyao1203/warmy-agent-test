@@ -134,9 +134,7 @@ export function TraceComparison({
               <tr
                 key={diff.name}
                 className={`border-b border-[var(--border)] last:border-0 ${
-                  diff.status === "changed"
-                    ? "bg-[var(--warning-subtle)]"
-                    : ""
+                  diff.status === "changed" ? "bg-[var(--warning-subtle)]" : ""
                 }`}
               >
                 <td className="px-4 py-2">
@@ -150,7 +148,9 @@ export function TraceComparison({
                 <td className="px-4 py-2 text-right font-mono">
                   {diff.durationB !== null ? `${diff.durationB}ms` : "-"}
                 </td>
-                <td className={`px-4 py-2 text-right font-mono ${getStatusColor(diff.status)}`}>
+                <td
+                  className={`px-4 py-2 text-right font-mono ${getStatusColor(diff.status)}`}
+                >
                   {getDiffText(diff)}
                 </td>
               </tr>
@@ -161,15 +161,9 @@ export function TraceComparison({
 
       {/* 统计摘要 */}
       <div className="flex gap-4 text-xs text-[var(--text-muted)]">
-        <span>
-          新增: {diffs.filter((d) => d.status === "added").length}
-        </span>
-        <span>
-          移除: {diffs.filter((d) => d.status === "removed").length}
-        </span>
-        <span>
-          变化: {diffs.filter((d) => d.status === "changed").length}
-        </span>
+        <span>新增: {diffs.filter((d) => d.status === "added").length}</span>
+        <span>移除: {diffs.filter((d) => d.status === "removed").length}</span>
+        <span>变化: {diffs.filter((d) => d.status === "changed").length}</span>
         <span>
           不变: {diffs.filter((d) => d.status === "unchanged").length}
         </span>

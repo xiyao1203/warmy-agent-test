@@ -44,6 +44,7 @@ class Experiment:
         updated_at: 更新时间。
         description: 可选描述。
     """
+
     experiment_id: ExperimentId
     project_id: ProjectId
     name: str
@@ -99,6 +100,7 @@ class Experiment:
 @dataclass(frozen=True, slots=True)
 class CaseComparison:
     """单用例对比结果值对象。"""
+
     test_case_id: str
     status_a: str | None
     status_b: str | None
@@ -111,6 +113,7 @@ class CaseComparison:
 @dataclass(frozen=True, slots=True)
 class ExperimentSummary:
     """实验对比统计摘要值对象。"""
+
     total_cases: int = 0
     improved: int = 0
     degraded: int = 0

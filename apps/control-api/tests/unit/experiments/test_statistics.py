@@ -47,7 +47,9 @@ class TestMetricStatistics:
 
     def test_to_dict(self):
         """序列化为字典。"""
-        stats = MetricStatistics(avg=100.0, p50=90.0, p95=200.0, std_dev=10.0, min_val=50.0, max_val=250.0)
+        stats = MetricStatistics(
+            avg=100.0, p50=90.0, p95=200.0, std_dev=10.0, min_val=50.0, max_val=250.0
+        )
         result = stats.to_dict()
         assert result["avg"] == 100.0
         assert result["p50"] == 90.0
@@ -62,9 +64,13 @@ class TestExperimentStatistics:
 
     def test_to_dict(self):
         """序列化为字典。"""
-        latency = MetricStatistics(avg=100.0, p50=90.0, p95=200.0, std_dev=10.0, min_val=50.0, max_val=250.0)
+        latency = MetricStatistics(
+            avg=100.0, p50=90.0, p95=200.0, std_dev=10.0, min_val=50.0, max_val=250.0
+        )
         score = MetricStatistics(avg=0.8, p50=0.85, p95=0.6, std_dev=0.1, min_val=0.5, max_val=1.0)
-        cost = MetricStatistics(avg=0.05, p50=0.04, p95=0.12, std_dev=0.02, min_val=0.01, max_val=0.15)
+        cost = MetricStatistics(
+            avg=0.05, p50=0.04, p95=0.12, std_dev=0.02, min_val=0.01, max_val=0.15
+        )
         stats = ExperimentStatistics(
             total_cases=10,
             passed=8,
@@ -97,9 +103,7 @@ class TestCalculateStatistics:
 
     def test_single_case_passed(self):
         """单个通过用例。"""
-        cases = [
-            {"status": "passed", "duration_ms": 100, "score": 0.9, "cost": 0.05}
-        ]
+        cases = [{"status": "passed", "duration_ms": 100, "score": 0.9, "cost": 0.05}]
         stats = calculate_statistics(cases)
         assert stats.total_cases == 1
         assert stats.passed == 1

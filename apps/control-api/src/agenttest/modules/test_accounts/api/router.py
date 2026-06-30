@@ -37,7 +37,11 @@ class UpdateAccountRequest(BaseModel):
 
 
 def create_test_account_router(
-    *, session_factory, actor_for, check_project, settings,
+    *,
+    session_factory,
+    actor_for,
+    check_project,
+    settings,
 ) -> APIRouter:
     router = APIRouter(
         prefix="/projects/{project_id}/test-accounts",
@@ -102,7 +106,8 @@ def create_test_account_router(
         if isinstance(actor, JSONResponse):
             return actor
         account = await repo.get_by_id_and_project(
-            TestAccountId(account_id), project_id,
+            TestAccountId(account_id),
+            project_id,
         )
         if account is None:
             return JSONResponse(status_code=404, content={"detail": "账号不存在"})
@@ -124,7 +129,8 @@ def create_test_account_router(
         if isinstance(actor, JSONResponse):
             return actor
         account = await repo.get_by_id_and_project(
-            TestAccountId(account_id), project_id,
+            TestAccountId(account_id),
+            project_id,
         )
         if account is None:
             return JSONResponse(status_code=404, content={"detail": "账号不存在"})

@@ -49,11 +49,20 @@ export function ConfirmationCard({
         <dd>{String(preview?.rationale ?? "-")}</dd>
       </dl>
       <div className="mt-4 flex justify-end gap-2">
-        <Button disabled={busy} onClick={() => void decide(false)} variant="secondary">
+        <Button
+          disabled={busy}
+          onClick={() => void decide(false)}
+          variant="secondary"
+        >
           <X className="size-4" />
           拒绝
         </Button>
-        <Button disabled={busy} loading={busy} onClick={() => void decide(true)} variant="primary">
+        <Button
+          disabled={busy}
+          loading={busy}
+          onClick={() => void decide(true)}
+          variant="primary"
+        >
           确认执行
         </Button>
       </div>

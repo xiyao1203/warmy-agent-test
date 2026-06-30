@@ -70,7 +70,9 @@ def create_scorer_router(
             return JSONResponse(status_code=401, content={"detail": "认证失败"})
 
         scorers, total = await repo.list_by_project(
-            ProjectId(project_id), limit=limit, offset=offset,
+            ProjectId(project_id),
+            limit=limit,
+            offset=offset,
         )
         return {
             "items": [_scorer_to_dict(s) for s in scorers],
@@ -130,7 +132,8 @@ def create_scorer_router(
             return actor
 
         scorer = await repo.get_by_id_and_project(
-            ScorerId(scorer_id), ProjectId(project_id),
+            ScorerId(scorer_id),
+            ProjectId(project_id),
         )
         if scorer is None:
             return JSONResponse(status_code=404, content={"detail": "评分器不存在"})
@@ -149,7 +152,8 @@ def create_scorer_router(
             return actor
 
         scorer = await repo.get_by_id_and_project(
-            ScorerId(scorer_id), ProjectId(project_id),
+            ScorerId(scorer_id),
+            ProjectId(project_id),
         )
         if scorer is None:
             return JSONResponse(status_code=404, content={"detail": "评分器不存在"})
@@ -193,7 +197,8 @@ def create_scorer_router(
             return actor
 
         scorer = await repo.get_by_id_and_project(
-            ScorerId(scorer_id), ProjectId(project_id),
+            ScorerId(scorer_id),
+            ProjectId(project_id),
         )
         if scorer is None:
             return JSONResponse(status_code=404, content={"detail": "评分器不存在"})

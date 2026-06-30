@@ -92,7 +92,11 @@ async def run_async_migrations() -> None:
     # 支持 AGENTTEST_DATABASE_URL 或 DATABASE_URL 环境变量覆盖
     import os
 
-    db_url = os.environ.get("AGENTTEST_DATABASE_URL") or os.environ.get("DATABASE_URL") or config.get_main_option("sqlalchemy.url")
+    db_url = (
+        os.environ.get("AGENTTEST_DATABASE_URL")
+        or os.environ.get("DATABASE_URL")
+        or config.get_main_option("sqlalchemy.url")
+    )
     config.set_main_option("sqlalchemy.url", db_url)
 
     engine = async_engine_from_config(

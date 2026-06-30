@@ -47,14 +47,10 @@ class PluginRegistry(Protocol):
         """按 ID 获取单个插件清单。"""
         ...
 
-    async def has_capability(
-        self, plugin_id: str, capability: PluginCapability
-    ) -> bool:
+    async def has_capability(self, plugin_id: str, capability: PluginCapability) -> bool:
         """检查插件是否具备某项能力。"""
         ...
 
-    async def list_by_capability(
-        self, capability: PluginCapability
-    ) -> list[PluginManifest]:
+    async def list_by_capability(self, capability: PluginCapability) -> list[PluginManifest]:
         """列出所有具备某项能力的插件。"""
         ...

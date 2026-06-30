@@ -29,7 +29,8 @@ export function BudgetDisplay({
   usagePercent: usagePercentProp,
 }: BudgetDisplayProps) {
   const remaining = remainingProp ?? budget - used;
-  const usagePercent = usagePercentProp ?? (budget > 0 ? (used / budget) * 100 : 0);
+  const usagePercent =
+    usagePercentProp ?? (budget > 0 ? (used / budget) * 100 : 0);
   const isWarning = usagePercent >= 80;
   const isExceeded = usagePercent >= 100;
 
@@ -66,15 +67,11 @@ export function BudgetDisplay({
       <div className="grid grid-cols-3 gap-3">
         <div className="rounded border border-[var(--border)] p-3 text-center">
           <p className="text-xs text-[var(--text-muted)]">预算</p>
-          <p className="mt-1 text-sm font-semibold">
-            {formatCurrency(budget)}
-          </p>
+          <p className="mt-1 text-sm font-semibold">{formatCurrency(budget)}</p>
         </div>
         <div className="rounded border border-[var(--border)] p-3 text-center">
           <p className="text-xs text-[var(--text-muted)]">已用</p>
-          <p className="mt-1 text-sm font-semibold">
-            {formatCurrency(used)}
-          </p>
+          <p className="mt-1 text-sm font-semibold">{formatCurrency(used)}</p>
         </div>
         <div className="rounded border border-[var(--border)] p-3 text-center">
           <p className="text-xs text-[var(--text-muted)]">剩余</p>

@@ -20,9 +20,7 @@ from agenttest.shared.infrastructure.database import Base
 
 class ScorerModel(Base):
     __tablename__ = "scorers"
-    __table_args__ = (
-        Index("ix_scorers_project_enabled", "project_id", "enabled"),
-    )
+    __table_args__ = (Index("ix_scorers_project_enabled", "project_id", "enabled"),)
 
     id: Mapped[UUID] = mapped_column(primary_key=True)
     project_id: Mapped[UUID] = mapped_column(

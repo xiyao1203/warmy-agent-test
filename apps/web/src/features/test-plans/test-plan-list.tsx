@@ -104,7 +104,11 @@ export function TestPlanList({
                   </TableCell>
                   <TableCell className={tableActionCellClass}>
                     <TableActions label={plan.name}>
-                      <Button asChild className="shrink-0 px-2.5" variant="ghost">
+                      <Button
+                        asChild
+                        className="shrink-0 px-2.5"
+                        variant="ghost"
+                      >
                         <Link
                           aria-label={`查看${plan.name}`}
                           href={`/projects/${projectId}/test-plans/${plan.id}`}
@@ -169,7 +173,9 @@ function CreatePlanDialog({
       </DialogTrigger>
       <DialogContent>
         <DialogTitle>创建测试计划</DialogTitle>
-        <DialogDescription>计划通过版本保存测试资产和执行参数。</DialogDescription>
+        <DialogDescription>
+          计划通过版本保存测试资产和执行参数。
+        </DialogDescription>
         <div className="mt-5 space-y-4">
           <label className="block text-sm font-medium">
             计划名称
@@ -187,9 +193,13 @@ function CreatePlanDialog({
               value={description}
             />
           </label>
-          {error ? <p className="text-sm text-[var(--danger)]">{error}</p> : null}
+          {error ? (
+            <p className="text-sm text-[var(--danger)]">{error}</p>
+          ) : null}
           <div className="flex justify-end gap-2">
-            <Button disabled={submitting} onClick={() => setOpen(false)}>取消</Button>
+            <Button disabled={submitting} onClick={() => setOpen(false)}>
+              取消
+            </Button>
             <Button
               disabled={submitting}
               loading={submitting}

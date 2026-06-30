@@ -43,7 +43,7 @@ describe("RunResultWorkbench", () => {
         onCaseSelect={mockOnCaseSelect}
         projectId="project-1"
         runId="run-1"
-      />
+      />,
     );
 
     // 左栏：用例列表
@@ -63,7 +63,7 @@ describe("RunResultWorkbench", () => {
         onCaseSelect={mockOnCaseSelect}
         projectId="project-1"
         runId="run-1"
-      />
+      />,
     );
 
     // 应该显示所有用例
@@ -79,7 +79,7 @@ describe("RunResultWorkbench", () => {
         onCaseSelect={mockOnCaseSelect}
         projectId="project-1"
         runId="run-1"
-      />
+      />,
     );
 
     // 点击用例
@@ -96,7 +96,7 @@ describe("RunResultWorkbench", () => {
         onCaseSelect={mockOnCaseSelect}
         projectId="project-1"
         runId="run-1"
-      />
+      />,
     );
 
     // 点击用例
@@ -117,7 +117,7 @@ describe("RunResultWorkbench", () => {
         onCaseSelect={mockOnCaseSelect}
         projectId="project-1"
         runId="run-1"
-      />
+      />,
     );
 
     // 点击用例
@@ -134,7 +134,7 @@ describe("RunResultWorkbench", () => {
         onCaseSelect={mockOnCaseSelect}
         projectId="project-1"
         runId="run-1"
-      />
+      />,
     );
 
     // 点击失败用例
@@ -152,7 +152,7 @@ describe("RunResultWorkbench", () => {
         onCaseSelect={mockOnCaseSelect}
         projectId="project-1"
         runId="run-1"
-      />
+      />,
     );
 
     // 点击筛选按钮 - 使用 getAllByText 因为可能有多个
@@ -173,7 +173,7 @@ describe("RunResultWorkbench", () => {
         onCaseSelect={mockOnCaseSelect}
         projectId="project-1"
         runId="run-1"
-      />
+      />,
     );
 
     expect(screen.getByText("暂无用例数据")).toBeInTheDocument();

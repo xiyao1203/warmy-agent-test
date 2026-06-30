@@ -140,10 +140,17 @@ export function ScorerEditorDialog({
             />
           </label>
         </div>
-        {error ? <p className="mt-3 text-sm text-[var(--danger)]">{error}</p> : null}
+        {error ? (
+          <p className="mt-3 text-sm text-[var(--danger)]">{error}</p>
+        ) : null}
         <div className="mt-5 flex justify-end gap-2">
           <Button onClick={() => onOpenChange(false)}>取消</Button>
-          <Button disabled={saving} loading={saving} onClick={handleSave} variant="primary">
+          <Button
+            disabled={saving}
+            loading={saving}
+            onClick={handleSave}
+            variant="primary"
+          >
             {isEdit ? "保存" : "创建"}
           </Button>
         </div>

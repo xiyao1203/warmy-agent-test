@@ -3,7 +3,13 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useCallback, useEffect, useRef, useState } from "react";
 
-import { cancelRun, getRun, listArtifacts, listRunCases, runEventsUrl } from "./api";
+import {
+  cancelRun,
+  getRun,
+  listArtifacts,
+  listRunCases,
+  runEventsUrl,
+} from "./api";
 import { RunDetail } from "./run-detail";
 
 /** SSE 重连配置 */

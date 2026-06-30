@@ -1,16 +1,11 @@
 import { describe, it, expect, vi } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
 
-import {
-  ABPreferenceSelector,
-  ABReviewPanel,
-} from "../ab-preference";
+import { ABPreferenceSelector, ABReviewPanel } from "../ab-preference";
 
 describe("ABPreferenceSelector", () => {
   it("renders all three options", () => {
-    render(
-      <ABPreferenceSelector onChange={() => undefined} value={null} />,
-    );
+    render(<ABPreferenceSelector onChange={() => undefined} value={null} />);
 
     expect(screen.getByText("A 更好")).toBeInTheDocument();
     expect(screen.getByText("相同")).toBeInTheDocument();
@@ -19,9 +14,7 @@ describe("ABPreferenceSelector", () => {
 
   it("calls onChange when option is clicked", () => {
     const onChange = vi.fn();
-    render(
-      <ABPreferenceSelector onChange={onChange} value={null} />,
-    );
+    render(<ABPreferenceSelector onChange={onChange} value={null} />);
 
     fireEvent.click(screen.getByText("A 更好"));
     expect(onChange).toHaveBeenCalledWith("a");
@@ -29,22 +22,14 @@ describe("ABPreferenceSelector", () => {
 
   it("does not call onChange when disabled", () => {
     const onChange = vi.fn();
-    render(
-      <ABPreferenceSelector
-        disabled
-        onChange={onChange}
-        value={null}
-      />,
-    );
+    render(<ABPreferenceSelector disabled onChange={onChange} value={null} />);
 
     fireEvent.click(screen.getByText("A 更好"));
     expect(onChange).not.toHaveBeenCalled();
   });
 
   it("applies selected styles to active option", () => {
-    render(
-      <ABPreferenceSelector onChange={() => undefined} value="a" />,
-    );
+    render(<ABPreferenceSelector onChange={() => undefined} value="a" />);
 
     const buttons = screen.getAllByRole("radio");
     expect(buttons[0]).toHaveAttribute("aria-checked", "true");

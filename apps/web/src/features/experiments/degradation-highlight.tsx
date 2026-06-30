@@ -14,7 +14,9 @@ type DegradationHighlightProps = {
   degradations: Degradation[];
 };
 
-export function DegradationHighlight({ degradations }: DegradationHighlightProps) {
+export function DegradationHighlight({
+  degradations,
+}: DegradationHighlightProps) {
   if (degradations.length === 0) {
     return (
       <div className="rounded-[var(--radius-md)] border border-dashed border-[var(--border)] p-4 text-center">
@@ -36,11 +38,15 @@ export function DegradationHighlight({ degradations }: DegradationHighlightProps
           </div>
           <div className="flex items-center gap-4 text-sm">
             <span className="text-[var(--text-muted)]">
-              {typeof deg.baseline === "number" ? deg.baseline.toFixed(2) : deg.baseline}
+              {typeof deg.baseline === "number"
+                ? deg.baseline.toFixed(2)
+                : deg.baseline}
             </span>
             <span>→</span>
             <span className="font-medium text-[var(--danger)]">
-              {typeof deg.current === "number" ? deg.current.toFixed(2) : deg.current}
+              {typeof deg.current === "number"
+                ? deg.current.toFixed(2)
+                : deg.current}
             </span>
             <span className="text-[var(--danger)]">
               {deg.change > 0 ? "+" : ""}

@@ -33,7 +33,11 @@ class CreateExperimentRequest(BaseModel):
 
 
 def create_experiment_router(
-    *, session_factory, actor_for, check_project, settings,
+    *,
+    session_factory,
+    actor_for,
+    check_project,
+    settings,
 ) -> APIRouter:
     router = APIRouter(
         prefix="/projects/{project_id}/experiments",
@@ -44,7 +48,10 @@ def create_experiment_router(
 
     @router.get("")
     async def list_experiments(
-        request: Request, project_id: UUID, limit: int = 50, offset: int = 0,
+        request: Request,
+        project_id: UUID,
+        limit: int = 50,
+        offset: int = 0,
     ):
         actor = await require_actor(request, actor_for, settings)
         if isinstance(actor, JSONResponse):
@@ -56,7 +63,9 @@ def create_experiment_router(
         except InvalidSessionError:
             return JSONResponse(status_code=401, content={"detail": "认证失败"})
         experiments = await repo.list_by_project(
-            ProjectId(project_id), limit=limit, offset=offset,
+            ProjectId(project_id),
+            limit=limit,
+            offset=offset,
         )
         return {"items": [_to_dict(e) for e in experiments]}
 
@@ -106,14 +115,17 @@ def create_experiment_router(
 
     @router.get("/{experiment_id}")
     async def get_experiment(
-        request: Request, project_id: UUID, experiment_id: UUID,
+        request: Request,
+        project_id: UUID,
+        experiment_id: UUID,
     ):
         actor = await require_actor(request, actor_for, settings)
         if isinstance(actor, JSONResponse):
             return actor
 
         exp = await repo.get_by_id_and_project(
-            ExperimentId(experiment_id), ProjectId(project_id),
+            ExperimentId(experiment_id),
+            ProjectId(project_id),
         )
         if exp is None:
             return JSONResponse(status_code=404, content={"detail": "实验不存在"})
@@ -132,7 +144,8 @@ def create_experiment_router(
             return actor
 
         exp = await repo.get_by_id_and_project(
-            ExperimentId(experiment_id), ProjectId(project_id),
+            ExperimentId(experiment_id),
+            ProjectId(project_id),
         )
         if exp is None:
             return JSONResponse(status_code=404, content={"detail": "实验不存在"})
@@ -200,14 +213,16 @@ def create_experiment_router(
                         status_b = b.get("status")
                     unchanged += 1
 
-                case_diffs.append({
-                    "test_case_id": cid,
-                    "status_a": status_a,
-                    "status_b": status_b,
-                    "status_changed": changed,
-                    "duration_delta_ms": dur_delta,
-                    "category": category,
-                })
+                case_diffs.append(
+                    {
+                        "test_case_id": cid,
+                        "status_a": status_a,
+                        "status_b": status_b,
+                        "status_changed": changed,
+                        "duration_delta_ms": dur_delta,
+                        "category": category,
+                    }
+                )
 
             import statistics
 
@@ -263,7 +278,8 @@ def create_experiment_router(
             elif experiment_id:
                 # 获取实验对比统计
                 exp = await repo.get_by_id_and_project(
-                    ExperimentId(experiment_id), ProjectId(project_id),
+                    ExperimentId(experiment_id),
+                    ProjectId(project_id),
                 )
                 if exp is None:
                     return JSONResponse(status_code=404, content={"detail": "实验不存在"})
@@ -292,10 +308,7 @@ def create_experiment_router(
 
 async def _get_run_cases(session, run_id: UUID) -> list[dict]:
     result = await session.execute(
-        text(
-            "SELECT test_case_id, status, duration_ms "
-            "FROM run_cases WHERE run_id = :rid"
-        ),
+        text("SELECT test_case_id, status, duration_ms FROM run_cases WHERE run_id = :rid"),
         {"rid": run_id},
     )
     return [

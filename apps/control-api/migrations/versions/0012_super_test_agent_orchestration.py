@@ -114,12 +114,8 @@ def upgrade() -> None:
         ),
         sa.ForeignKeyConstraint(["decided_by"], ["users.id"]),
         sa.PrimaryKeyConstraint("id"),
-        sa.UniqueConstraint(
-            "project_id", "id", name="uq_test_agent_confirmations_project_id"
-        ),
-        sa.UniqueConstraint(
-            "project_id", "task_id", name="uq_test_agent_confirmations_task"
-        ),
+        sa.UniqueConstraint("project_id", "id", name="uq_test_agent_confirmations_project_id"),
+        sa.UniqueConstraint("project_id", "task_id", name="uq_test_agent_confirmations_task"),
     )
 
     op.create_table(
@@ -171,9 +167,7 @@ def upgrade() -> None:
         sa.Column("created_at", sa.DateTime(timezone=True), nullable=False),
         sa.Column("updated_at", sa.DateTime(timezone=True), nullable=False),
         sa.ForeignKeyConstraint(["project_id"], ["projects.id"], ondelete="CASCADE"),
-        sa.ForeignKeyConstraint(
-            ["agent_version_id"], ["agent_versions.id"], ondelete="RESTRICT"
-        ),
+        sa.ForeignKeyConstraint(["agent_version_id"], ["agent_versions.id"], ondelete="RESTRICT"),
         sa.ForeignKeyConstraint(
             ["environment_template_id"],
             ["environment_templates.id"],
@@ -181,9 +175,7 @@ def upgrade() -> None:
         ),
         sa.ForeignKeyConstraint(["created_by"], ["users.id"]),
         sa.PrimaryKeyConstraint("id"),
-        sa.UniqueConstraint(
-            "project_id", "id", name="uq_target_chat_sessions_project_id"
-        ),
+        sa.UniqueConstraint("project_id", "id", name="uq_target_chat_sessions_project_id"),
     )
     op.create_index(
         "ix_target_chat_sessions_project_updated",

@@ -58,9 +58,7 @@ export function TestPlanVersionDialog({
   const [passThreshold, setPassThreshold] = useState(
     Number(config.pass_threshold ?? 1),
   );
-  const [maxRetries, setMaxRetries] = useState(
-    Number(config.max_retries ?? 0),
-  );
+  const [maxRetries, setMaxRetries] = useState(Number(config.max_retries ?? 0));
   const [baselineRunId, setBaselineRunId] = useState(
     String(config.baseline_run_id ?? ""),
   );
@@ -84,9 +82,7 @@ export function TestPlanVersionDialog({
           concurrency,
           max_retries: maxRetries,
           pass_threshold: passThreshold,
-          release_gate: releaseGateType
-            ? { type: releaseGateType }
-            : {},
+          release_gate: releaseGateType ? { type: releaseGateType } : {},
           runs_per_case: runsPerCase,
           timeout,
         },
@@ -190,7 +186,9 @@ export function TestPlanVersionDialog({
             </label>
           </div>
         </div>
-        {error ? <p className="mt-3 text-sm text-[var(--danger)]">{error}</p> : null}
+        {error ? (
+          <p className="mt-3 text-sm text-[var(--danger)]">{error}</p>
+        ) : null}
         <div className="mt-5 flex justify-end gap-2">
           <Button onClick={() => setOpen(false)}>取消</Button>
           <Button onClick={submit} variant="primary">

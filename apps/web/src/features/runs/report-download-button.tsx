@@ -50,7 +50,7 @@ export function ReportDownloadButton({
         `/api/v1/projects/${projectId}/runs/${runId}/reports/${format}`,
         {
           credentials: "include",
-        }
+        },
       );
 
       if (!response.ok) {

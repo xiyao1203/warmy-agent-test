@@ -66,7 +66,9 @@ export function AgentVersionDialog({
         </Button>
       </DialogTrigger>
       <DialogContent>
-        <DialogTitle>{version ? "编辑 Agent 版本" : "创建 Agent 版本"}</DialogTitle>
+        <DialogTitle>
+          {version ? "编辑 Agent 版本" : "创建 Agent 版本"}
+        </DialogTitle>
         <DialogDescription>
           配置通用 HTTP Agent 的调用地址、模型和超时。
         </DialogDescription>
@@ -99,7 +101,9 @@ export function AgentVersionDialog({
               value={timeout}
             />
           </label>
-          {error ? <p className="text-sm text-[var(--danger)]">{error}</p> : null}
+          {error ? (
+            <p className="text-sm text-[var(--danger)]">{error}</p>
+          ) : null}
           <div className="flex justify-end gap-2">
             <Button onClick={() => setOpen(false)} type="button">
               取消

@@ -30,6 +30,7 @@ from agenttest.modules.projects.public import ProjectId
 
 class ListAgentsHandler:
     """查询项目下 Agent 列表，支持游标分页。"""
+
     def __init__(
         self,
         *,
@@ -57,6 +58,7 @@ class ListAgentsHandler:
 
 class GetAgentHandler:
     """查询单个 Agent 详情。"""
+
     def __init__(
         self,
         *,
@@ -74,6 +76,7 @@ class GetAgentHandler:
 
 class ListAgentVersionsHandler:
     """查询 Agent 的所有版本列表（按版本号倒序）。"""
+
     def __init__(
         self,
         *,
@@ -93,6 +96,7 @@ class ListAgentVersionsHandler:
 
 class GetAgentVersionHandler:
     """查询单个 Agent 版本详情。"""
+
     def __init__(
         self,
         *,

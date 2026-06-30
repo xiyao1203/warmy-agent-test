@@ -53,7 +53,10 @@ export function ModelConfigScreen({ projectId }: { projectId: string }) {
 
   useEffect(() => {
     let active = true;
-    void Promise.all([listModelConfigs(projectId), listModelDefaults(projectId)])
+    void Promise.all([
+      listModelConfigs(projectId),
+      listModelDefaults(projectId),
+    ])
       .then(([nextModels, nextDefaults]) => {
         if (!active) return;
         setModels(nextModels);

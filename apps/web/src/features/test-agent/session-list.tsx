@@ -26,7 +26,9 @@ export function SessionList({
         </Button>
       </div>
       <div className="min-h-0 flex-1 overflow-y-auto p-2" aria-label="会话历史">
-        {loading ? <p className="p-2 text-xs text-[var(--text-muted)]">正在加载会话…</p> : null}
+        {loading ? (
+          <p className="p-2 text-xs text-[var(--text-muted)]">正在加载会话…</p>
+        ) : null}
         {!loading && items.length === 0 ? (
           <p className="p-2 text-xs text-[var(--text-muted)]">暂无历史会话</p>
         ) : null}
@@ -43,7 +45,9 @@ export function SessionList({
             type="button"
           >
             <span className="block truncate">{item.title}</span>
-            <span className="mt-1 block text-xs text-[var(--text-muted)]">{item.status}</span>
+            <span className="mt-1 block text-xs text-[var(--text-muted)]">
+              {item.status}
+            </span>
           </button>
         ))}
       </div>

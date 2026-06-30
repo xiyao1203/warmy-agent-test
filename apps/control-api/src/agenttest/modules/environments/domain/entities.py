@@ -18,6 +18,7 @@ from agenttest.modules.projects.public import ProjectId
 @dataclass(frozen=True, slots=True)
 class EnvironmentTemplateId:
     """环境模板实体的唯一标识。"""
+
     value: UUID
 
     @classmethod
@@ -42,6 +43,7 @@ class EnvironmentTemplate:
         config: 环境配置（JSONB）。
         description: 可选描述。
     """
+
     template_id: EnvironmentTemplateId
     project_id: ProjectId
     name: str

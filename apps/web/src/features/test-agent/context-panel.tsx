@@ -34,7 +34,9 @@ export function ContextPanel({
       <h2 className="text-sm font-semibold">关联资产</h2>
       <div className="mt-3 space-y-2">
         {artifacts.length === 0 ? (
-          <p className="text-xs text-[var(--text-muted)]">对话产生的平台资产会显示在这里。</p>
+          <p className="text-xs text-[var(--text-muted)]">
+            对话产生的平台资产会显示在这里。
+          </p>
         ) : null}
         {artifacts.map((artifact) => (
           <Link
@@ -43,17 +45,24 @@ export function ContextPanel({
             key={`${artifact.type}:${artifact.id}:${artifact.relation}`}
           >
             <span className="font-medium">{artifact.type}</span>
-            <span className="mt-1 block truncate text-xs text-[var(--text-muted)]">{artifact.id}</span>
+            <span className="mt-1 block truncate text-xs text-[var(--text-muted)]">
+              {artifact.id}
+            </span>
           </Link>
         ))}
       </div>
       <h2 className="mt-6 text-sm font-semibold">子 Agent 任务</h2>
       <div className="mt-3 space-y-2">
-        {events.filter((event) => event.type.startsWith("agent.")).map((event) => (
-          <div className="rounded-[var(--radius-sm)] bg-[var(--surface-subtle)] p-2 text-xs" key={`${event.id}:${event.type}`}>
-            {event.type}
-          </div>
-        ))}
+        {events
+          .filter((event) => event.type.startsWith("agent."))
+          .map((event) => (
+            <div
+              className="rounded-[var(--radius-sm)] bg-[var(--surface-subtle)] p-2 text-xs"
+              key={`${event.id}:${event.type}`}
+            >
+              {event.type}
+            </div>
+          ))}
       </div>
     </aside>
   );

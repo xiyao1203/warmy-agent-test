@@ -13,6 +13,7 @@ from agenttest.modules.scorers.domain.value_objects import ScorerType
 @dataclass(frozen=True, slots=True)
 class ScorerId:
     """评分器唯一标识。"""
+
     value: UUID
 
     @classmethod
@@ -39,6 +40,7 @@ class Scorer:
         description: 可选描述。
         enabled: 是否启用。
     """
+
     scorer_id: ScorerId
     project_id: ProjectId
     name: str

@@ -40,7 +40,11 @@ class ExemptRequest(BaseModel):
 
 
 def create_gate_router(
-    *, session_factory, actor_for, check_project, settings,
+    *,
+    session_factory,
+    actor_for,
+    check_project,
+    settings,
 ) -> APIRouter:
     router = APIRouter(
         prefix="/projects/{project_id}/gates",
@@ -58,11 +62,13 @@ def create_gate_router(
             await check_project(project_id)
         except ProjectNotFoundError:
             return JSONResponse(
-                status_code=404, content={"detail": "项目不存在"},
+                status_code=404,
+                content={"detail": "项目不存在"},
             )
         except InvalidSessionError:
             return JSONResponse(
-                status_code=401, content={"detail": "认证失败"},
+                status_code=401,
+                content={"detail": "认证失败"},
             )
         gates = await repo.list_by_project(project_id)
         return {"items": [_gate_to_dict(g) for g in gates]}
@@ -75,7 +81,10 @@ def create_gate_router(
         x_csrf_token: str | None = Header(default=None),
     ):
         actor = await require_writer(
-            request, actor_for, settings, x_csrf_token,
+            request,
+            actor_for,
+            settings,
+            x_csrf_token,
         )
         if isinstance(actor, JSONResponse):
             return actor
@@ -83,11 +92,13 @@ def create_gate_router(
             await check_project(project_id)
         except ProjectNotFoundError:
             return JSONResponse(
-                status_code=404, content={"detail": "项目不存在"},
+                status_code=404,
+                content={"detail": "项目不存在"},
             )
         except InvalidSessionError:
             return JSONResponse(
-                status_code=401, content={"detail": "认证失败"},
+                status_code=401,
+                content={"detail": "认证失败"},
             )
         try:
             gate = ReleaseGate.create(
@@ -105,17 +116,21 @@ def create_gate_router(
 
     @router.get("/{gate_id}")
     async def get_gate(
-        request: Request, project_id: UUID, gate_id: UUID,
+        request: Request,
+        project_id: UUID,
+        gate_id: UUID,
     ):
         actor = await require_actor(request, actor_for, settings)
         if isinstance(actor, JSONResponse):
             return actor
         gate = await repo.get_by_id_and_project(
-            ReleaseGateId(gate_id), project_id,
+            ReleaseGateId(gate_id),
+            project_id,
         )
         if gate is None:
             return JSONResponse(
-                status_code=404, content={"detail": "门禁不存在"},
+                status_code=404,
+                content={"detail": "门禁不存在"},
             )
         return _gate_to_dict(gate)
 
@@ -129,16 +144,21 @@ def create_gate_router(
     ):
         """评估门禁是否通过。"""
         actor = await require_writer(
-            request, actor_for, settings, x_csrf_token,
+            request,
+            actor_for,
+            settings,
+            x_csrf_token,
         )
         if isinstance(actor, JSONResponse):
             return actor
         gate = await repo.get_by_id_and_project(
-            ReleaseGateId(gate_id), project_id,
+            ReleaseGateId(gate_id),
+            project_id,
         )
         if gate is None:
             return JSONResponse(
-                status_code=404, content={"detail": "门禁不存在"},
+                status_code=404,
+                content={"detail": "门禁不存在"},
             )
         if not gate.enabled:
             return {
@@ -163,16 +183,21 @@ def create_gate_router(
     ):
         """临时豁免门禁（记录审计日志）。"""
         actor = await require_writer(
-            request, actor_for, settings, x_csrf_token,
+            request,
+            actor_for,
+            settings,
+            x_csrf_token,
         )
         if isinstance(actor, JSONResponse):
             return actor
         gate = await repo.get_by_id_and_project(
-            ReleaseGateId(gate_id), project_id,
+            ReleaseGateId(gate_id),
+            project_id,
         )
         if gate is None:
             return JSONResponse(
-                status_code=404, content={"detail": "门禁不存在"},
+                status_code=404,
+                content={"detail": "门禁不存在"},
             )
         gate.toggle()
         await repo.save(gate)
@@ -191,16 +216,21 @@ def create_gate_router(
         x_csrf_token: str | None = Header(default=None),
     ):
         actor = await require_writer(
-            request, actor_for, settings, x_csrf_token,
+            request,
+            actor_for,
+            settings,
+            x_csrf_token,
         )
         if isinstance(actor, JSONResponse):
             return actor
         gate = await repo.get_by_id_and_project(
-            ReleaseGateId(gate_id), project_id,
+            ReleaseGateId(gate_id),
+            project_id,
         )
         if gate is None:
             return JSONResponse(
-                status_code=404, content={"detail": "门禁不存在"},
+                status_code=404,
+                content={"detail": "门禁不存在"},
             )
         await repo.delete(ReleaseGateId(gate_id))
         return {"status": "deleted", "gate_id": str(gate_id)}

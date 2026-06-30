@@ -4,7 +4,10 @@ import type { HTMLAttributes } from "react";
 
 type TypingIndicatorProps = HTMLAttributes<HTMLDivElement>;
 
-export function TypingIndicator({ className = "", ...props }: TypingIndicatorProps) {
+export function TypingIndicator({
+  className = "",
+  ...props
+}: TypingIndicatorProps) {
   return (
     <div className={`flex items-center gap-1.5 ${className}`} {...props}>
       <div className="flex gap-1">

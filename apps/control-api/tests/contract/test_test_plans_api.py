@@ -214,25 +214,16 @@ def test_developer_creates_updates_and_publishes_test_plan_version() -> None:
     )
     version_id = version.json()["id"]
     updated = client.patch(
-        (
-            f"/api/v1/projects/{project_id.value}/test-plans/{plan_id}"
-            f"/versions/{version_id}"
-        ),
+        (f"/api/v1/projects/{project_id.value}/test-plans/{plan_id}/versions/{version_id}"),
         headers=csrf,
         json={"config": {"concurrency": 8, "timeout": 180}},
     )
     published = client.post(
-        (
-            f"/api/v1/projects/{project_id.value}/test-plans/{plan_id}"
-            f"/versions/{version_id}/publish"
-        ),
+        (f"/api/v1/projects/{project_id.value}/test-plans/{plan_id}/versions/{version_id}/publish"),
         headers=csrf,
     )
     immutable = client.patch(
-        (
-            f"/api/v1/projects/{project_id.value}/test-plans/{plan_id}"
-            f"/versions/{version_id}"
-        ),
+        (f"/api/v1/projects/{project_id.value}/test-plans/{plan_id}/versions/{version_id}"),
         headers=csrf,
         json={"config": {"concurrency": 1}},
     )
@@ -262,10 +253,7 @@ def test_test_plan_viewer_non_member_and_csrf_rules() -> None:
         member=False,
     )
     assert (
-        outsider.get(
-            f"/api/v1/projects/{outsider_project_id.value}/test-plans"
-        ).status_code
-        == 404
+        outsider.get(f"/api/v1/projects/{outsider_project_id.value}/test-plans").status_code == 404
     )
     assert (
         outsider.post(

@@ -31,6 +31,7 @@ class TestPlanConfig:
         pass_threshold: 通过阈值（0-1），默认 1.0。
         cost_budget: 费用预算上限（可选）。
     """
+
     api_browser_ratio: float = 0.0
     runs_per_case: int = 1
     concurrency: int = 1
@@ -93,28 +94,14 @@ class TestPlanConfig:
             concurrency=int(conc_raw) if isinstance(conc_raw, (int, float, str)) else 1,
             timeout=int(to_raw) if isinstance(to_raw, (int, float, str)) else 300,
             max_retries=int(mr_raw) if isinstance(mr_raw, (int, float, str)) else 0,
-            retry_policy=(
-                dict(retry_policy_raw)
-                if isinstance(retry_policy_raw, dict)
-                else {}
-            ),  # type: ignore[arg-type]
-            scorers=(
-                list(scorers_raw)
-                if isinstance(scorers_raw, list)
-                else []
-            ),  # type: ignore[arg-type]
+            retry_policy=(dict(retry_policy_raw) if isinstance(retry_policy_raw, dict) else {}),  # type: ignore[arg-type]
+            scorers=(list(scorers_raw) if isinstance(scorers_raw, list) else []),  # type: ignore[arg-type]
             pass_threshold=float(pt_raw) if isinstance(pt_raw, (int, float, str)) else 1.0,
             cost_budget=(
-                float(cost_budget_raw)
-                if isinstance(cost_budget_raw, (int, float))
-                else None
+                float(cost_budget_raw) if isinstance(cost_budget_raw, (int, float)) else None
             ),
             baseline_run_id=str(br_raw) if isinstance(br_raw, str) else None,
-            release_gate=(
-                dict(rg_raw)
-                if isinstance(rg_raw, dict)
-                else {}
-            ),  # type: ignore[arg-type]
+            release_gate=(dict(rg_raw) if isinstance(rg_raw, dict) else {}),  # type: ignore[arg-type]
         )
 
     def dry_run_preview(self, *, num_cases: int = 0) -> dict[str, object]:

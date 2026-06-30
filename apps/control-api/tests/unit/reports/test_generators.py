@@ -53,7 +53,7 @@ class TestJsonReportGenerator:
         """测试生成 JSON 报告。"""
         generator = JsonReportGenerator()
         report = generator.generate(mock_run_data)
-        
+
         assert isinstance(report, str)
         data = json.loads(report)
         assert data["run_id"] == "run-123"
@@ -65,7 +65,7 @@ class TestJsonReportGenerator:
         generator = JsonReportGenerator()
         report = generator.generate(mock_run_data)
         data = json.loads(report)
-        
+
         assert len(data["cases"]) == 2
         assert data["cases"][0]["case_id"] == "case-1"
 
@@ -74,7 +74,7 @@ class TestJsonReportGenerator:
         generator = JsonReportGenerator()
         report = generator.generate(mock_run_data)
         data = json.loads(report)
-        
+
         assert "generated_at" in data
         assert "format_version" in data
 
@@ -86,7 +86,7 @@ class TestJunitReportGenerator:
         """测试生成 JUnit XML 报告。"""
         generator = JunitReportGenerator()
         report = generator.generate(mock_run_data)
-        
+
         assert isinstance(report, str)
         assert '<?xml version="1.0"' in report
         assert "<testsuite" in report
@@ -95,7 +95,7 @@ class TestJunitReportGenerator:
         """测试 JUnit 报告包含测试用例。"""
         generator = JunitReportGenerator()
         report = generator.generate(mock_run_data)
-        
+
         assert 'name="case-1"' in report
         assert 'name="case-2"' in report
         assert "<failure" in report
@@ -104,7 +104,7 @@ class TestJunitReportGenerator:
         """测试 JUnit 报告包含摘要。"""
         generator = JunitReportGenerator()
         report = generator.generate(mock_run_data)
-        
+
         assert 'tests="10"' in report
         assert 'failures="2"' in report
 
@@ -116,7 +116,7 @@ class TestHtmlReportGenerator:
         """测试生成 HTML 报告。"""
         generator = HtmlReportGenerator()
         report = generator.generate(mock_run_data)
-        
+
         assert isinstance(report, str)
         assert "<!DOCTYPE html>" in report
         assert "<html" in report
@@ -125,16 +125,16 @@ class TestHtmlReportGenerator:
         """测试 HTML 报告包含摘要。"""
         generator = HtmlReportGenerator()
         report = generator.generate(mock_run_data)
-        
+
         assert "run-123" in report
         assert "10" in report  # total cases
-        assert "8" in report   # passed
+        assert "8" in report  # passed
 
     def test_html_report_contains_table(self, mock_run_data: dict[str, object]) -> None:
         """测试 HTML 报告包含用例表格。"""
         generator = HtmlReportGenerator()
         report = generator.generate(mock_run_data)
-        
+
         assert "<table" in report
         assert "case-1" in report
         assert "case-2" in report

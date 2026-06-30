@@ -88,9 +88,7 @@ class CanvasAgentAdapter(Protocol):
     不依赖控制面内部模块。
     """
 
-    async def start(
-        self, *, prompt: str, template: dict[str, object] | None = None
-    ) -> str:
+    async def start(self, *, prompt: str, template: dict[str, object] | None = None) -> str:
         """启动画布任务，返回任务 ID。"""
         ...
 

@@ -81,9 +81,7 @@ export function ScorerWeightConfig({
                 <p className="text-sm font-medium">{scorer.name}</p>
               </div>
               <div className="flex items-center gap-2">
-                <label className="text-xs text-[var(--text-muted)]">
-                  权重
-                </label>
+                <label className="text-xs text-[var(--text-muted)]">权重</label>
                 <Input
                   className="w-20 text-center"
                   disabled={disabled}

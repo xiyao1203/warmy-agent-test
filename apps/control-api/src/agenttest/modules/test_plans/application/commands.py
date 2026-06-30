@@ -72,6 +72,7 @@ class PublishTestPlanVersionCommand:
 
 class CreateTestPlanHandler:
     """创建测试计划的命令处理器。"""
+
     def __init__(
         self,
         *,
@@ -107,6 +108,7 @@ class CreateTestPlanHandler:
 
 class UpdateTestPlanHandler:
     """更新测试计划的命令处理器。支持部分更新。"""
+
     def __init__(
         self,
         *,
@@ -145,6 +147,7 @@ class UpdateTestPlanHandler:
 
 class CreateTestPlanVersionHandler:
     """创建测试计划新版本的命令处理器。可关联 Agent/Dataset/Environment。"""
+
     def __init__(
         self,
         *,
@@ -187,6 +190,7 @@ class CreateTestPlanVersionHandler:
 
 class UpdateTestPlanVersionHandler:
     """更新测试计划版本的命令处理器。仅草稿版本可编辑。"""
+
     def __init__(
         self,
         *,
@@ -222,6 +226,7 @@ class UpdateTestPlanVersionHandler:
 
 class PublishTestPlanVersionHandler:
     """发布测试计划版本的命令处理器。"""
+
     def __init__(
         self,
         *,
@@ -302,6 +307,7 @@ async def _record(
 
 class TestPlanNotFoundError(Exception):
     """测试计划不存在的领域异常。"""
+
     def __init__(self, plan_id: TestPlanId) -> None:
         self.plan_id = plan_id
         super().__init__(f"Test plan {plan_id.value} not found")
@@ -309,6 +315,7 @@ class TestPlanNotFoundError(Exception):
 
 class TestPlanVersionNotFoundError(Exception):
     """测试计划版本不存在的领域异常。"""
+
     def __init__(self, version_id: TestPlanVersionId) -> None:
         self.version_id = version_id
         super().__init__(f"Test plan version {version_id.value} not found")

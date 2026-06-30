@@ -104,18 +104,12 @@ class TestPlanVersionResponse(BaseModel):
             version_number=version.version_number,
             status=version.status,
             config=version.config.to_dict(),
-            agent_version_id=(
-                version.agent_version_id.value if version.agent_version_id else None
-            ),
+            agent_version_id=(version.agent_version_id.value if version.agent_version_id else None),
             dataset_version_id=(
-                version.dataset_version_id.value
-                if version.dataset_version_id
-                else None
+                version.dataset_version_id.value if version.dataset_version_id else None
             ),
             environment_template_id=(
-                version.environment_template_id.value
-                if version.environment_template_id
-                else None
+                version.environment_template_id.value if version.environment_template_id else None
             ),
             created_by=version.created_by.value,
             created_at=version.created_at,

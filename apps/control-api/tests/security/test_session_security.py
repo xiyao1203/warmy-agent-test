@@ -78,9 +78,7 @@ class InMemorySessionRepository:
 class InMemoryUserReader:
     def __init__(self, users: dict[Email, User] | None = None) -> None:
         self._by_email: dict[Email, User] = users or {}
-        self._by_id: dict[UserId, User] = {
-            u.user_id: u for u in (users or {}).values()
-        }
+        self._by_id: dict[UserId, User] = {u.user_id: u for u in (users or {}).values()}
 
     async def get_by_email(self, email: Email) -> User | None:
         return self._by_email.get(email)
@@ -310,9 +308,7 @@ class TestSessionCookieSecurity:
         assert response.status_code == 200
         cookies = response.headers.get_list("set-cookie")
 
-        session_cookie = next(
-            (c for c in cookies if "agenttest_session=" in c), None
-        )
+        session_cookie = next((c for c in cookies if "agenttest_session=" in c), None)
         assert session_cookie is not None
         assert "HttpOnly" in session_cookie
         assert "Secure" in session_cookie

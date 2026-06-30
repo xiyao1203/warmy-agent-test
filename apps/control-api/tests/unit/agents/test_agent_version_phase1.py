@@ -156,7 +156,8 @@ class TestVersionDiff:
         dict_b = config_b.to_dict()
 
         changed = [
-            k for k in set(list(dict_a.keys()) + list(dict_b.keys()))
+            k
+            for k in set(list(dict_a.keys()) + list(dict_b.keys()))
             if dict_a.get(k) != dict_b.get(k)
         ]
         assert "api_url" in changed

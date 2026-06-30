@@ -25,7 +25,11 @@ export function RunCenterScreen({ projectId }: { projectId: string }) {
     const kind = problemKind(error);
     return (
       <RunCenter
-        error={kind === "not-found" || kind === "permission" ? "not-found" : "service"}
+        error={
+          kind === "not-found" || kind === "permission"
+            ? "not-found"
+            : "service"
+        }
         projectId={projectId}
       />
     );
@@ -42,4 +46,3 @@ export function RunCenterScreen({ projectId }: { projectId: string }) {
     />
   );
 }
-

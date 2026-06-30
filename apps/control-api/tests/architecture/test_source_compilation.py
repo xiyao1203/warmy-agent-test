@@ -11,6 +11,8 @@ def test_all_control_api_sources_compile() -> None:
         except py_compile.PyCompileError as error:
             failures.append(f"{source}: {error.msg}")
     assert failures == []
+
+
 import py_compile
 from pathlib import Path
 

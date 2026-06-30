@@ -46,6 +46,7 @@ class ReviewTask:
         updated_at: 更新时间。
         reviewed_at: 审核完成时间。
     """
+
     task_id: ReviewTaskId
     project_id: ProjectId
     run_case_id: UUID

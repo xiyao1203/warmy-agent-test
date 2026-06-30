@@ -8,4 +8,3 @@ export default async function RunsPage({
   const { projectId } = await params;
   return <RunCenterScreen projectId={projectId} />;
 }
-

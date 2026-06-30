@@ -70,9 +70,7 @@ export function ABPreferenceSelector({
           <button
             key={option.id}
             className={`flex-1 rounded-lg border p-4 text-center transition-colors ${
-              disabled
-                ? "cursor-not-allowed opacity-50"
-                : "cursor-pointer"
+              disabled ? "cursor-not-allowed opacity-50" : "cursor-pointer"
             } ${
               isSelected
                 ? "border-[var(--accent)] bg-[var(--accent-subtle)]"

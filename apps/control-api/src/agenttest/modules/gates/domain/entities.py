@@ -34,6 +34,7 @@ class ReleaseGate:
         created_at: 创建时间。
         updated_at: 更新时间。
     """
+
     gate_id: ReleaseGateId
     project_id: UUID
     name: str
@@ -60,9 +61,7 @@ class ReleaseGate:
         if not normalized:
             raise ValueError("Gate name is required")
         if not (0.0 <= success_rate_threshold <= 1.0):
-            raise ValueError(
-                "success_rate_threshold must be between 0 and 1"
-            )
+            raise ValueError("success_rate_threshold must be between 0 and 1")
         if not (0.0 <= security_threshold <= 1.0):
             raise ValueError("security_threshold must be between 0 and 1")
         if cost_limit is not None and cost_limit < 0:
@@ -94,8 +93,7 @@ class ReleaseGate:
 
         if actual_pass_rate < self.success_rate_threshold:
             failures.append(
-                f"通过率 {actual_pass_rate:.1%} 低于阈值 "
-                f"{self.success_rate_threshold:.1%}"
+                f"通过率 {actual_pass_rate:.1%} 低于阈值 {self.success_rate_threshold:.1%}"
             )
 
         if not critical_passed:
@@ -106,18 +104,10 @@ class ReleaseGate:
             and actual_cost is not None
             and actual_cost > self.cost_limit
         ):
-            failures.append(
-                f"成本 {actual_cost:.2f} 超出限额 {self.cost_limit:.2f}"
-            )
+            failures.append(f"成本 {actual_cost:.2f} 超出限额 {self.cost_limit:.2f}")
 
-        if (
-            security_score is not None
-            and security_score < self.security_threshold
-        ):
-            failures.append(
-                f"安全评分 {security_score:.2f} 低于阈值 "
-                f"{self.security_threshold:.2f}"
-            )
+        if security_score is not None and security_score < self.security_threshold:
+            failures.append(f"安全评分 {security_score:.2f} 低于阈值 {self.security_threshold:.2f}")
 
         return GateResult(
             passed=len(failures) == 0,
@@ -133,6 +123,7 @@ class ReleaseGate:
 @dataclass(frozen=True, slots=True)
 class GateResult:
     """门禁评估结果值对象。"""
+
     passed: bool
     failures: list[str]
     evaluated_at: datetime

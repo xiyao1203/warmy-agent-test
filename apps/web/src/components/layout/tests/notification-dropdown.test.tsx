@@ -3,8 +3,18 @@ import { describe, expect, it, vi } from "vitest";
 
 // Mock next/link
 vi.mock("next/link", () => ({
-  default: ({ children, href, ...props }: { children: React.ReactNode; href: string; [key: string]: unknown }) => (
-    <a href={href} {...props}>{children}</a>
+  default: ({
+    children,
+    href,
+    ...props
+  }: {
+    children: React.ReactNode;
+    href: string;
+    [key: string]: unknown;
+  }) => (
+    <a href={href} {...props}>
+      {children}
+    </a>
   ),
 }));
 
@@ -44,6 +54,9 @@ describe("NotificationDropdown", () => {
 
     const settingsLink = screen.getByText("通知偏好设置");
     expect(settingsLink).toBeInTheDocument();
-    expect(settingsLink.closest("a")).toHaveAttribute("href", "/account?section=notifications");
+    expect(settingsLink.closest("a")).toHaveAttribute(
+      "href",
+      "/account?section=notifications",
+    );
   });
 });

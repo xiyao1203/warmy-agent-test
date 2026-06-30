@@ -19,7 +19,7 @@ def upgrade() -> None:
     # 注意：SQLite 不支持 ALTER TABLE ADD CONSTRAINT，外键约束仅在 PostgreSQL 中添加
     op.add_column("agents", sa.Column("current_version_id", sa.Uuid(), nullable=True))
     op.add_column("agents", sa.Column("baseline_version_id", sa.Uuid(), nullable=True))
-    
+
     # SQLite 不支持添加外键约束，仅在 PostgreSQL 中执行
     if op.get_bind().dialect.name != "sqlite":
         op.create_foreign_key(

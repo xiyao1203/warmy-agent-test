@@ -12,6 +12,7 @@ from uuid import UUID, uuid4
 @dataclass(frozen=True, slots=True)
 class CanvasNode:
     """画布节点。"""
+
     id: UUID
     node_type: str
     label: str
@@ -23,6 +24,7 @@ class CanvasNode:
 @dataclass(frozen=True, slots=True)
 class CanvasConnection:
     """画布连线。"""
+
     id: UUID
     source_node_id: UUID
     target_node_id: UUID
@@ -32,6 +34,7 @@ class CanvasConnection:
 @dataclass(slots=True)
 class CanvasState:
     """画布状态。"""
+
     nodes: list[CanvasNode] = field(default_factory=list)
     connections: list[CanvasConnection] = field(default_factory=list)
 
@@ -143,7 +146,7 @@ class CanvasState:
         """断言节点位置无重叠（基于阈值）。返回错误列表。"""
         errors: list[str] = []
         for i, a in enumerate(self.nodes):
-            for b in self.nodes[i + 1:]:
+            for b in self.nodes[i + 1 :]:
                 dx = abs(a.position.get("x", 0) - b.position.get("x", 0))
                 dy = abs(a.position.get("y", 0) - b.position.get("y", 0))
                 if dx < threshold and dy < threshold:

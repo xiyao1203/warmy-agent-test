@@ -155,13 +155,15 @@ def identify_degradation(
         status_a = case_a.get("status")
         status_b = case_b.get("status")
         if status_a == "passed" and status_b != "passed":
-            degradations.append({
-                "case_id": case_id,
-                "metric": "status",
-                "baseline": status_a,
-                "current": status_b,
-                "change": -1.0,
-            })
+            degradations.append(
+                {
+                    "case_id": case_id,
+                    "metric": "status",
+                    "baseline": status_a,
+                    "current": status_b,
+                    "change": -1.0,
+                }
+            )
             continue
 
         # 分数退化
@@ -171,13 +173,15 @@ def identify_degradation(
             score_a = float(score_a)
             score_b = float(score_b)
             if score_a > 0 and (score_a - score_b) / score_a > threshold:
-                degradations.append({
-                    "case_id": case_id,
-                    "metric": "score",
-                    "baseline": score_a,
-                    "current": score_b,
-                    "change": round((score_b - score_a) / score_a, 4),
-                })
+                degradations.append(
+                    {
+                        "case_id": case_id,
+                        "metric": "score",
+                        "baseline": score_a,
+                        "current": score_b,
+                        "change": round((score_b - score_a) / score_a, 4),
+                    }
+                )
 
         # 时长退化（增加超过 50%）
         dur_a = case_a.get("duration_ms")
@@ -186,12 +190,14 @@ def identify_degradation(
             dur_a = float(dur_a)
             dur_b = float(dur_b)
             if dur_a > 0 and dur_b > dur_a * 1.5:
-                degradations.append({
-                    "case_id": case_id,
-                    "metric": "duration",
-                    "baseline": dur_a,
-                    "current": dur_b,
-                    "change": round((dur_b - dur_a) / dur_a, 4),
-                })
+                degradations.append(
+                    {
+                        "case_id": case_id,
+                        "metric": "duration",
+                        "baseline": dur_a,
+                        "current": dur_b,
+                        "change": round((dur_b - dur_a) / dur_a, 4),
+                    }
+                )
 
     return degradations

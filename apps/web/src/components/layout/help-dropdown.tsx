@@ -117,9 +117,7 @@ export function HelpDropdown() {
           >
             <ExternalLink className="size-4" />
             GitHub 仓库
-            <span className="ml-auto text-xs text-[var(--text-subtle)]">
-              ↗
-            </span>
+            <span className="ml-auto text-xs text-[var(--text-subtle)]">↗</span>
           </a>
           <a
             className="flex items-center gap-2 px-4 py-2 text-sm text-[var(--text-muted)] transition-colors hover:bg-[var(--surface-subtle)] hover:text-[var(--text)]"
@@ -130,9 +128,7 @@ export function HelpDropdown() {
           >
             <ExternalLink className="size-4" />
             更新日志
-            <span className="ml-auto text-xs text-[var(--text-subtle)]">
-              ↗
-            </span>
+            <span className="ml-auto text-xs text-[var(--text-subtle)]">↗</span>
           </a>
         </div>
       )}

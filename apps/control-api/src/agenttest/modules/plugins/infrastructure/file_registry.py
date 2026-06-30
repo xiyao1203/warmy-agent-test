@@ -60,14 +60,10 @@ class FileBasedPluginRegistry:
         await self.discover()
         return self._cache.get(plugin_id)
 
-    async def has_capability(
-        self, plugin_id: str, capability: PluginCapability
-    ) -> bool:
+    async def has_capability(self, plugin_id: str, capability: PluginCapability) -> bool:
         manifest = await self.get(plugin_id)
         return manifest is not None and capability in manifest.capabilities
 
-    async def list_by_capability(
-        self, capability: PluginCapability
-    ) -> list[PluginManifest]:
+    async def list_by_capability(self, capability: PluginCapability) -> list[PluginManifest]:
         manifests = await self.discover()
         return [m for m in manifests if capability in m.capabilities]

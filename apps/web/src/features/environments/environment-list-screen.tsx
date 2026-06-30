@@ -9,11 +9,7 @@ import {
 } from "./api";
 import { EnvironmentList } from "./environment-list";
 
-export function EnvironmentListScreen({
-  projectId,
-}: {
-  projectId: string;
-}) {
+export function EnvironmentListScreen({ projectId }: { projectId: string }) {
   const envQuery = useQuery({
     queryFn: () => listEnvironmentTemplates(projectId),
     queryKey: ["environment-templates", projectId],

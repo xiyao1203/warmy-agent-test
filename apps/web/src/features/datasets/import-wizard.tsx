@@ -22,10 +22,7 @@ type ImportWizardProps = {
 
 type WizardStep = "select" | "preview" | "result";
 
-export function ImportWizard({
-  onImport,
-  onSuccess,
-}: ImportWizardProps) {
+export function ImportWizard({ onImport, onSuccess }: ImportWizardProps) {
   const [open, setOpen] = useState(false);
   const [step, setStep] = useState<WizardStep>("select");
   const [file, setFile] = useState<File | null>(null);
@@ -149,9 +146,7 @@ export function ImportWizard({
                 {formatSize(file.size)} · {file.type || "未知格式"}
               </p>
             </div>
-            {error && (
-              <p className="text-sm text-[var(--danger)]">{error}</p>
-            )}
+            {error && <p className="text-sm text-[var(--danger)]">{error}</p>}
             <div className="flex justify-end gap-2">
               <Button onClick={handleClose}>取消</Button>
               <Button

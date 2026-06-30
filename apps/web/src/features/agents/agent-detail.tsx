@@ -50,11 +50,31 @@ type AgentDetailProps = {
 type TabKey = "overview" | "config" | "versions" | "runs" | "artifacts";
 
 const TABS: { key: TabKey; icon: React.ReactNode; label: string }[] = [
-  { key: "overview", icon: <Bot aria-hidden="true" className="size-4" />, label: "概览" },
-  { key: "config", icon: <Cog aria-hidden="true" className="size-4" />, label: "配置" },
-  { key: "versions", icon: <Layers aria-hidden="true" className="size-4" />, label: "版本历史" },
-  { key: "runs", icon: <Clock aria-hidden="true" className="size-4" />, label: "运行记录" },
-  { key: "artifacts", icon: <Download aria-hidden="true" className="size-4" />, label: "产物" },
+  {
+    key: "overview",
+    icon: <Bot aria-hidden="true" className="size-4" />,
+    label: "概览",
+  },
+  {
+    key: "config",
+    icon: <Cog aria-hidden="true" className="size-4" />,
+    label: "配置",
+  },
+  {
+    key: "versions",
+    icon: <Layers aria-hidden="true" className="size-4" />,
+    label: "版本历史",
+  },
+  {
+    key: "runs",
+    icon: <Clock aria-hidden="true" className="size-4" />,
+    label: "运行记录",
+  },
+  {
+    key: "artifacts",
+    icon: <Download aria-hidden="true" className="size-4" />,
+    label: "产物",
+  },
 ];
 
 export function AgentDetail({
@@ -70,7 +90,8 @@ export function AgentDetail({
 }: AgentDetailProps) {
   const [publishVersion, setPublishVersion] = useState<AgentVersionResponse>();
   const [publishing, setPublishing] = useState(false);
-  const [selectedVersion, setSelectedVersion] = useState<AgentVersionResponse | null>(null);
+  const [selectedVersion, setSelectedVersion] =
+    useState<AgentVersionResponse | null>(null);
   const [activeTab, setActiveTab] = useState<TabKey>("versions");
 
   if (loading) {
@@ -104,7 +125,9 @@ export function AgentDetail({
       {/* ── 顶部固定区 ─────────────────────────────────────────────────── */}
       <header className="mt-4 flex items-start justify-between gap-4 border-b border-[var(--border)] pb-5">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">{agent.name}</h1>
+          <h1 className="text-2xl font-semibold tracking-tight">
+            {agent.name}
+          </h1>
           <p className="mt-2 text-sm text-[var(--text-muted)]">
             {agent.description || "暂无描述"}
           </p>
@@ -136,11 +159,13 @@ export function AgentDetail({
       {/* ── Tab 内容 ───────────────────────────────────────────────────── */}
       <section className="mt-5">
         {activeTab === "overview" && (
-          <OverviewTab agent={agent} versions={versions} latestPublished={latestPublished} />
+          <OverviewTab
+            agent={agent}
+            versions={versions}
+            latestPublished={latestPublished}
+          />
         )}
-        {activeTab === "config" && (
-          <ConfigTab versions={versions} />
-        )}
+        {activeTab === "config" && <ConfigTab versions={versions} />}
         {activeTab === "versions" && (
           <VersionsTab
             versions={versions}
@@ -170,7 +195,12 @@ export function AgentDetail({
           <DialogTitle>发布 Agent 版本</DialogTitle>
           <DialogDescription>发布后该版本将不可编辑。</DialogDescription>
           <div className="mt-5 flex justify-end gap-2">
-            <Button disabled={publishing} onClick={() => setPublishVersion(undefined)}>取消</Button>
+            <Button
+              disabled={publishing}
+              onClick={() => setPublishVersion(undefined)}
+            >
+              取消
+            </Button>
             <Button
               disabled={publishing}
               loading={publishing}
@@ -224,7 +254,9 @@ function OverviewTab({
         <dl className="mt-3 space-y-2 text-sm">
           <div className="flex justify-between">
             <dt className="text-[var(--text-muted)]">类型</dt>
-            <dd className="font-medium">{agent.agent_type === "canvas" ? "画布 Agent" : "通用 HTTP"}</dd>
+            <dd className="font-medium">
+              {agent.agent_type === "canvas" ? "画布 Agent" : "通用 HTTP"}
+            </dd>
           </div>
           <div className="flex justify-between">
             <dt className="text-[var(--text-muted)]">版本数</dt>
@@ -232,11 +264,15 @@ function OverviewTab({
           </div>
           <div className="flex justify-between">
             <dt className="text-[var(--text-muted)]">已发布</dt>
-            <dd className="font-medium">{versions.filter((v) => v.status === "published").length}</dd>
+            <dd className="font-medium">
+              {versions.filter((v) => v.status === "published").length}
+            </dd>
           </div>
           <div className="flex justify-between">
             <dt className="text-[var(--text-muted)]">草稿</dt>
-            <dd className="font-medium">{versions.filter((v) => v.status === "draft").length}</dd>
+            <dd className="font-medium">
+              {versions.filter((v) => v.status === "draft").length}
+            </dd>
           </div>
         </dl>
       </div>
@@ -245,8 +281,9 @@ function OverviewTab({
         <div className="rounded-[var(--radius-md)] border border-[var(--border)] p-4">
           <h3 className="text-sm font-semibold">当前版本</h3>
           <p className="mt-2 text-sm text-[var(--text-muted)]">
-            版本 v{latestPublished.version_number} · {String(latestPublished.config.model ?? "未指定模型")} ·
-            {" "}{String(latestPublished.config.api_url ?? "未配置 API")}
+            版本 v{latestPublished.version_number} ·{" "}
+            {String(latestPublished.config.model ?? "未指定模型")} ·{" "}
+            {String(latestPublished.config.api_url ?? "未配置 API")}
           </p>
         </div>
       )}
@@ -258,7 +295,9 @@ function ConfigTab({ versions }: { versions: AgentVersionResponse[] }) {
   const current = versions.find((v) => v.status === "published") || versions[0];
   if (!current) {
     return (
-      <p className="text-sm text-[var(--text-muted)]">暂无配置，请先创建版本。</p>
+      <p className="text-sm text-[var(--text-muted)]">
+        暂无配置，请先创建版本。
+      </p>
     );
   }
 
@@ -276,12 +315,16 @@ function ConfigTab({ versions }: { versions: AgentVersionResponse[] }) {
 
   return (
     <div className="rounded-[var(--radius-md)] border border-[var(--border)] p-4">
-      <h3 className="text-sm font-semibold">版本 v{current.version_number} 配置</h3>
+      <h3 className="text-sm font-semibold">
+        版本 v{current.version_number} 配置
+      </h3>
       <dl className="mt-3 space-y-2 text-sm">
         {fields.map((f) => (
           <div key={f.key} className="flex justify-between">
             <dt className="text-[var(--text-muted)]">{f.label}</dt>
-            <dd className="max-w-60 truncate font-medium">{String(config[f.key] ?? "未设置")}</dd>
+            <dd className="max-w-60 truncate font-medium">
+              {String(config[f.key] ?? "未设置")}
+            </dd>
           </div>
         ))}
       </dl>
@@ -318,7 +361,11 @@ function VersionsTab({
 
   function toggleSelect(id: string) {
     setSelectedVersions((prev) =>
-      prev.includes(id) ? prev.filter((v) => v !== id) : prev.length < 2 ? [...prev, id] : prev
+      prev.includes(id)
+        ? prev.filter((v) => v !== id)
+        : prev.length < 2
+          ? [...prev, id]
+          : prev,
     );
   }
 
@@ -385,8 +432,14 @@ function VersionsTab({
 
                 <div>
                   <div className="flex items-center gap-2">
-                    <h2 className="text-sm font-semibold">版本 v{version.version_number}</h2>
-                    <Badge tone={version.status === "published" ? "success" : "warning"}>
+                    <h2 className="text-sm font-semibold">
+                      版本 v{version.version_number}
+                    </h2>
+                    <Badge
+                      tone={
+                        version.status === "published" ? "success" : "warning"
+                      }
+                    >
                       {version.status === "published" ? "已发布" : "草稿"}
                     </Badge>
                     {isCurrent && (
@@ -416,7 +469,10 @@ function VersionsTab({
 
               <div className="flex gap-2">
                 {/* 查看详情 */}
-                <Button onClick={() => onViewDetail(version)} variant="secondary">
+                <Button
+                  onClick={() => onViewDetail(version)}
+                  variant="secondary"
+                >
                   详情
                 </Button>
 
@@ -444,7 +500,9 @@ function VersionsTab({
                 {version.status === "draft" && (
                   <>
                     <AgentVersionDialog
-                      onSubmit={async (payload) => { await onUpdateVersion?.(version.id, payload); }}
+                      onSubmit={async (payload) => {
+                        await onUpdateVersion?.(version.id, payload);
+                      }}
                       triggerLabel={`编辑 v${version.version_number}`}
                       version={version}
                     />
@@ -471,7 +529,12 @@ function VersionsTab({
             v2Id={v2.id}
             v1Number={v1.version_number}
             v2Number={v2.version_number}
-            onFetchDiff={onFetchDiff as (v1Id: string, v2Id: string) => Promise<import("./version-diff-view").VersionDiffResponse>}
+            onFetchDiff={
+              onFetchDiff as (
+                v1Id: string,
+                v2Id: string,
+              ) => Promise<import("./version-diff-view").VersionDiffResponse>
+            }
           />
         </div>
       )}

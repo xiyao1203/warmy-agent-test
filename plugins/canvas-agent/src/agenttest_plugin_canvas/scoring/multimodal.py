@@ -27,9 +27,7 @@ class ScoreResult:
 class MultiModalScorer(Protocol):
     """多模态评分器协议。"""
 
-    async def score_image_prompt_alignment(
-        self, *, image_url: str, prompt: str
-    ) -> ScoreResult:
+    async def score_image_prompt_alignment(self, *, image_url: str, prompt: str) -> ScoreResult:
         """评估图片与 Prompt 的一致性。"""
         ...
 
@@ -46,9 +44,7 @@ class HeuristicMultiModalScorer:
     通过 URL 结构化对比和 Prompt 关键词匹配给出有参考价值的评分。
     """
 
-    async def score_image_prompt_alignment(
-        self, *, image_url: str, prompt: str
-    ) -> ScoreResult:
+    async def score_image_prompt_alignment(self, *, image_url: str, prompt: str) -> ScoreResult:
         keywords = _extract_keywords(prompt)
         url_lower = image_url.lower()
         matched = [kw for kw in keywords if kw in url_lower]
@@ -56,8 +52,7 @@ class HeuristicMultiModalScorer:
         if keywords:
             ratio = len(matched) / len(keywords)
             match_info = (
-                f"Prompt 关键词 {len(keywords)} 个,"
-                f" URL 命中 {len(matched)} 个 ({ratio:.0%})"
+                f"Prompt 关键词 {len(keywords)} 个, URL 命中 {len(matched)} 个 ({ratio:.0%})"
             )
             evidence.append(match_info)
             if matched:

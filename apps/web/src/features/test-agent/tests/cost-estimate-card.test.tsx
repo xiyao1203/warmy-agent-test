@@ -40,60 +40,35 @@ describe("CostEstimateCard", () => {
   });
 
   it("shows warning when over threshold", () => {
-    render(
-      <CostEstimateCard
-        costThreshold={30}
-        estimate={mockEstimate}
-      />,
-    );
+    render(<CostEstimateCard costThreshold={30} estimate={mockEstimate} />);
 
     expect(screen.getByText("超出预算")).toBeInTheDocument();
     expect(screen.getByText(/是否继续执行/)).toBeInTheDocument();
   });
 
   it("does not show warning when under threshold", () => {
-    render(
-      <CostEstimateCard
-        costThreshold={100}
-        estimate={mockEstimate}
-      />,
-    );
+    render(<CostEstimateCard costThreshold={100} estimate={mockEstimate} />);
 
     expect(screen.queryByText("超出预算")).not.toBeInTheDocument();
   });
 
   it("renders confirm button", () => {
     const onConfirm = vi.fn();
-    render(
-      <CostEstimateCard
-        estimate={mockEstimate}
-        onConfirm={onConfirm}
-      />,
-    );
+    render(<CostEstimateCard estimate={mockEstimate} onConfirm={onConfirm} />);
 
     expect(screen.getByText("确认执行")).toBeInTheDocument();
   });
 
   it("renders cancel button", () => {
     const onCancel = vi.fn();
-    render(
-      <CostEstimateCard
-        estimate={mockEstimate}
-        onCancel={onCancel}
-      />,
-    );
+    render(<CostEstimateCard estimate={mockEstimate} onCancel={onCancel} />);
 
     expect(screen.getByText("取消")).toBeInTheDocument();
   });
 
   it("calls onConfirm when confirm button clicked", () => {
     const onConfirm = vi.fn();
-    render(
-      <CostEstimateCard
-        estimate={mockEstimate}
-        onConfirm={onConfirm}
-      />,
-    );
+    render(<CostEstimateCard estimate={mockEstimate} onConfirm={onConfirm} />);
 
     fireEvent.click(screen.getByText("确认执行"));
     expect(onConfirm).toHaveBeenCalled();
@@ -101,12 +76,7 @@ describe("CostEstimateCard", () => {
 
   it("calls onCancel when cancel button clicked", () => {
     const onCancel = vi.fn();
-    render(
-      <CostEstimateCard
-        estimate={mockEstimate}
-        onCancel={onCancel}
-      />,
-    );
+    render(<CostEstimateCard estimate={mockEstimate} onCancel={onCancel} />);
 
     fireEvent.click(screen.getByText("取消"));
     expect(onCancel).toHaveBeenCalled();

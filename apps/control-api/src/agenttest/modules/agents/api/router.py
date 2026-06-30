@@ -454,12 +454,14 @@ def create_agent_router(
         for key in all_keys:
             val1 = dict_v1.get(key)
             val2 = dict_v2.get(key)
-            fields.append({
-                "field": key,
-                "left_value": val1,
-                "right_value": val2,
-                "changed": val1 != val2,
-            })
+            fields.append(
+                {
+                    "field": key,
+                    "left_value": val1,
+                    "right_value": val2,
+                    "changed": val1 != val2,
+                }
+            )
         return {
             "v1": {
                 "id": str(v1.version_id.value),

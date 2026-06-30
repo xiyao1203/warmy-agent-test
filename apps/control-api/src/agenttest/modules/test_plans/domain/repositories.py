@@ -18,6 +18,7 @@ from agenttest.modules.test_plans.domain.entities import (
 
 class TestPlanRepository(Protocol):
     """测试计划聚合根的持久化仓库接口。"""
+
     async def get_by_id(self, test_plan_id: TestPlanId) -> TestPlan | None: ...
 
     async def list_by_project(
@@ -37,6 +38,7 @@ class TestPlanRepository(Protocol):
 
 class TestPlanVersionRepository(Protocol):
     """测试计划版本的持久化仓库接口。"""
+
     async def get_by_id(self, version_id: TestPlanVersionId) -> TestPlanVersion | None: ...
 
     async def list_by_test_plan(self, test_plan_id: TestPlanId) -> list[TestPlanVersion]: ...

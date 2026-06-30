@@ -34,6 +34,7 @@ from agenttest.shared.infrastructure.database import session_scope, transaction_
 
 class SqlAlchemyAgentRepository:
     """Agent 聚合根的 SQLAlchemy 仓库实现。"""
+
     def __init__(self, session_factory: async_sessionmaker[AsyncSession]) -> None:
         self._session_factory = session_factory
 
@@ -98,13 +99,12 @@ class SqlAlchemyAgentRepository:
 
     async def delete(self, agent_id: AgentId) -> None:
         async with transaction_scope(self._session_factory) as session:
-            await session.execute(
-                delete(AgentModel).where(AgentModel.id == agent_id.value)
-            )
+            await session.execute(delete(AgentModel).where(AgentModel.id == agent_id.value))
 
 
 class SqlAlchemyAgentVersionRepository:
     """Agent 版本的 SQLAlchemy 仓库实现。"""
+
     def __init__(self, session_factory: async_sessionmaker[AsyncSession]) -> None:
         self._session_factory = session_factory
 

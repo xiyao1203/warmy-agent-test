@@ -50,13 +50,20 @@ export function TestPlanDetail({
   const [publishVersion, setPublishVersion] =
     useState<TestPlanVersionResponse>();
   const [publishing, setPublishing] = useState(false);
-  const [dryRunResult, setDryRunResult] = useState<Record<string, unknown> | null>(null);
+  const [dryRunResult, setDryRunResult] = useState<Record<
+    string,
+    unknown
+  > | null>(null);
   const [dryRunLoading, setDryRunLoading] = useState(false);
 
   async function handleDryRun(versionId: string) {
     setDryRunLoading(true);
     try {
-      const result = await dryRunTestPlanVersion(plan.project_id, plan.id, versionId);
+      const result = await dryRunTestPlanVersion(
+        plan.project_id,
+        plan.id,
+        versionId,
+      );
       setDryRunResult(result);
     } catch {
       setDryRunResult({ error: "试运行失败" });
@@ -100,7 +107,11 @@ export function TestPlanDetail({
                   <h2 className="text-sm font-semibold">
                     版本 v{version.version_number}
                   </h2>
-                  <Badge tone={version.status === "published" ? "success" : "warning"}>
+                  <Badge
+                    tone={
+                      version.status === "published" ? "success" : "warning"
+                    }
+                  >
                     {version.status === "published" ? "已发布" : "草稿"}
                   </Badge>
                   {version.status === "published" ? (
@@ -115,7 +126,11 @@ export function TestPlanDetail({
                   {String(version.config.timeout ?? 300)} 秒 · 每用例{" "}
                   {String(version.config.runs_per_case ?? 1)} 次 · 阈值{" "}
                   {String(version.config.pass_threshold ?? 1)}
-                  {(version.config as Record<string, unknown>).max_retries != null && Number((version.config as Record<string, unknown>).max_retries) > 0
+                  {(version.config as Record<string, unknown>).max_retries !=
+                    null &&
+                  Number(
+                    (version.config as Record<string, unknown>).max_retries,
+                  ) > 0
                     ? ` · 重试 ${String((version.config as Record<string, unknown>).max_retries)} 次`
                     : ""}
                 </p>
@@ -127,7 +142,9 @@ export function TestPlanDetail({
                       agentVersions={agentVersions}
                       datasetVersions={datasetVersions}
                       environments={environments}
-                      onSubmit={(payload) => onUpdateVersion(version.id, payload)}
+                      onSubmit={(payload) =>
+                        onUpdateVersion(version.id, payload)
+                      }
                       triggerLabel={`编辑版本 v${version.version_number}`}
                       version={version}
                     />
@@ -168,7 +185,12 @@ export function TestPlanDetail({
           <DialogTitle>发布测试计划版本</DialogTitle>
           <DialogDescription>发布后计划版本将不可编辑。</DialogDescription>
           <div className="mt-5 flex justify-end gap-2">
-            <Button disabled={publishing} onClick={() => setPublishVersion(undefined)}>取消</Button>
+            <Button
+              disabled={publishing}
+              onClick={() => setPublishVersion(undefined)}
+            >
+              取消
+            </Button>
             <Button
               disabled={publishing}
               loading={publishing}
@@ -198,26 +220,73 @@ export function TestPlanDetail({
       >
         <DialogContent>
           <DialogTitle>试运行结果</DialogTitle>
-          <DialogDescription>测试计划版本的执行参数预览和有效性校验。</DialogDescription>
+          <DialogDescription>
+            测试计划版本的执行参数预览和有效性校验。
+          </DialogDescription>
           <div className="mt-4 space-y-2 text-sm">
             {dryRunResult?.error ? (
-              <p className="text-[var(--danger)]">{String(dryRunResult.error)}</p>
+              <p className="text-[var(--danger)]">
+                {String(dryRunResult.error)}
+              </p>
             ) : (
               <>
-                <p>状态：<Badge tone={dryRunResult?.status === "published" ? "success" : "warning"}>{String(dryRunResult?.status ?? "")}</Badge></p>
-                {dryRunResult?.preview && typeof dryRunResult.preview === "object" ? (
+                <p>
+                  状态：
+                  <Badge
+                    tone={
+                      dryRunResult?.status === "published"
+                        ? "success"
+                        : "warning"
+                    }
+                  >
+                    {String(dryRunResult?.status ?? "")}
+                  </Badge>
+                </p>
+                {dryRunResult?.preview &&
+                typeof dryRunResult.preview === "object" ? (
                   <div className="rounded border p-3 space-y-1">
-                    {Object.entries(dryRunResult.preview as Record<string, unknown>).map(([k, v]) => (
-                      <p key={k}><span className="text-[var(--text-muted)]">{k}：</span>{v === null ? "无" : String(v)}</p>
+                    {Object.entries(
+                      dryRunResult.preview as Record<string, unknown>,
+                    ).map(([k, v]) => (
+                      <p key={k}>
+                        <span className="text-[var(--text-muted)]">{k}：</span>
+                        {v === null ? "无" : String(v)}
+                      </p>
                     ))}
                   </div>
                 ) : null}
-                {dryRunResult?.validation && typeof dryRunResult.validation === "object" ? (
+                {dryRunResult?.validation &&
+                typeof dryRunResult.validation === "object" ? (
                   <div className="rounded border p-3">
-                    <p>校验结果：<Badge tone={(dryRunResult.validation as Record<string, unknown>).valid ? "success" : "danger"}>{(dryRunResult.validation as Record<string, unknown>).valid ? "通过" : "未通过"}</Badge></p>
-                    {Array.isArray((dryRunResult.validation as Record<string, unknown>).errors) && ((dryRunResult.validation as Record<string, unknown>).errors as string[]).length > 0 ? (
+                    <p>
+                      校验结果：
+                      <Badge
+                        tone={
+                          (dryRunResult.validation as Record<string, unknown>)
+                            .valid
+                            ? "success"
+                            : "danger"
+                        }
+                      >
+                        {(dryRunResult.validation as Record<string, unknown>)
+                          .valid
+                          ? "通过"
+                          : "未通过"}
+                      </Badge>
+                    </p>
+                    {Array.isArray(
+                      (dryRunResult.validation as Record<string, unknown>)
+                        .errors,
+                    ) &&
+                    (
+                      (dryRunResult.validation as Record<string, unknown>)
+                        .errors as string[]
+                    ).length > 0 ? (
                       <ul className="mt-2 list-disc pl-4 text-[var(--danger)]">
-                        {((dryRunResult.validation as Record<string, unknown>).errors as string[]).map((e, i) => (
+                        {(
+                          (dryRunResult.validation as Record<string, unknown>)
+                            .errors as string[]
+                        ).map((e, i) => (
                           <li key={i}>{e}</li>
                         ))}
                       </ul>

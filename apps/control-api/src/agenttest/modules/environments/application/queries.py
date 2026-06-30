@@ -17,6 +17,7 @@ from agenttest.modules.projects.public import ProjectId
 
 class ListEnvironmentTemplatesHandler:
     """查询项目下环境模板列表，支持游标分页。"""
+
     def __init__(
         self,
         *,
@@ -40,6 +41,7 @@ class ListEnvironmentTemplatesHandler:
 
 class GetEnvironmentTemplateHandler:
     """查询单个环境模板详情。"""
+
     def __init__(
         self,
         *,
@@ -49,9 +51,7 @@ class GetEnvironmentTemplateHandler:
         self._templates = templates
         self._project_access = project_access
 
-    async def execute(
-        self, actor: User, template_id: EnvironmentTemplateId
-    ) -> EnvironmentTemplate:
+    async def execute(self, actor: User, template_id: EnvironmentTemplateId) -> EnvironmentTemplate:
         template = await _required(self._templates, template_id)
         await self._project_access.ensure_member(actor, template.project_id)
         return template

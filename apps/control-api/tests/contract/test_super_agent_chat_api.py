@@ -116,9 +116,7 @@ def test_real_conversation_is_persisted_and_restored_from_history() -> None:
         headers={"X-CSRF-Token": "csrf"},
         json={"message": "你好"},
     )
-    restored = client.get(
-        f"/api/v1/projects/{project_id.value}/test-agent/sessions/{session_id}"
-    )
+    restored = client.get(f"/api/v1/projects/{project_id.value}/test-agent/sessions/{session_id}")
     history = client.get(f"/api/v1/projects/{project_id.value}/test-agent/sessions")
 
     assert created.status_code == 201
@@ -158,10 +156,7 @@ def test_model_runner_callback_persists_each_real_delta_and_requires_token() -> 
         headers={"X-CSRF-Token": "csrf"},
     )
     session_id = created.json()["session_id"]
-    url = (
-        f"/api/v1/projects/{project_id.value}/test-agent/sessions/"
-        f"{session_id}/model-events"
-    )
+    url = f"/api/v1/projects/{project_id.value}/test-agent/sessions/{session_id}/model-events"
 
     denied = client.post(url, json={"content": "你"})
     first = client.post(

@@ -29,16 +29,12 @@ def test_gate_requires_name() -> None:
 
 
 def test_gate_validates_threshold() -> None:
-    with pytest.raises(
-        ValueError, match="success_rate_threshold must be between 0 and 1"
-    ):
+    with pytest.raises(ValueError, match="success_rate_threshold must be between 0 and 1"):
         ReleaseGate.create(project_id=uuid4(), name="Test", success_rate_threshold=1.5)
 
 
 def test_gate_validates_security_threshold() -> None:
-    with pytest.raises(
-        ValueError, match="security_threshold must be between 0 and 1"
-    ):
+    with pytest.raises(ValueError, match="security_threshold must be between 0 and 1"):
         ReleaseGate.create(project_id=uuid4(), name="Test", security_threshold=-0.1)
 
 
@@ -68,7 +64,9 @@ def test_gate_evaluate_pass() -> None:
 
 def test_gate_evaluate_fail_low_pass_rate() -> None:
     g = ReleaseGate.create(
-        project_id=uuid4(), name="Gate", success_rate_threshold=0.8,
+        project_id=uuid4(),
+        name="Gate",
+        success_rate_threshold=0.8,
     )
     result = g.evaluate(actual_pass_rate=0.5, critical_passed=True)
     assert result.passed is False
@@ -84,10 +82,14 @@ def test_gate_evaluate_fail_critical() -> None:
 
 def test_gate_evaluate_fail_cost() -> None:
     g = ReleaseGate.create(
-        project_id=uuid4(), name="Gate", cost_limit=50.0,
+        project_id=uuid4(),
+        name="Gate",
+        cost_limit=50.0,
     )
     result = g.evaluate(
-        actual_pass_rate=1.0, critical_passed=True, actual_cost=80.0,
+        actual_pass_rate=1.0,
+        critical_passed=True,
+        actual_cost=80.0,
     )
     assert result.passed is False
     assert any("成本" in f for f in result.failures)
@@ -95,10 +97,14 @@ def test_gate_evaluate_fail_cost() -> None:
 
 def test_gate_evaluate_fail_security() -> None:
     g = ReleaseGate.create(
-        project_id=uuid4(), name="Gate", security_threshold=0.8,
+        project_id=uuid4(),
+        name="Gate",
+        security_threshold=0.8,
     )
     result = g.evaluate(
-        actual_pass_rate=1.0, critical_passed=True, security_score=0.5,
+        actual_pass_rate=1.0,
+        critical_passed=True,
+        security_score=0.5,
     )
     assert result.passed is False
     assert any("安全评分" in f for f in result.failures)

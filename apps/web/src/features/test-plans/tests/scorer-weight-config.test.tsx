@@ -13,10 +13,7 @@ const mockScorers: ScorerWeight[] = [
 describe("ScorerWeightConfig", () => {
   it("renders all scorers", () => {
     render(
-      <ScorerWeightConfig
-        onChange={() => undefined}
-        scorers={mockScorers}
-      />,
+      <ScorerWeightConfig onChange={() => undefined} scorers={mockScorers} />,
     );
 
     expect(screen.getByText("准确性")).toBeInTheDocument();
@@ -26,10 +23,7 @@ describe("ScorerWeightConfig", () => {
 
   it("displays total weight", () => {
     render(
-      <ScorerWeightConfig
-        onChange={() => undefined}
-        scorers={mockScorers}
-      />,
+      <ScorerWeightConfig onChange={() => undefined} scorers={mockScorers} />,
     );
 
     expect(screen.getByText("100%")).toBeInTheDocument();
@@ -54,12 +48,7 @@ describe("ScorerWeightConfig", () => {
 
   it("calls onChange when weight changes", () => {
     const onChange = vi.fn();
-    render(
-      <ScorerWeightConfig
-        onChange={onChange}
-        scorers={mockScorers}
-      />,
-    );
+    render(<ScorerWeightConfig onChange={onChange} scorers={mockScorers} />);
 
     const inputs = screen.getAllByRole("spinbutton");
     fireEvent.change(inputs[0], { target: { value: "50" } });
@@ -83,22 +72,14 @@ describe("ScorerWeightConfig", () => {
   });
 
   it("renders empty state when no scorers", () => {
-    render(
-      <ScorerWeightConfig
-        onChange={() => undefined}
-        scorers={[]}
-      />,
-    );
+    render(<ScorerWeightConfig onChange={() => undefined} scorers={[]} />);
 
     expect(screen.getByText("暂无评分器")).toBeInTheDocument();
   });
 
   it("displays weight percentages", () => {
     render(
-      <ScorerWeightConfig
-        onChange={() => undefined}
-        scorers={mockScorers}
-      />,
+      <ScorerWeightConfig onChange={() => undefined} scorers={mockScorers} />,
     );
 
     const inputs = screen.getAllByRole("spinbutton");

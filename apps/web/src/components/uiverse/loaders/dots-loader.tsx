@@ -16,7 +16,11 @@ const dotSizeClasses = {
   sm: "size-1.5",
 };
 
-export function DotsLoader({ className = "", size = "md", ...props }: DotsLoaderProps) {
+export function DotsLoader({
+  className = "",
+  size = "md",
+  ...props
+}: DotsLoaderProps) {
   return (
     <div
       className={`flex items-center ${sizeClasses[size]} ${className}`}

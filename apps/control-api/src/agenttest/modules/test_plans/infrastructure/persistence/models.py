@@ -20,9 +20,7 @@ from agenttest.shared.infrastructure.database import Base
 class TestPlanModel(Base):
     __tablename__ = "test_plans"
     __table_args__ = (
-        Index(
-            "ix_test_plans_project_created_at", "project_id", text("created_at DESC")
-        ),
+        Index("ix_test_plans_project_created_at", "project_id", text("created_at DESC")),
     )
 
     id: Mapped[UUID] = mapped_column(primary_key=True)
@@ -40,9 +38,7 @@ class TestPlanModel(Base):
 class TestPlanVersionModel(Base):
     __tablename__ = "test_plan_versions"
     __table_args__ = (
-        UniqueConstraint(
-            "test_plan_id", "version_number", name="uq_test_plan_versions_number"
-        ),
+        UniqueConstraint("test_plan_id", "version_number", name="uq_test_plan_versions_number"),
     )
 
     id: Mapped[UUID] = mapped_column(primary_key=True)
@@ -61,9 +57,7 @@ class TestPlanVersionModel(Base):
         ForeignKey("environment_templates.id", ondelete="SET NULL"), nullable=True
     )
     config: Mapped[dict] = mapped_column(JSONB)
-    published_at: Mapped[datetime | None] = mapped_column(
-        DateTime(timezone=True), nullable=True
-    )
+    published_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     created_by: Mapped[UUID] = mapped_column(ForeignKey("users.id"))

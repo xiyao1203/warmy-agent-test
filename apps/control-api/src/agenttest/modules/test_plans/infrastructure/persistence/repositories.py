@@ -32,6 +32,7 @@ from agenttest.shared.infrastructure.database import session_scope, transaction_
 
 class SqlAlchemyTestPlanRepository:
     """测试计划聚合根的 SQLAlchemy 仓库实现。"""
+
     def __init__(self, session_factory: async_sessionmaker[AsyncSession]) -> None:
         self._session_factory = session_factory
 
@@ -101,6 +102,7 @@ class SqlAlchemyTestPlanRepository:
 
 class SqlAlchemyTestPlanVersionRepository:
     """测试计划版本的 SQLAlchemy 仓库实现。"""
+
     def __init__(self, session_factory: async_sessionmaker[AsyncSession]) -> None:
         self._session_factory = session_factory
 
@@ -198,14 +200,10 @@ def _to_version(model: TestPlanVersionModel) -> TestPlanVersion:
         created_at=model.created_at,
         updated_at=model.updated_at,
         agent_version_id=(
-            AgentVersionId(model.agent_version_id)
-            if model.agent_version_id
-            else None
+            AgentVersionId(model.agent_version_id) if model.agent_version_id else None
         ),
         dataset_version_id=(
-            DatasetVersionId(model.dataset_version_id)
-            if model.dataset_version_id
-            else None
+            DatasetVersionId(model.dataset_version_id) if model.dataset_version_id else None
         ),
         environment_template_id=(
             EnvironmentTemplateId(model.environment_template_id)

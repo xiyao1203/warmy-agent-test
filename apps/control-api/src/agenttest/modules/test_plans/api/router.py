@@ -444,9 +444,7 @@ def create_test_plan_router(
             async with dependencies.uow_factory():
                 version = await dependencies.publish_version.execute(
                     actor,
-                    PublishTestPlanVersionCommand(
-                        version_id=TestPlanVersionId(version_id)
-                    ),
+                    PublishTestPlanVersionCommand(version_id=TestPlanVersionId(version_id)),
                 )
         except (
             TestPlanNotFoundError,

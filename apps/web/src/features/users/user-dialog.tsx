@@ -47,7 +47,12 @@ export function CreateUserDialog({
     reset,
     setError,
   } = useForm<CreateUserRequest>({
-    defaultValues: { display_name: "", email: "", initial_password: "", role: "developer" },
+    defaultValues: {
+      display_name: "",
+      email: "",
+      initial_password: "",
+      role: "developer",
+    },
   });
 
   async function submit(values: CreateUserRequest) {
@@ -88,17 +93,36 @@ export function CreateUserDialog({
         </DialogDescription>
         <form className="mt-5 space-y-4" onSubmit={handleSubmit(submit)}>
           {formError ? (
-            <p className="rounded-[var(--radius-sm)] bg-[var(--danger-subtle)] px-3 py-2 text-sm text-[var(--danger)]" role="alert">
+            <p
+              className="rounded-[var(--radius-sm)] bg-[var(--danger-subtle)] px-3 py-2 text-sm text-[var(--danger)]"
+              role="alert"
+            >
               {formError}
             </p>
           ) : null}
-          <Field error={errors.display_name?.message} htmlFor="create-display-name" label="姓名">
-            <Input autoFocus id="create-display-name" {...register("display_name")} />
+          <Field
+            error={errors.display_name?.message}
+            htmlFor="create-display-name"
+            label="姓名"
+          >
+            <Input
+              autoFocus
+              id="create-display-name"
+              {...register("display_name")}
+            />
           </Field>
-          <Field error={errors.email?.message} htmlFor="create-email" label="邮箱">
+          <Field
+            error={errors.email?.message}
+            htmlFor="create-email"
+            label="邮箱"
+          >
             <Input id="create-email" type="email" {...register("email")} />
           </Field>
-          <Field error={errors.initial_password?.message} htmlFor="create-initial-password" label="初始密码">
+          <Field
+            error={errors.initial_password?.message}
+            htmlFor="create-initial-password"
+            label="初始密码"
+          >
             <Input
               autoComplete="new-password"
               id="create-initial-password"
@@ -106,7 +130,11 @@ export function CreateUserDialog({
               {...register("initial_password")}
             />
           </Field>
-          <Field error={errors.role?.message} htmlFor="create-role" label="系统角色">
+          <Field
+            error={errors.role?.message}
+            htmlFor="create-role"
+            label="系统角色"
+          >
             <select
               className="h-9 w-full rounded-[var(--radius-sm)] border border-[var(--border)] bg-[var(--surface)] px-3 text-sm"
               id="create-role"
@@ -158,7 +186,9 @@ function Field({
         {label}
       </label>
       {children}
-      {error ? <p className="mt-1 text-xs text-[var(--danger)]">{error}</p> : null}
+      {error ? (
+        <p className="mt-1 text-xs text-[var(--danger)]">{error}</p>
+      ) : null}
     </div>
   );
 }
@@ -226,22 +256,39 @@ export function EditUserDialog({
       </DialogTrigger>
       <DialogContent>
         <DialogTitle>编辑用户</DialogTitle>
-        <DialogDescription>
-          修改用户姓名、邮箱或系统角色。
-        </DialogDescription>
+        <DialogDescription>修改用户姓名、邮箱或系统角色。</DialogDescription>
         <form className="mt-5 space-y-4" onSubmit={handleSubmit(submit)}>
           {formError ? (
-            <p className="rounded-[var(--radius-sm)] bg-[var(--danger-subtle)] px-3 py-2 text-sm text-[var(--danger)]" role="alert">
+            <p
+              className="rounded-[var(--radius-sm)] bg-[var(--danger-subtle)] px-3 py-2 text-sm text-[var(--danger)]"
+              role="alert"
+            >
               {formError}
             </p>
           ) : null}
-          <Field error={errors.display_name?.message} htmlFor="edit-display-name" label="姓名">
-            <Input autoFocus id="edit-display-name" {...register("display_name")} />
+          <Field
+            error={errors.display_name?.message}
+            htmlFor="edit-display-name"
+            label="姓名"
+          >
+            <Input
+              autoFocus
+              id="edit-display-name"
+              {...register("display_name")}
+            />
           </Field>
-          <Field error={errors.email?.message} htmlFor="edit-email" label="邮箱">
+          <Field
+            error={errors.email?.message}
+            htmlFor="edit-email"
+            label="邮箱"
+          >
             <Input id="edit-email" type="email" {...register("email")} />
           </Field>
-          <Field error={errors.role?.message} htmlFor="edit-role" label="系统角色">
+          <Field
+            error={errors.role?.message}
+            htmlFor="edit-role"
+            label="系统角色"
+          >
             <select
               className="h-9 w-full rounded-[var(--radius-sm)] border border-[var(--border)] bg-[var(--surface)] px-3 text-sm"
               id="edit-role"

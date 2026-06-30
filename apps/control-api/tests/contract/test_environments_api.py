@@ -168,37 +168,22 @@ def test_developer_creates_updates_lists_and_deletes_environment_template() -> N
     )
     template_id = created.json()["id"]
     updated = client.patch(
-        (
-            f"/api/v1/projects/{project_id.value}/environment-templates/"
-            f"{template_id}"
-        ),
+        (f"/api/v1/projects/{project_id.value}/environment-templates/{template_id}"),
         headers=csrf,
         json={"name": "Agent browser sandbox", "config": {"locale": "zh-CN"}},
     )
-    listed = client.get(
-        f"/api/v1/projects/{project_id.value}/environment-templates"
-    )
+    listed = client.get(f"/api/v1/projects/{project_id.value}/environment-templates")
     deleted = client.delete(
-        (
-            f"/api/v1/projects/{project_id.value}/environment-templates/"
-            f"{template_id}"
-        ),
+        (f"/api/v1/projects/{project_id.value}/environment-templates/{template_id}"),
         headers=csrf,
     )
-    missing = client.get(
-        
-            f"/api/v1/projects/{project_id.value}/environment-templates/"
-            f"{template_id}"
-        
-    )
+    missing = client.get(f"/api/v1/projects/{project_id.value}/environment-templates/{template_id}")
 
     assert created.status_code == 201
     assert updated.status_code == 200
     assert updated.json()["name"] == "Agent browser sandbox"
     assert updated.json()["config"] == {"locale": "zh-CN"}
-    assert [item["name"] for item in listed.json()["items"]] == [
-        "Agent browser sandbox"
-    ]
+    assert [item["name"] for item in listed.json()["items"]] == ["Agent browser sandbox"]
     assert deleted.status_code == 204
     assert missing.status_code == 404
 
@@ -214,10 +199,7 @@ def test_environment_template_paths_are_project_isolated() -> None:
 
     other_project_id = ProjectId.new()
     response = client.get(
-        
-            f"/api/v1/projects/{other_project_id.value}/environment-templates/"
-            f"{template_id}"
-        
+        f"/api/v1/projects/{other_project_id.value}/environment-templates/{template_id}"
     )
 
     assert response.status_code == 404
@@ -225,9 +207,7 @@ def test_environment_template_paths_are_project_isolated() -> None:
 
 def test_environment_viewer_non_member_and_csrf_rules() -> None:
     viewer, project_id = client_for(create_user(SystemRole.VIEWER))
-    listed = viewer.get(
-        f"/api/v1/projects/{project_id.value}/environment-templates"
-    )
+    listed = viewer.get(f"/api/v1/projects/{project_id.value}/environment-templates")
     forbidden = viewer.post(
         f"/api/v1/projects/{project_id.value}/environment-templates",
         headers={"X-CSRF-Token": "csrf-token"},
@@ -238,9 +218,7 @@ def test_environment_viewer_non_member_and_csrf_rules() -> None:
         create_user(SystemRole.DEVELOPER),
         member=False,
     )
-    hidden = outsider.get(
-        f"/api/v1/projects/{outsider_project_id.value}/environment-templates"
-    )
+    hidden = outsider.get(f"/api/v1/projects/{outsider_project_id.value}/environment-templates")
     no_csrf = outsider.post(
         f"/api/v1/projects/{outsider_project_id.value}/environment-templates",
         json={"name": "No CSRF", "template_type": "blank"},
@@ -268,8 +246,6 @@ def test_app_factory_registers_environment_router() -> None:
     client = TestClient(app, base_url="https://testserver")
     client.cookies.set("agenttest_session", "session-token")
 
-    response = client.get(
-        f"/api/v1/projects/{project_id.value}/environment-templates"
-    )
+    response = client.get(f"/api/v1/projects/{project_id.value}/environment-templates")
 
     assert response.status_code == 200
