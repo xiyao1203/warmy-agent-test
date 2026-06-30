@@ -5,17 +5,14 @@
 
 from __future__ import annotations
 
-import pytest
-from uuid import UUID, uuid4
 from datetime import UTC, datetime
+from uuid import uuid4
 
-from agenttest.modules.agents.domain.entities import Agent, AgentVersion
+from agenttest.modules.agents.domain.entities import Agent
 from agenttest.modules.agents.domain.value_objects import (
     AgentConfig,
     AgentType,
-    VersionStatus,
 )
-
 
 # ── AgentConfig 扩展字段测试 ─────────────────────────────────────────────────
 

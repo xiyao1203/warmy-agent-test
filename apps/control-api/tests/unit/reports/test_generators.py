@@ -6,10 +6,9 @@ import json
 from datetime import datetime
 
 import pytest
-
+from agenttest.modules.reports.generators.html_report import HtmlReportGenerator
 from agenttest.modules.reports.generators.json_report import JsonReportGenerator
 from agenttest.modules.reports.generators.junit_report import JunitReportGenerator
-from agenttest.modules.reports.generators.html_report import HtmlReportGenerator
 
 
 @pytest.fixture()

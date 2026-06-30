@@ -11,15 +11,10 @@ These tests verify the security properties required by M1 Plan Task 15 Step 2:
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from hashlib import sha256
-from typing import Protocol
-from uuid import UUID
 
 import pytest
-from fastapi.testclient import TestClient
-
 from agenttest.bootstrap.app import create_app
 from agenttest.bootstrap.settings import Settings
 from agenttest.modules.identity.api.router import AuthApiDependencies
@@ -29,22 +24,18 @@ from agenttest.modules.identity.application.commands.login import (
     LoginHandler,
     LoginResult,
 )
-from agenttest.modules.identity.application.queries.current_user import (
-    CurrentUserQuery,
-    CsrfValidator,
-    InvalidSessionError,
-)
 from agenttest.modules.identity.application.ports import (
-    CredentialReader,
-    PasswordHasher,
     SessionRecord,
-    SessionRepository,
-    UserReader,
+)
+from agenttest.modules.identity.application.queries.current_user import (
+    CsrfValidator,
+    CurrentUserQuery,
+    InvalidSessionError,
 )
 from agenttest.modules.identity.domain.entities import User
 from agenttest.modules.identity.domain.value_objects import Email, SystemRole, UserId
 from agenttest.shared.domain.clock import Clock
-
+from fastapi.testclient import TestClient
 
 # ---------------------------------------------------------------------------
 # In-memory fakes
@@ -154,7 +145,7 @@ def make_login_handler(
         credentials=credentials,
         sessions=sessions,
         password_hasher=PlainPasswordHasher(),
-        clock=FixedClock(datetime(2026, 1, 1, tzinfo=timezone.utc)),
+        clock=FixedClock(datetime(2026, 1, 1, tzinfo=UTC)),
         session_ttl=__import__("datetime").timedelta(hours=8),
     )
     return handler, sessions
@@ -208,7 +199,7 @@ class TestSessionTokenHashing:
         query = CurrentUserQuery(
             users=user_reader,
             sessions=sessions,
-            clock=FixedClock(datetime(2026, 1, 1, 1, tzinfo=timezone.utc)),
+            clock=FixedClock(datetime(2026, 1, 1, 1, tzinfo=UTC)),
         )
 
         # Valid token works
@@ -228,7 +219,7 @@ class TestSessionTokenHashing:
 
         validator = CsrfValidator(
             sessions=sessions,
-            clock=FixedClock(datetime(2026, 1, 1, 1, tzinfo=timezone.utc)),
+            clock=FixedClock(datetime(2026, 1, 1, 1, tzinfo=UTC)),
         )
 
         # Valid CSRF token passes
@@ -616,16 +607,14 @@ class TestSessionRevocation:
 
         # Revoke the session
         token_hash = sha256(result.session_token.encode()).hexdigest()
-        await sessions.revoke_by_token_hash(
-            token_hash, datetime(2026, 1, 1, 1, tzinfo=timezone.utc)
-        )
+        await sessions.revoke_by_token_hash(token_hash, datetime(2026, 1, 1, 1, tzinfo=UTC))
 
         # Query should now fail
         user_reader = InMemoryUserReader({result.user.email: result.user})
         query = CurrentUserQuery(
             users=user_reader,
             sessions=sessions,
-            clock=FixedClock(datetime(2026, 1, 1, 1, tzinfo=timezone.utc)),
+            clock=FixedClock(datetime(2026, 1, 1, 1, tzinfo=UTC)),
         )
         with pytest.raises(InvalidSessionError):
             await query.execute(result.session_token)
@@ -642,7 +631,7 @@ class TestSessionRevocation:
         query = CurrentUserQuery(
             users=user_reader,
             sessions=sessions,
-            clock=FixedClock(datetime(2026, 1, 2, tzinfo=timezone.utc)),
+            clock=FixedClock(datetime(2026, 1, 2, tzinfo=UTC)),
         )
         with pytest.raises(InvalidSessionError):
             await query.execute(result.session_token)

@@ -5,7 +5,6 @@ from __future__ import annotations
 from uuid import uuid4
 
 import pytest
-
 from agenttest.modules.agents.domain.entities import (
     Agent,
     AgentId,
@@ -19,7 +18,6 @@ from agenttest.modules.agents.domain.value_objects import (
 )
 from agenttest.modules.identity.public import Email, SystemRole, User, UserId
 from agenttest.modules.projects.public import ProjectId
-
 
 # ── Helpers ────────────────────────────────────────────────────────────────
 

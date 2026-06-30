@@ -6,10 +6,8 @@ import json
 from uuid import uuid4
 
 import pytest
-
 from agenttest.modules.datasets.application.import_export import (
     ImportError,
-    ImportExportService,
     _build_test_case,
 )
 from agenttest.modules.datasets.domain.entities import (

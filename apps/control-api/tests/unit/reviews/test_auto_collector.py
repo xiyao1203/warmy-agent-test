@@ -5,12 +5,10 @@ from __future__ import annotations
 from uuid import uuid4
 
 import pytest
-
 from agenttest.modules.reviews.domain.auto_collector import (
     AutoCollectCriteria,
     AutoCollector,
 )
-from agenttest.modules.reviews.domain.entities import ReviewStatus
 
 
 class TestAutoCollectCriteria:
