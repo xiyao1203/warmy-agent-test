@@ -65,3 +65,15 @@ class CapabilityRegistry:
             for capability in self._capabilities.values()
             if capability.child_agent == child_agent
         ]
+
+    def describe_all(self) -> list[dict[str, object]]:
+        return [
+            {
+                "name": capability.name,
+                "version": capability.version,
+                "child_agent": capability.child_agent,
+                "risk": capability.risk.value,
+                "input_schema": capability.input_model.model_json_schema(),
+            }
+            for capability in self._capabilities.values()
+        ]

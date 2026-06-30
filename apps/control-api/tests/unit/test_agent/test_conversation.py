@@ -17,6 +17,10 @@ class Invoker:
 
     async def invoke(self, config, messages, **kwargs):
         self.messages = messages
+        if kwargs.get("response_format"):
+            return InvocationResult(
+                content='{"actions":[{"child_agent":"execution","capability":"runs.start","arguments":{"test_plan_version_id":"version-1"},"rationale":"用户要求执行"}]}'
+            )
         return InvocationResult(content="你好，我是项目测试 Agent。你想测试哪个智能体？")
 
 
@@ -69,3 +73,30 @@ async def test_conversation_sends_complete_history_to_model() -> None:
         ("assistant", "请提供被测 Agent"),
         ("user", "使用 v2.3"),
     ]
+
+
+@pytest.mark.asyncio
+async def test_conversation_returns_typed_action_intents_from_capability_planner() -> None:
+    from agenttest.modules.test_agent.application.conversation import SuperAgentConversation
+
+    conversation = SuperAgentConversation(
+        Models(),
+        Invoker(),
+        capabilities=[
+            {
+                "name": "runs.start",
+                "child_agent": "execution",
+                "risk": "high_impact",
+                "input_schema": {"type": "object"},
+            }
+        ],
+    )
+
+    response = await conversation.respond(
+        actor(),
+        ProjectId(uuid4()),
+        history=[("user", "执行计划 version-1")],
+    )
+
+    assert response.actions[0].child_agent == "execution"
+    assert response.actions[0].capability == "runs.start"

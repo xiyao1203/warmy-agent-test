@@ -48,3 +48,20 @@ def test_confirmation_can_only_be_decided_once() -> None:
 
     with pytest.raises(ValueError, match="already decided"):
         confirmation.reject(uuid4())
+
+
+def test_waiting_task_can_be_rejected_without_running() -> None:
+    task = entities.AgentTask.create(
+        project_id=uuid4(),
+        session_id=uuid4(),
+        child_agent="security",
+        capability="security_scans.start",
+        risk_level=entities.RiskLevel.HIGH_IMPACT,
+        idempotency_key="security:1",
+        input={"target_url": "https://example.com"},
+    )
+
+    task.reject()
+
+    assert task.status is entities.TaskStatus.CANCELLED
+    assert task.error == {"type": "Rejected", "message": "User rejected operation"}

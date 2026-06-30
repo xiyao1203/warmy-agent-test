@@ -238,6 +238,13 @@ class AgentTask:
         self.status = TaskStatus.FAILED
         self.updated_at = datetime.now(UTC)
 
+    def reject(self) -> None:
+        if self.status is not TaskStatus.WAITING_CONFIRMATION:
+            raise ValueError("Only a task waiting for confirmation can be rejected")
+        self.error = {"type": "Rejected", "message": "User rejected operation"}
+        self.status = TaskStatus.CANCELLED
+        self.updated_at = datetime.now(UTC)
+
 
 @dataclass(slots=True)
 class AgentConfirmation:

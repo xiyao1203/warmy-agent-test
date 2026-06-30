@@ -20,6 +20,10 @@ from agenttest.modules.test_agent.application.conversation import (
     ConversationResponse,
     SuperAgentConversation,
 )
+from agenttest.modules.test_agent.application.orchestrator import (
+    OrchestrationContext,
+    SuperAgentOrchestrator,
+)
 from agenttest.modules.test_agent.application.ports import (
     ChatSessionRepository,
     OrchestrationRepository,
@@ -31,6 +35,10 @@ from agenttest.shared.api.auth_guard import require_actor, require_writer
 class ChatRequest(BaseModel):
     message: str = Field(min_length=1, max_length=20_000)
     session_id: UUID | None = None
+
+
+class ConfirmationDecision(BaseModel):
+    approved: bool
 
 
 class ConversationPort(Protocol):
@@ -51,6 +59,7 @@ def create_test_agent_router(
     check_project,
     settings,
     conversation: SuperAgentConversation | ConversationPort,
+    agent_orchestrator: SuperAgentOrchestrator | None = None,
 ) -> APIRouter:
     router = APIRouter(prefix="/projects/{project_id}/test-agent", tags=["test-agent"])
 
@@ -181,6 +190,27 @@ def create_test_agent_router(
         )
         session.add_assistant_message(result.content)
         await sessions.save(session)
+        if agent_orchestrator is not None:
+            context = OrchestrationContext(actor, ProjectId(project_id), session.session_id.value)
+            for index, intent in enumerate(result.actions):
+                await orchestration.append_event(
+                    ProjectId(project_id),
+                    session.session_id,
+                    "agent.delegated",
+                    {
+                        "child_agent": intent.child_agent,
+                        "capability": intent.capability,
+                    },
+                )
+                await agent_orchestrator.delegate(
+                    context,
+                    intent,
+                    child_agent=intent.child_agent,
+                    idempotency_key=(
+                        f"chat:{session.session_id.value}:"
+                        f"{session.messages[-1].sequence}:{index}:{intent.capability}"
+                    ),
+                )
         await orchestration.append_event(
             ProjectId(project_id),
             session.session_id,
@@ -262,6 +292,37 @@ def create_test_agent_router(
             media_type="text/event-stream",
             headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
         )
+
+    @router.post("/confirmations/{confirmation_id}")
+    async def decide_confirmation(
+        request: Request,
+        project_id: UUID,
+        confirmation_id: UUID,
+        body: ConfirmationDecision,
+        x_csrf_token: str | None = Header(default=None),
+    ):
+        actor = await authorize_write(request, project_id, x_csrf_token)
+        if isinstance(actor, JSONResponse):
+            return actor
+        if agent_orchestrator is None:
+            return JSONResponse(
+                status_code=503,
+                content={"detail": "超级 Agent 编排器未配置"},
+            )
+        session_id = request.query_params.get("session_id")
+        if not session_id:
+            return JSONResponse(status_code=422, content={"detail": "session_id is required"})
+        task = await agent_orchestrator.decide_confirmation(
+            OrchestrationContext(actor, ProjectId(project_id), UUID(session_id)),
+            confirmation_id,
+            approved=body.approved,
+        )
+        return {
+            "task_id": str(task.task_id),
+            "status": task.status.value,
+            "output": task.output,
+            "error": task.error,
+        }
 
     return router
 

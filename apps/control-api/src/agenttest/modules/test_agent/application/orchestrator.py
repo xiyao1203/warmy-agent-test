@@ -102,7 +102,7 @@ class SuperAgentOrchestrator:
         if not approved:
             confirmation.reject(context.actor.user_id.value)
             await self._repository.save_confirmation(confirmation)
-            task.fail({"type": "Rejected", "message": "User rejected operation"})
+            task.reject()
             await self._repository.save_task(task)
             return task
 

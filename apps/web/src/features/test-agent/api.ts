@@ -88,6 +88,30 @@ export function sendChatMessage(
   );
 }
 
+export function decideConfirmation(
+  projectId: string,
+  sessionId: string,
+  confirmationId: string,
+  approved: boolean,
+) {
+  return request<{
+    task_id: string;
+    status: string;
+    output: Record<string, unknown> | null;
+    error: Record<string, unknown> | null;
+  }>(
+    `${base(projectId)}/confirmations/${confirmationId}?session_id=${sessionId}`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...(csrfHeaders() as Record<string, string>),
+      },
+      body: JSON.stringify({ approved }),
+    },
+  );
+}
+
 export function subscribeToSession(
   projectId: string,
   sessionId: string,

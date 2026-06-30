@@ -23,6 +23,7 @@ import type {
   SessionSummary,
 } from "./api";
 import { ContextPanel } from "./context-panel";
+import { ConfirmationCard } from "./confirmation-card";
 import { SessionList } from "./session-list";
 
 export function TestAgentChat({ projectId }: { projectId: string }) {
@@ -178,6 +179,19 @@ export function TestAgentChat({ projectId }: { projectId: string }) {
               {messages.map((message, index) => (
                 <MessageBubble key={`${message.timestamp}:${index}`} message={message} />
               ))}
+              {active
+                ? events
+                    .filter((event) => event.type === "tool.confirmation_required")
+                    .map((event) => (
+                      <ConfirmationCard
+                        event={event}
+                        key={`${event.id}:${String(event.payload.confirmation_id)}`}
+                        onDecided={() => void selectSession(active.session_id)}
+                        projectId={projectId}
+                        sessionId={active.session_id}
+                      />
+                    ))
+                : null}
               {sending ? <TypingIndicator /> : null}
             </div>
           )}
