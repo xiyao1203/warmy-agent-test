@@ -21,6 +21,9 @@ import type {
   ArchiveProjectApiV1ProjectsProjectIdArchivePostData,
   ArchiveProjectApiV1ProjectsProjectIdArchivePostErrors,
   ArchiveProjectApiV1ProjectsProjectIdArchivePostResponses,
+  ArchiveSessionApiV1ProjectsProjectIdTestAgentSessionsSessionIdDeleteData,
+  ArchiveSessionApiV1ProjectsProjectIdTestAgentSessionsSessionIdDeleteErrors,
+  ArchiveSessionApiV1ProjectsProjectIdTestAgentSessionsSessionIdDeleteResponses,
   AutoEnqueueApiV1ProjectsProjectIdReviewsAutoEnqueuePostData,
   AutoEnqueueApiV1ProjectsProjectIdReviewsAutoEnqueuePostErrors,
   AutoEnqueueApiV1ProjectsProjectIdReviewsAutoEnqueuePostResponses,
@@ -33,12 +36,6 @@ import type {
   ChangePasswordApiV1AuthChangePasswordPostData,
   ChangePasswordApiV1AuthChangePasswordPostErrors,
   ChangePasswordApiV1AuthChangePasswordPostResponses,
-  ChatApiV1ProjectsProjectIdTestAgentChatPostData,
-  ChatApiV1ProjectsProjectIdTestAgentChatPostErrors,
-  ChatApiV1ProjectsProjectIdTestAgentChatPostResponses,
-  ConfirmApiV1ProjectsProjectIdTestAgentConfirmPostData,
-  ConfirmApiV1ProjectsProjectIdTestAgentConfirmPostErrors,
-  ConfirmApiV1ProjectsProjectIdTestAgentConfirmPostResponses,
   CreateAccountApiV1ProjectsProjectIdTestAccountsPostData,
   CreateAccountApiV1ProjectsProjectIdTestAccountsPostErrors,
   CreateAccountApiV1ProjectsProjectIdTestAccountsPostResponses,
@@ -75,6 +72,12 @@ import type {
   CreateScorerApiV1ProjectsProjectIdScorersPostData,
   CreateScorerApiV1ProjectsProjectIdScorersPostErrors,
   CreateScorerApiV1ProjectsProjectIdScorersPostResponses,
+  CreateSessionApiV1ProjectsProjectIdTestAgentSessionsPostData,
+  CreateSessionApiV1ProjectsProjectIdTestAgentSessionsPostErrors,
+  CreateSessionApiV1ProjectsProjectIdTestAgentSessionsPostResponses,
+  CreateSessionApiV1ProjectsProjectIdTestAgentTargetChatsPostData,
+  CreateSessionApiV1ProjectsProjectIdTestAgentTargetChatsPostErrors,
+  CreateSessionApiV1ProjectsProjectIdTestAgentTargetChatsPostResponses,
   CreateSnapshotApiV1ProjectsProjectIdEnvironmentsTemplateIdSnapshotsPostData,
   CreateSnapshotApiV1ProjectsProjectIdEnvironmentsTemplateIdSnapshotsPostErrors,
   CreateSnapshotApiV1ProjectsProjectIdEnvironmentsTemplateIdSnapshotsPostResponses,
@@ -95,6 +98,9 @@ import type {
   CreateVersionApiV1ProjectsProjectIdTestPlansPlanIdVersionsPostResponses,
   CurrentUserApiV1AuthMeGetData,
   CurrentUserApiV1AuthMeGetResponses,
+  DecideConfirmationApiV1ProjectsProjectIdTestAgentConfirmationsConfirmationIdPostData,
+  DecideConfirmationApiV1ProjectsProjectIdTestAgentConfirmationsConfirmationIdPostErrors,
+  DecideConfirmationApiV1ProjectsProjectIdTestAgentConfirmationsConfirmationIdPostResponses,
   DeleteAccountApiV1ProjectsProjectIdTestAccountsAccountIdDeleteData,
   DeleteAccountApiV1ProjectsProjectIdTestAccountsAccountIdDeleteErrors,
   DeleteAccountApiV1ProjectsProjectIdTestAccountsAccountIdDeleteResponses,
@@ -197,6 +203,9 @@ import type {
   GetSessionApiV1ProjectsProjectIdTestAgentSessionsSessionIdGetData,
   GetSessionApiV1ProjectsProjectIdTestAgentSessionsSessionIdGetErrors,
   GetSessionApiV1ProjectsProjectIdTestAgentSessionsSessionIdGetResponses,
+  GetSessionApiV1ProjectsProjectIdTestAgentTargetChatsSessionIdGetData,
+  GetSessionApiV1ProjectsProjectIdTestAgentTargetChatsSessionIdGetErrors,
+  GetSessionApiV1ProjectsProjectIdTestAgentTargetChatsSessionIdGetResponses,
   GetSettingsApiV1UsersMeSettingsGetData,
   GetSettingsApiV1UsersMeSettingsGetResponses,
   GetStatisticsApiV1ProjectsProjectIdExperimentsStatisticsGetData,
@@ -231,6 +240,9 @@ import type {
   JudgeVisionApiV1ProjectsProjectIdModelJudgesVisionPostData,
   JudgeVisionApiV1ProjectsProjectIdModelJudgesVisionPostErrors,
   JudgeVisionApiV1ProjectsProjectIdModelJudgesVisionPostResponses,
+  LegacyChatApiV1ProjectsProjectIdTestAgentChatPostData,
+  LegacyChatApiV1ProjectsProjectIdTestAgentChatPostErrors,
+  LegacyChatApiV1ProjectsProjectIdTestAgentChatPostResponses,
   ListAccountsApiV1ProjectsProjectIdTestAccountsGetData,
   ListAccountsApiV1ProjectsProjectIdTestAccountsGetErrors,
   ListAccountsApiV1ProjectsProjectIdTestAccountsGetResponses,
@@ -284,6 +296,12 @@ import type {
   ListScorersApiV1ProjectsProjectIdScorersGetData,
   ListScorersApiV1ProjectsProjectIdScorersGetErrors,
   ListScorersApiV1ProjectsProjectIdScorersGetResponses,
+  ListSessionsApiV1ProjectsProjectIdTestAgentSessionsGetData,
+  ListSessionsApiV1ProjectsProjectIdTestAgentSessionsGetErrors,
+  ListSessionsApiV1ProjectsProjectIdTestAgentSessionsGetResponses,
+  ListSessionsApiV1ProjectsProjectIdTestAgentTargetChatsGetData,
+  ListSessionsApiV1ProjectsProjectIdTestAgentTargetChatsGetErrors,
+  ListSessionsApiV1ProjectsProjectIdTestAgentTargetChatsGetResponses,
   ListSnapshotsApiV1ProjectsProjectIdEnvironmentsTemplateIdSnapshotsGetData,
   ListSnapshotsApiV1ProjectsProjectIdEnvironmentsTemplateIdSnapshotsGetErrors,
   ListSnapshotsApiV1ProjectsProjectIdEnvironmentsTemplateIdSnapshotsGetResponses,
@@ -308,6 +326,9 @@ import type {
   LogoutApiV1AuthLogoutPostData,
   LogoutApiV1AuthLogoutPostErrors,
   LogoutApiV1AuthLogoutPostResponses,
+  PostMessageApiV1ProjectsProjectIdTestAgentSessionsSessionIdMessagesPostData,
+  PostMessageApiV1ProjectsProjectIdTestAgentSessionsSessionIdMessagesPostErrors,
+  PostMessageApiV1ProjectsProjectIdTestAgentSessionsSessionIdMessagesPostResponses,
   ProjectAuditApiV1ProjectsProjectIdAuditGetData,
   ProjectAuditApiV1ProjectsProjectIdAuditGetErrors,
   ProjectAuditApiV1ProjectsProjectIdAuditGetResponses,
@@ -344,6 +365,9 @@ import type {
   ScoreReviewApiV1ProjectsProjectIdReviewsTaskIdScorePostData,
   ScoreReviewApiV1ProjectsProjectIdReviewsTaskIdScorePostErrors,
   ScoreReviewApiV1ProjectsProjectIdReviewsTaskIdScorePostResponses,
+  SendMessageApiV1ProjectsProjectIdTestAgentTargetChatsSessionIdMessagesPostData,
+  SendMessageApiV1ProjectsProjectIdTestAgentTargetChatsSessionIdMessagesPostErrors,
+  SendMessageApiV1ProjectsProjectIdTestAgentTargetChatsSessionIdMessagesPostResponses,
   SetBaselineVersionEndpointApiV1ProjectsProjectIdAgentsAgentIdBaselineVersionPatchData,
   SetBaselineVersionEndpointApiV1ProjectsProjectIdAgentsAgentIdBaselineVersionPatchErrors,
   SetBaselineVersionEndpointApiV1ProjectsProjectIdAgentsAgentIdBaselineVersionPatchResponses,
@@ -356,6 +380,9 @@ import type {
   SkipReviewApiV1ProjectsProjectIdReviewsTaskIdSkipPostData,
   SkipReviewApiV1ProjectsProjectIdReviewsTaskIdSkipPostErrors,
   SkipReviewApiV1ProjectsProjectIdReviewsTaskIdSkipPostResponses,
+  StreamEventsApiV1ProjectsProjectIdTestAgentSessionsSessionIdEventsGetData,
+  StreamEventsApiV1ProjectsProjectIdTestAgentSessionsSessionIdEventsGetErrors,
+  StreamEventsApiV1ProjectsProjectIdTestAgentSessionsSessionIdEventsGetResponses,
   StreamRunProgressApiV1ProjectsProjectIdRunsRunIdStreamGetData,
   StreamRunProgressApiV1ProjectsProjectIdRunsRunIdStreamGetErrors,
   StreamRunProgressApiV1ProjectsProjectIdRunsRunIdStreamGetResponses,
@@ -3048,23 +3075,23 @@ export const updateAccountApiV1ProjectsProjectIdTestAccountsAccountIdPatch = <
   });
 
 /**
- * Chat
+ * Legacy Chat
  */
-export const chatApiV1ProjectsProjectIdTestAgentChatPost = <
+export const legacyChatApiV1ProjectsProjectIdTestAgentChatPost = <
   ThrowOnError extends boolean = false,
 >(
   options: Options<
-    ChatApiV1ProjectsProjectIdTestAgentChatPostData,
+    LegacyChatApiV1ProjectsProjectIdTestAgentChatPostData,
     ThrowOnError
   >,
 ): RequestResult<
-  ChatApiV1ProjectsProjectIdTestAgentChatPostResponses,
-  ChatApiV1ProjectsProjectIdTestAgentChatPostErrors,
+  LegacyChatApiV1ProjectsProjectIdTestAgentChatPostResponses,
+  LegacyChatApiV1ProjectsProjectIdTestAgentChatPostErrors,
   ThrowOnError
 > =>
   (options.client ?? client).post<
-    ChatApiV1ProjectsProjectIdTestAgentChatPostResponses,
-    ChatApiV1ProjectsProjectIdTestAgentChatPostErrors,
+    LegacyChatApiV1ProjectsProjectIdTestAgentChatPostResponses,
+    LegacyChatApiV1ProjectsProjectIdTestAgentChatPostErrors,
     ThrowOnError
   >({
     url: "/api/v1/projects/{project_id}/test-agent/chat",
@@ -3076,32 +3103,96 @@ export const chatApiV1ProjectsProjectIdTestAgentChatPost = <
   });
 
 /**
- * Confirm
+ * Decide Confirmation
  */
-export const confirmApiV1ProjectsProjectIdTestAgentConfirmPost = <
+export const decideConfirmationApiV1ProjectsProjectIdTestAgentConfirmationsConfirmationIdPost =
+  <ThrowOnError extends boolean = false>(
+    options: Options<
+      DecideConfirmationApiV1ProjectsProjectIdTestAgentConfirmationsConfirmationIdPostData,
+      ThrowOnError
+    >,
+  ): RequestResult<
+    DecideConfirmationApiV1ProjectsProjectIdTestAgentConfirmationsConfirmationIdPostResponses,
+    DecideConfirmationApiV1ProjectsProjectIdTestAgentConfirmationsConfirmationIdPostErrors,
+    ThrowOnError
+  > =>
+    (options.client ?? client).post<
+      DecideConfirmationApiV1ProjectsProjectIdTestAgentConfirmationsConfirmationIdPostResponses,
+      DecideConfirmationApiV1ProjectsProjectIdTestAgentConfirmationsConfirmationIdPostErrors,
+      ThrowOnError
+    >({
+      url: "/api/v1/projects/{project_id}/test-agent/confirmations/{confirmation_id}",
+      ...options,
+      headers: {
+        "Content-Type": "application/json",
+        ...options.headers,
+      },
+    });
+
+/**
+ * List Sessions
+ */
+export const listSessionsApiV1ProjectsProjectIdTestAgentSessionsGet = <
   ThrowOnError extends boolean = false,
 >(
   options: Options<
-    ConfirmApiV1ProjectsProjectIdTestAgentConfirmPostData,
+    ListSessionsApiV1ProjectsProjectIdTestAgentSessionsGetData,
     ThrowOnError
   >,
 ): RequestResult<
-  ConfirmApiV1ProjectsProjectIdTestAgentConfirmPostResponses,
-  ConfirmApiV1ProjectsProjectIdTestAgentConfirmPostErrors,
+  ListSessionsApiV1ProjectsProjectIdTestAgentSessionsGetResponses,
+  ListSessionsApiV1ProjectsProjectIdTestAgentSessionsGetErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).get<
+    ListSessionsApiV1ProjectsProjectIdTestAgentSessionsGetResponses,
+    ListSessionsApiV1ProjectsProjectIdTestAgentSessionsGetErrors,
+    ThrowOnError
+  >({ url: "/api/v1/projects/{project_id}/test-agent/sessions", ...options });
+
+/**
+ * Create Session
+ */
+export const createSessionApiV1ProjectsProjectIdTestAgentSessionsPost = <
+  ThrowOnError extends boolean = false,
+>(
+  options: Options<
+    CreateSessionApiV1ProjectsProjectIdTestAgentSessionsPostData,
+    ThrowOnError
+  >,
+): RequestResult<
+  CreateSessionApiV1ProjectsProjectIdTestAgentSessionsPostResponses,
+  CreateSessionApiV1ProjectsProjectIdTestAgentSessionsPostErrors,
   ThrowOnError
 > =>
   (options.client ?? client).post<
-    ConfirmApiV1ProjectsProjectIdTestAgentConfirmPostResponses,
-    ConfirmApiV1ProjectsProjectIdTestAgentConfirmPostErrors,
+    CreateSessionApiV1ProjectsProjectIdTestAgentSessionsPostResponses,
+    CreateSessionApiV1ProjectsProjectIdTestAgentSessionsPostErrors,
     ThrowOnError
-  >({
-    url: "/api/v1/projects/{project_id}/test-agent/confirm",
-    ...options,
-    headers: {
-      "Content-Type": "application/json",
-      ...options.headers,
-    },
-  });
+  >({ url: "/api/v1/projects/{project_id}/test-agent/sessions", ...options });
+
+/**
+ * Archive Session
+ */
+export const archiveSessionApiV1ProjectsProjectIdTestAgentSessionsSessionIdDelete =
+  <ThrowOnError extends boolean = false>(
+    options: Options<
+      ArchiveSessionApiV1ProjectsProjectIdTestAgentSessionsSessionIdDeleteData,
+      ThrowOnError
+    >,
+  ): RequestResult<
+    ArchiveSessionApiV1ProjectsProjectIdTestAgentSessionsSessionIdDeleteResponses,
+    ArchiveSessionApiV1ProjectsProjectIdTestAgentSessionsSessionIdDeleteErrors,
+    ThrowOnError
+  > =>
+    (options.client ?? client).delete<
+      ArchiveSessionApiV1ProjectsProjectIdTestAgentSessionsSessionIdDeleteResponses,
+      ArchiveSessionApiV1ProjectsProjectIdTestAgentSessionsSessionIdDeleteErrors,
+      ThrowOnError
+    >({
+      url: "/api/v1/projects/{project_id}/test-agent/sessions/{session_id}",
+      ...options,
+    });
 
 /**
  * Get Session
@@ -3126,6 +3217,158 @@ export const getSessionApiV1ProjectsProjectIdTestAgentSessionsSessionIdGet = <
     url: "/api/v1/projects/{project_id}/test-agent/sessions/{session_id}",
     ...options,
   });
+
+/**
+ * Stream Events
+ */
+export const streamEventsApiV1ProjectsProjectIdTestAgentSessionsSessionIdEventsGet =
+  <ThrowOnError extends boolean = false>(
+    options: Options<
+      StreamEventsApiV1ProjectsProjectIdTestAgentSessionsSessionIdEventsGetData,
+      ThrowOnError
+    >,
+  ): RequestResult<
+    StreamEventsApiV1ProjectsProjectIdTestAgentSessionsSessionIdEventsGetResponses,
+    StreamEventsApiV1ProjectsProjectIdTestAgentSessionsSessionIdEventsGetErrors,
+    ThrowOnError
+  > =>
+    (options.client ?? client).get<
+      StreamEventsApiV1ProjectsProjectIdTestAgentSessionsSessionIdEventsGetResponses,
+      StreamEventsApiV1ProjectsProjectIdTestAgentSessionsSessionIdEventsGetErrors,
+      ThrowOnError
+    >({
+      url: "/api/v1/projects/{project_id}/test-agent/sessions/{session_id}/events",
+      ...options,
+    });
+
+/**
+ * Post Message
+ */
+export const postMessageApiV1ProjectsProjectIdTestAgentSessionsSessionIdMessagesPost =
+  <ThrowOnError extends boolean = false>(
+    options: Options<
+      PostMessageApiV1ProjectsProjectIdTestAgentSessionsSessionIdMessagesPostData,
+      ThrowOnError
+    >,
+  ): RequestResult<
+    PostMessageApiV1ProjectsProjectIdTestAgentSessionsSessionIdMessagesPostResponses,
+    PostMessageApiV1ProjectsProjectIdTestAgentSessionsSessionIdMessagesPostErrors,
+    ThrowOnError
+  > =>
+    (options.client ?? client).post<
+      PostMessageApiV1ProjectsProjectIdTestAgentSessionsSessionIdMessagesPostResponses,
+      PostMessageApiV1ProjectsProjectIdTestAgentSessionsSessionIdMessagesPostErrors,
+      ThrowOnError
+    >({
+      url: "/api/v1/projects/{project_id}/test-agent/sessions/{session_id}/messages",
+      ...options,
+      headers: {
+        "Content-Type": "application/json",
+        ...options.headers,
+      },
+    });
+
+/**
+ * List Sessions
+ */
+export const listSessionsApiV1ProjectsProjectIdTestAgentTargetChatsGet = <
+  ThrowOnError extends boolean = false,
+>(
+  options: Options<
+    ListSessionsApiV1ProjectsProjectIdTestAgentTargetChatsGetData,
+    ThrowOnError
+  >,
+): RequestResult<
+  ListSessionsApiV1ProjectsProjectIdTestAgentTargetChatsGetResponses,
+  ListSessionsApiV1ProjectsProjectIdTestAgentTargetChatsGetErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).get<
+    ListSessionsApiV1ProjectsProjectIdTestAgentTargetChatsGetResponses,
+    ListSessionsApiV1ProjectsProjectIdTestAgentTargetChatsGetErrors,
+    ThrowOnError
+  >({
+    url: "/api/v1/projects/{project_id}/test-agent/target-chats",
+    ...options,
+  });
+
+/**
+ * Create Session
+ */
+export const createSessionApiV1ProjectsProjectIdTestAgentTargetChatsPost = <
+  ThrowOnError extends boolean = false,
+>(
+  options: Options<
+    CreateSessionApiV1ProjectsProjectIdTestAgentTargetChatsPostData,
+    ThrowOnError
+  >,
+): RequestResult<
+  CreateSessionApiV1ProjectsProjectIdTestAgentTargetChatsPostResponses,
+  CreateSessionApiV1ProjectsProjectIdTestAgentTargetChatsPostErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).post<
+    CreateSessionApiV1ProjectsProjectIdTestAgentTargetChatsPostResponses,
+    CreateSessionApiV1ProjectsProjectIdTestAgentTargetChatsPostErrors,
+    ThrowOnError
+  >({
+    url: "/api/v1/projects/{project_id}/test-agent/target-chats",
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...options.headers,
+    },
+  });
+
+/**
+ * Get Session
+ */
+export const getSessionApiV1ProjectsProjectIdTestAgentTargetChatsSessionIdGet =
+  <ThrowOnError extends boolean = false>(
+    options: Options<
+      GetSessionApiV1ProjectsProjectIdTestAgentTargetChatsSessionIdGetData,
+      ThrowOnError
+    >,
+  ): RequestResult<
+    GetSessionApiV1ProjectsProjectIdTestAgentTargetChatsSessionIdGetResponses,
+    GetSessionApiV1ProjectsProjectIdTestAgentTargetChatsSessionIdGetErrors,
+    ThrowOnError
+  > =>
+    (options.client ?? client).get<
+      GetSessionApiV1ProjectsProjectIdTestAgentTargetChatsSessionIdGetResponses,
+      GetSessionApiV1ProjectsProjectIdTestAgentTargetChatsSessionIdGetErrors,
+      ThrowOnError
+    >({
+      url: "/api/v1/projects/{project_id}/test-agent/target-chats/{session_id}",
+      ...options,
+    });
+
+/**
+ * Send Message
+ */
+export const sendMessageApiV1ProjectsProjectIdTestAgentTargetChatsSessionIdMessagesPost =
+  <ThrowOnError extends boolean = false>(
+    options: Options<
+      SendMessageApiV1ProjectsProjectIdTestAgentTargetChatsSessionIdMessagesPostData,
+      ThrowOnError
+    >,
+  ): RequestResult<
+    SendMessageApiV1ProjectsProjectIdTestAgentTargetChatsSessionIdMessagesPostResponses,
+    SendMessageApiV1ProjectsProjectIdTestAgentTargetChatsSessionIdMessagesPostErrors,
+    ThrowOnError
+  > =>
+    (options.client ?? client).post<
+      SendMessageApiV1ProjectsProjectIdTestAgentTargetChatsSessionIdMessagesPostResponses,
+      SendMessageApiV1ProjectsProjectIdTestAgentTargetChatsSessionIdMessagesPostErrors,
+      ThrowOnError
+    >({
+      url: "/api/v1/projects/{project_id}/test-agent/target-chats/{session_id}/messages",
+      ...options,
+      headers: {
+        "Content-Type": "application/json",
+        ...options.headers,
+      },
+    });
 
 /**
  * List Plans

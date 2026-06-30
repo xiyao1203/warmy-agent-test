@@ -321,13 +321,13 @@ export type ChatRequest = {
 };
 
 /**
- * ConfirmRequest
+ * ConfirmationDecision
  */
-export type ConfirmRequest = {
+export type ConfirmationDecision = {
   /**
-   * Session Id
+   * Approved
    */
-  session_id: string;
+  approved: boolean;
 };
 
 /**
@@ -590,6 +590,20 @@ export type CreateScorerRequest = {
    * Weight
    */
   weight?: number;
+};
+
+/**
+ * CreateTargetChatRequest
+ */
+export type CreateTargetChatRequest = {
+  /**
+   * Agent Version Id
+   */
+  agent_version_id: string;
+  /**
+   * Environment Template Id
+   */
+  environment_template_id?: string | null;
 };
 
 /**
@@ -1397,6 +1411,16 @@ export type SecurityScanRequest = {
    * Scan Type
    */
   scan_type?: "full" | "quick";
+};
+
+/**
+ * SendTargetMessageRequest
+ */
+export type SendTargetMessageRequest = {
+  /**
+   * Message
+   */
+  message: string;
 };
 
 /**
@@ -6426,7 +6450,7 @@ export type UpdateAccountApiV1ProjectsProjectIdTestAccountsAccountIdPatchRespons
     200: unknown;
   };
 
-export type ChatApiV1ProjectsProjectIdTestAgentChatPostData = {
+export type LegacyChatApiV1ProjectsProjectIdTestAgentChatPostData = {
   body: ChatRequest;
   headers?: {
     /**
@@ -6444,25 +6468,96 @@ export type ChatApiV1ProjectsProjectIdTestAgentChatPostData = {
   url: "/api/v1/projects/{project_id}/test-agent/chat";
 };
 
-export type ChatApiV1ProjectsProjectIdTestAgentChatPostErrors = {
+export type LegacyChatApiV1ProjectsProjectIdTestAgentChatPostErrors = {
   /**
    * Validation Error
    */
   422: HttpValidationError;
 };
 
-export type ChatApiV1ProjectsProjectIdTestAgentChatPostError =
-  ChatApiV1ProjectsProjectIdTestAgentChatPostErrors[keyof ChatApiV1ProjectsProjectIdTestAgentChatPostErrors];
+export type LegacyChatApiV1ProjectsProjectIdTestAgentChatPostError =
+  LegacyChatApiV1ProjectsProjectIdTestAgentChatPostErrors[keyof LegacyChatApiV1ProjectsProjectIdTestAgentChatPostErrors];
 
-export type ChatApiV1ProjectsProjectIdTestAgentChatPostResponses = {
+export type LegacyChatApiV1ProjectsProjectIdTestAgentChatPostResponses = {
   /**
    * Successful Response
    */
   200: unknown;
 };
 
-export type ConfirmApiV1ProjectsProjectIdTestAgentConfirmPostData = {
-  body: ConfirmRequest;
+export type DecideConfirmationApiV1ProjectsProjectIdTestAgentConfirmationsConfirmationIdPostData =
+  {
+    body: ConfirmationDecision;
+    headers?: {
+      /**
+       * X-Csrf-Token
+       */
+      "x-csrf-token"?: string | null;
+    };
+    path: {
+      /**
+       * Project Id
+       */
+      project_id: string;
+      /**
+       * Confirmation Id
+       */
+      confirmation_id: string;
+    };
+    query?: never;
+    url: "/api/v1/projects/{project_id}/test-agent/confirmations/{confirmation_id}";
+  };
+
+export type DecideConfirmationApiV1ProjectsProjectIdTestAgentConfirmationsConfirmationIdPostErrors =
+  {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+  };
+
+export type DecideConfirmationApiV1ProjectsProjectIdTestAgentConfirmationsConfirmationIdPostError =
+  DecideConfirmationApiV1ProjectsProjectIdTestAgentConfirmationsConfirmationIdPostErrors[keyof DecideConfirmationApiV1ProjectsProjectIdTestAgentConfirmationsConfirmationIdPostErrors];
+
+export type DecideConfirmationApiV1ProjectsProjectIdTestAgentConfirmationsConfirmationIdPostResponses =
+  {
+    /**
+     * Successful Response
+     */
+    200: unknown;
+  };
+
+export type ListSessionsApiV1ProjectsProjectIdTestAgentSessionsGetData = {
+  body?: never;
+  path: {
+    /**
+     * Project Id
+     */
+    project_id: string;
+  };
+  query?: never;
+  url: "/api/v1/projects/{project_id}/test-agent/sessions";
+};
+
+export type ListSessionsApiV1ProjectsProjectIdTestAgentSessionsGetErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type ListSessionsApiV1ProjectsProjectIdTestAgentSessionsGetError =
+  ListSessionsApiV1ProjectsProjectIdTestAgentSessionsGetErrors[keyof ListSessionsApiV1ProjectsProjectIdTestAgentSessionsGetErrors];
+
+export type ListSessionsApiV1ProjectsProjectIdTestAgentSessionsGetResponses = {
+  /**
+   * Successful Response
+   */
+  200: unknown;
+};
+
+export type CreateSessionApiV1ProjectsProjectIdTestAgentSessionsPostData = {
+  body?: never;
   headers?: {
     /**
      * X-Csrf-Token
@@ -6476,25 +6571,71 @@ export type ConfirmApiV1ProjectsProjectIdTestAgentConfirmPostData = {
     project_id: string;
   };
   query?: never;
-  url: "/api/v1/projects/{project_id}/test-agent/confirm";
+  url: "/api/v1/projects/{project_id}/test-agent/sessions";
 };
 
-export type ConfirmApiV1ProjectsProjectIdTestAgentConfirmPostErrors = {
+export type CreateSessionApiV1ProjectsProjectIdTestAgentSessionsPostErrors = {
   /**
    * Validation Error
    */
   422: HttpValidationError;
 };
 
-export type ConfirmApiV1ProjectsProjectIdTestAgentConfirmPostError =
-  ConfirmApiV1ProjectsProjectIdTestAgentConfirmPostErrors[keyof ConfirmApiV1ProjectsProjectIdTestAgentConfirmPostErrors];
+export type CreateSessionApiV1ProjectsProjectIdTestAgentSessionsPostError =
+  CreateSessionApiV1ProjectsProjectIdTestAgentSessionsPostErrors[keyof CreateSessionApiV1ProjectsProjectIdTestAgentSessionsPostErrors];
 
-export type ConfirmApiV1ProjectsProjectIdTestAgentConfirmPostResponses = {
-  /**
-   * Successful Response
-   */
-  200: unknown;
-};
+export type CreateSessionApiV1ProjectsProjectIdTestAgentSessionsPostResponses =
+  {
+    /**
+     * Successful Response
+     */
+    201: unknown;
+  };
+
+export type ArchiveSessionApiV1ProjectsProjectIdTestAgentSessionsSessionIdDeleteData =
+  {
+    body?: never;
+    headers?: {
+      /**
+       * X-Csrf-Token
+       */
+      "x-csrf-token"?: string | null;
+    };
+    path: {
+      /**
+       * Project Id
+       */
+      project_id: string;
+      /**
+       * Session Id
+       */
+      session_id: string;
+    };
+    query?: never;
+    url: "/api/v1/projects/{project_id}/test-agent/sessions/{session_id}";
+  };
+
+export type ArchiveSessionApiV1ProjectsProjectIdTestAgentSessionsSessionIdDeleteErrors =
+  {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+  };
+
+export type ArchiveSessionApiV1ProjectsProjectIdTestAgentSessionsSessionIdDeleteError =
+  ArchiveSessionApiV1ProjectsProjectIdTestAgentSessionsSessionIdDeleteErrors[keyof ArchiveSessionApiV1ProjectsProjectIdTestAgentSessionsSessionIdDeleteErrors];
+
+export type ArchiveSessionApiV1ProjectsProjectIdTestAgentSessionsSessionIdDeleteResponses =
+  {
+    /**
+     * Successful Response
+     */
+    204: void;
+  };
+
+export type ArchiveSessionApiV1ProjectsProjectIdTestAgentSessionsSessionIdDeleteResponse =
+  ArchiveSessionApiV1ProjectsProjectIdTestAgentSessionsSessionIdDeleteResponses[keyof ArchiveSessionApiV1ProjectsProjectIdTestAgentSessionsSessionIdDeleteResponses];
 
 export type GetSessionApiV1ProjectsProjectIdTestAgentSessionsSessionIdGetData =
   {
@@ -6525,6 +6666,235 @@ export type GetSessionApiV1ProjectsProjectIdTestAgentSessionsSessionIdGetError =
   GetSessionApiV1ProjectsProjectIdTestAgentSessionsSessionIdGetErrors[keyof GetSessionApiV1ProjectsProjectIdTestAgentSessionsSessionIdGetErrors];
 
 export type GetSessionApiV1ProjectsProjectIdTestAgentSessionsSessionIdGetResponses =
+  {
+    /**
+     * Successful Response
+     */
+    200: unknown;
+  };
+
+export type StreamEventsApiV1ProjectsProjectIdTestAgentSessionsSessionIdEventsGetData =
+  {
+    body?: never;
+    headers?: {
+      /**
+       * Last-Event-Id
+       */
+      "Last-Event-ID"?: string | null;
+    };
+    path: {
+      /**
+       * Project Id
+       */
+      project_id: string;
+      /**
+       * Session Id
+       */
+      session_id: string;
+    };
+    query?: never;
+    url: "/api/v1/projects/{project_id}/test-agent/sessions/{session_id}/events";
+  };
+
+export type StreamEventsApiV1ProjectsProjectIdTestAgentSessionsSessionIdEventsGetErrors =
+  {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+  };
+
+export type StreamEventsApiV1ProjectsProjectIdTestAgentSessionsSessionIdEventsGetError =
+  StreamEventsApiV1ProjectsProjectIdTestAgentSessionsSessionIdEventsGetErrors[keyof StreamEventsApiV1ProjectsProjectIdTestAgentSessionsSessionIdEventsGetErrors];
+
+export type StreamEventsApiV1ProjectsProjectIdTestAgentSessionsSessionIdEventsGetResponses =
+  {
+    /**
+     * Successful Response
+     */
+    200: unknown;
+  };
+
+export type PostMessageApiV1ProjectsProjectIdTestAgentSessionsSessionIdMessagesPostData =
+  {
+    body: ChatRequest;
+    headers?: {
+      /**
+       * X-Csrf-Token
+       */
+      "x-csrf-token"?: string | null;
+    };
+    path: {
+      /**
+       * Project Id
+       */
+      project_id: string;
+      /**
+       * Session Id
+       */
+      session_id: string;
+    };
+    query?: never;
+    url: "/api/v1/projects/{project_id}/test-agent/sessions/{session_id}/messages";
+  };
+
+export type PostMessageApiV1ProjectsProjectIdTestAgentSessionsSessionIdMessagesPostErrors =
+  {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+  };
+
+export type PostMessageApiV1ProjectsProjectIdTestAgentSessionsSessionIdMessagesPostError =
+  PostMessageApiV1ProjectsProjectIdTestAgentSessionsSessionIdMessagesPostErrors[keyof PostMessageApiV1ProjectsProjectIdTestAgentSessionsSessionIdMessagesPostErrors];
+
+export type PostMessageApiV1ProjectsProjectIdTestAgentSessionsSessionIdMessagesPostResponses =
+  {
+    /**
+     * Successful Response
+     */
+    200: unknown;
+  };
+
+export type ListSessionsApiV1ProjectsProjectIdTestAgentTargetChatsGetData = {
+  body?: never;
+  path: {
+    /**
+     * Project Id
+     */
+    project_id: string;
+  };
+  query?: never;
+  url: "/api/v1/projects/{project_id}/test-agent/target-chats";
+};
+
+export type ListSessionsApiV1ProjectsProjectIdTestAgentTargetChatsGetErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type ListSessionsApiV1ProjectsProjectIdTestAgentTargetChatsGetError =
+  ListSessionsApiV1ProjectsProjectIdTestAgentTargetChatsGetErrors[keyof ListSessionsApiV1ProjectsProjectIdTestAgentTargetChatsGetErrors];
+
+export type ListSessionsApiV1ProjectsProjectIdTestAgentTargetChatsGetResponses =
+  {
+    /**
+     * Successful Response
+     */
+    200: unknown;
+  };
+
+export type CreateSessionApiV1ProjectsProjectIdTestAgentTargetChatsPostData = {
+  body: CreateTargetChatRequest;
+  headers?: {
+    /**
+     * X-Csrf-Token
+     */
+    "x-csrf-token"?: string | null;
+  };
+  path: {
+    /**
+     * Project Id
+     */
+    project_id: string;
+  };
+  query?: never;
+  url: "/api/v1/projects/{project_id}/test-agent/target-chats";
+};
+
+export type CreateSessionApiV1ProjectsProjectIdTestAgentTargetChatsPostErrors =
+  {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+  };
+
+export type CreateSessionApiV1ProjectsProjectIdTestAgentTargetChatsPostError =
+  CreateSessionApiV1ProjectsProjectIdTestAgentTargetChatsPostErrors[keyof CreateSessionApiV1ProjectsProjectIdTestAgentTargetChatsPostErrors];
+
+export type CreateSessionApiV1ProjectsProjectIdTestAgentTargetChatsPostResponses =
+  {
+    /**
+     * Successful Response
+     */
+    201: unknown;
+  };
+
+export type GetSessionApiV1ProjectsProjectIdTestAgentTargetChatsSessionIdGetData =
+  {
+    body?: never;
+    path: {
+      /**
+       * Project Id
+       */
+      project_id: string;
+      /**
+       * Session Id
+       */
+      session_id: string;
+    };
+    query?: never;
+    url: "/api/v1/projects/{project_id}/test-agent/target-chats/{session_id}";
+  };
+
+export type GetSessionApiV1ProjectsProjectIdTestAgentTargetChatsSessionIdGetErrors =
+  {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+  };
+
+export type GetSessionApiV1ProjectsProjectIdTestAgentTargetChatsSessionIdGetError =
+  GetSessionApiV1ProjectsProjectIdTestAgentTargetChatsSessionIdGetErrors[keyof GetSessionApiV1ProjectsProjectIdTestAgentTargetChatsSessionIdGetErrors];
+
+export type GetSessionApiV1ProjectsProjectIdTestAgentTargetChatsSessionIdGetResponses =
+  {
+    /**
+     * Successful Response
+     */
+    200: unknown;
+  };
+
+export type SendMessageApiV1ProjectsProjectIdTestAgentTargetChatsSessionIdMessagesPostData =
+  {
+    body: SendTargetMessageRequest;
+    headers?: {
+      /**
+       * X-Csrf-Token
+       */
+      "x-csrf-token"?: string | null;
+    };
+    path: {
+      /**
+       * Project Id
+       */
+      project_id: string;
+      /**
+       * Session Id
+       */
+      session_id: string;
+    };
+    query?: never;
+    url: "/api/v1/projects/{project_id}/test-agent/target-chats/{session_id}/messages";
+  };
+
+export type SendMessageApiV1ProjectsProjectIdTestAgentTargetChatsSessionIdMessagesPostErrors =
+  {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+  };
+
+export type SendMessageApiV1ProjectsProjectIdTestAgentTargetChatsSessionIdMessagesPostError =
+  SendMessageApiV1ProjectsProjectIdTestAgentTargetChatsSessionIdMessagesPostErrors[keyof SendMessageApiV1ProjectsProjectIdTestAgentTargetChatsSessionIdMessagesPostErrors];
+
+export type SendMessageApiV1ProjectsProjectIdTestAgentTargetChatsSessionIdMessagesPostResponses =
   {
     /**
      * Successful Response

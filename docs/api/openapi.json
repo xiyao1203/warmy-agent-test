@@ -582,18 +582,17 @@
         "title": "ChatRequest",
         "type": "object"
       },
-      "ConfirmRequest": {
+      "ConfirmationDecision": {
         "properties": {
-          "session_id": {
-            "format": "uuid",
-            "title": "Session Id",
-            "type": "string"
+          "approved": {
+            "title": "Approved",
+            "type": "boolean"
           }
         },
         "required": [
-          "session_id"
+          "approved"
         ],
-        "title": "ConfirmRequest",
+        "title": "ConfirmationDecision",
         "type": "object"
       },
       "CreateAccountRequest": {
@@ -1012,6 +1011,32 @@
           "scorer_type"
         ],
         "title": "CreateScorerRequest",
+        "type": "object"
+      },
+      "CreateTargetChatRequest": {
+        "properties": {
+          "agent_version_id": {
+            "format": "uuid",
+            "title": "Agent Version Id",
+            "type": "string"
+          },
+          "environment_template_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Environment Template Id"
+          }
+        },
+        "required": [
+          "agent_version_id"
+        ],
+        "title": "CreateTargetChatRequest",
         "type": "object"
       },
       "CreateTestCaseRequest": {
@@ -2364,6 +2389,21 @@
           "agent_endpoint"
         ],
         "title": "SecurityScanRequest",
+        "type": "object"
+      },
+      "SendTargetMessageRequest": {
+        "properties": {
+          "message": {
+            "maxLength": 20000,
+            "minLength": 1,
+            "title": "Message",
+            "type": "string"
+          }
+        },
+        "required": [
+          "message"
+        ],
+        "title": "SendTargetMessageRequest",
         "type": "object"
       },
       "SetModelDefaultRequest": {
@@ -10817,7 +10857,7 @@
     },
     "/api/v1/projects/{project_id}/test-agent/chat": {
       "post": {
-        "operationId": "chat_api_v1_projects__project_id__test_agent_chat_post",
+        "operationId": "legacy_chat_api_v1_projects__project_id__test_agent_chat_post",
         "parameters": [
           {
             "in": "path",
@@ -10876,15 +10916,131 @@
             "description": "Validation Error"
           }
         },
-        "summary": "Chat",
+        "summary": "Legacy Chat",
         "tags": [
           "test-agent"
         ]
       }
     },
-    "/api/v1/projects/{project_id}/test-agent/confirm": {
+    "/api/v1/projects/{project_id}/test-agent/confirmations/{confirmation_id}": {
       "post": {
-        "operationId": "confirm_api_v1_projects__project_id__test_agent_confirm_post",
+        "operationId": "decide_confirmation_api_v1_projects__project_id__test_agent_confirmations__confirmation_id__post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Project Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "confirmation_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Confirmation Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "x-csrf-token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Csrf-Token"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConfirmationDecision"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Decide Confirmation",
+        "tags": [
+          "test-agent"
+        ]
+      }
+    },
+    "/api/v1/projects/{project_id}/test-agent/sessions": {
+      "get": {
+        "operationId": "list_sessions_api_v1_projects__project_id__test_agent_sessions_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Project Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Sessions",
+        "tags": [
+          "test-agent"
+        ]
+      },
+      "post": {
+        "operationId": "create_session_api_v1_projects__project_id__test_agent_sessions_post",
         "parameters": [
           {
             "in": "path",
@@ -10913,18 +11069,8 @@
             }
           }
         ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/ConfirmRequest"
-              }
-            }
-          },
-          "required": true
-        },
         "responses": {
-          "200": {
+          "201": {
             "content": {
               "application/json": {
                 "schema": {}
@@ -10943,13 +11089,73 @@
             "description": "Validation Error"
           }
         },
-        "summary": "Confirm",
+        "summary": "Create Session",
         "tags": [
           "test-agent"
         ]
       }
     },
     "/api/v1/projects/{project_id}/test-agent/sessions/{session_id}": {
+      "delete": {
+        "operationId": "archive_session_api_v1_projects__project_id__test_agent_sessions__session_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Project Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "session_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Session Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "x-csrf-token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Csrf-Token"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Archive Session",
+        "tags": [
+          "test-agent"
+        ]
+      },
       "get": {
         "operationId": "get_session_api_v1_projects__project_id__test_agent_sessions__session_id__get",
         "parameters": [
@@ -10997,6 +11203,384 @@
         "summary": "Get Session",
         "tags": [
           "test-agent"
+        ]
+      }
+    },
+    "/api/v1/projects/{project_id}/test-agent/sessions/{session_id}/events": {
+      "get": {
+        "operationId": "stream_events_api_v1_projects__project_id__test_agent_sessions__session_id__events_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Project Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "session_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Session Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Last-Event-ID",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Last-Event-Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Stream Events",
+        "tags": [
+          "test-agent"
+        ]
+      }
+    },
+    "/api/v1/projects/{project_id}/test-agent/sessions/{session_id}/messages": {
+      "post": {
+        "operationId": "post_message_api_v1_projects__project_id__test_agent_sessions__session_id__messages_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Project Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "session_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Session Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "x-csrf-token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Csrf-Token"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChatRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Post Message",
+        "tags": [
+          "test-agent"
+        ]
+      }
+    },
+    "/api/v1/projects/{project_id}/test-agent/target-chats": {
+      "get": {
+        "operationId": "list_sessions_api_v1_projects__project_id__test_agent_target_chats_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Project Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Sessions",
+        "tags": [
+          "target-agent-chat"
+        ]
+      },
+      "post": {
+        "operationId": "create_session_api_v1_projects__project_id__test_agent_target_chats_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Project Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "x-csrf-token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Csrf-Token"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateTargetChatRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Create Session",
+        "tags": [
+          "target-agent-chat"
+        ]
+      }
+    },
+    "/api/v1/projects/{project_id}/test-agent/target-chats/{session_id}": {
+      "get": {
+        "operationId": "get_session_api_v1_projects__project_id__test_agent_target_chats__session_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Project Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "session_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Session Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Session",
+        "tags": [
+          "target-agent-chat"
+        ]
+      }
+    },
+    "/api/v1/projects/{project_id}/test-agent/target-chats/{session_id}/messages": {
+      "post": {
+        "operationId": "send_message_api_v1_projects__project_id__test_agent_target_chats__session_id__messages_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Project Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "session_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Session Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "x-csrf-token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Csrf-Token"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SendTargetMessageRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Send Message",
+        "tags": [
+          "target-agent-chat"
         ]
       }
     },
