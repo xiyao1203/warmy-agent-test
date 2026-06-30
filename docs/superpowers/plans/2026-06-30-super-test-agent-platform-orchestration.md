@@ -19,9 +19,9 @@
 - Modify: `apps/control-api/src/agenttest/modules/model_configs/api/router.py`
 - Modify: `apps/control-api/tests/contract/test_model_configs_api.py`
 
-- [ ] **Step 1: Write a failing contract test** that creates two configurations named `xiaomi` in one project and asserts the second response is RFC 7807 status 409 with `detail == "Model configuration name already exists"` while another project may use the same name.
-- [ ] **Step 2: Run** `uv run pytest apps/control-api/tests/contract/test_model_configs_api.py -q` and verify the duplicate case currently fails with 500.
-- [ ] **Step 3: Add and map a domain error**:
+- [x] **Step 1: Write a failing contract test** that creates two configurations named `xiaomi` in one project and asserts the second response is RFC 7807 status 409 with `detail == "Model configuration name already exists"` while another project may use the same name.
+- [x] **Step 2: Run** `uv run pytest apps/control-api/tests/contract/test_model_configs_api.py -q` and verify the duplicate case currently returns the wrong 400 status.
+- [x] **Step 3: Add and map a domain error**:
 
 ```python
 class ModelConfigNameConflictError(Exception):
@@ -29,7 +29,7 @@ class ModelConfigNameConflictError(Exception):
 ```
 
 Catch PostgreSQL/SQLite `IntegrityError` only around repository insertion, inspect the named project/name constraint, raise `ModelConfigNameConflictError`, and map it to status 409 without returning database text.
-- [ ] **Step 4: Re-run the contract tests** and verify project scoping plus secret redaction.
+- [x] **Step 4: Re-run the contract tests** and verify project scoping plus secret redaction.
 
 ### Task 2: Expand the durable orchestration schema
 
