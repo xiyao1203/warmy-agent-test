@@ -9,7 +9,7 @@ from temporalio.client import Client
 from temporalio.worker import Worker
 
 from .activities import ModelActivities
-from .workflow import ModelInvocationWorkflow
+from .workflow import ModelInvocationWorkflow, ModelStreamingWorkflow
 
 
 async def run() -> None:
@@ -27,8 +27,8 @@ async def run() -> None:
     worker = Worker(
         client,
         task_queue=os.environ.get("AGENTTEST_MODEL_RUNNER_TASK_QUEUE", "agenttest-model-runner"),
-        workflows=[ModelInvocationWorkflow],
-        activities=[activities.invoke_model],
+        workflows=[ModelInvocationWorkflow, ModelStreamingWorkflow],
+        activities=[activities.invoke_model, activities.stream_model],
     )
     await worker.run()
 

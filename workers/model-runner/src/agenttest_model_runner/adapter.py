@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import json
+from collections.abc import AsyncIterator
 from ipaddress import ip_address
 from time import monotonic
 from urllib.parse import urlsplit
@@ -89,6 +91,63 @@ class OpenAICompatibleAdapter:
             )
         except (ValueError, KeyError, IndexError, TypeError) as error:
             raise ModelProtocolError("模型服务响应不符合 OpenAI-Compatible 契约") from error
+
+    async def stream(self, request: ModelInvocationRequest) -> AsyncIterator[str]:
+        """从真实 OpenAI-Compatible SSE 响应中逐块产出内容。"""
+
+        _validate_target(request.base_url, request.allow_private_network)
+        payload: dict[str, object] = {
+            "model": request.model_name,
+            "messages": [{"role": item.role, "content": item.content} for item in request.messages],
+            "temperature": request.temperature,
+            "max_tokens": request.max_tokens,
+            "stream": True,
+        }
+        if request.response_format is not None:
+            payload["response_format"] = request.response_format
+        try:
+            async with httpx.AsyncClient(
+                transport=self._transport,
+                timeout=httpx.Timeout(request.timeout_seconds),
+                follow_redirects=False,
+            ) as client:
+                async with client.stream(
+                    "POST",
+                    f"{request.base_url.rstrip('/')}/chat/completions",
+                    headers={
+                        "Authorization": f"Bearer {request.api_key}",
+                        "Content-Type": "application/json",
+                    },
+                    json=payload,
+                ) as response:
+                    if response.status_code in {401, 403}:
+                        raise ModelPermissionError("模型服务拒绝了项目凭证")
+                    if response.status_code == 429 or response.status_code >= 500:
+                        raise ModelTransientError(
+                            f"模型服务暂时不可用（HTTP {response.status_code}）"
+                        )
+                    if response.status_code >= 400:
+                        raise ModelProtocolError(
+                            f"模型服务返回不支持的状态（HTTP {response.status_code}）"
+                        )
+                    async for line in response.aiter_lines():
+                        if not line.startswith("data:"):
+                            continue
+                        raw = line.removeprefix("data:").strip()
+                        if raw == "[DONE]":
+                            return
+                        try:
+                            body = json.loads(raw)
+                            delta = body["choices"][0]["delta"]
+                            content = delta.get("content") or delta.get("reasoning_content") or ""
+                        except (json.JSONDecodeError, KeyError, IndexError, TypeError) as error:
+                            raise ModelProtocolError(
+                                "模型流式响应不符合 OpenAI-Compatible 契约"
+                            ) from error
+                        if isinstance(content, str) and content:
+                            yield content
+        except (httpx.TimeoutException, httpx.NetworkError) as error:
+            raise ModelTransientError("模型服务网络连接或响应超时") from error
 
 
 def _validate_target(base_url: str, allow_private_network: bool) -> None:

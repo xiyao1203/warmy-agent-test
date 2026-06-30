@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
+import httpx
 from temporalio import activity
 
 from .adapter import OpenAICompatibleAdapter
@@ -46,3 +47,34 @@ class ModelActivities:
             "latency_ms": result.latency_ms,
             "response_id": result.response_id,
         }
+
+    @activity.defn(name="stream-model")
+    async def stream_model(self, payload: dict[str, Any]) -> dict[str, Any]:
+        """逐块读取供应商 SSE，并同步写入 Control API 的持久事件流。"""
+
+        api_key = decrypt_credential(self._master_key, str(payload["encrypted_api_key"]))
+        request = ModelInvocationRequest(
+            base_url=str(payload["base_url"]),
+            model_name=str(payload["model_name"]),
+            api_key=api_key,
+            messages=[
+                ChatMessage(role=item["role"], content=item["content"])
+                for item in payload["messages"]
+            ],
+            timeout_seconds=float(payload.get("timeout_seconds", 60)),
+            max_tokens=int(payload.get("max_tokens", 2048)),
+            allow_private_network=bool(payload.get("allow_private_network", False)),
+        )
+        callback = payload["callback"]
+        chunks: list[str] = []
+        async with httpx.AsyncClient(timeout=10) as client:
+            async for chunk in self._adapter.stream(request):
+                chunks.append(chunk)
+                response = await client.post(
+                    str(callback["url"]),
+                    headers={"X-Internal-Token": str(callback["internal_token"])},
+                    json={"content": chunk},
+                )
+                response.raise_for_status()
+                activity.heartbeat({"chunks": len(chunks)})
+        return {"content": "".join(chunks)}

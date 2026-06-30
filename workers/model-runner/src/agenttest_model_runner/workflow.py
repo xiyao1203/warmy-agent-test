@@ -33,3 +33,26 @@ class ModelInvocationWorkflow:
                 ],
             ),
         )
+
+
+@workflow.defn(name="model-streaming")
+class ModelStreamingWorkflow:
+    """可靠执行单轮流式模型调用。"""
+
+    @workflow.run
+    async def run(self, payload: dict[str, Any]) -> dict[str, Any]:
+        timeout_seconds = max(1, min(int(payload.get("timeout_seconds", 60)) + 15, 315))
+        return await workflow.execute_activity(
+            "stream-model",
+            payload,
+            start_to_close_timeout=timedelta(seconds=timeout_seconds),
+            heartbeat_timeout=timedelta(seconds=15),
+            retry_policy=RetryPolicy(
+                maximum_attempts=3,
+                non_retryable_error_types=[
+                    "ModelPermissionError",
+                    "ModelProtocolError",
+                    "ValueError",
+                ],
+            ),
+        )

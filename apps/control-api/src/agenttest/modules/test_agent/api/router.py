@@ -14,6 +14,7 @@ from agenttest.modules.identity.public import InvalidSessionError, User
 from agenttest.modules.model_configs.public import (
     ModelDefaultMissingError,
     ModelRuntimeUnavailableError,
+    ModelStreamCallback,
 )
 from agenttest.modules.projects.public import ProjectId, ProjectNotFoundError
 from agenttest.modules.test_agent.application.conversation import (
@@ -41,6 +42,10 @@ class ConfirmationDecision(BaseModel):
     approved: bool
 
 
+class ModelDeltaCallback(BaseModel):
+    content: str = Field(min_length=1, max_length=100_000)
+
+
 class ConversationPort(Protocol):
     async def respond(
         self,
@@ -48,6 +53,7 @@ class ConversationPort(Protocol):
         project_id: ProjectId,
         *,
         history: list[tuple[str, str]],
+        stream_callback: ModelStreamCallback | None = None,
     ) -> ConversationResponse: ...
 
 
@@ -116,9 +122,7 @@ def create_test_agent_router(
         session = await sessions.get(ProjectId(project_id), ChatSessionId(session_id))
         if session is None:
             return JSONResponse(status_code=404, content={"detail": "会话不存在"})
-        links = await orchestration.list_artifact_links(
-            ProjectId(project_id), session.session_id
-        )
+        links = await orchestration.list_artifact_links(ProjectId(project_id), session.session_id)
         return _session_response(session, links)
 
     @router.delete("/sessions/{session_id}", status_code=204)
@@ -159,6 +163,14 @@ def create_test_agent_router(
                 actor,
                 ProjectId(project_id),
                 history=[(item.role, item.content) for item in session.messages],
+                stream_callback=ModelStreamCallback(
+                    url=(
+                        f"{str(settings.control_api_base_url).rstrip('/')}/api/v1/"
+                        f"projects/{project_id}/test-agent/sessions/"
+                        f"{session.session_id.value}/model-events"
+                    ),
+                    internal_token=settings.internal_api_token,
+                ),
             )
         except ModelDefaultMissingError:
             await orchestration.append_event(
@@ -182,12 +194,6 @@ def create_test_agent_router(
             )
             return JSONResponse(status_code=422, content={"detail": str(error)})
 
-        await orchestration.append_event(
-            ProjectId(project_id),
-            session.session_id,
-            "message.delta",
-            {"content": result.content},
-        )
         session.add_assistant_message(result.content)
         await sessions.save(session)
         if agent_orchestrator is not None:
@@ -221,10 +227,28 @@ def create_test_agent_router(
                 "latency_ms": result.latency_ms,
             },
         )
-        links = await orchestration.list_artifact_links(
-            ProjectId(project_id), session.session_id
-        )
+        links = await orchestration.list_artifact_links(ProjectId(project_id), session.session_id)
         return _session_response(session, links)
+
+    @router.post("/sessions/{session_id}/model-events", include_in_schema=False)
+    async def append_model_delta(
+        project_id: UUID,
+        session_id: UUID,
+        body: ModelDeltaCallback,
+        x_internal_token: str | None = Header(default=None),
+    ):
+        if x_internal_token != settings.internal_api_token:
+            return JSONResponse(status_code=401, content={"detail": "Invalid internal token"})
+        session = await sessions.get(ProjectId(project_id), ChatSessionId(session_id))
+        if session is None:
+            return JSONResponse(status_code=404, content={"detail": "会话不存在"})
+        event = await orchestration.append_event(
+            ProjectId(project_id),
+            session.session_id,
+            "message.delta",
+            {"content": body.content},
+        )
+        return {"sequence": event.sequence}
 
     @router.post("/sessions/{session_id}/messages")
     async def post_message(
@@ -254,13 +278,9 @@ def create_test_agent_router(
             return actor
         session = None
         if body.session_id is not None:
-            session = await sessions.get(
-                ProjectId(project_id), ChatSessionId(body.session_id)
-            )
+            session = await sessions.get(ProjectId(project_id), ChatSessionId(body.session_id))
         if session is None:
-            session = ChatSession.create(
-                project_id=project_id, created_by=actor.user_id.value
-            )
+            session = ChatSession.create(project_id=project_id, created_by=actor.user_id.value)
             await sessions.save(session)
         return await send_message(actor, project_id, session, body.message)
 

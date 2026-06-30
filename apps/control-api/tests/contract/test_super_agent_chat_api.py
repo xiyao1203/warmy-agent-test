@@ -61,7 +61,7 @@ class Events:
 
 
 class Conversation:
-    async def respond(self, actor, project_id, *, history):
+    async def respond(self, actor, project_id, *, history, stream_callback=None):
         assert history[-1] == ("user", "你好")
         return ConversationResponse(content="你好，请告诉我要测试哪个 Agent。")
 
@@ -147,5 +147,40 @@ def test_event_stream_replays_after_last_event_id() -> None:
     )
 
     assert stream.status_code == 200
-    assert "event: message.delta" in stream.text
+    assert "event: message.completed" in stream.text
     assert "id: 1\n" not in stream.text
+
+
+def test_model_runner_callback_persists_each_real_delta_and_requires_token() -> None:
+    client, project_id = build_client()
+    created = client.post(
+        f"/api/v1/projects/{project_id.value}/test-agent/sessions",
+        headers={"X-CSRF-Token": "csrf"},
+    )
+    session_id = created.json()["session_id"]
+    url = (
+        f"/api/v1/projects/{project_id.value}/test-agent/sessions/"
+        f"{session_id}/model-events"
+    )
+
+    denied = client.post(url, json={"content": "你"})
+    first = client.post(
+        url,
+        headers={"X-Internal-Token": "local-internal-token"},
+        json={"content": "你"},
+    )
+    second = client.post(
+        url,
+        headers={"X-Internal-Token": "local-internal-token"},
+        json={"content": "好"},
+    )
+    stream = client.get(
+        f"/api/v1/projects/{project_id.value}/test-agent/sessions/{session_id}/events",
+        headers={"Last-Event-ID": "1"},
+    )
+
+    assert denied.status_code == 401
+    assert first.status_code == 200
+    assert second.json()["sequence"] == first.json()["sequence"] + 1
+    assert 'data: {"content":"你"}' in stream.text
+    assert 'data: {"content":"好"}' in stream.text
