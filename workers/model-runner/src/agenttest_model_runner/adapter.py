@@ -71,8 +71,12 @@ class OpenAICompatibleAdapter:
             raise ModelProtocolError(f"模型服务返回不支持的状态（HTTP {response.status_code}）")
         try:
             body = response.json()
-            content = body["choices"][0]["message"]["content"]
-            if not isinstance(content, str) or not content:
+            message = body["choices"][0]["message"]
+            # 优先使用 content，如果为空则尝试 reasoning_content（如 MIMO 模型）
+            content = message.get("content") or ""
+            if not content:
+                content = message.get("reasoning_content") or ""
+            if not isinstance(content, str):
                 raise ValueError
             usage = body.get("usage") or {}
             return ModelInvocationResult(
