@@ -252,6 +252,28 @@ install_deps() {
 
 # ── 数据库初始化 ──────────────────────────────────────────────────────────────
 
+ensure_local_env() {
+    header "初始化本地环境配置"
+    local root_env="$SCRIPT_DIR/.env"
+    local api_env="$SCRIPT_DIR/apps/control-api/.env"
+
+    # 运行 ensure_local_env.py 生成根目录 .env
+    if [ ! -f "$root_env" ]; then
+        info "生成本地环境配置..."
+        (cd "$SCRIPT_DIR" && uv run python scripts/ensure_local_env.py "$root_env")
+        ok "本地环境配置已生成"
+    else
+        ok "本地环境配置已存在"
+    fi
+
+    # 确保后端目录也有 .env（Pydantic Settings 使用相对路径）
+    if [ ! -f "$api_env" ]; then
+        cp "$root_env" "$api_env"
+        chmod 600 "$api_env"
+        ok "后端环境配置已同步"
+    fi
+}
+
 init_database() {
     header "初始化数据库"
     if echo "$AGENTTEST_DATABASE_URL" | grep -q "sqlite"; then
@@ -416,30 +438,34 @@ main() {
     echo -e "${BOLD}${CYAN}  ╚═══════════════════════════════════════════╝${NC}"
 
     # 1. 检查依赖
-    header "Step 1/5  检查运行环境"
+    header "Step 1/6  检查运行环境"
     check_node
     check_pnpm
     check_uv
     check_python
 
     # 2. 安装依赖
-    header "Step 2/5  安装项目依赖"
+    header "Step 2/6  安装项目依赖"
     install_deps
 
-    # 3. 检测数据库
-    header "Step 3/5  配置数据库"
+    # 3. 初始化本地环境配置
+    header "Step 3/6  初始化环境配置"
+    ensure_local_env
+
+    # 4. 检测数据库
+    header "Step 4/6  配置数据库"
     check_db_choice
 
-    # 4. 初始化数据库
+    # 5. 初始化数据库
     init_database
 
-    # 5. 启动服务
-    header "Step 4/5  启动服务"
+    # 6. 启动服务
+    header "Step 5/6  启动服务"
     start_backend
     start_frontend
 
     # 显示信息
-    header "Step 5/5  就绪"
+    header "Step 6/6  就绪"
     show_info
 
     # 保持运行
