@@ -3,7 +3,10 @@
 from agenttest.bootstrap.settings import Settings
 from agenttest.modules.identity.public import Email, SystemRole, User, UserId
 from agenttest.modules.model_configs.api.router import create_model_config_router
-from agenttest.modules.model_configs.application.ports import InvocationResult
+from agenttest.modules.model_configs.application.ports import (
+    InvocationResult,
+    ModelRuntimeUnavailableError,
+)
 from agenttest.modules.model_configs.application.service import ModelConfigService
 from agenttest.modules.projects.public import ProjectId, ProjectNotFoundError
 from fastapi import FastAPI
@@ -57,6 +60,11 @@ class Invoker:
         return InvocationResult(content="ok", latency_ms=42, total_tokens=1)
 
 
+class UnavailableInvoker:
+    async def invoke(self, config, messages, **kwargs):
+        raise ModelRuntimeUnavailableError("部署未配置 Model Runner")
+
+
 class Access:
     def __init__(self, project_id: ProjectId) -> None:
         self.project_id = project_id
@@ -84,7 +92,11 @@ class Csrf:
         return None
 
 
-def client_for(role: SystemRole = SystemRole.DEVELOPER) -> tuple[TestClient, ProjectId]:
+def client_for(
+    role: SystemRole = SystemRole.DEVELOPER,
+    *,
+    invoker=None,
+) -> tuple[TestClient, ProjectId]:
     project_id = ProjectId.new()
     actor = User.create(
         user_id=UserId.new(),
@@ -97,7 +109,7 @@ def client_for(role: SystemRole = SystemRole.DEVELOPER) -> tuple[TestClient, Pro
     app.include_router(
         create_model_config_router(
             service=service,
-            invoker=Invoker(),
+            invoker=invoker or Invoker(),
             current_user=CurrentUser(actor),
             csrf=Csrf(),
             settings=Settings(),
@@ -178,3 +190,16 @@ def test_connection_check_uses_real_invocation_port() -> None:
     )
     assert response.status_code == 200
     assert response.json() == {"ok": True, "latency_ms": 42, "total_tokens": 1}
+
+
+def test_connection_check_exposes_safe_runtime_configuration_error() -> None:
+    client, project_id = client_for(invoker=UnavailableInvoker())
+    model_id = create_model(client, project_id).json()["id"]
+
+    response = client.post(
+        f"/api/v1/projects/{project_id.value}/model-configs/{model_id}/test-connection",
+        headers={"X-CSRF-Token": "csrf"},
+    )
+
+    assert response.status_code == 503
+    assert response.json()["detail"] == "部署未配置 Model Runner"

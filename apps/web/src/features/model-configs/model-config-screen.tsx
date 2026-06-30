@@ -7,6 +7,8 @@ import type {
 } from "@warmy/generated-api-client";
 import { useCallback, useEffect, useState } from "react";
 
+import { problemMessage } from "@/lib/api/problem";
+
 import {
   createModelConfig,
   deleteModelConfig,
@@ -37,16 +39,43 @@ export function ModelConfigScreen({ projectId }: { projectId: string }) {
       setModels(nextModels);
       setDefaults(nextDefaults);
       setError("");
-    } catch {
-      setError("请刷新重试；若持续失败，请检查项目权限或 Control API。");
+    } catch (error) {
+      setError(
+        problemMessage(
+          error,
+          "请刷新重试；若持续失败，请检查项目权限或 Control API。",
+        ),
+      );
     } finally {
       setLoading(false);
     }
   }, [projectId]);
 
   useEffect(() => {
-    void reload();
-  }, [reload]);
+    let active = true;
+    void Promise.all([listModelConfigs(projectId), listModelDefaults(projectId)])
+      .then(([nextModels, nextDefaults]) => {
+        if (!active) return;
+        setModels(nextModels);
+        setDefaults(nextDefaults);
+        setError("");
+      })
+      .catch((error: unknown) => {
+        if (!active) return;
+        setError(
+          problemMessage(
+            error,
+            "请刷新重试；若持续失败，请检查项目权限或 Control API。",
+          ),
+        );
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, [projectId]);
 
   return (
     <ModelConfigList

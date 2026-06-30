@@ -81,4 +81,37 @@ describe("ModelConfigList", () => {
       }),
     );
   });
+
+  it("shows the server problem detail when saving fails", async () => {
+    const onCreate = vi
+      .fn()
+      .mockRejectedValue({ detail: "部署未配置模型凭证主密钥", status: 503 });
+    render(
+      <ModelConfigList
+        defaults={[]}
+        models={[]}
+        onCreate={onCreate}
+        onDelete={vi.fn()}
+        onSetDefault={vi.fn()}
+        onTestConnection={vi.fn()}
+        onUpdate={vi.fn()}
+      />,
+    );
+    fireEvent.click(screen.getByRole("button", { name: "添加模型" }));
+    fireEvent.change(screen.getByLabelText("配置名称"), {
+      target: { value: "主模型" },
+    });
+    fireEvent.change(screen.getByLabelText("Base URL"), {
+      target: { value: "https://api.example.com/v1" },
+    });
+    fireEvent.change(screen.getByLabelText("模型 ID"), {
+      target: { value: "model-a" },
+    });
+    fireEvent.change(screen.getByLabelText("API Key"), {
+      target: { value: "secret" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "保存模型" }));
+
+    expect(await screen.findByText("部署未配置模型凭证主密钥")).toBeVisible();
+  });
 });

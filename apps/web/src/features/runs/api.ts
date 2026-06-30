@@ -11,6 +11,7 @@ import {
 import { apiClient } from "@/lib/api/client";
 import { CONTROL_API_URL } from "@/lib/api/base-url";
 import { csrfHeaders } from "@/lib/api/csrf";
+import { responseProblem } from "@/lib/api/problem";
 
 export async function listRuns(projectId: string) {
   const { data } = await listRunsApiV1ProjectsProjectIdRunsGet({
@@ -113,7 +114,7 @@ export async function listArtifacts(
 ): Promise<ArtifactItem[]> {
   const url = `${CONTROL_API_URL}/api/v1/projects/${projectId}/runs/${runId}/artifacts`;
   const res = await fetch(url, { credentials: "include" });
-  if (!res.ok) throw new Error("Failed to list run artifacts");
+  if (!res.ok) throw await responseProblem(res, "加载运行产物失败");
   const data = await res.json();
   return (data as { items?: ArtifactItem[] }).items ?? [];
 }
@@ -140,7 +141,7 @@ export async function uploadArtifact(
     method: "POST",
   });
   if (!res.ok) {
-    throw new Error(`上传失败 (${res.status})`);
+    throw await responseProblem(res, `上传失败 (${res.status})`);
   }
   return (await res.json()) as ArtifactItem;
 }

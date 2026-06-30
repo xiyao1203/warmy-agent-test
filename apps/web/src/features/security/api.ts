@@ -1,5 +1,6 @@
 import { CONTROL_API_URL as API_BASE } from "@/lib/api/base-url";
 import { csrfHeaders } from "@/lib/api/csrf";
+import { responseProblem } from "@/lib/api/problem";
 
 export type Finding = {
   category: string;
@@ -28,7 +29,7 @@ export async function listScans(projectId: string) {
     `${API_BASE}/api/v1/projects/${projectId}/security/scans?limit=50`,
     { credentials: "include" },
   );
-  if (!res.ok) throw new Error("Failed to list scans");
+  if (!res.ok) throw await responseProblem(res, "加载安全扫描失败");
   const data = await res.json();
   return data.items as SecurityScanItem[];
 }
@@ -49,7 +50,7 @@ export async function triggerScan(projectId: string, agentEndpoint: string) {
       }),
     },
   );
-  if (!res.ok) throw new Error("Failed to trigger scan");
+  if (!res.ok) throw await responseProblem(res, "安全扫描启动失败");
   return res.json() as Promise<SecurityScanItem>;
 }
 
@@ -58,6 +59,6 @@ export async function getScan(projectId: string, scanId: string) {
     `${API_BASE}/api/v1/projects/${projectId}/security/scans/${scanId}`,
     { credentials: "include" },
   );
-  if (!res.ok) throw new Error("Failed to get scan");
+  if (!res.ok) throw await responseProblem(res, "加载安全扫描详情失败");
   return res.json() as Promise<SecurityScanItem>;
 }

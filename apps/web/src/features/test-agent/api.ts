@@ -1,5 +1,6 @@
 import { CONTROL_API_URL as API_BASE } from "@/lib/api/base-url";
 import { csrfHeaders } from "@/lib/api/csrf";
+import { responseProblem } from "@/lib/api/problem";
 
 export type ChatMessage = {
   role: "user" | "assistant";
@@ -41,11 +42,8 @@ export async function sendChatMessage(
     },
   );
   if (!res.ok) {
-    const body = (await res.json().catch(() => ({}))) as { detail?: string };
-    throw new TestAgentApiError(
-      res.status,
-      body.detail ?? "测试 Agent 调用失败",
-    );
+    const problem = await responseProblem(res, "测试 Agent 调用失败");
+    throw new TestAgentApiError(problem.status, problem.message);
   }
   return res.json() as Promise<ChatResponse>;
 }
@@ -63,7 +61,10 @@ export async function confirmPlan(projectId: string, sessionId: string) {
       body: JSON.stringify({ session_id: sessionId }),
     },
   );
-  if (!res.ok) throw new Error("Failed to confirm plan");
+  if (!res.ok) {
+    const problem = await responseProblem(res, "确认测试计划失败");
+    throw new TestAgentApiError(problem.status, problem.message);
+  }
   return res.json() as Promise<{
     session_id: string;
     status: string;

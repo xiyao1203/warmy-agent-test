@@ -4,6 +4,7 @@ from typing import Any
 
 from temporalio.client import Client
 
+from agenttest.modules.runs.application.ports import RunRuntimeUnavailableError
 from agenttest.modules.runs.domain.entities import Run, RunCase
 
 RUN_WORKFLOW_NAME = "RunWorkflow"
@@ -48,6 +49,9 @@ class TemporalRunOrchestrator:
         )
         return workflow_id
 
+    async def ensure_available(self) -> None:
+        await self._get_client()
+
     async def cancel(self, run: Run) -> None:
         if run.workflow_id is None:
             return
@@ -59,11 +63,14 @@ class TemporalRunOrchestrator:
         if self._client is not None:
             return self._client
         if self._address is None:
-            raise RuntimeError("Temporal address is required")
-        self._client = await Client.connect(
-            self._address,
-            namespace=self._namespace,
-        )
+            raise RunRuntimeUnavailableError("Run execution runtime is unavailable")
+        try:
+            self._client = await Client.connect(
+                self._address,
+                namespace=self._namespace,
+            )
+        except Exception as error:
+            raise RunRuntimeUnavailableError("Run execution runtime is unavailable") from error
         return self._client
 
 

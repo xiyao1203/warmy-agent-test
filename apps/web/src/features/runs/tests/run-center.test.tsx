@@ -111,6 +111,26 @@ describe("RunCenter", () => {
     );
     expect(screen.getByText("运行中心暂时不可用")).toBeVisible();
   });
+
+  it("shows an actionable runtime error when creating a run fails", async () => {
+    const onCreate = vi.fn().mockRejectedValue({
+      detail: "Run execution runtime is unavailable",
+      status: 503,
+    });
+    render(
+      <RunCenter
+        onCreate={onCreate}
+        planVersions={[{ id: "version-1", label: "客服回归 v2" }]}
+        projectId="project-1"
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "开始运行" }));
+
+    expect(
+      await screen.findByText("Run execution runtime is unavailable"),
+    ).toBeVisible();
+  });
 });
 
 describe("RunDetail", () => {

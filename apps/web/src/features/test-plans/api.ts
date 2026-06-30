@@ -15,6 +15,7 @@ import {
 import { apiClient } from "@/lib/api/client";
 import { CONTROL_API_URL as API_BASE } from "@/lib/api/base-url";
 import { csrfHeaders } from "@/lib/api/csrf";
+import { responseProblem } from "@/lib/api/problem";
 
 export async function listTestPlans(projectId: string) {
   const { data } = await listPlansApiV1ProjectsProjectIdTestPlansGet({
@@ -27,11 +28,15 @@ export async function listTestPlans(projectId: string) {
 }
 
 export async function deleteTestPlan(projectId: string, planId: string) {
-  await fetch(`${API_BASE}/api/v1/projects/${projectId}/test-plans/${planId}`, {
-    method: "DELETE",
-    headers: csrfHeaders() as Record<string, string>,
-    credentials: "include",
-  });
+  const response = await fetch(
+    `${API_BASE}/api/v1/projects/${projectId}/test-plans/${planId}`,
+    {
+      method: "DELETE",
+      headers: csrfHeaders() as Record<string, string>,
+      credentials: "include",
+    },
+  );
+  if (!response.ok) throw await responseProblem(response, "删除测试计划失败");
 }
 
 export async function getTestPlan(projectId: string, planId: string) {
@@ -151,6 +156,6 @@ export async function dryRunTestPlanVersion(
       credentials: "include",
     },
   );
-  if (!res.ok) throw new Error("Dry run failed");
+  if (!res.ok) throw await responseProblem(res, "测试计划试运行失败");
   return res.json();
 }

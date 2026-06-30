@@ -26,6 +26,7 @@ from agenttest.modules.runs.application.commands import (
     CreateRunResult,
     RunNotFoundError,
 )
+from agenttest.modules.runs.application.ports import RunRuntimeUnavailableError
 from agenttest.modules.runs.domain.entities import Run, RunCase, RunCaseId, RunId
 from agenttest.modules.runs.domain.value_objects import RunCaseStatus
 from agenttest.modules.test_plans.public import TestPlanVersionId
@@ -149,6 +150,8 @@ def create_run_router(
             return not_found()
         except PermissionError:
             return denied()
+        except RunRuntimeUnavailableError as error:
+            return problem(503, "Run runtime unavailable", str(error))
         except ValueError as error:
             return invalid(str(error))
         if not result.created:
@@ -210,9 +213,7 @@ def create_run_router(
             )
         except (ProjectNotFoundError, RunNotFoundError):
             return not_found()
-        return RunCaseListResponse(
-            items=[RunCaseResponse.from_domain(case) for case in cases]
-        )
+        return RunCaseListResponse(items=[RunCaseResponse.from_domain(case) for case in cases])
 
     @router.post("/{run_id}/cancel", response_model=RunResponse)
     async def cancel_run(
@@ -235,6 +236,8 @@ def create_run_router(
             return not_found()
         except PermissionError:
             return denied()
+        except RunRuntimeUnavailableError as error:
+            return problem(503, "Run runtime unavailable", str(error))
         except ValueError as error:
             return invalid(str(error))
         return RunResponse.from_domain(run)

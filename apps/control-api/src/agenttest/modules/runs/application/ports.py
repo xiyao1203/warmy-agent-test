@@ -73,6 +73,12 @@ class RunRepository(Protocol):
 
 
 class RunOrchestrator(Protocol):
+    async def ensure_available(self) -> None: ...
+
     async def start(self, run: Run, cases: list[RunCase]) -> str: ...
 
     async def cancel(self, run: Run) -> None: ...
+
+
+class RunRuntimeUnavailableError(RuntimeError):
+    """The configured execution runtime cannot accept Run workflows."""

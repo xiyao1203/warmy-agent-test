@@ -291,7 +291,14 @@ class TestSessionCookieSecurity:
             csrf=StubCsrf(),
         )
         client = TestClient(
-            create_app(settings=Settings(), auth_dependencies=deps),
+            create_app(
+                settings=Settings(
+                    environment="production",
+                    internal_api_token="test-production-internal-token",
+                    session_cookie_secure=True,
+                ),
+                auth_dependencies=deps,
+            ),
             base_url="https://testserver",
         )
 

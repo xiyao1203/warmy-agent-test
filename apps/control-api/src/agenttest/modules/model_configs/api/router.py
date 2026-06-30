@@ -15,7 +15,11 @@ from agenttest.modules.identity.public import InvalidSessionError, User
 from agenttest.modules.projects.public import ProjectId, ProjectNotFoundError
 from agenttest.shared.api.problem_details import ProblemDetails
 
-from ..application.ports import InvocationMessage, ModelInvoker
+from ..application.ports import (
+    InvocationMessage,
+    ModelInvoker,
+    ModelRuntimeUnavailableError,
+)
 from ..application.service import ModelConfigService
 from ..domain.entities import ModelConfigurationId
 from ..domain.errors import (
@@ -221,6 +225,8 @@ def create_model_config_router(
             return problem(404, "Asset not found", "Model configuration was not found")
         except PermissionError:
             return problem(403, "Permission denied", "Project editor access is required")
+        except ModelRuntimeUnavailableError as error:
+            return problem(503, "Model runtime unavailable", str(error))
         except (ConnectionError, TimeoutError, ValueError) as error:
             logger.warning("Model connection test failed: %s", error)
             return problem(
@@ -301,6 +307,8 @@ def create_model_config_router(
             return problem(422, "Invalid judge result", str(error))
         except PermissionError:
             return problem(403, "Permission denied", "Project editor access is required")
+        except ModelRuntimeUnavailableError as error:
+            return problem(503, "Model runtime unavailable", str(error))
         except (ConnectionError, TimeoutError, ValueError) as error:
             logger.warning("Model text judge failed: %s", error)
             return problem(503, "Model judge failed", "Model Runner or provider is unavailable")
@@ -340,6 +348,8 @@ def create_model_config_router(
             return problem(422, "Invalid judge result", str(error))
         except PermissionError:
             return problem(403, "Permission denied", "Project editor access is required")
+        except ModelRuntimeUnavailableError as error:
+            return problem(503, "Model runtime unavailable", str(error))
         except (ConnectionError, TimeoutError) as error:
             logger.warning("Model vision judge failed: %s", error)
             return problem(503, "Model judge failed", "Model Runner or provider is unavailable")
