@@ -15,6 +15,27 @@ class SessionStatus(StrEnum):
     COMPLETED = "completed"
 
 
+class TaskStatus(StrEnum):
+    PENDING = "pending"
+    WAITING_CONFIRMATION = "waiting_confirmation"
+    RUNNING = "running"
+    COMPLETED = "completed"
+    FAILED = "failed"
+    CANCELLED = "cancelled"
+
+
+class RiskLevel(StrEnum):
+    READ = "read"
+    DRAFT_WRITE = "draft_write"
+    HIGH_IMPACT = "high_impact"
+
+
+class ConfirmationStatus(StrEnum):
+    PENDING = "pending"
+    APPROVED = "approved"
+    REJECTED = "rejected"
+
+
 @dataclass(frozen=True, slots=True)
 class ChatSessionId:
     value: UUID
@@ -60,6 +81,9 @@ class ChatSession:
     status: SessionStatus
     created_at: datetime
     updated_at: datetime
+    title: str = "新对话"
+    protocol_version: int = 2
+    archived_at: datetime | None = None
 
     @classmethod
     def create(cls, *, project_id: UUID, created_by: UUID) -> ChatSession:
@@ -74,6 +98,11 @@ class ChatSession:
             created_at=now,
             updated_at=now,
         )
+
+    def archive(self) -> None:
+        now = datetime.now(UTC)
+        self.archived_at = now
+        self.updated_at = now
 
     def add_user_message(self, content: str) -> None:
         """添加用户消息。"""
@@ -125,3 +154,153 @@ class ChatSession:
         """标记会话完成。"""
         self.status = SessionStatus.COMPLETED
         self.updated_at = datetime.now(UTC)
+
+
+@dataclass(slots=True)
+class AgentTask:
+    task_id: UUID
+    project_id: UUID
+    session_id: UUID
+    parent_task_id: UUID | None
+    child_agent: str
+    capability: str
+    risk_level: RiskLevel
+    idempotency_key: str
+    input: dict[str, object]
+    status: TaskStatus
+    output: dict[str, object] | None
+    error: dict[str, object] | None
+    created_at: datetime
+    updated_at: datetime
+
+    @classmethod
+    def create(
+        cls,
+        *,
+        project_id: UUID,
+        session_id: UUID,
+        child_agent: str,
+        capability: str,
+        risk_level: RiskLevel,
+        idempotency_key: str,
+        input: dict[str, object],
+        parent_task_id: UUID | None = None,
+    ) -> AgentTask:
+        if not idempotency_key.strip():
+            raise ValueError("Task idempotency key is required")
+        now = datetime.now(UTC)
+        return cls(
+            task_id=uuid4(),
+            project_id=project_id,
+            session_id=session_id,
+            parent_task_id=parent_task_id,
+            child_agent=child_agent,
+            capability=capability,
+            risk_level=risk_level,
+            idempotency_key=idempotency_key.strip(),
+            input=input,
+            status=(
+                TaskStatus.PENDING
+                if risk_level is RiskLevel.READ
+                else TaskStatus.WAITING_CONFIRMATION
+            ),
+            output=None,
+            error=None,
+            created_at=now,
+            updated_at=now,
+        )
+
+    def approve(self) -> None:
+        if self.status is not TaskStatus.WAITING_CONFIRMATION:
+            raise ValueError("Task is not waiting for confirmation")
+        self.status = TaskStatus.PENDING
+        self.updated_at = datetime.now(UTC)
+
+    def start(self) -> None:
+        if self.status is TaskStatus.WAITING_CONFIRMATION:
+            raise ValueError("Task requires confirmation")
+        if self.status is not TaskStatus.PENDING:
+            raise ValueError("Task cannot start from current status")
+        self.status = TaskStatus.RUNNING
+        self.updated_at = datetime.now(UTC)
+
+    def complete(self, output: dict[str, object]) -> None:
+        if self.status is not TaskStatus.RUNNING:
+            raise ValueError("Only a running task can complete")
+        self.output = output
+        self.status = TaskStatus.COMPLETED
+        self.updated_at = datetime.now(UTC)
+
+    def fail(self, error: dict[str, object]) -> None:
+        if self.status not in {TaskStatus.PENDING, TaskStatus.RUNNING}:
+            raise ValueError("Task cannot fail from current status")
+        self.error = error
+        self.status = TaskStatus.FAILED
+        self.updated_at = datetime.now(UTC)
+
+
+@dataclass(slots=True)
+class AgentConfirmation:
+    confirmation_id: UUID
+    project_id: UUID
+    task_id: UUID
+    status: ConfirmationStatus
+    preview: dict[str, object]
+    decided_by: UUID | None
+    decided_at: datetime | None
+    created_at: datetime
+
+    @classmethod
+    def create(
+        cls,
+        *,
+        project_id: UUID,
+        task_id: UUID,
+        preview: dict[str, object],
+    ) -> AgentConfirmation:
+        return cls(
+            confirmation_id=uuid4(),
+            project_id=project_id,
+            task_id=task_id,
+            status=ConfirmationStatus.PENDING,
+            preview=preview,
+            decided_by=None,
+            decided_at=None,
+            created_at=datetime.now(UTC),
+        )
+
+    def approve(self, actor_id: UUID) -> None:
+        self._decide(ConfirmationStatus.APPROVED, actor_id)
+
+    def reject(self, actor_id: UUID) -> None:
+        self._decide(ConfirmationStatus.REJECTED, actor_id)
+
+    def _decide(self, status: ConfirmationStatus, actor_id: UUID) -> None:
+        if self.status is not ConfirmationStatus.PENDING:
+            raise ValueError("Confirmation already decided")
+        self.status = status
+        self.decided_by = actor_id
+        self.decided_at = datetime.now(UTC)
+
+
+@dataclass(frozen=True, slots=True)
+class AgentEvent:
+    event_id: UUID
+    project_id: UUID
+    session_id: UUID
+    sequence: int
+    event_type: str
+    payload: dict[str, object]
+    created_at: datetime
+
+
+@dataclass(frozen=True, slots=True)
+class ArtifactLink:
+    link_id: UUID
+    project_id: UUID
+    session_id: UUID
+    task_id: UUID
+    artifact_type: str
+    artifact_id: UUID
+    relation: str
+    created_at: datetime
