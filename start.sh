@@ -50,6 +50,11 @@ header() { echo -e "\n${BOLD}${CYAN}═══ $1 ═══${NC}\n"; }
 cleanup() {
     echo ""
     header "正在关闭服务..."
+    if [ -n "$PID_WORKER" ] && kill -0 "$PID_WORKER" 2>/dev/null; then
+        kill "$PID_WORKER" 2>/dev/null || true
+        wait "$PID_WORKER" 2>/dev/null || true
+        ok "Model Runner Worker 已关闭 (PID $PID_WORKER)"
+    fi
     if [ -n "$PID_BACKEND" ] && kill -0 "$PID_BACKEND" 2>/dev/null; then
         kill "$PID_BACKEND" 2>/dev/null || true
         wait "$PID_BACKEND" 2>/dev/null || true
@@ -333,6 +338,34 @@ start_backend() {
     fail "后端启动超时，请检查日志"
 }
 
+# ── Worker 启动 ──────────────────────────────────────────────────────────────
+
+PID_WORKER=""
+
+start_model_runner() {
+    header "启动 Model Runner Worker"
+    cd "$SCRIPT_DIR"
+
+    # 加载 .env 中的环境变量
+    local root_env="$SCRIPT_DIR/.env"
+    if [ -f "$root_env" ]; then
+        set -a
+        # shellcheck disable=SC1090
+        source "$root_env"
+        set +a
+    fi
+
+    uv run python -m agenttest_model_runner.main &
+    PID_WORKER=$!
+    info "等待 Model Runner Worker 启动..."
+    sleep 2
+    if kill -0 "$PID_WORKER" 2>/dev/null; then
+        ok "Model Runner Worker 已就绪 (PID $PID_WORKER)"
+    else
+        warn "Model Runner Worker 启动失败，测试连接功能将不可用"
+    fi
+}
+
 start_frontend() {
     header "启动前端服务 (端口 $FRONTEND_PORT)"
     check_port "$FRONTEND_PORT"
@@ -438,34 +471,35 @@ main() {
     echo -e "${BOLD}${CYAN}  ╚═══════════════════════════════════════════╝${NC}"
 
     # 1. 检查依赖
-    header "Step 1/6  检查运行环境"
+    header "Step 1/7  检查运行环境"
     check_node
     check_pnpm
     check_uv
     check_python
 
     # 2. 安装依赖
-    header "Step 2/6  安装项目依赖"
+    header "Step 2/7  安装项目依赖"
     install_deps
 
     # 3. 初始化本地环境配置
-    header "Step 3/6  初始化环境配置"
+    header "Step 3/7  初始化环境配置"
     ensure_local_env
 
     # 4. 检测数据库
-    header "Step 4/6  配置数据库"
+    header "Step 4/7  配置数据库"
     check_db_choice
 
     # 5. 初始化数据库
     init_database
 
     # 6. 启动服务
-    header "Step 5/6  启动服务"
+    header "Step 5/7  启动服务"
     start_backend
+    start_model_runner
     start_frontend
 
     # 显示信息
-    header "Step 6/6  就绪"
+    header "Step 6/7  就绪"
     show_info
 
     # 保持运行
