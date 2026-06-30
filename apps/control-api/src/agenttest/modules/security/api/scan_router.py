@@ -2,23 +2,36 @@
 
 from __future__ import annotations
 
+from typing import Literal
 from uuid import UUID
 
 from fastapi import APIRouter, Header, Request
 from fastapi.responses import JSONResponse
+from pydantic import AnyHttpUrl, BaseModel
 
 from agenttest.modules.identity.public import InvalidSessionError
 from agenttest.modules.projects.public import ProjectNotFoundError
-from agenttest.modules.security.adapters import create_scanner
+from agenttest.modules.security.adapters import ScannerUnavailableError, create_scanner
+from agenttest.modules.security.adapters.promptfoo_adapter import PromptfooOutputError
 from agenttest.modules.security.domain.models import ScanStatus, SecurityScan
+from agenttest.modules.security.domain.targets import validate_agent_endpoint
 from agenttest.modules.security.infrastructure.repositories import (
     SqlAlchemySecurityScanRepository,
 )
 from agenttest.shared.api.auth_guard import require_actor, require_writer
 
 
+class SecurityScanRequest(BaseModel):
+    agent_endpoint: AnyHttpUrl
+    scan_type: Literal["full", "quick"] = "full"
+
+
 def create_security_scan_router(
-    *, session_factory, actor_for, check_project, settings,
+    *,
+    session_factory,
+    actor_for,
+    check_project,
+    settings,
 ) -> APIRouter:
     router = APIRouter(
         prefix="/projects/{project_id}/security/scans",
@@ -46,6 +59,7 @@ def create_security_scan_router(
     async def trigger_scan(
         request: Request,
         project_id: UUID,
+        body: SecurityScanRequest,
         x_csrf_token: str | None = Header(default=None),
     ):
         """触发安全扫描。"""
@@ -59,26 +73,39 @@ def create_security_scan_router(
         except InvalidSessionError:
             return JSONResponse(status_code=401, content={"detail": "认证失败"})
 
-        scan = SecurityScan.create(project_id=project_id, scan_type="promptfoo")
+        scan = SecurityScan.create(project_id=project_id, scan_type=body.scan_type)
         await repo.add(scan)
 
         scan.status = ScanStatus.RUNNING
         await repo.save(scan)
 
-        # 通过适配器执行扫描（自动选择 Promptfoo 或 Mock）
-        scanner = create_scanner()
         try:
-            findings = await scanner.run_scan(scan_type="full")
+            validate_agent_endpoint(
+                str(body.agent_endpoint),
+                allow_private_network=settings.security_scan_allow_private_network,
+            )
+            scanner = create_scanner(settings.promptfoo_bin)
+            findings = await scanner.run_scan(
+                agent_endpoint=str(body.agent_endpoint),
+                scan_type=body.scan_type,
+            )
             scan.complete(findings)
-        except Exception as e:
-            scan.fail(str(e))
+        except (
+            ScannerUnavailableError,
+            PromptfooOutputError,
+            RuntimeError,
+            ValueError,
+        ) as error:
+            scan.fail(str(error))
         await repo.save(scan)
 
         return _scan_to_dict(scan)
 
     @router.get("/{scan_id}")
     async def get_scan(
-        request: Request, project_id: UUID, scan_id: UUID,
+        request: Request,
+        project_id: UUID,
+        scan_id: UUID,
     ):
         actor = await require_actor(request, actor_for, settings)
         if isinstance(actor, JSONResponse):

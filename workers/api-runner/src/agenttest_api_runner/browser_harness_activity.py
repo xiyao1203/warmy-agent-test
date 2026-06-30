@@ -9,6 +9,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 
 from temporalio import activity
+from temporalio.exceptions import ApplicationError
 
 
 @dataclass
@@ -41,13 +42,7 @@ async def capture_page_snapshot(inp: CapturePageInput) -> PageSnapshot:
     try:
         from browser_harness.helpers import goto_url, js, page_info  # type: ignore[import-untyped]
     except ImportError:
-        return PageSnapshot(
-            url=inp.url,
-            title="browser-harness 不可用",
-            dom_nodes=0,
-            html_preview="",
-            errors=["browser-harness 未安装或 Chrome 未启动"],
-        )
+        raise_runtime_unavailable()
 
     errors: list[str] = []
     try:
@@ -73,4 +68,13 @@ async def capture_page_snapshot(inp: CapturePageInput) -> PageSnapshot:
         dom_nodes=dom_nodes,
         html_preview=html,
         errors=errors,
+    )
+
+
+def raise_runtime_unavailable() -> None:
+    """将部署依赖缺失标记为不可重试的执行错误。"""
+    raise ApplicationError(
+        "Browser Harness runtime is not installed",
+        type="DependencyUnavailable",
+        non_retryable=True,
     )

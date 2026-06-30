@@ -3,9 +3,7 @@ name = "agenttest-plugin-canvas"
 version = "0.1.0"
 requires-python = ">=3.12,<3.14"
 dependencies = [
-    "httpx>=0.28.1",
     "jsonschema>=4.26.0",
-    "openai>=2.44.0",
 ]
 
 [build-system]

@@ -27,6 +27,9 @@ class ChatSessionId:
 @dataclass(slots=True)
 class ChatMessage:
     """单条对话消息。"""
+
+    message_id: UUID
+    sequence: int
     role: str  # "user" | "assistant"
     content: str
     timestamp: datetime
@@ -37,7 +40,7 @@ class ChatSession:
     """测试 Agent 对话会话实体。
 
     用户通过自然语言描述测试需求，Agent 生成结构化测试计划草稿，
-    用户确认后触发执行。
+    用户确认后可保存为正式测试计划；确认本身不伪装成运行启动。
 
     Attributes:
         session_id: 会话唯一标识。
@@ -48,8 +51,10 @@ class ChatSession:
         created_at: 创建时间。
         updated_at: 更新时间。
     """
+
     session_id: ChatSessionId
     project_id: UUID
+    created_by: UUID
     messages: list[ChatMessage]
     plan_draft: dict[str, object]
     status: SessionStatus
@@ -57,11 +62,12 @@ class ChatSession:
     updated_at: datetime
 
     @classmethod
-    def create(cls, *, project_id: UUID) -> ChatSession:
+    def create(cls, *, project_id: UUID, created_by: UUID) -> ChatSession:
         now = datetime.now(UTC)
         return cls(
             session_id=ChatSessionId.new(),
             project_id=project_id,
+            created_by=created_by,
             messages=[],
             plan_draft={},
             status=SessionStatus.ACTIVE,
@@ -72,17 +78,28 @@ class ChatSession:
     def add_user_message(self, content: str) -> None:
         """添加用户消息。"""
         self.messages.append(
-            ChatMessage(role="user", content=content, timestamp=datetime.now(UTC))
+            ChatMessage(
+                message_id=uuid4(),
+                sequence=len(self.messages) + 1,
+                role="user",
+                content=content,
+                timestamp=datetime.now(UTC),
+            )
         )
         self.updated_at = datetime.now(UTC)
 
     def add_assistant_message(
-        self, content: str, plan_draft: dict[str, object] | None = None,
+        self,
+        content: str,
+        plan_draft: dict[str, object] | None = None,
     ) -> None:
         """添加 Agent 回复，可附带计划草稿。"""
         self.messages.append(
             ChatMessage(
-                role="assistant", content=content,
+                message_id=uuid4(),
+                sequence=len(self.messages) + 1,
+                role="assistant",
+                content=content,
                 timestamp=datetime.now(UTC),
             )
         )

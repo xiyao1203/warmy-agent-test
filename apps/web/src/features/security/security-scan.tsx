@@ -14,6 +14,7 @@ import { useEffect, useState } from "react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
 import type { Finding, SecurityScanItem } from "./api";
 import { listScans, triggerScan } from "./api";
@@ -34,6 +35,8 @@ export function SecurityScanPage({ projectId }: { projectId: string }) {
   const [scans, setScans] = useState<SecurityScanItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [triggering, setTriggering] = useState(false);
+  const [agentEndpoint, setAgentEndpoint] = useState("");
+  const [triggerError, setTriggerError] = useState<string | null>(null);
   const [selectedScan, setSelectedScan] = useState<SecurityScanItem | null>(
     null,
   );
@@ -54,13 +57,20 @@ export function SecurityScanPage({ projectId }: { projectId: string }) {
   }, [projectId]);
 
   async function handleTrigger() {
+    if (!agentEndpoint.trim()) {
+      setTriggerError("请输入真实 Agent API 地址");
+      return;
+    }
     setTriggering(true);
+    setTriggerError(null);
     try {
-      const scan = await triggerScan(projectId);
+      const scan = await triggerScan(projectId, agentEndpoint.trim());
       setScans((prev) => [scan, ...prev]);
       setSelectedScan(scan);
-    } catch {
-      /* empty */
+    } catch (error) {
+      setTriggerError(
+        error instanceof Error ? error.message : "安全扫描启动失败",
+      );
     } finally {
       setTriggering(false);
     }
@@ -86,15 +96,30 @@ export function SecurityScanPage({ projectId }: { projectId: string }) {
             Promptfoo 安全扫描：注入、泄露、越狱检测。
           </p>
         </div>
-        <Button
-          disabled={triggering}
-          loading={triggering}
-          onClick={handleTrigger}
-          variant="primary"
-        >
-          <PlayCircle className="mr-1.5 size-4" />
-          触发扫描
-        </Button>
+        <div className="flex min-w-80 flex-col items-end gap-2">
+          <div className="flex w-full gap-2">
+            <Input
+              aria-label="Agent API 地址"
+              disabled={triggering}
+              onChange={(event) => setAgentEndpoint(event.target.value)}
+              placeholder="https://agent.example.com/chat"
+              type="url"
+              value={agentEndpoint}
+            />
+            <Button
+              disabled={triggering || !agentEndpoint.trim()}
+              loading={triggering}
+              onClick={handleTrigger}
+              variant="primary"
+            >
+              <PlayCircle className="mr-1.5 size-4" />
+              触发扫描
+            </Button>
+          </div>
+          {triggerError ? (
+            <p className="text-xs text-[var(--error)]">{triggerError}</p>
+          ) : null}
+        </div>
       </header>
 
       <div className="mt-5 grid grid-cols-[minmax(0,1fr)_24rem] gap-5 max-[1100px]:grid-cols-1">

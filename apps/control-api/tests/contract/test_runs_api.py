@@ -33,9 +33,7 @@ class InMemoryRunRepository:
         run = self.runs.get(run_id.value)
         return run if run and run.project_id == project_id else None
 
-    async def get_by_idempotency_key(
-        self, project_id: ProjectId, key: str
-    ) -> Run | None:
+    async def get_by_idempotency_key(self, project_id: ProjectId, key: str) -> Run | None:
         return next(
             (
                 run
@@ -45,12 +43,8 @@ class InMemoryRunRepository:
             None,
         )
 
-    async def list_by_project(
-        self, project_id: ProjectId, *, limit: int = 50
-    ) -> list[Run]:
-        return [
-            run for run in self.runs.values() if run.project_id == project_id
-        ][:limit]
+    async def list_by_project(self, project_id: ProjectId, *, limit: int = 50) -> list[Run]:
+        return [run for run in self.runs.values() if run.project_id == project_id][:limit]
 
     async def add(self, run: Run, cases: list[RunCase]) -> None:
         self.runs[run.run_id.value] = run
@@ -63,7 +57,8 @@ class InMemoryRunRepository:
         self.runs[run.run_id.value] = run
         self.cases[run.run_id.value] = cases
 
-    async def list_cases(self, run_id: RunId) -> list[RunCase]:
+    async def list_cases(self, project_id: ProjectId, run_id: RunId) -> list[RunCase]:
+        del project_id
         return self.cases.get(run_id.value, [])
 
 
@@ -83,9 +78,7 @@ class StubProjectAccess:
 
 
 class StubRunSource:
-    async def load(
-        self, project_id: ProjectId, version_id: TestPlanVersionId
-    ) -> RunDefinition:
+    async def load(self, project_id: ProjectId, version_id: TestPlanVersionId) -> RunDefinition:
         return RunDefinition(
             project_id=project_id,
             test_plan_version_id=version_id,
@@ -223,9 +216,7 @@ def test_run_list_and_cases_are_project_scoped() -> None:
     run_id = created.json()["id"]
 
     runs = client.get(f"/api/v1/projects/{project_id.value}/runs")
-    cases = client.get(
-        f"/api/v1/projects/{project_id.value}/runs/{run_id}/cases"
-    )
+    cases = client.get(f"/api/v1/projects/{project_id.value}/runs/{run_id}/cases")
     foreign = client.get(f"/api/v1/projects/{uuid4()}/runs/{run_id}")
 
     assert runs.status_code == 200
@@ -256,9 +247,7 @@ def test_internal_result_callback_updates_run_and_cases() -> None:
         json={"test_plan_version_id": str(uuid4())},
     )
     run_id = created.json()["id"]
-    cases = client.get(
-        f"/api/v1/projects/{project_id.value}/runs/{run_id}/cases"
-    ).json()["items"]
+    cases = client.get(f"/api/v1/projects/{project_id.value}/runs/{run_id}/cases").json()["items"]
 
     response = client.post(
         f"/api/v1/projects/{project_id.value}/runs/{run_id}/result",
@@ -275,9 +264,9 @@ def test_internal_result_callback_updates_run_and_cases() -> None:
             ]
         },
     )
-    updated_cases = client.get(
-        f"/api/v1/projects/{project_id.value}/runs/{run_id}/cases"
-    ).json()["items"]
+    updated_cases = client.get(f"/api/v1/projects/{project_id.value}/runs/{run_id}/cases").json()[
+        "items"
+    ]
 
     assert response.status_code == 200
     assert response.json()["status"] == "passed"

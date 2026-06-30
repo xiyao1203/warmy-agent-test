@@ -1,8 +1,21 @@
 """Browser Harness Activity 测试。"""
 
+import pytest
+from temporalio.exceptions import ApplicationError
 
 
 class TestBrowserHarnessActivity:
+    def test_missing_runtime_is_a_non_retryable_dependency_error(self):
+        from agenttest_api_runner.browser_harness_activity import (
+            raise_runtime_unavailable,
+        )
+
+        with pytest.raises(ApplicationError) as error:
+            raise_runtime_unavailable()
+
+        assert error.value.type == "DependencyUnavailable"
+        assert error.value.non_retryable is True
+
     def test_activity_is_registered_as_temporal_activity(self):
         """验证 Browser Harness Activity 可被 Temporal 注册。"""
         from agenttest_api_runner.browser_harness_activity import (

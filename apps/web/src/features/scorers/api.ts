@@ -1,7 +1,5 @@
+import { CONTROL_API_URL as API_BASE } from "@/lib/api/base-url";
 import { csrfHeaders } from "@/lib/api/csrf";
-
-const API_BASE =
-  process.env.NEXT_PUBLIC_CONTROL_API_URL ?? "http://localhost:8181";
 
 export type ScorerItem = {
   id: string;
@@ -38,18 +36,15 @@ export async function createScorer(
     description?: string | null;
   },
 ) {
-  const res = await fetch(
-    `${API_BASE}/api/v1/projects/${projectId}/scorers`,
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        ...(csrfHeaders() as Record<string, string>),
-      },
-      credentials: "include",
-      body: JSON.stringify(payload),
+  const res = await fetch(`${API_BASE}/api/v1/projects/${projectId}/scorers`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      ...(csrfHeaders() as Record<string, string>),
     },
-  );
+    credentials: "include",
+    body: JSON.stringify(payload),
+  });
   if (!res.ok) throw new Error("Failed to create scorer");
   return res.json() as Promise<ScorerItem>;
 }

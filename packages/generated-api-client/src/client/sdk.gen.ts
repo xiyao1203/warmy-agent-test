@@ -152,15 +152,15 @@ import type {
   EventsApiV1ProjectsProjectIdRunsRunIdEventsGetData,
   EventsApiV1ProjectsProjectIdRunsRunIdEventsGetErrors,
   EventsApiV1ProjectsProjectIdRunsRunIdEventsGetResponses,
-  ExecutePlaywrightAgentApiV1ProjectsProjectIdTestAgentPlaywrightExecutePostData,
-  ExecutePlaywrightAgentApiV1ProjectsProjectIdTestAgentPlaywrightExecutePostErrors,
-  ExecutePlaywrightAgentApiV1ProjectsProjectIdTestAgentPlaywrightExecutePostResponses,
   ExemptGateApiV1ProjectsProjectIdGatesGateIdExemptPostData,
   ExemptGateApiV1ProjectsProjectIdGatesGateIdExemptPostErrors,
   ExemptGateApiV1ProjectsProjectIdGatesGateIdExemptPostResponses,
   ExportCasesApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdExportGetData,
   ExportCasesApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdExportGetErrors,
   ExportCasesApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdExportGetResponses,
+  ExportRunReportApiV1ProjectsProjectIdRunsRunIdExportGetData,
+  ExportRunReportApiV1ProjectsProjectIdRunsRunIdExportGetErrors,
+  ExportRunReportApiV1ProjectsProjectIdRunsRunIdExportGetResponses,
   GenerateFromRunEndpointApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdGenerateFromRunPostData,
   GenerateFromRunEndpointApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdGenerateFromRunPostErrors,
   GenerateFromRunEndpointApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdGenerateFromRunPostResponses,
@@ -182,9 +182,6 @@ import type {
   GetPlanApiV1ProjectsProjectIdTestPlansPlanIdGetData,
   GetPlanApiV1ProjectsProjectIdTestPlansPlanIdGetErrors,
   GetPlanApiV1ProjectsProjectIdTestPlansPlanIdGetResponses,
-  GetPlaywrightTaskApiV1ProjectsProjectIdTestAgentPlaywrightTasksTaskIdGetData,
-  GetPlaywrightTaskApiV1ProjectsProjectIdTestAgentPlaywrightTasksTaskIdGetErrors,
-  GetPlaywrightTaskApiV1ProjectsProjectIdTestAgentPlaywrightTasksTaskIdGetResponses,
   GetProjectApiV1ProjectsProjectIdGetData,
   GetProjectApiV1ProjectsProjectIdGetErrors,
   GetProjectApiV1ProjectsProjectIdGetResponses,
@@ -270,9 +267,6 @@ import type {
   ListPlansApiV1ProjectsProjectIdTestPlansGetData,
   ListPlansApiV1ProjectsProjectIdTestPlansGetErrors,
   ListPlansApiV1ProjectsProjectIdTestPlansGetResponses,
-  ListPlaywrightTasksApiV1ProjectsProjectIdTestAgentPlaywrightTasksGetData,
-  ListPlaywrightTasksApiV1ProjectsProjectIdTestAgentPlaywrightTasksGetErrors,
-  ListPlaywrightTasksApiV1ProjectsProjectIdTestAgentPlaywrightTasksGetResponses,
   ListPoliciesApiV1ProjectsProjectIdSecurityPoliciesGetData,
   ListPoliciesApiV1ProjectsProjectIdSecurityPoliciesGetErrors,
   ListPoliciesApiV1ProjectsProjectIdSecurityPoliciesGetResponses,
@@ -2638,6 +2632,27 @@ export const eventsApiV1ProjectsProjectIdRunsRunIdEventsGet = <
   >({ url: "/api/v1/projects/{project_id}/runs/{run_id}/events", ...options });
 
 /**
+ * Export Run Report
+ */
+export const exportRunReportApiV1ProjectsProjectIdRunsRunIdExportGet = <
+  ThrowOnError extends boolean = false,
+>(
+  options: Options<
+    ExportRunReportApiV1ProjectsProjectIdRunsRunIdExportGetData,
+    ThrowOnError
+  >,
+): RequestResult<
+  ExportRunReportApiV1ProjectsProjectIdRunsRunIdExportGetResponses,
+  ExportRunReportApiV1ProjectsProjectIdRunsRunIdExportGetErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).get<
+    ExportRunReportApiV1ProjectsProjectIdRunsRunIdExportGetResponses,
+    ExportRunReportApiV1ProjectsProjectIdRunsRunIdExportGetErrors,
+    ThrowOnError
+  >({ url: "/api/v1/projects/{project_id}/runs/{run_id}/export", ...options });
+
+/**
  * Apply Result
  */
 export const applyResultApiV1ProjectsProjectIdRunsRunIdResultPost = <
@@ -2898,7 +2913,14 @@ export const triggerScanApiV1ProjectsProjectIdSecurityScansPost = <
     TriggerScanApiV1ProjectsProjectIdSecurityScansPostResponses,
     TriggerScanApiV1ProjectsProjectIdSecurityScansPostErrors,
     ThrowOnError
-  >({ url: "/api/v1/projects/{project_id}/security/scans", ...options });
+  >({
+    url: "/api/v1/projects/{project_id}/security/scans",
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...options.headers,
+    },
+  });
 
 /**
  * Get Scan
@@ -3027,8 +3049,6 @@ export const updateAccountApiV1ProjectsProjectIdTestAccountsAccountIdPatch = <
 
 /**
  * Chat
- *
- * 发送自然语言指令，返回 Agent 回复和计划草稿。
  */
 export const chatApiV1ProjectsProjectIdTestAgentChatPost = <
   ThrowOnError extends boolean = false,
@@ -3057,8 +3077,6 @@ export const chatApiV1ProjectsProjectIdTestAgentChatPost = <
 
 /**
  * Confirm
- *
- * 确认执行测试计划。
  */
 export const confirmApiV1ProjectsProjectIdTestAgentConfirmPost = <
   ThrowOnError extends boolean = false,
@@ -3086,93 +3104,7 @@ export const confirmApiV1ProjectsProjectIdTestAgentConfirmPost = <
   });
 
 /**
- * Execute Playwright Agent
- *
- * 执行 Playwright Test Agent。
- *
- * 支持三种 Agent：
- * - planner: 生成测试计划
- * - generator: 生成测试代码
- * - healer: 修复失败测试
- */
-export const executePlaywrightAgentApiV1ProjectsProjectIdTestAgentPlaywrightExecutePost =
-  <ThrowOnError extends boolean = false>(
-    options: Options<
-      ExecutePlaywrightAgentApiV1ProjectsProjectIdTestAgentPlaywrightExecutePostData,
-      ThrowOnError
-    >,
-  ): RequestResult<
-    ExecutePlaywrightAgentApiV1ProjectsProjectIdTestAgentPlaywrightExecutePostResponses,
-    ExecutePlaywrightAgentApiV1ProjectsProjectIdTestAgentPlaywrightExecutePostErrors,
-    ThrowOnError
-  > =>
-    (options.client ?? client).post<
-      ExecutePlaywrightAgentApiV1ProjectsProjectIdTestAgentPlaywrightExecutePostResponses,
-      ExecutePlaywrightAgentApiV1ProjectsProjectIdTestAgentPlaywrightExecutePostErrors,
-      ThrowOnError
-    >({
-      url: "/api/v1/projects/{project_id}/test-agent/playwright/execute",
-      ...options,
-      headers: {
-        "Content-Type": "application/json",
-        ...options.headers,
-      },
-    });
-
-/**
- * List Playwright Tasks
- *
- * 列出项目所有 Playwright Agent 任务。
- */
-export const listPlaywrightTasksApiV1ProjectsProjectIdTestAgentPlaywrightTasksGet =
-  <ThrowOnError extends boolean = false>(
-    options: Options<
-      ListPlaywrightTasksApiV1ProjectsProjectIdTestAgentPlaywrightTasksGetData,
-      ThrowOnError
-    >,
-  ): RequestResult<
-    ListPlaywrightTasksApiV1ProjectsProjectIdTestAgentPlaywrightTasksGetResponses,
-    ListPlaywrightTasksApiV1ProjectsProjectIdTestAgentPlaywrightTasksGetErrors,
-    ThrowOnError
-  > =>
-    (options.client ?? client).get<
-      ListPlaywrightTasksApiV1ProjectsProjectIdTestAgentPlaywrightTasksGetResponses,
-      ListPlaywrightTasksApiV1ProjectsProjectIdTestAgentPlaywrightTasksGetErrors,
-      ThrowOnError
-    >({
-      url: "/api/v1/projects/{project_id}/test-agent/playwright/tasks",
-      ...options,
-    });
-
-/**
- * Get Playwright Task
- *
- * 获取 Playwright Agent 任务状态。
- */
-export const getPlaywrightTaskApiV1ProjectsProjectIdTestAgentPlaywrightTasksTaskIdGet =
-  <ThrowOnError extends boolean = false>(
-    options: Options<
-      GetPlaywrightTaskApiV1ProjectsProjectIdTestAgentPlaywrightTasksTaskIdGetData,
-      ThrowOnError
-    >,
-  ): RequestResult<
-    GetPlaywrightTaskApiV1ProjectsProjectIdTestAgentPlaywrightTasksTaskIdGetResponses,
-    GetPlaywrightTaskApiV1ProjectsProjectIdTestAgentPlaywrightTasksTaskIdGetErrors,
-    ThrowOnError
-  > =>
-    (options.client ?? client).get<
-      GetPlaywrightTaskApiV1ProjectsProjectIdTestAgentPlaywrightTasksTaskIdGetResponses,
-      GetPlaywrightTaskApiV1ProjectsProjectIdTestAgentPlaywrightTasksTaskIdGetErrors,
-      ThrowOnError
-    >({
-      url: "/api/v1/projects/{project_id}/test-agent/playwright/tasks/{task_id}",
-      ...options,
-    });
-
-/**
  * Get Session
- *
- * 获取会话详情。
  */
 export const getSessionApiV1ProjectsProjectIdTestAgentSessionsSessionIdGet = <
   ThrowOnError extends boolean = false,

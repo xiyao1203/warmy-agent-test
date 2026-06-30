@@ -2,7 +2,7 @@ name: warmy-agent-test
 
 services:
   postgresql:
-    image: postgres:17-alpine
+    image: postgres:17.10-alpine
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-agenttest}
       POSTGRES_USER: ${POSTGRES_USER:-agenttest}
@@ -22,7 +22,7 @@ services:
       retries: 12
 
   redis:
-    image: redis:7-alpine
+    image: redis:7.4.9-alpine
     command: ["redis-server", "--save", "", "--appendonly", "no"]
     ports:
       - "6379:6379"
@@ -33,7 +33,7 @@ services:
       retries: 12
 
   temporal:
-    image: temporalio/auto-setup:latest
+    image: temporalio/auto-setup:1.29.7
     depends_on:
       postgresql:
         condition: service_healthy
@@ -52,18 +52,18 @@ services:
       retries: 24
 
   temporal-ui:
-    image: temporalio/ui:latest
+    image: temporalio/ui:2.51.1
     depends_on:
       temporal:
         condition: service_healthy
     environment:
       TEMPORAL_ADDRESS: temporal:7233
-      TEMPORAL_CORS_ORIGINS: http://localhost:3000
+      TEMPORAL_CORS_ORIGINS: ${TEMPORAL_CORS_ORIGINS:-http://localhost:5175}
     ports:
       - "8080:8080"
 
   minio:
-    image: minio/minio:latest
+    image: minio/minio:RELEASE.2025-09-07T16-13-09Z
     command: ["server", "/data", "--console-address", ":9001"]
     environment:
       MINIO_ROOT_USER: ${MINIO_ROOT_USER:-agenttest}
@@ -80,7 +80,7 @@ services:
       retries: 12
 
   minio-init:
-    image: minio/mc:latest
+    image: minio/mc:RELEASE.2025-08-13T08-35-41Z
     depends_on:
       minio:
         condition: service_healthy

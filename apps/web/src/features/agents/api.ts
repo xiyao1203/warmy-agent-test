@@ -12,10 +12,8 @@ import {
 } from "@warmy/generated-api-client";
 
 import { apiClient } from "@/lib/api/client";
+import { CONTROL_API_URL } from "@/lib/api/base-url";
 import { csrfHeaders } from "@/lib/api/csrf";
-
-const CONTROL_API_URL =
-  process.env.NEXT_PUBLIC_CONTROL_API_URL ?? "http://localhost:8181";
 
 export async function listAgents(projectId: string) {
   const { data } = await listAgentsApiV1ProjectsProjectIdAgentsGet({

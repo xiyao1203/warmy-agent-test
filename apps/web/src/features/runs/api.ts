@@ -9,10 +9,8 @@ import {
 } from "@warmy/generated-api-client";
 
 import { apiClient } from "@/lib/api/client";
+import { CONTROL_API_URL } from "@/lib/api/base-url";
 import { csrfHeaders } from "@/lib/api/csrf";
-
-const CONTROL_API_URL =
-  process.env.NEXT_PUBLIC_CONTROL_API_URL ?? "http://localhost:8181";
 
 export async function listRuns(projectId: string) {
   const { data } = await listRunsApiV1ProjectsProjectIdRunsGet({
@@ -115,7 +113,7 @@ export async function listArtifacts(
 ): Promise<ArtifactItem[]> {
   const url = `${CONTROL_API_URL}/api/v1/projects/${projectId}/runs/${runId}/artifacts`;
   const res = await fetch(url, { credentials: "include" });
-  if (!res.ok) return [];
+  if (!res.ok) throw new Error("Failed to list run artifacts");
   const data = await res.json();
   return (data as { items?: ArtifactItem[] }).items ?? [];
 }

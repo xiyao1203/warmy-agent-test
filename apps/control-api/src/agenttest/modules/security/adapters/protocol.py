@@ -11,7 +11,7 @@ class SecurityScanner(Protocol):
     async def run_scan(
         self,
         *,
-        agent_endpoint: str | None = None,
+        agent_endpoint: str,
         scan_type: str = "full",
     ) -> list[dict[str, object]]:
         """执行安全扫描，返回 findings 列表。"""

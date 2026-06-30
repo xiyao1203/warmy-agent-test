@@ -142,7 +142,7 @@ class ApplyRunResultHandler:
         if run.status.is_terminal:
             return run
 
-        cases = await self._runs.list_cases(run.run_id)
+        cases = await self._runs.list_cases(command.project_id, run.run_id)
         if len(command.cases) != run.total_cases:
             raise ValueError("Run result must include every run case")
 

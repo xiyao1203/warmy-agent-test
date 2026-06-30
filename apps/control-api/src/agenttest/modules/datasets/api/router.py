@@ -38,6 +38,11 @@ from agenttest.modules.datasets.application.commands import (
     UpdateDatasetCommand,
     UpdateTestCaseCommand,
 )
+from agenttest.modules.datasets.application.generate_from_run import (
+    GenerateFromRunCommand,
+    GenerateFromRunResult,
+    SourceRunNotFoundError,
+)
 from agenttest.modules.datasets.application.import_export import (
     ImportError as DatasetImportError,
 )
@@ -163,6 +168,16 @@ class ImportExportExecutor(Protocol):
     ) -> str: ...
 
 
+class GenerateFromRunExecutor(Protocol):
+    async def execute(
+        self,
+        *,
+        actor: User,
+        project_id: ProjectId,
+        command: GenerateFromRunCommand,
+    ) -> GenerateFromRunResult: ...
+
+
 @dataclass(frozen=True, slots=True)
 class DatasetApiDependencies:
     list_datasets: ListDatasetsExecutor
@@ -179,6 +194,7 @@ class DatasetApiDependencies:
     delete_case: DeleteCaseExecutor
     publish_version: PublishVersionExecutor
     import_export: ImportExportExecutor
+    generate_from_run: GenerateFromRunExecutor
     uow_factory: UnitOfWorkFactory = null_uow_factory
 
 
@@ -439,9 +455,7 @@ def create_dataset_router(
             async with dependencies.uow_factory():
                 version = await dependencies.publish_version.execute(
                     actor,
-                    PublishDatasetVersionCommand(
-                        version_id=DatasetVersionId(version_id)
-                    ),
+                    PublishDatasetVersionCommand(version_id=DatasetVersionId(version_id)),
                 )
         except (
             DatasetNotFoundError,
@@ -758,24 +772,22 @@ def create_dataset_router(
         except Exception:
             return invalid_request("Invalid request body")
 
-        from agenttest.modules.datasets.application.generate_from_run import (
-            GenerateFromRunCommand,
-            generate_cases_from_failed_run,
-        )
-        from agenttest.modules.projects.public import ProjectId as Pid
-
-        result = await generate_cases_from_failed_run(
-            actor=actor,
-            project_id=Pid(project_id),
-            command=GenerateFromRunCommand(
-                run_id=UUID(str(run_id)),
-                dataset_version_id=version_id,
-            ),
-        )
+        try:
+            result = await dependencies.generate_from_run.execute(
+                actor=actor,
+                project_id=ProjectId(project_id),
+                command=GenerateFromRunCommand(
+                    run_id=UUID(str(run_id)),
+                    dataset_version_id=version_id,
+                ),
+            )
+        except SourceRunNotFoundError:
+            return asset_not_found()
         return {
             "status": "completed",
             "generated": len(result.generated_cases),
             "total_failed": result.total_failed,
+            "skipped_existing": result.skipped_existing,
             "message": f"已从失败运行提取 {len(result.generated_cases)} 条用例",
         }
 

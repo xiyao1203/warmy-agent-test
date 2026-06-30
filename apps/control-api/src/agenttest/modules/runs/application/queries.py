@@ -51,5 +51,4 @@ class ListRunCasesHandler:
         run = await self._runs.get_by_id(project_id, run_id)
         if run is None:
             raise RunNotFoundError
-        return await self._runs.list_cases(run_id)
-
+        return await self._runs.list_cases(project_id, run_id)

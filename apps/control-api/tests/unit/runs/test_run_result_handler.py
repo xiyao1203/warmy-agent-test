@@ -58,8 +58,8 @@ class InMemoryRunRepository:
         self.run = run
         self.cases = cases
 
-    async def list_cases(self, run_id: RunId) -> list[RunCase]:
-        if self.run.run_id == run_id:
+    async def list_cases(self, project_id: ProjectId, run_id: RunId) -> list[RunCase]:
+        if self.run.project_id == project_id and self.run.run_id == run_id:
             return self.cases
         return []
 
@@ -192,7 +192,7 @@ async def test_apply_run_result_rejects_unknown_case() -> None:
                         output={},
                         trace=[],
                         duration_ms=1,
-                    )
+                    ),
                 ],
             )
         )

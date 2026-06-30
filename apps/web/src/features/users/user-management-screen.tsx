@@ -5,32 +5,31 @@ import { useQuery } from "@tanstack/react-query";
 import { getCurrentUser } from "@/features/auth";
 import { problemKind } from "@/lib/api/problem";
 
-import { createUser, deleteUser, listUsers, resetUserPassword, setUserEnabled, updateUser } from "./api";
+import {
+  createUser,
+  deleteUser,
+  listUsers,
+  resetUserPassword,
+  setUserEnabled,
+  updateUser,
+} from "./api";
 import { UserManagement } from "./user-management";
 
 export function UserManagementScreen() {
-  const userQuery = useQuery({ queryFn: getCurrentUser, queryKey: ["session"] });
+  const userQuery = useQuery({
+    queryFn: getCurrentUser,
+    queryKey: ["session"],
+  });
   const usersQuery = useQuery({
     enabled: userQuery.data?.role === "super_admin",
     queryFn: () => listUsers(),
     queryKey: ["users"],
   });
-  const placeholderUser = {
-    display_name: "",
-    email: "",
-    id: "",
-    must_change_password: false,
-    role: "viewer" as const,
-    status: "active" as const,
-  };
-
   if (userQuery.isPending) {
-    return <UserManagement currentUser={placeholderUser} loading />;
+    return <UserManagement loading />;
   }
   if (userQuery.isError || userQuery.data.role !== "super_admin") {
-    return (
-      <UserManagement currentUser={userQuery.data ?? placeholderUser} error="permission" />
-    );
+    return <UserManagement currentUser={userQuery.data} error="permission" />;
   }
   if (usersQuery.isPending) {
     return <UserManagement currentUser={userQuery.data} loading />;
@@ -39,7 +38,11 @@ export function UserManagementScreen() {
     return (
       <UserManagement
         currentUser={userQuery.data}
-        error={problemKind(usersQuery.error) === "permission" ? "permission" : "service"}
+        error={
+          problemKind(usersQuery.error) === "permission"
+            ? "permission"
+            : "service"
+        }
       />
     );
   }

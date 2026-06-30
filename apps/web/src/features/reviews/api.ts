@@ -1,7 +1,5 @@
+import { CONTROL_API_URL as API_BASE } from "@/lib/api/base-url";
 import { csrfHeaders } from "@/lib/api/csrf";
-
-const API_BASE =
-  process.env.NEXT_PUBLIC_CONTROL_API_URL ?? "http://localhost:8181";
 
 export type ReviewTask = {
   id: string;
@@ -18,10 +16,7 @@ export type ReviewTask = {
   reviewed_at: string | null;
 };
 
-export async function listReviews(
-  projectId: string,
-  status?: string,
-) {
+export async function listReviews(projectId: string, status?: string) {
   const params = new URLSearchParams({ limit: "100" });
   if (status) params.set("status", status);
   const res = await fetch(
@@ -36,7 +31,11 @@ export async function listReviews(
 export async function scoreReview(
   projectId: string,
   taskId: string,
-  payload: { score: number; opinion?: string; rubric_scores?: Record<string, number> },
+  payload: {
+    score: number;
+    opinion?: string;
+    rubric_scores?: Record<string, number>;
+  },
 ) {
   const res = await fetch(
     `${API_BASE}/api/v1/projects/${projectId}/reviews/${taskId}/score`,
@@ -54,7 +53,11 @@ export async function scoreReview(
   return res.json() as Promise<ReviewTask>;
 }
 
-export async function rejectReview(projectId: string, taskId: string, opinion?: string) {
+export async function rejectReview(
+  projectId: string,
+  taskId: string,
+  opinion?: string,
+) {
   const params = opinion ? `?opinion=${encodeURIComponent(opinion)}` : "";
   const res = await fetch(
     `${API_BASE}/api/v1/projects/${projectId}/reviews/${taskId}/reject${params}`,

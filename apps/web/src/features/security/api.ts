@@ -1,7 +1,5 @@
+import { CONTROL_API_URL as API_BASE } from "@/lib/api/base-url";
 import { csrfHeaders } from "@/lib/api/csrf";
-
-const API_BASE =
-  process.env.NEXT_PUBLIC_CONTROL_API_URL ?? "http://localhost:8181";
 
 export type Finding = {
   category: string;
@@ -35,13 +33,20 @@ export async function listScans(projectId: string) {
   return data.items as SecurityScanItem[];
 }
 
-export async function triggerScan(projectId: string) {
+export async function triggerScan(projectId: string, agentEndpoint: string) {
   const res = await fetch(
     `${API_BASE}/api/v1/projects/${projectId}/security/scans`,
     {
       method: "POST",
-      headers: csrfHeaders() as Record<string, string>,
+      headers: {
+        "Content-Type": "application/json",
+        ...(csrfHeaders() as Record<string, string>),
+      },
       credentials: "include",
+      body: JSON.stringify({
+        agent_endpoint: agentEndpoint,
+        scan_type: "full",
+      }),
     },
   );
   if (!res.ok) throw new Error("Failed to trigger scan");

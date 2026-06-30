@@ -1136,38 +1136,6 @@ export type ModelDefaultResponse = {
 export type ModelPurpose = "test_agent_chat" | "text_judge" | "vision_judge";
 
 /**
- * PlaywrightAgentRequest
- *
- * Playwright Agent 请求。
- */
-export type PlaywrightAgentRequest = {
-  /**
-   * Agent Type
-   */
-  agent_type: string;
-  /**
-   * Plan Path
-   */
-  plan_path?: string | null;
-  /**
-   * Prd Path
-   */
-  prd_path?: string | null;
-  /**
-   * Prompt
-   */
-  prompt: string;
-  /**
-   * Seed Test
-   */
-  seed_test?: string | null;
-  /**
-   * Test Name
-   */
-  test_name?: string | null;
-};
-
-/**
  * Priority
  *
  * 用例优先级：P0（最高）→ P3（最低）。
@@ -1415,6 +1383,20 @@ export type ScoreReviewRequest = {
    * Score
    */
   score: number;
+};
+
+/**
+ * SecurityScanRequest
+ */
+export type SecurityScanRequest = {
+  /**
+   * Agent Endpoint
+   */
+  agent_endpoint: string;
+  /**
+   * Scan Type
+   */
+  scan_type?: "full" | "quick";
 };
 
 /**
@@ -5832,6 +5814,44 @@ export type EventsApiV1ProjectsProjectIdRunsRunIdEventsGetResponses = {
   200: unknown;
 };
 
+export type ExportRunReportApiV1ProjectsProjectIdRunsRunIdExportGetData = {
+  body?: never;
+  path: {
+    /**
+     * Project Id
+     */
+    project_id: string;
+    /**
+     * Run Id
+     */
+    run_id: string;
+  };
+  query?: {
+    /**
+     * Format
+     */
+    format?: string;
+  };
+  url: "/api/v1/projects/{project_id}/runs/{run_id}/export";
+};
+
+export type ExportRunReportApiV1ProjectsProjectIdRunsRunIdExportGetErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type ExportRunReportApiV1ProjectsProjectIdRunsRunIdExportGetError =
+  ExportRunReportApiV1ProjectsProjectIdRunsRunIdExportGetErrors[keyof ExportRunReportApiV1ProjectsProjectIdRunsRunIdExportGetErrors];
+
+export type ExportRunReportApiV1ProjectsProjectIdRunsRunIdExportGetResponses = {
+  /**
+   * Successful Response
+   */
+  200: unknown;
+};
+
 export type ApplyResultApiV1ProjectsProjectIdRunsRunIdResultPostData = {
   body: ApplyRunResultRequest;
   headers?: {
@@ -6191,7 +6211,7 @@ export type ListScansApiV1ProjectsProjectIdSecurityScansGetResponses = {
 };
 
 export type TriggerScanApiV1ProjectsProjectIdSecurityScansPostData = {
-  body?: never;
+  body: SecurityScanRequest;
   headers?: {
     /**
      * X-Csrf-Token
@@ -6475,112 +6495,6 @@ export type ConfirmApiV1ProjectsProjectIdTestAgentConfirmPostResponses = {
    */
   200: unknown;
 };
-
-export type ExecutePlaywrightAgentApiV1ProjectsProjectIdTestAgentPlaywrightExecutePostData =
-  {
-    body: PlaywrightAgentRequest;
-    headers?: {
-      /**
-       * X-Csrf-Token
-       */
-      "x-csrf-token"?: string | null;
-    };
-    path: {
-      /**
-       * Project Id
-       */
-      project_id: string;
-    };
-    query?: never;
-    url: "/api/v1/projects/{project_id}/test-agent/playwright/execute";
-  };
-
-export type ExecutePlaywrightAgentApiV1ProjectsProjectIdTestAgentPlaywrightExecutePostErrors =
-  {
-    /**
-     * Validation Error
-     */
-    422: HttpValidationError;
-  };
-
-export type ExecutePlaywrightAgentApiV1ProjectsProjectIdTestAgentPlaywrightExecutePostError =
-  ExecutePlaywrightAgentApiV1ProjectsProjectIdTestAgentPlaywrightExecutePostErrors[keyof ExecutePlaywrightAgentApiV1ProjectsProjectIdTestAgentPlaywrightExecutePostErrors];
-
-export type ExecutePlaywrightAgentApiV1ProjectsProjectIdTestAgentPlaywrightExecutePostResponses =
-  {
-    /**
-     * Successful Response
-     */
-    200: unknown;
-  };
-
-export type ListPlaywrightTasksApiV1ProjectsProjectIdTestAgentPlaywrightTasksGetData =
-  {
-    body?: never;
-    path: {
-      /**
-       * Project Id
-       */
-      project_id: string;
-    };
-    query?: never;
-    url: "/api/v1/projects/{project_id}/test-agent/playwright/tasks";
-  };
-
-export type ListPlaywrightTasksApiV1ProjectsProjectIdTestAgentPlaywrightTasksGetErrors =
-  {
-    /**
-     * Validation Error
-     */
-    422: HttpValidationError;
-  };
-
-export type ListPlaywrightTasksApiV1ProjectsProjectIdTestAgentPlaywrightTasksGetError =
-  ListPlaywrightTasksApiV1ProjectsProjectIdTestAgentPlaywrightTasksGetErrors[keyof ListPlaywrightTasksApiV1ProjectsProjectIdTestAgentPlaywrightTasksGetErrors];
-
-export type ListPlaywrightTasksApiV1ProjectsProjectIdTestAgentPlaywrightTasksGetResponses =
-  {
-    /**
-     * Successful Response
-     */
-    200: unknown;
-  };
-
-export type GetPlaywrightTaskApiV1ProjectsProjectIdTestAgentPlaywrightTasksTaskIdGetData =
-  {
-    body?: never;
-    path: {
-      /**
-       * Project Id
-       */
-      project_id: string;
-      /**
-       * Task Id
-       */
-      task_id: string;
-    };
-    query?: never;
-    url: "/api/v1/projects/{project_id}/test-agent/playwright/tasks/{task_id}";
-  };
-
-export type GetPlaywrightTaskApiV1ProjectsProjectIdTestAgentPlaywrightTasksTaskIdGetErrors =
-  {
-    /**
-     * Validation Error
-     */
-    422: HttpValidationError;
-  };
-
-export type GetPlaywrightTaskApiV1ProjectsProjectIdTestAgentPlaywrightTasksTaskIdGetError =
-  GetPlaywrightTaskApiV1ProjectsProjectIdTestAgentPlaywrightTasksTaskIdGetErrors[keyof GetPlaywrightTaskApiV1ProjectsProjectIdTestAgentPlaywrightTasksTaskIdGetErrors];
-
-export type GetPlaywrightTaskApiV1ProjectsProjectIdTestAgentPlaywrightTasksTaskIdGetResponses =
-  {
-    /**
-     * Successful Response
-     */
-    200: unknown;
-  };
 
 export type GetSessionApiV1ProjectsProjectIdTestAgentSessionsSessionIdGetData =
   {

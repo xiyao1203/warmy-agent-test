@@ -558,12 +558,15 @@
       "ChatRequest": {
         "properties": {
           "message": {
+            "maxLength": 20000,
+            "minLength": 1,
             "title": "Message",
             "type": "string"
           },
           "session_id": {
             "anyOf": [
               {
+                "format": "uuid",
                 "type": "string"
               },
               {
@@ -582,6 +585,7 @@
       "ConfirmRequest": {
         "properties": {
           "session_id": {
+            "format": "uuid",
             "title": "Session Id",
             "type": "string"
           }
@@ -1910,69 +1914,6 @@
         "title": "ModelPurpose",
         "type": "string"
       },
-      "PlaywrightAgentRequest": {
-        "description": "Playwright Agent 请求。",
-        "properties": {
-          "agent_type": {
-            "title": "Agent Type",
-            "type": "string"
-          },
-          "plan_path": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Plan Path"
-          },
-          "prd_path": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Prd Path"
-          },
-          "prompt": {
-            "title": "Prompt",
-            "type": "string"
-          },
-          "seed_test": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Seed Test"
-          },
-          "test_name": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Test Name"
-          }
-        },
-        "required": [
-          "agent_type",
-          "prompt"
-        ],
-        "title": "PlaywrightAgentRequest",
-        "type": "object"
-      },
       "Priority": {
         "description": "用例优先级：P0（最高）→ P3（最低）。",
         "enum": [
@@ -2399,6 +2340,30 @@
           "score"
         ],
         "title": "ScoreReviewRequest",
+        "type": "object"
+      },
+      "SecurityScanRequest": {
+        "properties": {
+          "agent_endpoint": {
+            "format": "uri",
+            "minLength": 1,
+            "title": "Agent Endpoint",
+            "type": "string"
+          },
+          "scan_type": {
+            "default": "full",
+            "enum": [
+              "full",
+              "quick"
+            ],
+            "title": "Scan Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "agent_endpoint"
+        ],
+        "title": "SecurityScanRequest",
         "type": "object"
       },
       "SetModelDefaultRequest": {
@@ -9824,6 +9789,68 @@
         ]
       }
     },
+    "/api/v1/projects/{project_id}/runs/{run_id}/export": {
+      "get": {
+        "operationId": "export_run_report_api_v1_projects__project_id__runs__run_id__export_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Project Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "run_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Run Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "format",
+            "required": false,
+            "schema": {
+              "default": "json",
+              "pattern": "^(json|junit|html)$",
+              "title": "Format",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Export Run Report",
+        "tags": [
+          "reports"
+        ]
+      }
+    },
     "/api/v1/projects/{project_id}/runs/{run_id}/result": {
       "post": {
         "operationId": "apply_result_api_v1_projects__project_id__runs__run_id__result_post",
@@ -10453,6 +10480,16 @@
             }
           }
         ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SecurityScanRequest"
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
           "200": {
             "content": {
@@ -10780,7 +10817,6 @@
     },
     "/api/v1/projects/{project_id}/test-agent/chat": {
       "post": {
-        "description": "发送自然语言指令，返回 Agent 回复和计划草稿。",
         "operationId": "chat_api_v1_projects__project_id__test_agent_chat_post",
         "parameters": [
           {
@@ -10848,7 +10884,6 @@
     },
     "/api/v1/projects/{project_id}/test-agent/confirm": {
       "post": {
-        "description": "确认执行测试计划。",
         "operationId": "confirm_api_v1_projects__project_id__test_agent_confirm_post",
         "parameters": [
           {
@@ -10914,170 +10949,8 @@
         ]
       }
     },
-    "/api/v1/projects/{project_id}/test-agent/playwright/execute": {
-      "post": {
-        "description": "执行 Playwright Test Agent。\n\n支持三种 Agent：\n- planner: 生成测试计划\n- generator: 生成测试代码\n- healer: 修复失败测试",
-        "operationId": "execute_playwright_agent_api_v1_projects__project_id__test_agent_playwright_execute_post",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "project_id",
-            "required": true,
-            "schema": {
-              "format": "uuid",
-              "title": "Project Id",
-              "type": "string"
-            }
-          },
-          {
-            "in": "header",
-            "name": "x-csrf-token",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "X-Csrf-Token"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/PlaywrightAgentRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {}
-              }
-            },
-            "description": "Successful Response"
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            },
-            "description": "Validation Error"
-          }
-        },
-        "summary": "Execute Playwright Agent",
-        "tags": [
-          "test-agent"
-        ]
-      }
-    },
-    "/api/v1/projects/{project_id}/test-agent/playwright/tasks": {
-      "get": {
-        "description": "列出项目所有 Playwright Agent 任务。",
-        "operationId": "list_playwright_tasks_api_v1_projects__project_id__test_agent_playwright_tasks_get",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "project_id",
-            "required": true,
-            "schema": {
-              "format": "uuid",
-              "title": "Project Id",
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {}
-              }
-            },
-            "description": "Successful Response"
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            },
-            "description": "Validation Error"
-          }
-        },
-        "summary": "List Playwright Tasks",
-        "tags": [
-          "test-agent"
-        ]
-      }
-    },
-    "/api/v1/projects/{project_id}/test-agent/playwright/tasks/{task_id}": {
-      "get": {
-        "description": "获取 Playwright Agent 任务状态。",
-        "operationId": "get_playwright_task_api_v1_projects__project_id__test_agent_playwright_tasks__task_id__get",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "project_id",
-            "required": true,
-            "schema": {
-              "format": "uuid",
-              "title": "Project Id",
-              "type": "string"
-            }
-          },
-          {
-            "in": "path",
-            "name": "task_id",
-            "required": true,
-            "schema": {
-              "title": "Task Id",
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {}
-              }
-            },
-            "description": "Successful Response"
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            },
-            "description": "Validation Error"
-          }
-        },
-        "summary": "Get Playwright Task",
-        "tags": [
-          "test-agent"
-        ]
-      }
-    },
     "/api/v1/projects/{project_id}/test-agent/sessions/{session_id}": {
       "get": {
-        "description": "获取会话详情。",
         "operationId": "get_session_api_v1_projects__project_id__test_agent_sessions__session_id__get",
         "parameters": [
           {
@@ -11095,6 +10968,7 @@
             "name": "session_id",
             "required": true,
             "schema": {
+              "format": "uuid",
               "title": "Session Id",
               "type": "string"
             }

@@ -26,7 +26,7 @@ import { UserDrawer } from "./user-drawer";
 import { CreateUserDialog } from "./user-dialog";
 
 type UserManagementProps = {
-  currentUser: UserResponse;
+  currentUser?: UserResponse;
   error?: "permission" | "service";
   loading?: boolean;
   nextCursor?: string | null;
@@ -99,6 +99,14 @@ export function UserManagement({
       />
     );
   }
+  if (!currentUser) {
+    return (
+      <StatusPanel
+        description="当前用户信息不可用，请重新登录后再试。"
+        title="无法加载用户管理"
+      />
+    );
+  }
 
   return (
     <div className="min-w-0 px-6 py-6">
@@ -144,7 +152,9 @@ export function UserManagement({
         <select
           aria-label="按角色筛选"
           className="h-9 rounded-[var(--radius-sm)] border border-[var(--border)] bg-[var(--surface)] px-3 text-sm"
-          onChange={(event) => setRole(event.target.value as SystemRole | "all")}
+          onChange={(event) =>
+            setRole(event.target.value as SystemRole | "all")
+          }
           value={role}
         >
           <option value="all">全部角色</option>
@@ -203,12 +213,16 @@ export function UserManagement({
                     </p>
                   </TableCell>
                   <TableCell>
-                    <Badge tone={user.role === "super_admin" ? "accent" : "neutral"}>
+                    <Badge
+                      tone={user.role === "super_admin" ? "accent" : "neutral"}
+                    >
                       {roleLabels[user.role]}
                     </Badge>
                   </TableCell>
                   <TableCell>
-                    <Badge tone={user.status === "active" ? "success" : "danger"}>
+                    <Badge
+                      tone={user.status === "active" ? "success" : "danger"}
+                    >
                       {statusLabels[user.status]}
                     </Badge>
                   </TableCell>

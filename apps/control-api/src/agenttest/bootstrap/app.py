@@ -50,6 +50,9 @@ from agenttest.modules.datasets.application.commands import (
     UpdateDatasetHandler,
     UpdateTestCaseHandler,
 )
+from agenttest.modules.datasets.application.generate_from_run import (
+    GenerateCasesFromFailedRunHandler,
+)
 from agenttest.modules.datasets.application.import_export import ImportExportService
 from agenttest.modules.datasets.application.queries import (
     GetDatasetHandler,
@@ -154,6 +157,8 @@ from agenttest.modules.projects.application.queries.list_projects import (
 from agenttest.modules.projects.infrastructure.persistence.repositories import (
     SqlAlchemyProjectRepository,
 )
+from agenttest.modules.reports.api.router import create_report_router
+from agenttest.modules.reports.application.service import ReportService
 from agenttest.modules.runs.api.router import RunApiDependencies, create_run_router
 from agenttest.modules.runs.application.commands import (
     ApplyRunResultHandler,
@@ -242,11 +247,10 @@ def create_app(
 
     app.add_middleware(PreflightMiddleware)
 
-    # CORS 中间件在最外层，确保所有响应都包含正确的 CORS 头
-    # 本地开发环境使用通配符 origin，生产环境应指定具体域名
+    # CORS 中间件在最外层，凭证请求只允许已配置的 Web Origin。
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=["*"],
+        allow_origins=[str(resolved_settings.web_origin).rstrip("/")],
         allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],
@@ -348,6 +352,21 @@ def create_app(
             runs,
             current_user=dependencies.current_user,
             csrf=dependencies.csrf,
+            settings=resolved_settings,
+        ),
+        prefix="/api/v1",
+    )
+    report_engine = create_database_engine(str(resolved_settings.database_url))
+    report_session_factory = create_session_factory(report_engine)
+    report_runs = SqlAlchemyRunRepository(report_session_factory)
+    report_projects = SqlAlchemyProjectRepository(report_session_factory)
+    app.include_router(
+        create_report_router(
+            service=ReportService(
+                runs=report_runs,
+                project_access=ProjectAccessAdapter(report_projects),
+            ),
+            current_user=dependencies.current_user,
             settings=resolved_settings,
         ),
         prefix="/api/v1",
@@ -731,6 +750,14 @@ def build_dataset_dependencies(settings: Settings) -> DatasetApiDependencies:
     projects = SqlAlchemyProjectRepository(session_factory)
     access = ProjectAccessAdapter(projects)
     audit = AuditRecorder(SqlAlchemyAuditRepository(session_factory))
+    add_case = AddTestCaseHandler(
+        datasets=datasets,
+        versions=versions,
+        cases=cases,
+        project_access=access,
+        audit=audit,
+    )
+    runs = SqlAlchemyRunRepository(session_factory)
     return DatasetApiDependencies(
         list_datasets=ListDatasetsHandler(
             datasets=datasets,
@@ -778,13 +805,7 @@ def build_dataset_dependencies(settings: Settings) -> DatasetApiDependencies:
             cases=cases,
             project_access=access,
         ),
-        add_case=AddTestCaseHandler(
-            datasets=datasets,
-            versions=versions,
-            cases=cases,
-            project_access=access,
-            audit=audit,
-        ),
+        add_case=add_case,
         update_case=UpdateTestCaseHandler(
             datasets=datasets,
             versions=versions,
@@ -808,6 +829,11 @@ def build_dataset_dependencies(settings: Settings) -> DatasetApiDependencies:
         import_export=ImportExportService(
             cases=cases,
             project_access=access,
+        ),
+        generate_from_run=GenerateCasesFromFailedRunHandler(
+            runs=runs,
+            cases=cases,
+            add_case=add_case,
         ),
         uow_factory=lambda: SqlAlchemyUnitOfWork(session_factory),
     )
@@ -1518,6 +1544,9 @@ def _register_test_agent_endpoints(
     )
     from agenttest.modules.test_agent.api.router import create_test_agent_router
     from agenttest.modules.test_agent.application.model_planner import ModelTestPlanGenerator
+    from agenttest.modules.test_agent.infrastructure.repositories import (
+        SqlAlchemyChatSessionRepository,
+    )
     from agenttest.shared.infrastructure.database import (
         create_database_engine,
         create_session_factory,
@@ -1549,7 +1578,7 @@ def _register_test_agent_endpoints(
         return await auth_deps.current_user.execute(token)
 
     router = create_test_agent_router(
-        session_factory=session_factory,
+        sessions=SqlAlchemyChatSessionRepository(session_factory),
         actor_for=actor_for,
         check_project=check_project,
         settings=settings,

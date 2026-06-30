@@ -108,9 +108,7 @@ class InMemoryTestCaseRepository:
     ) -> tuple[list[DatasetTestCase], str | None]:
         del cursor
         items = [
-            item
-            for item in self.items.values()
-            if item.dataset_version_id == dataset_version_id
+            item for item in self.items.values() if item.dataset_version_id == dataset_version_id
         ]
         return sorted(items, key=lambda item: item.sort_order)[:limit], None
 
@@ -163,6 +161,11 @@ class StubCurrentUser:
 class StubCsrf:
     async def execute(self, *_args: object) -> None:
         return None
+
+
+class StubGenerateFromRun:
+    async def execute(self, **_kwargs: object):
+        raise AssertionError("generate-from-run is not used in this contract fixture")
 
 
 def create_user(role: SystemRole) -> User:
@@ -239,6 +242,7 @@ def build_dependencies(
             project_access=access,
         ),
         import_export=ImportExportService(cases=cases, project_access=access),
+        generate_from_run=StubGenerateFromRun(),
     )
 
 
@@ -280,10 +284,7 @@ def test_developer_manages_imports_publishes_and_exports_dataset() -> None:
     )
     version_id = version.json()["id"]
     added = client.post(
-        (
-            f"/api/v1/projects/{project_id.value}/datasets/{dataset_id}"
-            f"/versions/{version_id}/cases"
-        ),
+        (f"/api/v1/projects/{project_id.value}/datasets/{dataset_id}/versions/{version_id}/cases"),
         headers=csrf,
         json={
             "name": "Chat stream",
@@ -293,16 +294,12 @@ def test_developer_manages_imports_publishes_and_exports_dataset() -> None:
         },
     )
     imported = client.post(
-        (
-            f"/api/v1/projects/{project_id.value}/datasets/{dataset_id}"
-            f"/versions/{version_id}/import"
-        ),
+        (f"/api/v1/projects/{project_id.value}/datasets/{dataset_id}/versions/{version_id}/import"),
         headers=csrf,
         json={
             "format": "jsonl",
             "content": (
-                '{"name":"Browser chat","input":{"message":"hi"},'
-                '"execution_mode":"browser"}\n'
+                '{"name":"Browser chat","input":{"message":"hi"},"execution_mode":"browser"}\n'
             ),
         },
     )
@@ -346,10 +343,7 @@ def test_dataset_import_reports_line_errors_without_partial_state() -> None:
     ).json()["id"]
 
     imported = client.post(
-        (
-            f"/api/v1/projects/{project_id.value}/datasets/{dataset_id}"
-            f"/versions/{version_id}/import"
-        ),
+        (f"/api/v1/projects/{project_id.value}/datasets/{dataset_id}/versions/{version_id}/import"),
         headers=csrf,
         json={
             "format": "json",
@@ -360,8 +354,7 @@ def test_dataset_import_reports_line_errors_without_partial_state() -> None:
         },
     )
     cases = client.get(
-        f"/api/v1/projects/{project_id.value}/datasets/{dataset_id}"
-        f"/versions/{version_id}/cases"
+        f"/api/v1/projects/{project_id.value}/datasets/{dataset_id}/versions/{version_id}/cases"
     )
 
     assert imported.status_code == 400
@@ -395,8 +388,7 @@ def test_dataset_paths_are_isolated_and_published_versions_are_read_only() -> No
     )
 
     mismatched = client.get(
-        f"/api/v1/projects/{project_id.value}/datasets/{second_dataset_id}"
-        f"/versions/{version_id}"
+        f"/api/v1/projects/{project_id.value}/datasets/{second_dataset_id}/versions/{version_id}"
     )
     immutable = client.post(
         (

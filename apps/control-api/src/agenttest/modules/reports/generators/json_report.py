@@ -3,7 +3,8 @@
 from __future__ import annotations
 
 import json
-from datetime import datetime
+from datetime import UTC, datetime
+from typing import Any
 
 
 class JsonReportGenerator:
@@ -12,7 +13,7 @@ class JsonReportGenerator:
     生成标准化测试结果 JSON 格式。
     """
 
-    def generate(self, run_data: dict[str, object]) -> str:
+    def generate(self, run_data: dict[str, Any]) -> str:
         """生成 JSON 报告。
 
         Args:
@@ -23,7 +24,7 @@ class JsonReportGenerator:
         """
         report = {
             "format_version": "1.0",
-            "generated_at": datetime.utcnow().isoformat() + "Z",
+            "generated_at": datetime.now(UTC).isoformat(),
             "run_id": run_data.get("run_id"),
             "plan_id": run_data.get("plan_id"),
             "status": run_data.get("status"),

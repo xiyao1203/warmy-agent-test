@@ -50,6 +50,10 @@ def test_initial_migration_generates_expected_postgresql_schema() -> None:
     assert "project_model_defaults" in sql
     assert "uq_model_configs_project_name" in sql
     assert "uq_project_model_defaults_project_purpose" in sql
+    assert "test_agent_sessions" in sql
+    assert "test_agent_messages" in sql
+    assert "fk_test_agent_messages_project_session" in sql
+    assert "uq_test_agent_messages_sequence" in sql
 
 
 @pytest.mark.skipif(
@@ -61,11 +65,11 @@ def test_empty_database_upgrade_and_revision_cycle() -> None:
     config = alembic_config(database_url=database_url)
 
     command.upgrade(config, "head")
-    assert run(current_revision(database_url)) == "0009"
+    assert run(current_revision(database_url)) == "0010"
 
     command.downgrade(config, "base")
     command.upgrade(config, "head")
-    assert run(current_revision(database_url)) == "0009"
+    assert run(current_revision(database_url)) == "0010"
 
 
 async def current_revision(database_url: str) -> str:
