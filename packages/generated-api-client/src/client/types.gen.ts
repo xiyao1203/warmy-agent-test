@@ -331,6 +331,20 @@ export type ConfirmationDecision = {
 };
 
 /**
+ * ConvertTurnRequest
+ */
+export type ConvertTurnRequest = {
+  /**
+   * Dataset Version Id
+   */
+  dataset_version_id: string;
+  /**
+   * Name
+   */
+  name: string;
+};
+
+/**
  * CreateAccountRequest
  */
 export type CreateAccountRequest = {
@@ -6900,6 +6914,52 @@ export type SendMessageApiV1ProjectsProjectIdTestAgentTargetChatsSessionIdMessag
      * Successful Response
      */
     200: unknown;
+  };
+
+export type ConvertToRegressionApiV1ProjectsProjectIdTestAgentTargetChatsSessionIdTurnsTurnIdRegressionCasesPostData =
+  {
+    body: ConvertTurnRequest;
+    headers?: {
+      /**
+       * X-Csrf-Token
+       */
+      "x-csrf-token"?: string | null;
+    };
+    path: {
+      /**
+       * Project Id
+       */
+      project_id: string;
+      /**
+       * Session Id
+       */
+      session_id: string;
+      /**
+       * Turn Id
+       */
+      turn_id: string;
+    };
+    query?: never;
+    url: "/api/v1/projects/{project_id}/test-agent/target-chats/{session_id}/turns/{turn_id}/regression-cases";
+  };
+
+export type ConvertToRegressionApiV1ProjectsProjectIdTestAgentTargetChatsSessionIdTurnsTurnIdRegressionCasesPostErrors =
+  {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+  };
+
+export type ConvertToRegressionApiV1ProjectsProjectIdTestAgentTargetChatsSessionIdTurnsTurnIdRegressionCasesPostError =
+  ConvertToRegressionApiV1ProjectsProjectIdTestAgentTargetChatsSessionIdTurnsTurnIdRegressionCasesPostErrors[keyof ConvertToRegressionApiV1ProjectsProjectIdTestAgentTargetChatsSessionIdTurnsTurnIdRegressionCasesPostErrors];
+
+export type ConvertToRegressionApiV1ProjectsProjectIdTestAgentTargetChatsSessionIdTurnsTurnIdRegressionCasesPostResponses =
+  {
+    /**
+     * Successful Response
+     */
+    201: unknown;
   };
 
 export type ListPlansApiV1ProjectsProjectIdTestPlansGetData = {

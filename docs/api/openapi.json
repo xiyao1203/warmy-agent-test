@@ -595,6 +595,27 @@
         "title": "ConfirmationDecision",
         "type": "object"
       },
+      "ConvertTurnRequest": {
+        "properties": {
+          "dataset_version_id": {
+            "format": "uuid",
+            "title": "Dataset Version Id",
+            "type": "string"
+          },
+          "name": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "dataset_version_id",
+          "name"
+        ],
+        "title": "ConvertTurnRequest",
+        "type": "object"
+      },
       "CreateAccountRequest": {
         "properties": {
           "account_type": {
@@ -11579,6 +11600,93 @@
           }
         },
         "summary": "Send Message",
+        "tags": [
+          "target-agent-chat"
+        ]
+      }
+    },
+    "/api/v1/projects/{project_id}/test-agent/target-chats/{session_id}/turns/{turn_id}/regression-cases": {
+      "post": {
+        "operationId": "convert_to_regression_api_v1_projects__project_id__test_agent_target_chats__session_id__turns__turn_id__regression_cases_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Project Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "session_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Session Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "turn_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Turn Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "x-csrf-token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Csrf-Token"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConvertTurnRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Convert To Regression",
         "tags": [
           "target-agent-chat"
         ]

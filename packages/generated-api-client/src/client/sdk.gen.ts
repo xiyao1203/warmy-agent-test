@@ -36,6 +36,9 @@ import type {
   ChangePasswordApiV1AuthChangePasswordPostData,
   ChangePasswordApiV1AuthChangePasswordPostErrors,
   ChangePasswordApiV1AuthChangePasswordPostResponses,
+  ConvertToRegressionApiV1ProjectsProjectIdTestAgentTargetChatsSessionIdTurnsTurnIdRegressionCasesPostData,
+  ConvertToRegressionApiV1ProjectsProjectIdTestAgentTargetChatsSessionIdTurnsTurnIdRegressionCasesPostErrors,
+  ConvertToRegressionApiV1ProjectsProjectIdTestAgentTargetChatsSessionIdTurnsTurnIdRegressionCasesPostResponses,
   CreateAccountApiV1ProjectsProjectIdTestAccountsPostData,
   CreateAccountApiV1ProjectsProjectIdTestAccountsPostErrors,
   CreateAccountApiV1ProjectsProjectIdTestAccountsPostResponses,
@@ -3363,6 +3366,33 @@ export const sendMessageApiV1ProjectsProjectIdTestAgentTargetChatsSessionIdMessa
       ThrowOnError
     >({
       url: "/api/v1/projects/{project_id}/test-agent/target-chats/{session_id}/messages",
+      ...options,
+      headers: {
+        "Content-Type": "application/json",
+        ...options.headers,
+      },
+    });
+
+/**
+ * Convert To Regression
+ */
+export const convertToRegressionApiV1ProjectsProjectIdTestAgentTargetChatsSessionIdTurnsTurnIdRegressionCasesPost =
+  <ThrowOnError extends boolean = false>(
+    options: Options<
+      ConvertToRegressionApiV1ProjectsProjectIdTestAgentTargetChatsSessionIdTurnsTurnIdRegressionCasesPostData,
+      ThrowOnError
+    >,
+  ): RequestResult<
+    ConvertToRegressionApiV1ProjectsProjectIdTestAgentTargetChatsSessionIdTurnsTurnIdRegressionCasesPostResponses,
+    ConvertToRegressionApiV1ProjectsProjectIdTestAgentTargetChatsSessionIdTurnsTurnIdRegressionCasesPostErrors,
+    ThrowOnError
+  > =>
+    (options.client ?? client).post<
+      ConvertToRegressionApiV1ProjectsProjectIdTestAgentTargetChatsSessionIdTurnsTurnIdRegressionCasesPostResponses,
+      ConvertToRegressionApiV1ProjectsProjectIdTestAgentTargetChatsSessionIdTurnsTurnIdRegressionCasesPostErrors,
+      ThrowOnError
+    >({
+      url: "/api/v1/projects/{project_id}/test-agent/target-chats/{session_id}/turns/{turn_id}/regression-cases",
       ...options,
       headers: {
         "Content-Type": "application/json",
