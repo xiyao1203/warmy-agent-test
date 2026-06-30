@@ -1,8 +1,5 @@
 "use client";
 
-import { useState } from "react";
-
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
 export interface RubricDimension {
@@ -50,9 +47,7 @@ export function RubricEditor({
 
   const handleCommentChange = (dimensionId: string, comment: string) => {
     onDimensionsChange(
-      dimensions.map((d) =>
-        d.id === dimensionId ? { ...d, comment } : d,
-      ),
+      dimensions.map((d) => (d.id === dimensionId ? { ...d, comment } : d)),
     );
   };
 
@@ -166,9 +161,7 @@ export function RubricDisplay({
               </p>
             ) : null}
           </div>
-          <span className="text-sm font-semibold">
-            {dimension.score} / 5
-          </span>
+          <span className="text-sm font-semibold">{dimension.score} / 5</span>
         </div>
       ))}
     </div>

@@ -1,22 +1,21 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
 
 import { LoginForm } from "./login-form";
 
 export function LoginScreen({ returnTo }: { returnTo?: string }) {
   const router = useRouter();
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
   return (
     <main className="grid min-h-screen lg:grid-cols-2">
       {/* 左侧品牌区域 */}
-      <aside className="relative hidden overflow-hidden lg:flex lg:flex-col lg:justify-between lg:p-14" style={{ background: "linear-gradient(135deg, var(--accent) 0%, color-mix(in srgb, var(--accent) 70%, #1a1a2e) 100%)" }}>
+      <aside
+        className="relative hidden overflow-hidden lg:flex lg:flex-col lg:justify-between lg:p-14"
+        style={{
+          background:
+            "linear-gradient(135deg, var(--accent) 0%, color-mix(in srgb, var(--accent) 70%, #1a1a2e) 100%)",
+        }}
+      >
         {/* 装饰性背景图案 */}
         <div
           aria-hidden="true"
@@ -52,7 +51,7 @@ export function LoginScreen({ returnTo }: { returnTo?: string }) {
 
       {/* 右侧登录表单 */}
       <section className="flex items-center justify-center px-6 py-14 lg:px-16">
-        <div className={`w-full max-w-[400px] transition-all duration-700 ${mounted ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0"}`}>
+        <div className="w-full max-w-[400px] opacity-100 transition-all duration-700">
           {/* 移动端品牌标识 */}
           <div className="mb-10 lg:hidden">
             <p className="text-sm font-semibold tracking-wide text-[var(--accent)]">

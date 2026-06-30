@@ -14,7 +14,10 @@ const PROJECT_STORAGE_KEY = "agenttest_current_project_id";
 export function PlatformFrame({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
-  const userQuery = useQuery({ queryFn: getCurrentUser, queryKey: ["session"] });
+  const userQuery = useQuery({
+    queryFn: getCurrentUser,
+    queryKey: ["session"],
+  });
   const projectsQuery = useQuery({
     enabled: userQuery.isSuccess,
     queryFn: listProjects,
@@ -31,14 +34,13 @@ export function PlatformFrame({ children }: { children: ReactNode }) {
         return localStorage.getItem(PROJECT_STORAGE_KEY) ?? undefined;
       }
       return undefined;
-    }
+    },
   );
 
   // URL 有项目 ID 时，同步到 localStorage
   useEffect(() => {
     if (urlProjectId) {
       localStorage.setItem(PROJECT_STORAGE_KEY, urlProjectId);
-      setStoredProjectId(urlProjectId);
     }
   }, [urlProjectId]);
 
@@ -55,7 +57,7 @@ export function PlatformFrame({ children }: { children: ReactNode }) {
       setStoredProjectId(projectId);
       router.push(`/projects/${projectId}/overview`);
     },
-    [router]
+    [router],
   );
 
   if (userQuery.isPending || projectsQuery.isPending) {

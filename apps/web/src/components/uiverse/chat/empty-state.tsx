@@ -1,7 +1,6 @@
 "use client";
 
 import { Bot } from "lucide-react";
-import { useEffect, useState } from "react";
 
 type ChatEmptyStateProps = {
   title?: string;
@@ -11,23 +10,13 @@ type ChatEmptyStateProps = {
 };
 
 export function ChatEmptyState({
-  description = "例如：\"测试登录流程，使用 admin 账号\"",
+  description = '例如："测试登录流程，使用 admin 账号"',
   onSuggestionClick,
   suggestions = [],
   title = "告诉我您想测试什么",
 }: ChatEmptyStateProps) {
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
   return (
-    <div
-      className={`flex h-full flex-col items-center justify-center transition-all duration-700 ${
-        mounted ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0"
-      }`}
-    >
+    <div className="flex h-full flex-col items-center justify-center opacity-100 transition-all duration-700">
       <div className="relative">
         <Bot className="size-16 text-[var(--text-muted)]" />
         <div className="absolute -right-1 -top-1 size-4 animate-pulse rounded-full bg-[var(--accent)]" />
@@ -43,8 +32,8 @@ export function ChatEmptyState({
               onClick={() => onSuggestionClick?.(suggestion)}
               style={{
                 animationDelay: `${i * 100}ms`,
-                opacity: mounted ? 1 : 0,
-                transform: mounted ? "translateY(0)" : "translateY(10px)",
+                opacity: 1,
+                transform: "translateY(0)",
                 transition: `all 0.5s ease ${i * 100}ms`,
               }}
             >

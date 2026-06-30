@@ -41,20 +41,18 @@ export function NotificationDropdown() {
           role="menu"
         >
           <div className="border-b border-[var(--border)] px-4 py-3">
-            <h3 className="font-semibold">通知</h3>
+            <h3 className="font-semibold">通知中心</h3>
           </div>
           <div className="p-8 text-center">
             <Bell className="mx-auto size-8 text-[var(--text-muted)]" />
-            <p className="mt-3 text-sm text-[var(--text-muted)]">
-              暂无新通知
-            </p>
+            <p className="mt-3 text-sm text-[var(--text-muted)]">暂无新通知</p>
             <Link
               className="mt-3 inline-flex items-center gap-2 text-sm text-[var(--primary)] hover:underline"
               href="/account?section=notifications"
               onClick={() => setOpen(false)}
             >
               <Settings className="size-3.5" />
-              通知偏好
+              通知偏好设置
             </Link>
           </div>
         </div>

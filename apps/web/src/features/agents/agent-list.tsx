@@ -33,7 +33,7 @@ import {
   tableActionCellClass,
   tableActionHeadClass,
 } from "@/components/ui/table-actions";
-import { Skeleton, SkeletonText, Tooltip } from "@/components/uiverse";
+import { Skeleton, Tooltip } from "@/components/uiverse";
 
 type AgentListProps = {
   agents?: AgentResponse[];
@@ -59,7 +59,13 @@ export function AgentList({
   onRetry,
   projectId,
 }: AgentListProps) {
-  if (loading) return <AgentListSkeleton />;
+  if (loading)
+    return (
+      <>
+        <span className="sr-only">正在加载 Agent…</span>
+        <AgentListSkeleton />
+      </>
+    );
   if (error === "not-found") {
     return <StatusPanel title="项目不存在或你无权访问" />;
   }
@@ -71,7 +77,9 @@ export function AgentList({
     <div className="min-w-0 px-6 py-6">
       <header className="flex items-start justify-between gap-4 border-b border-[var(--border)] pb-5">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Agent 与版本</h1>
+          <h1 className="text-2xl font-semibold tracking-tight">
+            Agent 与版本
+          </h1>
           <p className="mt-2 text-sm text-[var(--text-muted)]">
             管理待测 Agent、连接配置和不可变发布版本。
           </p>
@@ -116,7 +124,11 @@ export function AgentList({
                     </div>
                   </TableCell>
                   <TableCell className="text-center">
-                    <Badge tone={agent.agent_type === "canvas" ? "accent" : "neutral"}>
+                    <Badge
+                      tone={
+                        agent.agent_type === "canvas" ? "accent" : "neutral"
+                      }
+                    >
                       {typeLabels[agent.agent_type]}
                     </Badge>
                   </TableCell>
@@ -125,7 +137,11 @@ export function AgentList({
                   </TableCell>
                   <TableCell className={tableActionCellClass}>
                     <TableActions label={agent.name}>
-                      <Button asChild className="shrink-0 px-2.5" variant="ghost">
+                      <Button
+                        asChild
+                        className="shrink-0 px-2.5"
+                        variant="ghost"
+                      >
                         <Link
                           aria-label={`查看${agent.name}`}
                           href={`/projects/${projectId}/agents/${agent.id}`}
@@ -196,7 +212,9 @@ function CreateAgentDialog({
       </DialogTrigger>
       <DialogContent>
         <DialogTitle>创建 Agent</DialogTitle>
-        <DialogDescription>先登记 Agent，再创建具体连接版本。</DialogDescription>
+        <DialogDescription>
+          先登记 Agent，再创建具体连接版本。
+        </DialogDescription>
         <div className="mt-5 space-y-4">
           <label className="block text-sm font-medium">
             Agent 名称
@@ -210,7 +228,9 @@ function CreateAgentDialog({
             Agent 类型
             <select
               className="mt-1.5 h-9 w-full rounded-[var(--radius-sm)] border border-[var(--border)] bg-[var(--surface)] px-3 text-sm text-[var(--text)] hover:border-[var(--border-strong)] focus:border-[var(--accent)] focus:outline-none focus:ring-2 focus:ring-[var(--focus-ring-subtle)]"
-              onChange={(event) => setAgentType(event.target.value as AgentType)}
+              onChange={(event) =>
+                setAgentType(event.target.value as AgentType)
+              }
               value={agentType}
             >
               <option value="generic_http">通用 HTTP</option>
@@ -225,9 +245,15 @@ function CreateAgentDialog({
               value={description}
             />
           </label>
-          {error ? <p className="text-sm text-[var(--danger)]">{error}</p> : null}
+          {error ? (
+            <p className="text-sm text-[var(--danger)]">{error}</p>
+          ) : null}
           <div className="flex justify-end gap-2">
-            <Button disabled={submitting} onClick={() => setOpen(false)} type="button">
+            <Button
+              disabled={submitting}
+              onClick={() => setOpen(false)}
+              type="button"
+            >
               取消
             </Button>
             <Button
@@ -298,7 +324,13 @@ function ConfirmDeleteButton({
   );
 }
 
-function StatusPanel({ onRetry, title }: { onRetry?: () => void; title: string }) {
+function StatusPanel({
+  onRetry,
+  title,
+}: {
+  onRetry?: () => void;
+  title: string;
+}) {
   return (
     <div className="grid min-h-[calc(100vh-3rem)] place-items-center px-6 text-center">
       <div>

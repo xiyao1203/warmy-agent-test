@@ -48,7 +48,12 @@ export function ProjectOverview({
   user,
 }: ProjectOverviewProps) {
   if (loading) {
-    return <LoadingSkeleton />;
+    return (
+      <>
+        <span className="sr-only">正在加载项目概览…</span>
+        <LoadingSkeleton />
+      </>
+    );
   }
 
   if (error === "not-found") {
