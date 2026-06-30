@@ -1558,10 +1558,16 @@ def _register_test_agent_endpoints(
     async def check_project(project_id):
         from sqlalchemy import text
 
+        # Convert UUID to hex format (no hyphens) for SQLite compatibility
+        if isinstance(project_id, str):
+            pid_str = project_id.replace('-', '')
+        else:
+            pid_str = project_id.hex if hasattr(project_id, 'hex') else str(project_id).replace('-', '')
+
         async with session_factory() as session:
             result = await session.execute(
                 text("SELECT 1 FROM projects WHERE id = :pid"),
-                {"pid": project_id},
+                {"pid": pid_str},
             )
             if result.scalar() is None:
                 from fastapi import HTTPException
