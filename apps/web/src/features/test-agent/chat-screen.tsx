@@ -34,6 +34,7 @@ export function TestAgentChat({ projectId }: { projectId: string }) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [artifacts, setArtifacts] = useState<ArtifactLink[]>([]);
   const [events, setEvents] = useState<AgentEvent[]>([]);
+  const [streamingContent, setStreamingContent] = useState("");
   const [input, setInput] = useState("");
   const [loadingHistory, setLoadingHistory] = useState(true);
   const [sending, setSending] = useState(false);
@@ -90,6 +91,13 @@ export function TestAgentChat({ projectId }: { projectId: string }) {
             : [...current, next],
         );
       }
+      if (event.type === "message.started") setStreamingContent("");
+      if (event.type === "message.delta") {
+        setStreamingContent(
+          (current) => current + String(event.payload.content ?? ""),
+        );
+      }
+      if (event.type === "message.completed") setStreamingContent("");
     });
   }, [activeSessionId, projectId]);
 
@@ -210,6 +218,15 @@ export function TestAgentChat({ projectId }: { projectId: string }) {
                     message={message}
                   />
                 ))}
+                {streamingContent ? (
+                  <MessageBubble
+                    message={{
+                      role: "assistant",
+                      content: streamingContent,
+                      timestamp: "streaming",
+                    }}
+                  />
+                ) : null}
                 {active
                   ? events
                       .filter(
@@ -227,7 +244,7 @@ export function TestAgentChat({ projectId }: { projectId: string }) {
                         />
                       ))
                   : null}
-                {sending ? <TypingIndicator /> : null}
+                {sending && !streamingContent ? <TypingIndicator /> : null}
               </div>
             )}
           </div>
