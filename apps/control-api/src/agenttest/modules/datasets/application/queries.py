@@ -30,6 +30,7 @@ from agenttest.modules.projects.public import ProjectId
 
 class ListDatasetsHandler:
     """查询项目下数据集列表，支持游标分页。"""
+
     def __init__(
         self,
         *,
@@ -53,6 +54,7 @@ class ListDatasetsHandler:
 
 class GetDatasetHandler:
     """查询单个数据集详情。"""
+
     def __init__(
         self,
         *,
@@ -70,6 +72,7 @@ class GetDatasetHandler:
 
 class ListDatasetVersionsHandler:
     """查询数据集的所有版本（按版本号倒序）。"""
+
     def __init__(
         self,
         *,
@@ -114,6 +117,7 @@ class GetDatasetVersionHandler:
 
 class ListTestCasesHandler:
     """查询数据集版本下的测试用例列表，支持游标分页。"""
+
     def __init__(
         self,
         *,
@@ -138,13 +142,12 @@ class ListTestCasesHandler:
         version = await _required_version(self._versions, dataset_version_id)
         dataset = await _required_dataset(self._datasets, version.dataset_id)
         await self._project_access.ensure_member(actor, dataset.project_id)
-        return await self._cases.list_by_version(
-            dataset_version_id, limit=limit, cursor=cursor
-        )
+        return await self._cases.list_by_version(dataset_version_id, limit=limit, cursor=cursor)
 
 
 class GetTestCaseHandler:
     """查询单个测试用例详情。"""
+
     def __init__(
         self,
         *,

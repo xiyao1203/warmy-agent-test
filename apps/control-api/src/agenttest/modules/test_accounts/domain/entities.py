@@ -34,6 +34,7 @@ class TestAccount:
         updated_at: 更新时间。
         description: 可选描述。
     """
+
     account_id: TestAccountId
     project_id: UUID
     name: str

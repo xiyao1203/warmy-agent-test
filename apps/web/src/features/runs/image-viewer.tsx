@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 
 import { Button } from "@/components/ui/button";
 
@@ -50,9 +51,12 @@ export function ImageViewer({ src, alt, onFullscreen }: ImageViewerProps) {
 
       {/* 图片容器 */}
       <div className="flex items-center justify-center overflow-hidden rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--surface-subtle)]">
-        <img
+        <Image
           src={src}
           alt={alt}
+          height={800}
+          unoptimized
+          width={1200}
           style={{ transform: `scale(${scale})` }}
           className="max-h-[500px] max-w-full object-contain transition-transform"
         />

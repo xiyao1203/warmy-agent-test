@@ -152,4 +152,3 @@ def test_run_cancel_mid_execution() -> None:
     run.cancel()
     assert run.status is RunStatus.CANCELLED
     assert run.completed_at is not None
-

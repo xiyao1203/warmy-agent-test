@@ -43,7 +43,9 @@ def upgrade() -> None:
     )
     op.create_index(
         "ix_model_configs_project_created_at",
-        "model_configurations", ["project_id", sa.text("created_at DESC")], unique=False,
+        "model_configurations",
+        ["project_id", sa.text("created_at DESC")],
+        unique=False,
     )
     op.create_table(
         "project_model_defaults",
@@ -66,7 +68,9 @@ def upgrade() -> None:
         ),
         sa.PrimaryKeyConstraint("project_id", "purpose"),
         sa.UniqueConstraint(
-            "project_id", "purpose", name="uq_project_model_defaults_project_purpose",
+            "project_id",
+            "purpose",
+            name="uq_project_model_defaults_project_purpose",
         ),
     )
 

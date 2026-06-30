@@ -1,6 +1,12 @@
 import type { HTMLAttributes } from "react";
 
-type StatusType = "error" | "info" | "offline" | "running" | "success" | "warning";
+type StatusType =
+  | "error"
+  | "info"
+  | "offline"
+  | "running"
+  | "success"
+  | "warning";
 
 type StatusIndicatorProps = HTMLAttributes<HTMLDivElement> & {
   status: StatusType;
@@ -68,7 +74,9 @@ export function StatusIndicator({
           />
         )}
       </span>
-      {label && <span className={`text-sm font-medium ${config.text}`}>{label}</span>}
+      {label && (
+        <span className={`text-sm font-medium ${config.text}`}>{label}</span>
+      )}
     </div>
   );
 }

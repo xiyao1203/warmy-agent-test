@@ -1539,13 +1539,43 @@ def _register_test_agent_endpoints(
     auth_deps,
 ) -> None:
     """注册测试 Agent 对话 API。"""
+    from agenttest.modules.experiments.infrastructure.persistence.repositories import (
+        SqlAlchemyExperimentRepository,
+    )
+    from agenttest.modules.gates.infrastructure.persistence.repositories import (
+        SqlAlchemyReleaseGateRepository,
+    )
     from agenttest.modules.model_configs.infrastructure.temporal_invoker import (
         TemporalModelInvoker,
     )
+    from agenttest.modules.reviews.infrastructure.persistence.repositories import (
+        SqlAlchemyReviewTaskRepository,
+    )
+    from agenttest.modules.scorers.infrastructure.persistence.repositories import (
+        SqlAlchemyScorerRepository,
+    )
+    from agenttest.modules.security.infrastructure.repositories import (
+        SqlAlchemySecurityScanRepository,
+    )
+    from agenttest.modules.test_accounts.infrastructure.persistence.repositories import (
+        SqlAlchemyTestAccountRepository,
+    )
+    from agenttest.modules.test_agent.adapters.platform import HandlerPlatformGateway
     from agenttest.modules.test_agent.api.router import create_test_agent_router
-    from agenttest.modules.test_agent.application.model_planner import ModelTestPlanGenerator
+    from agenttest.modules.test_agent.api.target_chat import create_target_chat_router
+    from agenttest.modules.test_agent.application.conversation import SuperAgentConversation
+    from agenttest.modules.test_agent.application.orchestrator import SuperAgentOrchestrator
+    from agenttest.modules.test_agent.application.platform_catalog import (
+        build_platform_registry,
+    )
+    from agenttest.modules.test_agent.application.target_chat import TargetChatService
     from agenttest.modules.test_agent.infrastructure.repositories import (
         SqlAlchemyChatSessionRepository,
+        SqlAlchemyOrchestrationRepository,
+        SqlAlchemyTargetChatRepository,
+    )
+    from agenttest.modules.test_agent.infrastructure.target_runtime import (
+        TemporalTargetAgentRuntime,
     )
     from agenttest.shared.infrastructure.database import (
         create_database_engine,
@@ -1554,15 +1584,35 @@ def _register_test_agent_endpoints(
 
     engine = create_database_engine(str(settings.database_url))
     session_factory = create_session_factory(engine)
+    orchestration = SqlAlchemyOrchestrationRepository(session_factory)
+    registry = build_platform_registry(
+        HandlerPlatformGateway(
+            agents=build_agent_dependencies(settings),
+            datasets=build_dataset_dependencies(settings),
+            environments=build_environment_dependencies(settings),
+            plans=build_test_plan_dependencies(settings),
+            runs=build_run_dependencies(settings),
+            scorers=SqlAlchemyScorerRepository(session_factory),
+            experiments=SqlAlchemyExperimentRepository(session_factory),
+            reviews=SqlAlchemyReviewTaskRepository(session_factory),
+            gates=SqlAlchemyReleaseGateRepository(session_factory),
+            security=SqlAlchemySecurityScanRepository(session_factory),
+            accounts=SqlAlchemyTestAccountRepository(session_factory),
+            promptfoo_bin=settings.promptfoo_bin,
+            allow_private_security_targets=settings.security_scan_allow_private_network,
+        )
+    )
 
     async def check_project(project_id):
         from sqlalchemy import text
 
         # Convert UUID to hex format (no hyphens) for SQLite compatibility
         if isinstance(project_id, str):
-            pid_str = project_id.replace('-', '')
+            pid_str = project_id.replace("-", "")
         else:
-            pid_str = project_id.hex if hasattr(project_id, 'hex') else str(project_id).replace('-', '')
+            pid_str = (
+                project_id.hex if hasattr(project_id, "hex") else str(project_id).replace("-", "")
+            )
 
         async with session_factory() as session:
             result = await session.execute(
@@ -1585,10 +1635,11 @@ def _register_test_agent_endpoints(
 
     router = create_test_agent_router(
         sessions=SqlAlchemyChatSessionRepository(session_factory),
+        orchestration=orchestration,
         actor_for=actor_for,
         check_project=check_project,
         settings=settings,
-        plan_generator=ModelTestPlanGenerator(
+        conversation=SuperAgentConversation(
             build_model_config_service(settings),
             TemporalModelInvoker(
                 address=settings.temporal_address,
@@ -1596,9 +1647,31 @@ def _register_test_agent_endpoints(
                 task_queue=settings.model_runner_task_queue,
                 allow_private_network=settings.model_allow_private_network,
             ),
+            capabilities=registry.describe_all(),
         ),
+        agent_orchestrator=SuperAgentOrchestrator(registry, orchestration),
     )
     app.include_router(router, prefix="/api/v1")
+    target_repository = SqlAlchemyTargetChatRepository(session_factory)
+    app.include_router(
+        create_target_chat_router(
+            service=TargetChatService(
+                target_repository,
+                TemporalTargetAgentRuntime(
+                    address=settings.temporal_address,
+                    namespace=settings.temporal_namespace,
+                    task_queue=settings.temporal_task_queue,
+                ),
+            ),
+            repository=target_repository,
+            agents=build_agent_dependencies(settings),
+            environments=build_environment_dependencies(settings),
+            datasets=build_dataset_dependencies(settings),
+            actor_for=actor_for,
+            settings=settings,
+        ),
+        prefix="/api/v1",
+    )
 
 
 def _register_test_account_endpoints(

@@ -17,9 +17,7 @@ async def execute_agent_case(
     headers_raw = agent_config.get("headers", {})
     headers = headers_raw if isinstance(headers_raw, dict) else {}
     timeout_raw = agent_config.get("timeout_seconds", 30)
-    timeout_seconds = (
-        float(timeout_raw) if isinstance(timeout_raw, int | float | str) else 30.0
-    )
+    timeout_seconds = float(timeout_raw) if isinstance(timeout_raw, int | float | str) else 30.0
     result = await adapter.execute(
         AgentRequest(
             url=str(agent_config["url"]),

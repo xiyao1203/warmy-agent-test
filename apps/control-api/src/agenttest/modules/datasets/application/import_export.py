@@ -45,6 +45,7 @@ class ImportExportService:
     支持 JSON/JSONL/CSV 导入和 JSON/JSONL/CSV 导出。
     导入为全量或全无——任一错误即回滚全部已导入用例。
     """
+
     def __init__(
         self,
         *,
@@ -138,9 +139,18 @@ class ImportExportService:
 
 _REQUIRED_FIELDS = {"name", "input", "execution_mode"}
 _OPTIONAL_FIELDS = {
-    "assertions", "scorers", "initial_state", "expected_outcome",
-    "security_policies", "tags", "scenario", "priority",
-    "risk_level", "difficulty", "test_group", "sort_order",
+    "assertions",
+    "scorers",
+    "initial_state",
+    "expected_outcome",
+    "security_policies",
+    "tags",
+    "scenario",
+    "priority",
+    "risk_level",
+    "difficulty",
+    "test_group",
+    "sort_order",
 }
 
 
@@ -166,14 +176,19 @@ def _parse_csv(content: str) -> list[dict[str, object]]:
     for row in reader:
         record: dict[str, object] = {}
         for key, value in row.items():
-            if key in ("input", "initial_state", "expected_outcome", "assertions",
-                       "scorers", "security_policies", "tags"):
+            if key in (
+                "input",
+                "initial_state",
+                "expected_outcome",
+                "assertions",
+                "scorers",
+                "security_policies",
+                "tags",
+            ):
                 try:
                     record[key] = json.loads(value) if value else []
                 except json.JSONDecodeError as exc:
-                    raise ValueError(
-                        f"Invalid JSON in field '{key}': {value}"
-                    ) from exc
+                    raise ValueError(f"Invalid JSON in field '{key}': {value}") from exc
             else:
                 record[key] = value
         records.append(record)
@@ -197,36 +212,28 @@ def _build_test_case(
     try:
         execution_mode = ExecutionMode(execution_mode_raw)
     except ValueError as exc:
-        raise ValueError(
-            f"Invalid execution_mode: {execution_mode_raw}"
-        ) from exc
+        raise ValueError(f"Invalid execution_mode: {execution_mode_raw}") from exc
 
     priority = None
     if raw.get("priority"):
         try:
             priority = Priority(str(raw["priority"]))
         except ValueError as exc:
-            raise ValueError(
-                f"Invalid priority: {raw['priority']}"
-            ) from exc
+            raise ValueError(f"Invalid priority: {raw['priority']}") from exc
 
     risk_level = None
     if raw.get("risk_level"):
         try:
             risk_level = RiskLevel(str(raw["risk_level"]))
         except ValueError as exc:
-            raise ValueError(
-                f"Invalid risk_level: {raw['risk_level']}"
-            ) from exc
+            raise ValueError(f"Invalid risk_level: {raw['risk_level']}") from exc
 
     test_group = None
     if raw.get("test_group"):
         try:
             test_group = TestGroup(str(raw["test_group"]))
         except ValueError as exc:
-            raise ValueError(
-                f"Invalid test_group: {raw['test_group']}"
-            ) from exc
+            raise ValueError(f"Invalid test_group: {raw['test_group']}") from exc
 
     return TestCase.create(
         case_id=TestCaseId.new(),

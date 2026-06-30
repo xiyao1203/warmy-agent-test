@@ -27,7 +27,9 @@ class SqlAlchemyReviewTaskRepository:
         return _to_entity(model) if model else None
 
     async def get_by_id_and_project(
-        self, task_id: ReviewTaskId, project_id: ProjectId,
+        self,
+        task_id: ReviewTaskId,
+        project_id: ProjectId,
     ) -> ReviewTask | None:
         async with session_scope(self._session_factory) as session:
             model = await session.get(ReviewTaskModel, task_id.value)
@@ -78,7 +80,10 @@ class SqlAlchemyReviewTaskRepository:
                 model.updated_at = task.updated_at
 
     async def auto_enqueue_low_confidence(
-        self, project_id: ProjectId, run_id: str, confidence_threshold: float,
+        self,
+        project_id: ProjectId,
+        run_id: str,
+        confidence_threshold: float,
     ) -> list[ReviewTask]:
         """将低置信度用例自动入队。"""
         async with session_scope(self._session_factory) as session:

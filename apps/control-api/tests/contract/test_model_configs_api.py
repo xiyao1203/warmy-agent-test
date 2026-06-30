@@ -8,6 +8,7 @@ from agenttest.modules.model_configs.application.ports import (
     ModelRuntimeUnavailableError,
 )
 from agenttest.modules.model_configs.application.service import ModelConfigService
+from agenttest.modules.model_configs.domain.errors import ModelConfigNameConflictError
 from agenttest.modules.projects.public import ProjectId, ProjectNotFoundError
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
@@ -26,6 +27,11 @@ class MemoryRepo:
         return item if item and item.project_id == project_id else None
 
     async def add(self, item):
+        if any(
+            existing.project_id == item.project_id and existing.name == item.name
+            for existing in self.items.values()
+        ):
+            raise ModelConfigNameConflictError
         self.items[item.model_config_id] = item
 
     async def save(self, item):
@@ -153,6 +159,18 @@ def test_crud_never_returns_plaintext_or_ciphertext() -> None:
     assert "encrypted:" not in body
     assert created.json()["has_api_key"] is True
     assert created.json()["api_key_hint"] == "...cret"
+
+
+def test_duplicate_name_returns_stable_conflict_without_database_details() -> None:
+    client, project_id = client_for()
+    first = create_model(client, project_id)
+
+    duplicate = create_model(client, project_id)
+
+    assert first.status_code == 201
+    assert duplicate.status_code == 409
+    assert duplicate.json()["detail"] == "Model configuration name already exists"
+    assert "constraint" not in duplicate.text.lower()
 
 
 def test_sets_three_project_defaults_and_enforces_csrf() -> None:

@@ -58,7 +58,9 @@ export function ImportDialog({
             <select
               className="mt-1.5 h-9 w-full rounded-[var(--radius-sm)] border border-[var(--border)] bg-[var(--surface)] px-3"
               onChange={(event) =>
-                setFormat(event.target.value as ImportTestCasesRequest["format"])
+                setFormat(
+                  event.target.value as ImportTestCasesRequest["format"],
+                )
               }
               value={format}
             >
@@ -85,7 +87,9 @@ export function ImportDialog({
               ))}
             </ul>
           ) : null}
-          {message ? <p className="text-sm text-[var(--danger)]">{message}</p> : null}
+          {message ? (
+            <p className="text-sm text-[var(--danger)]">{message}</p>
+          ) : null}
           <div className="flex justify-end gap-2">
             <Button onClick={() => setOpen(false)}>取消</Button>
             <Button onClick={submit} variant="primary">

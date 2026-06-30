@@ -16,7 +16,11 @@ from agenttest.shared.api.auth_guard import require_actor
 
 
 def create_run_stream_router(
-    *, session_factory, actor_for, check_project, settings,
+    *,
+    session_factory,
+    actor_for,
+    check_project,
+    settings,
 ) -> APIRouter:
     router = APIRouter(
         prefix="/projects/{project_id}/runs/{run_id}",

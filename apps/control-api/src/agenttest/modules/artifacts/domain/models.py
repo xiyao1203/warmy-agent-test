@@ -10,6 +10,7 @@ from uuid import UUID
 
 class ArtifactId(UUID):
     """产物 ID。"""
+
     pass
 
 

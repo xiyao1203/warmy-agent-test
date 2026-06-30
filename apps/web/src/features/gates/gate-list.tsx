@@ -155,7 +155,11 @@ function GateCard({
             评估
           </Button>
           <Tooltip content="删除门禁">
-            <Button aria-label={`删除门禁 ${gate.name}`} onClick={onDelete} variant="ghost">
+            <Button
+              aria-label={`删除门禁 ${gate.name}`}
+              onClick={onDelete}
+              variant="ghost"
+            >
               <Trash2 className="size-4 text-[var(--danger)]" />
             </Button>
           </Tooltip>
@@ -172,13 +176,13 @@ function GateCard({
       footer={
         <>
           <ListCardMeta
-            items={
-              [
-                `安全评分 ≥ ${gate.security_threshold.toFixed(1)}`,
-                gate.cost_limit != null ? `成本 ≤ ${gate.cost_limit}` : undefined,
-                gate.critical_cases.length > 0 ? `关键用例 ${gate.critical_cases.length} 个` : undefined,
-              ]
-            }
+            items={[
+              `安全评分 ≥ ${gate.security_threshold.toFixed(1)}`,
+              gate.cost_limit != null ? `成本 ≤ ${gate.cost_limit}` : undefined,
+              gate.critical_cases.length > 0
+                ? `关键用例 ${gate.critical_cases.length} 个`
+                : undefined,
+            ]}
           />
           {result ? (
             <div

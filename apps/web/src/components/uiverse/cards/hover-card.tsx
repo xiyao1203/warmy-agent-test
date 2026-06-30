@@ -27,7 +27,9 @@ export function HoverCard({
             {icon}
           </div>
         )}
-        <h3 className="text-sm font-medium text-[var(--text-muted)]">{title}</h3>
+        <h3 className="text-sm font-medium text-[var(--text-muted)]">
+          {title}
+        </h3>
         {value !== undefined && (
           <p className="mt-2 text-3xl font-bold text-[var(--text)]">{value}</p>
         )}

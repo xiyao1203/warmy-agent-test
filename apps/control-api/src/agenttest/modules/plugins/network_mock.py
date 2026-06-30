@@ -12,6 +12,7 @@ from typing import Any
 @dataclass(slots=True)
 class NetworkMockRule:
     """单条网络 Mock 规则。"""
+
     url_pattern: str
     status: int = 200
     body: Any = None
@@ -22,6 +23,7 @@ class NetworkMockRule:
 @dataclass(slots=True)
 class NetworkFaultRule:
     """单条网络异常注入规则。"""
+
     url_pattern: str
     fault_type: str = "abort"  # abort | timeout | slow | error
     delay_ms: int = 0

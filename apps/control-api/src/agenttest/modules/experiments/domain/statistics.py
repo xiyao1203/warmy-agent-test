@@ -5,7 +5,6 @@
 
 from __future__ import annotations
 
-import math
 import statistics
 from dataclasses import dataclass
 
@@ -107,9 +106,9 @@ def calculate_statistics(cases: list[dict[str, object]]) -> ExperimentStatistics
     pass_rate = passed / total if total > 0 else 0.0
 
     # 提取有效值（忽略 None）
-    durations = [float(c["duration_ms"]) for c in cases if c.get("duration_ms") is not None]
-    scores = [float(c["score"]) for c in cases if c.get("score") is not None]
-    costs = [float(c["cost"]) for c in cases if c.get("cost") is not None]
+    durations = [value for c in cases if (value := _numeric(c.get("duration_ms"))) is not None]
+    scores = [value for c in cases if (value := _numeric(c.get("score"))) is not None]
+    costs = [value for c in cases if (value := _numeric(c.get("cost"))) is not None]
 
     return ExperimentStatistics(
         total_cases=total,
@@ -156,43 +155,58 @@ def identify_degradation(
         status_a = case_a.get("status")
         status_b = case_b.get("status")
         if status_a == "passed" and status_b != "passed":
-            degradations.append({
-                "case_id": case_id,
-                "metric": "status",
-                "baseline": status_a,
-                "current": status_b,
-                "change": -1.0,
-            })
+            degradations.append(
+                {
+                    "case_id": case_id,
+                    "metric": "status",
+                    "baseline": status_a,
+                    "current": status_b,
+                    "change": -1.0,
+                }
+            )
             continue
 
         # 分数退化
         score_a = case_a.get("score")
         score_b = case_b.get("score")
+        score_a = _numeric(score_a)
+        score_b = _numeric(score_b)
         if score_a is not None and score_b is not None:
-            score_a = float(score_a)
-            score_b = float(score_b)
             if score_a > 0 and (score_a - score_b) / score_a > threshold:
-                degradations.append({
-                    "case_id": case_id,
-                    "metric": "score",
-                    "baseline": score_a,
-                    "current": score_b,
-                    "change": round((score_b - score_a) / score_a, 4),
-                })
+                degradations.append(
+                    {
+                        "case_id": case_id,
+                        "metric": "score",
+                        "baseline": score_a,
+                        "current": score_b,
+                        "change": round((score_b - score_a) / score_a, 4),
+                    }
+                )
 
         # 时长退化（增加超过 50%）
         dur_a = case_a.get("duration_ms")
         dur_b = case_b.get("duration_ms")
+        dur_a = _numeric(dur_a)
+        dur_b = _numeric(dur_b)
         if dur_a is not None and dur_b is not None:
-            dur_a = float(dur_a)
-            dur_b = float(dur_b)
             if dur_a > 0 and dur_b > dur_a * 1.5:
-                degradations.append({
-                    "case_id": case_id,
-                    "metric": "duration",
-                    "baseline": dur_a,
-                    "current": dur_b,
-                    "change": round((dur_b - dur_a) / dur_a, 4),
-                })
+                degradations.append(
+                    {
+                        "case_id": case_id,
+                        "metric": "duration",
+                        "baseline": dur_a,
+                        "current": dur_b,
+                        "change": round((dur_b - dur_a) / dur_a, 4),
+                    }
+                )
 
     return degradations
+
+
+def _numeric(value: object) -> float | None:
+    if isinstance(value, (int, float, str)) and not isinstance(value, bool):
+        try:
+            return float(value)
+        except ValueError:
+            return None
+    return None

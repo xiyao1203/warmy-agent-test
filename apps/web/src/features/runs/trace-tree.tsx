@@ -25,10 +25,13 @@ type TraceTreeNodeProps = {
 
 const TYPE_COLORS: Record<string, string> = {
   error: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400",
-  model_request: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400",
-  result: "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400",
+  model_request:
+    "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400",
+  result:
+    "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400",
   step: "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300",
-  tool_call: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400",
+  tool_call:
+    "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400",
 };
 
 function TraceTreeNode({ depth = 0, span }: TraceTreeNodeProps) {
@@ -38,7 +41,9 @@ function TraceTreeNode({ depth = 0, span }: TraceTreeNodeProps) {
   const colorClass = TYPE_COLORS[typeKey] ?? TYPE_COLORS.step;
 
   return (
-    <div className={depth > 0 ? "ml-5 border-l border-[var(--border)] pl-3" : ""}>
+    <div
+      className={depth > 0 ? "ml-5 border-l border-[var(--border)] pl-3" : ""}
+    >
       <button
         className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-sm hover:bg-[var(--surface-subtle)]"
         onClick={() => hasChildren && setExpanded(!expanded)}
@@ -52,7 +57,9 @@ function TraceTreeNode({ depth = 0, span }: TraceTreeNodeProps) {
         ) : (
           <span className="w-3.5" />
         )}
-        <span className={`rounded px-1.5 py-0.5 text-xs font-medium ${colorClass}`}>
+        <span
+          className={`rounded px-1.5 py-0.5 text-xs font-medium ${colorClass}`}
+        >
           {typeKey}
         </span>
         <span className="flex-1 truncate font-medium">
@@ -73,8 +80,8 @@ function TraceTreeNode({ depth = 0, span }: TraceTreeNodeProps) {
           ) : null}
           {span.cost != null ? (
             <span className="flex items-center gap-0.5">
-              <Zap aria-hidden="true" className="size-3" />
-              ¥{span.cost.toFixed(2)}
+              <Zap aria-hidden="true" className="size-3" />¥
+              {span.cost.toFixed(2)}
             </span>
           ) : null}
         </span>
@@ -145,17 +152,15 @@ export function TraceTree({ spans }: { spans: TraceSpan[] }) {
 export function TraceTimeline({ spans }: { spans: TraceSpan[] }) {
   if (spans.length === 0) return null;
 
-  const maxDuration = Math.max(
-    ...spans.map((s) => s.duration_ms ?? 0),
-    1,
-  );
+  const maxDuration = Math.max(...spans.map((s) => s.duration_ms ?? 0), 1);
 
   return (
     <div className="space-y-1">
       {spans.map((span, i) => {
         const typeKey = span.event_type ?? "step";
         const colorClass = TYPE_COLORS[typeKey] ?? TYPE_COLORS.step;
-        const pct = maxDuration > 0 ? ((span.duration_ms ?? 0) / maxDuration) * 100 : 0;
+        const pct =
+          maxDuration > 0 ? ((span.duration_ms ?? 0) / maxDuration) * 100 : 0;
 
         return (
           <div className="flex items-center gap-3 text-xs" key={span.id ?? i}>

@@ -5,12 +5,10 @@ from __future__ import annotations
 from uuid import uuid4
 
 import pytest
-
 from agenttest.modules.reviews.domain.auto_collector import (
     AutoCollectCriteria,
     AutoCollector,
 )
-from agenttest.modules.reviews.domain.entities import ReviewStatus
 
 
 class TestAutoCollectCriteria:
@@ -44,9 +42,7 @@ class TestAutoCollector:
         """创建收集器实例。"""
         return AutoCollector()
 
-    def test_low_confidence_should_collect(
-        self, collector: AutoCollector
-    ) -> None:
+    def test_low_confidence_should_collect(self, collector: AutoCollector) -> None:
         """测试低置信度结果应被收集。"""
         result = {
             "case_id": str(uuid4()),
@@ -57,9 +53,7 @@ class TestAutoCollector:
         }
         assert collector.should_collect(result) is True
 
-    def test_high_confidence_should_not_collect(
-        self, collector: AutoCollector
-    ) -> None:
+    def test_high_confidence_should_not_collect(self, collector: AutoCollector) -> None:
         """测试高置信度结果不应被收集。"""
         result = {
             "case_id": str(uuid4()),
@@ -70,9 +64,7 @@ class TestAutoCollector:
         }
         assert collector.should_collect(result) is False
 
-    def test_score_conflict_should_collect(
-        self, collector: AutoCollector
-    ) -> None:
+    def test_score_conflict_should_collect(self, collector: AutoCollector) -> None:
         """测试评分冲突结果应被收集。"""
         result = {
             "case_id": str(uuid4()),
@@ -83,9 +75,7 @@ class TestAutoCollector:
         }
         assert collector.should_collect(result) is True
 
-    def test_high_risk_should_collect(
-        self, collector: AutoCollector
-    ) -> None:
+    def test_high_risk_should_collect(self, collector: AutoCollector) -> None:
         """测试高风险用例应被收集。"""
         result = {
             "case_id": str(uuid4()),
@@ -96,9 +86,7 @@ class TestAutoCollector:
         }
         assert collector.should_collect(result) is True
 
-    def test_security_findings_should_collect(
-        self, collector: AutoCollector
-    ) -> None:
+    def test_security_findings_should_collect(self, collector: AutoCollector) -> None:
         """测试安全测试发现应被收集。"""
         result = {
             "case_id": str(uuid4()),
@@ -109,9 +97,7 @@ class TestAutoCollector:
         }
         assert collector.should_collect(result) is True
 
-    def test_priority_higher_for_lower_confidence(
-        self, collector: AutoCollector
-    ) -> None:
+    def test_priority_higher_for_lower_confidence(self, collector: AutoCollector) -> None:
         """测试置信度越低，优先级越高。"""
         result_low = {
             "case_id": str(uuid4()),
@@ -131,9 +117,7 @@ class TestAutoCollector:
         priority_high = collector.calculate_priority(result_high)
         assert priority_low > priority_high
 
-    def test_priority_boosted_for_security_findings(
-        self, collector: AutoCollector
-    ) -> None:
+    def test_priority_boosted_for_security_findings(self, collector: AutoCollector) -> None:
         """测试安全发现会提升优先级。"""
         result = {
             "case_id": str(uuid4()),

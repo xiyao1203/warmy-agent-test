@@ -24,7 +24,8 @@ type AggregationViewProps = {
 };
 
 export function AggregationView({ statistics }: AggregationViewProps) {
-  const { total_cases, passed, failed, pass_rate, latency, score, cost } = statistics;
+  const { total_cases, passed, failed, pass_rate, latency, score, cost } =
+    statistics;
 
   return (
     <div className="space-y-4">

@@ -118,4 +118,3 @@ class RunEventModel(Base):
     cost: Mapped[float | None] = mapped_column(nullable=True)
     metadata_json: Mapped[dict | None] = mapped_column("metadata", JSON, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
-

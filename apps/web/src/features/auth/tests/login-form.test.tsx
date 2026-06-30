@@ -36,9 +36,7 @@ describe("LoginForm", () => {
     });
     fireEvent.click(screen.getByRole("button", { name: "登录" }));
 
-    expect(
-      await screen.findByText("邮箱或密码不正确，请重试。"),
-    ).toBeVisible();
+    expect(await screen.findByText("邮箱或密码不正确，请重试。")).toBeVisible();
     expect(screen.queryByText("account missing")).not.toBeInTheDocument();
   });
 

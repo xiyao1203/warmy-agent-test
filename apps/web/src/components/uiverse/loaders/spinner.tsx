@@ -10,7 +10,11 @@ const sizeClasses = {
   sm: "size-4",
 };
 
-export function Spinner({ className = "", size = "md", ...props }: SpinnerProps) {
+export function Spinner({
+  className = "",
+  size = "md",
+  ...props
+}: SpinnerProps) {
   return (
     <div
       aria-label="加载中"

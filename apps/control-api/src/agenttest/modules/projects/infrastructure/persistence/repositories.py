@@ -80,6 +80,7 @@ class SqlAlchemyProjectRepository:
                     updated_by=project.created_by.value,
                 )
             )
+            await session.flush()
             self._add_members(session, project)
 
     async def save(self, project: Project) -> None:

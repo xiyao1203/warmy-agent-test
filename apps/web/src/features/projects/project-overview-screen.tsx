@@ -12,7 +12,10 @@ import { getProject, listProjectMembers } from "./api";
 import { ProjectOverview } from "./project-overview";
 
 export function ProjectOverviewScreen({ projectId }: { projectId: string }) {
-  const userQuery = useQuery({ queryFn: getCurrentUser, queryKey: ["session"] });
+  const userQuery = useQuery({
+    queryFn: getCurrentUser,
+    queryKey: ["session"],
+  });
   const projectQuery = useQuery({
     queryFn: () => getProject(projectId),
     queryKey: ["project", projectId],
@@ -68,7 +71,11 @@ export function ProjectOverviewScreen({ projectId }: { projectId: string }) {
     const kind = problemKind(queryError);
     return (
       <ProjectOverview
-        error={kind === "not-found" || kind === "permission" ? "not-found" : "service"}
+        error={
+          kind === "not-found" || kind === "permission"
+            ? "not-found"
+            : "service"
+        }
         user={userQuery.data}
       />
     );

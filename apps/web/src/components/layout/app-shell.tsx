@@ -5,13 +5,10 @@ import type {
   UserResponse,
 } from "@warmy/generated-api-client";
 import {
-  Bell,
   Bot,
-  ChevronDown,
   ClipboardCheck,
   Database,
   FlaskConical,
-  HelpCircle,
   KeyRound,
   LayoutDashboard,
   MessageSquareText,
@@ -25,12 +22,11 @@ import {
   Users,
 } from "lucide-react";
 import Link from "next/link";
-import { useRouter, usePathname } from "next/navigation";
+import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
 
 import { logout } from "@/features/auth";
 import { ProjectSwitcher } from "@/features/projects";
-import { Tooltip } from "@/components/uiverse";
 import { canManageUsers } from "@/lib/permissions";
 
 import { HelpDropdown } from "./help-dropdown";
@@ -54,7 +50,6 @@ export function AppShell({
   user,
   workspaceMode = "management",
 }: AppShellProps) {
-  const router = useRouter();
   const projectHref = currentProjectId
     ? `/projects/${currentProjectId}/overview`
     : "/projects";
@@ -98,8 +93,7 @@ export function AppShell({
             email={user.email}
             onLogout={async () => {
               await logout();
-              router.push("/login");
-              router.refresh();
+              window.location.assign("/login");
             }}
           />
         </div>
@@ -272,7 +266,8 @@ function ProjectNavLink({
   label: string;
 }) {
   const pathname = usePathname();
-  const isActive = pathname === href || pathname.startsWith(href + "/");
+  const isActive =
+    pathname === href || Boolean(pathname?.startsWith(href + "/"));
 
   return (
     <Link

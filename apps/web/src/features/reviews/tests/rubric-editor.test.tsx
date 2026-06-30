@@ -1,10 +1,7 @@
 import { describe, it, expect, vi } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
 
-import {
-  RubricEditor,
-  RubricDisplay,
-} from "../rubric-editor";
+import { RubricEditor, RubricDisplay } from "../rubric-editor";
 import type { RubricDimension } from "../rubric-editor";
 
 const mockDimensions: RubricDimension[] = [
@@ -103,10 +100,7 @@ describe("RubricEditor", () => {
 
   it("renders empty state when no dimensions", () => {
     render(
-      <RubricEditor
-        dimensions={[]}
-        onDimensionsChange={() => undefined}
-      />,
+      <RubricEditor dimensions={[]} onDimensionsChange={() => undefined} />,
     );
 
     expect(screen.getByText("暂无评分维度")).toBeInTheDocument();

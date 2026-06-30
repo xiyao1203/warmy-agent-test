@@ -5,16 +5,17 @@ Revises: 0007
 Create Date: 2026-06-29 10:00:00.000000
 
 """
-from typing import Sequence, Union
+
+from collections.abc import Sequence
 
 import sqlalchemy as sa
 from alembic import op
 
 # revision identifiers, used by Alembic.
 revision: str = "0008"
-down_revision: Union[str, None] = "0007"
-branch_labels: Union[str, Sequence[str], None] = None
-depends_on: Union[str, Sequence[str], None] = None
+down_revision: str | None = "0007"
+branch_labels: str | Sequence[str] | None = None
+depends_on: str | Sequence[str] | None = None
 
 
 def upgrade() -> None:
@@ -24,12 +25,8 @@ def upgrade() -> None:
         sa.Column("user_id", sa.Uuid(), nullable=False),
         sa.Column("theme", sa.String(20), nullable=False, server_default="system"),
         sa.Column("language", sa.String(10), nullable=False, server_default="zh-CN"),
-        sa.Column(
-            "email_notifications", sa.Boolean(), nullable=False, server_default="1"
-        ),
-        sa.Column(
-            "push_notifications", sa.Boolean(), nullable=False, server_default="0"
-        ),
+        sa.Column("email_notifications", sa.Boolean(), nullable=False, server_default="1"),
+        sa.Column("push_notifications", sa.Boolean(), nullable=False, server_default="0"),
         sa.Column(
             "test_complete_notifications",
             sa.Boolean(),
@@ -51,12 +48,8 @@ def upgrade() -> None:
         sa.Column("created_at", sa.DateTime(), nullable=False),
         sa.PrimaryKeyConstraint("id"),
     )
-    op.create_index(
-        "ix_feedbacks_user_id", "feedbacks", ["user_id"], unique=False
-    )
-    op.create_index(
-        "ix_feedbacks_created_at", "feedbacks", ["created_at"], unique=False
-    )
+    op.create_index("ix_feedbacks_user_id", "feedbacks", ["user_id"], unique=False)
+    op.create_index("ix_feedbacks_created_at", "feedbacks", ["created_at"], unique=False)
 
 
 def downgrade() -> None:

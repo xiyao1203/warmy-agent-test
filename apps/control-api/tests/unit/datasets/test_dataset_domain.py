@@ -6,10 +6,8 @@ import json
 from uuid import uuid4
 
 import pytest
-
 from agenttest.modules.datasets.application.import_export import (
     ImportError,
-    ImportExportService,
     _build_test_case,
 )
 from agenttest.modules.datasets.domain.entities import (
@@ -211,10 +209,12 @@ def test_build_test_case_missing_required() -> None:
 
 
 def test_import_json_parse_errors() -> None:
-    content = json.dumps([
-        {"name": "OK", "input": {"x": 1}, "execution_mode": "api"},
-        {"name": "", "input": {"x": 1}, "execution_mode": "api"},
-    ])
+    content = json.dumps(
+        [
+            {"name": "OK", "input": {"x": 1}, "execution_mode": "api"},
+            {"name": "", "input": {"x": 1}, "execution_mode": "api"},
+        ]
+    )
     with pytest.raises(ImportError) as exc_info:
         _parse_json_and_build(content, "json")
     errors = exc_info.value.errors
@@ -223,9 +223,11 @@ def test_import_json_parse_errors() -> None:
 
 
 def test_import_json_invalid_enum() -> None:
-    content = json.dumps([
-        {"name": "Test", "input": {"x": 1}, "execution_mode": "invalid_mode"},
-    ])
+    content = json.dumps(
+        [
+            {"name": "Test", "input": {"x": 1}, "execution_mode": "invalid_mode"},
+        ]
+    )
     with pytest.raises(ImportError) as exc_info:
         _parse_json_and_build(content, "json")
     assert len(exc_info.value.errors) == 1
@@ -257,9 +259,7 @@ def test_export_to_json() -> None:
 # ── Helpers ────────────────────────────────────────────────────────────────
 
 
-def _parse_json_and_build(
-    content: str, format: str
-) -> None:
+def _parse_json_and_build(content: str, format: str) -> None:
     """Helper that mirrors ImportExportService.import_test_cases logic."""
     from agenttest.modules.datasets.application.import_export import (
         _parse_json,

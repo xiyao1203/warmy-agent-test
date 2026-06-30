@@ -2,6 +2,12 @@
 
 from __future__ import annotations
 
+from agenttest.modules.environments.public import EnvironmentTemplateId
+from agenttest.modules.test_plans.application.commands import (
+    CreateTestPlanCommand,
+    CreateTestPlanVersionCommand,
+    PublishTestPlanVersionCommand,
+)
 from agenttest.modules.test_plans.domain.entities import (
     TestPlan,
     TestPlanId,
@@ -12,6 +18,10 @@ from agenttest.modules.test_plans.domain.value_objects import TestPlanConfig, Ve
 
 __all__ = [
     "TestPlan",
+    "CreateTestPlanCommand",
+    "CreateTestPlanVersionCommand",
+    "EnvironmentTemplateId",
+    "PublishTestPlanVersionCommand",
     "TestPlanConfig",
     "TestPlanId",
     "TestPlanVersion",

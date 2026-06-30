@@ -23,6 +23,7 @@ from agenttest.modules.test_plans.domain.value_objects import TestPlanConfig, Ve
 @dataclass(frozen=True, slots=True)
 class TestPlanId:
     """测试计划聚合根的唯一标识。"""
+
     value: UUID
 
     @classmethod
@@ -33,6 +34,7 @@ class TestPlanId:
 @dataclass(frozen=True, slots=True)
 class TestPlanVersionId:
     """测试计划版本实体的唯一标识。"""
+
     value: UUID
 
     @classmethod
@@ -43,6 +45,7 @@ class TestPlanVersionId:
 @dataclass(frozen=True, slots=True)
 class EnvironmentTemplateId:
     """环境模板实体的唯一标识。"""
+
     value: UUID
 
     @classmethod
@@ -57,6 +60,7 @@ class TestPlan:
     测试计划定义了一组测试执行的配置，包括关联的 Agent、
     数据集和环境模板版本，以及并发、超时、阈值等运行参数。
     """
+
     test_plan_id: TestPlanId
     project_id: ProjectId
     name: str
@@ -128,6 +132,7 @@ class TestPlanVersion:
         environment_template_id: 关联的环境模板 ID。
         published_at: 发布时间。
     """
+
     version_id: TestPlanVersionId
     test_plan_id: TestPlanId
     version_number: int

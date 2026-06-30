@@ -60,9 +60,10 @@ describe("AgentList", () => {
     expect(
       screen.getByRole("columnheader", { name: "智能体信息" }),
     ).toHaveClass("w-[360px]", "pl-16");
-    expect(
-      screen.getByRole("columnheader", { name: "接入类型" }),
-    ).toHaveClass("w-36", "text-center");
+    expect(screen.getByRole("columnheader", { name: "接入类型" })).toHaveClass(
+      "w-36",
+      "text-center",
+    );
     expect(screen.getByRole("columnheader", { name: "更新时间" })).toHaveClass(
       "w-32",
       "text-center",
@@ -73,7 +74,9 @@ describe("AgentList", () => {
     expect(
       screen.getByRole("link", { name: "查看客服 Agent" }),
     ).toHaveAttribute("href", "/projects/project-1/agents/agent-1");
-    expect(screen.getByRole("button", { name: "删除客服 Agent" })).toBeVisible();
+    expect(
+      screen.getByRole("button", { name: "删除客服 Agent" }),
+    ).toBeVisible();
 
     fireEvent.click(screen.getByRole("button", { name: "创建 Agent" }));
     fireEvent.change(screen.getByLabelText("Agent 名称"), {

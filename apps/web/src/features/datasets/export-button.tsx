@@ -22,7 +22,9 @@ export function ExportButton({
       typeof URL.createObjectURL === "function" &&
       !document.defaultView?.navigator.userAgent.includes("jsdom")
     ) {
-      const blob = new Blob([result.content], { type: "text/plain;charset=utf-8" });
+      const blob = new Blob([result.content], {
+        type: "text/plain;charset=utf-8",
+      });
       const url = URL.createObjectURL(blob);
       const anchor = document.createElement("a");
       anchor.href = url;

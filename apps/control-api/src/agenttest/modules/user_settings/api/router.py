@@ -9,21 +9,59 @@ from fastapi import APIRouter, Header, Request
 from fastapi.responses import JSONResponse
 
 from agenttest.bootstrap.settings import Settings
-from agenttest.modules.identity.api.router import (
-    CsrfExecutor,
-    authentication_required,
-    problem_response,
-    validate_csrf,
-)
-from agenttest.modules.identity.application.queries.current_user import InvalidSessionError
-from agenttest.modules.identity.domain.entities import User
+from agenttest.modules.identity.public import InvalidSessionError, User
 from agenttest.modules.user_settings.api.schemas import (
     UpdateSettingsRequest,
     UserSettingsResponse,
 )
 from agenttest.modules.user_settings.domain.entities import UserSettings
 from agenttest.modules.user_settings.domain.value_objects import Language, Theme
+from agenttest.shared.api.problem_details import ProblemDetails
 from agenttest.shared.application.uow import UnitOfWorkFactory, null_uow_factory
+
+CSRF_COOKIE_NAME = "agenttest_csrf"
+
+
+class CsrfExecutor(Protocol):
+    async def execute(self, session_token: str, csrf_token: str) -> None: ...
+
+
+def problem_response(*, status: int, title: str, detail: str) -> JSONResponse:
+    problem = ProblemDetails(title=title, status=status, detail=detail)
+    return JSONResponse(
+        status_code=status,
+        content=problem.model_dump(exclude_none=True),
+        media_type="application/problem+json",
+    )
+
+
+def authentication_required() -> JSONResponse:
+    return problem_response(
+        status=401,
+        title="Authentication required",
+        detail="A valid session is required",
+    )
+
+
+async def validate_csrf(
+    *, request: Request, session_token: str, csrf_header: str | None, csrf: CsrfExecutor
+) -> JSONResponse | None:
+    csrf_cookie = request.cookies.get(CSRF_COOKIE_NAME)
+    if not csrf_header or not csrf_cookie or csrf_header != csrf_cookie:
+        return problem_response(
+            status=403,
+            title="CSRF validation failed",
+            detail="A valid CSRF token is required",
+        )
+    try:
+        await csrf.execute(session_token, csrf_header)
+    except InvalidSessionError:
+        return problem_response(
+            status=403,
+            title="CSRF validation failed",
+            detail="A valid CSRF token is required",
+        )
+    return None
 
 
 class CurrentUserExecutor(Protocol):

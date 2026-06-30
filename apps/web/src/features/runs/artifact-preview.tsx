@@ -38,7 +38,9 @@ function getArtifactTypeLabel(type: Artifact["type"]): string {
   }
 }
 
-function getArtifactTypeBadgeTone(type: Artifact["type"]): "accent" | "success" | "neutral" {
+function getArtifactTypeBadgeTone(
+  type: Artifact["type"],
+): "accent" | "success" | "neutral" {
   switch (type) {
     case "image":
       return "accent";
@@ -49,8 +51,13 @@ function getArtifactTypeBadgeTone(type: Artifact["type"]): "accent" | "success" 
   }
 }
 
-export function ArtifactPreview({ artifacts, onArtifactSelect }: ArtifactPreviewProps) {
-  const [selectedType, setSelectedType] = useState<"all" | Artifact["type"]>("all");
+export function ArtifactPreview({
+  artifacts,
+  onArtifactSelect,
+}: ArtifactPreviewProps) {
+  const [selectedType, setSelectedType] = useState<"all" | Artifact["type"]>(
+    "all",
+  );
 
   const filteredArtifacts = artifacts.filter((artifact) => {
     if (selectedType === "all") return true;
@@ -80,7 +87,9 @@ export function ArtifactPreview({ artifacts, onArtifactSelect }: ArtifactPreview
     <div className="space-y-4">
       {/* 头部统计和筛选 */}
       <div className="flex items-center justify-between">
-        <p className="text-sm text-[var(--text-muted)]">共 {artifacts.length} 个产物文件</p>
+        <p className="text-sm text-[var(--text-muted)]">
+          共 {artifacts.length} 个产物文件
+        </p>
         <div className="flex gap-2">
           <Button
             variant={selectedType === "all" ? "primary" : "secondary"}
@@ -177,7 +186,8 @@ export function ArtifactPreview({ artifacts, onArtifactSelect }: ArtifactPreview
               <div>
                 <p className="text-sm font-medium">{artifact.name}</p>
                 <p className="text-xs text-[var(--text-muted)]">
-                  {formatFileSize(artifact.size)} · {new Date(artifact.created_at).toLocaleString()}
+                  {formatFileSize(artifact.size)} ·{" "}
+                  {new Date(artifact.created_at).toLocaleString()}
                 </p>
               </div>
             </div>

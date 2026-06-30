@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import pytest
-
 from agenttest.modules.test_plans.domain.budget_controller import (
     BudgetController,
     BudgetExceededError,

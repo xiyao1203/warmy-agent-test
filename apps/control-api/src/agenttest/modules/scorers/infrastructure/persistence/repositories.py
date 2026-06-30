@@ -94,9 +94,7 @@ class SqlAlchemyScorerRepository:
 
     async def delete(self, scorer_id: ScorerId) -> None:
         async with transaction_scope(self._session_factory) as session:
-            await session.execute(
-                delete(ScorerModel).where(ScorerModel.id == scorer_id.value)
-            )
+            await session.execute(delete(ScorerModel).where(ScorerModel.id == scorer_id.value))
 
 
 def _to_scorer(model: ScorerModel) -> Scorer:

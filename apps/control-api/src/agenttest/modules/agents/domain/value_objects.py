@@ -17,6 +17,7 @@ class AgentType(StrEnum):
     - GENERIC_HTTP: 通用 HTTP Agent，通过 api_url 调用。
     - CANVAS: 画布 Agent，通过 Canvas 插件适配。
     """
+
     GENERIC_HTTP = "generic_http"
     CANVAS = "canvas"
 
@@ -27,6 +28,7 @@ class VersionStatus(StrEnum):
     - DRAFT: 草稿，可编辑。
     - PUBLISHED: 已发布，不可修改。
     """
+
     DRAFT = "draft"
     PUBLISHED = "published"
 
@@ -127,9 +129,7 @@ class AgentConfig:
             timeout=int(timeout_raw) if isinstance(timeout_raw, (int, float, str)) else 30,
             max_steps=int(max_steps_raw) if isinstance(max_steps_raw, (int, float, str)) else None,
             cost_limit=(
-                float(cost_limit_raw)
-                if isinstance(cost_limit_raw, (int, float, str))
-                else None
+                float(cost_limit_raw) if isinstance(cost_limit_raw, (int, float, str)) else None
             ),
             system_prompt_version=str(data.get("system_prompt_version") or "") or None,
             knowledge_version=str(data.get("knowledge_version") or "") or None,

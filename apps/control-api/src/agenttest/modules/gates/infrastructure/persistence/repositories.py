@@ -18,12 +18,15 @@ from agenttest.modules.gates.infrastructure.persistence.models import (
 
 class SqlAlchemyReleaseGateRepository:
     def __init__(
-        self, session_factory: async_sessionmaker[AsyncSession],
+        self,
+        session_factory: async_sessionmaker[AsyncSession],
     ) -> None:
         self._session_factory = session_factory
 
     async def get_by_id_and_project(
-        self, gate_id: ReleaseGateId, project_id: UUID,
+        self,
+        gate_id: ReleaseGateId,
+        project_id: UUID,
     ) -> ReleaseGate | None:
         async with self._session_factory() as session:
             row = await session.get(ReleaseGateModel, gate_id.value)
@@ -32,7 +35,10 @@ class SqlAlchemyReleaseGateRepository:
             return _to_entity(row)
 
     async def list_by_project(
-        self, project_id: UUID, *, limit: int = 50,
+        self,
+        project_id: UUID,
+        *,
+        limit: int = 50,
     ) -> list[ReleaseGate]:
         async with self._session_factory() as session:
             stmt = (
@@ -101,9 +107,7 @@ def _to_entity(row: ReleaseGateModel) -> ReleaseGate:
         project_id=row.project_id,
         name=row.name,
         success_rate_threshold=row.success_rate_threshold,
-        critical_cases=list(row.critical_cases)
-        if isinstance(row.critical_cases, list)
-        else [],
+        critical_cases=list(row.critical_cases) if isinstance(row.critical_cases, list) else [],
         cost_limit=row.cost_limit,
         security_threshold=row.security_threshold,
         enabled=row.enabled,

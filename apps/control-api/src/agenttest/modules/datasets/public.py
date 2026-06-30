@@ -5,6 +5,12 @@ Other modules must only import from this file when referencing datasets.
 
 from __future__ import annotations
 
+from agenttest.modules.datasets.application.commands import (
+    AddTestCaseCommand,
+    CreateDatasetCommand,
+    CreateDatasetVersionCommand,
+    PublishDatasetVersionCommand,
+)
 from agenttest.modules.datasets.domain.entities import (
     Dataset,
     DatasetId,
@@ -23,12 +29,16 @@ from agenttest.modules.datasets.domain.value_objects import (
 
 __all__ = [
     "Dataset",
+    "AddTestCaseCommand",
+    "CreateDatasetCommand",
+    "CreateDatasetVersionCommand",
     "DatasetId",
     "DatasetVersion",
     "DatasetVersionId",
     "DatasetVersionRef",
     "ExecutionMode",
     "Priority",
+    "PublishDatasetVersionCommand",
     "RiskLevel",
     "TestCase",
     "TestCaseId",

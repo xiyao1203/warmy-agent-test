@@ -54,6 +54,17 @@ _TEXT_RULES = {
     "generic frontend API error": re.compile(
         r"if\s*\(!?\w+\.ok\)\s*throw\s+new\s+Error\([\"']Failed\s"
     ),
+    "fixed test-agent assistant response": re.compile(
+        r"ConversationResponse\(\s*content\s*=\s*[\"'][^\"']+[\"']"
+    ),
+    "process-memory test-agent history": re.compile(
+        r"self\._(?:sessions|events|conversations)\s*:\s*(?:dict|list)\["
+    ),
+    "legacy plan draft execution": re.compile(r"plan_draft\s*\[.*\].*(?:execute|run)"),
+    "plaintext credential response": re.compile(
+        r"(?:return|response).{0,80}(?:api_key|password|authorization).{0,40}(?:plaintext|decrypted)",
+        re.IGNORECASE,
+    ),
 }
 
 _ROOTS = (

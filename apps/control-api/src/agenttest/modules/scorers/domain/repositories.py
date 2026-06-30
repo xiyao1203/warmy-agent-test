@@ -10,6 +10,7 @@ from agenttest.modules.scorers.domain.entities import Scorer, ScorerId
 
 class ScorerRepository(Protocol):
     """评分器持久化仓库接口。"""
+
     async def get_by_id(self, scorer_id: ScorerId) -> Scorer | None: ...
 
     async def get_by_id_and_project(

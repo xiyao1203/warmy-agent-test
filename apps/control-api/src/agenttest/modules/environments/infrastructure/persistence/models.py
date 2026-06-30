@@ -19,9 +19,7 @@ from agenttest.shared.infrastructure.database import Base
 class EnvironmentTemplateModel(Base):
     __tablename__ = "environment_templates"
     __table_args__ = (
-        UniqueConstraint(
-            "project_id", "name", name="uq_environment_templates_project_name"
-        ),
+        UniqueConstraint("project_id", "name", name="uq_environment_templates_project_name"),
         Index(
             "ix_environment_templates_project",
             "project_id",

@@ -18,12 +18,15 @@ from agenttest.modules.test_accounts.infrastructure.persistence.models import (
 
 class SqlAlchemyTestAccountRepository:
     def __init__(
-        self, session_factory: async_sessionmaker[AsyncSession],
+        self,
+        session_factory: async_sessionmaker[AsyncSession],
     ) -> None:
         self._session_factory = session_factory
 
     async def get_by_id_and_project(
-        self, account_id: TestAccountId, project_id: UUID,
+        self,
+        account_id: TestAccountId,
+        project_id: UUID,
     ) -> TestAccount | None:
         async with self._session_factory() as session:
             row = await session.get(TestAccountModel, account_id.value)
@@ -32,7 +35,10 @@ class SqlAlchemyTestAccountRepository:
             return _to_entity(row)
 
     async def list_by_project(
-        self, project_id: UUID, *, limit: int = 50,
+        self,
+        project_id: UUID,
+        *,
+        limit: int = 50,
     ) -> list[TestAccount]:
         from sqlalchemy import select
 

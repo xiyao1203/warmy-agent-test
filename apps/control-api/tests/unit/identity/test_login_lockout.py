@@ -2,15 +2,15 @@
 
 from __future__ import annotations
 
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, datetime
 
 import pytest
-
 from agenttest.modules.identity.domain.entities import (
     LOCKOUT_DURATION,
     MAX_FAILED_LOGINS,
     User,
 )
+from agenttest.modules.identity.domain.errors import DisabledUserError
 from agenttest.modules.identity.domain.value_objects import (
     Email,
     SystemRole,
@@ -77,5 +77,5 @@ def test_locked_user_cannot_authenticate() -> None:
     user = _make_user()
     for _ in range(MAX_FAILED_LOGINS):
         user.record_failed_login()
-    with pytest.raises(Exception):
+    with pytest.raises(DisabledUserError):
         user.ensure_can_authenticate()

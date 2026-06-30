@@ -10,5 +10,6 @@ from enum import StrEnum
 
 class TemplateType(StrEnum):
     """环境模板类型：blank 为空环境，preset 为预设环境。"""
+
     BLANK = "blank"
     PRESET = "preset"

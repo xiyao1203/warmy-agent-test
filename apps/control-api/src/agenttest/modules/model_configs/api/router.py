@@ -24,6 +24,7 @@ from ..application.service import ModelConfigService
 from ..domain.entities import ModelConfigurationId
 from ..domain.errors import (
     ModelConfigInUseError,
+    ModelConfigNameConflictError,
     ModelConfigNotFoundError,
     ModelDefaultMissingError,
 )
@@ -122,6 +123,12 @@ def create_model_config_router(
             return problem(404, "Asset not found", "Project was not found")
         except PermissionError:
             return problem(403, "Permission denied", "Project editor access is required")
+        except ModelConfigNameConflictError:
+            return problem(
+                409,
+                "Model configuration conflict",
+                "Model configuration name already exists",
+            )
         except ValueError as error:
             return problem(400, "Invalid request", str(error))
         return ModelConfigResponse.from_domain(item)

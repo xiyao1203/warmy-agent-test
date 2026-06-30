@@ -24,7 +24,9 @@ describe("CreateUserDialog", () => {
     });
     fireEvent.click(screen.getByRole("button", { name: "保存用户" }));
 
-    expect(await screen.findByText("创建用户失败，请检查输入后重试。")).toBeVisible();
+    expect(
+      await screen.findByText("创建用户失败，请检查输入后重试。"),
+    ).toBeVisible();
     expect(screen.getByLabelText("姓名")).toHaveValue("开发用户");
     await waitFor(() => expect(onCreate).toHaveBeenCalledTimes(1));
   });
@@ -70,9 +72,7 @@ describe("UserDrawer actions", () => {
     fireEvent.click(screen.getByRole("button", { name: "取消" }));
 
     fireEvent.click(screen.getByRole("button", { name: "禁用用户" }));
-    expect(
-      await screen.findByText(/现有 Session 会立即失效/),
-    ).toBeVisible();
+    expect(await screen.findByText(/现有 Session 会立即失效/)).toBeVisible();
   });
 
   it("opens edit form with current user values", async () => {
@@ -142,12 +142,8 @@ describe("UserDrawer actions", () => {
     );
 
     fireEvent.click(screen.getByRole("button", { name: "删除用户" }));
-    expect(
-      await screen.findByText(/删除后该用户将无法登录/),
-    ).toBeVisible();
-    expect(
-      screen.getByText(/此操作不可撤销/),
-    ).toBeVisible();
+    expect(await screen.findByText(/删除后该用户将无法登录/)).toBeVisible();
+    expect(screen.getByText(/此操作不可撤销/)).toBeVisible();
   });
 
   it("confirms delete and calls onDelete", async () => {
@@ -189,8 +185,6 @@ describe("UserDrawer actions", () => {
     expect(screen.getByText("编辑用户")).toBeVisible();
     expect(screen.queryByText("禁用用户")).not.toBeInTheDocument();
     expect(screen.queryByText("删除用户")).not.toBeInTheDocument();
-    expect(
-      screen.getByText(/当前账号不能在此禁用或降权/),
-    ).toBeVisible();
+    expect(screen.getByText(/当前账号不能在此禁用或降权/)).toBeVisible();
   });
 });

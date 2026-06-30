@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from sqlalchemy import delete, select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from agenttest.modules.identity.public import UserId
@@ -10,6 +11,7 @@ from agenttest.modules.projects.public import ProjectId
 from agenttest.shared.infrastructure.database import session_scope, transaction_scope
 
 from ...domain.entities import ModelConfiguration, ModelConfigurationId, ProjectModelDefault
+from ...domain.errors import ModelConfigNameConflictError
 from ...domain.value_objects import ModelPurpose, ProviderType
 from .models import ModelConfigurationModel, ProjectModelDefaultModel
 
@@ -46,8 +48,13 @@ class SqlAlchemyModelConfigRepository:
         return _to_domain(value) if value else None
 
     async def add(self, item: ModelConfiguration) -> None:
-        async with transaction_scope(self._session_factory) as session:
-            session.add(_to_model(item))
+        try:
+            async with transaction_scope(self._session_factory) as session:
+                session.add(_to_model(item))
+        except IntegrityError as error:
+            if _is_name_conflict(error):
+                raise ModelConfigNameConflictError from error
+            raise
 
     async def save(self, item: ModelConfiguration) -> None:
         async with transaction_scope(self._session_factory) as session:
@@ -154,6 +161,19 @@ def _to_model(item: ModelConfiguration) -> ModelConfigurationModel:
         created_by=item.created_by.value,
         created_at=item.created_at,
         updated_at=item.updated_at,
+    )
+
+
+def _is_name_conflict(error: IntegrityError) -> bool:
+    diagnostic = getattr(error.orig, "diag", None)
+    constraint_name = getattr(diagnostic, "constraint_name", None)
+    if constraint_name == "uq_model_configs_project_name":
+        return True
+    message = str(error.orig).lower()
+    return (
+        "unique constraint failed" in message
+        and "model_configurations.project_id" in message
+        and "model_configurations.name" in message
     )
 
 

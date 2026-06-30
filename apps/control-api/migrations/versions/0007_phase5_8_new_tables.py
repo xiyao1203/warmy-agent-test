@@ -8,15 +8,15 @@
 - release_gates 表（Phase 10 发布门禁）
 """
 
-from typing import Sequence, Union
+from collections.abc import Sequence
 
 import sqlalchemy as sa
 from alembic import op
 
 revision: str = "0007"
-down_revision: Union[str, None] = "0006"
-branch_labels: Union[str, Sequence[str], None] = None
-depends_on: Union[str, Sequence[str], None] = None
+down_revision: str | None = "0006"
+branch_labels: str | Sequence[str] | None = None
+depends_on: str | Sequence[str] | None = None
 
 
 def upgrade() -> None:
@@ -36,7 +36,9 @@ def upgrade() -> None:
             ondelete="SET NULL",
         )
     op.create_index(
-        "ix_run_events_parent", "run_events", ["parent_event_id"],
+        "ix_run_events_parent",
+        "run_events",
+        ["parent_event_id"],
     )
     op.add_column("run_events", sa.Column("duration_ms", sa.Integer(), nullable=True))
     op.add_column("run_events", sa.Column("token_count", sa.Integer(), nullable=True))
@@ -64,7 +66,9 @@ def upgrade() -> None:
         sa.Column("updated_at", sa.DateTime(timezone=True), nullable=False),
     )
     op.create_index(
-        "ix_scorers_project_enabled", "scorers", ["project_id", "enabled"],
+        "ix_scorers_project_enabled",
+        "scorers",
+        ["project_id", "enabled"],
     )
 
     # ── Phase 7: experiments 表 ───────────────────────────────────────────
@@ -97,7 +101,9 @@ def upgrade() -> None:
         sa.Column("updated_at", sa.DateTime(timezone=True), nullable=False),
     )
     op.create_index(
-        "ix_experiments_project_status", "experiments", ["project_id", "status"],
+        "ix_experiments_project_status",
+        "experiments",
+        ["project_id", "status"],
     )
 
     # ── Phase 8: review_tasks 表 ──────────────────────────────────────────
@@ -132,10 +138,14 @@ def upgrade() -> None:
         sa.Column("reviewed_at", sa.DateTime(timezone=True), nullable=True),
     )
     op.create_index(
-        "ix_review_tasks_project_status", "review_tasks", ["project_id", "status"],
+        "ix_review_tasks_project_status",
+        "review_tasks",
+        ["project_id", "status"],
     )
     op.create_index(
-        "ix_review_tasks_run_case", "review_tasks", ["run_case_id"],
+        "ix_review_tasks_run_case",
+        "review_tasks",
+        ["run_case_id"],
     )
 
     # ── Phase 9: security_scans 表 ─────────────────────────────────────
@@ -183,7 +193,10 @@ def upgrade() -> None:
             server_default="0.8",
         ),
         sa.Column(
-            "enabled", sa.Boolean(), nullable=False, server_default="1",
+            "enabled",
+            sa.Boolean(),
+            nullable=False,
+            server_default="1",
         ),
         sa.Column("created_at", sa.DateTime(timezone=True), nullable=False),
         sa.Column("updated_at", sa.DateTime(timezone=True), nullable=False),

@@ -58,11 +58,12 @@ async def test_run_registers_run_workflow_and_all_activities(
         "namespace": "default",
     }
     assert worker_options["task_queue"] == "agenttest-api-runner"
-    assert worker_options["workflows"] == [main.RunWorkflow]
+    assert worker_options["workflows"] == [main.RunWorkflow, main.TargetAgentChatWorkflow]
     assert worker_options["activities"] == [
         main.execute_agent_case,
         main.post_run_result,
         main.capture_page_snapshot,
         main.run_playwright_case,
+        main.execute_target_chat,
     ]
     assert worker_options["ran"] is True

@@ -8,4 +8,3 @@ export default async function RunDetailPage({
   const { projectId, runId } = await params;
   return <RunDetailScreen projectId={projectId} runId={runId} />;
 }
-

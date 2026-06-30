@@ -19,6 +19,7 @@ from agenttest.modules.projects.public import ProjectId
 
 class AgentRepository(Protocol):
     """Agent 聚合根的持久化仓库接口。"""
+
     async def get_by_id(self, agent_id: AgentId) -> Agent | None: ...
 
     async def list_by_project(
@@ -38,6 +39,7 @@ class AgentRepository(Protocol):
 
 class AgentVersionRepository(Protocol):
     """Agent 版本的持久化仓库接口。"""
+
     async def get_by_id(self, version_id: AgentVersionId) -> AgentVersion | None: ...
 
     async def list_by_agent(self, agent_id: AgentId) -> list[AgentVersion]: ...

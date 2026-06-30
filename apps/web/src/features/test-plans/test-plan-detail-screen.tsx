@@ -35,11 +35,7 @@ export function TestPlanDetailScreen({
     queryFn: () => loadAssetOptions(projectId),
     queryKey: ["test-plan-assets", projectId],
   });
-  if (
-    planQuery.isPending ||
-    versionsQuery.isPending ||
-    assetsQuery.isPending
-  ) {
+  if (planQuery.isPending || versionsQuery.isPending || assetsQuery.isPending) {
     return (
       <div className="grid min-h-[calc(100vh-3rem)] place-items-center text-sm">
         正在加载测试计划详情…

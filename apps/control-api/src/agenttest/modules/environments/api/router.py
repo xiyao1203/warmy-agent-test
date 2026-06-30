@@ -140,9 +140,7 @@ def create_environment_router(
             EnvironmentTemplateId(template_id),
         )
         if template.project_id != ProjectId(project_id):
-            raise EnvironmentTemplateNotFoundError(
-                EnvironmentTemplateId(template_id)
-            )
+            raise EnvironmentTemplateNotFoundError(EnvironmentTemplateId(template_id))
         return template
 
     @router.get("", response_model=EnvironmentTemplateListResponse)

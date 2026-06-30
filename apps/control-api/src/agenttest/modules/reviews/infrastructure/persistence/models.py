@@ -18,7 +18,8 @@ class ReviewTaskModel(Base):
 
     id: Mapped[UUID] = mapped_column(primary_key=True)
     project_id: Mapped[UUID] = mapped_column(
-        ForeignKey("projects.id", ondelete="CASCADE"), nullable=False,
+        ForeignKey("projects.id", ondelete="CASCADE"),
+        nullable=False,
     )
     run_case_id: Mapped[UUID] = mapped_column(ForeignKey("run_cases.id"), nullable=False)
     status: Mapped[str] = mapped_column(String(32), nullable=False, default="pending")

@@ -75,7 +75,9 @@ class AgentResponse(BaseModel):
             created_at=agent.created_at,
             updated_at=agent.updated_at,
             current_version_id=agent.current_version_id.value if agent.current_version_id else None,
-            baseline_version_id=agent.baseline_version_id.value if agent.baseline_version_id else None,
+            baseline_version_id=(
+                agent.baseline_version_id.value if agent.baseline_version_id else None
+            ),
         )
 
 

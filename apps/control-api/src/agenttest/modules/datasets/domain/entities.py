@@ -28,6 +28,7 @@ from agenttest.modules.projects.public import ProjectId
 @dataclass(frozen=True, slots=True)
 class DatasetId:
     """数据集聚合根的唯一标识。"""
+
     value: UUID
 
     @classmethod
@@ -38,6 +39,7 @@ class DatasetId:
 @dataclass(frozen=True, slots=True)
 class DatasetVersionId:
     """数据集版本实体的唯一标识。"""
+
     value: UUID
 
     @classmethod
@@ -48,6 +50,7 @@ class DatasetVersionId:
 @dataclass(frozen=True, slots=True)
 class TestCaseId:
     """测试用例实体的唯一标识。"""
+
     value: UUID
 
     @classmethod

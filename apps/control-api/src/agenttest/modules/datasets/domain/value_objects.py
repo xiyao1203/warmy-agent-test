@@ -10,18 +10,21 @@ from enum import StrEnum
 
 class VersionStatus(StrEnum):
     """版本状态：DRAFT（可编辑）→ PUBLISHED（不可修改）。"""
+
     DRAFT = "draft"
     PUBLISHED = "published"
 
 
 class ExecutionMode(StrEnum):
     """测试用例执行模式：API 调用或浏览器操作。"""
+
     API = "api"
     BROWSER = "browser"
 
 
 class Priority(StrEnum):
     """用例优先级：P0（最高）→ P3（最低）。"""
+
     P0 = "P0"
     P1 = "P1"
     P2 = "P2"
@@ -30,6 +33,7 @@ class Priority(StrEnum):
 
 class RiskLevel(StrEnum):
     """风险评估等级。"""
+
     CRITICAL = "critical"
     HIGH = "high"
     MEDIUM = "medium"
@@ -38,6 +42,7 @@ class RiskLevel(StrEnum):
 
 class TestGroup(StrEnum):
     """数据集分组：训练集 / 验证集 / 测试集。"""
+
     TRAIN = "train"
     VALIDATION = "validation"
     TEST = "test"

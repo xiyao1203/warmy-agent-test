@@ -39,9 +39,7 @@ export function ProjectSwitcher({
           className="flex h-8 min-w-44 max-w-64 items-center justify-between gap-2 rounded-[var(--radius-sm)] border border-[var(--border)] bg-[var(--surface)] px-2.5 text-sm hover:bg-[var(--surface-subtle)]"
           type="button"
         >
-          <span className="truncate">
-            {currentProject?.name ?? "选择项目"}
-          </span>
+          <span className="truncate">{currentProject?.name ?? "选择项目"}</span>
           <ChevronsUpDown
             aria-hidden="true"
             className="size-3.5 shrink-0 text-[var(--text-muted)]"
@@ -84,7 +82,9 @@ export function ProjectSwitcher({
                   <span className="flex size-6 shrink-0 items-center justify-center rounded-[var(--radius-sm)] bg-[var(--accent-subtle)] text-xs font-semibold text-[var(--accent-text)]">
                     {project.name.slice(0, 1).toUpperCase()}
                   </span>
-                  <span className="min-w-0 flex-1 truncate">{project.name}</span>
+                  <span className="min-w-0 flex-1 truncate">
+                    {project.name}
+                  </span>
                   {project.archived ? (
                     <FolderArchive
                       aria-label="已归档"

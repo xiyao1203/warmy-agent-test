@@ -27,7 +27,9 @@ class SqlAlchemyExperimentRepository:
         return _to_experiment(model) if model else None
 
     async def get_by_id_and_project(
-        self, exp_id: ExperimentId, project_id: ProjectId,
+        self,
+        exp_id: ExperimentId,
+        project_id: ProjectId,
     ) -> Experiment | None:
         async with session_scope(self._session_factory) as session:
             model = await session.get(ExperimentModel, exp_id.value)
@@ -36,7 +38,11 @@ class SqlAlchemyExperimentRepository:
             return _to_experiment(model) if model else None
 
     async def list_by_project(
-        self, project_id: ProjectId, *, limit: int = 50, offset: int = 0,
+        self,
+        project_id: ProjectId,
+        *,
+        limit: int = 50,
+        offset: int = 0,
     ) -> list[Experiment]:
         stmt = (
             select(ExperimentModel)

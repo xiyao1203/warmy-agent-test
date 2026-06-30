@@ -68,9 +68,7 @@ class GenericHttpAgentAdapter:
                 timeout=request.timeout_seconds,
             )
             if response.status_code >= 400:
-                raise TargetProductError(
-                    f"Target returned HTTP {response.status_code}"
-                )
+                raise TargetProductError(f"Target returned HTTP {response.status_code}")
             if request.mode == "stream":
                 output, tool_calls = _parse_sse(response.text)
             elif request.mode == "poll":
@@ -110,9 +108,7 @@ class GenericHttpAgentAdapter:
                 timeout=request.timeout_seconds,
             )
             if response.status_code >= 400:
-                raise TargetProductError(
-                    f"Target polling returned HTTP {response.status_code}"
-                )
+                raise TargetProductError(f"Target polling returned HTTP {response.status_code}")
             data = response.json()
             if data.get("status") in {"completed", "failed"}:
                 if data.get("status") == "failed":

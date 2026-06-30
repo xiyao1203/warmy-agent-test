@@ -28,6 +28,14 @@ class InvocationResult:
     response_id: str | None = None
 
 
+@dataclass(frozen=True, slots=True)
+class ModelStreamCallback:
+    """Model Runner 可访问的受保护增量回调。"""
+
+    url: str
+    internal_token: str
+
+
 class ModelInvoker(Protocol):
     """Control API 发起独立 Worker 模型调用的端口。"""
 
@@ -37,6 +45,16 @@ class ModelInvoker(Protocol):
         messages: list[InvocationMessage],
         *,
         response_format: dict[str, str] | None = None,
+        timeout_seconds: int = 60,
+        max_tokens: int = 2048,
+    ) -> InvocationResult: ...
+
+    async def stream(
+        self,
+        config: ModelConfiguration,
+        messages: list[InvocationMessage],
+        *,
+        callback: ModelStreamCallback,
         timeout_seconds: int = 60,
         max_tokens: int = 2048,
     ) -> InvocationResult: ...

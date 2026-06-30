@@ -29,7 +29,11 @@ class AutoEnqueueRequest(BaseModel):
 
 
 def create_review_router(
-    *, session_factory, actor_for, check_project, settings,
+    *,
+    session_factory,
+    actor_for,
+    check_project,
+    settings,
 ) -> APIRouter:
     router = APIRouter(
         prefix="/projects/{project_id}/reviews",
@@ -58,7 +62,10 @@ def create_review_router(
         except InvalidSessionError:
             return JSONResponse(status_code=401, content={"detail": "认证失败"})
         tasks, total = await repo.list_by_project(
-            ProjectId(project_id), status=status, limit=limit, offset=offset,
+            ProjectId(project_id),
+            status=status,
+            limit=limit,
+            offset=offset,
         )
         return {
             "items": [_to_dict(t) for t in tasks],
@@ -101,7 +108,9 @@ def create_review_router(
         except InvalidSessionError:
             return JSONResponse(status_code=401, content={"detail": "认证失败"})
         created = await repo.auto_enqueue_low_confidence(
-            ProjectId(project_id), body.run_id, body.confidence_threshold,
+            ProjectId(project_id),
+            body.run_id,
+            body.confidence_threshold,
         )
         return {
             "enqueued": len(created),
@@ -123,7 +132,8 @@ def create_review_router(
         if isinstance(actor, JSONResponse):
             return actor
         task = await repo.get_by_id_and_project(
-            ReviewTaskId(task_id), ProjectId(project_id),
+            ReviewTaskId(task_id),
+            ProjectId(project_id),
         )
         if task is None:
             return JSONResponse(status_code=404, content={"detail": "审核任务不存在"})
@@ -154,7 +164,8 @@ def create_review_router(
         if isinstance(actor, JSONResponse):
             return actor
         task = await repo.get_by_id_and_project(
-            ReviewTaskId(task_id), ProjectId(project_id),
+            ReviewTaskId(task_id),
+            ProjectId(project_id),
         )
         if task is None:
             return JSONResponse(status_code=404, content={"detail": "审核任务不存在"})
@@ -176,7 +187,8 @@ def create_review_router(
         if isinstance(actor, JSONResponse):
             return actor
         task = await repo.get_by_id_and_project(
-            ReviewTaskId(task_id), ProjectId(project_id),
+            ReviewTaskId(task_id),
+            ProjectId(project_id),
         )
         if task is None:
             return JSONResponse(status_code=404, content={"detail": "审核任务不存在"})

@@ -38,9 +38,7 @@ class DatasetModel(Base):
 class DatasetVersionModel(Base):
     __tablename__ = "dataset_versions"
     __table_args__ = (
-        UniqueConstraint(
-            "dataset_id", "version_number", name="uq_dataset_versions_number"
-        ),
+        UniqueConstraint("dataset_id", "version_number", name="uq_dataset_versions_number"),
     )
 
     id: Mapped[UUID] = mapped_column(primary_key=True)
@@ -49,9 +47,7 @@ class DatasetVersionModel(Base):
     )
     version_number: Mapped[int] = mapped_column(Integer)
     status: Mapped[str] = mapped_column(String(32))
-    published_at: Mapped[datetime | None] = mapped_column(
-        DateTime(timezone=True), nullable=True
-    )
+    published_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     created_by: Mapped[UUID] = mapped_column(ForeignKey("users.id"))
@@ -59,9 +55,7 @@ class DatasetVersionModel(Base):
 
 class TestCaseModel(Base):
     __tablename__ = "test_cases"
-    __table_args__ = (
-        Index("ix_test_cases_version_sort", "dataset_version_id", "sort_order"),
-    )
+    __table_args__ = (Index("ix_test_cases_version_sort", "dataset_version_id", "sort_order"),)
 
     id: Mapped[UUID] = mapped_column(primary_key=True)
     dataset_version_id: Mapped[UUID] = mapped_column(

@@ -70,9 +70,7 @@ describe("TraceTimeline", () => {
 
   it("calls onSpanClick when span is clicked", () => {
     const onSpanClick = vi.fn();
-    render(
-      <TraceTimeline onSpanClick={onSpanClick} spans={mockSpans} />,
-    );
+    render(<TraceTimeline onSpanClick={onSpanClick} spans={mockSpans} />);
 
     fireEvent.click(screen.getByText("root-span"));
     expect(onSpanClick).toHaveBeenCalledWith(mockSpans[0]);

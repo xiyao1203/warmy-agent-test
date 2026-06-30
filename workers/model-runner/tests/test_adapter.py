@@ -87,3 +87,24 @@ async def test_rejects_cloud_metadata_and_private_literal_addresses() -> None:
     adapter = OpenAICompatibleAdapter()
     with pytest.raises(ModelProtocolError, match="网络"):
         await adapter.invoke(replace(request(), base_url="http://169.254.169.254/latest"))
+
+
+@pytest.mark.asyncio
+async def test_stream_yields_real_provider_deltas_in_order() -> None:
+    async def handler(http_request: httpx.Request) -> httpx.Response:
+        assert http_request.url.path.endswith("/chat/completions")
+        return httpx.Response(
+            200,
+            headers={"content-type": "text/event-stream"},
+            text=(
+                'data: {"choices":[{"delta":{"content":"你"}}]}\n\n'
+                'data: {"choices":[{"delta":{"content":"好"}}]}\n\n'
+                "data: [DONE]\n\n"
+            ),
+        )
+
+    adapter = OpenAICompatibleAdapter(transport=httpx.MockTransport(handler))
+
+    chunks = [chunk async for chunk in adapter.stream(request())]
+
+    assert chunks == ["你", "好"]

@@ -22,7 +22,11 @@ test.describe("test assets E2E", () => {
   });
 
   // ── 场景 1：创建 Agent 并发布版本 ─────────────────────────────────────
-  test("developer creates an Agent and publishes a version", async ({ page }: { page: Page }) => {
+  test("developer creates an Agent and publishes a version", async ({
+    page,
+  }: {
+    page: Page;
+  }) => {
     const pid = process.env.E2E_PROJECT_ID!;
     await page.goto(`/projects/${pid}/agents`);
 
@@ -30,7 +34,10 @@ test.describe("test assets E2E", () => {
     await expect(page.getByRole("heading")).toBeVisible();
 
     // 点击创建 Agent
-    await page.getByRole("button", { name: /创建|新建/ }).first().click();
+    await page
+      .getByRole("button", { name: /创建|新建/ })
+      .first()
+      .click();
 
     const unique = Date.now().toString(36);
     await page.getByLabel(/名称/).fill(`E2E-Agent-${unique}`);
@@ -42,7 +49,9 @@ test.describe("test assets E2E", () => {
 
     // 创建版本
     await page.getByRole("button", { name: /创建版本|新建版本/ }).click();
-    await page.getByLabel(/API.*URL|api_url/i).fill("https://e2e-agent.example.com/v1");
+    await page
+      .getByLabel(/API.*URL|api_url/i)
+      .fill("https://e2e-agent.example.com/v1");
     await page.getByLabel(/模型/).fill("gpt-4");
     await page.getByRole("button", { name: /保存/ }).click();
 
@@ -54,15 +63,24 @@ test.describe("test assets E2E", () => {
     // 验证已发布状态
     await expect(page.getByText(/已发布|published/i)).toBeVisible();
     // 发布后不应有编辑按钮
-    await expect(page.getByRole("button", { name: /编辑版本/ })).not.toBeVisible();
+    await expect(
+      page.getByRole("button", { name: /编辑版本/ }),
+    ).not.toBeVisible();
   });
 
   // ── 场景 2：创建 Dataset、导入用例并发布 ──────────────────────────────
-  test("developer creates a Dataset, imports test cases, and publishes", async ({ page }: { page: Page }) => {
+  test("developer creates a Dataset, imports test cases, and publishes", async ({
+    page,
+  }: {
+    page: Page;
+  }) => {
     const pid = process.env.E2E_PROJECT_ID!;
     await page.goto(`/projects/${pid}/datasets`);
 
-    await page.getByRole("button", { name: /创建|新建/ }).first().click();
+    await page
+      .getByRole("button", { name: /创建|新建/ })
+      .first()
+      .click();
 
     const unique = Date.now().toString(36);
     await page.getByLabel(/名称/).fill(`E2E-Dataset-${unique}`);
@@ -109,11 +127,18 @@ test.describe("test assets E2E", () => {
   });
 
   // ── 场景 3：创建 TestPlan 引用已发布版本 ──────────────────────────────
-  test("developer creates a TestPlan referencing published Agent and Dataset", async ({ page }: { page: Page }) => {
+  test("developer creates a TestPlan referencing published Agent and Dataset", async ({
+    page,
+  }: {
+    page: Page;
+  }) => {
     const pid = process.env.E2E_PROJECT_ID!;
     await page.goto(`/projects/${pid}/test-plans`);
 
-    await page.getByRole("button", { name: /创建|新建/ }).first().click();
+    await page
+      .getByRole("button", { name: /创建|新建/ })
+      .first()
+      .click();
 
     const unique = Date.now().toString(36);
     await page.getByLabel(/名称/).fill(`E2E-Plan-${unique}`);
@@ -138,7 +163,11 @@ test.describe("test assets E2E", () => {
   });
 
   // ── 场景 4：Viewer 可以查看但不能编辑 ─────────────────────────────────
-  test("viewer can view but not edit test assets", async ({ browser }: { browser: Browser }) => {
+  test("viewer can view but not edit test assets", async ({
+    browser,
+  }: {
+    browser: Browser;
+  }) => {
     const viewerCtx = await browser.newContext();
     const page = await viewerCtx.newPage();
 
@@ -154,13 +183,19 @@ test.describe("test assets E2E", () => {
     // Viewer 可以看到列表
     await expect(page.getByRole("heading")).toBeVisible();
     // 但不应该有创建按钮
-    await expect(page.getByRole("button", { name: /创建|新建/ })).not.toBeVisible();
+    await expect(
+      page.getByRole("button", { name: /创建|新建/ }),
+    ).not.toBeVisible();
 
     await viewerCtx.close();
   });
 
   // ── 场景 5：非项目成员访问返回 404 ────────────────────────────────────
-  test("non-member gets 404 on project test assets", async ({ browser }: { browser: Browser }) => {
+  test("non-member gets 404 on project test assets", async ({
+    browser,
+  }: {
+    browser: Browser;
+  }) => {
     const outsiderCtx = await browser.newContext();
     const page = await outsiderCtx.newPage();
 
@@ -181,29 +216,43 @@ test.describe("test assets E2E", () => {
   });
 
   // ── 场景 6：已发布版本不可编辑 ─────────────────────────────────────────
-  test("published version cannot be edited", async ({ page }: { page: Page }) => {
+  test("published version cannot be edited", async ({
+    page,
+  }: {
+    page: Page;
+  }) => {
     const pid = process.env.E2E_PROJECT_ID!;
     await page.goto(`/projects/${pid}/test-plans`);
 
     // 进入第一个已发布的 TestPlan 版本
     // 点击第一个 TestPlan
-    const firstPlan = page.locator("a, button", { hasText: /E2E-Plan/ }).first();
+    const firstPlan = page
+      .locator("a, button", { hasText: /E2E-Plan/ })
+      .first();
     if (await firstPlan.isVisible()) {
       await firstPlan.click();
     }
 
     // 已发布版本不应有编辑/删除按钮
-    await expect(page.getByRole("button", { name: /编辑版本/ })).not.toBeVisible();
+    await expect(
+      page.getByRole("button", { name: /编辑版本/ }),
+    ).not.toBeVisible();
     await expect(page.getByRole("button", { name: /删除/ })).not.toBeVisible();
   });
 
   // ── 场景 7：导入无效数据显示行级错误 ───────────────────────────────────
-  test("import with invalid data shows line-by-line errors", async ({ page }: { page: Page }) => {
+  test("import with invalid data shows line-by-line errors", async ({
+    page,
+  }: {
+    page: Page;
+  }) => {
     const pid = process.env.E2E_PROJECT_ID!;
     await page.goto(`/projects/${pid}/datasets`);
 
     // 进入第一个 Dataset 的版本
-    const firstDs = page.locator("a, button", { hasText: /E2E-Dataset/ }).first();
+    const firstDs = page
+      .locator("a, button", { hasText: /E2E-Dataset/ })
+      .first();
     if (await firstDs.isVisible()) {
       await firstDs.click();
     }
@@ -218,7 +267,7 @@ test.describe("test assets E2E", () => {
 
     const badJson = JSON.stringify([
       { name: "Valid", input: { x: 1 }, execution_mode: "api" },
-      { name: "", input: { x: 1 }, execution_mode: "api" },           // 空名称
+      { name: "", input: { x: 1 }, execution_mode: "api" }, // 空名称
       { name: "Bad Mode", input: { x: 1 }, execution_mode: "invalid" }, // 无效模式
     ]);
     await page.getByRole("textbox", { name: /内容/ }).fill(badJson);

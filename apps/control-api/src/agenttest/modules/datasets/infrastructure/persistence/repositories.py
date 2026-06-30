@@ -39,6 +39,7 @@ from agenttest.shared.infrastructure.database import session_scope, transaction_
 
 class SqlAlchemyDatasetRepository:
     """数据集聚合根的 SQLAlchemy 仓库实现。"""
+
     def __init__(self, session_factory: async_sessionmaker[AsyncSession]) -> None:
         self._session_factory = session_factory
 
@@ -101,13 +102,12 @@ class SqlAlchemyDatasetRepository:
 
     async def delete(self, dataset_id: DatasetId) -> None:
         async with transaction_scope(self._session_factory) as session:
-            await session.execute(
-                delete(DatasetModel).where(DatasetModel.id == dataset_id.value)
-            )
+            await session.execute(delete(DatasetModel).where(DatasetModel.id == dataset_id.value))
 
 
 class SqlAlchemyDatasetVersionRepository:
     """数据集版本的 SQLAlchemy 仓库实现。"""
+
     def __init__(self, session_factory: async_sessionmaker[AsyncSession]) -> None:
         self._session_factory = session_factory
 
@@ -164,6 +164,7 @@ class SqlAlchemyDatasetVersionRepository:
 
 class SqlAlchemyTestCaseRepository:
     """测试用例的 SQLAlchemy 仓库实现。"""
+
     def __init__(self, session_factory: async_sessionmaker[AsyncSession]) -> None:
         self._session_factory = session_factory
 
@@ -249,9 +250,7 @@ class SqlAlchemyTestCaseRepository:
 
     async def delete(self, case_id: TestCaseId) -> None:
         async with transaction_scope(self._session_factory) as session:
-            await session.execute(
-                delete(TestCaseModel).where(TestCaseModel.id == case_id.value)
-            )
+            await session.execute(delete(TestCaseModel).where(TestCaseModel.id == case_id.value))
 
     async def get_max_sort_order(self, dataset_version_id: DatasetVersionId) -> int:
         statement = select(func.max(TestCaseModel.sort_order)).where(

@@ -11,6 +11,7 @@ from ..application.ports import (
     InvocationMessage,
     InvocationResult,
     ModelRuntimeUnavailableError,
+    ModelStreamCallback,
 )
 from ..domain.entities import ModelConfiguration
 
@@ -78,3 +79,42 @@ class TemporalModelInvoker:
             latency_ms=int(result.get("latency_ms", 0)),
             response_id=result.get("response_id"),
         )
+
+    async def stream(
+        self,
+        config: ModelConfiguration,
+        messages: list[InvocationMessage],
+        *,
+        callback: ModelStreamCallback,
+        timeout_seconds: int = 60,
+        max_tokens: int = 2048,
+    ) -> InvocationResult:
+        """执行真实流式 Workflow；每个供应商增量由 Worker 持久回调。"""
+
+        if not self._address:
+            raise ModelRuntimeUnavailableError("部署未配置 Model Runner")
+        payload: dict[str, Any] = {
+            "project_id": str(config.project_id.value),
+            "model_config_id": str(config.model_config_id.value),
+            "base_url": config.base_url,
+            "model_name": config.model_name,
+            "encrypted_api_key": config.encrypted_api_key,
+            "messages": [{"role": item.role, "content": item.content} for item in messages],
+            "timeout_seconds": timeout_seconds,
+            "max_tokens": max_tokens,
+            "allow_private_network": self._allow_private_network,
+            "callback": {"url": callback.url, "internal_token": callback.internal_token},
+        }
+        try:
+            client = await Client.connect(self._address, namespace=self._namespace)
+            result = await client.execute_workflow(
+                "model-streaming",
+                payload,
+                id=f"model-streaming-{uuid4()}",
+                task_queue=self._task_queue,
+            )
+        except Exception as error:
+            raise ModelRuntimeUnavailableError("Model Runner 流式调用失败") from error
+        if not isinstance(result, dict) or not isinstance(result.get("content"), str):
+            raise ModelRuntimeUnavailableError("Model Runner 返回无效流式结果")
+        return InvocationResult(content=result["content"])

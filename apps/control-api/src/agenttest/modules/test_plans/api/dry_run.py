@@ -60,25 +60,19 @@ def create_dry_run_router(
                 {"vid": version_id, "pid": project_id, "plan_id": plan_id},
             )
             if version_check.scalar() is None:
-                return JSONResponse(
-                    status_code=404, content={"detail": "测试计划版本不存在"}
-                )
+                return JSONResponse(status_code=404, content={"detail": "测试计划版本不存在"})
 
             from agenttest.modules.test_plans.domain.entities import TestPlanVersionId
 
             version = await version_repo.get_by_id(TestPlanVersionId(version_id))
             if version is None:
-                return JSONResponse(
-                    status_code=404, content={"detail": "测试计划版本不存在"}
-                )
+                return JSONResponse(status_code=404, content={"detail": "测试计划版本不存在"})
 
             errors: list[str] = []
 
             if version.agent_version_id is not None:
                 result = await session.execute(
-                    text(
-                        "SELECT 1 FROM agent_versions WHERE id = :vid AND status = 'published'"
-                    ),
+                    text("SELECT 1 FROM agent_versions WHERE id = :vid AND status = 'published'"),
                     {"vid": version.agent_version_id.value},
                 )
                 if result.scalar() is None:
@@ -86,9 +80,7 @@ def create_dry_run_router(
 
             if version.dataset_version_id is not None:
                 result = await session.execute(
-                    text(
-                        "SELECT 1 FROM dataset_versions WHERE id = :vid AND status = 'published'"
-                    ),
+                    text("SELECT 1 FROM dataset_versions WHERE id = :vid AND status = 'published'"),
                     {"vid": version.dataset_version_id.value},
                 )
                 if result.scalar() is None:
@@ -107,10 +99,7 @@ def create_dry_run_router(
             num_cases = 0
             if version.dataset_version_id is not None:
                 result = await session.execute(
-                    text(
-                        "SELECT COUNT(*) FROM test_cases "
-                        "WHERE dataset_version_id = :dvid"
-                    ),
+                    text("SELECT COUNT(*) FROM test_cases WHERE dataset_version_id = :dvid"),
                     {"dvid": version.dataset_version_id.value},
                 )
                 num_cases = result.scalar() or 0

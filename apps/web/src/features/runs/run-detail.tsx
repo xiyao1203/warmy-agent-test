@@ -45,7 +45,9 @@ export function RunDetail({
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState("");
   const [cancelling, setCancelling] = useState(false);
-  const [activeTab, setActiveTab] = useState<"overview" | "cases" | "trace" | "artifacts">("overview");
+  const [activeTab, setActiveTab] = useState<
+    "overview" | "cases" | "trace" | "artifacts"
+  >("overview");
   if (loading || !run) {
     return <RunDetailSkeleton />;
   }
@@ -59,7 +61,9 @@ export function RunDetail({
     <div className="min-w-0 bg-[var(--background)] px-6 py-6">
       <header className="flex flex-wrap items-start justify-between gap-4 border-b border-[var(--border)] pb-5">
         <div>
-          <p className="text-xs font-medium text-[var(--text-subtle)]">运行详情</p>
+          <p className="text-xs font-medium text-[var(--text-subtle)]">
+            运行详情
+          </p>
           <h1 className="text-2xl font-semibold tracking-tight">
             Run {run.id.slice(0, 8)}
           </h1>
@@ -73,7 +77,13 @@ export function RunDetail({
           <Tooltip content="下载测试报告（JSON/JUnit/HTML）">
             <ReportDownloadButton projectId={projectId} runId={run.id} />
           </Tooltip>
-          <Tooltip content={canCancel ? "取消正在运行的测试" : "只有排队中或运行中的任务才能取消"}>
+          <Tooltip
+            content={
+              canCancel
+                ? "取消正在运行的测试"
+                : "只有排队中或运行中的任务才能取消"
+            }
+          >
             <Button
               disabled={!canCancel || cancelling}
               loading={cancelling}
@@ -94,12 +104,14 @@ export function RunDetail({
       </header>
       {/* Tabs */}
       <nav className="mt-5 flex gap-1 border-b border-[var(--border)]">
-        {([
-          ["overview", "概览"],
-          ["cases", "用例列表"],
-          ["trace", "Trace"],
-          ["artifacts", "产物"],
-        ] as const).map(([key, label]) => (
+        {(
+          [
+            ["overview", "概览"],
+            ["cases", "用例列表"],
+            ["trace", "Trace"],
+            ["artifacts", "产物"],
+          ] as const
+        ).map(([key, label]) => (
           <button
             key={key}
             className={`rounded-t px-4 py-2 text-sm font-medium transition-colors ${
@@ -153,14 +165,24 @@ export function RunDetail({
               <SummaryItem label="总用例" value={String(run.total_cases)} />
               <SummaryItem label="已完成" value={String(finishedCases)} />
               <SummaryItem label="通过" value={String(run.passed_cases)} />
-              <SummaryItem label="失败/错误" value={String(run.failed_cases + run.error_cases)} />
+              <SummaryItem
+                label="失败/错误"
+                value={String(run.failed_cases + run.error_cases)}
+              />
             </dl>
             <div className="mt-5 space-y-3 border-t border-[var(--border)] pt-5 text-sm">
               <InfoRow label="Workflow" value={run.workflow_id ?? "待启动"} />
-              <InfoRow label="创建时间" value={new Date(run.created_at).toLocaleString("zh-CN")} />
+              <InfoRow
+                label="创建时间"
+                value={new Date(run.created_at).toLocaleString("zh-CN")}
+              />
               <InfoRow
                 label="开始时间"
-                value={run.started_at ? new Date(run.started_at).toLocaleString("zh-CN") : "未开始"}
+                value={
+                  run.started_at
+                    ? new Date(run.started_at).toLocaleString("zh-CN")
+                    : "未开始"
+                }
               />
               <InfoRow
                 label="完成时间"
@@ -189,66 +211,72 @@ export function RunDetail({
         <section className="mt-5 grid gap-4">
           {cases.length === 0 ? (
             <div className="rounded-[var(--radius-md)] border border-[var(--border)] p-8 text-center">
-              <p className="text-sm font-medium text-[var(--text-muted)]">暂无用例数据</p>
+              <p className="text-sm font-medium text-[var(--text-muted)]">
+                暂无用例数据
+              </p>
             </div>
           ) : (
             cases.map((item) => (
               <article
-              className="rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--surface)] p-4 shadow-[0_12px_40px_rgba(15,23,42,0.04)]"
-              key={item.id}
-            >
-              <div className="flex flex-wrap items-center justify-between gap-3">
-                <div>
-                  <h2 className="font-medium">{item.name}</h2>
-                  <p className="mt-1 text-xs text-[var(--text-muted)]">
-                    {item.duration_ms == null ? "未记录耗时" : `${item.duration_ms} ms`}
-                  </p>
-                </div>
-                <StatusBadge status={item.status} />
-              </div>
-              {item.error_type ? (
-                <div className="mt-4 rounded-[var(--radius-sm)] bg-[var(--danger-subtle)] p-3 text-sm text-[var(--danger)]">
-                  <div className="flex items-center gap-2 font-medium">
-                    <AlertTriangle aria-hidden="true" className="size-4" />
-                    {item.error_type}
+                className="rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--surface)] p-4 shadow-[0_12px_40px_rgba(15,23,42,0.04)]"
+                key={item.id}
+              >
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <div>
+                    <h2 className="font-medium">{item.name}</h2>
+                    <p className="mt-1 text-xs text-[var(--text-muted)]">
+                      {item.duration_ms == null
+                        ? "未记录耗时"
+                        : `${item.duration_ms} ms`}
+                    </p>
                   </div>
-                  <p className="mt-1">{item.error_message}</p>
+                  <StatusBadge status={item.status} />
                 </div>
-              ) : null}
-              {item.output ? (
-                <pre className="mt-4 overflow-auto rounded-[var(--radius-sm)] bg-[var(--surface-subtle)] p-3 text-xs">
-                  {JSON.stringify(item.output, null, 2)}
-                </pre>
-              ) : null}
-              <details className="mt-4" open={item.status === "error"}>
-                <summary className="flex cursor-pointer items-center gap-2 text-sm font-medium">
-                  <ListTree aria-hidden="true" className="size-4" />
-                  Trace
-                </summary>
-                <div className="mt-3 space-y-2">
-                  {item.trace.length ? (
-                    item.trace.map((span, index) => (
-                      <div
-                        className="rounded-[var(--radius-sm)] border border-[var(--border)] p-3 text-xs"
-                        key={index}
-                      >
-                        <div className="flex items-center justify-between gap-3">
-                          <span className="font-medium">
-                            {String(span.name ?? `span-${index + 1}`)}
-                          </span>
-                          <Badge>{String(span.status ?? "recorded")}</Badge>
+                {item.error_type ? (
+                  <div className="mt-4 rounded-[var(--radius-sm)] bg-[var(--danger-subtle)] p-3 text-sm text-[var(--danger)]">
+                    <div className="flex items-center gap-2 font-medium">
+                      <AlertTriangle aria-hidden="true" className="size-4" />
+                      {item.error_type}
+                    </div>
+                    <p className="mt-1">{item.error_message}</p>
+                  </div>
+                ) : null}
+                {item.output ? (
+                  <pre className="mt-4 overflow-auto rounded-[var(--radius-sm)] bg-[var(--surface-subtle)] p-3 text-xs">
+                    {JSON.stringify(item.output, null, 2)}
+                  </pre>
+                ) : null}
+                <details className="mt-4" open={item.status === "error"}>
+                  <summary className="flex cursor-pointer items-center gap-2 text-sm font-medium">
+                    <ListTree aria-hidden="true" className="size-4" />
+                    Trace
+                  </summary>
+                  <div className="mt-3 space-y-2">
+                    {item.trace.length ? (
+                      item.trace.map((span, index) => (
+                        <div
+                          className="rounded-[var(--radius-sm)] border border-[var(--border)] p-3 text-xs"
+                          key={index}
+                        >
+                          <div className="flex items-center justify-between gap-3">
+                            <span className="font-medium">
+                              {String(span.name ?? `span-${index + 1}`)}
+                            </span>
+                            <Badge>{String(span.status ?? "recorded")}</Badge>
+                          </div>
+                          <pre className="mt-2 overflow-auto text-[var(--text-muted)]">
+                            {JSON.stringify(span, null, 2)}
+                          </pre>
                         </div>
-                        <pre className="mt-2 overflow-auto text-[var(--text-muted)]">
-                          {JSON.stringify(span, null, 2)}
-                        </pre>
-                      </div>
-                    ))
-                  ) : (
-                    <p className="text-sm text-[var(--text-muted)]">暂无 Trace</p>
-                  )}
-                </div>
-              </details>
-            </article>
+                      ))
+                    ) : (
+                      <p className="text-sm text-[var(--text-muted)]">
+                        暂无 Trace
+                      </p>
+                    )}
+                  </div>
+                </details>
+              </article>
             ))
           )}
         </section>
@@ -327,9 +355,8 @@ export function RunDetail({
                   <div className="min-w-0">
                     <p className="truncate text-sm font-medium">{a.filename}</p>
                     <p className="text-xs text-[var(--text-muted)]">
-                      {a.content_type}{" "}
-                      · {formatBytes(a.size_bytes)}{" "}
-                      · {new Date(a.created_at).toLocaleDateString("zh-CN")}
+                      {a.content_type} · {formatBytes(a.size_bytes)} ·{" "}
+                      {new Date(a.created_at).toLocaleDateString("zh-CN")}
                     </p>
                   </div>
                   <Button asChild className="shrink-0" variant="ghost">
@@ -394,7 +421,10 @@ function RunDetailSkeleton() {
       {/* Summary skeleton */}
       <dl className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
         {Array.from({ length: 6 }).map((_, i) => (
-          <div key={i} className="rounded-[var(--radius-sm)] border border-[var(--border)] p-3">
+          <div
+            key={i}
+            className="rounded-[var(--radius-sm)] border border-[var(--border)] p-3"
+          >
             <Skeleton className="h-3 w-12" />
             <Skeleton className="mt-1 h-7 w-16" />
           </div>

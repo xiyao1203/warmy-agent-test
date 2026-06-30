@@ -8,11 +8,53 @@ export type ChatMessage = {
   timestamp: string;
 };
 
-export type ChatResponse = {
+export type ArtifactLink = {
+  type: string;
+  id: string;
+  relation: string;
+};
+
+export type SessionSummary = {
   session_id: string;
-  messages: ChatMessage[];
-  plan_draft: Record<string, unknown>;
+  title: string;
   status: string;
+  updated_at: string;
+};
+
+export type ChatResponse = SessionSummary & {
+  messages: ChatMessage[];
+  artifacts: ArtifactLink[];
+  protocol_version: number;
+  plan_draft: Record<string, unknown>;
+};
+
+export type AgentEvent = {
+  id: number;
+  type: string;
+  payload: Record<string, unknown>;
+};
+
+export type TargetChatTurn = {
+  turn_id: string;
+  sequence: number;
+  input: Record<string, unknown>;
+  output: Record<string, unknown> | null;
+  trace: Array<Record<string, unknown>> | null;
+  scores: Array<Record<string, unknown>> | null;
+  duration_ms: number | null;
+  token_usage: Record<string, unknown> | null;
+  error: Record<string, unknown> | null;
+  created_at: string;
+};
+
+export type TargetChatSession = {
+  session_id: string;
+  agent_version_id: string;
+  environment_template_id: string | null;
+  status: string;
+  created_at: string;
+  updated_at: string;
+  turns: TargetChatTurn[];
 };
 
 export class TestAgentApiError extends Error {
@@ -24,51 +66,151 @@ export class TestAgentApiError extends Error {
   }
 }
 
-export async function sendChatMessage(
-  projectId: string,
-  message: string,
-  sessionId?: string,
-) {
-  const res = await fetch(
-    `${API_BASE}/api/v1/projects/${projectId}/test-agent/chat`,
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        ...(csrfHeaders() as Record<string, string>),
-      },
-      credentials: "include",
-      body: JSON.stringify({ message, session_id: sessionId }),
-    },
-  );
-  if (!res.ok) {
-    const problem = await responseProblem(res, "测试 Agent 调用失败");
+async function request<T>(url: string, init?: RequestInit): Promise<T> {
+  const response = await fetch(url, { credentials: "include", ...init });
+  if (!response.ok) {
+    const problem = await responseProblem(response, "测试 Agent 调用失败");
     throw new TestAgentApiError(problem.status, problem.message);
   }
-  return res.json() as Promise<ChatResponse>;
+  return response.json() as Promise<T>;
 }
 
-export async function confirmPlan(projectId: string, sessionId: string) {
-  const res = await fetch(
-    `${API_BASE}/api/v1/projects/${projectId}/test-agent/confirm`,
+const base = (projectId: string) =>
+  `${API_BASE}/api/v1/projects/${projectId}/test-agent`;
+
+export function listSessions(projectId: string) {
+  return request<{ items: SessionSummary[] }>(`${base(projectId)}/sessions`);
+}
+
+export function createSession(projectId: string) {
+  return request<ChatResponse>(`${base(projectId)}/sessions`, {
+    method: "POST",
+    headers: csrfHeaders() as Record<string, string>,
+  });
+}
+
+export function getSession(projectId: string, sessionId: string) {
+  return request<ChatResponse>(`${base(projectId)}/sessions/${sessionId}`);
+}
+
+export function sendChatMessage(
+  projectId: string,
+  sessionId: string,
+  message: string,
+) {
+  return request<ChatResponse>(
+    `${base(projectId)}/sessions/${sessionId}/messages`,
     {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         ...(csrfHeaders() as Record<string, string>),
       },
-      credentials: "include",
-      body: JSON.stringify({ session_id: sessionId }),
+      body: JSON.stringify({ message }),
     },
   );
-  if (!res.ok) {
-    const problem = await responseProblem(res, "确认测试计划失败");
-    throw new TestAgentApiError(problem.status, problem.message);
-  }
-  return res.json() as Promise<{
-    session_id: string;
+}
+
+export function decideConfirmation(
+  projectId: string,
+  sessionId: string,
+  confirmationId: string,
+  approved: boolean,
+) {
+  return request<{
+    task_id: string;
     status: string;
-    plan: Record<string, unknown>;
-    message: string;
-  }>;
+    output: Record<string, unknown> | null;
+    error: Record<string, unknown> | null;
+  }>(
+    `${base(projectId)}/confirmations/${confirmationId}?session_id=${sessionId}`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...(csrfHeaders() as Record<string, string>),
+      },
+      body: JSON.stringify({ approved }),
+    },
+  );
+}
+
+export function subscribeToSession(
+  projectId: string,
+  sessionId: string,
+  onEvent: (event: AgentEvent) => void,
+  onError?: () => void,
+) {
+  const source = new EventSource(
+    `${base(projectId)}/sessions/${sessionId}/events`,
+    { withCredentials: true },
+  );
+  const eventTypes = [
+    "message.started",
+    "message.delta",
+    "message.completed",
+    "agent.delegated",
+    "agent.progress",
+    "agent.completed",
+    "tool.confirmation_required",
+    "asset.created",
+    "asset.updated",
+    "run.progress",
+    "run.completed",
+    "error",
+  ];
+  for (const type of eventTypes) {
+    source.addEventListener(type, (raw) => {
+      const message = raw as MessageEvent<string>;
+      onEvent({
+        id: Number(message.lastEventId || 0),
+        type,
+        payload: JSON.parse(message.data) as Record<string, unknown>,
+      });
+    });
+  }
+  source.onerror = () => onError?.();
+  return () => source.close();
+}
+
+export function listTargetChats(projectId: string) {
+  return request<{ items: TargetChatSession[] }>(
+    `${base(projectId)}/target-chats`,
+  );
+}
+
+export function createTargetChat(
+  projectId: string,
+  agentVersionId: string,
+  environmentTemplateId?: string,
+) {
+  return request<TargetChatSession>(`${base(projectId)}/target-chats`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      ...(csrfHeaders() as Record<string, string>),
+    },
+    body: JSON.stringify({
+      agent_version_id: agentVersionId,
+      environment_template_id: environmentTemplateId || null,
+    }),
+  });
+}
+
+export function sendTargetMessage(
+  projectId: string,
+  sessionId: string,
+  message: string,
+) {
+  return request<TargetChatTurn>(
+    `${base(projectId)}/target-chats/${sessionId}/messages`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...(csrfHeaders() as Record<string, string>),
+      },
+      body: JSON.stringify({ message }),
+    },
+  );
 }

@@ -21,7 +21,9 @@ describe("BudgetDisplay", () => {
   it("shows warning when usage is 80%", () => {
     render(<BudgetDisplay budget={100} used={85} />);
 
-    expect(screen.getByText("预算使用已达 80%，请注意控制成本")).toBeInTheDocument();
+    expect(
+      screen.getByText("预算使用已达 80%，请注意控制成本"),
+    ).toBeInTheDocument();
   });
 
   it("shows exceeded warning when usage is 100%", () => {
@@ -45,13 +47,7 @@ describe("BudgetDisplay", () => {
   });
 
   it("calculates usage percent from props", () => {
-    render(
-      <BudgetDisplay
-        budget={100}
-        usagePercent={75}
-        used={50}
-      />,
-    );
+    render(<BudgetDisplay budget={100} usagePercent={75} used={50} />);
 
     expect(screen.getByText("75.0%")).toBeInTheDocument();
   });
@@ -59,7 +55,11 @@ describe("BudgetDisplay", () => {
   it("no warning when usage is below 80%", () => {
     render(<BudgetDisplay budget={100} used={50} />);
 
-    expect(screen.queryByText("预算使用已达 80%，请注意控制成本")).not.toBeInTheDocument();
-    expect(screen.queryByText("预算已超支，建议停止执行")).not.toBeInTheDocument();
+    expect(
+      screen.queryByText("预算使用已达 80%，请注意控制成本"),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByText("预算已超支，建议停止执行"),
+    ).not.toBeInTheDocument();
   });
 });

@@ -13,11 +13,7 @@ const positionClasses = {
   top: "bottom-full left-1/2 -translate-x-1/2 mb-2",
 };
 
-export function Tooltip({
-  children,
-  content,
-  side = "bottom",
-}: TooltipProps) {
+export function Tooltip({ children, content, side = "bottom" }: TooltipProps) {
   return (
     <div className="group relative inline-flex">
       {children}

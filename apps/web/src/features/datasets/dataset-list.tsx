@@ -49,7 +49,13 @@ export function DatasetList({
   onDelete?: (datasetId: string) => Promise<unknown>;
   projectId: string;
 }) {
-  if (loading) return <DatasetListSkeleton />;
+  if (loading)
+    return (
+      <>
+        <span className="sr-only">正在加载数据集…</span>
+        <DatasetListSkeleton />
+      </>
+    );
   if (error === "not-found") {
     return <StatusPanel title="项目不存在或你无权访问" />;
   }
@@ -61,7 +67,9 @@ export function DatasetList({
     <div className="min-w-0 px-6 py-6">
       <header className="flex items-start justify-between gap-4 border-b border-[var(--border)] pb-5">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">数据集与用例</h1>
+          <h1 className="text-2xl font-semibold tracking-tight">
+            数据集与用例
+          </h1>
           <p className="mt-2 text-sm text-[var(--text-muted)]">
             管理 API 与浏览器测试用例、导入导出和不可变版本。
           </p>
@@ -114,7 +122,11 @@ export function DatasetList({
                   </TableCell>
                   <TableCell className={tableActionCellClass}>
                     <TableActions label={dataset.name}>
-                      <Button asChild className="shrink-0 px-2.5" variant="ghost">
+                      <Button
+                        asChild
+                        className="shrink-0 px-2.5"
+                        variant="ghost"
+                      >
                         <Link
                           aria-label={`查看${dataset.name}`}
                           href={`/projects/${projectId}/datasets/${dataset.id}`}
@@ -203,9 +215,13 @@ function CreateDatasetDialog({
               value={description}
             />
           </label>
-          {error ? <p className="text-sm text-[var(--danger)]">{error}</p> : null}
+          {error ? (
+            <p className="text-sm text-[var(--danger)]">{error}</p>
+          ) : null}
           <div className="flex justify-end gap-2">
-            <Button disabled={submitting} onClick={() => setOpen(false)}>取消</Button>
+            <Button disabled={submitting} onClick={() => setOpen(false)}>
+              取消
+            </Button>
             <Button
               disabled={submitting}
               loading={submitting}

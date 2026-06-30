@@ -1,7 +1,6 @@
 """Browser Harness Workflow 集成测试。"""
 
 
-
 class TestBrowserHarnessWorkflowIntegration:
     def test_workflow_imports_harness_activity(self):
         """验证 Workflow 可导入 browser harness activity。"""
@@ -21,9 +20,7 @@ class TestBrowserHarnessWorkflowIntegration:
             capture_page_snapshot,
         )
 
-        definition = getattr(
-            capture_page_snapshot, "__temporal_activity_definition", None
-        )
+        definition = getattr(capture_page_snapshot, "__temporal_activity_definition", None)
         assert definition is not None
 
     def test_capture_input_factory(self):

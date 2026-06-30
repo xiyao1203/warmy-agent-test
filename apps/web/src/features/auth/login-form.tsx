@@ -4,7 +4,6 @@ import { AlertCircle, Eye, EyeOff } from "lucide-react";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import type { LoginRequest, UserResponse } from "@warmy/generated-api-client";
 
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PulseButton } from "@/components/uiverse";
 
@@ -167,11 +166,7 @@ export function LoginForm({
         ) : null}
       </div>
 
-      <PulseButton
-        className="mt-2 w-full"
-        loading={pending}
-        type="submit"
-      >
+      <PulseButton className="mt-2 w-full" loading={pending} type="submit">
         {pending ? "正在登录…" : "登录"}
       </PulseButton>
     </form>

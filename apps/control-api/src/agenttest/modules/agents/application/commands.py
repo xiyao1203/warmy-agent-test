@@ -34,6 +34,7 @@ from agenttest.modules.projects.public import ProjectId
 @dataclass(frozen=True, slots=True)
 class CreateAgentCommand:
     """创建 Agent 命令。"""
+
     project_id: ProjectId
     name: str
     agent_type: AgentType
@@ -43,6 +44,7 @@ class CreateAgentCommand:
 @dataclass(frozen=True, slots=True)
 class UpdateAgentCommand:
     """更新 Agent 名称或描述的命令。"""
+
     agent_id: AgentId
     name: str | None = None
     description: str | None = None
@@ -51,6 +53,7 @@ class UpdateAgentCommand:
 @dataclass(frozen=True, slots=True)
 class CreateAgentVersionCommand:
     """为 Agent 创建新草稿版本的命令。"""
+
     agent_id: AgentId
     config: AgentConfig
 
@@ -58,6 +61,7 @@ class CreateAgentVersionCommand:
 @dataclass(frozen=True, slots=True)
 class UpdateAgentVersionCommand:
     """更新草稿版本配置的命令。"""
+
     version_id: AgentVersionId
     config: AgentConfig
 
@@ -65,6 +69,7 @@ class UpdateAgentVersionCommand:
 @dataclass(frozen=True, slots=True)
 class PublishAgentVersionCommand:
     """发布草稿版本的命令。发布后版本不可修改。"""
+
     version_id: AgentVersionId
 
 
@@ -80,6 +85,7 @@ class CreateAgentHandler:
     3. 持久化到数据库。
     4. 记录审计日志。
     """
+
     def __init__(
         self,
         *,
@@ -122,6 +128,7 @@ class UpdateAgentHandler:
 
     支持部分更新：仅更新传入的非 None 字段。
     """
+
     def __init__(
         self,
         *,
@@ -163,6 +170,7 @@ class CreateAgentVersionHandler:
 
     自动计算下一个版本号（基于已有最大版本号 +1）。
     """
+
     def __init__(
         self,
         *,
@@ -205,6 +213,7 @@ class UpdateAgentVersionHandler:
 
     仅可更新草稿状态的版本，已发布版本不可修改。
     """
+
     def __init__(
         self,
         *,
@@ -241,6 +250,7 @@ class PublishAgentVersionHandler:
 
     将草稿版本转为已发布状态，发布后配置不可再修改。
     """
+
     def __init__(
         self,
         *,
@@ -325,6 +335,7 @@ async def _record(
 
 class AgentNotFoundError(Exception):
     """Agent 不存在的领域异常。"""
+
     def __init__(self, agent_id: AgentId) -> None:
         self.agent_id = agent_id
         super().__init__(f"Agent {agent_id.value} not found")
@@ -332,6 +343,7 @@ class AgentNotFoundError(Exception):
 
 class AgentVersionNotFoundError(Exception):
     """Agent 版本不存在的领域异常。"""
+
     def __init__(self, version_id: AgentVersionId) -> None:
         self.version_id = version_id
         super().__init__(f"Agent version {version_id.value} not found")

@@ -58,7 +58,9 @@ export function UserDrawer({
   open: boolean;
   user?: UserResponse;
 }) {
-  const [action, setAction] = useState<"delete" | "edit" | "reset" | "status">();
+  const [action, setAction] = useState<
+    "delete" | "edit" | "reset" | "status"
+  >();
   const [password, setPassword] = useState("");
   const [pending, setPending] = useState(false);
   const [error, setError] = useState("");
@@ -146,10 +148,7 @@ export function UserDrawer({
         </dl>
 
         <div className="mt-5 space-y-2">
-          <Button
-            className="w-full justify-start"
-            onClick={openEdit}
-          >
+          <Button className="w-full justify-start" onClick={openEdit}>
             编辑用户
           </Button>
           <Button
@@ -191,25 +190,56 @@ export function UserDrawer({
           )}
         </div>
       </DrawerContent>
-      <Dialog onOpenChange={(value) => !value && setAction(undefined)} open={Boolean(action)}>
+      <Dialog
+        onOpenChange={(value) => !value && setAction(undefined)}
+        open={Boolean(action)}
+      >
         <DialogContent>
           {action === "edit" ? (
             <>
               <DialogTitle>编辑用户</DialogTitle>
-              <DialogDescription>修改用户姓名、邮箱或系统角色。</DialogDescription>
-              <form className="mt-5 space-y-4" onSubmit={handleEditSubmit(submitEdit)}>
+              <DialogDescription>
+                修改用户姓名、邮箱或系统角色。
+              </DialogDescription>
+              <form
+                className="mt-5 space-y-4"
+                onSubmit={handleEditSubmit(submitEdit)}
+              >
                 {error ? (
-                  <p className="rounded-[var(--radius-sm)] bg-[var(--danger-subtle)] px-3 py-2 text-sm text-[var(--danger)]" role="alert">
+                  <p
+                    className="rounded-[var(--radius-sm)] bg-[var(--danger-subtle)] px-3 py-2 text-sm text-[var(--danger)]"
+                    role="alert"
+                  >
                     {error}
                   </p>
                 ) : null}
-                <EditField error={editErrors.display_name?.message} htmlFor="drawer-edit-name" label="姓名">
-                  <Input autoFocus id="drawer-edit-name" {...registerEdit("display_name")} />
+                <EditField
+                  error={editErrors.display_name?.message}
+                  htmlFor="drawer-edit-name"
+                  label="姓名"
+                >
+                  <Input
+                    autoFocus
+                    id="drawer-edit-name"
+                    {...registerEdit("display_name")}
+                  />
                 </EditField>
-                <EditField error={editErrors.email?.message} htmlFor="drawer-edit-email" label="邮箱">
-                  <Input id="drawer-edit-email" type="email" {...registerEdit("email")} />
+                <EditField
+                  error={editErrors.email?.message}
+                  htmlFor="drawer-edit-email"
+                  label="邮箱"
+                >
+                  <Input
+                    id="drawer-edit-email"
+                    type="email"
+                    {...registerEdit("email")}
+                  />
                 </EditField>
-                <EditField error={editErrors.role?.message} htmlFor="drawer-edit-role" label="系统角色">
+                <EditField
+                  error={editErrors.role?.message}
+                  htmlFor="drawer-edit-role"
+                  label="系统角色"
+                >
                   <select
                     className="h-9 w-full rounded-[var(--radius-sm)] border border-[var(--border)] bg-[var(--surface)] px-3 text-sm"
                     id="drawer-edit-role"
@@ -234,7 +264,11 @@ export function UserDrawer({
                   <Button onClick={() => setAction(undefined)} type="button">
                     取消
                   </Button>
-                  <Button disabled={editSubmitting || pending} type="submit" variant="primary">
+                  <Button
+                    disabled={editSubmitting || pending}
+                    type="submit"
+                    variant="primary"
+                  >
                     {editSubmitting || pending ? "正在保存…" : "保存修改"}
                   </Button>
                 </div>
@@ -293,7 +327,10 @@ export function UserDrawer({
               </DialogDescription>
               {action === "reset" ? (
                 <div className="mt-4">
-                  <label className="mb-1.5 block text-sm font-medium" htmlFor="reset-password">
+                  <label
+                    className="mb-1.5 block text-sm font-medium"
+                    htmlFor="reset-password"
+                  >
                     新密码
                   </label>
                   <Input
@@ -316,7 +353,9 @@ export function UserDrawer({
                   取消
                 </Button>
                 <Button
-                  disabled={pending || (action === "reset" && password.length < 12)}
+                  disabled={
+                    pending || (action === "reset" && password.length < 12)
+                  }
                   onClick={async () => {
                     setPending(true);
                     setError("");
@@ -371,7 +410,9 @@ function EditField({
         {label}
       </label>
       {children}
-      {error ? <p className="mt-1 text-xs text-[var(--danger)]">{error}</p> : null}
+      {error ? (
+        <p className="mt-1 text-xs text-[var(--danger)]">{error}</p>
+      ) : null}
     </div>
   );
 }

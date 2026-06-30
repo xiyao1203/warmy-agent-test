@@ -19,9 +19,12 @@ test.describe("login flow", () => {
     await expect(page).toHaveURL(/\/login/);
   });
 
-  test("super admin can log in and reach project overview", async ({ page }) => {
+  test("super admin can log in and reach project overview", async ({
+    page,
+  }) => {
     const adminEmail = process.env.E2E_ADMIN_EMAIL ?? "admin@example.com";
-    const adminPassword = process.env.E2E_ADMIN_PASSWORD ?? "admin-password-123";
+    const adminPassword =
+      process.env.E2E_ADMIN_PASSWORD ?? "admin-password-123";
 
     await page.goto("/login");
 

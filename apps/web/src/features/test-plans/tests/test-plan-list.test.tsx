@@ -65,16 +65,13 @@ describe("TestPlanList", () => {
     expect(screen.getByText("测试计划列表暂时不可用")).toBeVisible();
 
     rerender(
-      <TestPlanList
-        onDelete={vi.fn()}
-        plans={[plan]}
-        projectId="project-1"
-      />,
+      <TestPlanList onDelete={vi.fn()} plans={[plan]} projectId="project-1" />,
     );
     expect(screen.getByText("回归计划")).toBeVisible();
-    expect(
-      screen.getByRole("columnheader", { name: "计划信息" }),
-    ).toHaveClass("w-[420px]", "pl-16");
+    expect(screen.getByRole("columnheader", { name: "计划信息" })).toHaveClass(
+      "w-[420px]",
+      "pl-16",
+    );
     expect(screen.getByRole("columnheader", { name: "更新时间" })).toHaveClass(
       "w-32",
       "text-center",
@@ -124,9 +121,7 @@ describe("TestPlanDetail", () => {
     expect(
       screen.queryByRole("option", { name: "客服 Agent v1" }),
     ).not.toBeInTheDocument();
-    expect(
-      screen.getByRole("option", { name: "客服 Agent v2" }),
-    ).toBeVisible();
+    expect(screen.getByRole("option", { name: "客服 Agent v2" })).toBeVisible();
     expect(
       screen.queryByRole("option", { name: "回归集 v1" }),
     ).not.toBeInTheDocument();
@@ -186,7 +181,9 @@ describe("TestPlanDetail", () => {
     fireEvent.click(screen.getByRole("button", { name: "发布版本 v1" }));
     expect(await screen.findByText("发布后计划版本将不可编辑。")).toBeVisible();
     fireEvent.click(screen.getByRole("button", { name: "确认发布" }));
-    await waitFor(() => expect(onPublish).toHaveBeenCalledWith(draftVersion.id));
+    await waitFor(() =>
+      expect(onPublish).toHaveBeenCalledWith(draftVersion.id),
+    );
 
     rerender(
       <TestPlanDetail

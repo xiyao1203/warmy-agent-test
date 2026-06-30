@@ -26,6 +26,7 @@ from agenttest.modules.test_plans.domain.repositories import (
 
 class ListTestPlansHandler:
     """查询项目下测试计划列表，支持游标分页。"""
+
     def __init__(
         self,
         *,
@@ -49,6 +50,7 @@ class ListTestPlansHandler:
 
 class GetTestPlanHandler:
     """查询单个测试计划详情。"""
+
     def __init__(
         self,
         *,
@@ -66,6 +68,7 @@ class GetTestPlanHandler:
 
 class ListTestPlanVersionsHandler:
     """查询测试计划的所有版本（按版本号倒序）。"""
+
     def __init__(
         self,
         *,
@@ -85,6 +88,7 @@ class ListTestPlanVersionsHandler:
 
 class GetTestPlanVersionHandler:
     """查询单个测试计划版本详情。"""
+
     def __init__(
         self,
         *,

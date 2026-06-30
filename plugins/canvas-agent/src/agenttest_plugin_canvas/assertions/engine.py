@@ -153,8 +153,7 @@ def assert_required_connection(
     from_nodes = {n.node_id for n in trace.nodes if n.node_type == from_type}
     to_nodes = {n.node_id for n in trace.nodes if n.node_type == to_type}
     found = any(
-        c.source_node_id in from_nodes and c.target_node_id in to_nodes
-        for c in trace.connections
+        c.source_node_id in from_nodes and c.target_node_id in to_nodes for c in trace.connections
     )
     rule = f"连线检查 ({from_type.value} → {to_type.value})"
     if found:
@@ -262,7 +261,7 @@ def run_all_assertions(
     if required_types:
         results.append(assert_node_types(trace, required=required_types))
 
-    for from_t, to_t in (required_connections or []):
+    for from_t, to_t in required_connections or []:
         results.append(assert_required_connection(trace, from_type=from_t, to_type=to_t))
 
     results.append(assert_no_orphan_nodes(trace))

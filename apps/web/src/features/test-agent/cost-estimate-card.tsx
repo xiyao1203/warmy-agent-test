@@ -84,9 +84,11 @@ export function CostEstimateCard({
             <DollarSign className="size-4" />
             <span className="text-xs">总成本</span>
           </div>
-          <p className={`mt-1 text-lg font-semibold ${
-            isOverThreshold ? "text-[var(--danger)]" : ""
-          }`}>
+          <p
+            className={`mt-1 text-lg font-semibold ${
+              isOverThreshold ? "text-[var(--danger)]" : ""
+            }`}
+          >
             {formatCurrency(totalCost)}
           </p>
         </div>
@@ -115,9 +117,7 @@ export function CostEstimateCard({
           <div className="flex items-center gap-2 text-[var(--text-muted)]">
             <span className="text-xs">用例数</span>
           </div>
-          <p className="mt-1 text-lg font-semibold">
-            {estimate.caseCount}
-          </p>
+          <p className="mt-1 text-lg font-semibold">{estimate.caseCount}</p>
         </div>
       </div>
 
@@ -125,7 +125,8 @@ export function CostEstimateCard({
       {isOverThreshold && (
         <div className="rounded bg-[var(--warning-subtle)] p-3">
           <p className="text-sm text-[var(--warning)]">
-            预计成本 {formatCurrency(totalCost)} 已超过阈值 {formatCurrency(costThreshold)}，是否继续执行？
+            预计成本 {formatCurrency(totalCost)} 已超过阈值{" "}
+            {formatCurrency(costThreshold)}，是否继续执行？
           </p>
         </div>
       )}

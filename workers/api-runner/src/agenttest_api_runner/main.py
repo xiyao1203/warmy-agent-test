@@ -12,6 +12,7 @@ from temporalio.worker import Worker
 from .activities import execute_agent_case, post_run_result
 from .browser_harness_activity import capture_page_snapshot
 from .playwright_activity import run_playwright_case
+from .target_chat import TargetAgentChatWorkflow, execute_target_chat
 from .workflow import RunWorkflow
 
 
@@ -46,12 +47,13 @@ async def run() -> None:
     worker = Worker(
         client,
         task_queue=settings.task_queue,
-        workflows=[RunWorkflow],
+        workflows=[RunWorkflow, TargetAgentChatWorkflow],
         activities=[
             execute_agent_case,
             post_run_result,
             capture_page_snapshot,
             run_playwright_case,
+            execute_target_chat,
         ],
     )
     await worker.run()

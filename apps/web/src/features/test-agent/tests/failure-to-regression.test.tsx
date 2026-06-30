@@ -85,10 +85,7 @@ describe("FailureToRegression", () => {
   it("calls onConvert with selected ids", () => {
     const onConvert = vi.fn();
     render(
-      <FailureToRegression
-        failures={mockFailures}
-        onConvert={onConvert}
-      />,
+      <FailureToRegression failures={mockFailures} onConvert={onConvert} />,
     );
 
     const checkbox = screen.getAllByRole("checkbox")[0];

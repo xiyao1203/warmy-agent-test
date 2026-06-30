@@ -5,10 +5,8 @@ from __future__ import annotations
 from uuid import uuid4
 
 import pytest
-
 from agenttest.modules.test_accounts.domain.entities import (
     TestAccount,
-    TestAccountId,
 )
 
 

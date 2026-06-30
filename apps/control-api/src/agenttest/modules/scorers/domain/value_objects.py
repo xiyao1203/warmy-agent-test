@@ -8,6 +8,7 @@ from enum import StrEnum
 
 class ScorerType(StrEnum):
     """评分器类型。"""
+
     RULE = "rule"
     MODEL = "model"
     REFERENCE = "reference"
@@ -26,6 +27,7 @@ class ScorerResult:
         confidence: 置信度（0.0-1.0）。
         scorer_version: 评分器版本。
     """
+
     score: float
     passed: bool
     explanation: str = ""

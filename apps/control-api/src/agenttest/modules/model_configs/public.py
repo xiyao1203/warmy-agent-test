@@ -5,6 +5,7 @@ from .application.ports import (
     InvocationResult,
     ModelInvoker,
     ModelRuntimeUnavailableError,
+    ModelStreamCallback,
 )
 from .domain.entities import ModelConfiguration, ModelConfigurationId, ProjectModelDefault
 from .domain.errors import ModelConfigNotFoundError, ModelDefaultMissingError
@@ -18,6 +19,7 @@ __all__ = [
     "InvocationMessage",
     "InvocationResult",
     "ModelInvoker",
+    "ModelStreamCallback",
     "ModelRuntimeUnavailableError",
     "ModelPurpose",
     "ProjectModelDefault",

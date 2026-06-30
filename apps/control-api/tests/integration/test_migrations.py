@@ -65,11 +65,11 @@ def test_empty_database_upgrade_and_revision_cycle() -> None:
     config = alembic_config(database_url=database_url)
 
     command.upgrade(config, "head")
-    assert run(current_revision(database_url)) == "0010"
+    assert run(current_revision(database_url)) == "0012"
 
     command.downgrade(config, "base")
     command.upgrade(config, "head")
-    assert run(current_revision(database_url)) == "0010"
+    assert run(current_revision(database_url)) == "0012"
 
 
 async def current_revision(database_url: str) -> str:

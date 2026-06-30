@@ -31,7 +31,9 @@ export function RunResultWorkbench({
   onCaseSelect,
 }: RunResultWorkbenchProps) {
   const [selectedCaseId, setSelectedCaseId] = useState<string | null>(null);
-  const [filter, setFilter] = useState<"all" | "passed" | "failed" | "error">("all");
+  const [filter, setFilter] = useState<"all" | "passed" | "failed" | "error">(
+    "all",
+  );
 
   const selectedCase = cases.find((c) => c.id === selectedCaseId);
 
@@ -63,14 +65,22 @@ export function RunResultWorkbench({
                 onClick={() => setFilter(f)}
                 type="button"
               >
-                {f === "all" ? "全部" : f === "passed" ? "通过" : f === "failed" ? "失败" : "错误"}
+                {f === "all"
+                  ? "全部"
+                  : f === "passed"
+                    ? "通过"
+                    : f === "failed"
+                      ? "失败"
+                      : "错误"}
               </button>
             ))}
           </div>
         </div>
         <div className="flex-1 overflow-y-auto p-2">
           {filteredCases.length === 0 ? (
-            <p className="p-4 text-center text-sm text-[var(--text-muted)]">暂无用例数据</p>
+            <p className="p-4 text-center text-sm text-[var(--text-muted)]">
+              暂无用例数据
+            </p>
           ) : (
             <div className="space-y-1">
               {filteredCases.map((item) => (
@@ -87,7 +97,9 @@ export function RunResultWorkbench({
                   <div className="min-w-0 flex-1">
                     <p className="truncate font-medium">{item.name}</p>
                     <p className="text-xs text-[var(--text-muted)]">
-                      {item.duration_ms != null ? `${item.duration_ms}ms` : "未记录"}
+                      {item.duration_ms != null
+                        ? `${item.duration_ms}ms`
+                        : "未记录"}
                     </p>
                   </div>
                   <Badge
@@ -124,7 +136,9 @@ export function RunResultWorkbench({
         <div className="flex-1 overflow-y-auto p-4">
           {!selectedCase ? (
             <div className="flex h-full items-center justify-center">
-              <p className="text-sm text-[var(--text-muted)]">请选择一个用例查看详情</p>
+              <p className="text-sm text-[var(--text-muted)]">
+                请选择一个用例查看详情
+              </p>
             </div>
           ) : (
             <div className="space-y-4">
@@ -210,14 +224,18 @@ export function RunResultWorkbench({
         <div className="flex-1 overflow-y-auto p-4">
           {!selectedCase ? (
             <div className="flex h-full items-center justify-center">
-              <p className="text-sm text-[var(--text-muted)]">请选择一个用例查看评分</p>
+              <p className="text-sm text-[var(--text-muted)]">
+                请选择一个用例查看评分
+              </p>
             </div>
           ) : (
             <div className="space-y-4">
               {selectedCase.score != null ? (
                 <div className="rounded-[var(--radius-md)] border border-[var(--border)] p-4 text-center">
                   <p className="text-sm text-[var(--text-muted)]">综合评分</p>
-                  <p className="mt-2 text-4xl font-bold">{selectedCase.score.toFixed(2)}</p>
+                  <p className="mt-2 text-4xl font-bold">
+                    {selectedCase.score.toFixed(2)}
+                  </p>
                   <p className="mt-2 text-sm text-[var(--text-muted)]">
                     {selectedCase.score >= 0.8
                       ? "优秀"
@@ -228,7 +246,9 @@ export function RunResultWorkbench({
                 </div>
               ) : (
                 <div className="rounded-[var(--radius-md)] border border-dashed border-[var(--border)] p-4 text-center">
-                  <p className="text-sm text-[var(--text-muted)]">暂无评分数据</p>
+                  <p className="text-sm text-[var(--text-muted)]">
+                    暂无评分数据
+                  </p>
                 </div>
               )}
 

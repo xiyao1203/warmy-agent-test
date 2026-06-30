@@ -26,7 +26,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Skeleton, Tooltip } from "@/components/uiverse";
+import { Skeleton } from "@/components/uiverse";
 
 type EnvironmentListProps = {
   environments?: EnvironmentTemplateResponse[];

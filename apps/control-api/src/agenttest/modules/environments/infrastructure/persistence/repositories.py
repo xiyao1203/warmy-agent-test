@@ -23,6 +23,7 @@ from agenttest.shared.infrastructure.database import session_scope, transaction_
 
 class SqlAlchemyEnvironmentTemplateRepository:
     """环境模板的 SQLAlchemy 仓库实现。"""
+
     def __init__(self, session_factory: async_sessionmaker[AsyncSession]) -> None:
         self._session_factory = session_factory
 
