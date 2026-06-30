@@ -1543,9 +1543,10 @@ def _register_test_agent_endpoints(
         TemporalModelInvoker,
     )
     from agenttest.modules.test_agent.api.router import create_test_agent_router
-    from agenttest.modules.test_agent.application.model_planner import ModelTestPlanGenerator
+    from agenttest.modules.test_agent.application.conversation import SuperAgentConversation
     from agenttest.modules.test_agent.infrastructure.repositories import (
         SqlAlchemyChatSessionRepository,
+        SqlAlchemyOrchestrationRepository,
     )
     from agenttest.shared.infrastructure.database import (
         create_database_engine,
@@ -1562,7 +1563,11 @@ def _register_test_agent_endpoints(
         if isinstance(project_id, str):
             pid_str = project_id.replace('-', '')
         else:
-            pid_str = project_id.hex if hasattr(project_id, 'hex') else str(project_id).replace('-', '')
+            pid_str = (
+                project_id.hex
+                if hasattr(project_id, "hex")
+                else str(project_id).replace("-", "")
+            )
 
         async with session_factory() as session:
             result = await session.execute(
@@ -1585,10 +1590,11 @@ def _register_test_agent_endpoints(
 
     router = create_test_agent_router(
         sessions=SqlAlchemyChatSessionRepository(session_factory),
+        orchestration=SqlAlchemyOrchestrationRepository(session_factory),
         actor_for=actor_for,
         check_project=check_project,
         settings=settings,
-        plan_generator=ModelTestPlanGenerator(
+        conversation=SuperAgentConversation(
             build_model_config_service(settings),
             TemporalModelInvoker(
                 address=settings.temporal_address,
