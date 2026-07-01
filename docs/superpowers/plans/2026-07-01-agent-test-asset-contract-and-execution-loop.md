@@ -55,8 +55,8 @@ Define `EnvironmentRuntimeSnapshot`, `CaseExecutionSnapshot`, `ScorerBindingSnap
 - Modify: `apps/control-api/src/agenttest/modules/runs/infrastructure/persistence/models.py`
 - Test: `apps/control-api/tests/integration/test_executable_asset_migration.py`
 
-- [ ] **Step 1: Write a failing PostgreSQL migration test** for `environment_versions`, `credential_bindings`, `scorer_versions`, `run_evaluations`, `scores`, `security_profiles`, `review_policies`, and `release_decisions`, including project composite keys and reverse-reference indexes.
-- [ ] **Step 2: Run the test against an isolated database** and verify revision `0013` is absent.
+- [x] **Step 1: Write a failing PostgreSQL migration test** for `environment_versions`, `credential_bindings`, `scorer_versions`, `run_evaluations`, `scores`, `security_profiles`, `review_policies`, and `release_decisions`, including project composite keys and reverse-reference indexes.
+- [x] **Step 2: Run the test against an isolated database** and verify revision `0013` is absent.
 - [ ] **Step 3: Implement an Expand migration.** Add `schema_version` and `invocation_config` to AgentVersion, map legacy `api_url` to `endpoint_url`, and mark configurations that cannot be inferred as `needs_configuration`; never invent credentials or publish missing fields.
 - [ ] **Step 4: Verify offline SQL, empty upgrade, `0012 -> 0013`, downgrade, and constraint enforcement.**
 - [ ] **Step 5: Commit** `feat: persist executable asset versions`.
@@ -165,9 +165,9 @@ Define `EnvironmentRuntimeSnapshot`, `CaseExecutionSnapshot`, `ScorerBindingSnap
 
 - [x] **Step 1: Write the regression test** proving plan config can no longer be passed as Agent config and that environment/case/evaluator fields survive serialization.
 - [x] **Step 2: Run it and observe the current missing `url`/wrong nesting failure.**
-- [ ] **Step 3: Build `RunExecutionSnapshot` from published assets**, resolve credential references only for the Activity, render request templates, support sync/OpenAI/SSE/poll, extract response paths, and redact Trace.
-- [ ] **Step 4: Apply concurrency, retries, timeout, cancellation, idempotency, and budget checks deterministically in Workflow.**
-- [ ] **Step 5: Run Worker tests including replay and commit** `fix: execute immutable run snapshots`.
+- [x] **Step 3: Build `RunExecutionSnapshot` from published assets**, resolve credential references only for the Activity, render request templates, support sync/OpenAI/SSE/poll, extract response paths, and redact Trace.
+- [x] **Step 4: Apply concurrency, retries, timeout, cancellation, idempotency, and budget checks deterministically in Workflow.**
+- [x] **Step 5: Run Worker tests including replay and commit** `fix: execute immutable run snapshots`.
 
 ### Task 9: Persist scores and aggregate real evaluations
 
@@ -178,7 +178,7 @@ Define `EnvironmentRuntimeSnapshot`, `CaseExecutionSnapshot`, `ScorerBindingSnap
 - Create: `apps/control-api/tests/integration/test_run_evaluation_chain.py`
 - Create: `workers/api-runner/tests/test_scorer_activities.py`
 
-- [ ] **Step 1: Write failing tests** for deterministic assertions, rule/reference/model scores, weighted aggregate, threshold, confidence, cost, token usage, and explicit scorer failure.
+- [x] **Step 1: Write failing tests** for deterministic assertions, rule/reference/model scores, weighted aggregate, threshold, confidence, cost, token usage, and explicit scorer failure.
 - [ ] **Step 2: Verify Run currently records only status/output/trace.**
 - [ ] **Step 3: Add Score/Evaluation domain and repositories**, run scoring Activities after each target result, and apply results idempotently through protected callbacks.
 - [ ] **Step 4: Expose Evaluation in Run detail API/UI and link scorer versions.**
@@ -196,7 +196,7 @@ Define `EnvironmentRuntimeSnapshot`, `CaseExecutionSnapshot`, `ScorerBindingSnap
 - Test: `apps/control-api/tests/integration/test_experiment_review_chain.py`
 - Test: `apps/web/src/features/experiments/tests/experiment-create.test.tsx`
 
-- [ ] **Step 1: Write failing tests** for compatible Run selection, score/cost/security diffs, review auto-collection, deduplication, and source links.
+- [x] **Step 1: Write failing tests** for compatible Run selection, score/cost/security diffs, review auto-collection, deduplication, and source links.
 - [ ] **Step 2: Verify free-text Run UUID and unused `AutoCollector` fail the tests.**
 - [ ] **Step 3: Extract application services**, query compatible runs, compare Evaluations, and create ReviewTask after Evaluation/Security events.
 - [ ] **Step 4: Replace UUID inputs with searchable run selectors and show review source/evidence.**
@@ -211,7 +211,7 @@ Define `EnvironmentRuntimeSnapshot`, `CaseExecutionSnapshot`, `ScorerBindingSnap
 - Create: `apps/control-api/tests/integration/test_security_asset_chain.py`
 - Create: `apps/web/src/features/security/tests/security-scan-config.test.tsx`
 
-- [ ] **Step 1: Write failing tests** for Agent/Environment/Profile selection, Promptfoo real failure semantics, Finding persistence, project isolation, and conversion to TestCase.
+- [x] **Step 1: Write failing tests** for Agent/Environment/Profile selection, Promptfoo real failure semantics, Finding persistence, project isolation, and conversion to TestCase.
 - [ ] **Step 2: Verify raw URL scanning and pending-only records fail.**
 - [ ] **Step 3: Implement public security service** resolving published assets and environment credentials without returning secrets; persist completed/failed state and findings.
 - [ ] **Step 4: Build asset selectors, profile editor, progress/error states, and finding-to-regression action.**
@@ -226,7 +226,7 @@ Define `EnvironmentRuntimeSnapshot`, `CaseExecutionSnapshot`, `ScorerBindingSnap
 - Create: `apps/control-api/tests/integration/test_release_decision_chain.py`
 - Create: `apps/web/src/features/gates/tests/gate-evaluation.test.tsx`
 
-- [ ] **Step 1: Write a failing test** rejecting client-submitted pass-rate/security facts and aggregating actual Run Evaluation, critical cases, cost, SecurityFindings, Experiment, and pending ReviewTasks.
+- [x] **Step 1: Write a failing test** rejecting client-submitted pass-rate/security facts and aggregating actual Run Evaluation, critical cases, cost, SecurityFindings, Experiment, and pending ReviewTasks.
 - [ ] **Step 2: Prove the existing `0.85` and `critical_passed=true` UI path fails.**
 - [ ] **Step 3: Change evaluate API input to `{run_id, experiment_id?}`**, compute server-side facts, persist ReleaseDecision with evidence links, and audit exemptions.
 - [ ] **Step 4: Replace manual metric submission with Run/Experiment selectors and evidence display.**
@@ -260,9 +260,9 @@ Define `EnvironmentRuntimeSnapshot`, `CaseExecutionSnapshot`, `ScorerBindingSnap
 - Create: `apps/web/playwright/agent-test-complete-flow.spec.ts`
 
 - [ ] **Step 1: Document exact field purposes and import templates** and add a runbook from Agent through ReleaseDecision.
-- [ ] **Step 2: Regenerate OpenAPI/client and verify zero drift.**
+- [x] **Step 2: Regenerate OpenAPI/client and verify zero drift.**
 - [ ] **Step 3: Run isolated PostgreSQL migration/constraints/project-isolation tests.**
 - [ ] **Step 4: Run Worker protocol, retry, cancellation, callback, and Temporal replay tests.**
 - [ ] **Step 5: Run browser E2E** covering standalone Agent validation, environment validation, import preview/import, scorer trial, plan readiness, Run, experiment, security, review, and gate evidence.
-- [ ] **Step 6: Run `make verify`, truthfulness scan, `git diff --check`, and secret scan.**
+- [x] **Step 6: Run `make verify`, truthfulness scan, `git diff --check`, and secret scan.**
 - [ ] **Step 7: Update ledgers with exact evidence and commit** `docs: complete executable agent testing loop`.

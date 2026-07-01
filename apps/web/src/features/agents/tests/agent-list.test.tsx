@@ -111,7 +111,8 @@ describe("AgentDetail", () => {
     expect(screen.getByText("草稿")).toBeVisible();
 
     fireEvent.click(screen.getByRole("button", { name: "创建版本" }));
-    fireEvent.change(screen.getByLabelText("API 地址"), {
+    const apiInput = await screen.findByLabelText(/API 地址/);
+    fireEvent.change(apiInput, {
       target: { value: "https://new-agent.example.com" },
     });
     fireEvent.click(screen.getByRole("button", { name: "保存版本" }));

@@ -35,12 +35,12 @@ import { VersionDiffView } from "./version-diff-view";
 type AgentDetailProps = {
   agent: AgentResponse;
   loading?: boolean;
-  onCreateVersion?: (payload: CreateAgentVersionRequest) => Promise<unknown>;
+  onCreateVersion?: (payload: CreateAgentVersionRequest) => Promise<void>;
   onPublish?: (versionId: string) => Promise<unknown>;
   onUpdateVersion?: (
     versionId: string,
     payload: CreateAgentVersionRequest,
-  ) => Promise<unknown>;
+  ) => Promise<void>;
   onSetCurrentVersion?: (versionId: string) => Promise<unknown>;
   onSetBaselineVersion?: (versionId: string) => Promise<unknown>;
   onFetchDiff?: (v1Id: string, v2Id: string) => Promise<unknown>;
@@ -133,7 +133,9 @@ export function AgentDetail({
           </p>
         </div>
         <AgentVersionDialog
+          agentId={agent.id}
           onSubmit={onCreateVersion}
+          projectId={agent.project_id}
           triggerLabel="创建版本"
         />
       </header>
@@ -168,6 +170,7 @@ export function AgentDetail({
         {activeTab === "config" && <ConfigTab versions={versions} />}
         {activeTab === "versions" && (
           <VersionsTab
+            agentId={agent.id}
             versions={versions}
             currentVersionId={agent.current_version_id ?? undefined}
             baselineVersionId={agent.baseline_version_id ?? undefined}
@@ -178,6 +181,7 @@ export function AgentDetail({
             setPublishVersion={setPublishVersion}
             onViewDetail={setSelectedVersion}
             onFetchDiff={onFetchDiff}
+            projectId={agent.project_id}
           />
         )}
         {activeTab === "runs" && <RunsTab />}
@@ -344,6 +348,8 @@ function VersionsTab({
   setPublishVersion,
   onViewDetail,
   onFetchDiff,
+  agentId,
+  projectId,
 }: {
   versions: AgentVersionResponse[];
   currentVersionId?: string;
@@ -358,6 +364,8 @@ function VersionsTab({
   setPublishVersion: (v: AgentVersionResponse) => void;
   onViewDetail: (v: AgentVersionResponse) => void;
   onFetchDiff?: (v1Id: string, v2Id: string) => Promise<unknown>;
+  agentId: string;
+  projectId: string;
 }) {
   const [selectedVersions, setSelectedVersions] = useState<string[]>([]);
 
@@ -502,9 +510,11 @@ function VersionsTab({
                 {version.status === "draft" && (
                   <>
                     <AgentVersionDialog
+                      agentId={agentId}
                       onSubmit={async (payload) => {
                         await onUpdateVersion?.(version.id, payload);
                       }}
+                      projectId={projectId}
                       triggerLabel={`编辑 v${version.version_number}`}
                       version={version}
                     />
