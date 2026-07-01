@@ -122,7 +122,10 @@ export function TestAgentChat({ projectId }: { projectId: string }) {
           (current) => current + String(event.payload.content ?? ""),
         );
       }
-      if (event.type === "message.completed") setStreamingContent("");
+      // message.completed is intentionally NOT clearing streamingContent —
+      // applySession handles the cleanup when the POST response arrives,
+      // preventing a flash between the streaming bubble disappearing
+      // and the completed message bubble appearing.
     });
     return () => sseCloseRef.current?.();
   }, [activeSessionId, projectId]);
@@ -158,6 +161,7 @@ export function TestAgentChat({ projectId }: { projectId: string }) {
     setActive(session);
     setMessages(session.messages);
     setArtifacts(session.artifacts);
+    setStreamingContent("");
     window.history.replaceState(
       {},
       "",
@@ -334,8 +338,12 @@ export function TestAgentChat({ projectId }: { projectId: string }) {
           </button>
         ) : null}
 
-        {/* Main + context panel */}
-        <div className="grid h-full grid-cols-[minmax(0,1fr)_19rem] max-[1100px]:grid-cols-1 overflow-hidden">
+        {/* Main + context panel — shifts right when sidebar opens */}
+        <div
+          className={`grid h-full grid-cols-[minmax(0,1fr)_19rem] max-[1100px]:grid-cols-1 overflow-hidden transition-[margin] duration-300 ease-in-out ${
+            sidebarOpen ? "ml-64" : "ml-0"
+          }`}
+        >
 
         <main className="relative flex min-h-0 min-w-0 flex-col bg-[var(--canvas)]">
           {messages.length === 0 && !sending && !streamingContent ? (
