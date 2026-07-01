@@ -13,6 +13,8 @@ import {
   LayoutDashboard,
   MessageSquareText,
   Cpu,
+  PanelLeftClose,
+  PanelLeftOpen,
   PlayCircle,
   Scale,
   Search,
@@ -23,7 +25,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import type { ReactNode } from "react";
+import { type ReactNode, useCallback, useState } from "react";
 
 import { logout } from "@/features/auth";
 import { ProjectSwitcher } from "@/features/projects";
@@ -31,6 +33,7 @@ import { canManageUsers } from "@/lib/permissions";
 
 import { HelpDropdown } from "./help-dropdown";
 import { NotificationDropdown } from "./notification-dropdown";
+import { ThemeToggle } from "./theme-toggle";
 import { UserDropdown } from "./user-dropdown";
 
 type AppShellProps = {
@@ -57,6 +60,21 @@ export function AppShell({
   const activeProjectId =
     currentProjectId || (projects.length > 0 ? projects[0].id : null);
 
+  const [collapsed, setCollapsed] = useState(() => {
+    if (typeof window === "undefined") return false;
+    return localStorage.getItem("sidebar-collapsed") === "true";
+  });
+
+  const toggleSidebar = useCallback(() => {
+    setCollapsed((prev) => {
+      const next = !prev;
+      localStorage.setItem("sidebar-collapsed", String(next));
+      return next;
+    });
+  }, []);
+
+  const sidebarWidth = collapsed ? "3.5rem" : "14rem";
+
   return (
     <div className="min-h-screen bg-[var(--canvas)] text-[var(--ink)]">
       <header className="grid h-14 grid-cols-[minmax(16rem,1fr)_minmax(18rem,32rem)_minmax(16rem,1fr)] items-center gap-4 border-b border-[var(--hairline)] bg-[var(--surface)] px-4 max-[900px]:grid-cols-[1fr_auto]">
@@ -65,7 +83,7 @@ export function AppShell({
             className="shrink-0 text-base font-semibold tracking-tight"
             href={projectHref}
           >
-            Warmy Agent Test
+            {collapsed ? "WAT" : "Warmy Agent Test"}
           </Link>
           <ProjectSwitcher
             currentProjectId={currentProjectId}
@@ -85,7 +103,8 @@ export function AppShell({
             type="search"
           />
         </label>
-        <div className="flex items-center justify-end gap-2">
+        <div className="flex items-center justify-end gap-1">
+          <ThemeToggle />
           <HelpDropdown />
           <NotificationDropdown />
           <UserDropdown
@@ -99,26 +118,29 @@ export function AppShell({
         </div>
       </header>
       <div
-        className={
-          workspaceMode === "agent"
-            ? "grid min-h-[calc(100vh-3.5rem)] grid-cols-[14rem_minmax(0,1fr)_20rem] max-[1279px]:grid-cols-[4rem_minmax(0,1fr)]"
-            : "grid min-h-[calc(100vh-3.5rem)] grid-cols-[14rem_minmax(0,1fr)] max-[1279px]:grid-cols-[4rem_minmax(0,1fr)]"
-        }
+        className="flex min-h-[calc(100vh-3.5rem)]"
       >
-        <aside className="flex flex-col border-r border-[var(--hairline)] bg-[var(--surface)] p-2">
-          <p className="px-3 pb-2 pt-2 text-xs font-medium text-[var(--body)] max-[1279px]:sr-only">
-            项目导航
-          </p>
-          <nav aria-label="项目导航" className="space-y-1">
-            <OverviewNavLink href={projectHref} />
+        <aside
+          className="flex shrink-0 flex-col border-r border-[var(--hairline)] bg-[var(--surface)] p-2 transition-[width] duration-200"
+          style={{ width: sidebarWidth }}
+        >
+          {!collapsed && (
+            <p className="px-3 pb-2 pt-2 text-[11px] font-semibold uppercase tracking-[0.66px] text-[var(--muted)]">
+              项目导航
+            </p>
+          )}
+          <nav aria-label="项目导航" className="flex-1 space-y-1">
+            <OverviewNavLink collapsed={collapsed} href={projectHref} />
             {activeProjectId ? (
               <>
                 <ProjectNavLink
+                  collapsed={collapsed}
                   href={`/projects/${activeProjectId}/agents`}
                   icon={<Bot aria-hidden="true" className="size-4 shrink-0" />}
                   label="智能体"
                 />
                 <ProjectNavLink
+                  collapsed={collapsed}
                   href={`/projects/${activeProjectId}/datasets`}
                   icon={
                     <Database aria-hidden="true" className="size-4 shrink-0" />
@@ -126,6 +148,7 @@ export function AppShell({
                   label="测试用例"
                 />
                 <ProjectNavLink
+                  collapsed={collapsed}
                   href={`/projects/${activeProjectId}/test-plans`}
                   icon={
                     <ClipboardCheck
@@ -136,6 +159,7 @@ export function AppShell({
                   label="测试计划"
                 />
                 <ProjectNavLink
+                  collapsed={collapsed}
                   href={`/projects/${activeProjectId}/runs`}
                   icon={
                     <PlayCircle
@@ -146,6 +170,7 @@ export function AppShell({
                   label="测试执行"
                 />
                 <ProjectNavLink
+                  collapsed={collapsed}
                   href={`/projects/${activeProjectId}/environments`}
                   icon={
                     <KeyRound aria-hidden="true" className="size-4 shrink-0" />
@@ -153,11 +178,13 @@ export function AppShell({
                   label="环境与凭证"
                 />
                 <ProjectNavLink
+                  collapsed={collapsed}
                   href={`/projects/${activeProjectId}/models`}
                   icon={<Cpu aria-hidden="true" className="size-4 shrink-0" />}
                   label="模型配置"
                 />
                 <ProjectNavLink
+                  collapsed={collapsed}
                   href={`/projects/${activeProjectId}/scorers`}
                   icon={
                     <Scale aria-hidden="true" className="size-4 shrink-0" />
@@ -165,6 +192,7 @@ export function AppShell({
                   label="评分器"
                 />
                 <ProjectNavLink
+                  collapsed={collapsed}
                   href={`/projects/${activeProjectId}/experiments`}
                   icon={
                     <FlaskConical
@@ -175,6 +203,7 @@ export function AppShell({
                   label="实验对比"
                 />
                 <ProjectNavLink
+                  collapsed={collapsed}
                   href={`/projects/${activeProjectId}/reviews`}
                   icon={
                     <MessageSquareText
@@ -185,6 +214,7 @@ export function AppShell({
                   label="人工审核"
                 />
                 <ProjectNavLink
+                  collapsed={collapsed}
                   href={`/projects/${activeProjectId}/security`}
                   icon={
                     <Shield aria-hidden="true" className="size-4 shrink-0" />
@@ -192,6 +222,7 @@ export function AppShell({
                   label="安全测试"
                 />
                 <ProjectNavLink
+                  collapsed={collapsed}
                   href={`/projects/${activeProjectId}/gates`}
                   icon={
                     <ShieldCheck
@@ -202,6 +233,7 @@ export function AppShell({
                   label="发布门禁"
                 />
                 <ProjectNavLink
+                  collapsed={collapsed}
                   href={`/projects/${activeProjectId}/test-agent`}
                   icon={
                     <Sparkles aria-hidden="true" className="size-4 shrink-0" />
@@ -213,21 +245,48 @@ export function AppShell({
           </nav>
           {canManageUsers(user) ? (
             <div className="mt-auto border-t border-[var(--hairline)] pt-3">
-              <p className="px-3 pb-1.5 text-xs font-medium text-[var(--body)] max-[1279px]:sr-only">
-                系统管理
-              </p>
+              {!collapsed && (
+                <p className="px-3 pb-1.5 text-[11px] font-semibold uppercase tracking-[0.66px] text-[var(--muted)]">
+                  系统管理
+                </p>
+              )}
               <Link
-                className="flex h-9 items-center gap-3 rounded-[var(--radius-lg)] px-3 text-sm text-[var(--muted)] hover:bg-[var(--canvas-soft)] hover:text-[var(--ink)] max-[1279px]:justify-center max-[1279px]:px-0"
+                className={`flex h-9 items-center gap-3 rounded-[var(--radius-lg)] text-sm text-[var(--muted)] transition-colors hover:bg-[var(--canvas-soft)] hover:text-[var(--ink)] ${
+                  collapsed
+                    ? "justify-center px-0"
+                    : "px-3"
+                }`}
                 href="/system/users"
                 title="用户管理"
               >
                 <Users aria-hidden="true" className="size-4 shrink-0" />
-                <span className="max-[1279px]:sr-only">用户管理</span>
+                {!collapsed && <span>用户管理</span>}
               </Link>
             </div>
           ) : null}
+          <div className="border-t border-[var(--hairline)] pt-2">
+            <button
+              aria-expanded={!collapsed}
+              aria-label={collapsed ? "展开侧边栏" : "收起侧边栏"}
+              className={`flex h-9 w-full items-center gap-3 rounded-[var(--radius-lg)] text-sm text-[var(--muted)] transition-colors hover:bg-[var(--canvas-soft)] hover:text-[var(--ink)] ${
+                collapsed
+                  ? "justify-center px-0"
+                  : "px-3"
+              }`}
+              onClick={toggleSidebar}
+              title={collapsed ? "展开侧边栏" : "收起侧边栏"}
+              type="button"
+            >
+              {collapsed ? (
+                <PanelLeftOpen aria-hidden="true" className="size-4 shrink-0" />
+              ) : (
+                <PanelLeftClose aria-hidden="true" className="size-4 shrink-0" />
+              )}
+              {!collapsed && <span>收起菜单</span>}
+            </button>
+          </div>
         </aside>
-        <main className="min-w-0">{children}</main>
+        <main className="min-w-0 flex-1">{children}</main>
         {workspaceMode === "agent" ? (
           <aside className="border-l border-[var(--hairline)] bg-[var(--surface)] max-[1279px]:hidden" />
         ) : null}
@@ -236,13 +295,21 @@ export function AppShell({
   );
 }
 
-function OverviewNavLink({ href }: { href: string }) {
+function OverviewNavLink({
+  collapsed,
+  href,
+}: {
+  collapsed: boolean;
+  href: string;
+}) {
   const pathname = usePathname();
   const isActive = pathname === href;
 
   return (
     <Link
-      className={`flex h-9 items-center gap-3 rounded-[var(--radius-lg)] px-3 text-sm transition-colors max-[1279px]:justify-center max-[1279px]:px-0 ${
+      className={`flex h-9 items-center gap-3 rounded-[var(--radius-lg)] text-sm transition-colors ${
+        collapsed ? "justify-center px-0" : "px-3"
+      } ${
         isActive
           ? "bg-[var(--primary-subtle)] font-medium text-[var(--primary)]"
           : "text-[var(--muted)] hover:bg-[var(--canvas-soft)] hover:text-[var(--ink)]"
@@ -251,16 +318,18 @@ function OverviewNavLink({ href }: { href: string }) {
       title="概览"
     >
       <LayoutDashboard aria-hidden="true" className="size-4 shrink-0" />
-      <span className="max-[1279px]:sr-only">概览</span>
+      {!collapsed && <span>概览</span>}
     </Link>
   );
 }
 
 function ProjectNavLink({
+  collapsed,
   href,
   icon,
   label,
 }: {
+  collapsed: boolean;
   href: string;
   icon: ReactNode;
   label: string;
@@ -271,7 +340,9 @@ function ProjectNavLink({
 
   return (
     <Link
-      className={`flex h-9 items-center gap-3 rounded-[var(--radius-lg)] px-3 text-sm transition-colors max-[1279px]:justify-center max-[1279px]:px-0 ${
+      className={`flex h-9 items-center gap-3 rounded-[var(--radius-lg)] text-sm transition-colors ${
+        collapsed ? "justify-center px-0" : "px-3"
+      } ${
         isActive
           ? "bg-[var(--primary-subtle)] font-medium text-[var(--primary)]"
           : "text-[var(--muted)] hover:bg-[var(--canvas-soft)] hover:text-[var(--ink)]"
@@ -280,7 +351,7 @@ function ProjectNavLink({
       title={label}
     >
       {icon}
-      <span className="max-[1279px]:sr-only">{label}</span>
+      {!collapsed && <span>{label}</span>}
     </Link>
   );
 }

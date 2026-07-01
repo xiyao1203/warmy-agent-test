@@ -14,7 +14,22 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: ReactNode }>) {
   return (
-    <html lang="zh-CN">
+    <html lang="zh-CN" suppressHydrationWarning>
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function(){
+                try {
+                  var t=localStorage.getItem('theme');
+                  if (t==='dark') document.documentElement.classList.add('dark');
+                  else if (t==='light') document.documentElement.classList.add('light');
+                } catch(e){}
+              })();
+            `,
+          }}
+        />
+      </head>
       <body>
         <QueryProvider>{children}</QueryProvider>
       </body>

@@ -60,105 +60,87 @@
   --accent-text: var(--primary);
   --accent-rgb: var(--primary-rgb);
   --selected: var(--primary-subtle);
+
   /* No shadow — but keep as empty to not break existing references */
   --shadow-overlay: none;
 }
 
+/* ===== Dark Mode: System Preference ===== */
 @media (prefers-color-scheme: dark) {
-  :root {
-    /* === Surface (dark: warm near-black) === */
-    --canvas: #1a1a16;
-    --canvas-soft: #21211c;
-    --surface: #282824;
-    --surface-strong: #353530;
+  :root:not(.light) {
+    /* === Surface === */
+    --canvas: #0c0c0e;
+    --canvas-soft: #161618;
+    --surface: #161618;
+    --surface-strong: #1d1d20;
 
-    /* === Hairlines (dark) === */
-    --hairline: #3a3a33;
-    --hairline-soft: #33332e;
-    --hairline-strong: #4a4a42;
+    /* === Hairlines === */
+    --hairline: rgba(255, 255, 255, 0.12);
+    --hairline-soft: rgba(255, 255, 255, 0.06);
+    --hairline-strong: rgba(255, 255, 255, 0.22);
 
-    /* === Text (dark: warm off-white) === */
-    --ink: #f0efe8;
-    --body: #b0aea8;
-    --muted: #807d72;
-    --muted-soft: #686860;
+    /* === Text === */
+    --ink: #ffffff;
+    --body: rgba(255, 255, 255, 0.85);
+    --muted: rgba(255, 255, 255, 0.60);
+    --muted-soft: rgba(255, 255, 255, 0.40);
 
-    /* === Brand (dark) === */
+    /* === Brand === */
     --primary: #f54e00;
-    --primary-active: #ff661a;
+    --primary-active: #d04200;
     --primary-rgb: 245, 78, 0;
-    --primary-subtle: #3d1f0a;
+    --primary-subtle: rgba(245, 78, 0, 0.12);
 
-    /* === Semantic (dark) === */
-    --success: #3fb950;
-    --success-subtle: #193c25;
+    /* === Semantic === */
+    --success: #1f8a65;
+    --success-subtle: rgba(31, 138, 101, 0.15);
     --warning: #d29922;
-    --warning-subtle: #3d3014;
-    --danger: #f85149;
-    --danger-subtle: #481d20;
+    --warning-subtle: rgba(210, 153, 34, 0.15);
+    --danger: #cf2d56;
+    --danger-subtle: rgba(207, 45, 86, 0.15);
 
-    /* === Focus & Overlay (dark) === */
-    --focus-ring: #ff7733;
-    --focus-ring-subtle: rgb(255 119 51 / 0.2);
-    --overlay: rgb(0 0 0 / 0.68);
+    /* === Focus & Overlay === */
+    --focus-ring: #f54e00;
+    --focus-ring-subtle: rgb(245 78 0 / 0.25);
+    --overlay: rgb(0 0 0 / 0.72);
   }
 }
-:root {
-  --background: #f7f7f8;
-  --surface: #ffffff;
-  --surface-subtle: #f1f1f3;
-  --border: #dedee3;
-  --border-strong: #c8c8cf;
-  --text: #17171a;
-  --text-muted: #686871;
-  --text-subtle: #8c8c96;
-  --text-disabled: #a8a8b0;
-  --accent: #5b5bd6;
-  --accent-strong: #4b4bc7;
-  --accent-subtle: #eeeeff;
-  --accent-text: #4545b5;
-  --success: #238636;
-  --success-subtle: #dafbe1;
-  --warning: #9a6700;
-  --warning-subtle: #fff1c2;
-  --danger: #cf222e;
-  --danger-subtle: #ffebe9;
-  --focus-ring: #7c7cf0;
-  --focus-ring-subtle: rgb(124 124 240 / 0.2);
-  --overlay: rgb(17 17 19 / 0.45);
-  --overlay-light: rgb(17 17 19 / 0.18);
-  --selected: #f0f0ff;
-  --radius-sm: 6px;
-  --radius-md: 10px;
-  --shadow-overlay: 0 16px 48px rgb(17 17 19 / 0.16);
-}
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #111113;
-    --surface: #18181b;
-    --surface-subtle: #202024;
-    --border: #303036;
-    --border-strong: #46464e;
-    --text: #f0f0f2;
-    --text-muted: #a0a0aa;
-    --text-subtle: #7f7f89;
-    --text-disabled: #686871;
-    --accent: #8b8bf5;
-    --accent-strong: #9b9bff;
-    --accent-subtle: #292949;
-    --accent-text: #b6b6ff;
-    --success: #3fb950;
-    --success-subtle: #193c25;
-    --warning: #d29922;
-    --warning-subtle: #3d3014;
-    --danger: #f85149;
-    --danger-subtle: #481d20;
-    --focus-ring: #a5a5ff;
-    --focus-ring-subtle: rgb(165 165 255 / 0.2);
-    --overlay: rgb(0 0 0 / 0.68);
-    --overlay-light: rgb(0 0 0 / 0.38);
-    --selected: #252542;
-    --shadow-overlay: 0 16px 48px rgb(0 0 0 / 0.4);
-  }
+/* ===== Dark Mode: Manual Class Toggle ===== */
+.dark {
+  /* === Surface === */
+  --canvas: #0c0c0e;
+  --canvas-soft: #161618;
+  --surface: #161618;
+  --surface-strong: #1d1d20;
+
+  /* === Hairlines === */
+  --hairline: rgba(255, 255, 255, 0.12);
+  --hairline-soft: rgba(255, 255, 255, 0.06);
+  --hairline-strong: rgba(255, 255, 255, 0.22);
+
+  /* === Text === */
+  --ink: #ffffff;
+  --body: rgba(255, 255, 255, 0.85);
+  --muted: rgba(255, 255, 255, 0.60);
+  --muted-soft: rgba(255, 255, 255, 0.40);
+
+  /* === Brand === */
+  --primary: #f54e00;
+  --primary-active: #d04200;
+  --primary-rgb: 245, 78, 0;
+  --primary-subtle: rgba(245, 78, 0, 0.12);
+
+  /* === Semantic === */
+  --success: #1f8a65;
+  --success-subtle: rgba(31, 138, 101, 0.15);
+  --warning: #d29922;
+  --warning-subtle: rgba(210, 153, 34, 0.15);
+  --danger: #cf2d56;
+  --danger-subtle: rgba(207, 45, 86, 0.15);
+
+  /* === Focus & Overlay === */
+  --focus-ring: #f54e00;
+  --focus-ring-subtle: rgb(245 78 0 / 0.25);
+  --overlay: rgb(0 0 0 / 0.72);
 }
