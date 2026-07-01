@@ -283,6 +283,25 @@ def create_model_config_router(
             return problem(400, "Invalid request", str(error))
         return ModelDefaultResponse.from_domain(value)
 
+    @router.delete("/model-defaults/{purpose}", status_code=204)
+    async def delete_default(
+        request: Request,
+        project_id: UUID,
+        purpose: ModelPurpose,
+        x_csrf_token: str | None = Header(default=None),
+    ):
+        """取消项目某个用途的默认模型绑定。"""
+        actor = await writer(request, x_csrf_token)
+        if isinstance(actor, JSONResponse):
+            return actor
+        try:
+            await service.clear_default(actor, ProjectId(project_id), purpose)
+        except ProjectNotFoundError:
+            return problem(404, "Asset not found", "Project was not found")
+        except PermissionError:
+            return problem(403, "Permission denied", "Project editor access is required")
+        return Response(status_code=204)
+
     @router.post("/model-judges/text")
     async def judge_text(
         request: Request,

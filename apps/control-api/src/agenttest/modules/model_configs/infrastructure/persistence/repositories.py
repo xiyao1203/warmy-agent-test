@@ -128,6 +128,19 @@ class SqlAlchemyModelConfigRepository:
                 model.updated_by = value.updated_by.value
                 model.updated_at = value.updated_at
 
+    async def delete_default(
+        self,
+        project_id: ProjectId,
+        purpose: ModelPurpose,
+    ) -> None:
+        async with transaction_scope(self._session_factory) as session:
+            await session.execute(
+                delete(ProjectModelDefaultModel).where(
+                    ProjectModelDefaultModel.project_id == project_id.value,
+                    ProjectModelDefaultModel.purpose == purpose.value,
+                )
+            )
+
     async def is_default(
         self,
         project_id: ProjectId,

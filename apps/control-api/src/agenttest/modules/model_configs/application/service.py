@@ -180,6 +180,16 @@ class ModelConfigService:
         await self._repository.set_default(value)
         return value
 
+    async def clear_default(
+        self,
+        actor: User,
+        project_id: ProjectId,
+        purpose: ModelPurpose,
+    ) -> None:
+        """取消项目某个用途的默认模型绑定。"""
+        await self._project_access.ensure_editor(actor, project_id)
+        await self._repository.delete_default(project_id, purpose)
+
     async def resolve_default(
         self,
         actor: User,

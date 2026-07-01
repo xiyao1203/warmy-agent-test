@@ -85,6 +85,18 @@ export async function setModelDefault(
   });
 }
 
+export async function clearModelDefault(
+  projectId: string,
+  purpose: ModelPurpose,
+) {
+  await apiClient.delete({
+    url: "/api/v1/projects/{project_id}/model-defaults/{purpose}",
+    headers: csrfHeaders(),
+    path: { project_id: projectId, purpose },
+    throwOnError: true,
+  });
+}
+
 export async function testModelConnection(
   projectId: string,
   modelConfigId: string,

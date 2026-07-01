@@ -59,6 +59,7 @@ export function ModelConfigList(props: Props) {
   const [busy, setBusy] = useState<string | null>(null);
   const [connection, setConnection] = useState<Record<string, string>>({});
   const [deleteTarget, setDeleteTarget] = useState<ModelConfigResponse | null>(null);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
   const [deleteBusy, setDeleteBusy] = useState(false);
 
   if (props.loading) {
@@ -263,14 +264,19 @@ export function ModelConfigList(props: Props) {
         />
       ) : null}
 
-      <Dialog onOpenChange={() => setDeleteTarget(null)} open={deleteTarget !== null}>
+      <Dialog onOpenChange={(open: boolean) => { setDeleteTarget(open ? deleteTarget : null); if (!open) setDeleteError(null); }} open={deleteTarget !== null}>
         <DialogContent>
           <DialogTitle>确认删除</DialogTitle>
           <DialogDescription>
             确定要删除模型「{deleteTarget?.name}」吗？此操作不可撤销。
           </DialogDescription>
+          {deleteError ? (
+            <p className="mt-3 rounded-[var(--radius-md)] border border-red-200 bg-red-50 p-3 text-sm text-red-700 dark:border-red-800 dark:bg-red-950 dark:text-red-400">
+              {deleteError}
+            </p>
+          ) : null}
           <div className="mt-5 flex justify-end gap-3">
-            <Button onClick={() => setDeleteTarget(null)} variant="secondary">
+            <Button onClick={() => { setDeleteTarget(null); setDeleteError(null); }} variant="secondary">
               取消
             </Button>
             <Button
@@ -278,9 +284,12 @@ export function ModelConfigList(props: Props) {
               onClick={async () => {
                 if (!deleteTarget) return;
                 setDeleteBusy(true);
+                setDeleteError(null);
                 try {
                   await props.onDelete(deleteTarget.id);
                   setDeleteTarget(null);
+                } catch (error) {
+                  setDeleteError(problemMessage(error, "删除失败，请重试。"));
                 } finally {
                   setDeleteBusy(false);
                 }

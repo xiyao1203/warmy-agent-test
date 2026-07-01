@@ -10,6 +10,7 @@ import { useCallback, useEffect, useState } from "react";
 import { problemMessage } from "@/lib/api/problem";
 
 import {
+  clearModelDefault,
   createModelConfig,
   deleteModelConfig,
   listModelConfigs,
@@ -95,8 +96,11 @@ export function ModelConfigScreen({ projectId }: { projectId: string }) {
         await reload();
       }}
       onSetDefault={async (purpose: ModelPurpose, id) => {
-        if (!id) return;
-        await setModelDefault(projectId, purpose, id);
+        if (!id) {
+          await clearModelDefault(projectId, purpose);
+        } else {
+          await setModelDefault(projectId, purpose, id);
+        }
         await reload();
       }}
       onTestConnection={(id) => testModelConnection(projectId, id)}
