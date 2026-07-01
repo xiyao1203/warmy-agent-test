@@ -1,7 +1,6 @@
 "use client";
 
 import {
-  ChevronsLeft,
   MessageSquarePlus,
   Search,
   Trash2,
@@ -62,17 +61,8 @@ export function SessionList({
 
   return (
     <aside className="flex min-h-0 flex-col overflow-hidden border-r border-[var(--hairline)] bg-[var(--surface)]">
-      {/* Collapse + new session header */}
+      {/* New session header */}
       <div className="flex shrink-0 items-center gap-1 border-b border-[var(--hairline)] p-2">
-        <button
-          aria-label="收起会话列表"
-          className="rounded p-1 text-[var(--muted)] transition-colors hover:bg-[var(--canvas-soft)] hover:text-[var(--ink)]"
-          onClick={onToggleCollapse}
-          title="收起会话列表"
-          type="button"
-        >
-          <ChevronsLeft className="size-4" />
-        </button>
         <Button className="flex-1 text-xs" onClick={onCreate} variant="secondary">
           <MessageSquarePlus className="size-3.5" />
           新建对话
