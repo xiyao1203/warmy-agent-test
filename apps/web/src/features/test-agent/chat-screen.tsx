@@ -131,12 +131,12 @@ export function TestAgentChat({ projectId }: { projectId: string }) {
     return () => sseCloseRef.current?.();
   }, [activeSessionId, projectId]);
 
-  // Auto-focus input on mount and after sending
+  // Auto-focus input on initial load only (not after every send)
   useEffect(() => {
-    if (!sending && !loadingHistory) {
+    if (!loadingHistory) {
       inputRef.current?.focus();
     }
-  }, [sending, loadingHistory]);
+  }, [loadingHistory]);
 
   // Smooth auto-scroll — only when user is near bottom
   useEffect(() => {
