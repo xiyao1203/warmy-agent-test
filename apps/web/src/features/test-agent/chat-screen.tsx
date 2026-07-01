@@ -341,19 +341,6 @@ export function TestAgentChat({ projectId }: { projectId: string }) {
           />
         ) : null}
 
-        {/* Floating toggle when sidebar is closed */}
-        {!sidebarOpen ? (
-          <button
-            aria-label="展开会话列表"
-            className="absolute left-0 top-3 z-30 rounded-r-lg border border-l-0 border-[var(--hairline)] bg-[var(--surface)] p-1.5 text-[var(--muted)] shadow-sm transition-colors hover:bg-[var(--canvas-soft)] hover:text-[var(--ink)]"
-            onClick={handleToggleSidebar}
-            title="展开会话列表"
-            type="button"
-          >
-            <ChevronsRight className="size-4" />
-          </button>
-        ) : null}
-
         {/* Main + context panel — shifts right when sidebar opens */}
         <div
           className={`grid h-full grid-cols-[minmax(0,1fr)_19rem] max-[1100px]:grid-cols-1 overflow-hidden transition-[margin] duration-300 ease-in-out ${
@@ -362,23 +349,21 @@ export function TestAgentChat({ projectId }: { projectId: string }) {
         >
 
         <main className="relative flex min-h-0 min-w-0 flex-col bg-[var(--canvas)]">
-          {/* Header: shown when there's a conversation (not empty) */}
-          {messages.length > 0 || sending || streamingContent ? (
-            <header className="flex shrink-0 items-center justify-between border-b border-[var(--hairline)] bg-[var(--canvas)] px-4 py-2.5">
-              <button
-                aria-label="切换侧边栏"
-                className="rounded-lg p-1.5 text-[var(--muted)] transition-colors hover:bg-[var(--canvas-soft)] hover:text-[var(--ink)]"
-                onClick={handleToggleSidebar}
-                type="button"
-              >
-                <ChevronsRight className={`size-4 transition-transform ${sidebarOpen ? "rotate-180" : ""}`} />
-              </button>
-              <span className="text-sm font-medium text-[var(--ink)] truncate mx-3">
-                {active?.title ?? "超级测试 Agent"}
-              </span>
-              <div className="w-8" />
-            </header>
-          ) : null}
+          {/* Header always visible with sidebar toggle */}
+          <header className="flex shrink-0 items-center justify-between border-b border-[var(--hairline)] bg-[var(--canvas)] px-4 py-2.5">
+            <button
+              aria-label="切换侧边栏"
+              className="rounded-lg p-1.5 text-[var(--muted)] transition-colors hover:bg-[var(--canvas-soft)] hover:text-[var(--ink)]"
+              onClick={handleToggleSidebar}
+              type="button"
+            >
+              <ChevronsRight className={`size-4 transition-transform ${sidebarOpen ? "rotate-180" : ""}`} />
+            </button>
+            <span className="text-sm font-medium text-[var(--ink)] truncate mx-3">
+              {active?.title ?? "超级测试 Agent"}
+            </span>
+            <div className="w-8" />
+          </header>
 
           <div
             className="chat-scroll min-h-0 flex-1 overflow-y-auto px-5 py-4"
