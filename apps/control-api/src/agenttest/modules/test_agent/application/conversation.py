@@ -220,3 +220,30 @@ class SuperAgentConversation:
             for item in plan.actions
             if (item.child_agent, item.capability) in allowed
         ]
+
+    async def generate_title(
+        self,
+        actor: User,
+        project_id: ProjectId,
+        history: list[tuple[str, str]],
+    ) -> str:
+        """用模型将对话历史提炼为一个简短标题（≤10 字）。"""
+        config = await self._models.resolve_default(
+            actor, project_id, ModelPurpose.TEST_AGENT_CHAT,
+        )
+        prompt = (
+            "你是一个对话标题生成器。根据以下对话，生成一个简短标题（最多10个中文字）。"
+            "只返回标题本身，不加引号、标点或解释。"
+        )
+        result = await self._invoker.invoke(
+            config,
+            [InvocationMessage(role="system", content=prompt)]
+            + [
+                InvocationMessage(role=role, content=content)
+                for role, content in history
+            ],
+            timeout_seconds=15,
+            max_tokens=32,
+        )
+        title = result.content.strip()[:40]
+        return title if title else "新对话"

@@ -51,6 +51,15 @@ export function SessionList({
     processing: "处理中",
   };
 
+  /** Only show status dot + label for the currently active session. */
+  function statusForSession(sessionId: string, status: string) {
+    if (sessionId === activeId && status === "active") {
+      return { dot: statusIcons.active, label: "进行中" };
+    }
+    // Inactive sessions don't need a status badge.
+    return null;
+  }
+
   return (
     <aside className="flex min-h-0 flex-col overflow-hidden border-r border-[var(--hairline)] bg-[var(--surface)]">
       {/* Collapse + new session header */}
@@ -101,8 +110,7 @@ export function SessionList({
           </p>
         ) : null}
         {filtered.map((item) => {
-          const statusLabel = statusLabels[item.status] ?? item.status;
-          const statusDot = statusIcons[item.status] ?? "bg-[var(--muted)]";
+          const sessionStatus = statusForSession(item.session_id, item.status);
           return (
             <div className="group relative mb-1" key={item.session_id}>
               <button
@@ -116,12 +124,14 @@ export function SessionList({
                 type="button"
               >
                 <span className="block truncate pr-1">{item.title}</span>
-                <span className="mt-1 flex items-center gap-1.5 text-xs text-[var(--muted)]">
-                  <span
-                    className={`inline-block size-1.5 shrink-0 rounded-full ${statusDot}`}
-                  />
-                  {statusLabel}
-                </span>
+                {sessionStatus ? (
+                  <span className="mt-1 flex items-center gap-1.5 text-xs text-[var(--muted)]">
+                    <span
+                      className={`inline-block size-1.5 shrink-0 rounded-full ${sessionStatus.dot}`}
+                    />
+                    {sessionStatus.label}
+                  </span>
+                ) : null}
               </button>
 
               {/* Delete button */}

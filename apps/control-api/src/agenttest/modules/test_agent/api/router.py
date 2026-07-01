@@ -155,8 +155,6 @@ def create_test_agent_router(
         message: str,
     ):
         session.add_user_message(message)
-        if session.title == "新对话":
-            session.title = message[:40]
         await sessions.save(session)
         await orchestration.append_event(
             ProjectId(project_id),
@@ -213,6 +211,18 @@ def create_test_agent_router(
             return JSONResponse(status_code=422, content={"detail": str(error)})
 
         session.add_assistant_message(result.content)
+
+        # Generate an AI-summarised title on the first turn
+        if session.title == "新对话" and session.messages:
+            try:
+                session.title = await conversation.generate_title(
+                    actor,
+                    ProjectId(project_id),
+                    [(m.role, m.content) for m in session.messages],
+                )
+            except Exception:
+                pass  # keep default title on failure
+
         await sessions.save(session)
         if agent_orchestrator is not None:
             context = OrchestrationContext(actor, ProjectId(project_id), session.session_id.value)
