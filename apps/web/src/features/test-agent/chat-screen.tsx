@@ -201,15 +201,21 @@ export function TestAgentChat({ projectId }: { projectId: string }) {
     try {
       const response = await deleteSession(projectId, sessionId);
       if (!response.ok) throw new Error("删除失败");
-      setSessions((current) =>
-        current.filter((item) => item.session_id !== sessionId),
+      const remaining = sessions.filter(
+        (item) => item.session_id !== sessionId,
       );
+      setSessions(remaining);
       if (activeSessionId === sessionId) {
-        setActive(null);
-        setMessages([]);
-        setArtifacts([]);
-        setEvents([]);
-        window.history.replaceState({}, "", window.location.pathname);
+        if (remaining.length > 0) {
+          // Auto-select the most recent remaining session
+          await selectSession(remaining[0].session_id);
+        } else {
+          setActive(null);
+          setMessages([]);
+          setArtifacts([]);
+          setEvents([]);
+          window.history.replaceState({}, "", window.location.pathname);
+        }
       }
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : "删除会话失败");
