@@ -119,7 +119,6 @@ export function TestAgentChat({ projectId }: { projectId: string }) {
         );
       }
       if (event.type === "message.started") {
-        acceptDeltasRef.current = true;
         setStreamingContent("");
       }
       if (event.type === "message.delta" && acceptDeltasRef.current) {
@@ -226,6 +225,7 @@ export function TestAgentChat({ projectId }: { projectId: string }) {
     abortRef.current?.abort();
     sseCloseRef.current?.();
     sseCloseRef.current = null;
+    acceptDeltasRef.current = false;
     setSending(false);
     setStreamingContent("");
   }
@@ -238,6 +238,7 @@ export function TestAgentChat({ projectId }: { projectId: string }) {
     setSending(true);
     setError(null);
     pinnedBottomRef.current = true;
+    acceptDeltasRef.current = true;
     abortRef.current = new AbortController();
 
     // Optimistically show the user message immediately
