@@ -39,7 +39,10 @@ def invocation_from_stored_config(config: dict[str, object]) -> AgentInvocationC
         return AgentInvocationConfig.model_validate(config)
     legacy = {
         "endpoint_url": config.get("api_url"),
-        "protocol": InvocationProtocol.SYNC_JSON,
+        "protocol": config.get("protocol", InvocationProtocol.SYNC_JSON),
+        "request_template": config.get("request_template", _default_request_template()),
+        "response_path": config.get("response_path", "output"),
         "timeout_seconds": config.get("timeout", 30),
+        "credential_binding_ids": config.get("credential_binding_ids", []),
     }
     return AgentInvocationConfig.model_validate(legacy)

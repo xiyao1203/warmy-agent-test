@@ -88,16 +88,28 @@ def create_experiment_router(
 
         # 校验 run_a_id 和 run_b_id 属于同一项目
         async with session_factory() as session:
+            plan_versions: list[UUID] = []
             for run_id in [body.run_a_id, body.run_b_id]:
                 result = await session.execute(
-                    text("SELECT 1 FROM runs WHERE id = :rid AND project_id = :pid"),
+                    text(
+                        "SELECT test_plan_version_id FROM runs "
+                        "WHERE id = :rid AND project_id = :pid "
+                        "AND status IN ('passed', 'failed', 'error')"
+                    ),
                     {"rid": run_id, "pid": project_id},
                 )
-                if result.scalar() is None:
+                plan_version = result.scalar()
+                if plan_version is None:
                     return JSONResponse(
                         status_code=422,
-                        content={"detail": f"运行 {run_id} 不存在或不属于该项目"},
+                        content={"detail": f"运行 {run_id} 不存在、未完成或不属于该项目"},
                     )
+                plan_versions.append(plan_version)
+            if plan_versions[0] != plan_versions[1]:
+                return JSONResponse(
+                    status_code=422,
+                    content={"detail": "仅可对比来自同一测试计划版本的运行"},
+                )
 
         try:
             exp = Experiment.create(

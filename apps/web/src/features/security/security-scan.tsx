@@ -14,10 +14,9 @@ import { useEffect, useState } from "react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-
 import type { Finding, SecurityScanItem } from "./api";
-import { listScans, triggerScan } from "./api";
+import type { SecurityTarget } from "./api";
+import { listScans, listSecurityTargets, triggerScan } from "./api";
 
 const SEVERITY_TONES: Record<string, "danger" | "warning" | "neutral"> = {
   high: "danger",
@@ -35,7 +34,8 @@ export function SecurityScanPage({ projectId }: { projectId: string }) {
   const [scans, setScans] = useState<SecurityScanItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [triggering, setTriggering] = useState(false);
-  const [agentEndpoint, setAgentEndpoint] = useState("");
+  const [agentVersionId, setAgentVersionId] = useState("");
+  const [targets, setTargets] = useState<SecurityTarget[]>([]);
   const [triggerError, setTriggerError] = useState<string | null>(null);
   const [selectedScan, setSelectedScan] = useState<SecurityScanItem | null>(
     null,
@@ -56,15 +56,21 @@ export function SecurityScanPage({ projectId }: { projectId: string }) {
     };
   }, [projectId]);
 
+  useEffect(() => {
+    void listSecurityTargets(projectId)
+      .then(setTargets)
+      .catch(() => setTargets([]));
+  }, [projectId]);
+
   async function handleTrigger() {
-    if (!agentEndpoint.trim()) {
-      setTriggerError("请输入真实 Agent API 地址");
+    if (!agentVersionId) {
+      setTriggerError("请选择已发布的 Agent 版本");
       return;
     }
     setTriggering(true);
     setTriggerError(null);
     try {
-      const scan = await triggerScan(projectId, agentEndpoint.trim());
+      const scan = await triggerScan(projectId, agentVersionId);
       setScans((prev) => [scan, ...prev]);
       setSelectedScan(scan);
     } catch (error) {
@@ -98,16 +104,22 @@ export function SecurityScanPage({ projectId }: { projectId: string }) {
         </div>
         <div className="flex min-w-80 flex-col items-end gap-2">
           <div className="flex w-full gap-2">
-            <Input
-              aria-label="Agent API 地址"
+            <select
+              aria-label="已发布 Agent 版本"
+              className="h-9 min-w-64 rounded border border-[var(--border)] bg-[var(--surface)] px-3 text-sm"
               disabled={triggering}
-              onChange={(event) => setAgentEndpoint(event.target.value)}
-              placeholder="https://agent.example.com/chat"
-              type="url"
-              value={agentEndpoint}
-            />
+              onChange={(event) => setAgentVersionId(event.target.value)}
+              value={agentVersionId}
+            >
+              <option value="">选择已发布 Agent 版本</option>
+              {targets.map((target) => (
+                <option key={target.id} value={target.id}>
+                  {target.label}
+                </option>
+              ))}
+            </select>
             <Button
-              disabled={triggering || !agentEndpoint.trim()}
+              disabled={triggering || !agentVersionId}
               loading={triggering}
               onClick={handleTrigger}
               variant="primary"

@@ -48,8 +48,9 @@ class ExperimentInput(NamedResourceInput):
 
 
 class SecurityScanInput(BaseModel):
-    target_url: str
-    policy_ids: list[str] = Field(default_factory=list)
+    agent_version_id: str
+    run_id: str | None = None
+    security_profile_id: str | None = None
 
 
 class ReviewInput(BaseModel):

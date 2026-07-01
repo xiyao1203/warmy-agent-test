@@ -54,6 +54,28 @@ def test_initial_migration_generates_expected_postgresql_schema() -> None:
     assert "test_agent_messages" in sql
     assert "fk_test_agent_messages_project_session" in sql
     assert "uq_test_agent_messages_sequence" in sql
+    for table_name in (
+        "environment_versions",
+        "credential_bindings",
+        "scorer_versions",
+        "run_evaluations",
+        "scores",
+        "security_profiles",
+        "review_policies",
+        "release_decisions",
+    ):
+        assert table_name in sql
+    assert "invocation_config" in sql
+    assert "ix_release_decisions_project_run" in sql
+
+
+def test_empty_sqlite_database_upgrades_to_head(tmp_path: Path) -> None:
+    database_url = f"sqlite+aiosqlite:///{tmp_path / 'migration.db'}"
+    config = alembic_config(database_url=database_url)
+
+    command.upgrade(config, "head")
+
+    assert run(current_sqlite_revision(database_url)) == "0013"
 
 
 @pytest.mark.skipif(
@@ -65,11 +87,11 @@ def test_empty_database_upgrade_and_revision_cycle() -> None:
     config = alembic_config(database_url=database_url)
 
     command.upgrade(config, "head")
-    assert run(current_revision(database_url)) == "0012"
+    assert run(current_revision(database_url)) == "0013"
 
     command.downgrade(config, "base")
     command.upgrade(config, "head")
-    assert run(current_revision(database_url)) == "0012"
+    assert run(current_revision(database_url)) == "0013"
 
 
 async def current_revision(database_url: str) -> str:
@@ -82,3 +104,17 @@ async def current_revision(database_url: str) -> str:
         return revision
     finally:
         await connection.close()
+
+
+async def current_sqlite_revision(database_url: str) -> str:
+    from sqlalchemy import text
+    from sqlalchemy.ext.asyncio import create_async_engine
+
+    engine = create_async_engine(database_url)
+    try:
+        async with engine.connect() as connection:
+            revision = await connection.scalar(text("select version_num from alembic_version"))
+            assert isinstance(revision, str)
+            return revision
+    finally:
+        await engine.dispose()

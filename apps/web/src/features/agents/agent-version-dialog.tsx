@@ -3,6 +3,7 @@
 import type {
   AgentVersionResponse,
   CreateAgentVersionRequest,
+  InvocationProtocol,
 } from "@warmy/generated-api-client";
 import { useState } from "react";
 
@@ -32,6 +33,19 @@ export function AgentVersionDialog({
   const [apiUrl, setApiUrl] = useState(String(config.api_url ?? ""));
   const [model, setModel] = useState(String(config.model ?? ""));
   const [timeout, setTimeout] = useState(Number(config.timeout ?? 30));
+  const [protocol, setProtocol] = useState<InvocationProtocol>(
+    (config.protocol as InvocationProtocol) ?? "sync_json",
+  );
+  const [responsePath, setResponsePath] = useState(
+    String(config.response_path ?? "output"),
+  );
+  const [requestTemplate, setRequestTemplate] = useState(
+    JSON.stringify(
+      config.request_template ?? { input: "{{ input }}" },
+      null,
+      2,
+    ),
+  );
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
@@ -43,16 +57,32 @@ export function AgentVersionDialog({
     setSubmitting(true);
     setError("");
     try {
+      const parsedTemplate = JSON.parse(requestTemplate) as unknown;
+      if (
+        !parsedTemplate ||
+        typeof parsedTemplate !== "object" ||
+        Array.isArray(parsedTemplate)
+      ) {
+        setError("请求模板必须是 JSON 对象");
+        return;
+      }
       await onSubmit({
         config: {
           api_url: apiUrl.trim(),
           model: model.trim() || null,
+          protocol,
+          request_template: parsedTemplate as Record<string, unknown>,
+          response_path: responsePath.trim(),
           timeout,
         },
       });
       setOpen(false);
-    } catch {
-      setError("保存版本失败，请检查配置后重试。");
+    } catch (caught) {
+      setError(
+        caught instanceof SyntaxError
+          ? "请求模板不是合法 JSON"
+          : "保存版本失败，请检查配置后重试。",
+      );
     } finally {
       setSubmitting(false);
     }
@@ -70,7 +100,7 @@ export function AgentVersionDialog({
           {version ? "编辑 Agent 版本" : "创建 Agent 版本"}
         </DialogTitle>
         <DialogDescription>
-          配置通用 HTTP Agent 的调用地址、模型和超时。
+          配置真实调用协议、请求映射、响应提取和执行限制。
         </DialogDescription>
         <div className="mt-5 space-y-4">
           <label className="block text-sm font-medium">
@@ -80,6 +110,38 @@ export function AgentVersionDialog({
               onChange={(event) => setApiUrl(event.target.value)}
               placeholder="https://agent.example.com"
               value={apiUrl}
+            />
+          </label>
+          <label className="block text-sm font-medium">
+            调用协议
+            <select
+              className="mt-1.5 h-9 w-full rounded border border-[var(--border)] bg-[var(--surface)] px-3"
+              onChange={(event) =>
+                setProtocol(event.target.value as InvocationProtocol)
+              }
+              value={protocol}
+            >
+              <option value="sync_json">同步 JSON</option>
+              <option value="openai_chat">OpenAI Chat Compatible</option>
+              <option value="sse">SSE 流式</option>
+              <option value="async_poll">异步轮询</option>
+            </select>
+          </label>
+          <label className="block text-sm font-medium">
+            请求模板（JSON）
+            <textarea
+              className="mt-1.5 min-h-28 w-full rounded border border-[var(--border)] bg-[var(--surface)] p-3 font-mono text-xs"
+              onChange={(event) => setRequestTemplate(event.target.value)}
+              value={requestTemplate}
+            />
+          </label>
+          <label className="block text-sm font-medium">
+            响应提取路径
+            <Input
+              className="mt-1.5"
+              onChange={(event) => setResponsePath(event.target.value)}
+              placeholder="choices.0.message.content"
+              value={responsePath}
             />
           </label>
           <label className="block text-sm font-medium">

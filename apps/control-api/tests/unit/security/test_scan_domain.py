@@ -35,14 +35,14 @@ def test_scan_complete() -> None:
     s.complete(findings)
     assert s.status is ScanStatus.COMPLETED
     assert s.completed_at is not None
-    assert s.summary == {"injection": 2, "leak": 1}
+    assert s.summary == {"injection": 2, "leak": 1, "score": 1.0}
 
 
 def test_scan_complete_empty() -> None:
     s = SecurityScan.create(project_id=uuid4())
     s.complete([])
     assert s.status is ScanStatus.COMPLETED
-    assert s.summary == {}
+    assert s.summary == {"score": 1.0}
 
 
 def test_scan_fail() -> None:

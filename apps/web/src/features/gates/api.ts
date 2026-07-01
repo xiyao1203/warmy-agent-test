@@ -20,6 +20,12 @@ export type GateResult = {
   failures: string[];
 };
 
+export type GateRun = {
+  id: string;
+  status: string;
+  created_at: string;
+};
+
 export async function listGates(projectId: string) {
   const res = await fetch(
     `${API_BASE}/api/v1/projects/${projectId}/gates?limit=50`,
@@ -57,10 +63,8 @@ export async function evaluateGate(
   projectId: string,
   gateId: string,
   payload: {
-    actual_pass_rate: number;
-    critical_passed: boolean;
-    actual_cost?: number | null;
-    security_score?: number | null;
+    run_id: string;
+    experiment_id?: string | null;
   },
 ) {
   const res = await fetch(
@@ -77,6 +81,16 @@ export async function evaluateGate(
   );
   if (!res.ok) throw await responseProblem(res, "评估门禁失败");
   return res.json() as Promise<{ gate_id: string; result: GateResult }>;
+}
+
+export async function listGateRuns(projectId: string) {
+  const res = await fetch(
+    `${API_BASE}/api/v1/projects/${projectId}/runs?limit=50`,
+    { credentials: "include" },
+  );
+  if (!res.ok) throw await responseProblem(res, "加载执行记录失败");
+  const data = await res.json();
+  return data.items as GateRun[];
 }
 
 export async function deleteGate(projectId: string, gateId: string) {

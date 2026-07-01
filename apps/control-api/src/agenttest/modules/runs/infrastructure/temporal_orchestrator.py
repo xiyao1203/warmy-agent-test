@@ -88,6 +88,8 @@ def _payload(
         "run_id": str(run.run_id.value),
         "idempotency_key": run.idempotency_key,
         "agent_config": agent_config,
+        "environment": run.plugin_snapshot.get("environment_config", {}),
+        "execution_policy": run.config_snapshot,
         "cases": [
             {
                 "run_case_id": str(case.run_case_id.value),

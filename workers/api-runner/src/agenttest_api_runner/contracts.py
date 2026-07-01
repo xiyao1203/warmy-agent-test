@@ -23,6 +23,8 @@ class RunTask:
     idempotency_key: str
     cases: list[RunCaseTask]
     agent_config: dict[str, object]
+    environment: dict[str, object] = field(default_factory=dict)
+    execution_policy: dict[str, object] = field(default_factory=dict)
     callback: ResultCallbackConfig | None = None
 
 

@@ -14,6 +14,7 @@ from agenttest.modules.security.domain.models import (
     SecurityPolicy,
     SecurityScan,
 )
+from agenttest.modules.security.infrastructure import models as _profile_models  # noqa: F401
 from agenttest.shared.infrastructure.database import Base
 
 
@@ -113,6 +114,16 @@ class SecurityScanModel(Base):
     )
     status: Mapped[str] = mapped_column(String(32), nullable=False, default="pending")
     scan_type: Mapped[str] = mapped_column(String(64), nullable=False, default="full")
+    run_id: Mapped[UUID | None] = mapped_column(ForeignKey("runs.id"), nullable=True)
+    agent_version_id: Mapped[UUID | None] = mapped_column(
+        ForeignKey("agent_versions.id"), nullable=True
+    )
+    environment_version_id: Mapped[UUID | None] = mapped_column(
+        ForeignKey("environment_versions.id"), nullable=True
+    )
+    security_profile_id: Mapped[UUID | None] = mapped_column(
+        ForeignKey("security_profiles.id"), nullable=True
+    )
     findings: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
     summary: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
     created_at: Mapped[datetime] = mapped_column(
@@ -141,6 +152,10 @@ class SqlAlchemySecurityScanRepository:
                     project_id=scan.project_id,
                     status=scan.status.value,
                     scan_type=scan.scan_type,
+                    run_id=scan.run_id,
+                    agent_version_id=scan.agent_version_id,
+                    environment_version_id=scan.environment_version_id,
+                    security_profile_id=scan.security_profile_id,
                     findings=scan.findings,
                     summary=scan.summary,
                     created_at=scan.created_at,
@@ -207,4 +222,8 @@ def _scan_to_domain(row: SecurityScanModel) -> SecurityScan:
         created_at=row.created_at,
         updated_at=row.updated_at,
         completed_at=row.completed_at,
+        run_id=row.run_id,
+        agent_version_id=row.agent_version_id,
+        environment_version_id=row.environment_version_id,
+        security_profile_id=row.security_profile_id,
     )

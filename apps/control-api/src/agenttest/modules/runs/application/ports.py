@@ -72,6 +72,10 @@ class RunRepository(Protocol):
     ) -> list[RunCase]: ...
 
 
+class ReviewCollectorPort(Protocol):
+    async def collect(self, project_id: ProjectId, run_id: RunId) -> None: ...
+
+
 class RunOrchestrator(Protocol):
     async def ensure_available(self) -> None: ...
 

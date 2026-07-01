@@ -129,3 +129,30 @@ export async function publishAgentVersion(
     );
   return data;
 }
+
+export async function validateAgentConnection(
+  projectId: string,
+  agentId: string,
+  versionId: string,
+  input: Record<string, unknown>,
+) {
+  const response = await fetch(
+    `${CONTROL_API_URL}/api/v1/projects/${projectId}/agents/${agentId}/versions/${versionId}/validate-connection`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...(csrfHeaders() as Record<string, string>),
+      },
+      credentials: "include",
+      body: JSON.stringify({ input }),
+    },
+  );
+  if (!response.ok) throw new Error("连接测试失败");
+  return response.json() as Promise<{
+    ok: boolean;
+    status_code: number;
+    latency_ms: number;
+    response_preview: unknown;
+  }>;
+}

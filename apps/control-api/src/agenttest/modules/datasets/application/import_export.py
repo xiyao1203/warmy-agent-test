@@ -29,6 +29,7 @@ from agenttest.modules.datasets.domain.value_objects import (
 from agenttest.modules.identity.public import User
 
 ExportFormat = Literal["json", "jsonl", "csv"]
+MAX_IMPORT_BYTES = 10 * 1024 * 1024
 
 
 class ImportError(Exception):
@@ -75,20 +76,18 @@ class ImportExportService:
 
         await self._project_access.ensure_editor(actor, dataset.project_id)
 
-        if format == "json":
-            parsed = _parse_json(content)
-        elif format == "jsonl":
-            parsed = _parse_jsonl(content)
-        elif format == "csv":
-            parsed = _parse_csv(content)
-        else:
-            raise ValueError(f"Unsupported import format: {format}")
+        validated = parse_and_validate_import(format, content)
+        parsed = validated["records"]
+        if not isinstance(parsed, list):
+            raise ValueError("Import parser returned an invalid result")
 
         errors: list[dict[str, object]] = []
         cases: list[TestCase] = []
         max_order = await self._cases.get_max_sort_order(version.version_id)
 
         for idx, raw in enumerate(parsed):
+            if not isinstance(raw, dict):
+                continue
             try:
                 case = _build_test_case(version.version_id, raw, sort_order=max_order + idx + 1)
                 cases.append(case)
@@ -102,6 +101,21 @@ class ImportExportService:
             await self._cases.add(case)
 
         return cases
+
+    async def preview_test_cases(
+        self,
+        *,
+        actor: User,
+        dataset: Dataset,
+        version: DatasetVersion,
+        format: str,
+        content: str,
+    ) -> dict[str, object]:
+        if not version.is_editable:
+            raise ValueError("Cannot import into a published version")
+        await self._project_access.ensure_editor(actor, dataset.project_id)
+        result = parse_and_validate_import(format, content, allow_errors=True)
+        return {key: value for key, value in result.items() if key != "records"}
 
     # ── Export ────────────────────────────────────────────────────────────
 
@@ -154,19 +168,113 @@ _OPTIONAL_FIELDS = {
 }
 
 
-def _parse_json(content: str) -> list[dict[str, object]]:
+def parse_and_validate_import(
+    format: str,
+    content: str,
+    *,
+    allow_errors: bool = False,
+) -> dict[str, object]:
+    if len(content.encode("utf-8")) > MAX_IMPORT_BYTES:
+        raise ValueError("Import file exceeds the 10MB limit")
+    parsed: list[object]
+    if format == "json":
+        parsed = _parse_json(content)
+    elif format == "jsonl":
+        parsed = _parse_jsonl(content)
+    elif format == "csv":
+        parsed = list(_parse_csv(content))
+    else:
+        raise ValueError(f"Unsupported import format: {format}")
+
+    records: list[dict[str, object]] = []
+    errors: list[dict[str, object]] = []
+    for index, item in enumerate(parsed, start=1):
+        if not isinstance(item, dict):
+            errors.append(_import_error(index, "$", "invalid_type", "test case must be an object"))
+            continue
+        item_errors = _validate_import_record(index, item)
+        if item_errors:
+            errors.extend(item_errors)
+        else:
+            records.append(item)
+    if errors and not allow_errors:
+        raise ImportError(errors)
+    return {
+        "valid_count": len(records),
+        "errors": errors,
+        "preview": records[:20],
+        "records": records,
+    }
+
+
+def _validate_import_record(line: int, raw: dict[str, object]) -> list[dict[str, object]]:
+    errors: list[dict[str, object]] = []
+    missing = _REQUIRED_FIELDS - set(raw)
+    for field_name in sorted(missing):
+        errors.append(_import_error(line, field_name, "required", f"{field_name} is required"))
+    unknown = set(raw) - _REQUIRED_FIELDS - _OPTIONAL_FIELDS
+    for field_name in sorted(unknown):
+        errors.append(_import_error(line, field_name, "unknown_field", "field is not supported"))
+    if "name" in raw and (not isinstance(raw["name"], str) or not raw["name"].strip()):
+        errors.append(_import_error(line, "name", "invalid_value", "name must be non-empty"))
+    if "input" in raw and not isinstance(raw["input"], dict):
+        errors.append(_import_error(line, "input", "invalid_type", "input must be a JSON object"))
+    if "execution_mode" in raw:
+        try:
+            ExecutionMode(str(raw["execution_mode"]))
+        except ValueError:
+            errors.append(
+                _import_error(
+                    line,
+                    "execution_mode",
+                    "invalid_enum",
+                    "execution_mode must be api, browser, canvas, or hybrid",
+                )
+            )
+    for field_name in ("assertions", "scorers", "security_policies"):
+        value = raw.get(field_name)
+        if value is not None and (
+            not isinstance(value, list) or not all(isinstance(item, dict) for item in value)
+        ):
+            errors.append(
+                _import_error(
+                    line, field_name, "invalid_type", f"{field_name} must be a list of objects"
+                )
+            )
+    for field_name in ("initial_state", "expected_outcome"):
+        value = raw.get(field_name)
+        if value is not None and not isinstance(value, dict):
+            errors.append(
+                _import_error(line, field_name, "invalid_type", f"{field_name} must be an object")
+            )
+    tags = raw.get("tags")
+    if tags is not None and (
+        not isinstance(tags, list) or not all(isinstance(item, str) for item in tags)
+    ):
+        errors.append(_import_error(line, "tags", "invalid_type", "tags must be a list of strings"))
+    return errors
+
+
+def _import_error(line: int, field: str, code: str, message: str) -> dict[str, object]:
+    return {"line": line, "field": field, "code": code, "message": message}
+
+
+def _parse_json(content: str) -> list[object]:
     data = json.loads(content)
     if not isinstance(data, list):
         raise ValueError("JSON content must be an array of test case objects")
     return data
 
 
-def _parse_jsonl(content: str) -> list[dict[str, object]]:
-    records: list[dict[str, object]] = []
-    for line in content.strip().split("\n"):
+def _parse_jsonl(content: str) -> list[object]:
+    records: list[object] = []
+    for line_number, line in enumerate(content.splitlines(), start=1):
         if not line.strip():
             continue
-        records.append(json.loads(line))
+        try:
+            records.append(json.loads(line))
+        except json.JSONDecodeError as error:
+            raise ValueError(f"Invalid JSONL at line {line_number}: {error.msg}") from error
     return records
 
 

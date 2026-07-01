@@ -12,7 +12,7 @@ import {
 import { Input } from "@/components/ui/input";
 
 import type { ScorerItem } from "./api";
-import { createScorer, updateScorer } from "./api";
+import { createScorer, trialScorer, updateScorer } from "./api";
 
 export function ScorerEditorDialog({
   onOpenChange,
@@ -35,6 +35,24 @@ export function ScorerEditorDialog({
   const [description, setDescription] = useState(scorer?.description ?? "");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const [operator, setOperator] = useState(
+    String(scorer?.config_json.operator ?? "contains"),
+  );
+  const [expected, setExpected] = useState(
+    String(scorer?.config_json.expected ?? ""),
+  );
+  const [rubric, setRubric] = useState(
+    String(scorer?.config_json.rubric ?? ""),
+  );
+  const [sampleOutput, setSampleOutput] = useState("");
+  const [sampleReference, setSampleReference] = useState("");
+  const [trialResult, setTrialResult] = useState<string>("");
+
+  function scorerConfig() {
+    if (scorerType === "model") return { rubric };
+    if (scorerType === "reference") return { operator };
+    return { expected, operator };
+  }
 
   async function handleSave() {
     if (!name.trim()) {
@@ -50,6 +68,7 @@ export function ScorerEditorDialog({
           weight,
           threshold,
           description: description || null,
+          config_json: scorerConfig(),
         });
       } else {
         await createScorer(projectId, {
@@ -58,6 +77,7 @@ export function ScorerEditorDialog({
           weight,
           threshold,
           description: description || null,
+          config_json: scorerConfig(),
         });
       }
       onOpenChange(false);
@@ -130,6 +150,41 @@ export function ScorerEditorDialog({
               />
             </label>
           </div>
+          {scorerType === "model" ? (
+            <label className="block text-sm font-medium">
+              评分标准（Rubric）
+              <textarea
+                className="mt-1.5 min-h-24 w-full rounded border border-[var(--border)] bg-[var(--surface)] p-3 text-sm"
+                onChange={(event) => setRubric(event.target.value)}
+                placeholder="明确描述 0-1 分的判断标准"
+                value={rubric}
+              />
+            </label>
+          ) : (
+            <div className="grid grid-cols-2 gap-4">
+              <label className="block text-sm font-medium">
+                比较方式
+                <select
+                  className="mt-1.5 h-9 w-full rounded border border-[var(--border)] bg-[var(--surface)] px-3"
+                  onChange={(event) => setOperator(event.target.value)}
+                  value={operator}
+                >
+                  <option value="contains">包含</option>
+                  <option value="exact">完全相等</option>
+                </select>
+              </label>
+              {scorerType === "rule" && (
+                <label className="block text-sm font-medium">
+                  期望值
+                  <Input
+                    className="mt-1.5"
+                    onChange={(event) => setExpected(event.target.value)}
+                    value={expected}
+                  />
+                </label>
+              )}
+            </div>
+          )}
           <label className="block text-sm font-medium">
             描述（可选）
             <Input
@@ -139,6 +194,45 @@ export function ScorerEditorDialog({
               value={description}
             />
           </label>
+          {scorer && (
+            <div className="rounded border border-[var(--border)] p-3">
+              <p className="text-sm font-medium">真实试评</p>
+              <Input
+                className="mt-2"
+                onChange={(event) => setSampleOutput(event.target.value)}
+                placeholder="样例输出"
+                value={sampleOutput}
+              />
+              {scorerType === "reference" && (
+                <Input
+                  className="mt-2"
+                  onChange={(event) => setSampleReference(event.target.value)}
+                  placeholder="参考答案"
+                  value={sampleReference}
+                />
+              )}
+              <Button
+                className="mt-2"
+                onClick={async () => {
+                  try {
+                    const result = await trialScorer(projectId, scorer.id, {
+                      output: sampleOutput,
+                      reference: sampleReference || undefined,
+                    });
+                    setTrialResult(
+                      `${result.passed ? "通过" : "未通过"} · ${result.score.toFixed(2)} · ${result.explanation}`,
+                    );
+                  } catch {
+                    setTrialResult("试评失败，请检查配置及模型运行时。");
+                  }
+                }}
+                type="button"
+              >
+                运行试评
+              </Button>
+              {trialResult && <p className="mt-2 text-xs">{trialResult}</p>}
+            </div>
+          )}
         </div>
         {error ? (
           <p className="mt-3 text-sm text-[var(--danger)]">{error}</p>

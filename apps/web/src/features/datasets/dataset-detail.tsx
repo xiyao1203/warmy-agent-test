@@ -36,6 +36,11 @@ type DatasetDetailProps = {
   onDeleteCases?: (caseIds: string[]) => Promise<unknown>;
   onCreateCase?: (payload: CreateTestCaseRequest) => Promise<unknown>;
   onRefresh?: () => void;
+  onImport?: (file: File) => Promise<unknown>;
+  onPreviewImport?: (file: File) => Promise<{
+    valid_count: number;
+    errors: Array<{ line: number; field: string; message: string }>;
+  }>;
   projectId: string;
 };
 
@@ -46,6 +51,8 @@ export function DatasetDetail({
   loading = false,
   onDeleteCases,
   onRefresh,
+  onImport,
+  onPreviewImport,
   projectId,
   versions = [],
 }: DatasetDetailProps) {
@@ -128,7 +135,11 @@ export function DatasetDetail({
             {dataset.description || "暂无描述"}
           </p>
         </div>
-        <ImportWizard onSuccess={onRefresh} />
+        <ImportWizard
+          onImport={onImport}
+          onPreview={onPreviewImport}
+          onSuccess={onRefresh}
+        />
       </header>
 
       {/* ── 版本信息 ───────────────────────────────────────────────────── */}

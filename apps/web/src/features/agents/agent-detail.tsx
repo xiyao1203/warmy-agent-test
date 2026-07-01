@@ -225,11 +225,13 @@ export function AgentDetail({
       {/* ── 版本详情抽屉 ─────────────────────────────────────────────── */}
       {selectedVersion && (
         <VersionDetailDrawer
+          agentId={agent.id}
           version={selectedVersion}
           isCurrent={selectedVersion.id === agent.current_version_id}
           isBaseline={selectedVersion.id === agent.baseline_version_id}
           open={true}
           onClose={() => setSelectedVersion(null)}
+          projectId={agent.project_id}
         />
       )}
     </div>

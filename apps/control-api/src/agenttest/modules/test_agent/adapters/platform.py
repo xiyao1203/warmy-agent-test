@@ -26,7 +26,7 @@ from agenttest.modules.environments.public import (
     TemplateType,
 )
 from agenttest.modules.experiments.public import Experiment, ExperimentId
-from agenttest.modules.gates.public import ReleaseGateId
+from agenttest.modules.gates.public import ReleaseGateId, evaluate_evidence
 from agenttest.modules.runs.public import CreateRunCommand, RunId
 from agenttest.modules.scorers.public import Scorer, ScorerId, ScorerType
 from agenttest.modules.security.public import (
@@ -64,6 +64,7 @@ class HandlerPlatformGateway:
         accounts,
         promptfoo_bin: str,
         allow_private_security_targets: bool,
+        gate_evidence,
     ) -> None:
         self._agents = agents
         self._datasets = datasets
@@ -78,6 +79,7 @@ class HandlerPlatformGateway:
         self._accounts = accounts
         self._promptfoo_bin = promptfoo_bin
         self._allow_private_security_targets = allow_private_security_targets
+        self._gate_evidence = gate_evidence
 
     async def execute(
         self,
@@ -291,12 +293,29 @@ class HandlerPlatformGateway:
             items = await self._security.list_by_project(project_id.value)
             return {"items": [_security_scan(item) for item in items]}
         if capability == "security_scans.start":
-            endpoint = str(values["target_url"])
+            version = await self._agents.get_version.execute(
+                context.actor,
+                AgentVersionId(UUID(str(values["agent_version_id"]))),
+            )
+            agent = await self._agents.get_agent.execute(context.actor, version.agent_id)
+            if agent.project_id != project_id:
+                raise ValueError("Agent version does not exist in project")
+            endpoint = version.config.api_url
             validate_agent_endpoint(
                 endpoint,
                 allow_private_network=self._allow_private_security_targets,
             )
-            scan = SecurityScan.create(project_id=project_id.value, scan_type="full")
+            scan = SecurityScan.create(
+                project_id=project_id.value,
+                scan_type="full",
+                agent_version_id=version.version_id.value,
+                run_id=UUID(str(values["run_id"])) if values.get("run_id") else None,
+                security_profile_id=(
+                    UUID(str(values["security_profile_id"]))
+                    if values.get("security_profile_id")
+                    else None
+                ),
+            )
             await self._security.add(scan)
             scan.status = ScanStatus.RUNNING
             await self._security.save(scan)
@@ -333,17 +352,24 @@ class HandlerPlatformGateway:
             )
             if gate is None:
                 raise ValueError("Release gate does not exist in project")
-            run = await self._runs.get_run.execute(
-                context.actor, project_id, RunId(UUID(str(values["run_id"])))
-            )
-            result = gate.evaluate(
-                actual_pass_rate=(run.passed_cases / run.total_cases),
-                critical_passed=run.failed_cases == 0 and run.error_cases == 0,
+            run_id = UUID(str(values["run_id"]))
+            evidence = await self._gate_evidence.load(project_id.value, run_id)
+            if evidence is None:
+                raise ValueError("Run does not exist in project")
+            result = evaluate_evidence(gate, evidence)
+            decision_id = await self._gate_evidence.record(
+                project_id=project_id.value,
+                gate_id=gate.gate_id.value,
+                actor_id=context.actor.user_id.value,
+                evidence=evidence,
+                passed=result.passed,
+                failures=result.failures,
+                experiment_id=None,
             )
             return _created(
-                "release_gate",
-                gate.gate_id.value,
-                result.to_dict(),
+                "release_decision",
+                decision_id,
+                {**result.to_dict(), "run_id": str(run_id)},
                 relation="evaluated",
             )
         raise KeyError(f"Unsupported platform capability: {capability}")

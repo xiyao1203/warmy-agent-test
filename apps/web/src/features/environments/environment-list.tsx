@@ -5,7 +5,7 @@ import type {
   EnvironmentTemplateResponse,
 } from "@warmy/generated-api-client";
 import { Cog, Plus } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -28,6 +28,9 @@ import {
 } from "@/components/ui/table";
 import { Skeleton } from "@/components/uiverse";
 
+import type { CredentialBinding } from "./api";
+import { createCredentialBinding, listCredentialBindings } from "./api";
+
 type EnvironmentListProps = {
   environments?: EnvironmentTemplateResponse[];
   error?: "not-found" | "service";
@@ -48,7 +51,14 @@ export function EnvironmentList({
   loading = false,
   onCreate,
   onDelete,
+  projectId,
 }: EnvironmentListProps) {
+  const [credentials, setCredentials] = useState<CredentialBinding[]>([]);
+  useEffect(() => {
+    void listCredentialBindings(projectId)
+      .then(setCredentials)
+      .catch(() => setCredentials([]));
+  }, [projectId]);
   if (loading) {
     return <EnvironmentListSkeleton />;
   }
@@ -76,7 +86,9 @@ export function EnvironmentList({
             管理测试环境模板、测试凭证、Mock 服务和沙箱配置。
           </p>
         </div>
-        {onCreate && <CreateTemplateDialog onCreate={onCreate} />}
+        {onCreate && (
+          <CreateTemplateDialog credentials={credentials} onCreate={onCreate} />
+        )}
       </header>
 
       <section className="mt-5 overflow-hidden rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--surface)]">
@@ -146,13 +158,123 @@ export function EnvironmentList({
           </Table>
         )}
       </section>
+      <CredentialSection
+        credentials={credentials}
+        onCreate={async (payload) => {
+          const created = await createCredentialBinding(projectId, payload);
+          setCredentials((current) => [created, ...current]);
+        }}
+      />
     </div>
   );
 }
 
-function CreateTemplateDialog({
+function CredentialSection({
+  credentials,
   onCreate,
 }: {
+  credentials: CredentialBinding[];
+  onCreate: (payload: {
+    alias: string;
+    kind: string;
+    injection_location: string;
+    injection_name: string;
+    value: string;
+  }) => Promise<void>;
+}) {
+  const [open, setOpen] = useState(false);
+  const [alias, setAlias] = useState("");
+  const [name, setName] = useState("Authorization");
+  const [value, setValue] = useState("");
+  const [error, setError] = useState("");
+  return (
+    <section className="mt-6 rounded border border-[var(--border)] bg-[var(--surface)] p-5">
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="font-semibold">加密凭证绑定</h2>
+          <p className="mt-1 text-xs text-[var(--text-muted)]">
+            密钥仅加密保存；列表和 API 永不返回明文。
+          </p>
+        </div>
+        <Button onClick={() => setOpen(true)} variant="secondary">
+          新增凭证
+        </Button>
+      </div>
+      <ul className="mt-4 space-y-2 text-sm">
+        {credentials.map((item) => (
+          <li
+            className="flex justify-between rounded border border-[var(--border)] p-3"
+            key={item.id}
+          >
+            <span>
+              {item.alias} · {item.injection_location}:{item.injection_name}
+            </span>
+            <code>{item.masked_hint}</code>
+          </li>
+        ))}
+      </ul>
+      <Dialog onOpenChange={setOpen} open={open}>
+        <DialogContent>
+          <DialogTitle>新增加密凭证</DialogTitle>
+          <DialogDescription>
+            凭证值保存后不可读取，只能替换。
+          </DialogDescription>
+          <div className="mt-4 space-y-3">
+            <Input
+              onChange={(event) => setAlias(event.target.value)}
+              placeholder="别名，如 staging-token"
+              value={alias}
+            />
+            <Input
+              onChange={(event) => setName(event.target.value)}
+              placeholder="Header 名称"
+              value={name}
+            />
+            <Input
+              onChange={(event) => setValue(event.target.value)}
+              placeholder="凭证值"
+              type="password"
+              value={value}
+            />
+            {error && <p className="text-sm text-[var(--danger)]">{error}</p>}
+            <div className="flex justify-end gap-2">
+              <Button onClick={() => setOpen(false)}>取消</Button>
+              <Button
+                onClick={async () => {
+                  try {
+                    await onCreate({
+                      alias,
+                      kind: "bearer",
+                      injection_location: "header",
+                      injection_name: name,
+                      value,
+                    });
+                    setOpen(false);
+                    setAlias("");
+                    setValue("");
+                  } catch (caught) {
+                    setError(
+                      caught instanceof Error ? caught.message : "保存失败",
+                    );
+                  }
+                }}
+                variant="primary"
+              >
+                保存
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </section>
+  );
+}
+
+function CreateTemplateDialog({
+  credentials,
+  onCreate,
+}: {
+  credentials: CredentialBinding[];
   onCreate: (payload: CreateEnvironmentTemplateRequest) => Promise<unknown>;
 }) {
   const [open, setOpen] = useState(false);
@@ -160,6 +282,10 @@ function CreateTemplateDialog({
   const [description, setDescription] = useState("");
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [variables, setVariables] = useState("{}");
+  const [headers, setHeaders] = useState("{}");
+  const [initialState, setInitialState] = useState("{}");
+  const [credentialIds, setCredentialIds] = useState<string[]>([]);
 
   async function submit() {
     if (!name.trim()) {
@@ -168,7 +294,20 @@ function CreateTemplateDialog({
     }
     setSubmitting(true);
     try {
+      const parsedVariables = JSON.parse(variables) as Record<string, unknown>;
+      const parsedHeaders = JSON.parse(headers) as Record<string, unknown>;
+      const parsedInitialState = JSON.parse(initialState) as Record<
+        string,
+        unknown
+      >;
       await onCreate({
+        config: {
+          variables: parsedVariables,
+          headers: parsedHeaders,
+          initial_state: parsedInitialState,
+          credential_binding_ids: credentialIds,
+          sandbox: {},
+        },
         description: description.trim() || null,
         name: name.trim(),
         template_type: "blank",
@@ -177,8 +316,12 @@ function CreateTemplateDialog({
       setName("");
       setDescription("");
       setError("");
-    } catch {
-      setError("创建失败，请检查输入后重试。");
+    } catch (caught) {
+      setError(
+        caught instanceof SyntaxError
+          ? "变量、Headers 和初始状态必须是合法 JSON 对象。"
+          : "创建失败，请检查输入后重试。",
+      );
     } finally {
       setSubmitting(false);
     }
@@ -214,6 +357,45 @@ function CreateTemplateDialog({
               value={description}
             />
           </label>
+          <JsonField
+            label="环境变量（JSON）"
+            onChange={setVariables}
+            value={variables}
+          />
+          <div>
+            <p className="text-sm font-medium">凭证绑定</p>
+            <div className="mt-2 space-y-2">
+              {credentials.map((credential) => (
+                <label
+                  className="flex items-center gap-2 text-sm"
+                  key={credential.id}
+                >
+                  <input
+                    checked={credentialIds.includes(credential.id)}
+                    onChange={(event) =>
+                      setCredentialIds((current) =>
+                        event.target.checked
+                          ? [...current, credential.id]
+                          : current.filter((id) => id !== credential.id),
+                      )
+                    }
+                    type="checkbox"
+                  />
+                  {credential.alias} · {credential.masked_hint}
+                </label>
+              ))}
+            </div>
+          </div>
+          <JsonField
+            label="公开 Headers（JSON）"
+            onChange={setHeaders}
+            value={headers}
+          />
+          <JsonField
+            label="初始状态（JSON）"
+            onChange={setInitialState}
+            value={initialState}
+          />
           {error ? (
             <p className="text-sm text-[var(--danger)]">{error}</p>
           ) : null}
@@ -238,6 +420,27 @@ function CreateTemplateDialog({
         </div>
       </DialogContent>
     </Dialog>
+  );
+}
+
+function JsonField({
+  label,
+  onChange,
+  value,
+}: {
+  label: string;
+  onChange: (value: string) => void;
+  value: string;
+}) {
+  return (
+    <label className="block text-sm font-medium">
+      {label}
+      <textarea
+        className="mt-1.5 min-h-20 w-full rounded border border-[var(--border)] bg-[var(--surface)] p-3 font-mono text-xs"
+        onChange={(event) => onChange(event.target.value)}
+        value={value}
+      />
+    </label>
   );
 }
 

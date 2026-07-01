@@ -22,6 +22,13 @@ export type SecurityScanItem = {
   created_at: string;
   updated_at: string;
   completed_at: string | null;
+  agent_version_id: string | null;
+  run_id: string | null;
+};
+
+export type SecurityTarget = {
+  id: string;
+  label: string;
 };
 
 export async function listScans(projectId: string) {
@@ -34,7 +41,7 @@ export async function listScans(projectId: string) {
   return data.items as SecurityScanItem[];
 }
 
-export async function triggerScan(projectId: string, agentEndpoint: string) {
+export async function triggerScan(projectId: string, agentVersionId: string) {
   const res = await fetch(
     `${API_BASE}/api/v1/projects/${projectId}/security/scans`,
     {
@@ -45,13 +52,47 @@ export async function triggerScan(projectId: string, agentEndpoint: string) {
       },
       credentials: "include",
       body: JSON.stringify({
-        agent_endpoint: agentEndpoint,
+        agent_version_id: agentVersionId,
         scan_type: "full",
       }),
     },
   );
   if (!res.ok) throw await responseProblem(res, "安全扫描启动失败");
   return res.json() as Promise<SecurityScanItem>;
+}
+
+export async function listSecurityTargets(projectId: string) {
+  const agentsResponse = await fetch(
+    `${API_BASE}/api/v1/projects/${projectId}/agents?limit=100`,
+    { credentials: "include" },
+  );
+  if (!agentsResponse.ok)
+    throw await responseProblem(agentsResponse, "加载 Agent 失败");
+  const agents = (await agentsResponse.json()).items as Array<{
+    id: string;
+    name: string;
+  }>;
+  const targets = await Promise.all(
+    agents.map(async (agent) => {
+      const response = await fetch(
+        `${API_BASE}/api/v1/projects/${projectId}/agents/${agent.id}/versions`,
+        { credentials: "include" },
+      );
+      if (!response.ok) return [];
+      const versions = (await response.json()).items as Array<{
+        id: string;
+        version_number: number;
+        status: string;
+      }>;
+      return versions
+        .filter((version) => version.status === "published")
+        .map((version) => ({
+          id: version.id,
+          label: `${agent.name} · v${version.version_number}`,
+        }));
+    }),
+  );
+  return targets.flat() as SecurityTarget[];
 }
 
 export async function getScan(projectId: string, scanId: string) {

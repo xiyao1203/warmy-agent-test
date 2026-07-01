@@ -108,13 +108,26 @@ class SecurityScan:
     status: ScanStatus
     scan_type: str
     findings: list[dict[str, object]]
-    summary: dict[str, int]
+    summary: dict[str, object]
     created_at: datetime
     updated_at: datetime
     completed_at: datetime | None = None
+    run_id: UUID | None = None
+    agent_version_id: UUID | None = None
+    environment_version_id: UUID | None = None
+    security_profile_id: UUID | None = None
 
     @classmethod
-    def create(cls, *, project_id: UUID, scan_type: str = "full") -> SecurityScan:
+    def create(
+        cls,
+        *,
+        project_id: UUID,
+        scan_type: str = "full",
+        run_id: UUID | None = None,
+        agent_version_id: UUID | None = None,
+        environment_version_id: UUID | None = None,
+        security_profile_id: UUID | None = None,
+    ) -> SecurityScan:
         now = datetime.now(UTC)
         return cls(
             scan_id=uuid4(),
@@ -125,15 +138,25 @@ class SecurityScan:
             summary={},
             created_at=now,
             updated_at=now,
+            run_id=run_id,
+            agent_version_id=agent_version_id,
+            environment_version_id=environment_version_id,
+            security_profile_id=security_profile_id,
         )
 
     def complete(self, findings: list[dict[str, object]]) -> None:
         self.findings = findings
-        summary: dict[str, int] = {}
+        counts: dict[str, int] = {}
         for f in findings:
             cat = str(f.get("category", "other"))
-            summary[cat] = summary.get(cat, 0) + 1
-        self.summary = summary
+            counts[cat] = counts.get(cat, 0) + 1
+        self.summary = dict(counts)
+        numeric_scores: list[float] = []
+        for item in findings:
+            raw_score = item.get("score")
+            if isinstance(raw_score, int | float):
+                numeric_scores.append(float(raw_score))
+        self.summary["score"] = sum(numeric_scores) / len(numeric_scores) if numeric_scores else 1.0
         self.status = ScanStatus.COMPLETED
         now = datetime.now(UTC)
         self.completed_at = now

@@ -6,6 +6,7 @@ from agenttest.modules.identity.public import User
 from agenttest.modules.projects.public import ProjectId
 from agenttest.modules.runs.application.ports import (
     ProjectAccessPort,
+    ReviewCollectorPort,
     RunOrchestrator,
     RunRepository,
     RunSourcePort,
@@ -133,8 +134,14 @@ class CancelRunHandler:
 
 
 class ApplyRunResultHandler:
-    def __init__(self, *, runs: RunRepository) -> None:
+    def __init__(
+        self,
+        *,
+        runs: RunRepository,
+        review_collector: ReviewCollectorPort | None = None,
+    ) -> None:
         self._runs = runs
+        self._review_collector = review_collector
 
     async def execute(self, command: ApplyRunResultCommand) -> Run:
         run = await self._runs.get_by_id(command.project_id, command.run_id)
@@ -182,6 +189,8 @@ class ApplyRunResultHandler:
             cancelled_cases=cancelled_cases,
         )
         await self._runs.save_result(run, cases)
+        if self._review_collector is not None:
+            await self._review_collector.collect(run.project_id, run.run_id)
         return run
 
 

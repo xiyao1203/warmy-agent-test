@@ -17,21 +17,33 @@ type ImportWizardProps = {
   projectId?: string;
   versionId?: string;
   onImport?: (file: File) => Promise<unknown>;
+  onPreview?: (file: File) => Promise<{
+    valid_count: number;
+    errors: Array<{ line: number; field: string; message: string }>;
+  }>;
   onSuccess?: () => void;
 };
 
 type WizardStep = "select" | "preview" | "result";
 
-export function ImportWizard({ onImport, onSuccess }: ImportWizardProps) {
+export function ImportWizard({
+  onImport,
+  onPreview,
+  onSuccess,
+}: ImportWizardProps) {
   const [open, setOpen] = useState(false);
   const [step, setStep] = useState<WizardStep>("select");
   const [file, setFile] = useState<File | null>(null);
   const [importing, setImporting] = useState(false);
   const [error, setError] = useState("");
+  const [preview, setPreview] = useState<{
+    valid_count: number;
+    errors: Array<{ line: number; field: string; message: string }>;
+  } | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const handleFileChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
+    async (e: React.ChangeEvent<HTMLInputElement>) => {
       const selected = e.target.files?.[0];
       if (!selected) return;
 
@@ -40,18 +52,31 @@ export function ImportWizard({ onImport, onSuccess }: ImportWizardProps) {
         setError("仅支持 JSON、JSONL、CSV 格式");
         return;
       }
+      if (selected.size > 10 * 1024 * 1024) {
+        setError("文件不能超过 10MB");
+        return;
+      }
 
       setError("");
       setFile(selected);
       setStep("preview");
+      setPreview(null);
+      if (onPreview) {
+        try {
+          setPreview(await onPreview(selected));
+        } catch {
+          setError("预检失败，请检查文件格式和当前草稿版本。");
+        }
+      }
     },
-    [],
+    [onPreview],
   );
 
   const handleImport = useCallback(async () => {
     if (!file || !onImport) return;
     setImporting(true);
     setError("");
+    setPreview(null);
     try {
       await onImport(file);
       setStep("result");
@@ -77,7 +102,13 @@ export function ImportWizard({ onImport, onSuccess }: ImportWizardProps) {
   };
 
   return (
-    <Dialog onOpenChange={handleClose} open={open}>
+    <Dialog
+      onOpenChange={(nextOpen) => {
+        if (nextOpen) setOpen(true);
+        else handleClose();
+      }}
+      open={open}
+    >
       <DialogTrigger asChild>
         <Button variant="ghost">
           <Upload aria-hidden="true" className="mr-1.5 size-4" />
@@ -147,10 +178,24 @@ export function ImportWizard({ onImport, onSuccess }: ImportWizardProps) {
               </p>
             </div>
             {error && <p className="text-sm text-[var(--danger)]">{error}</p>}
+            {preview && (
+              <div className="rounded border border-[var(--border)] p-3 text-sm">
+                <p>有效用例：{preview.valid_count} 条</p>
+                {preview.errors.length > 0 && (
+                  <ul className="mt-2 space-y-1 text-xs text-[var(--danger)]">
+                    {preview.errors.slice(0, 10).map((item, index) => (
+                      <li key={`${item.line}-${item.field}-${index}`}>
+                        第 {item.line} 行 · {item.field}：{item.message}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            )}
             <div className="flex justify-end gap-2">
               <Button onClick={handleClose}>取消</Button>
               <Button
-                disabled={importing}
+                disabled={importing || !preview || preview.errors.length > 0}
                 loading={importing}
                 onClick={handleImport}
                 variant="primary"

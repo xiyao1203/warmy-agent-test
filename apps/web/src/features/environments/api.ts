@@ -9,7 +9,54 @@ import {
 } from "@warmy/generated-api-client";
 
 import { apiClient } from "@/lib/api/client";
+import { CONTROL_API_URL } from "@/lib/api/base-url";
 import { csrfHeaders } from "@/lib/api/csrf";
+import { responseProblem } from "@/lib/api/problem";
+
+export type CredentialBinding = {
+  id: string;
+  alias: string;
+  kind: string;
+  injection_location: string;
+  injection_name: string;
+  masked_hint: string;
+  updated_at: string;
+};
+
+export async function listCredentialBindings(projectId: string) {
+  const response = await fetch(
+    `${CONTROL_API_URL}/api/v1/projects/${projectId}/credentials`,
+    { credentials: "include" },
+  );
+  if (!response.ok) throw await responseProblem(response, "加载凭证失败");
+  return ((await response.json()).items ?? []) as CredentialBinding[];
+}
+
+export async function createCredentialBinding(
+  projectId: string,
+  payload: {
+    alias: string;
+    kind: string;
+    injection_location: string;
+    injection_name: string;
+    value: string;
+  },
+) {
+  const response = await fetch(
+    `${CONTROL_API_URL}/api/v1/projects/${projectId}/credentials`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...(csrfHeaders() as Record<string, string>),
+      },
+      credentials: "include",
+      body: JSON.stringify(payload),
+    },
+  );
+  if (!response.ok) throw await responseProblem(response, "保存凭证失败");
+  return response.json() as Promise<CredentialBinding>;
+}
 
 export async function listEnvironmentTemplates(projectId: string) {
   const { data } =

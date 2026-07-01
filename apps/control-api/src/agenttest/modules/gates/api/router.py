@@ -2,12 +2,14 @@
 
 from __future__ import annotations
 
+from typing import Protocol
 from uuid import UUID
 
 from fastapi import APIRouter, Header, Request
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
+from agenttest.modules.gates.application.evaluate import GateEvidence, evaluate_evidence
 from agenttest.modules.gates.domain.entities import (
     ReleaseGate,
     ReleaseGateId,
@@ -29,14 +31,28 @@ class CreateGateRequest(BaseModel):
 
 
 class EvaluateGateRequest(BaseModel):
-    actual_pass_rate: float
-    critical_passed: bool
-    actual_cost: float | None = None
-    security_score: float | None = None
+    run_id: UUID
+    experiment_id: UUID | None = None
 
 
 class ExemptRequest(BaseModel):
     reason: str
+
+
+class GateEvidencePort(Protocol):
+    async def load(self, project_id: UUID, run_id: UUID) -> GateEvidence | None: ...
+
+    async def record(
+        self,
+        *,
+        project_id: UUID,
+        gate_id: UUID,
+        actor_id: UUID,
+        evidence: GateEvidence,
+        passed: bool,
+        failures: list[str],
+        experiment_id: UUID | None,
+    ) -> UUID: ...
 
 
 def create_gate_router(
@@ -45,6 +61,7 @@ def create_gate_router(
     actor_for,
     check_project,
     settings,
+    evidence_reader: GateEvidencePort,
 ) -> APIRouter:
     router = APIRouter(
         prefix="/projects/{project_id}/gates",
@@ -160,18 +177,32 @@ def create_gate_router(
                 status_code=404,
                 content={"detail": "门禁不存在"},
             )
-        if not gate.enabled:
-            return {
-                "gate_id": str(gate_id),
-                "result": {"passed": True, "failures": [], "disabled": True},
-            }
-        result = gate.evaluate(
-            actual_pass_rate=body.actual_pass_rate,
-            critical_passed=body.critical_passed,
-            actual_cost=body.actual_cost,
-            security_score=body.security_score,
+        evidence = await evidence_reader.load(project_id, body.run_id)
+        if evidence is None:
+            return JSONResponse(status_code=404, content={"detail": "执行记录不存在"})
+        result = evaluate_evidence(gate, evidence)
+        decision_id = await evidence_reader.record(
+            project_id=project_id,
+            gate_id=gate_id,
+            actor_id=actor.user_id.value,
+            evidence=evidence,
+            passed=result.passed,
+            failures=result.failures,
+            experiment_id=body.experiment_id,
         )
-        return {"gate_id": str(gate_id), "result": result.to_dict()}
+        return {
+            "gate_id": str(gate_id),
+            "decision_id": str(decision_id),
+            "run_id": str(body.run_id),
+            "result": result.to_dict(),
+            "facts": {
+                "pass_rate": evidence.pass_rate,
+                "critical_passed": evidence.critical_passed,
+                "total_cost": evidence.total_cost,
+                "security_score": evidence.security_score,
+                "pending_reviews": evidence.pending_reviews,
+            },
+        }
 
     @router.post("/{gate_id}/exempt")
     async def exempt_gate(

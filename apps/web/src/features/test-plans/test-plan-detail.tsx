@@ -29,6 +29,9 @@ export function TestPlanDetail({
   agentVersions,
   datasetVersions,
   environments,
+  gates = [],
+  runs = [],
+  scorers = [],
   onCreateVersion = async () => undefined,
   onPublish = async () => undefined,
   onUpdateVersion = async () => undefined,
@@ -38,6 +41,9 @@ export function TestPlanDetail({
   agentVersions: VersionAssetOption[];
   datasetVersions: VersionAssetOption[];
   environments: VersionAssetOption[];
+  gates?: VersionAssetOption[];
+  runs?: VersionAssetOption[];
+  scorers?: VersionAssetOption[];
   onCreateVersion?: (payload: CreateTestPlanVersionRequest) => Promise<unknown>;
   onPublish?: (versionId: string) => Promise<unknown>;
   onUpdateVersion?: (
@@ -91,6 +97,9 @@ export function TestPlanDetail({
           agentVersions={agentVersions}
           datasetVersions={datasetVersions}
           environments={environments}
+          gates={gates}
+          runs={runs}
+          scorers={scorers}
           onSubmit={onCreateVersion}
           triggerLabel="创建版本"
         />
@@ -142,6 +151,9 @@ export function TestPlanDetail({
                       agentVersions={agentVersions}
                       datasetVersions={datasetVersions}
                       environments={environments}
+                      gates={gates}
+                      runs={runs}
+                      scorers={scorers}
                       onSubmit={(payload) =>
                         onUpdateVersion(version.id, payload)
                       }

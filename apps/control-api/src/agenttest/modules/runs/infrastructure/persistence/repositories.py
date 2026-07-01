@@ -1,15 +1,21 @@
 from __future__ import annotations
 
+from datetime import UTC, datetime
+from uuid import uuid4
+
 from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
+from agenttest.modules.evaluations.public import CaseScoreInput, build_evaluation_summary
 from agenttest.modules.identity.public import UserId
 from agenttest.modules.projects.public import ProjectId
 from agenttest.modules.runs.domain.entities import Run, RunCase, RunCaseId, RunId
 from agenttest.modules.runs.domain.value_objects import RunCaseStatus, RunStatus
 from agenttest.modules.runs.infrastructure.persistence.models import (
     RunCaseModel,
+    RunEvaluationModel,
     RunModel,
+    ScoreModel,
 )
 from agenttest.modules.test_plans.public import TestPlanVersionId
 from agenttest.shared.infrastructure.database import session_scope, transaction_scope
@@ -122,6 +128,57 @@ class SqlAlchemyRunRepository:
                         completed_at=case.completed_at,
                     )
                 )
+            summary = build_evaluation_summary(
+                [
+                    CaseScoreInput(
+                        run_case_id=str(case.run_case_id.value),
+                        status=case.status.value,
+                    )
+                    for case in cases
+                ]
+            )
+            now = datetime.now(UTC)
+            evaluation_id = uuid4()
+            session.add(
+                RunEvaluationModel(
+                    id=evaluation_id,
+                    project_id=run.project_id.value,
+                    run_id=run.run_id.value,
+                    status=summary.status,
+                    aggregate_score=summary.aggregate_score,
+                    pass_rate=summary.pass_rate,
+                    total_cost=None,
+                    token_usage={},
+                    summary={
+                        "passed_cases": run.passed_cases,
+                        "failed_cases": run.failed_cases,
+                        "error_cases": run.error_cases,
+                        "cancelled_cases": run.cancelled_cases,
+                    },
+                    created_at=now,
+                    updated_at=now,
+                )
+            )
+            score_by_case = {item.run_case_id: item for item in summary.scores}
+            session.add_all(
+                [
+                    ScoreModel(
+                        id=uuid4(),
+                        project_id=run.project_id.value,
+                        evaluation_id=evaluation_id,
+                        run_case_id=case.run_case_id.value,
+                        scorer_version_id=None,
+                        score=score_by_case[str(case.run_case_id.value)].score,
+                        passed=score_by_case[str(case.run_case_id.value)].passed,
+                        confidence=score_by_case[str(case.run_case_id.value)].confidence,
+                        explanation=score_by_case[str(case.run_case_id.value)].explanation,
+                        metadata_json={"source": "assertions"},
+                        created_at=now,
+                        updated_at=now,
+                    )
+                    for case in cases
+                ]
+            )
 
     async def list_cases(
         self,

@@ -1,6 +1,8 @@
 from __future__ import annotations
 
-from sqlalchemy import select
+from uuid import UUID
+
+from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from agenttest.modules.agents.domain.invocation import invocation_from_stored_config
@@ -12,6 +14,10 @@ from agenttest.modules.datasets.infrastructure.persistence.models import (
     DatasetModel,
     DatasetVersionModel,
     TestCaseModel,
+)
+from agenttest.modules.environments.infrastructure.persistence.models import (
+    CredentialBindingModel,
+    EnvironmentTemplateModel,
 )
 from agenttest.modules.projects.public import ProjectId
 from agenttest.modules.runs.application.ports import RunDefinition, RunDefinitionCase
@@ -44,6 +50,7 @@ class SqlAlchemyRunSource:
                 AgentVersionModel,
                 AgentModel,
                 DatasetVersionModel,
+                EnvironmentTemplateModel,
             )
             .join(
                 TestPlanModel,
@@ -59,11 +66,19 @@ class SqlAlchemyRunSource:
                 DatasetVersionModel.id == TestPlanVersionModel.dataset_version_id,
             )
             .join(DatasetModel, DatasetModel.id == DatasetVersionModel.dataset_id)
+            .outerjoin(
+                EnvironmentTemplateModel,
+                EnvironmentTemplateModel.id == TestPlanVersionModel.environment_template_id,
+            )
             .where(
                 TestPlanVersionModel.id == version_id.value,
                 TestPlanModel.project_id == project_id.value,
                 AgentModel.project_id == project_id.value,
                 DatasetModel.project_id == project_id.value,
+                or_(
+                    TestPlanVersionModel.environment_template_id.is_(None),
+                    EnvironmentTemplateModel.project_id == project_id.value,
+                ),
                 TestPlanVersionModel.status == "published",
                 AgentVersionModel.status == "published",
                 DatasetVersionModel.status == "published",
@@ -73,7 +88,39 @@ class SqlAlchemyRunSource:
             row = (await session.execute(statement)).one_or_none()
             if row is None:
                 raise ValueError("Published test plan version was not found")
-            plan_version, agent_version, agent, dataset_version = row
+            plan_version, agent_version, agent, dataset_version, environment = row
+            environment_config = dict(environment.config) if environment else {}
+            credential_ids_raw = environment_config.get("credential_binding_ids", [])
+            credential_ids = (
+                [UUID(str(item)) for item in credential_ids_raw]
+                if isinstance(credential_ids_raw, list)
+                else []
+            )
+            credentials = []
+            if credential_ids:
+                credential_rows = list(
+                    (
+                        await session.scalars(
+                            select(CredentialBindingModel).where(
+                                CredentialBindingModel.project_id == project_id.value,
+                                CredentialBindingModel.id.in_(credential_ids),
+                            )
+                        )
+                    ).all()
+                )
+                if len(credential_rows) != len(set(credential_ids)):
+                    raise ValueError("Environment references a missing project credential")
+                credentials = [
+                    {
+                        "id": str(item.id),
+                        "kind": item.kind,
+                        "injection_location": item.injection_location,
+                        "injection_name": item.injection_name,
+                        "encrypted_value": item.encrypted_value,
+                    }
+                    for item in credential_rows
+                ]
+            environment_config["credential_bindings"] = credentials
             cases = list(
                 (
                     await session.scalars(
@@ -99,6 +146,7 @@ class SqlAlchemyRunSource:
                 "agent_config": invocation_from_stored_config(
                     dict(agent_version.config)
                 ).model_dump(mode="json"),
+                "environment_config": environment_config,
             },
             cases=[
                 RunDefinitionCase(

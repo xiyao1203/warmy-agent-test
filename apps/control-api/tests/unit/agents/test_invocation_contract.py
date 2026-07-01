@@ -1,6 +1,7 @@
 from uuid import uuid4
 
 import pytest
+from agenttest.modules.agents.api.schemas import AgentConfigRequest
 from agenttest.modules.agents.domain.invocation import (
     AgentInvocationConfig,
     InvocationProtocol,
@@ -56,11 +57,28 @@ def test_invocation_config_rejects_unknown_or_secret_fields() -> None:
 
 
 def test_legacy_agent_config_is_normalized_without_inventing_credentials() -> None:
-    config = invocation_from_stored_config(
-        {"api_url": "https://agent.example/run", "timeout": 18}
-    )
+    config = invocation_from_stored_config({"api_url": "https://agent.example/run", "timeout": 18})
 
     assert config.endpoint_url.unicode_string() == "https://agent.example/run"
     assert config.timeout_seconds == 18
     assert config.protocol is InvocationProtocol.SYNC_JSON
     assert config.credential_binding_ids == []
+
+
+def test_api_agent_config_persists_full_invocation_contract() -> None:
+    credential_id = uuid4()
+    request = AgentConfigRequest(
+        api_url="https://agent.example/v1/chat",
+        protocol="openai_chat",
+        request_template={"messages": "{{ input.messages }}"},
+        response_path="choices.0.message.content",
+        credential_binding_ids=[credential_id],
+        timeout=42,
+    )
+
+    stored = request.to_domain().to_dict()
+
+    assert stored["protocol"] == "openai_chat"
+    assert stored["request_template"] == {"messages": "{{ input.messages }}"}
+    assert stored["response_path"] == "choices.0.message.content"
+    assert stored["credential_binding_ids"] == [str(credential_id)]

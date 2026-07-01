@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from uuid import uuid4
+
 from agenttest.bootstrap.app import create_app
 from agenttest.bootstrap.settings import Settings
 from agenttest.modules.identity.api.router import AuthApiDependencies
@@ -204,19 +206,28 @@ def test_developer_creates_updates_and_publishes_test_plan_version() -> None:
         f"/api/v1/projects/{project_id.value}/test-plans/{plan_id}/versions",
         headers=csrf,
         json={
+            "agent_version_id": str(uuid4()),
+            "dataset_version_id": str(uuid4()),
             "config": {
                 "runs_per_case": 2,
                 "concurrency": 4,
                 "timeout": 120,
                 "pass_threshold": 0.9,
-            }
+                "observation_only": True,
+            },
         },
     )
     version_id = version.json()["id"]
     updated = client.patch(
         (f"/api/v1/projects/{project_id.value}/test-plans/{plan_id}/versions/{version_id}"),
         headers=csrf,
-        json={"config": {"concurrency": 8, "timeout": 180}},
+        json={
+            "config": {
+                "concurrency": 8,
+                "timeout": 180,
+                "observation_only": True,
+            }
+        },
     )
     published = client.post(
         (f"/api/v1/projects/{project_id.value}/test-plans/{plan_id}/versions/{version_id}/publish"),

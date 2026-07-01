@@ -10,6 +10,7 @@ import {
   listDatasetsApiV1ProjectsProjectIdDatasetsGet,
   listVersionsApiV1ProjectsProjectIdDatasetsDatasetIdVersionsGet,
   publishVersionApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdPublishPost,
+  previewImportApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdImportsPreviewPost,
   updateCaseApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdCasesCaseIdPatch,
   type CreateDatasetRequest,
   type CreateTestCaseRequest,
@@ -190,6 +191,29 @@ export async function importTestCases(
 ) {
   const { data } =
     await importCasesApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdImportPost(
+      {
+        body: payload,
+        client: apiClient,
+        headers: csrfHeaders(),
+        path: {
+          dataset_id: datasetId,
+          project_id: projectId,
+          version_id: versionId,
+        },
+        throwOnError: true,
+      },
+    );
+  return data;
+}
+
+export async function previewTestCaseImport(
+  projectId: string,
+  datasetId: string,
+  versionId: string,
+  payload: ImportTestCasesRequest,
+) {
+  const { data } =
+    await previewImportApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdImportsPreviewPost(
       {
         body: payload,
         client: apiClient,

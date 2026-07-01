@@ -16,6 +16,7 @@ from agenttest_api_runner.workflow import (
     RunWorkflow,
     aggregate_results,
     callback_task_for,
+    execution_activity_options,
     normalize_run_task,
 )
 
@@ -23,6 +24,26 @@ from agenttest_api_runner.workflow import (
 def test_workflow_activity_policy_is_bounded() -> None:
     assert ACTIVITY_TIMEOUT == timedelta(minutes=5)
     assert ACTIVITY_RETRY_POLICY.maximum_attempts == 3
+
+
+def test_execution_policy_controls_timeout_and_retries_with_safe_bounds() -> None:
+    timeout, retry = execution_activity_options(
+        {"timeout": 12, "max_retries": 4, "retry_policy": {"backoff_coefficient": 1.5}}
+    )
+
+    assert timeout == timedelta(seconds=12)
+    assert retry.maximum_attempts == 5
+    assert retry.backoff_coefficient == 1.5
+
+
+def test_execution_policy_rejects_invalid_runtime_values() -> None:
+    timeout, retry = execution_activity_options(
+        {"timeout": -1, "max_retries": 100, "retry_policy": {"backoff_coefficient": 0}}
+    )
+
+    assert timeout == timedelta(seconds=1)
+    assert retry.maximum_attempts == 11
+    assert retry.backoff_coefficient == 1.0
 
 
 def test_aggregate_distinguishes_failure_error_and_cancelled() -> None:

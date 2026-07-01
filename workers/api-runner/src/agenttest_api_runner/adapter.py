@@ -22,6 +22,9 @@ class TransientError(Exception):
 class AgentRequest:
     url: str
     input: dict[str, object]
+    variables: dict[str, str] = field(default_factory=dict)
+    request_template: dict[str, object] | None = None
+    response_path: str = "output"
     mode: Literal["sync", "stream", "poll"] = "sync"
     headers: dict[str, str] = field(default_factory=dict)
     timeout_seconds: float = 30
@@ -63,7 +66,7 @@ class GenericHttpAgentAdapter:
         try:
             response = await self._client.post(
                 request.url,
-                json=request.input,
+                json=_render_request(request),
                 headers=request.headers,
                 timeout=request.timeout_seconds,
             )
@@ -74,7 +77,7 @@ class GenericHttpAgentAdapter:
             elif request.mode == "poll":
                 output, tool_calls = await self._poll(request, response)
             else:
-                output, tool_calls = _parse_json(response)
+                output, tool_calls = _parse_json(response, request.response_path)
         except TargetProductError:
             raise
         except (httpx.TimeoutException, httpx.NetworkError) as error:
@@ -119,14 +122,61 @@ class GenericHttpAgentAdapter:
             await asyncio.sleep(request.poll_interval_seconds)
 
 
-def _parse_json(response: httpx.Response) -> tuple[dict[str, object], list[dict[str, object]]]:
+def _parse_json(
+    response: httpx.Response,
+    response_path: str = "output",
+) -> tuple[dict[str, object], list[dict[str, object]]]:
     try:
         payload = response.json()
     except json.JSONDecodeError as error:
         raise TargetProductError("Target response was not valid JSON") from error
     if not isinstance(payload, dict):
         raise TargetProductError("Target response must be a JSON object")
-    return _payload_output(payload)
+    selected = _resolve_path(payload, response_path)
+    output = selected if isinstance(selected, dict) else {"value": selected}
+    raw_calls = payload.get("tool_calls", [])
+    tool_calls = list(raw_calls) if isinstance(raw_calls, list) else []
+    return dict(output), [dict(call) for call in tool_calls if isinstance(call, dict)]
+
+
+def _render_request(request: AgentRequest) -> dict[str, object]:
+    template = request.request_template
+    if template is None:
+        return request.input
+    context: dict[str, object] = {"input": request.input, "env": request.variables}
+    rendered = _render_value(template, context)
+    if not isinstance(rendered, dict):
+        raise TargetProductError("Request template must render to a JSON object")
+    return rendered
+
+
+def _render_value(value: object, context: dict[str, object]) -> object:
+    if isinstance(value, dict):
+        return {str(key): _render_value(item, context) for key, item in value.items()}
+    if isinstance(value, list):
+        return [_render_value(item, context) for item in value]
+    if not isinstance(value, str):
+        return value
+    stripped = value.strip()
+    if stripped.startswith("{{") and stripped.endswith("}}"):
+        expression = stripped[2:-2].strip()
+        return _resolve_path(context, expression)
+    return value
+
+
+def _resolve_path(payload: object, path: str) -> object:
+    current = payload
+    for segment in path.split("."):
+        if isinstance(current, dict) and segment in current:
+            current = current[segment]
+        elif isinstance(current, list) and segment.isdigit():
+            index = int(segment)
+            if index >= len(current):
+                raise TargetProductError(f"Response path was not found: {path}")
+            current = current[index]
+        else:
+            raise TargetProductError(f"Response path was not found: {path}")
+    return current
 
 
 def _payload_output(

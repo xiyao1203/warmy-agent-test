@@ -3,8 +3,10 @@ from uuid import UUID
 
 from sqlalchemy import (
     JSON,
+    Boolean,
     CheckConstraint,
     DateTime,
+    Float,
     ForeignKey,
     Index,
     Integer,
@@ -118,3 +120,50 @@ class RunEventModel(Base):
     cost: Mapped[float | None] = mapped_column(nullable=True)
     metadata_json: Mapped[dict | None] = mapped_column("metadata", JSON, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+
+
+class RunEvaluationModel(Base):
+    __tablename__ = "run_evaluations"
+    __table_args__ = (
+        UniqueConstraint("project_id", "run_id", name="uq_run_evaluations_project_run"),
+        UniqueConstraint("project_id", "id", name="uq_run_evaluations_project_id"),
+    )
+
+    id: Mapped[UUID] = mapped_column(primary_key=True)
+    project_id: Mapped[UUID] = mapped_column(ForeignKey("projects.id", ondelete="CASCADE"))
+    run_id: Mapped[UUID] = mapped_column(ForeignKey("runs.id", ondelete="CASCADE"))
+    status: Mapped[str] = mapped_column(String(32))
+    aggregate_score: Mapped[float | None] = mapped_column(Float, nullable=True)
+    pass_rate: Mapped[float] = mapped_column(Float)
+    total_cost: Mapped[float | None] = mapped_column(Float, nullable=True)
+    token_usage: Mapped[dict] = mapped_column(JSON)
+    summary: Mapped[dict] = mapped_column(JSON)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+
+class ScoreModel(Base):
+    __tablename__ = "scores"
+    __table_args__ = (
+        UniqueConstraint(
+            "evaluation_id", "run_case_id", "scorer_version_id", name="uq_scores_source"
+        ),
+        Index("ix_scores_project_case", "project_id", "run_case_id"),
+    )
+
+    id: Mapped[UUID] = mapped_column(primary_key=True)
+    project_id: Mapped[UUID] = mapped_column(ForeignKey("projects.id", ondelete="CASCADE"))
+    evaluation_id: Mapped[UUID] = mapped_column(
+        ForeignKey("run_evaluations.id", ondelete="CASCADE")
+    )
+    run_case_id: Mapped[UUID] = mapped_column(ForeignKey("run_cases.id", ondelete="CASCADE"))
+    scorer_version_id: Mapped[UUID | None] = mapped_column(
+        ForeignKey("scorer_versions.id"), nullable=True
+    )
+    score: Mapped[float] = mapped_column(Float)
+    passed: Mapped[bool] = mapped_column(Boolean)
+    confidence: Mapped[float | None] = mapped_column(Float, nullable=True)
+    explanation: Mapped[str | None] = mapped_column(Text, nullable=True)
+    metadata_json: Mapped[dict] = mapped_column("metadata", JSON)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))

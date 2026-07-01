@@ -7,6 +7,8 @@ import {
   getDataset,
   listDatasetVersions,
   listTestCases,
+  importTestCases,
+  previewTestCaseImport,
 } from "./api";
 import { DatasetDetail } from "./dataset-detail";
 
@@ -82,6 +84,30 @@ export function DatasetDetailScreen({
           await deleteTestCase(projectId, datasetId, latestVersion.id, cid);
         }
         await refreshCases();
+      }}
+      onImport={async (file) => {
+        if (!latestVersion) throw new Error("请先创建草稿版本");
+        const format = file.name.endsWith(".jsonl")
+          ? "jsonl"
+          : file.name.endsWith(".csv")
+            ? "csv"
+            : "json";
+        await importTestCases(projectId, datasetId, latestVersion.id, {
+          content: await file.text(),
+          format,
+        });
+      }}
+      onPreviewImport={async (file) => {
+        if (!latestVersion) throw new Error("请先创建草稿版本");
+        const format = file.name.endsWith(".jsonl")
+          ? "jsonl"
+          : file.name.endsWith(".csv")
+            ? "csv"
+            : "json";
+        return previewTestCaseImport(projectId, datasetId, latestVersion.id, {
+          content: await file.text(),
+          format,
+        });
       }}
       onRefresh={refreshCases}
       projectId={projectId}

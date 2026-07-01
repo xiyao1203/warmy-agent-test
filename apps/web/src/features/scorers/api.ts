@@ -89,3 +89,29 @@ export async function deleteScorer(projectId: string, scorerId: string) {
   );
   if (!res.ok) throw await responseProblem(res, "删除评分器失败");
 }
+
+export async function trialScorer(
+  projectId: string,
+  scorerId: string,
+  payload: { input?: unknown; output: unknown; reference?: unknown },
+) {
+  const response = await fetch(
+    `${API_BASE}/api/v1/projects/${projectId}/scorers/${scorerId}/trial`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...(csrfHeaders() as Record<string, string>),
+      },
+      credentials: "include",
+      body: JSON.stringify(payload),
+    },
+  );
+  if (!response.ok) throw await responseProblem(response, "评分器试评失败");
+  return response.json() as Promise<{
+    score: number;
+    passed: boolean;
+    explanation: string;
+    confidence: number;
+  }>;
+}

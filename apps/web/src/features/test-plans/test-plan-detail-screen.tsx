@@ -4,6 +4,8 @@ import { useQuery } from "@tanstack/react-query";
 
 import { listAgentVersions, listAgents } from "@/features/agents";
 import { listDatasets, listDatasetVersions } from "@/features/datasets";
+import { listScorers } from "@/features/scorers/api";
+import { listGates, listGateRuns } from "@/features/gates/api";
 
 import {
   createTestPlanVersion,
@@ -61,6 +63,9 @@ export function TestPlanDetailScreen({
       agentVersions={assetsQuery.data.agentVersions}
       datasetVersions={assetsQuery.data.datasetVersions}
       environments={assetsQuery.data.environments}
+      gates={assetsQuery.data.gates}
+      runs={assetsQuery.data.runs}
+      scorers={assetsQuery.data.scorers}
       onCreateVersion={async (payload) => {
         await createTestPlanVersion(projectId, planId, payload);
         await versionsQuery.refetch();
@@ -83,12 +88,19 @@ async function loadAssetOptions(projectId: string): Promise<{
   agentVersions: VersionAssetOption[];
   datasetVersions: VersionAssetOption[];
   environments: VersionAssetOption[];
+  gates: VersionAssetOption[];
+  runs: VersionAssetOption[];
+  scorers: VersionAssetOption[];
 }> {
-  const [agentPage, datasetPage, environments] = await Promise.all([
-    listAgents(projectId),
-    listDatasets(projectId),
-    listEnvironmentTemplates(projectId),
-  ]);
+  const [agentPage, datasetPage, environments, scorers, gates, runs] =
+    await Promise.all([
+      listAgents(projectId),
+      listDatasets(projectId),
+      listEnvironmentTemplates(projectId),
+      listScorers(projectId),
+      listGates(projectId),
+      listGateRuns(projectId),
+    ]);
   const agentVersions = (
     await Promise.all(
       agentPage.items.map(async (agent) =>
@@ -117,6 +129,12 @@ async function loadAssetOptions(projectId: string): Promise<{
     environments: environments.map((template) => ({
       id: template.id,
       label: template.name,
+    })),
+    scorers: scorers.map((scorer) => ({ id: scorer.id, label: scorer.name })),
+    gates: gates.map((gate) => ({ id: gate.id, label: gate.name })),
+    runs: runs.map((run) => ({
+      id: run.id,
+      label: `${run.status} · ${new Date(run.created_at).toLocaleString("zh-CN")}`,
     })),
   };
 }

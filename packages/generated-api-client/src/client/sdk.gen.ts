@@ -48,6 +48,9 @@ import type {
   CreateConfigApiV1ProjectsProjectIdModelConfigsPostData,
   CreateConfigApiV1ProjectsProjectIdModelConfigsPostErrors,
   CreateConfigApiV1ProjectsProjectIdModelConfigsPostResponses,
+  CreateCredentialApiV1ProjectsProjectIdCredentialsPostData,
+  CreateCredentialApiV1ProjectsProjectIdCredentialsPostErrors,
+  CreateCredentialApiV1ProjectsProjectIdCredentialsPostResponses,
   CreateDatasetApiV1ProjectsProjectIdDatasetsPostData,
   CreateDatasetApiV1ProjectsProjectIdDatasetsPostErrors,
   CreateDatasetApiV1ProjectsProjectIdDatasetsPostResponses,
@@ -116,6 +119,9 @@ import type {
   DeleteConfigApiV1ProjectsProjectIdModelConfigsModelConfigIdDeleteData,
   DeleteConfigApiV1ProjectsProjectIdModelConfigsModelConfigIdDeleteErrors,
   DeleteConfigApiV1ProjectsProjectIdModelConfigsModelConfigIdDeleteResponses,
+  DeleteCredentialApiV1ProjectsProjectIdCredentialsCredentialIdDeleteData,
+  DeleteCredentialApiV1ProjectsProjectIdCredentialsCredentialIdDeleteErrors,
+  DeleteCredentialApiV1ProjectsProjectIdCredentialsCredentialIdDeleteResponses,
   DeleteDatasetApiV1ProjectsProjectIdDatasetsDatasetIdDeleteData,
   DeleteDatasetApiV1ProjectsProjectIdDatasetsDatasetIdDeleteErrors,
   DeleteDatasetApiV1ProjectsProjectIdDatasetsDatasetIdDeleteResponses,
@@ -264,6 +270,9 @@ import type {
   ListConfigsApiV1ProjectsProjectIdModelConfigsGetData,
   ListConfigsApiV1ProjectsProjectIdModelConfigsGetErrors,
   ListConfigsApiV1ProjectsProjectIdModelConfigsGetResponses,
+  ListCredentialsApiV1ProjectsProjectIdCredentialsGetData,
+  ListCredentialsApiV1ProjectsProjectIdCredentialsGetErrors,
+  ListCredentialsApiV1ProjectsProjectIdCredentialsGetResponses,
   ListDatasetsApiV1ProjectsProjectIdDatasetsGetData,
   ListDatasetsApiV1ProjectsProjectIdDatasetsGetErrors,
   ListDatasetsApiV1ProjectsProjectIdDatasetsGetResponses,
@@ -332,6 +341,9 @@ import type {
   PostMessageApiV1ProjectsProjectIdTestAgentSessionsSessionIdMessagesPostData,
   PostMessageApiV1ProjectsProjectIdTestAgentSessionsSessionIdMessagesPostErrors,
   PostMessageApiV1ProjectsProjectIdTestAgentSessionsSessionIdMessagesPostResponses,
+  PreviewImportApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdImportsPreviewPostData,
+  PreviewImportApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdImportsPreviewPostErrors,
+  PreviewImportApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdImportsPreviewPostResponses,
   ProjectAuditApiV1ProjectsProjectIdAuditGetData,
   ProjectAuditApiV1ProjectsProjectIdAuditGetErrors,
   ProjectAuditApiV1ProjectsProjectIdAuditGetResponses,
@@ -392,6 +404,9 @@ import type {
   TestConnectionApiV1ProjectsProjectIdModelConfigsModelConfigIdTestConnectionPostData,
   TestConnectionApiV1ProjectsProjectIdModelConfigsModelConfigIdTestConnectionPostErrors,
   TestConnectionApiV1ProjectsProjectIdModelConfigsModelConfigIdTestConnectionPostResponses,
+  TrialScorerApiV1ProjectsProjectIdScorersScorerIdTrialPostData,
+  TrialScorerApiV1ProjectsProjectIdScorersScorerIdTrialPostErrors,
+  TrialScorerApiV1ProjectsProjectIdScorersScorerIdTrialPostResponses,
   TriggerScanApiV1ProjectsProjectIdSecurityScansPostData,
   TriggerScanApiV1ProjectsProjectIdSecurityScansPostErrors,
   TriggerScanApiV1ProjectsProjectIdSecurityScansPostResponses,
@@ -440,6 +455,9 @@ import type {
   UploadArtifactApiV1ProjectsProjectIdRunsRunIdArtifactsPostData,
   UploadArtifactApiV1ProjectsProjectIdRunsRunIdArtifactsPostErrors,
   UploadArtifactApiV1ProjectsProjectIdRunsRunIdArtifactsPostResponses,
+  ValidateConnectionApiV1ProjectsProjectIdAgentsAgentIdVersionsVersionIdValidateConnectionPostData,
+  ValidateConnectionApiV1ProjectsProjectIdAgentsAgentIdVersionsVersionIdValidateConnectionPostErrors,
+  ValidateConnectionApiV1ProjectsProjectIdAgentsAgentIdVersionsVersionIdValidateConnectionPostResponses,
 } from "./types.gen";
 
 export type Options<
@@ -926,6 +944,33 @@ export const publishVersionApiV1ProjectsProjectIdAgentsAgentIdVersionsVersionIdP
     });
 
 /**
+ * Validate Connection
+ */
+export const validateConnectionApiV1ProjectsProjectIdAgentsAgentIdVersionsVersionIdValidateConnectionPost =
+  <ThrowOnError extends boolean = false>(
+    options: Options<
+      ValidateConnectionApiV1ProjectsProjectIdAgentsAgentIdVersionsVersionIdValidateConnectionPostData,
+      ThrowOnError
+    >,
+  ): RequestResult<
+    ValidateConnectionApiV1ProjectsProjectIdAgentsAgentIdVersionsVersionIdValidateConnectionPostResponses,
+    ValidateConnectionApiV1ProjectsProjectIdAgentsAgentIdVersionsVersionIdValidateConnectionPostErrors,
+    ThrowOnError
+  > =>
+    (options.client ?? client).post<
+      ValidateConnectionApiV1ProjectsProjectIdAgentsAgentIdVersionsVersionIdValidateConnectionPostResponses,
+      ValidateConnectionApiV1ProjectsProjectIdAgentsAgentIdVersionsVersionIdValidateConnectionPostErrors,
+      ThrowOnError
+    >({
+      url: "/api/v1/projects/{project_id}/agents/{agent_id}/versions/{version_id}/validate-connection",
+      ...options,
+      headers: {
+        "Content-Type": "application/json",
+        ...options.headers,
+      },
+    });
+
+/**
  * Set Baseline Version Endpoint
  */
 export const setBaselineVersionEndpointApiV1ProjectsProjectIdAgentsAgentIdBaselineVersionPatch =
@@ -1058,6 +1103,78 @@ export const projectAuditApiV1ProjectsProjectIdAuditGet = <
     ProjectAuditApiV1ProjectsProjectIdAuditGetErrors,
     ThrowOnError
   >({ url: "/api/v1/projects/{project_id}/audit", ...options });
+
+/**
+ * List Credentials
+ */
+export const listCredentialsApiV1ProjectsProjectIdCredentialsGet = <
+  ThrowOnError extends boolean = false,
+>(
+  options: Options<
+    ListCredentialsApiV1ProjectsProjectIdCredentialsGetData,
+    ThrowOnError
+  >,
+): RequestResult<
+  ListCredentialsApiV1ProjectsProjectIdCredentialsGetResponses,
+  ListCredentialsApiV1ProjectsProjectIdCredentialsGetErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).get<
+    ListCredentialsApiV1ProjectsProjectIdCredentialsGetResponses,
+    ListCredentialsApiV1ProjectsProjectIdCredentialsGetErrors,
+    ThrowOnError
+  >({ url: "/api/v1/projects/{project_id}/credentials", ...options });
+
+/**
+ * Create Credential
+ */
+export const createCredentialApiV1ProjectsProjectIdCredentialsPost = <
+  ThrowOnError extends boolean = false,
+>(
+  options: Options<
+    CreateCredentialApiV1ProjectsProjectIdCredentialsPostData,
+    ThrowOnError
+  >,
+): RequestResult<
+  CreateCredentialApiV1ProjectsProjectIdCredentialsPostResponses,
+  CreateCredentialApiV1ProjectsProjectIdCredentialsPostErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).post<
+    CreateCredentialApiV1ProjectsProjectIdCredentialsPostResponses,
+    CreateCredentialApiV1ProjectsProjectIdCredentialsPostErrors,
+    ThrowOnError
+  >({
+    url: "/api/v1/projects/{project_id}/credentials",
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...options.headers,
+    },
+  });
+
+/**
+ * Delete Credential
+ */
+export const deleteCredentialApiV1ProjectsProjectIdCredentialsCredentialIdDelete =
+  <ThrowOnError extends boolean = false>(
+    options: Options<
+      DeleteCredentialApiV1ProjectsProjectIdCredentialsCredentialIdDeleteData,
+      ThrowOnError
+    >,
+  ): RequestResult<
+    DeleteCredentialApiV1ProjectsProjectIdCredentialsCredentialIdDeleteResponses,
+    DeleteCredentialApiV1ProjectsProjectIdCredentialsCredentialIdDeleteErrors,
+    ThrowOnError
+  > =>
+    (options.client ?? client).delete<
+      DeleteCredentialApiV1ProjectsProjectIdCredentialsCredentialIdDeleteResponses,
+      DeleteCredentialApiV1ProjectsProjectIdCredentialsCredentialIdDeleteErrors,
+      ThrowOnError
+    >({
+      url: "/api/v1/projects/{project_id}/credentials/{credential_id}",
+      ...options,
+    });
 
 /**
  * List Datasets
@@ -1391,6 +1508,33 @@ export const importCasesApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionId
       ThrowOnError
     >({
       url: "/api/v1/projects/{project_id}/datasets/{dataset_id}/versions/{version_id}/import",
+      ...options,
+      headers: {
+        "Content-Type": "application/json",
+        ...options.headers,
+      },
+    });
+
+/**
+ * Preview Import
+ */
+export const previewImportApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdImportsPreviewPost =
+  <ThrowOnError extends boolean = false>(
+    options: Options<
+      PreviewImportApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdImportsPreviewPostData,
+      ThrowOnError
+    >,
+  ): RequestResult<
+    PreviewImportApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdImportsPreviewPostResponses,
+    PreviewImportApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdImportsPreviewPostErrors,
+    ThrowOnError
+  > =>
+    (options.client ?? client).post<
+      PreviewImportApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdImportsPreviewPostResponses,
+      PreviewImportApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdImportsPreviewPostErrors,
+      ThrowOnError
+    >({
+      url: "/api/v1/projects/{project_id}/datasets/{dataset_id}/versions/{version_id}/imports:preview",
       ...options,
       headers: {
         "Content-Type": "application/json",
@@ -2845,6 +2989,34 @@ export const updateScorerApiV1ProjectsProjectIdScorersScorerIdPatch = <
     ThrowOnError
   >({
     url: "/api/v1/projects/{project_id}/scorers/{scorer_id}",
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...options.headers,
+    },
+  });
+
+/**
+ * Trial Scorer
+ */
+export const trialScorerApiV1ProjectsProjectIdScorersScorerIdTrialPost = <
+  ThrowOnError extends boolean = false,
+>(
+  options: Options<
+    TrialScorerApiV1ProjectsProjectIdScorersScorerIdTrialPostData,
+    ThrowOnError
+  >,
+): RequestResult<
+  TrialScorerApiV1ProjectsProjectIdScorersScorerIdTrialPostResponses,
+  TrialScorerApiV1ProjectsProjectIdScorersScorerIdTrialPostErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).post<
+    TrialScorerApiV1ProjectsProjectIdScorersScorerIdTrialPostResponses,
+    TrialScorerApiV1ProjectsProjectIdScorersScorerIdTrialPostErrors,
+    ThrowOnError
+  >({
+    url: "/api/v1/projects/{project_id}/scorers/{scorer_id}/trial",
     ...options,
     headers: {
       "Content-Type": "application/json",

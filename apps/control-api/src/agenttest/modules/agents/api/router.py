@@ -106,6 +106,10 @@ class PublishVersionExecutor(Protocol):
     ) -> AgentVersion: ...
 
 
+class ConnectionValidator(Protocol):
+    async def validate(self, config, probe_input: dict[str, object]): ...
+
+
 @dataclass(frozen=True, slots=True)
 class AgentApiDependencies:
     list_agents: ListAgentsExecutor
@@ -118,6 +122,7 @@ class AgentApiDependencies:
     update_version: UpdateVersionExecutor
     publish_version: PublishVersionExecutor
     uow_factory: UnitOfWorkFactory = null_uow_factory
+    connection_validator: ConnectionValidator | None = None
 
 
 def create_agent_router(
@@ -389,6 +394,42 @@ def create_agent_router(
         except ValueError as error:
             return conflict(str(error))
         return AgentVersionResponse.from_domain(version)
+
+    @router.post(
+        "/{agent_id}/versions/{version_id}/validate-connection",
+        response_model=None,
+    )
+    async def validate_connection(
+        request: Request,
+        project_id: UUID,
+        agent_id: UUID,
+        version_id: UUID,
+        payload: dict[str, object],
+        x_csrf_token: str | None = Header(default=None),
+    ) -> dict[str, object] | JSONResponse:
+        actor = await writer(request, x_csrf_token)
+        if isinstance(actor, JSONResponse):
+            return actor
+        try:
+            version = await project_version(actor, project_id, agent_id, version_id)
+            if dependencies.connection_validator is None:
+                return problem_response(503, "Runtime unavailable", "连接测试运行时不可用")
+            probe = payload.get("input", payload)
+            if not isinstance(probe, dict):
+                return invalid_request("input must be an object")
+            result = await dependencies.connection_validator.validate(version.config, probe)
+            return {
+                "ok": True,
+                "status_code": result.status_code,
+                "latency_ms": result.latency_ms,
+                "response_preview": result.response_preview,
+            }
+        except (AgentNotFoundError, AgentVersionNotFoundError, ProjectNotFoundError):
+            return asset_not_found()
+        except (ValueError, RuntimeError) as error:
+            return invalid_request(str(error))
+        except Exception:
+            return problem_response(502, "Connection failed", "目标 Agent 连接失败")
 
     @router.post(
         "/{agent_id}/versions/{version_id}/publish",

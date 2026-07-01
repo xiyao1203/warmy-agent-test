@@ -244,6 +244,15 @@ class PublishTestPlanVersionHandler:
         version = await _required_version(self._versions, command.version_id)
         plan = await _required_plan(self._test_plans, version.test_plan_id)
         await self._project_access.ensure_editor(actor, plan.project_id)
+        missing: list[str] = []
+        if version.agent_version_id is None:
+            missing.append("Agent 版本")
+        if version.dataset_version_id is None:
+            missing.append("数据集版本")
+        if not version.config.observation_only and not version.config.scorer_ids:
+            missing.append("评分器（或显式开启仅观察模式）")
+        if missing:
+            raise ValueError(f"测试计划尚未就绪：缺少 {', '.join(missing)}")
         version.publish()
         await self._versions.save(version)
         await _record(
