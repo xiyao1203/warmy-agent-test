@@ -96,7 +96,7 @@ export function UserDropdown({
             role="menuitem"
             type="button"
           >
-            <LogOut className="size-4" />
+            <LogOut className="size-4 text-[var(--muted)]" />
             <div>
               <p className="font-medium">退出登录</p>
               <p className="text-xs text-[var(--muted)]">
