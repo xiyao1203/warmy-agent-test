@@ -218,6 +218,10 @@ export type ApplyRunCaseResultRequest = {
    */
   run_case_id: string;
   /**
+   * Scores
+   */
+  scores?: Array<ApplyRunCaseScoreRequest>;
+  /**
    * Status
    */
   status: string;
@@ -227,6 +231,36 @@ export type ApplyRunCaseResultRequest = {
   trace?: Array<{
     [key: string]: unknown;
   }>;
+};
+
+/**
+ * ApplyRunCaseScoreRequest
+ */
+export type ApplyRunCaseScoreRequest = {
+  /**
+   * Confidence
+   */
+  confidence?: number;
+  /**
+   * Explanation
+   */
+  explanation?: string;
+  /**
+   * Passed
+   */
+  passed: boolean;
+  /**
+   * Score
+   */
+  score: number;
+  /**
+   * Scorer Type
+   */
+  scorer_type: string;
+  /**
+   * Scorer Version Id
+   */
+  scorer_version_id: string;
 };
 
 /**
@@ -466,6 +500,20 @@ export type CreateEnvironmentTemplateRequest = {
    */
   name: string;
   template_type: TemplateType;
+};
+
+/**
+ * CreateEnvironmentVersionRequest
+ *
+ * Request body for creating a new environment version.
+ */
+export type CreateEnvironmentVersionRequest = {
+  /**
+   * Config
+   */
+  config?: {
+    [key: string]: unknown;
+  };
 };
 
 /**
@@ -925,6 +973,70 @@ export type EnvironmentTemplateResponse = {
    * Updated At
    */
   updated_at: string;
+};
+
+/**
+ * EnvironmentVersionListResponse
+ */
+export type EnvironmentVersionListResponse = {
+  /**
+   * Items
+   */
+  items: Array<EnvironmentVersionResponse>;
+  /**
+   * Next Cursor
+   */
+  next_cursor?: string | null;
+};
+
+/**
+ * EnvironmentVersionResponse
+ *
+ * Public response for an environment version (never includes secrets).
+ */
+export type EnvironmentVersionResponse = {
+  /**
+   * Config
+   */
+  config: {
+    [key: string]: unknown;
+  };
+  /**
+   * Created At
+   */
+  created_at: string;
+  /**
+   * Created By
+   */
+  created_by: string;
+  /**
+   * Environment Template Id
+   */
+  environment_template_id: string;
+  /**
+   * Id
+   */
+  id: string;
+  /**
+   * Project Id
+   */
+  project_id: string;
+  /**
+   * Published At
+   */
+  published_at: string | null;
+  /**
+   * Status
+   */
+  status: string;
+  /**
+   * Updated At
+   */
+  updated_at: string;
+  /**
+   * Version Number
+   */
+  version_number: number;
 };
 
 /**
@@ -1980,6 +2092,20 @@ export type UpdateEnvironmentTemplateRequest = {
    * Name
    */
   name?: string | null;
+};
+
+/**
+ * UpdateEnvironmentVersionRequest
+ *
+ * Request body for updating a draft environment version.
+ */
+export type UpdateEnvironmentVersionRequest = {
+  /**
+   * Config
+   */
+  config?: {
+    [key: string]: unknown;
+  } | null;
 };
 
 /**
@@ -4523,6 +4649,231 @@ export type UpdateTemplateApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdPa
 
 export type UpdateTemplateApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdPatchResponse =
   UpdateTemplateApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdPatchResponses[keyof UpdateTemplateApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdPatchResponses];
+
+export type ListVersionsApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdVersionsGetData =
+  {
+    body?: never;
+    path: {
+      /**
+       * Project Id
+       */
+      project_id: string;
+      /**
+       * Template Id
+       */
+      template_id: string;
+    };
+    query?: never;
+    url: "/api/v1/projects/{project_id}/environment-templates/{template_id}/versions";
+  };
+
+export type ListVersionsApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdVersionsGetErrors =
+  {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+  };
+
+export type ListVersionsApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdVersionsGetError =
+  ListVersionsApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdVersionsGetErrors[keyof ListVersionsApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdVersionsGetErrors];
+
+export type ListVersionsApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdVersionsGetResponses =
+  {
+    /**
+     * Successful Response
+     */
+    200: EnvironmentVersionListResponse;
+  };
+
+export type ListVersionsApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdVersionsGetResponse =
+  ListVersionsApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdVersionsGetResponses[keyof ListVersionsApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdVersionsGetResponses];
+
+export type CreateVersionApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdVersionsPostData =
+  {
+    body: CreateEnvironmentVersionRequest;
+    headers?: {
+      /**
+       * X-Csrf-Token
+       */
+      "x-csrf-token"?: string | null;
+    };
+    path: {
+      /**
+       * Project Id
+       */
+      project_id: string;
+      /**
+       * Template Id
+       */
+      template_id: string;
+    };
+    query?: never;
+    url: "/api/v1/projects/{project_id}/environment-templates/{template_id}/versions";
+  };
+
+export type CreateVersionApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdVersionsPostErrors =
+  {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+  };
+
+export type CreateVersionApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdVersionsPostError =
+  CreateVersionApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdVersionsPostErrors[keyof CreateVersionApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdVersionsPostErrors];
+
+export type CreateVersionApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdVersionsPostResponses =
+  {
+    /**
+     * Successful Response
+     */
+    201: EnvironmentVersionResponse;
+  };
+
+export type CreateVersionApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdVersionsPostResponse =
+  CreateVersionApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdVersionsPostResponses[keyof CreateVersionApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdVersionsPostResponses];
+
+export type GetVersionApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdVersionsVersionIdGetData =
+  {
+    body?: never;
+    path: {
+      /**
+       * Project Id
+       */
+      project_id: string;
+      /**
+       * Template Id
+       */
+      template_id: string;
+      /**
+       * Version Id
+       */
+      version_id: string;
+    };
+    query?: never;
+    url: "/api/v1/projects/{project_id}/environment-templates/{template_id}/versions/{version_id}";
+  };
+
+export type GetVersionApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdVersionsVersionIdGetErrors =
+  {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+  };
+
+export type GetVersionApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdVersionsVersionIdGetError =
+  GetVersionApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdVersionsVersionIdGetErrors[keyof GetVersionApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdVersionsVersionIdGetErrors];
+
+export type GetVersionApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdVersionsVersionIdGetResponses =
+  {
+    /**
+     * Successful Response
+     */
+    200: EnvironmentVersionResponse;
+  };
+
+export type GetVersionApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdVersionsVersionIdGetResponse =
+  GetVersionApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdVersionsVersionIdGetResponses[keyof GetVersionApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdVersionsVersionIdGetResponses];
+
+export type UpdateVersionApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdVersionsVersionIdPatchData =
+  {
+    body: UpdateEnvironmentVersionRequest;
+    headers?: {
+      /**
+       * X-Csrf-Token
+       */
+      "x-csrf-token"?: string | null;
+    };
+    path: {
+      /**
+       * Project Id
+       */
+      project_id: string;
+      /**
+       * Template Id
+       */
+      template_id: string;
+      /**
+       * Version Id
+       */
+      version_id: string;
+    };
+    query?: never;
+    url: "/api/v1/projects/{project_id}/environment-templates/{template_id}/versions/{version_id}";
+  };
+
+export type UpdateVersionApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdVersionsVersionIdPatchErrors =
+  {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+  };
+
+export type UpdateVersionApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdVersionsVersionIdPatchError =
+  UpdateVersionApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdVersionsVersionIdPatchErrors[keyof UpdateVersionApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdVersionsVersionIdPatchErrors];
+
+export type UpdateVersionApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdVersionsVersionIdPatchResponses =
+  {
+    /**
+     * Successful Response
+     */
+    200: EnvironmentVersionResponse;
+  };
+
+export type UpdateVersionApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdVersionsVersionIdPatchResponse =
+  UpdateVersionApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdVersionsVersionIdPatchResponses[keyof UpdateVersionApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdVersionsVersionIdPatchResponses];
+
+export type PublishVersionApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdVersionsVersionIdPublishPostData =
+  {
+    body?: never;
+    headers?: {
+      /**
+       * X-Csrf-Token
+       */
+      "x-csrf-token"?: string | null;
+    };
+    path: {
+      /**
+       * Project Id
+       */
+      project_id: string;
+      /**
+       * Template Id
+       */
+      template_id: string;
+      /**
+       * Version Id
+       */
+      version_id: string;
+    };
+    query?: never;
+    url: "/api/v1/projects/{project_id}/environment-templates/{template_id}/versions/{version_id}/publish";
+  };
+
+export type PublishVersionApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdVersionsVersionIdPublishPostErrors =
+  {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+  };
+
+export type PublishVersionApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdVersionsVersionIdPublishPostError =
+  PublishVersionApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdVersionsVersionIdPublishPostErrors[keyof PublishVersionApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdVersionsVersionIdPublishPostErrors];
+
+export type PublishVersionApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdVersionsVersionIdPublishPostResponses =
+  {
+    /**
+     * Successful Response
+     */
+    200: EnvironmentVersionResponse;
+  };
+
+export type PublishVersionApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdVersionsVersionIdPublishPostResponse =
+  PublishVersionApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdVersionsVersionIdPublishPostResponses[keyof PublishVersionApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdVersionsVersionIdPublishPostResponses];
 
 export type ListSnapshotsApiV1ProjectsProjectIdEnvironmentsTemplateIdSnapshotsGetData =
   {

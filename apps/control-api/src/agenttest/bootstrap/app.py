@@ -85,8 +85,16 @@ from agenttest.modules.environments.application.queries import (
     GetEnvironmentTemplateHandler,
     ListEnvironmentTemplatesHandler,
 )
+from agenttest.modules.environments.application.versions import (
+    CreateEnvironmentVersionHandler,
+    GetEnvironmentVersionHandler,
+    ListEnvironmentVersionsHandler,
+    PublishEnvironmentVersionHandler,
+    UpdateEnvironmentVersionHandler,
+)
 from agenttest.modules.environments.infrastructure.persistence.repositories import (
     SqlAlchemyEnvironmentTemplateRepository,
+    SqlAlchemyEnvironmentVersionRepository,
 )
 from agenttest.modules.feedback.api.router import (
     FeedbackApiDependencies,
@@ -914,6 +922,7 @@ def build_environment_dependencies(settings: Settings) -> EnvironmentApiDependen
     engine = create_database_engine(str(settings.database_url))
     session_factory = create_session_factory(engine)
     templates = SqlAlchemyEnvironmentTemplateRepository(session_factory)
+    versions = SqlAlchemyEnvironmentVersionRepository(session_factory)
     projects = SqlAlchemyProjectRepository(session_factory)
     access = ProjectAccessAdapter(projects)
     audit = AuditRecorder(SqlAlchemyAuditRepository(session_factory))
@@ -937,6 +946,34 @@ def build_environment_dependencies(settings: Settings) -> EnvironmentApiDependen
             audit=audit,
         ),
         delete_template=DeleteEnvironmentTemplateHandler(
+            templates=templates,
+            project_access=access,
+            audit=audit,
+        ),
+        list_versions=ListEnvironmentVersionsHandler(
+            versions=versions,
+            templates=templates,
+            project_access=access,
+        ),
+        get_version=GetEnvironmentVersionHandler(
+            versions=versions,
+            templates=templates,
+            project_access=access,
+        ),
+        create_version=CreateEnvironmentVersionHandler(
+            versions=versions,
+            templates=templates,
+            project_access=access,
+            audit=audit,
+        ),
+        update_version=UpdateEnvironmentVersionHandler(
+            versions=versions,
+            templates=templates,
+            project_access=access,
+            audit=audit,
+        ),
+        publish_version=PublishEnvironmentVersionHandler(
+            versions=versions,
             templates=templates,
             project_access=access,
             audit=audit,

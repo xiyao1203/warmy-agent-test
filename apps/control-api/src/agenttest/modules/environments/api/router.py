@@ -12,15 +12,26 @@ from fastapi.responses import JSONResponse, Response
 from agenttest.bootstrap.settings import Settings
 from agenttest.modules.environments.api.schemas import (
     CreateEnvironmentTemplateRequest,
+    CreateEnvironmentVersionRequest,
     EnvironmentTemplateListResponse,
     EnvironmentTemplateResponse,
+    EnvironmentVersionListResponse,
+    EnvironmentVersionResponse,
     UpdateEnvironmentTemplateRequest,
+    UpdateEnvironmentVersionRequest,
 )
 from agenttest.modules.environments.application.commands import (
     CreateEnvironmentTemplateCommand,
     DeleteEnvironmentTemplateCommand,
     EnvironmentTemplateNotFoundError,
     UpdateEnvironmentTemplateCommand,
+)
+from agenttest.modules.environments.application.versions import (
+    CreateEnvironmentVersionCommand,
+    EnvironmentVersionNotFoundError,
+    EnvironmentVersionRecord,
+    PublishEnvironmentVersionCommand,
+    UpdateEnvironmentVersionCommand,
 )
 from agenttest.modules.environments.domain.entities import (
     EnvironmentTemplate,
@@ -85,6 +96,49 @@ class DeleteTemplateExecutor(Protocol):
     ) -> None: ...
 
 
+class ListVersionsExecutor(Protocol):
+    async def execute(
+        self,
+        actor: User,
+        template_id: EnvironmentTemplateId,
+        project_id: ProjectId,
+    ) -> list[EnvironmentVersionRecord]: ...
+
+
+class GetVersionExecutor(Protocol):
+    async def execute(
+        self,
+        actor: User,
+        version_id: UUID,
+        template_id: EnvironmentTemplateId,
+        project_id: ProjectId,
+    ) -> EnvironmentVersionRecord: ...
+
+
+class CreateVersionExecutor(Protocol):
+    async def execute(
+        self,
+        actor: User,
+        command: CreateEnvironmentVersionCommand,
+    ) -> EnvironmentVersionRecord: ...
+
+
+class UpdateVersionExecutor(Protocol):
+    async def execute(
+        self,
+        actor: User,
+        command: UpdateEnvironmentVersionCommand,
+    ) -> EnvironmentVersionRecord: ...
+
+
+class PublishVersionExecutor(Protocol):
+    async def execute(
+        self,
+        actor: User,
+        command: PublishEnvironmentVersionCommand,
+    ) -> EnvironmentVersionRecord: ...
+
+
 @dataclass(frozen=True, slots=True)
 class EnvironmentApiDependencies:
     list_templates: ListTemplatesExecutor
@@ -92,6 +146,11 @@ class EnvironmentApiDependencies:
     create_template: CreateTemplateExecutor
     update_template: UpdateTemplateExecutor
     delete_template: DeleteTemplateExecutor
+    list_versions: ListVersionsExecutor | None = None
+    get_version: GetVersionExecutor | None = None
+    create_version: CreateVersionExecutor | None = None
+    update_version: UpdateVersionExecutor | None = None
+    publish_version: PublishVersionExecutor | None = None
     uow_factory: UnitOfWorkFactory = null_uow_factory
 
 
@@ -272,7 +331,192 @@ def create_environment_router(
             return permission_denied()
         return Response(status_code=204)
 
+    # ── Version endpoints ────────────────────────────────────────────────
+
+    @router.get(
+        "/{template_id}/versions",
+        response_model=EnvironmentVersionListResponse,
+    )
+    async def list_versions(
+        request: Request,
+        project_id: UUID,
+        template_id: UUID,
+    ) -> EnvironmentVersionListResponse | JSONResponse:
+        if dependencies.list_versions is None:
+            return JSONResponse(
+                status_code=503,
+                content={"detail": "Version management unavailable"},
+            )
+        actor = await actor_for(request)
+        if isinstance(actor, JSONResponse):
+            return actor
+        try:
+            items = await dependencies.list_versions.execute(
+                actor,
+                EnvironmentTemplateId(template_id),
+                ProjectId(project_id),
+            )
+        except (EnvironmentVersionNotFoundError, ProjectNotFoundError):
+            return asset_not_found()
+        return EnvironmentVersionListResponse(items=[_version_response(item) for item in items])
+
+    @router.post(
+        "/{template_id}/versions",
+        status_code=201,
+        response_model=EnvironmentVersionResponse,
+    )
+    async def create_version(
+        request: Request,
+        project_id: UUID,
+        template_id: UUID,
+        payload: CreateEnvironmentVersionRequest,
+        x_csrf_token: str | None = Header(default=None),
+    ) -> EnvironmentVersionResponse | JSONResponse:
+        if dependencies.create_version is None:
+            return JSONResponse(
+                status_code=503,
+                content={"detail": "Version management unavailable"},
+            )
+        actor = await writer(request, x_csrf_token)
+        if isinstance(actor, JSONResponse):
+            return actor
+        try:
+            async with dependencies.uow_factory():
+                record = await dependencies.create_version.execute(
+                    actor,
+                    CreateEnvironmentVersionCommand(
+                        template_id=EnvironmentTemplateId(template_id),
+                        project_id=ProjectId(project_id),
+                        config=payload.config,
+                    ),
+                )
+        except (EnvironmentVersionNotFoundError, ProjectNotFoundError):
+            return asset_not_found()
+        except PermissionError:
+            return permission_denied()
+        return _version_response(record)
+
+    @router.get(
+        "/{template_id}/versions/{version_id}",
+        response_model=EnvironmentVersionResponse,
+    )
+    async def get_version(
+        request: Request,
+        project_id: UUID,
+        template_id: UUID,
+        version_id: UUID,
+    ) -> EnvironmentVersionResponse | JSONResponse:
+        if dependencies.get_version is None:
+            return JSONResponse(
+                status_code=503,
+                content={"detail": "Version management unavailable"},
+            )
+        actor = await actor_for(request)
+        if isinstance(actor, JSONResponse):
+            return actor
+        try:
+            record = await dependencies.get_version.execute(
+                actor,
+                version_id,
+                EnvironmentTemplateId(template_id),
+                ProjectId(project_id),
+            )
+        except (EnvironmentVersionNotFoundError, ProjectNotFoundError):
+            return asset_not_found()
+        return _version_response(record)
+
+    @router.patch(
+        "/{template_id}/versions/{version_id}",
+        response_model=EnvironmentVersionResponse,
+    )
+    async def update_version(
+        request: Request,
+        project_id: UUID,
+        template_id: UUID,
+        version_id: UUID,
+        payload: UpdateEnvironmentVersionRequest,
+        x_csrf_token: str | None = Header(default=None),
+    ) -> EnvironmentVersionResponse | JSONResponse:
+        if dependencies.update_version is None:
+            return JSONResponse(
+                status_code=503,
+                content={"detail": "Version management unavailable"},
+            )
+        actor = await writer(request, x_csrf_token)
+        if isinstance(actor, JSONResponse):
+            return actor
+        try:
+            async with dependencies.uow_factory():
+                record = await dependencies.update_version.execute(
+                    actor,
+                    UpdateEnvironmentVersionCommand(
+                        version_id=version_id,
+                        template_id=EnvironmentTemplateId(template_id),
+                        project_id=ProjectId(project_id),
+                        config=payload.config,
+                    ),
+                )
+        except (EnvironmentVersionNotFoundError, ProjectNotFoundError):
+            return asset_not_found()
+        except PermissionError:
+            return permission_denied()
+        except ValueError as error:
+            return invalid_request(str(error))
+        return _version_response(record)
+
+    @router.post(
+        "/{template_id}/versions/{version_id}/publish",
+        response_model=EnvironmentVersionResponse,
+    )
+    async def publish_version(
+        request: Request,
+        project_id: UUID,
+        template_id: UUID,
+        version_id: UUID,
+        x_csrf_token: str | None = Header(default=None),
+    ) -> EnvironmentVersionResponse | JSONResponse:
+        if dependencies.publish_version is None:
+            return JSONResponse(
+                status_code=503,
+                content={"detail": "Version management unavailable"},
+            )
+        actor = await writer(request, x_csrf_token)
+        if isinstance(actor, JSONResponse):
+            return actor
+        try:
+            async with dependencies.uow_factory():
+                record = await dependencies.publish_version.execute(
+                    actor,
+                    PublishEnvironmentVersionCommand(
+                        version_id=version_id,
+                        template_id=EnvironmentTemplateId(template_id),
+                        project_id=ProjectId(project_id),
+                    ),
+                )
+        except (EnvironmentVersionNotFoundError, ProjectNotFoundError):
+            return asset_not_found()
+        except PermissionError:
+            return permission_denied()
+        except ValueError as error:
+            return invalid_request(str(error))
+        return _version_response(record)
+
     return router
+
+
+def _version_response(record: EnvironmentVersionRecord) -> EnvironmentVersionResponse:
+    return EnvironmentVersionResponse(
+        id=record.id,
+        project_id=record.project_id,
+        environment_template_id=record.environment_template_id,
+        version_number=record.version_number,
+        status=record.status,
+        config=record.config,
+        published_at=record.published_at,
+        created_by=record.created_by,
+        created_at=record.created_at,
+        updated_at=record.updated_at,
+    )
 
 
 def authentication_required() -> JSONResponse:

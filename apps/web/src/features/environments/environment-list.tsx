@@ -2,7 +2,10 @@
 
 import type {
   CreateEnvironmentTemplateRequest,
+  CreateEnvironmentVersionRequest,
   EnvironmentTemplateResponse,
+  EnvironmentVersionResponse,
+  UpdateEnvironmentVersionRequest,
 } from "@warmy/generated-api-client";
 import { Cog, Plus } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -29,7 +32,12 @@ import {
 import { Skeleton } from "@/components/uiverse";
 
 import type { CredentialBinding } from "./api";
-import { createCredentialBinding, listCredentialBindings } from "./api";
+import {
+  createCredentialBinding,
+  listCredentialBindings,
+  listEnvironmentVersions,
+} from "./api";
+import { EnvironmentVersionDialog } from "./environment-version-dialog";
 
 type EnvironmentListProps = {
   environments?: EnvironmentTemplateResponse[];
@@ -37,6 +45,19 @@ type EnvironmentListProps = {
   loading?: boolean;
   onCreate?: (payload: CreateEnvironmentTemplateRequest) => Promise<unknown>;
   onDelete?: (templateId: string) => Promise<unknown>;
+  onCreateVersion?: (
+    templateId: string,
+    payload: CreateEnvironmentVersionRequest,
+  ) => Promise<EnvironmentVersionResponse>;
+  onUpdateVersion?: (
+    templateId: string,
+    versionId: string,
+    payload: UpdateEnvironmentVersionRequest,
+  ) => Promise<EnvironmentVersionResponse>;
+  onPublishVersion?: (
+    templateId: string,
+    versionId: string,
+  ) => Promise<EnvironmentVersionResponse>;
   projectId: string;
 };
 
@@ -50,7 +71,10 @@ export function EnvironmentList({
   error,
   loading = false,
   onCreate,
+  onCreateVersion,
   onDelete,
+  onPublishVersion,
+  onUpdateVersion,
   projectId,
 }: EnvironmentListProps) {
   const [credentials, setCredentials] = useState<CredentialBinding[]>([]);
@@ -101,58 +125,25 @@ export function EnvironmentList({
           <Table className="w-auto min-w-[680px] table-fixed">
             <TableHeader className="bg-[var(--surface-subtle)]">
               <TableRow>
-                <TableHead className="w-[420px]">模板信息</TableHead>
-                <TableHead className="w-32 text-center">类型</TableHead>
+                <TableHead className="w-[380px]">模板信息</TableHead>
+                <TableHead className="w-24 text-center">类型</TableHead>
+                <TableHead className="w-24 text-center">版本</TableHead>
                 <TableHead className="w-32 text-center">更新时间</TableHead>
                 <TableHead className="w-24 text-center">操作</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {environments.map((template) => (
-                <TableRow
-                  className="transition-colors hover:bg-[var(--surface-subtle)]"
+                <TemplateRow
+                  credentials={credentials}
                   key={template.id}
-                >
-                  <TableCell>
-                    <div className="flex min-w-0 items-center gap-3">
-                      <span className="grid size-8 shrink-0 place-items-center rounded-[var(--radius-sm)] bg-[var(--surface-subtle)]">
-                        <Cog aria-hidden="true" className="size-4" />
-                      </span>
-                      <div className="min-w-0">
-                        <p className="truncate font-medium">{template.name}</p>
-                        <p className="mt-0.5 truncate text-xs text-[var(--text-muted)]">
-                          {template.description || "暂无描述"}
-                        </p>
-                      </div>
-                    </div>
-                  </TableCell>
-                  <TableCell className="text-center">
-                    <Badge
-                      tone={
-                        template.template_type === "preset"
-                          ? "accent"
-                          : "neutral"
-                      }
-                    >
-                      {typeLabels[template.template_type] ??
-                        template.template_type}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="whitespace-nowrap text-center text-sm text-[var(--text-muted)]">
-                    {new Date(template.updated_at).toLocaleDateString("zh-CN")}
-                  </TableCell>
-                  <TableCell className="text-center">
-                    {onDelete && (
-                      <Button
-                        aria-label={`删除${template.name}`}
-                        onClick={() => onDelete(template.id)}
-                        variant="danger"
-                      >
-                        删除
-                      </Button>
-                    )}
-                  </TableCell>
-                </TableRow>
+                  onCreateVersion={onCreateVersion}
+                  onPublishVersion={onPublishVersion}
+                  onUpdateVersion={onUpdateVersion}
+                  projectId={projectId}
+                  template={template}
+                  onDelete={onDelete}
+                />
               ))}
             </TableBody>
           </Table>
@@ -165,6 +156,247 @@ export function EnvironmentList({
           setCredentials((current) => [created, ...current]);
         }}
       />
+    </div>
+  );
+}
+
+function TemplateRow({
+  credentials,
+  onCreateVersion,
+  onDelete,
+  onPublishVersion,
+  onUpdateVersion,
+  projectId,
+  template,
+}: {
+  credentials: CredentialBinding[];
+  onCreateVersion?: EnvironmentListProps["onCreateVersion"];
+  onDelete?: (templateId: string) => Promise<unknown>;
+  onPublishVersion?: EnvironmentListProps["onPublishVersion"];
+  onUpdateVersion?: EnvironmentListProps["onUpdateVersion"];
+  projectId: string;
+  template: EnvironmentTemplateResponse;
+}) {
+  const [versions, setVersions] = useState<EnvironmentVersionResponse[]>([]);
+  const [versionsLoaded, setVersionsLoaded] = useState(false);
+  const [showVersions, setShowVersions] = useState(false);
+
+  async function loadVersions() {
+    if (versionsLoaded) return;
+    try {
+      const items = await listEnvironmentVersions(projectId, template.id);
+      setVersions(items);
+    } catch {
+      // versions unavailable
+    }
+    setVersionsLoaded(true);
+  }
+
+  async function handleToggleVersions() {
+    if (!showVersions) {
+      await loadVersions();
+    }
+    setShowVersions((prev) => !prev);
+  }
+
+  const draftVersion = versions.find((v) => v.status === "draft");
+  const publishedCount = versions.filter((v) => v.status === "published").length;
+
+  return (
+    <>
+      <TableRow className="transition-colors hover:bg-[var(--surface-subtle)]">
+        <TableCell>
+          <div className="flex min-w-0 items-center gap-3">
+            <span className="grid size-8 shrink-0 place-items-center rounded-[var(--radius-sm)] bg-[var(--surface-subtle)]">
+              <Cog aria-hidden="true" className="size-4" />
+            </span>
+            <div className="min-w-0">
+              <p className="truncate font-medium">{template.name}</p>
+              <p className="mt-0.5 truncate text-xs text-[var(--text-muted)]">
+                {template.description || "暂无描述"}
+              </p>
+            </div>
+          </div>
+        </TableCell>
+        <TableCell className="text-center">
+          <Badge
+            tone={
+              template.template_type === "preset" ? "accent" : "neutral"
+            }
+          >
+            {typeLabels[template.template_type] ?? template.template_type}
+          </Badge>
+        </TableCell>
+        <TableCell className="text-center">
+          <button
+            className="text-sm font-medium text-[var(--accent)] hover:underline"
+            onClick={handleToggleVersions}
+            type="button"
+          >
+            {versionsLoaded ? versions.length : "…"}
+          </button>
+        </TableCell>
+        <TableCell className="whitespace-nowrap text-center text-sm text-[var(--text-muted)]">
+          {new Date(template.updated_at).toLocaleDateString("zh-CN")}
+        </TableCell>
+        <TableCell className="text-center">
+          <div className="flex items-center justify-center gap-1">
+            {onCreateVersion ? (
+              <EnvironmentVersionDialog
+                credentials={credentials}
+                triggerLabel="创建版本"
+                onSubmit={async (payload: CreateEnvironmentVersionRequest) => {
+                  const result = await onCreateVersion(template.id, payload);
+                  setVersions((prev) => [result, ...prev]);
+                }}
+                version={draftVersion}
+              />
+            ) : null}
+            {onDelete ? (
+              <Button
+                aria-label={`删除${template.name}`}
+                onClick={() => onDelete(template.id)}
+                variant="danger"
+              >
+                删除
+              </Button>
+            ) : null}
+          </div>
+        </TableCell>
+      </TableRow>
+
+      {/* Version detail panel */}
+      {showVersions ? (
+        <TableRow>
+          <TableCell colSpan={5}>
+            <VersionPanel
+              credentials={credentials}
+              draftVersion={draftVersion}
+              onCreateVersion={onCreateVersion}
+              onPublishVersion={onPublishVersion}
+              onUpdateVersion={onUpdateVersion}
+              publishedCount={publishedCount}
+              template={template}
+              versions={versions}
+            />
+          </TableCell>
+        </TableRow>
+      ) : null}
+    </>
+  );
+}
+
+function VersionPanel({
+  credentials,
+  draftVersion,
+  onCreateVersion,
+  onPublishVersion,
+  onUpdateVersion,
+  publishedCount,
+  template,
+  versions,
+}: {
+  credentials: CredentialBinding[];
+  draftVersion?: EnvironmentVersionResponse;
+  onCreateVersion?: EnvironmentListProps["onCreateVersion"];
+  onPublishVersion?: EnvironmentListProps["onPublishVersion"];
+  onUpdateVersion?: EnvironmentListProps["onUpdateVersion"];
+  publishedCount: number;
+  template: EnvironmentTemplateResponse;
+  versions: EnvironmentVersionResponse[];
+}) {
+  return (
+    <div className="rounded border border-[var(--border)] bg-[var(--surface-subtle)] p-4 text-sm">
+      <div className="mb-3 flex items-center justify-between">
+        <h3 className="font-semibold">
+          版本历史 · {publishedCount} 个已发布
+          {draftVersion ? " · 1 个草稿" : ""}
+        </h3>
+        {onCreateVersion ? (
+          <EnvironmentVersionDialog
+            credentials={credentials}
+            key={draftVersion?.id ?? "new"}
+            triggerLabel={draftVersion ? "编辑草稿" : "创建版本"}
+            version={draftVersion}
+            onSubmit={
+              draftVersion
+                ? async (payload: UpdateEnvironmentVersionRequest) => {
+                    if (onUpdateVersion) {
+                      await onUpdateVersion(
+                        template.id,
+                        draftVersion.id,
+                        payload as UpdateEnvironmentVersionRequest,
+                      );
+                    }
+                  }
+                : async (payload: CreateEnvironmentVersionRequest) => {
+                    if (onCreateVersion) {
+                      await onCreateVersion(template.id, payload);
+                    }
+                  }
+            }
+          />
+        ) : null}
+      </div>
+
+      {versions.length === 0 ? (
+        <p className="text-[var(--text-muted)]">尚无版本。点击上方按钮创建第一个版本。</p>
+      ) : (
+        <div className="space-y-2">
+          {versions.map((v) => (
+            <div
+              className="flex items-center justify-between rounded border border-[var(--border)] bg-[var(--surface)] p-3"
+              key={v.id}
+            >
+              <div className="flex items-center gap-3">
+                <Badge
+                  tone={v.status === "published" ? "accent" : "neutral"}
+                >
+                  v{v.version_number}
+                </Badge>
+                <Badge
+                  tone={v.status === "published" ? "accent" : "neutral"}
+                >
+                  {v.status === "published" ? "已发布" : "草稿"}
+                </Badge>
+                <span className="text-xs text-[var(--text-muted)]">
+                  {new Date(v.updated_at).toLocaleDateString("zh-CN")}
+                </span>
+              </div>
+              <div className="flex gap-1">
+                {v.status === "draft" && onUpdateVersion ? (
+                  <EnvironmentVersionDialog
+                    credentials={credentials}
+                    triggerLabel="编辑"
+                    version={v}
+                    onSubmit={async (payload: UpdateEnvironmentVersionRequest) => {
+                      if (onUpdateVersion) {
+                        await onUpdateVersion(
+                          template.id,
+                          v.id,
+                          payload as UpdateEnvironmentVersionRequest,
+                        );
+                      }
+                    }}
+                  />
+                ) : null}
+                {v.status === "draft" && onPublishVersion ? (
+                  <Button
+                    onClick={async () => {
+                      if (onPublishVersion) {
+                        await onPublishVersion(template.id, v.id);
+                      }
+                    }}
+                    variant="primary"
+                  >
+                    发布
+                  </Button>
+                ) : null}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

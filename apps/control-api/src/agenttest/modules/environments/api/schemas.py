@@ -55,3 +55,38 @@ class EnvironmentTemplateResponse(BaseModel):
 class EnvironmentTemplateListResponse(BaseModel):
     items: list[EnvironmentTemplateResponse]
     next_cursor: str | None = None
+
+
+# ── Environment Version schemas ──────────────────────────────────────────
+
+
+class CreateEnvironmentVersionRequest(BaseModel):
+    """Request body for creating a new environment version."""
+
+    config: dict[str, object] = Field(default_factory=dict)
+
+
+class UpdateEnvironmentVersionRequest(BaseModel):
+    """Request body for updating a draft environment version."""
+
+    config: dict[str, object] | None = None
+
+
+class EnvironmentVersionResponse(BaseModel):
+    """Public response for an environment version (never includes secrets)."""
+
+    id: UUID
+    project_id: UUID
+    environment_template_id: UUID
+    version_number: int
+    status: str
+    config: dict[str, object]
+    published_at: datetime | None
+    created_by: UUID
+    created_at: datetime
+    updated_at: datetime
+
+
+class EnvironmentVersionListResponse(BaseModel):
+    items: list[EnvironmentVersionResponse]
+    next_cursor: str | None = None

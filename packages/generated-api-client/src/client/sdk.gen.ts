@@ -99,6 +99,9 @@ import type {
   CreateVersionApiV1ProjectsProjectIdDatasetsDatasetIdVersionsPostData,
   CreateVersionApiV1ProjectsProjectIdDatasetsDatasetIdVersionsPostErrors,
   CreateVersionApiV1ProjectsProjectIdDatasetsDatasetIdVersionsPostResponses,
+  CreateVersionApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdVersionsPostData,
+  CreateVersionApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdVersionsPostErrors,
+  CreateVersionApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdVersionsPostResponses,
   CreateVersionApiV1ProjectsProjectIdTestPlansPlanIdVersionsPostData,
   CreateVersionApiV1ProjectsProjectIdTestPlansPlanIdVersionsPostErrors,
   CreateVersionApiV1ProjectsProjectIdTestPlansPlanIdVersionsPostResponses,
@@ -232,6 +235,9 @@ import type {
   GetVersionApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdGetData,
   GetVersionApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdGetErrors,
   GetVersionApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdGetResponses,
+  GetVersionApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdVersionsVersionIdGetData,
+  GetVersionApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdVersionsVersionIdGetErrors,
+  GetVersionApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdVersionsVersionIdGetResponses,
   GetVersionApiV1ProjectsProjectIdTestPlansPlanIdVersionsVersionIdGetData,
   GetVersionApiV1ProjectsProjectIdTestPlansPlanIdVersionsVersionIdGetErrors,
   GetVersionApiV1ProjectsProjectIdTestPlansPlanIdVersionsVersionIdGetResponses,
@@ -329,6 +335,9 @@ import type {
   ListVersionsApiV1ProjectsProjectIdDatasetsDatasetIdVersionsGetData,
   ListVersionsApiV1ProjectsProjectIdDatasetsDatasetIdVersionsGetErrors,
   ListVersionsApiV1ProjectsProjectIdDatasetsDatasetIdVersionsGetResponses,
+  ListVersionsApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdVersionsGetData,
+  ListVersionsApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdVersionsGetErrors,
+  ListVersionsApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdVersionsGetResponses,
   ListVersionsApiV1ProjectsProjectIdTestPlansPlanIdVersionsGetData,
   ListVersionsApiV1ProjectsProjectIdTestPlansPlanIdVersionsGetErrors,
   ListVersionsApiV1ProjectsProjectIdTestPlansPlanIdVersionsGetResponses,
@@ -353,6 +362,9 @@ import type {
   PublishVersionApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdPublishPostData,
   PublishVersionApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdPublishPostErrors,
   PublishVersionApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdPublishPostResponses,
+  PublishVersionApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdVersionsVersionIdPublishPostData,
+  PublishVersionApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdVersionsVersionIdPublishPostErrors,
+  PublishVersionApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdVersionsVersionIdPublishPostResponses,
   PublishVersionApiV1ProjectsProjectIdTestPlansPlanIdVersionsVersionIdPublishPostData,
   PublishVersionApiV1ProjectsProjectIdTestPlansPlanIdVersionsVersionIdPublishPostErrors,
   PublishVersionApiV1ProjectsProjectIdTestPlansPlanIdVersionsVersionIdPublishPostResponses,
@@ -449,6 +461,9 @@ import type {
   UpdateVersionApiV1ProjectsProjectIdAgentsAgentIdVersionsVersionIdPatchData,
   UpdateVersionApiV1ProjectsProjectIdAgentsAgentIdVersionsVersionIdPatchErrors,
   UpdateVersionApiV1ProjectsProjectIdAgentsAgentIdVersionsVersionIdPatchResponses,
+  UpdateVersionApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdVersionsVersionIdPatchData,
+  UpdateVersionApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdVersionsVersionIdPatchErrors,
+  UpdateVersionApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdVersionsVersionIdPatchResponses,
   UpdateVersionApiV1ProjectsProjectIdTestPlansPlanIdVersionsVersionIdPatchData,
   UpdateVersionApiV1ProjectsProjectIdTestPlansPlanIdVersionsVersionIdPatchErrors,
   UpdateVersionApiV1ProjectsProjectIdTestPlansPlanIdVersionsVersionIdPatchResponses,
@@ -1735,6 +1750,129 @@ export const updateTemplateApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdP
         "Content-Type": "application/json",
         ...options.headers,
       },
+    });
+
+/**
+ * List Versions
+ */
+export const listVersionsApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdVersionsGet =
+  <ThrowOnError extends boolean = false>(
+    options: Options<
+      ListVersionsApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdVersionsGetData,
+      ThrowOnError
+    >,
+  ): RequestResult<
+    ListVersionsApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdVersionsGetResponses,
+    ListVersionsApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdVersionsGetErrors,
+    ThrowOnError
+  > =>
+    (options.client ?? client).get<
+      ListVersionsApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdVersionsGetResponses,
+      ListVersionsApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdVersionsGetErrors,
+      ThrowOnError
+    >({
+      url: "/api/v1/projects/{project_id}/environment-templates/{template_id}/versions",
+      ...options,
+    });
+
+/**
+ * Create Version
+ */
+export const createVersionApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdVersionsPost =
+  <ThrowOnError extends boolean = false>(
+    options: Options<
+      CreateVersionApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdVersionsPostData,
+      ThrowOnError
+    >,
+  ): RequestResult<
+    CreateVersionApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdVersionsPostResponses,
+    CreateVersionApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdVersionsPostErrors,
+    ThrowOnError
+  > =>
+    (options.client ?? client).post<
+      CreateVersionApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdVersionsPostResponses,
+      CreateVersionApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdVersionsPostErrors,
+      ThrowOnError
+    >({
+      url: "/api/v1/projects/{project_id}/environment-templates/{template_id}/versions",
+      ...options,
+      headers: {
+        "Content-Type": "application/json",
+        ...options.headers,
+      },
+    });
+
+/**
+ * Get Version
+ */
+export const getVersionApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdVersionsVersionIdGet =
+  <ThrowOnError extends boolean = false>(
+    options: Options<
+      GetVersionApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdVersionsVersionIdGetData,
+      ThrowOnError
+    >,
+  ): RequestResult<
+    GetVersionApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdVersionsVersionIdGetResponses,
+    GetVersionApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdVersionsVersionIdGetErrors,
+    ThrowOnError
+  > =>
+    (options.client ?? client).get<
+      GetVersionApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdVersionsVersionIdGetResponses,
+      GetVersionApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdVersionsVersionIdGetErrors,
+      ThrowOnError
+    >({
+      url: "/api/v1/projects/{project_id}/environment-templates/{template_id}/versions/{version_id}",
+      ...options,
+    });
+
+/**
+ * Update Version
+ */
+export const updateVersionApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdVersionsVersionIdPatch =
+  <ThrowOnError extends boolean = false>(
+    options: Options<
+      UpdateVersionApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdVersionsVersionIdPatchData,
+      ThrowOnError
+    >,
+  ): RequestResult<
+    UpdateVersionApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdVersionsVersionIdPatchResponses,
+    UpdateVersionApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdVersionsVersionIdPatchErrors,
+    ThrowOnError
+  > =>
+    (options.client ?? client).patch<
+      UpdateVersionApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdVersionsVersionIdPatchResponses,
+      UpdateVersionApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdVersionsVersionIdPatchErrors,
+      ThrowOnError
+    >({
+      url: "/api/v1/projects/{project_id}/environment-templates/{template_id}/versions/{version_id}",
+      ...options,
+      headers: {
+        "Content-Type": "application/json",
+        ...options.headers,
+      },
+    });
+
+/**
+ * Publish Version
+ */
+export const publishVersionApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdVersionsVersionIdPublishPost =
+  <ThrowOnError extends boolean = false>(
+    options: Options<
+      PublishVersionApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdVersionsVersionIdPublishPostData,
+      ThrowOnError
+    >,
+  ): RequestResult<
+    PublishVersionApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdVersionsVersionIdPublishPostResponses,
+    PublishVersionApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdVersionsVersionIdPublishPostErrors,
+    ThrowOnError
+  > =>
+    (options.client ?? client).post<
+      PublishVersionApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdVersionsVersionIdPublishPostResponses,
+      PublishVersionApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdVersionsVersionIdPublishPostErrors,
+      ThrowOnError
+    >({
+      url: "/api/v1/projects/{project_id}/environment-templates/{template_id}/versions/{version_id}/publish",
+      ...options,
     });
 
 /**
