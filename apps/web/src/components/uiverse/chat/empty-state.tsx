@@ -16,25 +16,21 @@ export function ChatEmptyState({
   title = "告诉我您想测试什么",
 }: ChatEmptyStateProps) {
   return (
-    <div className="flex h-full flex-col items-center justify-center opacity-100 transition-all duration-700">
-      <div className="relative">
-        <Bot className="size-16 text-[var(--muted)]" />
-        <div className="absolute -right-1 -top-1 size-4 animate-pulse rounded-full bg-[var(--primary)]" />
+    <div className="flex h-full flex-col items-center justify-center px-4">
+      <div className="mb-6 flex size-16 items-center justify-center rounded-full bg-[var(--primary-subtle)]">
+        <Bot className="size-8 text-[var(--primary)]" />
       </div>
-      <p className="mt-6 text-lg font-semibold text-[var(--ink)]">{title}</p>
-      <p className="mt-2 text-sm text-[var(--muted)]">{description}</p>
+      <h1 className="text-2xl font-semibold text-[var(--ink)]">{title}</h1>
+      <p className="mt-2 text-[0.9375rem] text-[var(--muted)]">{description}</p>
       {suggestions.length > 0 && (
-        <div className="mt-6 flex flex-wrap justify-center gap-2">
+        <div className="mt-8 flex flex-wrap justify-center gap-2 max-w-xl">
           {suggestions.map((suggestion, i) => (
             <button
               key={i}
-              className="rounded-full border border-[var(--hairline)] bg-[var(--surface)] px-3 py-1.5 text-xs text-[var(--muted)] transition-all hover:border-[var(--primary)] hover:text-[var(--primary)] hover:shadow-sm"
+              className="rounded-xl border border-[var(--hairline)] bg-[var(--surface)] px-4 py-2.5 text-[0.875rem] text-[var(--ink)] transition-all hover:border-[var(--hairline-strong)] hover:bg-[var(--canvas-soft)] hover:shadow-sm"
               onClick={() => onSuggestionClick?.(suggestion)}
               style={{
-                animationDelay: `${i * 100}ms`,
-                opacity: 1,
-                transform: "translateY(0)",
-                transition: `all 0.5s ease ${i * 100}ms`,
+                animationDelay: `${i * 80}ms`,
               }}
             >
               {suggestion}

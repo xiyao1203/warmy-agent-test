@@ -40,23 +40,23 @@ export function MessageBubble({
 
   return (
     <div
-      className={`flex gap-3 transition-all duration-300 ${
+      className={`flex gap-4 transition-all duration-300 ${
         isUser ? "flex-row-reverse" : ""
       } ${visible ? "translate-y-0 opacity-100" : "translate-y-2 opacity-0"}`}
     >
       <div
-        className={`flex size-8 shrink-0 items-center justify-center rounded-full transition-transform duration-300 hover:scale-110 ${
+        className={`flex size-7 shrink-0 items-center justify-center rounded-full ${
           isUser
             ? "bg-[var(--primary)] text-white"
-            : "bg-[var(--canvas-soft)] text-[var(--ink)]"
+            : "border border-[var(--hairline)] bg-white text-[var(--ink)]"
         }`}
       >
-        {isUser ? <User className="size-4" /> : <Bot className="size-4" />}
+        {isUser ? <User className="size-3.5" /> : <Bot className="size-3.5" />}
       </div>
-      <div className="max-w-[80%]">
+      <div className="min-w-0 max-w-[85%]">
         {timestamp ? (
           <span
-            className={`mb-1 block text-[0.6rem] text-[var(--muted)] ${
+            className={`mb-0.5 block text-[0.65rem] text-[var(--muted)] ${
               isUser ? "text-right" : "text-left"
             }`}
           >
@@ -64,14 +64,14 @@ export function MessageBubble({
           </span>
         ) : null}
         <div
-          className={`group/bubble relative rounded-lg px-4 py-2.5 text-sm ${
+          className={`group/bubble relative text-[0.9375rem] leading-7 ${
             isUser
-              ? "bg-[var(--primary)] text-white"
-              : "bg-[var(--canvas-soft)] text-[var(--ink)]"
+              ? "rounded-2xl rounded-br-md bg-[var(--primary)] px-4 py-2.5 text-white"
+              : "text-[var(--ink)]"
           }`}
         >
           {isUser ? (
-            <p className="whitespace-pre-wrap leading-relaxed">{content}</p>
+            <p className="whitespace-pre-wrap">{content}</p>
           ) : (
             <MarkdownContent content={content} isStreaming={isStreaming} />
           )}
@@ -79,18 +79,18 @@ export function MessageBubble({
           {!isStreaming ? (
             <button
               aria-label={copied ? "已复制" : "复制消息"}
-              className={`absolute -top-1 rounded-md p-1 text-[var(--muted)] opacity-0 transition-all hover:text-[var(--ink)] group-hover/bubble:opacity-100 ${
+              className={`absolute rounded-md p-1 text-[var(--muted)] opacity-0 transition-all hover:text-[var(--ink)] group-hover/bubble:opacity-100 ${
                 isUser
-                  ? "right-0 -translate-y-full"
-                  : "left-0 -translate-y-full"
+                  ? "-left-9 top-1/2 -translate-y-1/2"
+                  : "-right-9 top-1/2 -translate-y-1/2"
               }`}
               onClick={handleCopy}
               type="button"
             >
               {copied ? (
-                <Check className="size-3 text-[var(--success)]" />
+                <Check className="size-3.5 text-[var(--success)]" />
               ) : (
-                <Copy className="size-3" />
+                <Copy className="size-3.5" />
               )}
             </button>
           ) : null}

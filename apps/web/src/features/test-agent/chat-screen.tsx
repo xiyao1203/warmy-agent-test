@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowDown, ChevronsRight, Send, Sparkles, Square } from "lucide-react";
+import { ArrowDown, ChevronsRight, CornerDownLeft, StopCircle } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -55,7 +55,7 @@ export function TestAgentChat({ projectId }: { projectId: string }) {
     return localStorage.getItem("chat-sidebar-open") !== "false";
   });
   const scrollRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
   const sessionRef = useRef<string | null>(null);
   const abortRef = useRef<AbortController | null>(null);
   const sseCloseRef = useRef<(() => void) | null>(null);
@@ -362,15 +362,21 @@ export function TestAgentChat({ projectId }: { projectId: string }) {
         >
 
         <main className="relative flex min-h-0 min-w-0 flex-col bg-[var(--canvas)]">
-          {messages.length === 0 && !sending && !streamingContent ? (
-            <header className="flex items-center gap-3 border-b border-[var(--hairline)] px-5 py-3">
-              <Sparkles className="size-5 text-[var(--primary)]" />
-              <div>
-                <h1 className="text-sm font-semibold">超级测试 Agent</h1>
-                <p className="text-xs text-[var(--muted)]">
-                  编排被测智能体、用例、执行、评测、安全与发布门禁
-                </p>
-              </div>
+          {/* Header: shown when there's a conversation (not empty) */}
+          {messages.length > 0 || sending || streamingContent ? (
+            <header className="flex shrink-0 items-center justify-between border-b border-[var(--hairline)] bg-[var(--canvas)] px-4 py-2.5">
+              <button
+                aria-label="切换侧边栏"
+                className="rounded-lg p-1.5 text-[var(--muted)] transition-colors hover:bg-[var(--canvas-soft)] hover:text-[var(--ink)]"
+                onClick={handleToggleSidebar}
+                type="button"
+              >
+                <ChevronsRight className={`size-4 transition-transform ${sidebarOpen ? "rotate-180" : ""}`} />
+              </button>
+              <span className="text-sm font-medium text-[var(--ink)] truncate mx-3">
+                {active?.title ?? "超级测试 Agent"}
+              </span>
+              <div className="w-8" />
             </header>
           ) : null}
 
@@ -479,42 +485,60 @@ export function TestAgentChat({ projectId }: { projectId: string }) {
             </div>
           ) : null}
 
-          <div className="shrink-0 border-t border-[var(--hairline)] p-4">
+          <div className="shrink-0 border-t border-[var(--hairline)] px-4 py-3">
             <div className="mx-auto flex max-w-3xl gap-2">
-              <Input
-                aria-label="对话输入"
-                className="flex-1"
-                disabled={sending}
-                onChange={(event) => setInput(event.target.value)}
-                onKeyDown={(event) => {
-                  if (event.key === "Enter" && !event.shiftKey) {
-                    event.preventDefault();
-                    void handleSend();
-                  }
-                }}
-                placeholder="向超级测试 Agent 描述目标…"
-                ref={inputRef}
-                value={input}
-              />
-              {sending ? (
-                <Button
-                  aria-label="停止生成"
-                  onClick={stopGenerating}
-                  variant="secondary"
-                >
-                  <Square className="size-4" />
-                </Button>
-              ) : (
-                <Button
-                  aria-label="发送"
-                  disabled={!input.trim()}
-                  onClick={() => void handleSend()}
-                  variant="primary"
-                >
-                  <Send className="size-4" />
-                </Button>
-              )}
+              <div className="relative flex-1">
+                <textarea
+                  aria-label="对话输入"
+                  className="w-full resize-none rounded-2xl border border-[var(--hairline)] bg-[var(--canvas-soft)] px-4 py-3 pr-10 text-[0.9375rem] leading-6 text-[var(--ink)] placeholder-[var(--muted)] transition-shadow focus:border-[var(--hairline-strong)] focus:shadow-md focus:outline-none disabled:opacity-50"
+                  disabled={sending}
+                  onChange={(event) => {
+                    setInput(event.target.value);
+                    // Auto-resize
+                    const el = event.target;
+                    el.style.height = "auto";
+                    el.style.height = `${Math.min(el.scrollHeight, 200)}px`;
+                  }}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter" && !event.shiftKey) {
+                      event.preventDefault();
+                      void handleSend();
+                    }
+                  }}
+                  placeholder="向超级测试 Agent 描述目标…"
+                  ref={inputRef}
+                  rows={1}
+                  value={input}
+                />
+                {sending ? (
+                  <button
+                    aria-label="停止生成"
+                    className="absolute bottom-2 right-2 rounded-lg p-1.5 text-[var(--muted)] transition-colors hover:bg-[var(--danger-subtle)] hover:text-[var(--danger)]"
+                    onClick={stopGenerating}
+                    type="button"
+                  >
+                    <StopCircle className="size-5" />
+                  </button>
+                ) : (
+                  <button
+                    aria-label="发送"
+                    className={`absolute bottom-2 right-2 rounded-lg p-1.5 transition-all ${
+                      input.trim()
+                        ? "bg-[var(--primary)] text-white hover:bg-[var(--primary-hover)]"
+                        : "cursor-default text-[var(--muted)]"
+                    }`}
+                    disabled={!input.trim()}
+                    onClick={() => void handleSend()}
+                    type="button"
+                  >
+                    <CornerDownLeft className="size-5" />
+                  </button>
+                )}
+              </div>
             </div>
+            <p className="mx-auto mt-2 max-w-3xl text-center text-[0.65rem] text-[var(--muted)]">
+              超级测试 Agent 可能产生不准确信息，请验证关键结果。
+            </p>
           </div>
         </main>
 
@@ -669,7 +693,7 @@ function Timeline({
   }
 
   return (
-    <div className="mx-auto max-w-3xl space-y-1">
+    <div className="mx-auto max-w-3xl">
       {messages.map((message, index) => {
         const showDivider =
           index > 0 &&
@@ -690,10 +714,9 @@ function Timeline({
                 <div className="h-px flex-1 bg-[var(--hairline)]" />
               </div>
             ) : null}
-            <div className="timeline-item animate-fadeIn">
+            <div className="timeline-item mb-8 animate-fadeIn last:mb-0">
               <ChatMessageBubble
                 message={message}
-                key={`${message.timestamp}:${index}`}
               />
             </div>
           </div>
@@ -702,7 +725,7 @@ function Timeline({
 
       {/* Streaming message */}
       {streamingContent ? (
-        <div className="timeline-item animate-fadeIn">
+        <div className="timeline-item mb-8 animate-fadeIn">
           <ChatMessageBubble
             isStreaming
             message={{
