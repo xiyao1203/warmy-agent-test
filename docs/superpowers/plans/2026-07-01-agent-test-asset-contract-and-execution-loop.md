@@ -20,9 +20,9 @@
 - Test: `apps/control-api/tests/unit/agents/test_invocation_contract.py`
 - Test: `apps/control-api/tests/unit/runs/test_execution_snapshot.py`
 
-- [ ] **Step 1: Write failing contract tests** proving endpoint/protocol/request mapping/response mapping are validated, credentials remain references, and a Run snapshot rejects missing agent, cases, or evaluation policy.
-- [ ] **Step 2: Run** `uv run pytest apps/control-api/tests/unit/agents/test_invocation_contract.py apps/control-api/tests/unit/runs/test_execution_snapshot.py -q` and verify missing types fail collection.
-- [ ] **Step 3: Implement typed contracts** with `extra="forbid"`:
+- [x] **Step 1: Write failing contract tests** proving endpoint/protocol/request mapping/response mapping are validated, credentials remain references, and a Run snapshot rejects missing agent, cases, or evaluation policy.
+- [x] **Step 2: Run** `uv run pytest apps/control-api/tests/unit/agents/test_invocation_contract.py apps/control-api/tests/unit/runs/test_execution_snapshot.py -q` and verify missing types fail collection.
+- [x] **Step 3: Implement typed contracts** with `extra="forbid"`:
 
 ```python
 class InvocationProtocol(StrEnum):
@@ -42,8 +42,8 @@ class AgentInvocationConfig(BaseModel):
 ```
 
 Define `EnvironmentRuntimeSnapshot`, `CaseExecutionSnapshot`, `ScorerBindingSnapshot`, `SecurityBindingSnapshot`, and `RunExecutionSnapshot` with explicit fields.
-- [ ] **Step 4: Re-run focused tests, Ruff, and mypy.**
-- [ ] **Step 5: Commit** `feat: define executable asset contracts`.
+- [x] **Step 4: Re-run focused tests, Ruff, and mypy.**
+- [x] **Step 5: Commit** `feat: define executable asset contracts`.
 
 ### Task 2: Expand versioned persistence and migrate legacy Agent configuration
 
@@ -163,8 +163,8 @@ Define `EnvironmentRuntimeSnapshot`, `CaseExecutionSnapshot`, `ScorerBindingSnap
 - Test: `workers/api-runner/tests/test_protocol_execution.py`
 - Test: `workers/api-runner/tests/test_workflow.py`
 
-- [ ] **Step 1: Write the regression test** proving plan config can no longer be passed as Agent config and that environment/case/evaluator fields survive serialization.
-- [ ] **Step 2: Run it and observe the current missing `url`/wrong nesting failure.**
+- [x] **Step 1: Write the regression test** proving plan config can no longer be passed as Agent config and that environment/case/evaluator fields survive serialization.
+- [x] **Step 2: Run it and observe the current missing `url`/wrong nesting failure.**
 - [ ] **Step 3: Build `RunExecutionSnapshot` from published assets**, resolve credential references only for the Activity, render request templates, support sync/OpenAI/SSE/poll, extract response paths, and redact Trace.
 - [ ] **Step 4: Apply concurrency, retries, timeout, cancellation, idempotency, and budget checks deterministically in Workflow.**
 - [ ] **Step 5: Run Worker tests including replay and commit** `fix: execute immutable run snapshots`.

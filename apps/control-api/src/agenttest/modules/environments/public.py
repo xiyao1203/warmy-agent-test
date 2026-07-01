@@ -7,11 +7,13 @@ from agenttest.modules.environments.domain.entities import (
     EnvironmentTemplate,
     EnvironmentTemplateId,
 )
+from agenttest.modules.environments.domain.runtime import EnvironmentRuntimeSnapshot
 from agenttest.modules.environments.domain.value_objects import TemplateType
 
 __all__ = [
     "EnvironmentTemplate",
     "CreateEnvironmentTemplateCommand",
     "EnvironmentTemplateId",
+    "EnvironmentRuntimeSnapshot",
     "TemplateType",
 ]

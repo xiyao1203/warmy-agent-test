@@ -7,8 +7,8 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from agenttest.modules.agents.domain.invocation import AgentInvocationConfig
-from agenttest.modules.environments.domain.runtime import EnvironmentRuntimeSnapshot
+from agenttest.modules.agents.public import AgentInvocationConfig
+from agenttest.modules.environments.public import EnvironmentRuntimeSnapshot
 
 
 class CaseExecutionSnapshot(BaseModel):
