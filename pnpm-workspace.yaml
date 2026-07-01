@@ -5,9 +5,9 @@ packages:
 onlyBuiltDependencies:
   - sharp
 allowBuilds:
-  '@playwright/browser-chromium': set this to true or false
-  better-sqlite3: set this to true or false
-  esbuild: set this to true or false
+  '@playwright/browser-chromium': true
+  better-sqlite3: true
+  esbuild: true
   sharp: true
   unrs-resolver: true
 storeDir: /Users/jason/Desktop/pc/agenttest/.pnpm-store/v11
