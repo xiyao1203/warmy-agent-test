@@ -36,7 +36,6 @@ from agenttest.shared.api.auth_guard import require_actor, require_writer
 
 class ChatRequest(BaseModel):
     message: str = Field(min_length=1, max_length=20_000)
-    session_id: UUID | None = None
 
 
 class ConfirmationDecision(BaseModel):
@@ -290,24 +289,6 @@ def create_test_agent_router(
         session = await sessions.get(ProjectId(project_id), ChatSessionId(session_id))
         if session is None:
             return JSONResponse(status_code=404, content={"detail": "会话不存在"})
-        return await send_message(actor, project_id, session, body.message)
-
-    @router.post("/chat")
-    async def legacy_chat(
-        request: Request,
-        project_id: UUID,
-        body: ChatRequest,
-        x_csrf_token: str | None = Header(default=None),
-    ):
-        actor = await authorize_write(request, project_id, x_csrf_token)
-        if isinstance(actor, JSONResponse):
-            return actor
-        session = None
-        if body.session_id is not None:
-            session = await sessions.get(ProjectId(project_id), ChatSessionId(body.session_id))
-        if session is None:
-            session = ChatSession.create(project_id=project_id, created_by=actor.user_id.value)
-            await sessions.save(session)
         return await send_message(actor, project_id, session, body.message)
 
     @router.get("/sessions/{session_id}/events")
