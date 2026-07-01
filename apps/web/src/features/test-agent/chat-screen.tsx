@@ -60,6 +60,7 @@ export function TestAgentChat({ projectId }: { projectId: string }) {
   const abortRef = useRef<AbortController | null>(null);
   const sseCloseRef = useRef<(() => void) | null>(null);
   const pinnedBottomRef = useRef(true);
+  const acceptDeltasRef = useRef(true);
   const [isPinned, setIsPinned] = useState(true);
   const activeSessionId = active?.session_id ?? null;
 
@@ -117,8 +118,11 @@ export function TestAgentChat({ projectId }: { projectId: string }) {
             : [...current, next],
         );
       }
-      if (event.type === "message.started") setStreamingContent("");
-      if (event.type === "message.delta") {
+      if (event.type === "message.started") {
+        acceptDeltasRef.current = true;
+        setStreamingContent("");
+      }
+      if (event.type === "message.delta" && acceptDeltasRef.current) {
         setStreamingContent(
           (current) => current + String(event.payload.content ?? ""),
         );
@@ -159,6 +163,7 @@ export function TestAgentChat({ projectId }: { projectId: string }) {
   }, []);
 
   function applySession(session: ChatResponse) {
+    acceptDeltasRef.current = false;
     setActive(session);
     setMessages(session.messages);
     setArtifacts(session.artifacts);
