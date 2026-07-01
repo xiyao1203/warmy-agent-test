@@ -31,9 +31,9 @@ export function TestCaseDetail({
       />
 
       {/* 抽屉内容 */}
-      <div className="relative z-10 w-full max-w-lg overflow-y-auto border-l border-[var(--border)] bg-[var(--surface)] p-6 shadow-xl">
+      <div className="relative z-10 w-full max-w-lg overflow-y-auto border-l border-[var(--hairline)] bg-[var(--surface)] p-6 shadow-xl">
         {/* 头部 */}
-        <div className="flex items-center justify-between border-b border-[var(--border)] pb-4">
+        <div className="flex items-center justify-between border-b border-[var(--hairline)] pb-4">
           <div>
             <h2 className="text-lg font-semibold">{caseItem.name}</h2>
             <div className="mt-2 flex flex-wrap gap-2">
@@ -48,7 +48,7 @@ export function TestCaseDetail({
           </div>
           <button
             onClick={onClose}
-            className="rounded p-1 hover:bg-[var(--surface-subtle)]"
+            className="rounded p-1 hover:bg-[var(--canvas-soft)]"
             aria-label="关闭"
           >
             <svg className="size-5" viewBox="0 0 20 20" fill="currentColor">
@@ -71,7 +71,7 @@ export function TestCaseDetail({
             )}
             {caseItem.tags && caseItem.tags.length > 0 && (
               <div>
-                <span className="text-sm text-[var(--text-muted)]">标签</span>
+                <span className="text-sm text-[var(--muted)]">标签</span>
                 <div className="mt-1 flex flex-wrap gap-1">
                   {caseItem.tags.map((tag, i) => (
                     <Badge key={i}>{tag}</Badge>
@@ -145,7 +145,7 @@ function Section({
 }) {
   return (
     <div>
-      <div className="flex items-center gap-2 text-sm font-semibold text-[var(--text)]">
+      <div className="flex items-center gap-2 text-sm font-semibold text-[var(--ink)]">
         {icon}
         {title}
       </div>
@@ -157,7 +157,7 @@ function Section({
 function Field({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex justify-between text-sm">
-      <span className="text-[var(--text-muted)]">{label}</span>
+      <span className="text-[var(--muted)]">{label}</span>
       <span className="font-medium">{value}</span>
     </div>
   );
@@ -165,7 +165,7 @@ function Field({ label, value }: { label: string; value: string }) {
 
 function JsonBlock({ data }: { data: unknown }) {
   return (
-    <pre className="max-h-48 overflow-auto rounded border border-[var(--border)] bg-[var(--surface-subtle)] p-3 text-xs font-mono">
+    <pre className="max-h-48 overflow-auto rounded border border-[var(--hairline)] bg-[var(--canvas-soft)] p-3 text-xs font-mono">
       {JSON.stringify(data, null, 2)}
     </pre>
   );

@@ -39,7 +39,7 @@ export function AgentDetailScreen({
       <div className="grid min-h-[calc(100vh-3rem)] place-items-center px-6 text-center">
         <div>
           <h1 className="text-base font-semibold">Agent 不存在或你无权访问</h1>
-          <p className="mt-2 text-sm text-[var(--text-muted)]">
+          <p className="mt-2 text-sm text-[var(--muted)]">
             请返回 Agent 列表检查项目和资源地址。
           </p>
         </div>

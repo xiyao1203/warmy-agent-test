@@ -18,17 +18,17 @@ export function ChatEmptyState({
   return (
     <div className="flex h-full flex-col items-center justify-center opacity-100 transition-all duration-700">
       <div className="relative">
-        <Bot className="size-16 text-[var(--text-muted)]" />
-        <div className="absolute -right-1 -top-1 size-4 animate-pulse rounded-full bg-[var(--accent)]" />
+        <Bot className="size-16 text-[var(--muted)]" />
+        <div className="absolute -right-1 -top-1 size-4 animate-pulse rounded-full bg-[var(--primary)]" />
       </div>
-      <p className="mt-6 text-lg font-semibold text-[var(--text)]">{title}</p>
-      <p className="mt-2 text-sm text-[var(--text-muted)]">{description}</p>
+      <p className="mt-6 text-lg font-semibold text-[var(--ink)]">{title}</p>
+      <p className="mt-2 text-sm text-[var(--muted)]">{description}</p>
       {suggestions.length > 0 && (
         <div className="mt-6 flex flex-wrap justify-center gap-2">
           {suggestions.map((suggestion, i) => (
             <button
               key={i}
-              className="rounded-full border border-[var(--border)] bg-[var(--surface)] px-3 py-1.5 text-xs text-[var(--text-muted)] transition-all hover:border-[var(--accent)] hover:text-[var(--accent)] hover:shadow-sm"
+              className="rounded-full border border-[var(--hairline)] bg-[var(--surface)] px-3 py-1.5 text-xs text-[var(--muted)] transition-all hover:border-[var(--primary)] hover:text-[var(--primary)] hover:shadow-sm"
               onClick={() => onSuggestionClick?.(suggestion)}
               style={{
                 animationDelay: `${i * 100}ms`,

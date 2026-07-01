@@ -75,12 +75,12 @@ export function AgentList({
 
   return (
     <div className="min-w-0 px-6 py-6">
-      <header className="flex items-start justify-between gap-4 border-b border-[var(--border)] pb-5">
+      <header className="flex items-start justify-between gap-4 border-b border-[var(--hairline)] pb-5">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">
             Agent 与版本
           </h1>
-          <p className="mt-2 text-sm text-[var(--text-muted)]">
+          <p className="mt-2 text-sm text-[var(--muted)]">
             管理待测 Agent、连接配置和不可变发布版本。
           </p>
         </div>
@@ -88,7 +88,7 @@ export function AgentList({
           <CreateAgentDialog onCreate={onCreate} />
         </Tooltip>
       </header>
-      <section className="mt-5 overflow-hidden rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--surface)]">
+      <section className="mt-5 overflow-hidden rounded-[var(--radius-lg)] border border-[var(--hairline)] bg-[var(--surface)]">
         {!agents.length ? (
           <EmptyState
             description="创建 Agent 后，再为它配置并发布可复现版本。"
@@ -96,7 +96,7 @@ export function AgentList({
           />
         ) : (
           <Table className="w-auto min-w-[760px] table-fixed">
-            <TableHeader className="bg-[var(--surface-subtle)]">
+            <TableHeader className="bg-[var(--canvas-soft)]">
               <TableRow>
                 <TableHead className="w-[360px] pl-16">智能体信息</TableHead>
                 <TableHead className="w-36 text-center">接入类型</TableHead>
@@ -107,17 +107,17 @@ export function AgentList({
             <TableBody>
               {agents.map((agent) => (
                 <TableRow
-                  className="transition-colors hover:bg-[var(--surface-subtle)]"
+                  className="transition-colors hover:bg-[var(--canvas-soft)]"
                   key={agent.id}
                 >
                   <TableCell>
                     <div className="flex min-w-0 items-center gap-3">
-                      <span className="grid size-8 shrink-0 place-items-center rounded-[var(--radius-sm)] bg-[var(--surface-subtle)]">
+                      <span className="grid size-8 shrink-0 place-items-center rounded-[var(--radius-md)] bg-[var(--canvas-soft)]">
                         <Bot aria-hidden="true" className="size-4" />
                       </span>
                       <div className="min-w-0">
                         <p className="truncate font-medium">{agent.name}</p>
-                        <p className="mt-0.5 truncate text-xs text-[var(--text-muted)]">
+                        <p className="mt-0.5 truncate text-xs text-[var(--muted)]">
                           {agent.description || "暂无描述"}
                         </p>
                       </div>
@@ -132,7 +132,7 @@ export function AgentList({
                       {typeLabels[agent.agent_type]}
                     </Badge>
                   </TableCell>
-                  <TableCell className="whitespace-nowrap text-center text-sm text-[var(--text-muted)]">
+                  <TableCell className="whitespace-nowrap text-center text-sm text-[var(--muted)]">
                     {new Date(agent.updated_at).toLocaleDateString("zh-CN")}
                   </TableCell>
                   <TableCell className={tableActionCellClass}>
@@ -227,7 +227,7 @@ function CreateAgentDialog({
           <label className="block text-sm font-medium">
             Agent 类型
             <select
-              className="mt-1.5 h-9 w-full rounded-[var(--radius-sm)] border border-[var(--border)] bg-[var(--surface)] px-3 text-sm text-[var(--text)] hover:border-[var(--border-strong)] focus:border-[var(--accent)] focus:outline-none focus:ring-2 focus:ring-[var(--focus-ring-subtle)]"
+              className="mt-1.5 h-9 w-full rounded-[var(--radius-md)] border border-[var(--hairline)] bg-[var(--surface)] px-3 text-sm text-[var(--ink)] hover:border-[var(--hairline-strong)] focus:border-[var(--primary)] focus:outline-none focus:ring-2 focus:ring-[var(--focus-ring-subtle)]"
               onChange={(event) =>
                 setAgentType(event.target.value as AgentType)
               }
@@ -335,7 +335,7 @@ function StatusPanel({
     <div className="grid min-h-[calc(100vh-3rem)] place-items-center px-6 text-center">
       <div>
         <h1 className="text-base font-semibold">{title}</h1>
-        <p className="mt-2 max-w-md text-sm leading-6 text-[var(--text-muted)]">
+        <p className="mt-2 max-w-md text-sm leading-6 text-[var(--muted)]">
           请稍后刷新重试，或联系超级管理员。
         </p>
         {onRetry ? (
@@ -352,7 +352,7 @@ function AgentListSkeleton() {
   return (
     <div className="min-w-0 px-6 py-6">
       {/* Header skeleton */}
-      <header className="flex items-start justify-between gap-4 border-b border-[var(--border)] pb-5">
+      <header className="flex items-start justify-between gap-4 border-b border-[var(--hairline)] pb-5">
         <div>
           <Skeleton className="h-8 w-48" />
           <Skeleton className="mt-2 h-4 w-64" />
@@ -361,7 +361,7 @@ function AgentListSkeleton() {
       </header>
 
       {/* Table skeleton */}
-      <section className="mt-5 overflow-hidden rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--surface)]">
+      <section className="mt-5 overflow-hidden rounded-[var(--radius-lg)] border border-[var(--hairline)] bg-[var(--surface)]">
         <div className="p-4">
           <div className="space-y-4">
             {Array.from({ length: 5 }).map((_, i) => (

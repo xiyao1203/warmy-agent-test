@@ -80,16 +80,16 @@ export function TestPlanDetail({
   return (
     <div className="min-w-0 px-6 py-6">
       <Link
-        className="inline-flex items-center gap-1.5 text-sm text-[var(--text-muted)] hover:text-[var(--text)]"
+        className="inline-flex items-center gap-1.5 text-sm text-[var(--muted)] hover:text-[var(--ink)]"
         href={`/projects/${plan.project_id}/test-plans`}
       >
         <ArrowLeft aria-hidden="true" className="size-4" />
         返回测试计划列表
       </Link>
-      <header className="mt-4 flex items-start justify-between gap-4 border-b border-[var(--border)] pb-5">
+      <header className="mt-4 flex items-start justify-between gap-4 border-b border-[var(--hairline)] pb-5">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">{plan.name}</h1>
-          <p className="mt-2 text-sm text-[var(--text-muted)]">
+          <p className="mt-2 text-sm text-[var(--muted)]">
             {plan.description || "暂无描述"}
           </p>
         </div>
@@ -107,7 +107,7 @@ export function TestPlanDetail({
       <section className="mt-5 space-y-3">
         {versions.map((version) => (
           <article
-            className="rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--surface)] px-4 py-4"
+            className="rounded-[var(--radius-lg)] border border-[var(--hairline)] bg-[var(--surface)] px-4 py-4"
             key={version.id}
           >
             <div className="flex items-center justify-between gap-4">
@@ -124,13 +124,13 @@ export function TestPlanDetail({
                     {version.status === "published" ? "已发布" : "草稿"}
                   </Badge>
                   {version.status === "published" ? (
-                    <span className="inline-flex items-center gap-1 text-xs text-[var(--text-muted)]">
+                    <span className="inline-flex items-center gap-1 text-xs text-[var(--muted)]">
                       <LockKeyhole aria-hidden="true" className="size-3.5" />
                       已锁定
                     </span>
                   ) : null}
                 </div>
-                <p className="mt-2 text-xs text-[var(--text-muted)]">
+                <p className="mt-2 text-xs text-[var(--muted)]">
                   并发 {String(version.config.concurrency ?? 1)} · 超时{" "}
                   {String(version.config.timeout ?? 300)} 秒 · 每用例{" "}
                   {String(version.config.runs_per_case ?? 1)} 次 · 阈值{" "}
@@ -261,7 +261,7 @@ export function TestPlanDetail({
                       dryRunResult.preview as Record<string, unknown>,
                     ).map(([k, v]) => (
                       <p key={k}>
-                        <span className="text-[var(--text-muted)]">{k}：</span>
+                        <span className="text-[var(--muted)]">{k}：</span>
                         {v === null ? "无" : String(v)}
                       </p>
                     ))}

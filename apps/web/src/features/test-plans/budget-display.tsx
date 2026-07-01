@@ -47,7 +47,7 @@ export function BudgetDisplay({
       {/* 标题 */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <DollarSign className="size-5 text-[var(--text-muted)]" />
+          <DollarSign className="size-5 text-[var(--muted)]" />
           <h3 className="text-sm font-medium">成本预算</h3>
         </div>
         <span
@@ -56,7 +56,7 @@ export function BudgetDisplay({
               ? "text-[var(--danger)]"
               : isWarning
                 ? "text-[var(--warning)]"
-                : "text-[var(--text)]"
+                : "text-[var(--ink)]"
           }`}
         >
           {usagePercent.toFixed(1)}%
@@ -65,16 +65,16 @@ export function BudgetDisplay({
 
       {/* 金额卡片 */}
       <div className="grid grid-cols-3 gap-3">
-        <div className="rounded border border-[var(--border)] p-3 text-center">
-          <p className="text-xs text-[var(--text-muted)]">预算</p>
+        <div className="rounded border border-[var(--hairline)] p-3 text-center">
+          <p className="text-xs text-[var(--muted)]">预算</p>
           <p className="mt-1 text-sm font-semibold">{formatCurrency(budget)}</p>
         </div>
-        <div className="rounded border border-[var(--border)] p-3 text-center">
-          <p className="text-xs text-[var(--text-muted)]">已用</p>
+        <div className="rounded border border-[var(--hairline)] p-3 text-center">
+          <p className="text-xs text-[var(--muted)]">已用</p>
           <p className="mt-1 text-sm font-semibold">{formatCurrency(used)}</p>
         </div>
-        <div className="rounded border border-[var(--border)] p-3 text-center">
-          <p className="text-xs text-[var(--text-muted)]">剩余</p>
+        <div className="rounded border border-[var(--hairline)] p-3 text-center">
+          <p className="text-xs text-[var(--muted)]">剩余</p>
           <p
             className={`mt-1 text-sm font-semibold ${
               isExceeded ? "text-[var(--danger)]" : ""
@@ -87,14 +87,14 @@ export function BudgetDisplay({
 
       {/* 进度条 */}
       <div className="space-y-2">
-        <div className="h-2 overflow-hidden rounded-full bg-[var(--surface-subtle)]">
+        <div className="h-2 overflow-hidden rounded-full bg-[var(--canvas-soft)]">
           <div
             className={`h-full transition-all ${
               isExceeded
                 ? "bg-[var(--danger)]"
                 : isWarning
                   ? "bg-[var(--warning)]"
-                  : "bg-[var(--accent)]"
+                  : "bg-[var(--primary)]"
             }`}
             style={{ width: `${Math.min(usagePercent, 100)}%` }}
           />

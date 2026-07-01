@@ -53,7 +53,7 @@ export function ExperimentCompare({
       {/* 标题 */}
       <div className="flex items-center justify-between">
         <h2 className="text-2xl font-bold">实验对比</h2>
-        <span className="text-sm text-[var(--text-muted)]">
+        <span className="text-sm text-[var(--muted)]">
           ID: {experimentId}
         </span>
       </div>

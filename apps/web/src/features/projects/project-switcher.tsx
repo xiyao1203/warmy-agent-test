@@ -36,20 +36,20 @@ export function ProjectSwitcher({
     <Popover.Root onOpenChange={setOpen} open={open}>
       <Popover.Trigger asChild>
         <button
-          className="flex h-8 min-w-44 max-w-64 items-center justify-between gap-2 rounded-[var(--radius-sm)] border border-[var(--border)] bg-[var(--surface)] px-2.5 text-sm hover:bg-[var(--surface-subtle)]"
+          className="flex h-8 min-w-44 max-w-64 items-center justify-between gap-2 rounded-[var(--radius-md)] border border-[var(--hairline)] bg-[var(--surface)] px-2.5 text-sm hover:bg-[var(--canvas-soft)]"
           type="button"
         >
           <span className="truncate">{currentProject?.name ?? "选择项目"}</span>
           <ChevronsUpDown
             aria-hidden="true"
-            className="size-3.5 shrink-0 text-[var(--text-muted)]"
+            className="size-3.5 shrink-0 text-[var(--muted)]"
           />
         </button>
       </Popover.Trigger>
       <Popover.Portal>
         <Popover.Content
           align="start"
-          className="z-50 w-72 rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--surface)] p-2 shadow-[var(--shadow-overlay)]"
+          className="z-50 w-72 rounded-[var(--radius-lg)] border border-[var(--hairline)] bg-[var(--surface)] p-2 shadow-[var(--overlay)]"
           side="bottom"
           sideOffset={6}
         >
@@ -69,7 +69,7 @@ export function ProjectSwitcher({
               filteredProjects.map((project) => (
                 <button
                   aria-selected={project.id === currentProjectId}
-                  className="flex min-h-10 w-full items-center gap-2 rounded-[var(--radius-sm)] px-2 text-left text-sm hover:bg-[var(--surface-subtle)]"
+                  className="flex min-h-10 w-full items-center gap-2 rounded-[var(--radius-md)] px-2 text-left text-sm hover:bg-[var(--canvas-soft)]"
                   key={project.id}
                   onClick={() => {
                     onSelect(project.id);
@@ -79,7 +79,7 @@ export function ProjectSwitcher({
                   role="option"
                   type="button"
                 >
-                  <span className="flex size-6 shrink-0 items-center justify-center rounded-[var(--radius-sm)] bg-[var(--accent-subtle)] text-xs font-semibold text-[var(--accent-text)]">
+                  <span className="flex size-6 shrink-0 items-center justify-center rounded-[var(--radius-md)] bg-[var(--primary-subtle)] text-xs font-semibold text-[var(--primary)]">
                     {project.name.slice(0, 1).toUpperCase()}
                   </span>
                   <span className="min-w-0 flex-1 truncate">
@@ -88,19 +88,19 @@ export function ProjectSwitcher({
                   {project.archived ? (
                     <FolderArchive
                       aria-label="已归档"
-                      className="size-3.5 text-[var(--text-muted)]"
+                      className="size-3.5 text-[var(--muted)]"
                     />
                   ) : null}
                   {project.id === currentProjectId ? (
                     <Check
                       aria-label="当前项目"
-                      className="size-4 text-[var(--accent)]"
+                      className="size-4 text-[var(--primary)]"
                     />
                   ) : null}
                 </button>
               ))
             ) : (
-              <p className="px-2 py-6 text-center text-sm text-[var(--text-muted)]">
+              <p className="px-2 py-6 text-center text-sm text-[var(--muted)]">
                 没有匹配的项目
               </p>
             )}

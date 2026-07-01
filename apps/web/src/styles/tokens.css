@@ -1,4 +1,109 @@
 :root {
+  /* === Surface === */
+  --canvas: #f7f7f4;
+  --canvas-soft: #fafaf7;
+  --surface: #ffffff;
+  --surface-strong: #e6e5e0;
+
+  /* === Hairlines (no shadows — hairline-only depth) === */
+  --hairline: #e6e5e0;
+  --hairline-soft: #efeee8;
+  --hairline-strong: #cfcdc4;
+
+  /* === Text === */
+  --ink: #26251e;
+  --body: #5a5852;
+  --muted: #807d72;
+  --muted-soft: #a09c92;
+
+  /* === Brand (single voltage: Warmy Orange) === */
+  --primary: #f54e00;
+  --primary-active: #d04200;
+  --primary-rgb: 245, 78, 0;
+  --primary-subtle: #fff0e8;
+
+  /* === Semantic === */
+  --success: #1f8a65;
+  --success-subtle: #dafbe1;
+  --warning: #9a6700;
+  --warning-subtle: #fff1c2;
+  --danger: #cf2d56;
+  --danger-subtle: #ffebe9;
+
+  /* === Focus & Overlay === */
+  --focus-ring: #f54e00;
+  --focus-ring-subtle: rgb(245 78 0 / 0.2);
+  --overlay: rgb(38 37 30 / 0.45);
+
+  /* === Radius === */
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-pill: 9999px;
+
+  /* === Typography === */
+  --font-sans: "Inter", system-ui, "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --font-code: "JetBrains Mono", "Fira Code", monospace;
+
+  /* === Backward-compatible aliases (migrate to new names gradually) === */
+  --background: var(--canvas);
+  --surface-subtle: var(--canvas-soft);
+  --border: var(--hairline);
+  --border-strong: var(--hairline-strong);
+  --text: var(--ink);
+  --text-muted: var(--muted);
+  --text-subtle: var(--body);
+  --text-disabled: var(--muted-soft);
+  --accent: var(--primary);
+  --accent-strong: var(--primary-active);
+  --accent-subtle: var(--primary-subtle);
+  --accent-text: var(--primary);
+  --accent-rgb: var(--primary-rgb);
+  --selected: var(--primary-subtle);
+  /* No shadow — but keep as empty to not break existing references */
+  --shadow-overlay: none;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    /* === Surface (dark: warm near-black) === */
+    --canvas: #1a1a16;
+    --canvas-soft: #21211c;
+    --surface: #282824;
+    --surface-strong: #353530;
+
+    /* === Hairlines (dark) === */
+    --hairline: #3a3a33;
+    --hairline-soft: #33332e;
+    --hairline-strong: #4a4a42;
+
+    /* === Text (dark: warm off-white) === */
+    --ink: #f0efe8;
+    --body: #b0aea8;
+    --muted: #807d72;
+    --muted-soft: #686860;
+
+    /* === Brand (dark) === */
+    --primary: #f54e00;
+    --primary-active: #ff661a;
+    --primary-rgb: 245, 78, 0;
+    --primary-subtle: #3d1f0a;
+
+    /* === Semantic (dark) === */
+    --success: #3fb950;
+    --success-subtle: #193c25;
+    --warning: #d29922;
+    --warning-subtle: #3d3014;
+    --danger: #f85149;
+    --danger-subtle: #481d20;
+
+    /* === Focus & Overlay (dark) === */
+    --focus-ring: #ff7733;
+    --focus-ring-subtle: rgb(255 119 51 / 0.2);
+    --overlay: rgb(0 0 0 / 0.68);
+  }
+}
+:root {
   --background: #f7f7f8;
   --surface: #ffffff;
   --surface-subtle: #f1f1f3;

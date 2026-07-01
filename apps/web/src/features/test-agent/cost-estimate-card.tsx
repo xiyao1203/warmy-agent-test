@@ -65,7 +65,7 @@ export function CostEstimateCard({
   };
 
   return (
-    <div className="space-y-4 rounded border border-[var(--border)] p-4">
+    <div className="space-y-4 rounded border border-[var(--hairline)] p-4">
       {/* 标题 */}
       <div className="flex items-center justify-between">
         <h3 className="text-sm font-medium">成本估算</h3>
@@ -79,8 +79,8 @@ export function CostEstimateCard({
 
       {/* 统计卡片 */}
       <div className="grid grid-cols-2 gap-3">
-        <div className="rounded border border-[var(--border)] p-3">
-          <div className="flex items-center gap-2 text-[var(--text-muted)]">
+        <div className="rounded border border-[var(--hairline)] p-3">
+          <div className="flex items-center gap-2 text-[var(--muted)]">
             <DollarSign className="size-4" />
             <span className="text-xs">总成本</span>
           </div>
@@ -93,8 +93,8 @@ export function CostEstimateCard({
           </p>
         </div>
 
-        <div className="rounded border border-[var(--border)] p-3">
-          <div className="flex items-center gap-2 text-[var(--text-muted)]">
+        <div className="rounded border border-[var(--hairline)] p-3">
+          <div className="flex items-center gap-2 text-[var(--muted)]">
             <Zap className="size-4" />
             <span className="text-xs">Token 消耗</span>
           </div>
@@ -103,8 +103,8 @@ export function CostEstimateCard({
           </p>
         </div>
 
-        <div className="rounded border border-[var(--border)] p-3">
-          <div className="flex items-center gap-2 text-[var(--text-muted)]">
+        <div className="rounded border border-[var(--hairline)] p-3">
+          <div className="flex items-center gap-2 text-[var(--muted)]">
             <Clock className="size-4" />
             <span className="text-xs">预计时间</span>
           </div>
@@ -113,8 +113,8 @@ export function CostEstimateCard({
           </p>
         </div>
 
-        <div className="rounded border border-[var(--border)] p-3">
-          <div className="flex items-center gap-2 text-[var(--text-muted)]">
+        <div className="rounded border border-[var(--hairline)] p-3">
+          <div className="flex items-center gap-2 text-[var(--muted)]">
             <span className="text-xs">用例数</span>
           </div>
           <p className="mt-1 text-lg font-semibold">{estimate.caseCount}</p>
@@ -136,7 +136,7 @@ export function CostEstimateCard({
         <div className="flex gap-2">
           {onConfirm && (
             <button
-              className="flex-1 rounded bg-[var(--accent)] px-4 py-2 text-sm text-white"
+              className="flex-1 rounded bg-[var(--primary)] px-4 py-2 text-sm text-white"
               onClick={onConfirm}
             >
               确认执行
@@ -144,7 +144,7 @@ export function CostEstimateCard({
           )}
           {onCancel && (
             <button
-              className="flex-1 rounded border border-[var(--border)] px-4 py-2 text-sm"
+              className="flex-1 rounded border border-[var(--hairline)] px-4 py-2 text-sm"
               onClick={onCancel}
             >
               取消

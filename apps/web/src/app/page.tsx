@@ -24,7 +24,7 @@ export default function HomePage() {
   }
 
   return (
-    <main className="grid min-h-screen place-items-center text-sm text-[var(--text-muted)]">
+    <main className="grid min-h-screen place-items-center text-sm text-[var(--muted)]">
       正在验证身份…
     </main>
   );

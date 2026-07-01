@@ -13,7 +13,7 @@ export function LoginScreen({ returnTo }: { returnTo?: string }) {
         className="relative hidden overflow-hidden lg:flex lg:flex-col lg:justify-between lg:p-14"
         style={{
           background:
-            "linear-gradient(135deg, var(--accent) 0%, color-mix(in srgb, var(--accent) 70%, #1a1a2e) 100%)",
+            "linear-gradient(135deg, var(--primary) 0%, color-mix(in srgb, var(--primary) 70%, #1a1a2e) 100%)",
         }}
       >
         {/* 装饰性背景图案 */}
@@ -54,7 +54,7 @@ export function LoginScreen({ returnTo }: { returnTo?: string }) {
         <div className="w-full max-w-[400px] opacity-100 transition-all duration-700">
           {/* 移动端品牌标识 */}
           <div className="mb-10 lg:hidden">
-            <p className="text-sm font-semibold tracking-wide text-[var(--accent)]">
+            <p className="text-sm font-semibold tracking-wide text-[var(--primary)]">
               Warmy Agent Test
             </p>
           </div>
@@ -62,7 +62,7 @@ export function LoginScreen({ returnTo }: { returnTo?: string }) {
           <h1 className="text-[1.75rem] font-semibold tracking-tight leading-tight">
             登录到测试工作台
           </h1>
-          <p className="mt-2.5 text-sm leading-relaxed text-[var(--text-muted)]">
+          <p className="mt-2.5 text-sm leading-relaxed text-[var(--muted)]">
             使用内部账号继续。平台暂不开放自主注册。
           </p>
 
@@ -73,7 +73,7 @@ export function LoginScreen({ returnTo }: { returnTo?: string }) {
             />
           </div>
 
-          <p className="mt-8 text-center text-xs text-[var(--text-subtle)]">
+          <p className="mt-8 text-center text-xs text-[var(--body)]">
             安全连接 · 数据加密传输
           </p>
         </div>

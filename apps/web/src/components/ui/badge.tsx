@@ -9,17 +9,17 @@ export function Badge({
   tone = "neutral",
   ...props
 }: BadgeProps) {
-  const tones = {
-    accent: "bg-[var(--accent-subtle)] text-[var(--accent-text)]",
+  const tones: Record<string, string> = {
+    accent: "bg-[var(--primary-subtle)] text-[var(--primary)]",
     danger: "bg-[var(--danger-subtle)] text-[var(--danger)]",
-    neutral: "bg-[var(--surface-subtle)] text-[var(--text-muted)]",
+    neutral: "bg-[var(--surface-strong)] text-[var(--muted)]",
     success: "bg-[var(--success-subtle)] text-[var(--success)]",
     warning: "bg-[var(--warning-subtle)] text-[var(--warning)]",
   };
 
   return (
     <span
-      className={`inline-flex min-h-5 items-center rounded-[var(--radius-sm)] px-1.5 text-xs font-medium ${tones[tone]} ${className}`}
+      className={`inline-flex items-center rounded-[var(--radius-pill)] px-2 py-0.5 text-[11px] font-semibold uppercase tracking-[0.66px] ${tones[tone]} ${className}`}
       {...props}
     />
   );

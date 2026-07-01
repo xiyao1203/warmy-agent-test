@@ -114,7 +114,7 @@ export function ScorerEditorDialog({
           <label className="block text-sm font-medium">
             类型
             <select
-              className="mt-1.5 h-9 w-full rounded-[var(--radius-sm)] border border-[var(--border)] bg-[var(--surface)] px-3"
+              className="mt-1.5 h-9 w-full rounded-[var(--radius-md)] border border-[var(--hairline)] bg-[var(--surface)] px-3"
               disabled={isEdit}
               onChange={(e) => setScorerType(e.target.value)}
               value={scorerType}
@@ -123,7 +123,7 @@ export function ScorerEditorDialog({
               <option value="model">模型（Model）</option>
               <option value="reference">参考（Reference）</option>
             </select>
-            <span className="mt-1 block text-xs text-[var(--text-muted)]">
+            <span className="mt-1 block text-xs text-[var(--muted)]">
               {scorerType === "rule"
                 ? "基于固定规则比较输出与期望值"
                 : scorerType === "model"
@@ -143,7 +143,7 @@ export function ScorerEditorDialog({
                 type="number"
                 value={weight}
               />
-              <span className="mt-1 block text-xs text-[var(--text-muted)]">
+              <span className="mt-1 block text-xs text-[var(--muted)]">
                 多评分器加权时的相对权重（0-10）
               </span>
             </label>
@@ -158,7 +158,7 @@ export function ScorerEditorDialog({
                 type="number"
                 value={threshold}
               />
-              <span className="mt-1 block text-xs text-[var(--text-muted)]">
+              <span className="mt-1 block text-xs text-[var(--muted)]">
                 分数 ≥ 此值视为通过（0.00-1.00）
               </span>
             </label>
@@ -167,12 +167,12 @@ export function ScorerEditorDialog({
             <label className="block text-sm font-medium">
               评分标准（Rubric）
               <textarea
-                className="mt-1.5 min-h-24 w-full rounded border border-[var(--border)] bg-[var(--surface)] p-3 text-sm"
+                className="mt-1.5 min-h-24 w-full rounded border border-[var(--hairline)] bg-[var(--surface)] p-3 text-sm"
                 onChange={(event) => setRubric(event.target.value)}
                 placeholder="明确描述 0-1 分的判断标准"
                 value={rubric}
               />
-              <span className="mt-1 block text-xs text-[var(--text-muted)]">
+              <span className="mt-1 block text-xs text-[var(--muted)]">
                 模型将严格按此标准打分，建议明确写出各分数段的条件
               </span>
             </label>
@@ -181,14 +181,14 @@ export function ScorerEditorDialog({
               <label className="block text-sm font-medium">
                 比较方式
                 <select
-                  className="mt-1.5 h-9 w-full rounded border border-[var(--border)] bg-[var(--surface)] px-3"
+                  className="mt-1.5 h-9 w-full rounded border border-[var(--hairline)] bg-[var(--surface)] px-3"
                   onChange={(event) => setOperator(event.target.value)}
                   value={operator}
                 >
                   <option value="contains">包含</option>
                   <option value="exact">完全相等</option>
                 </select>
-                <span className="mt-1 block text-xs text-[var(--text-muted)]">
+                <span className="mt-1 block text-xs text-[var(--muted)]">
                   {scorerType === "rule"
                     ? "输出是否包含/等于期望值"
                     : "输出是否包含/等于参考答案"}
@@ -202,7 +202,7 @@ export function ScorerEditorDialog({
                     onChange={(event) => setExpected(event.target.value)}
                     value={expected}
                   />
-                  <span className="mt-1 block text-xs text-[var(--text-muted)]">
+                  <span className="mt-1 block text-xs text-[var(--muted)]">
                     期望在输出中找到的值
                   </span>
                 </label>
@@ -219,9 +219,9 @@ export function ScorerEditorDialog({
             />
           </label>
           {scorer && (
-            <div className="rounded border border-[var(--border)] p-3">
+            <div className="rounded border border-[var(--hairline)] p-3">
               <p className="text-sm font-medium">真实试评</p>
-              <p className="mt-1 text-xs text-[var(--text-muted)]">
+              <p className="mt-1 text-xs text-[var(--muted)]">
                 输入样例数据验证评分器是否按预期工作。
               </p>
               <Input

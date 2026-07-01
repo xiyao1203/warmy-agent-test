@@ -94,7 +94,7 @@ export function CreateUserDialog({
         <form className="mt-5 space-y-4" onSubmit={handleSubmit(submit)}>
           {formError ? (
             <p
-              className="rounded-[var(--radius-sm)] bg-[var(--danger-subtle)] px-3 py-2 text-sm text-[var(--danger)]"
+              className="rounded-[var(--radius-md)] bg-[var(--danger-subtle)] px-3 py-2 text-sm text-[var(--danger)]"
               role="alert"
             >
               {formError}
@@ -136,7 +136,7 @@ export function CreateUserDialog({
             label="系统角色"
           >
             <select
-              className="h-9 w-full rounded-[var(--radius-sm)] border border-[var(--border)] bg-[var(--surface)] px-3 text-sm"
+              className="h-9 w-full rounded-[var(--radius-md)] border border-[var(--hairline)] bg-[var(--surface)] px-3 text-sm"
               id="create-role"
               {...register("role")}
             >
@@ -260,7 +260,7 @@ export function EditUserDialog({
         <form className="mt-5 space-y-4" onSubmit={handleSubmit(submit)}>
           {formError ? (
             <p
-              className="rounded-[var(--radius-sm)] bg-[var(--danger-subtle)] px-3 py-2 text-sm text-[var(--danger)]"
+              className="rounded-[var(--radius-md)] bg-[var(--danger-subtle)] px-3 py-2 text-sm text-[var(--danger)]"
               role="alert"
             >
               {formError}
@@ -290,7 +290,7 @@ export function EditUserDialog({
             label="系统角色"
           >
             <select
-              className="h-9 w-full rounded-[var(--radius-sm)] border border-[var(--border)] bg-[var(--surface)] px-3 text-sm"
+              className="h-9 w-full rounded-[var(--radius-md)] border border-[var(--hairline)] bg-[var(--surface)] px-3 text-sm"
               id="edit-role"
               {...register("role")}
             >

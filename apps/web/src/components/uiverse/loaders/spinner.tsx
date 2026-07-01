@@ -18,7 +18,7 @@ export function Spinner({
   return (
     <div
       aria-label="加载中"
-      className={`animate-spin rounded-full border-2 border-[var(--border)] border-t-[var(--accent)] ${sizeClasses[size]} ${className}`}
+      className={`animate-spin rounded-full border-2 border-[var(--hairline)] border-t-[var(--primary)] ${sizeClasses[size]} ${className}`}
       role="status"
       {...props}
     >

@@ -29,8 +29,8 @@ export interface TraceTimelineProps {
 export function TraceTimeline({ spans, onSpanClick }: TraceTimelineProps) {
   if (spans.length === 0) {
     return (
-      <div className="flex min-h-[200px] items-center justify-center rounded border border-dashed border-[var(--border)]">
-        <p className="text-sm text-[var(--text-muted)]">暂无 Trace 数据</p>
+      <div className="flex min-h-[200px] items-center justify-center rounded border border-dashed border-[var(--hairline)]">
+        <p className="text-sm text-[var(--muted)]">暂无 Trace 数据</p>
       </div>
     );
   }
@@ -44,13 +44,13 @@ export function TraceTimeline({ spans, onSpanClick }: TraceTimelineProps) {
       {/* 标题栏 */}
       <div className="flex items-center justify-between">
         <h3 className="text-sm font-medium">Trace 时间轴</h3>
-        <span className="text-xs text-[var(--text-muted)]">
+        <span className="text-xs text-[var(--muted)]">
           总耗时: {totalDuration}ms
         </span>
       </div>
 
       {/* 时间刻度 */}
-      <div className="flex justify-between text-xs text-[var(--text-muted)]">
+      <div className="flex justify-between text-xs text-[var(--muted)]">
         <span>0ms</span>
         <span>{Math.round(totalDuration / 4)}ms</span>
         <span>{Math.round(totalDuration / 2)}ms</span>
@@ -71,7 +71,7 @@ export function TraceTimeline({ spans, onSpanClick }: TraceTimelineProps) {
               className={`cursor-pointer rounded border p-3 transition-colors ${
                 isError
                   ? "border-[var(--danger)] bg-[var(--danger-subtle)]"
-                  : "border-[var(--border)] hover:bg-[var(--surface-subtle)]"
+                  : "border-[var(--hairline)] hover:bg-[var(--canvas-soft)]"
               }`}
               onClick={() => onSpanClick?.(span)}
             >
@@ -84,16 +84,16 @@ export function TraceTimeline({ spans, onSpanClick }: TraceTimelineProps) {
                     </span>
                   )}
                 </div>
-                <span className="text-xs text-[var(--text-muted)]">
+                <span className="text-xs text-[var(--muted)]">
                   {span.duration}ms
                 </span>
               </div>
 
               {/* 时间条 */}
-              <div className="relative mt-2 h-2 overflow-hidden rounded-full bg-[var(--surface-subtle)]">
+              <div className="relative mt-2 h-2 overflow-hidden rounded-full bg-[var(--canvas-soft)]">
                 <div
                   className={`absolute h-full rounded-full ${
-                    isError ? "bg-[var(--danger)]" : "bg-[var(--accent)]"
+                    isError ? "bg-[var(--danger)]" : "bg-[var(--primary)]"
                   }`}
                   style={{
                     left: `${leftPercent}%`,

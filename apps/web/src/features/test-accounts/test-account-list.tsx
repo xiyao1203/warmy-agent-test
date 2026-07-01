@@ -66,7 +66,7 @@ export function TestAccountList({
   if (loading) {
     return (
       <div className="grid min-h-[200px] place-items-center text-sm">
-        <p className="text-[var(--text-muted)]">正在加载测试账号…</p>
+        <p className="text-[var(--muted)]">正在加载测试账号…</p>
       </div>
     );
   }
@@ -76,14 +76,14 @@ export function TestAccountList({
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-lg font-semibold">测试账号</h2>
-          <p className="mt-1 text-sm text-[var(--text-muted)]">
+          <p className="mt-1 text-sm text-[var(--muted)]">
             管理用于测试的账号凭证，凭证已加密存储。
           </p>
         </div>
         {onCreate && <CreateAccountDialog onCreate={onCreate} />}
       </div>
 
-      <section className="mt-4 overflow-hidden rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--surface)]">
+      <section className="mt-4 overflow-hidden rounded-[var(--radius-lg)] border border-[var(--hairline)] bg-[var(--surface)]">
         {!accounts.length ? (
           <EmptyState
             description="创建测试账号后，可在测试计划中引用。"
@@ -91,7 +91,7 @@ export function TestAccountList({
           />
         ) : (
           <Table>
-            <TableHeader className="bg-[var(--surface-subtle)]">
+            <TableHeader className="bg-[var(--canvas-soft)]">
               <TableRow>
                 <TableHead>账号信息</TableHead>
                 <TableHead className="w-32 text-center">类型</TableHead>
@@ -103,17 +103,17 @@ export function TestAccountList({
             <TableBody>
               {accounts.map((account) => (
                 <TableRow
-                  className="transition-colors hover:bg-[var(--surface-subtle)]"
+                  className="transition-colors hover:bg-[var(--canvas-soft)]"
                   key={account.id}
                 >
                   <TableCell>
                     <div className="flex items-center gap-3">
-                      <span className="grid size-8 shrink-0 place-items-center rounded-[var(--radius-sm)] bg-[var(--surface-subtle)]">
+                      <span className="grid size-8 shrink-0 place-items-center rounded-[var(--radius-md)] bg-[var(--canvas-soft)]">
                         <User aria-hidden="true" className="size-4" />
                       </span>
                       <div>
                         <p className="font-medium">{account.name}</p>
-                        <p className="mt-0.5 text-xs text-[var(--text-muted)]">
+                        <p className="mt-0.5 text-xs text-[var(--muted)]">
                           {account.username}
                         </p>
                       </div>
@@ -125,7 +125,7 @@ export function TestAccountList({
                     </Badge>
                   </TableCell>
                   <TableCell className="text-center">
-                    <code className="rounded bg-[var(--surface-subtle)] px-2 py-1 text-xs">
+                    <code className="rounded bg-[var(--canvas-soft)] px-2 py-1 text-xs">
                       {account.credential_masked}
                     </code>
                   </TableCell>
@@ -276,7 +276,7 @@ function CreateAccountDialog({
                 value={credential}
               />
               <button
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)]"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--muted)]"
                 onClick={() => setShowCredential(!showCredential)}
                 type="button"
               >
@@ -291,7 +291,7 @@ function CreateAccountDialog({
           <label className="block text-sm font-medium">
             账号类型
             <select
-              className="mt-1.5 h-9 w-full rounded-[var(--radius-sm)] border border-[var(--border)] bg-[var(--surface)] px-3"
+              className="mt-1.5 h-9 w-full rounded-[var(--radius-md)] border border-[var(--hairline)] bg-[var(--surface)] px-3"
               onChange={(e) => setAccountType(e.target.value)}
               value={accountType}
             >
@@ -311,7 +311,7 @@ function CreateAccountDialog({
             />
           </label>
           {error && <p className="text-sm text-[var(--danger)]">{error}</p>}
-          <div className="flex justify-end gap-2 border-t border-[var(--border)] pt-4">
+          <div className="flex justify-end gap-2 border-t border-[var(--hairline)] pt-4">
             <Button onClick={() => setOpen(false)}>取消</Button>
             <Button
               disabled={submitting}

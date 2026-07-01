@@ -61,12 +61,12 @@ export function SecuritySection() {
 
   return (
     <div className="space-y-5">
-      <section className="rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--surface)] p-4 sm:p-5">
-        <div className="mb-4 flex items-start gap-3 border-b border-[var(--border)] pb-4">
-          <Lock className="mt-0.5 size-4 text-[var(--text-muted)]" />
+      <section className="rounded-[var(--radius-lg)] border border-[var(--hairline)] bg-[var(--surface)] p-4 sm:p-5">
+        <div className="mb-4 flex items-start gap-3 border-b border-[var(--hairline)] pb-4">
+          <Lock className="mt-0.5 size-4 text-[var(--muted)]" />
           <div>
             <h3 className="text-sm font-semibold">修改密码</h3>
-            <p className="mt-1 text-xs text-[var(--text-muted)]">
+            <p className="mt-1 text-xs text-[var(--muted)]">
               使用当前密码验证身份后设置新密码。
             </p>
           </div>
@@ -109,7 +109,7 @@ export function SecuritySection() {
               />
               <button
                 aria-label={showCurrentPassword ? "隐藏密码" : "显示密码"}
-                className="absolute inset-y-0 right-0 flex w-10 items-center justify-center text-[var(--text-muted)]"
+                className="absolute inset-y-0 right-0 flex w-10 items-center justify-center text-[var(--muted)]"
                 onClick={() => setShowCurrentPassword(!showCurrentPassword)}
                 type="button"
               >
@@ -140,7 +140,7 @@ export function SecuritySection() {
               />
               <button
                 aria-label={showNewPassword ? "隐藏密码" : "显示密码"}
-                className="absolute inset-y-0 right-0 flex w-10 items-center justify-center text-[var(--text-muted)]"
+                className="absolute inset-y-0 right-0 flex w-10 items-center justify-center text-[var(--muted)]"
                 onClick={() => setShowNewPassword(!showNewPassword)}
                 type="button"
               >
@@ -176,18 +176,18 @@ export function SecuritySection() {
         </form>
       </section>
 
-      <section className="rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--surface)] p-4 sm:p-5">
+      <section className="rounded-[var(--radius-lg)] border border-[var(--hairline)] bg-[var(--surface)] p-4 sm:p-5">
         <div className="flex items-start justify-between gap-4">
           <div className="flex items-start gap-3">
-            <Shield className="mt-0.5 size-4 text-[var(--text-muted)]" />
+            <Shield className="mt-0.5 size-4 text-[var(--muted)]" />
             <div>
               <h3 className="text-sm font-semibold">两步验证</h3>
-              <p className="mt-1 text-xs leading-5 text-[var(--text-muted)]">
+              <p className="mt-1 text-xs leading-5 text-[var(--muted)]">
                 当前账户暂不支持手机验证码或身份验证器绑定。
               </p>
             </div>
           </div>
-          <span className="shrink-0 rounded-full bg-[var(--surface-subtle)] px-2.5 py-1 text-xs font-medium text-[var(--text-muted)]">
+          <span className="shrink-0 rounded-full bg-[var(--canvas-soft)] px-2.5 py-1 text-xs font-medium text-[var(--muted)]">
             暂未开放
           </span>
         </div>

@@ -110,17 +110,17 @@ export function UserManagement({
 
   return (
     <div className="min-w-0 px-6 py-6">
-      <header className="flex items-start justify-between gap-4 border-b border-[var(--border)] pb-5">
+      <header className="flex items-start justify-between gap-4 border-b border-[var(--hairline)] pb-5">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">用户管理</h1>
-          <p className="mt-2 text-sm text-[var(--text-muted)]">
+          <p className="mt-2 text-sm text-[var(--muted)]">
             管理内部账号、系统角色和登录状态。
           </p>
         </div>
         <CreateUserDialog onCreate={onCreate} />
       </header>
 
-      <section className="grid grid-cols-4 border-b border-[var(--border)] py-4 text-sm max-[900px]:grid-cols-2 max-[900px]:gap-4">
+      <section className="grid grid-cols-4 border-b border-[var(--hairline)] py-4 text-sm max-[900px]:grid-cols-2 max-[900px]:gap-4">
         <Summary label="当前页用户" value={users.length} />
         <Summary
           label="活跃"
@@ -140,7 +140,7 @@ export function UserManagement({
         <label className="relative min-w-64 flex-1">
           <Search
             aria-hidden="true"
-            className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-[var(--text-muted)]"
+            className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-[var(--muted)]"
           />
           <Input
             className="pl-9"
@@ -151,7 +151,7 @@ export function UserManagement({
         </label>
         <select
           aria-label="按角色筛选"
-          className="h-9 rounded-[var(--radius-sm)] border border-[var(--border)] bg-[var(--surface)] px-3 text-sm"
+          className="h-9 rounded-[var(--radius-md)] border border-[var(--hairline)] bg-[var(--surface)] px-3 text-sm"
           onChange={(event) =>
             setRole(event.target.value as SystemRole | "all")
           }
@@ -166,7 +166,7 @@ export function UserManagement({
         </select>
         <select
           aria-label="按状态筛选"
-          className="h-9 rounded-[var(--radius-sm)] border border-[var(--border)] bg-[var(--surface)] px-3 text-sm"
+          className="h-9 rounded-[var(--radius-md)] border border-[var(--hairline)] bg-[var(--surface)] px-3 text-sm"
           onChange={(event) =>
             setStatus(event.target.value as UserStatus | "all")
           }
@@ -178,7 +178,7 @@ export function UserManagement({
         </select>
       </div>
 
-      <section className="overflow-hidden rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--surface)]">
+      <section className="overflow-hidden rounded-[var(--radius-lg)] border border-[var(--hairline)] bg-[var(--surface)]">
         {!users.length ? (
           <EmptyState
             description="创建第一个内部账号后，用户会显示在这里。"
@@ -191,7 +191,7 @@ export function UserManagement({
           />
         ) : (
           <Table>
-            <TableHeader className="bg-[var(--surface-subtle)]">
+            <TableHeader className="bg-[var(--canvas-soft)]">
               <TableRow>
                 <TableHead>用户</TableHead>
                 <TableHead>系统角色</TableHead>
@@ -203,12 +203,12 @@ export function UserManagement({
             <TableBody>
               {filteredUsers.map((user) => (
                 <TableRow
-                  className="hover:bg-[var(--surface-subtle)]"
+                  className="hover:bg-[var(--canvas-soft)]"
                   key={user.id}
                 >
                   <TableCell>
                     <p className="font-medium">{user.display_name}</p>
-                    <p className="mt-0.5 text-xs text-[var(--text-muted)]">
+                    <p className="mt-0.5 text-xs text-[var(--muted)]">
                       {user.email}
                     </p>
                   </TableCell>
@@ -230,13 +230,13 @@ export function UserManagement({
                     {user.must_change_password ? (
                       <Badge tone="warning">需改密</Badge>
                     ) : (
-                      <span className="text-[var(--text-muted)]">正常</span>
+                      <span className="text-[var(--muted)]">正常</span>
                     )}
                   </TableCell>
                   <TableCell className="text-right">
                     <button
                       aria-label={`查看${user.display_name}`}
-                      className="rounded-[var(--radius-sm)] px-2 py-1 text-sm text-[var(--accent)] hover:bg-[var(--accent-subtle)]"
+                      className="rounded-[var(--radius-md)] px-2 py-1 text-sm text-[var(--primary)] hover:bg-[var(--primary-subtle)]"
                       onClick={() => setSelectedUser(user)}
                       type="button"
                     >
@@ -249,7 +249,7 @@ export function UserManagement({
           </Table>
         )}
         {nextCursor ? (
-          <div className="border-t border-[var(--border)] px-4 py-3 text-right text-xs text-[var(--text-muted)]">
+          <div className="border-t border-[var(--hairline)] px-4 py-3 text-right text-xs text-[var(--muted)]">
             后端还有更多用户，下一阶段接入游标翻页。
           </div>
         ) : null}
@@ -273,8 +273,8 @@ export function UserManagement({
 
 function Summary({ label, value }: { label: string; value: number }) {
   return (
-    <div className="border-r border-[var(--border)] px-4 first:pl-0 last:border-r-0">
-      <p className="text-xs text-[var(--text-muted)]">{label}</p>
+    <div className="border-r border-[var(--hairline)] px-4 first:pl-0 last:border-r-0">
+      <p className="text-xs text-[var(--muted)]">{label}</p>
       <p className="mt-1 text-lg font-semibold">{value}</p>
     </div>
   );
@@ -292,7 +292,7 @@ function StatusPanel({
       <div>
         <h1 className="text-base font-semibold">{title}</h1>
         {description ? (
-          <p className="mt-2 text-sm text-[var(--text-muted)]">{description}</p>
+          <p className="mt-2 text-sm text-[var(--muted)]">{description}</p>
         ) : null}
       </div>
     </div>

@@ -77,8 +77,8 @@ export function ArtifactPreview({
 
   if (artifacts.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center rounded-[var(--radius-md)] border border-dashed border-[var(--border)] p-8">
-        <p className="text-sm text-[var(--text-muted)]">暂无产物文件</p>
+      <div className="flex flex-col items-center justify-center rounded-[var(--radius-lg)] border border-dashed border-[var(--hairline)] p-8">
+        <p className="text-sm text-[var(--muted)]">暂无产物文件</p>
       </div>
     );
   }
@@ -87,7 +87,7 @@ export function ArtifactPreview({
     <div className="space-y-4">
       {/* 头部统计和筛选 */}
       <div className="flex items-center justify-between">
-        <p className="text-sm text-[var(--text-muted)]">
+        <p className="text-sm text-[var(--muted)]">
           共 {artifacts.length} 个产物文件
         </p>
         <div className="flex gap-2">
@@ -123,15 +123,15 @@ export function ArtifactPreview({
         {filteredArtifacts.map((artifact) => (
           <div
             key={artifact.id}
-            className="flex cursor-pointer items-center justify-between rounded-[var(--radius-md)] border border-[var(--border)] p-3 transition-colors hover:bg-[var(--surface-hover)]"
+            className="flex cursor-pointer items-center justify-between rounded-[var(--radius-lg)] border border-[var(--hairline)] p-3 transition-colors hover:bg-[var(--surface-hover)]"
             onClick={() => onArtifactSelect?.(artifact)}
           >
             <div className="flex items-center gap-3">
               {/* 文件图标 */}
-              <div className="flex h-10 w-10 items-center justify-center rounded-[var(--radius-sm)] bg-[var(--surface-subtle)]">
+              <div className="flex h-10 w-10 items-center justify-center rounded-[var(--radius-md)] bg-[var(--canvas-soft)]">
                 {artifact.type === "image" && (
                   <svg
-                    className="h-5 w-5 text-[var(--text-muted)]"
+                    className="h-5 w-5 text-[var(--muted)]"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -146,7 +146,7 @@ export function ArtifactPreview({
                 )}
                 {artifact.type === "video" && (
                   <svg
-                    className="h-5 w-5 text-[var(--text-muted)]"
+                    className="h-5 w-5 text-[var(--muted)]"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -167,7 +167,7 @@ export function ArtifactPreview({
                 )}
                 {artifact.type === "file" && (
                   <svg
-                    className="h-5 w-5 text-[var(--text-muted)]"
+                    className="h-5 w-5 text-[var(--muted)]"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -185,7 +185,7 @@ export function ArtifactPreview({
               {/* 文件信息 */}
               <div>
                 <p className="text-sm font-medium">{artifact.name}</p>
-                <p className="text-xs text-[var(--text-muted)]">
+                <p className="text-xs text-[var(--muted)]">
                   {formatFileSize(artifact.size)} ·{" "}
                   {new Date(artifact.created_at).toLocaleString()}
                 </p>

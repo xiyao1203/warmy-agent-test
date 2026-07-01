@@ -56,7 +56,7 @@ export function ImportDialog({
           <label className="block text-sm font-medium">
             导入格式
             <select
-              className="mt-1.5 h-9 w-full rounded-[var(--radius-sm)] border border-[var(--border)] bg-[var(--surface)] px-3"
+              className="mt-1.5 h-9 w-full rounded-[var(--radius-md)] border border-[var(--hairline)] bg-[var(--surface)] px-3"
               onChange={(event) =>
                 setFormat(
                   event.target.value as ImportTestCasesRequest["format"],
@@ -73,13 +73,13 @@ export function ImportDialog({
             导入内容
             <textarea
               aria-label="导入内容"
-              className="mt-1.5 min-h-48 w-full rounded-[var(--radius-sm)] border border-[var(--border)] bg-[var(--surface)] px-3 py-2 font-mono text-xs"
+              className="mt-1.5 min-h-48 w-full rounded-[var(--radius-md)] border border-[var(--hairline)] bg-[var(--surface)] px-3 py-2 font-mono text-xs"
               onChange={(event) => setContent(event.target.value)}
               value={content}
             />
           </label>
           {errors.length ? (
-            <ul className="space-y-1 rounded-[var(--radius-sm)] bg-[var(--danger-subtle)] p-3 text-sm text-[var(--danger)]">
+            <ul className="space-y-1 rounded-[var(--radius-md)] bg-[var(--danger-subtle)] p-3 text-sm text-[var(--danger)]">
               {errors.map((error) => (
                 <li key={`${error.line}-${error.reason}`}>
                   第 {error.line} 行：{error.reason}

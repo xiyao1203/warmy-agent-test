@@ -58,16 +58,16 @@ export function RunDetail({
     ? Math.round((finishedCases / run.total_cases) * 100)
     : 0;
   return (
-    <div className="min-w-0 bg-[var(--background)] px-6 py-6">
-      <header className="flex flex-wrap items-start justify-between gap-4 border-b border-[var(--border)] pb-5">
+    <div className="min-w-0 bg-[var(--canvas)] px-6 py-6">
+      <header className="flex flex-wrap items-start justify-between gap-4 border-b border-[var(--hairline)] pb-5">
         <div>
-          <p className="text-xs font-medium text-[var(--text-subtle)]">
+          <p className="text-xs font-medium text-[var(--body)]">
             运行详情
           </p>
           <h1 className="text-2xl font-semibold tracking-tight">
             Run {run.id.slice(0, 8)}
           </h1>
-          <p className="mt-2 text-sm text-[var(--text-muted)]">
+          <p className="mt-2 text-sm text-[var(--muted)]">
             {run.passed_cases} 通过 · {run.failed_cases} 失败 ·{" "}
             {run.error_cases} 错误 · {run.cancelled_cases} 已取消
           </p>
@@ -103,7 +103,7 @@ export function RunDetail({
         </div>
       </header>
       {/* Tabs */}
-      <nav className="mt-5 flex gap-1 border-b border-[var(--border)]">
+      <nav className="mt-5 flex gap-1 border-b border-[var(--hairline)]">
         {(
           [
             ["overview", "概览"],
@@ -116,8 +116,8 @@ export function RunDetail({
             key={key}
             className={`rounded-t px-4 py-2 text-sm font-medium transition-colors ${
               activeTab === key
-                ? "border-b-2 border-[var(--accent)] text-[var(--accent)]"
-                : "text-[var(--text-muted)] hover:text-[var(--text)]"
+                ? "border-b-2 border-[var(--primary)] text-[var(--primary)]"
+                : "text-[var(--muted)] hover:text-[var(--ink)]"
             }`}
             onClick={() => setActiveTab(key)}
             type="button"
@@ -131,7 +131,7 @@ export function RunDetail({
       {activeTab === "overview" ? (
         <div className="mt-5 grid grid-cols-[minmax(0,1fr)_22rem] gap-5 max-[1100px]:grid-cols-1">
           <section className="space-y-3">
-            <div className="rounded border border-[var(--border)] bg-[var(--surface)] p-5">
+            <div className="rounded border border-[var(--hairline)] bg-[var(--surface)] p-5">
               <h3 className="text-sm font-semibold">执行摘要</h3>
               <dl className="mt-3 grid grid-cols-4 gap-3">
                 <SummaryItem label="总用例" value={String(run.total_cases)} />
@@ -141,7 +141,7 @@ export function RunDetail({
               </dl>
             </div>
           </section>
-          <aside className="h-fit rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[0_12px_40px_rgba(15,23,42,0.04)]">
+          <aside className="h-fit rounded-[var(--radius-lg)] border border-[var(--hairline)] bg-[var(--surface)] p-5 shadow-[0_12px_40px_rgba(15,23,42,0.04)]">
             <div className="flex items-center justify-between gap-3">
               <h2 className="text-base font-semibold">执行摘要</h2>
               <Badge tone={canCancel ? "accent" : "neutral"}>
@@ -151,12 +151,12 @@ export function RunDetail({
             </div>
             <div className="mt-5">
               <div className="flex items-center justify-between text-sm">
-                <span className="text-[var(--text-muted)]">完成进度</span>
+                <span className="text-[var(--muted)]">完成进度</span>
                 <span className="font-medium">{progress}%</span>
               </div>
-              <div className="mt-2 h-2 overflow-hidden rounded-full bg-[var(--surface-subtle)]">
+              <div className="mt-2 h-2 overflow-hidden rounded-full bg-[var(--canvas-soft)]">
                 <div
-                  className="h-full rounded-full bg-[var(--accent)]"
+                  className="h-full rounded-full bg-[var(--primary)]"
                   style={{ width: `${progress}%` }}
                 />
               </div>
@@ -170,7 +170,7 @@ export function RunDetail({
                 value={String(run.failed_cases + run.error_cases)}
               />
             </dl>
-            <div className="mt-5 space-y-3 border-t border-[var(--border)] pt-5 text-sm">
+            <div className="mt-5 space-y-3 border-t border-[var(--hairline)] pt-5 text-sm">
               <InfoRow label="Workflow" value={run.workflow_id ?? "待启动"} />
               <InfoRow
                 label="创建时间"
@@ -193,8 +193,8 @@ export function RunDetail({
                 }
               />
             </div>
-            <div className="mt-5 rounded-[var(--radius-sm)] bg-[var(--surface-subtle)] p-3 text-xs leading-5 text-[var(--text-muted)]">
-              <div className="flex items-center gap-2 font-medium text-[var(--text)]">
+            <div className="mt-5 rounded-[var(--radius-md)] bg-[var(--canvas-soft)] p-3 text-xs leading-5 text-[var(--muted)]">
+              <div className="flex items-center gap-2 font-medium text-[var(--ink)]">
                 <CheckCircle2 aria-hidden="true" className="size-4" />
                 Trace 会随运行结果持续更新
               </div>
@@ -210,21 +210,21 @@ export function RunDetail({
       {activeTab === "cases" ? (
         <section className="mt-5 grid gap-4">
           {cases.length === 0 ? (
-            <div className="rounded-[var(--radius-md)] border border-[var(--border)] p-8 text-center">
-              <p className="text-sm font-medium text-[var(--text-muted)]">
+            <div className="rounded-[var(--radius-lg)] border border-[var(--hairline)] p-8 text-center">
+              <p className="text-sm font-medium text-[var(--muted)]">
                 暂无用例数据
               </p>
             </div>
           ) : (
             cases.map((item) => (
               <article
-                className="rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--surface)] p-4 shadow-[0_12px_40px_rgba(15,23,42,0.04)]"
+                className="rounded-[var(--radius-lg)] border border-[var(--hairline)] bg-[var(--surface)] p-4 shadow-[0_12px_40px_rgba(15,23,42,0.04)]"
                 key={item.id}
               >
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <div>
                     <h2 className="font-medium">{item.name}</h2>
-                    <p className="mt-1 text-xs text-[var(--text-muted)]">
+                    <p className="mt-1 text-xs text-[var(--muted)]">
                       {item.duration_ms == null
                         ? "未记录耗时"
                         : `${item.duration_ms} ms`}
@@ -233,7 +233,7 @@ export function RunDetail({
                   <StatusBadge status={item.status} />
                 </div>
                 {item.error_type ? (
-                  <div className="mt-4 rounded-[var(--radius-sm)] bg-[var(--danger-subtle)] p-3 text-sm text-[var(--danger)]">
+                  <div className="mt-4 rounded-[var(--radius-md)] bg-[var(--danger-subtle)] p-3 text-sm text-[var(--danger)]">
                     <div className="flex items-center gap-2 font-medium">
                       <AlertTriangle aria-hidden="true" className="size-4" />
                       {item.error_type}
@@ -242,7 +242,7 @@ export function RunDetail({
                   </div>
                 ) : null}
                 {item.output ? (
-                  <pre className="mt-4 overflow-auto rounded-[var(--radius-sm)] bg-[var(--surface-subtle)] p-3 text-xs">
+                  <pre className="mt-4 overflow-auto rounded-[var(--radius-md)] bg-[var(--canvas-soft)] p-3 text-xs">
                     {JSON.stringify(item.output, null, 2)}
                   </pre>
                 ) : null}
@@ -255,7 +255,7 @@ export function RunDetail({
                     {item.trace.length ? (
                       item.trace.map((span, index) => (
                         <div
-                          className="rounded-[var(--radius-sm)] border border-[var(--border)] p-3 text-xs"
+                          className="rounded-[var(--radius-md)] border border-[var(--hairline)] p-3 text-xs"
                           key={index}
                         >
                           <div className="flex items-center justify-between gap-3">
@@ -264,13 +264,13 @@ export function RunDetail({
                             </span>
                             <Badge>{String(span.status ?? "recorded")}</Badge>
                           </div>
-                          <pre className="mt-2 overflow-auto text-[var(--text-muted)]">
+                          <pre className="mt-2 overflow-auto text-[var(--muted)]">
                             {JSON.stringify(span, null, 2)}
                           </pre>
                         </div>
                       ))
                     ) : (
-                      <p className="text-sm text-[var(--text-muted)]">
+                      <p className="text-sm text-[var(--muted)]">
                         暂无 Trace
                       </p>
                     )}
@@ -342,11 +342,11 @@ export function RunDetail({
             <p className="mt-2 text-sm text-[var(--danger)]">{uploadError}</p>
           )}
           {artifacts.length === 0 ? (
-            <p className="mt-3 text-sm text-[var(--text-muted)]">
+            <p className="mt-3 text-sm text-[var(--muted)]">
               暂无产物，点击上传按钮添加。
             </p>
           ) : (
-            <ul className="mt-3 divide-y divide-[var(--border)] rounded-[var(--radius-sm)] border border-[var(--border)]">
+            <ul className="mt-3 divide-y divide-[var(--hairline)] rounded-[var(--radius-md)] border border-[var(--hairline)]">
               {artifacts.map((a) => (
                 <li
                   key={a.id}
@@ -354,7 +354,7 @@ export function RunDetail({
                 >
                   <div className="min-w-0">
                     <p className="truncate text-sm font-medium">{a.filename}</p>
-                    <p className="text-xs text-[var(--text-muted)]">
+                    <p className="text-xs text-[var(--muted)]">
                       {a.content_type} · {formatBytes(a.size_bytes)} ·{" "}
                       {new Date(a.created_at).toLocaleDateString("zh-CN")}
                     </p>
@@ -379,8 +379,8 @@ export function RunDetail({
 
 function SummaryItem({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-[var(--radius-sm)] border border-[var(--border)] p-3">
-      <dt className="text-xs text-[var(--text-muted)]">{label}</dt>
+    <div className="rounded-[var(--radius-md)] border border-[var(--hairline)] p-3">
+      <dt className="text-xs text-[var(--muted)]">{label}</dt>
       <dd className="mt-1 text-lg font-semibold">{value}</dd>
     </div>
   );
@@ -389,7 +389,7 @@ function SummaryItem({ label, value }: { label: string; value: string }) {
 function InfoRow({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex items-start justify-between gap-3">
-      <span className="text-[var(--text-muted)]">{label}</span>
+      <span className="text-[var(--muted)]">{label}</span>
       <span className="max-w-44 break-all text-right font-medium">{value}</span>
     </div>
   );
@@ -403,9 +403,9 @@ function formatBytes(bytes: number): string {
 
 function RunDetailSkeleton() {
   return (
-    <div className="min-w-0 bg-[var(--background)] px-6 py-6">
+    <div className="min-w-0 bg-[var(--canvas)] px-6 py-6">
       {/* Header skeleton */}
-      <header className="flex flex-wrap items-start justify-between gap-4 border-b border-[var(--border)] pb-5">
+      <header className="flex flex-wrap items-start justify-between gap-4 border-b border-[var(--hairline)] pb-5">
         <div>
           <Skeleton className="h-3 w-16" />
           <Skeleton className="mt-1 h-8 w-32" />
@@ -423,7 +423,7 @@ function RunDetailSkeleton() {
         {Array.from({ length: 6 }).map((_, i) => (
           <div
             key={i}
-            className="rounded-[var(--radius-sm)] border border-[var(--border)] p-3"
+            className="rounded-[var(--radius-md)] border border-[var(--hairline)] p-3"
           >
             <Skeleton className="h-3 w-12" />
             <Skeleton className="mt-1 h-7 w-16" />
@@ -432,7 +432,7 @@ function RunDetailSkeleton() {
       </dl>
 
       {/* Tabs skeleton */}
-      <div className="mt-6 border-b border-[var(--border)]">
+      <div className="mt-6 border-b border-[var(--hairline)]">
         <div className="flex gap-4">
           {Array.from({ length: 4 }).map((_, i) => (
             <Skeleton key={i} className="h-8 w-16" />

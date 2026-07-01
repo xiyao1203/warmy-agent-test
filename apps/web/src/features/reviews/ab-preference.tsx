@@ -44,7 +44,7 @@ const OPTIONS: ABPreferenceOption[] = [
 const COLOR_MAP: Record<string, string> = {
   success: "text-[var(--success)]",
   danger: "text-[var(--danger)]",
-  muted: "text-[var(--text-muted)]",
+  muted: "text-[var(--muted)]",
 };
 
 /**
@@ -73,8 +73,8 @@ export function ABPreferenceSelector({
               disabled ? "cursor-not-allowed opacity-50" : "cursor-pointer"
             } ${
               isSelected
-                ? "border-[var(--accent)] bg-[var(--accent-subtle)]"
-                : "border-[var(--border)] hover:bg-[var(--surface-subtle)]"
+                ? "border-[var(--primary)] bg-[var(--primary-subtle)]"
+                : "border-[var(--hairline)] hover:bg-[var(--canvas-soft)]"
             }`}
             onClick={() => !disabled && onChange(option.id)}
             type="button"
@@ -127,14 +127,14 @@ export function ABReviewPanel({
     <div className="space-y-4">
       {/* 对比区域 */}
       <div className="grid grid-cols-2 gap-4">
-        <div className="rounded border border-[var(--border)] p-4">
-          <p className="mb-2 text-sm font-medium text-[var(--text-muted)]">
+        <div className="rounded border border-[var(--hairline)] p-4">
+          <p className="mb-2 text-sm font-medium text-[var(--muted)]">
             版本 A
           </p>
           <div className="max-h-48 overflow-auto text-sm">{outputA}</div>
         </div>
-        <div className="rounded border border-[var(--border)] p-4">
-          <p className="mb-2 text-sm font-medium text-[var(--text-muted)]">
+        <div className="rounded border border-[var(--hairline)] p-4">
+          <p className="mb-2 text-sm font-medium text-[var(--muted)]">
             版本 B
           </p>
           <div className="max-h-48 overflow-auto text-sm">{outputB}</div>
@@ -156,7 +156,7 @@ export function ABReviewPanel({
         <label className="block text-sm font-medium" htmlFor="ab-opinion">
           审核意见
           <textarea
-            className="mt-1.5 w-full rounded border border-[var(--border)] bg-[var(--surface)] p-2 text-sm"
+            className="mt-1.5 w-full rounded border border-[var(--hairline)] bg-[var(--surface)] p-2 text-sm"
             disabled={disabled}
             id="ab-opinion"
             onChange={(e) => onOpinionChange(e.target.value)}

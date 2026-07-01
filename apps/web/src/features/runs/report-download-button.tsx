@@ -78,7 +78,7 @@ export function ReportDownloadButton({
   return (
     <div className="relative">
       <button
-        className="flex items-center gap-2 rounded-[var(--radius-sm)] border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm font-medium transition-colors hover:bg-[var(--surface-subtle)]"
+        className="flex items-center gap-2 rounded-[var(--radius-md)] border border-[var(--hairline)] bg-[var(--surface)] px-3 py-2 text-sm font-medium transition-colors hover:bg-[var(--canvas-soft)]"
         onClick={() => setIsOpen(!isOpen)}
         type="button"
       >
@@ -92,8 +92,8 @@ export function ReportDownloadButton({
             className="fixed inset-0 z-40"
             onClick={() => setIsOpen(false)}
           />
-          <div className="absolute right-0 top-full z-50 mt-2 w-64 rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--surface)] p-2 shadow-[var(--shadow-overlay)]">
-            <p className="px-2 pb-2 text-xs font-medium text-[var(--text-muted)]">
+          <div className="absolute right-0 top-full z-50 mt-2 w-64 rounded-[var(--radius-lg)] border border-[var(--hairline)] bg-[var(--surface)] p-2 shadow-[var(--overlay)]">
+            <p className="px-2 pb-2 text-xs font-medium text-[var(--muted)]">
               选择报告格式
             </p>
             <div className="space-y-1">
@@ -102,20 +102,20 @@ export function ReportDownloadButton({
                 return (
                   <button
                     key={option.format}
-                    className="flex w-full items-center gap-3 rounded-[var(--radius-sm)] px-3 py-2 text-left text-sm transition-colors hover:bg-[var(--surface-subtle)] disabled:opacity-50"
+                    className="flex w-full items-center gap-3 rounded-[var(--radius-md)] px-3 py-2 text-left text-sm transition-colors hover:bg-[var(--canvas-soft)] disabled:opacity-50"
                     disabled={downloading !== null}
                     onClick={() => handleDownload(option.format)}
                     type="button"
                   >
-                    <Icon className="size-4 shrink-0 text-[var(--text-muted)]" />
+                    <Icon className="size-4 shrink-0 text-[var(--muted)]" />
                     <div className="min-w-0 flex-1">
                       <p className="font-medium">{option.label}</p>
-                      <p className="text-xs text-[var(--text-muted)]">
+                      <p className="text-xs text-[var(--muted)]">
                         {option.description}
                       </p>
                     </div>
                     {downloading === option.format && (
-                      <div className="size-4 animate-spin rounded-full border-2 border-[var(--accent)] border-t-transparent" />
+                      <div className="size-4 animate-spin rounded-full border-2 border-[var(--primary)] border-t-transparent" />
                     )}
                   </button>
                 );

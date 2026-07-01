@@ -179,12 +179,12 @@ export function EnvironmentVersionDialog({
         </DialogDescription>
 
         {/* ── 分段 Tab ── */}
-        <div className="mt-4 flex gap-1 border-b border-[var(--border)]">
+        <div className="mt-4 flex gap-1 border-b border-[var(--hairline)]">
           {ALL_SECTIONS.map((s) => (
             <button
               className={`px-3 py-2 text-sm font-medium transition-colors ${
                 activeSection === s
-                  ? "border-b-2 border-[var(--accent)] text-[var(--accent)]"
+                  ? "border-b-2 border-[var(--primary)] text-[var(--primary)]"
                   : "text-[var(--muted)] hover:text-[var(--foreground)]"
               }`}
               key={s}
@@ -235,7 +235,7 @@ export function EnvironmentVersionDialog({
                 <div className="space-y-2">
                   {credentials.map((cred) => (
                     <label
-                      className="flex items-center gap-2 rounded border border-[var(--border)] p-3 text-sm"
+                      className="flex items-center gap-2 rounded border border-[var(--hairline)] p-3 text-sm"
                       key={cred.id}
                     >
                       <input
@@ -277,7 +277,7 @@ export function EnvironmentVersionDialog({
               <label className="block text-sm font-medium">
                 描述（可选）
                 <textarea
-                  className="mt-1.5 min-h-16 w-full rounded border border-[var(--border)] bg-[var(--surface)] p-3 text-sm"
+                  className="mt-1.5 min-h-16 w-full rounded border border-[var(--hairline)] bg-[var(--surface)] p-3 text-sm"
                   disabled={isPublished}
                   onChange={(event) => setDescription(event.target.value)}
                   placeholder="记录此版本的用途或变更说明"
@@ -287,7 +287,7 @@ export function EnvironmentVersionDialog({
               <label className="block text-sm font-medium">
                 标签（逗号分隔）
                 <input
-                  className="mt-1.5 h-9 w-full rounded border border-[var(--border)] bg-[var(--surface)] px-3 text-sm"
+                  className="mt-1.5 h-9 w-full rounded border border-[var(--hairline)] bg-[var(--surface)] px-3 text-sm"
                   disabled={isPublished}
                   onChange={(event) => setTags(event.target.value)}
                   placeholder="例如 staging, production, v2"
@@ -302,7 +302,7 @@ export function EnvironmentVersionDialog({
           ) : null}
 
           {/* ── 底部操作栏 ── */}
-          <div className="flex items-center justify-between border-t border-[var(--border)] pt-4">
+          <div className="flex items-center justify-between border-t border-[var(--hairline)] pt-4">
             <div className="flex gap-1">
               {ALL_SECTIONS.map((s, i) => (
                 <span
@@ -355,7 +355,7 @@ function JsonField({
     <label className="block text-sm font-medium">
       {label}
       <textarea
-        className="mt-1.5 min-h-24 w-full rounded border border-[var(--border)] bg-[var(--surface)] p-3 font-mono text-xs"
+        className="mt-1.5 min-h-24 w-full rounded border border-[var(--hairline)] bg-[var(--surface)] p-3 font-mono text-xs"
         disabled={disabled}
         onChange={(event) => onChange(event.target.value)}
         value={value}

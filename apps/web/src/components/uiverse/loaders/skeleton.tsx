@@ -5,7 +5,7 @@ type SkeletonProps = HTMLAttributes<HTMLDivElement>;
 export function Skeleton({ className = "", ...props }: SkeletonProps) {
   return (
     <div
-      className={`animate-pulse rounded-[var(--radius-sm)] bg-gradient-to-r from-[var(--surface-subtle)] via-[var(--border)] to-[var(--surface-subtle)] bg-[length:200%_100%] ${className}`}
+      className={`animate-pulse rounded-[var(--radius-md)] bg-gradient-to-r from-[var(--canvas-soft)] via-[var(--hairline)] to-[var(--canvas-soft)] bg-[length:200%_100%] ${className}`}
       style={{
         animation: "skeleton-loading 1.5s ease-in-out infinite",
       }}
@@ -36,7 +36,7 @@ export function SkeletonText({
 export function SkeletonCard({ className = "" }: { className?: string }) {
   return (
     <div
-      className={`rounded-[var(--radius)] border border-[var(--border)] bg-[var(--surface)] p-6 ${className}`}
+      className={`rounded-[var(--radius)] border border-[var(--hairline)] bg-[var(--surface)] p-6 ${className}`}
     >
       <Skeleton className="mb-4 h-32 w-full" />
       <Skeleton className="mb-2 h-5 w-3/4" />

@@ -94,10 +94,10 @@ export function TargetChatScreen({ projectId }: { projectId: string }) {
 
   return (
     <div className="flex h-[calc(100vh-7rem)] flex-col">
-      <div className="flex flex-wrap gap-3 border-b border-[var(--border)] p-4">
+      <div className="flex flex-wrap gap-3 border-b border-[var(--hairline)] p-4">
         <select
           aria-label="被测 Agent 版本"
-          className="rounded-md border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm"
+          className="rounded-md border border-[var(--hairline)] bg-[var(--surface)] px-3 py-2 text-sm"
           disabled={Boolean(session)}
           onChange={(event) => setVersionId(event.target.value)}
           value={versionId}
@@ -111,7 +111,7 @@ export function TargetChatScreen({ projectId }: { projectId: string }) {
         </select>
         <select
           aria-label="测试环境"
-          className="rounded-md border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm"
+          className="rounded-md border border-[var(--hairline)] bg-[var(--surface)] px-3 py-2 text-sm"
           disabled={Boolean(session)}
           onChange={(event) => setEnvironmentId(event.target.value)}
           value={environmentId}
@@ -140,7 +140,7 @@ export function TargetChatScreen({ projectId }: { projectId: string }) {
                 icon={<Bot className="size-4" />}
                 text={JSON.stringify(turn.output, null, 2)}
               />
-              <p className="pl-11 text-xs text-[var(--text-muted)]">
+              <p className="pl-11 text-xs text-[var(--muted)]">
                 耗时 {turn.duration_ms ?? "-"} ms · Trace{" "}
                 {turn.trace?.length ?? 0} 条 · 评分 {turn.scores?.length ?? 0}{" "}
                 项
@@ -148,13 +148,13 @@ export function TargetChatScreen({ projectId }: { projectId: string }) {
             </div>
           ))
         ) : (
-          <p className="text-sm text-[var(--text-muted)]">
+          <p className="text-sm text-[var(--muted)]">
             选择版本后直接与真实被测 Agent 对话；每轮结果、Trace
             与耗时都会持久化。
           </p>
         )}
       </div>
-      <div className="border-t border-[var(--border)] p-4">
+      <div className="border-t border-[var(--hairline)] p-4">
         <div className="flex gap-2">
           <Input
             aria-label="被测 Agent 对话输入"
@@ -191,7 +191,7 @@ function Bubble({
 }) {
   return (
     <div className={`flex gap-3 ${user ? "flex-row-reverse" : ""}`}>
-      <span className="flex size-8 items-center justify-center rounded-full bg-[var(--surface-subtle)]">
+      <span className="flex size-8 items-center justify-center rounded-full bg-[var(--canvas-soft)]">
         {icon}
       </span>
       <pre className="max-w-[80%] whitespace-pre-wrap rounded-lg bg-[var(--surface)] px-4 py-3 text-sm">

@@ -39,7 +39,7 @@ export function ExportButton({
     <div className="flex items-center gap-2">
       <select
         aria-label="导出格式"
-        className="h-8 rounded-[var(--radius-sm)] border border-[var(--border)] bg-[var(--surface)] px-2 text-sm"
+        className="h-8 rounded-[var(--radius-md)] border border-[var(--hairline)] bg-[var(--surface)] px-2 text-sm"
         onChange={(event) => setFormat(event.target.value as ExportFormat)}
         value={format}
       >

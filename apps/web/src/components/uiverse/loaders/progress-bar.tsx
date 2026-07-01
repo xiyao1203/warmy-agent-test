@@ -19,15 +19,15 @@ export function ProgressBar({
     <div className={`w-full ${className}`} {...props}>
       {showLabel && (
         <div className="mb-1 flex justify-between text-sm">
-          <span className="text-[var(--text-muted)]">进度</span>
-          <span className="font-medium text-[var(--text)]">
+          <span className="text-[var(--muted)]">进度</span>
+          <span className="font-medium text-[var(--ink)]">
             {Math.round(percentage)}%
           </span>
         </div>
       )}
-      <div className="h-2 w-full overflow-hidden rounded-full bg-[var(--surface-subtle)]">
+      <div className="h-2 w-full overflow-hidden rounded-full bg-[var(--canvas-soft)]">
         <div
-          className="h-full rounded-full bg-gradient-to-r from-[var(--accent)] to-[var(--accent-strong)] transition-all duration-500 ease-out"
+          className="h-full rounded-full bg-gradient-to-r from-[var(--primary)] to-[var(--primary-active)] transition-all duration-500 ease-out"
           style={{ width: `${percentage}%` }}
         />
       </div>

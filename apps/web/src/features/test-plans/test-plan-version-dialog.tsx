@@ -193,7 +193,7 @@ export function TestPlanVersionDialog({
               />
             </label>
           </div>
-          <div className="col-span-2 rounded border border-[var(--border)] p-3">
+          <div className="col-span-2 rounded border border-[var(--hairline)] p-3">
             <p className="text-sm font-medium">评分器</p>
             <div className="mt-2 flex flex-wrap gap-3">
               {scorers.map((scorer) => (
@@ -251,7 +251,7 @@ function AssetSelect({
 }) {
   return (
     <select
-      className="mt-1.5 h-9 w-full rounded border border-[var(--border)] bg-[var(--surface)] px-3"
+      className="mt-1.5 h-9 w-full rounded border border-[var(--hairline)] bg-[var(--surface)] px-3"
       onChange={(event) => onChange(event.target.value)}
       value={value}
     >
@@ -281,7 +281,7 @@ function SelectField({
       {label}
       <select
         aria-label={label}
-        className="mt-1.5 h-9 w-full rounded-[var(--radius-sm)] border border-[var(--border)] bg-[var(--surface)] px-3"
+        className="mt-1.5 h-9 w-full rounded-[var(--radius-md)] border border-[var(--hairline)] bg-[var(--surface)] px-3"
         onChange={(event) => onChange(event.target.value)}
         value={value}
       >

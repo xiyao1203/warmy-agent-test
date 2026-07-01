@@ -89,24 +89,24 @@ export function EnvironmentList({
   if (error === "not-found") {
     return (
       <div className="grid min-h-[calc(100vh-3rem)] place-items-center text-sm">
-        <p className="text-[var(--text-muted)]">项目不存在或无权访问</p>
+        <p className="text-[var(--muted)]">项目不存在或无权访问</p>
       </div>
     );
   }
   if (error === "service") {
     return (
       <div className="grid min-h-[calc(100vh-3rem)] place-items-center text-sm">
-        <p className="text-[var(--text-muted)]">环境模板列表暂时不可用</p>
+        <p className="text-[var(--muted)]">环境模板列表暂时不可用</p>
       </div>
     );
   }
 
   return (
     <div className="min-w-0 px-6 py-6">
-      <header className="flex items-start justify-between gap-4 border-b border-[var(--border)] pb-5">
+      <header className="flex items-start justify-between gap-4 border-b border-[var(--hairline)] pb-5">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">环境与凭证</h1>
-          <p className="mt-2 text-sm text-[var(--text-muted)]">
+          <p className="mt-2 text-sm text-[var(--muted)]">
             管理测试环境模板、测试凭证、Mock 服务和沙箱配置。
           </p>
         </div>
@@ -115,7 +115,7 @@ export function EnvironmentList({
         )}
       </header>
 
-      <section className="mt-5 overflow-hidden rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--surface)]">
+      <section className="mt-5 overflow-hidden rounded-[var(--radius-lg)] border border-[var(--hairline)] bg-[var(--surface)]">
         {!environments.length ? (
           <EmptyState
             description="创建环境模板后，可在测试计划中引用并自动配置执行环境。"
@@ -123,7 +123,7 @@ export function EnvironmentList({
           />
         ) : (
           <Table className="w-auto min-w-[680px] table-fixed">
-            <TableHeader className="bg-[var(--surface-subtle)]">
+            <TableHeader className="bg-[var(--canvas-soft)]">
               <TableRow>
                 <TableHead className="w-[380px]">模板信息</TableHead>
                 <TableHead className="w-24 text-center">类型</TableHead>
@@ -206,15 +206,15 @@ function TemplateRow({
 
   return (
     <>
-      <TableRow className="transition-colors hover:bg-[var(--surface-subtle)]">
+      <TableRow className="transition-colors hover:bg-[var(--canvas-soft)]">
         <TableCell>
           <div className="flex min-w-0 items-center gap-3">
-            <span className="grid size-8 shrink-0 place-items-center rounded-[var(--radius-sm)] bg-[var(--surface-subtle)]">
+            <span className="grid size-8 shrink-0 place-items-center rounded-[var(--radius-md)] bg-[var(--canvas-soft)]">
               <Cog aria-hidden="true" className="size-4" />
             </span>
             <div className="min-w-0">
               <p className="truncate font-medium">{template.name}</p>
-              <p className="mt-0.5 truncate text-xs text-[var(--text-muted)]">
+              <p className="mt-0.5 truncate text-xs text-[var(--muted)]">
                 {template.description || "暂无描述"}
               </p>
             </div>
@@ -229,14 +229,14 @@ function TemplateRow({
         </TableCell>
         <TableCell className="text-center">
           <button
-            className="text-sm font-medium text-[var(--accent)] hover:underline"
+            className="text-sm font-medium text-[var(--primary)] hover:underline"
             onClick={handleToggleVersions}
             type="button"
           >
             {versionsLoaded ? versions.length : "…"}
           </button>
         </TableCell>
-        <TableCell className="whitespace-nowrap text-center text-sm text-[var(--text-muted)]">
+        <TableCell className="whitespace-nowrap text-center text-sm text-[var(--muted)]">
           {new Date(template.updated_at).toLocaleDateString("zh-CN")}
         </TableCell>
         <TableCell className="text-center">
@@ -306,7 +306,7 @@ function VersionPanel({
   versions: EnvironmentVersionResponse[];
 }) {
   return (
-    <div className="rounded border border-[var(--border)] bg-[var(--surface-subtle)] p-4 text-sm">
+    <div className="rounded border border-[var(--hairline)] bg-[var(--canvas-soft)] p-4 text-sm">
       <div className="mb-3 flex items-center justify-between">
         <h3 className="font-semibold">
           版本历史 · {publishedCount} 个已发布
@@ -340,14 +340,14 @@ function VersionPanel({
       </div>
 
       {versions.length === 0 ? (
-        <p className="text-[var(--text-muted)]">
+        <p className="text-[var(--muted)]">
           尚无版本。点击上方按钮创建第一个版本。
         </p>
       ) : (
         <div className="space-y-2">
           {versions.map((v) => (
             <div
-              className="flex items-center justify-between rounded border border-[var(--border)] bg-[var(--surface)] p-3"
+              className="flex items-center justify-between rounded border border-[var(--hairline)] bg-[var(--surface)] p-3"
               key={v.id}
             >
               <div className="flex items-center gap-3">
@@ -357,7 +357,7 @@ function VersionPanel({
                 <Badge tone={v.status === "published" ? "accent" : "neutral"}>
                   {v.status === "published" ? "已发布" : "草稿"}
                 </Badge>
-                <span className="text-xs text-[var(--text-muted)]">
+                <span className="text-xs text-[var(--muted)]">
                   {new Date(v.updated_at).toLocaleDateString("zh-CN")}
                 </span>
               </div>
@@ -420,11 +420,11 @@ function CredentialSection({
   const [value, setValue] = useState("");
   const [error, setError] = useState("");
   return (
-    <section className="mt-6 rounded border border-[var(--border)] bg-[var(--surface)] p-5">
+    <section className="mt-6 rounded border border-[var(--hairline)] bg-[var(--surface)] p-5">
       <div className="flex items-center justify-between">
         <div>
           <h2 className="font-semibold">加密凭证绑定</h2>
-          <p className="mt-1 text-xs text-[var(--text-muted)]">
+          <p className="mt-1 text-xs text-[var(--muted)]">
             密钥仅加密保存；列表和 API 永不返回明文。
           </p>
         </div>
@@ -435,7 +435,7 @@ function CredentialSection({
       <ul className="mt-4 space-y-2 text-sm">
         {credentials.map((item) => (
           <li
-            className="flex justify-between rounded border border-[var(--border)] p-3"
+            className="flex justify-between rounded border border-[var(--hairline)] p-3"
             key={item.id}
           >
             <span>
@@ -668,7 +668,7 @@ function JsonField({
     <label className="block text-sm font-medium">
       {label}
       <textarea
-        className="mt-1.5 min-h-20 w-full rounded border border-[var(--border)] bg-[var(--surface)] p-3 font-mono text-xs"
+        className="mt-1.5 min-h-20 w-full rounded border border-[var(--hairline)] bg-[var(--surface)] p-3 font-mono text-xs"
         onChange={(event) => onChange(event.target.value)}
         value={value}
       />
@@ -680,7 +680,7 @@ function EnvironmentListSkeleton() {
   return (
     <div className="min-w-0 px-6 py-6">
       {/* Header skeleton */}
-      <header className="flex items-start justify-between gap-4 border-b border-[var(--border)] pb-5">
+      <header className="flex items-start justify-between gap-4 border-b border-[var(--hairline)] pb-5">
         <div>
           <Skeleton className="h-8 w-40" />
           <Skeleton className="mt-2 h-4 w-56" />
@@ -689,7 +689,7 @@ function EnvironmentListSkeleton() {
       </header>
 
       {/* Table skeleton */}
-      <section className="mt-5 overflow-hidden rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--surface)]">
+      <section className="mt-5 overflow-hidden rounded-[var(--radius-lg)] border border-[var(--hairline)] bg-[var(--surface)]">
         <div className="p-4">
           <div className="space-y-4">
             {Array.from({ length: 3 }).map((_, i) => (

@@ -113,7 +113,7 @@ export function DatasetDetail({
         <Skeleton className="mb-1 h-8 w-48" />
         <Skeleton className="mb-6 h-4 w-64" />
         <Skeleton className="mb-4 h-10 w-full max-w-xs" />
-        <Skeleton className="h-64 rounded-[var(--radius-md)]" />
+        <Skeleton className="h-64 rounded-[var(--radius-lg)]" />
       </div>
     );
   }
@@ -121,14 +121,14 @@ export function DatasetDetail({
   return (
     <div className="min-w-0 px-6 py-6">
       <Link
-        className="inline-flex items-center gap-1.5 text-sm text-[var(--text-muted)] hover:text-[var(--text)]"
+        className="inline-flex items-center gap-1.5 text-sm text-[var(--muted)] hover:text-[var(--ink)]"
         href={`/projects/${projectId}/datasets`}
       >
         ← 返回数据集列表
       </Link>
 
       {/* ── 顶部 ──────────────────────────────────────────────────────── */}
-      <header className="mt-4 flex items-start justify-between gap-4 border-b border-[var(--border)] pb-5">
+      <header className="mt-4 flex items-start justify-between gap-4 border-b border-[var(--hairline)] pb-5">
         <div>
           <div className="flex items-center gap-2">
             <h1 className="text-2xl font-semibold tracking-tight">
@@ -138,7 +138,7 @@ export function DatasetDetail({
               <Badge tone="accent">v{currentVersionId.slice(0, 6)}</Badge>
             )}
           </div>
-          <p className="mt-2 text-sm text-[var(--text-muted)]">
+          <p className="mt-2 text-sm text-[var(--muted)]">
             {dataset.description || "暂无描述"}
           </p>
         </div>
@@ -175,7 +175,7 @@ export function DatasetDetail({
               value={search}
             />
             {selectedCount > 0 && (
-              <span className="text-xs text-[var(--text-muted)]">
+              <span className="text-xs text-[var(--muted)]">
                 已选 {selectedCount} 项
               </span>
             )}
@@ -201,9 +201,9 @@ export function DatasetDetail({
             title={search ? "无匹配结果" : "暂无测试用例"}
           />
         ) : (
-          <div className="mt-3 overflow-hidden rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--surface)]">
+          <div className="mt-3 overflow-hidden rounded-[var(--radius-lg)] border border-[var(--hairline)] bg-[var(--surface)]">
             <Table>
-              <TableHeader className="bg-[var(--surface-subtle)]">
+              <TableHeader className="bg-[var(--canvas-soft)]">
                 <TableRow>
                   <TableHead className="w-10">
                     <button
@@ -228,7 +228,7 @@ export function DatasetDetail({
               <TableBody>
                 {filteredCases.map((c) => (
                   <TableRow
-                    className="transition-colors hover:bg-[var(--surface-subtle)]"
+                    className="transition-colors hover:bg-[var(--canvas-soft)]"
                     key={c.id}
                   >
                     <TableCell>
@@ -238,7 +238,7 @@ export function DatasetDetail({
                         type="button"
                       >
                         {selectedIds.has(c.id) ? (
-                          <CheckSquare className="size-4 text-[var(--accent)]" />
+                          <CheckSquare className="size-4 text-[var(--primary)]" />
                         ) : (
                           <Square className="size-4" />
                         )}
@@ -246,7 +246,7 @@ export function DatasetDetail({
                     </TableCell>
                     <TableCell>
                       <p className="truncate font-medium">{c.name}</p>
-                      <p className="mt-0.5 truncate text-xs text-[var(--text-muted)]">
+                      <p className="mt-0.5 truncate text-xs text-[var(--muted)]">
                         {c.input
                           ? JSON.stringify(c.input).slice(0, 80)
                           : "无输入"}
@@ -264,7 +264,7 @@ export function DatasetDetail({
                         {c.risk_level || "中"}
                       </Badge>
                     </TableCell>
-                    <TableCell className="text-center text-sm text-[var(--text-muted)]">
+                    <TableCell className="text-center text-sm text-[var(--muted)]">
                       {c.execution_mode === "api" ? "API" : "浏览器"}
                     </TableCell>
                     <TableCell className="text-center">

@@ -79,7 +79,7 @@ export function ExperimentList({ projectId }: { projectId: string }) {
 
   if (loading) {
     return (
-      <div className="grid min-h-[40vh] place-items-center text-sm text-[var(--text-muted)]">
+      <div className="grid min-h-[40vh] place-items-center text-sm text-[var(--muted)]">
         正在加载实验…
       </div>
     );
@@ -87,10 +87,10 @@ export function ExperimentList({ projectId }: { projectId: string }) {
 
   return (
     <div className="min-w-0 px-6 py-6">
-      <header className="flex items-center justify-between gap-4 border-b border-[var(--border)] pb-5">
+      <header className="flex items-center justify-between gap-4 border-b border-[var(--hairline)] pb-5">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">实验对比</h1>
-          <p className="mt-1 text-sm text-[var(--text-muted)]">
+          <p className="mt-1 text-sm text-[var(--muted)]">
             A/B 对比分析与退化检测。
           </p>
         </div>
@@ -101,15 +101,15 @@ export function ExperimentList({ projectId }: { projectId: string }) {
       </header>
 
       {experiments.length === 0 ? (
-        <div className="mt-8 rounded-[var(--radius-md)] border border-dashed border-[var(--border)] p-10 text-center">
+        <div className="mt-8 rounded-[var(--radius-lg)] border border-dashed border-[var(--hairline)] p-10 text-center">
           <FlaskConical
             aria-hidden="true"
-            className="mx-auto size-8 text-[var(--text-muted)]"
+            className="mx-auto size-8 text-[var(--muted)]"
           />
-          <p className="mt-3 text-sm font-medium text-[var(--text-muted)]">
+          <p className="mt-3 text-sm font-medium text-[var(--muted)]">
             暂无实验
           </p>
-          <p className="mt-1 text-xs text-[var(--text-muted)]">
+          <p className="mt-1 text-xs text-[var(--muted)]">
             点击「创建实验」选择两个运行进行 A/B 对比。
           </p>
         </div>
@@ -218,13 +218,13 @@ function ExperimentCard({
           ) : null}
           {(exp.result_json as Record<string, unknown>).case_diffs ? (
             <details className="mt-4">
-              <summary className="cursor-pointer text-xs font-medium text-[var(--text-muted)]">
+              <summary className="cursor-pointer text-xs font-medium text-[var(--muted)]">
                 查看逐用例对比
               </summary>
               <div className="mt-2 overflow-auto">
                 <table className="w-full text-xs">
                   <thead>
-                    <tr className="border-b border-[var(--border)] text-left text-[var(--text-muted)]">
+                    <tr className="border-b border-[var(--hairline)] text-left text-[var(--muted)]">
                       <th className="pb-1.5 pr-3">用例</th>
                       <th className="pb-1.5 pr-3">状态 A</th>
                       <th className="pb-1.5 pr-3">状态 B</th>
@@ -238,7 +238,7 @@ function ExperimentCard({
                         .case_diffs as Record<string, unknown>[]
                     ).map((d, i) => (
                       <tr
-                        className="border-b border-[var(--border)] last:border-0"
+                        className="border-b border-[var(--hairline)] last:border-0"
                         key={i}
                       >
                         <td className="py-1.5 pr-3 font-mono">
@@ -300,11 +300,11 @@ function SummaryChip({
       ? "text-[var(--success)]"
       : tone === "danger"
         ? "text-[var(--danger)]"
-        : "text-[var(--text-muted)]";
+        : "text-[var(--muted)]";
   return (
     <span className={`flex items-center gap-1 ${color}`}>
       {icon}
-      <span className="text-[var(--text-muted)]">{label}:</span>
+      <span className="text-[var(--muted)]">{label}:</span>
       <span className="font-semibold">{value}</span>
     </span>
   );
@@ -416,7 +416,7 @@ function RunSelect({
 }) {
   return (
     <select
-      className="mt-1.5 h-9 w-full rounded border border-[var(--border)] bg-[var(--surface)] px-3 text-sm"
+      className="mt-1.5 h-9 w-full rounded border border-[var(--hairline)] bg-[var(--surface)] px-3 text-sm"
       onChange={(event) => onChange(event.target.value)}
       value={value}
     >

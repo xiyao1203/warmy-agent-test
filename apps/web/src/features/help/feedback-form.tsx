@@ -58,7 +58,7 @@ export function FeedbackForm() {
       <div className="rounded-lg border border-[var(--success)] bg-[var(--success-subtle)] p-8 text-center">
         <CheckCircle className="mx-auto size-8 text-[var(--success)]" />
         <h3 className="mt-3 text-lg font-medium">感谢您的反馈！</h3>
-        <p className="mt-1 text-sm text-[var(--text-muted)]">
+        <p className="mt-1 text-sm text-[var(--muted)]">
           我们会认真处理您的反馈，并持续改进产品。
         </p>
         <Button
@@ -83,7 +83,7 @@ export function FeedbackForm() {
               className={`rounded-lg px-3 py-1.5 text-sm transition-colors ${
                 type === id
                   ? "bg-[var(--primary)] text-[var(--primary-fg)]"
-                  : "bg-[var(--muted)] text-[var(--text-muted)] hover:bg-[var(--accent-subtle)]"
+                  : "bg-[var(--muted)] text-[var(--muted)] hover:bg-[var(--primary-subtle)]"
               }`}
               onClick={() => setType(id)}
               type="button"
@@ -114,7 +114,7 @@ export function FeedbackForm() {
           详细描述
         </label>
         <textarea
-          className="h-32 w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] p-3 text-sm outline-none placeholder:text-[var(--text-subtle)] focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--focus-ring-subtle)]"
+          className="h-32 w-full rounded-lg border border-[var(--hairline)] bg-[var(--surface)] p-3 text-sm outline-none placeholder:text-[var(--body)] focus:border-[var(--primary)] focus:ring-2 focus:ring-[var(--focus-ring-subtle)]"
           id="description"
           onChange={(e) => setDescription(e.target.value)}
           placeholder="请详细描述您遇到的问题或建议..."

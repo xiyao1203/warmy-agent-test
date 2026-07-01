@@ -19,8 +19,8 @@ export function DegradationHighlight({
 }: DegradationHighlightProps) {
   if (degradations.length === 0) {
     return (
-      <div className="rounded-[var(--radius-md)] border border-dashed border-[var(--border)] p-4 text-center">
-        <p className="text-sm text-[var(--text-muted)]">无退化项</p>
+      <div className="rounded-[var(--radius-lg)] border border-dashed border-[var(--hairline)] p-4 text-center">
+        <p className="text-sm text-[var(--muted)]">无退化项</p>
       </div>
     );
   }
@@ -30,14 +30,14 @@ export function DegradationHighlight({
       {degradations.map((deg) => (
         <div
           key={`${deg.case_id}-${deg.metric}`}
-          className="flex items-center justify-between rounded-[var(--radius-md)] border border-[var(--danger)] bg-[var(--danger-subtle)] p-3"
+          className="flex items-center justify-between rounded-[var(--radius-lg)] border border-[var(--danger)] bg-[var(--danger-subtle)] p-3"
         >
           <div className="flex items-center gap-3">
             <span className="font-medium">{deg.case_id}</span>
             <Badge tone="danger">{deg.metric}</Badge>
           </div>
           <div className="flex items-center gap-4 text-sm">
-            <span className="text-[var(--text-muted)]">
+            <span className="text-[var(--muted)]">
               {typeof deg.baseline === "number"
                 ? deg.baseline.toFixed(2)
                 : deg.baseline}

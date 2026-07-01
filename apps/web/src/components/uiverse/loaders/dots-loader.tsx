@@ -30,7 +30,7 @@ export function DotsLoader({
       {[0, 1, 2].map((i) => (
         <div
           key={i}
-          className={`animate-bounce rounded-full bg-[var(--accent)] ${dotSizeClasses[size]}`}
+          className={`animate-bounce rounded-full bg-[var(--primary)] ${dotSizeClasses[size]}`}
           style={{ animationDelay: `${i * 150}ms` }}
         />
       ))}

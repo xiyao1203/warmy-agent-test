@@ -35,13 +35,13 @@ export default function TestCasesGuidePage() {
   return (
     <article className="space-y-10">
       <header className="max-w-3xl">
-        <p className="text-sm font-medium text-[var(--text-muted)]">
+        <p className="text-sm font-medium text-[var(--muted)]">
           帮助中心 / 测试资产
         </p>
         <h1 className="mt-2 text-2xl font-semibold tracking-tight">
           测试用例编写指南
         </h1>
-        <p className="mt-2 text-sm leading-6 text-[var(--text-muted)]">
+        <p className="mt-2 text-sm leading-6 text-[var(--muted)]">
           把 Agent
           的输入、过程、状态变化和最终输出拆成可以稳定执行与复核的结构化用例。
         </p>
@@ -49,19 +49,19 @@ export default function TestCasesGuidePage() {
 
       <section aria-labelledby="case-structure-title">
         <div className="mb-4 flex items-center gap-2">
-          <FileText className="size-4 text-[var(--text-muted)]" />
+          <FileText className="size-4 text-[var(--muted)]" />
           <h2 className="text-base font-semibold" id="case-structure-title">
             用例结构
           </h2>
         </div>
-        <ol className="border-l border-[var(--border)] pl-6">
+        <ol className="border-l border-[var(--hairline)] pl-6">
           {structureSteps.map(({ description, title }, index) => (
             <li className="relative pb-7 last:pb-0" key={title}>
-              <span className="absolute -left-[2.15rem] flex size-5 items-center justify-center rounded-full border border-[var(--border-strong)] bg-[var(--background)] text-[10px] font-semibold text-[var(--text-muted)]">
+              <span className="absolute -left-[2.15rem] flex size-5 items-center justify-center rounded-full border border-[var(--hairline-strong)] bg-[var(--canvas)] text-[10px] font-semibold text-[var(--muted)]">
                 {index + 1}
               </span>
               <h3 className="text-sm font-semibold">{title}</h3>
-              <p className="mt-1 max-w-3xl text-sm leading-6 text-[var(--text-muted)]">
+              <p className="mt-1 max-w-3xl text-sm leading-6 text-[var(--muted)]">
                 {description}
               </p>
             </li>
@@ -71,15 +71,15 @@ export default function TestCasesGuidePage() {
 
       <section
         aria-labelledby="best-practices-title"
-        className="rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--surface)]"
+        className="rounded-[var(--radius-lg)] border border-[var(--hairline)] bg-[var(--surface)]"
       >
-        <div className="flex items-center gap-2 border-b border-[var(--border)] px-4 py-3">
-          <Lightbulb className="size-4 text-[var(--text-muted)]" />
+        <div className="flex items-center gap-2 border-b border-[var(--hairline)] px-4 py-3">
+          <Lightbulb className="size-4 text-[var(--muted)]" />
           <h2 className="text-sm font-semibold" id="best-practices-title">
             编写检查清单
           </h2>
         </div>
-        <ul className="divide-y divide-[var(--border)]">
+        <ul className="divide-y divide-[var(--hairline)]">
           {bestPractices.map((practice) => (
             <li
               className="flex items-start gap-3 px-4 py-3 text-sm"

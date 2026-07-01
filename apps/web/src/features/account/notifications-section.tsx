@@ -25,7 +25,7 @@ function NotificationToggle({
     <div className="flex items-center justify-between gap-5 px-4 py-4">
       <div className="min-w-0">
         <p className="text-sm font-medium">{label}</p>
-        <p className="mt-1 text-xs leading-5 text-[var(--text-muted)]">
+        <p className="mt-1 text-xs leading-5 text-[var(--muted)]">
           {description}
         </p>
       </div>
@@ -97,7 +97,7 @@ export function NotificationsSection() {
 
   if (isLoading) {
     return (
-      <div className="rounded-lg border border-[var(--border)] bg-[var(--card)] p-6">
+      <div className="rounded-lg border border-[var(--hairline)] bg-[var(--card)] p-6">
         <div className="animate-pulse space-y-4">
           <div className="h-4 w-24 rounded bg-[var(--muted)]" />
           <div className="h-16 w-full rounded bg-[var(--muted)]" />
@@ -109,14 +109,14 @@ export function NotificationsSection() {
 
   return (
     <div className="space-y-5">
-      <section className="overflow-hidden rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--surface)]">
-        <div className="border-b border-[var(--border)] px-4 py-3">
+      <section className="overflow-hidden rounded-[var(--radius-lg)] border border-[var(--hairline)] bg-[var(--surface)]">
+        <div className="border-b border-[var(--hairline)] px-4 py-3">
           <h3 className="text-sm font-semibold">通知偏好</h3>
-          <p className="mt-0.5 text-xs text-[var(--text-muted)]">
+          <p className="mt-0.5 text-xs text-[var(--muted)]">
             选择需要接收的测试和系统消息。
           </p>
         </div>
-        <div className="divide-y divide-[var(--border)]">
+        <div className="divide-y divide-[var(--hairline)]">
           <NotificationToggle
             description="接收测试结果、系统更新等邮件通知"
             enabled={emailNotifications}

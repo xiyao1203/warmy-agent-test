@@ -17,20 +17,20 @@ export function Button({
   ...props
 }: ButtonProps) {
   const Component = asChild ? Slot : "button";
-  const variants = {
+  const variants: Record<string, string> = {
     danger:
       "border-[var(--danger)] bg-[var(--surface)] text-[var(--danger)] hover:bg-[var(--danger-subtle)]",
     ghost:
-      "border-transparent bg-transparent text-[var(--text-muted)] hover:bg-[var(--surface-subtle)] hover:text-[var(--text)]",
+      "border-transparent bg-transparent text-[var(--muted)] hover:bg-[var(--canvas-soft)] hover:text-[var(--ink)]",
     primary:
-      "border-[var(--accent)] bg-[var(--accent)] text-white hover:bg-[var(--accent-strong)]",
+      "border-transparent bg-[var(--primary)] text-white hover:bg-[var(--primary-active)]",
     secondary:
-      "border-[var(--border)] bg-[var(--surface)] text-[var(--text)] hover:bg-[var(--surface-subtle)]",
+      "border-[var(--hairline-strong)] bg-[var(--surface)] text-[var(--ink)] hover:bg-[var(--canvas-soft)]",
   };
 
   return (
     <Component
-      className={`inline-flex h-8 items-center justify-center gap-2 rounded-[var(--radius-sm)] border px-3 text-sm font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${variants[variant]} ${className}`}
+      className={`inline-flex h-9 items-center justify-center gap-2 rounded-[var(--radius-lg)] border px-4 text-sm font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${variants[variant]} ${className}`}
       {...props}
       disabled={loading || props.disabled}
     >

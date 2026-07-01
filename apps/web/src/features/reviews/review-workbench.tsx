@@ -112,7 +112,7 @@ export function ReviewWorkbench({ projectId }: { projectId: string }) {
 
   if (loading) {
     return (
-      <div className="grid min-h-[40vh] place-items-center text-sm text-[var(--text-muted)]">
+      <div className="grid min-h-[40vh] place-items-center text-sm text-[var(--muted)]">
         正在加载审核任务…
       </div>
     );
@@ -122,10 +122,10 @@ export function ReviewWorkbench({ projectId }: { projectId: string }) {
 
   return (
     <div className="min-w-0 px-6 py-6">
-      <header className="flex items-center justify-between gap-4 border-b border-[var(--border)] pb-5">
+      <header className="flex items-center justify-between gap-4 border-b border-[var(--hairline)] pb-5">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">人工审核</h1>
-          <p className="mt-1 text-sm text-[var(--text-muted)]">
+          <p className="mt-1 text-sm text-[var(--muted)]">
             {pendingCount > 0
               ? `${pendingCount} 个待审核任务`
               : "暂无待审核任务"}
@@ -158,7 +158,7 @@ export function ReviewWorkbench({ projectId }: { projectId: string }) {
         {/* 任务列表 */}
         <ul className="space-y-2">
           {tasks.length === 0 ? (
-            <li className="rounded border border-dashed border-[var(--border)] p-8 text-center text-sm text-[var(--text-muted)]">
+            <li className="rounded border border-dashed border-[var(--hairline)] p-8 text-center text-sm text-[var(--muted)]">
               <ClipboardCheck className="mx-auto size-8" />
               <p className="mt-2">暂无审核任务</p>
             </li>
@@ -168,8 +168,8 @@ export function ReviewWorkbench({ projectId }: { projectId: string }) {
                 <button
                   className={`flex w-full items-center gap-3 rounded border px-4 py-3 text-left text-sm transition-colors ${
                     selected?.id === t.id
-                      ? "border-[var(--accent)] bg-[var(--accent-subtle)]"
-                      : "border-[var(--border)] hover:bg-[var(--surface-subtle)]"
+                      ? "border-[var(--primary)] bg-[var(--primary-subtle)]"
+                      : "border-[var(--hairline)] hover:bg-[var(--canvas-soft)]"
                   }`}
                   onClick={() => setSelected(t)}
                   type="button"
@@ -178,7 +178,7 @@ export function ReviewWorkbench({ projectId }: { projectId: string }) {
                     <p className="font-mono text-xs">
                       {t.run_case_id.slice(0, 12)}
                     </p>
-                    <p className="mt-0.5 text-xs text-[var(--text-muted)]">
+                    <p className="mt-0.5 text-xs text-[var(--muted)]">
                       置信度 {(t.confidence * 100).toFixed(0)}%
                       {t.score != null ? ` · 评分 ${t.score.toFixed(2)}` : ""}
                     </p>
@@ -203,7 +203,7 @@ export function ReviewWorkbench({ projectId }: { projectId: string }) {
                       <SkipForward className="size-4" />
                     </Button>
                   ) : null}
-                  <ChevronRight className="size-4 text-[var(--text-muted)]" />
+                  <ChevronRight className="size-4 text-[var(--muted)]" />
                 </button>
               </li>
             ))
@@ -211,44 +211,44 @@ export function ReviewWorkbench({ projectId }: { projectId: string }) {
         </ul>
 
         {/* 详情 + 评分面板 */}
-        <aside className="h-fit rounded border border-[var(--border)] bg-[var(--surface)] p-5">
+        <aside className="h-fit rounded border border-[var(--hairline)] bg-[var(--surface)] p-5">
           {selected ? (
             <div className="space-y-4">
               <div>
-                <p className="text-xs font-medium text-[var(--text-muted)]">
+                <p className="text-xs font-medium text-[var(--muted)]">
                   用例 ID
                 </p>
                 <p className="mt-1 font-mono text-sm">{selected.run_case_id}</p>
               </div>
               <div className="grid grid-cols-2 gap-3 text-sm">
                 <div>
-                  <p className="text-xs text-[var(--text-muted)]">置信度</p>
+                  <p className="text-xs text-[var(--muted)]">置信度</p>
                   <p className="font-semibold">
                     {(selected.confidence * 100).toFixed(0)}%
                   </p>
                 </div>
                 <div>
-                  <p className="text-xs text-[var(--text-muted)]">状态</p>
+                  <p className="text-xs text-[var(--muted)]">状态</p>
                   <Badge tone={STATUS_TONES[selected.status] ?? "neutral"}>
                     {selected.status}
                   </Badge>
                 </div>
                 {selected.score != null ? (
                   <div>
-                    <p className="text-xs text-[var(--text-muted)]">评分</p>
+                    <p className="text-xs text-[var(--muted)]">评分</p>
                     <p className="font-semibold">{selected.score.toFixed(2)}</p>
                   </div>
                 ) : null}
                 {selected.opinion ? (
                   <div className="col-span-2">
-                    <p className="text-xs text-[var(--text-muted)]">审核意见</p>
+                    <p className="text-xs text-[var(--muted)]">审核意见</p>
                     <p className="mt-1 text-sm">{selected.opinion}</p>
                   </div>
                 ) : null}
               </div>
 
               {selected.status === "pending" ? (
-                <div className="border-t border-[var(--border)] pt-4">
+                <div className="border-t border-[var(--hairline)] pt-4">
                   {/* 审核模式切换 */}
                   <div className="mb-4 flex gap-2">
                     <Button
@@ -300,8 +300,8 @@ export function ReviewWorkbench({ projectId }: { projectId: string }) {
                         <button
                           className={`flex-1 rounded-lg border p-4 text-center transition-colors ${
                             abPreference === "a"
-                              ? "border-[var(--accent)] bg-[var(--accent-subtle)]"
-                              : "border-[var(--border)] hover:bg-[var(--surface-subtle)]"
+                              ? "border-[var(--primary)] bg-[var(--primary-subtle)]"
+                              : "border-[var(--hairline)] hover:bg-[var(--canvas-soft)]"
                           }`}
                           onClick={() => setAbPreference("a")}
                           type="button"
@@ -312,20 +312,20 @@ export function ReviewWorkbench({ projectId }: { projectId: string }) {
                         <button
                           className={`flex-1 rounded-lg border p-4 text-center transition-colors ${
                             abPreference === "equal"
-                              ? "border-[var(--accent)] bg-[var(--accent-subtle)]"
-                              : "border-[var(--border)] hover:bg-[var(--surface-subtle)]"
+                              ? "border-[var(--primary)] bg-[var(--primary-subtle)]"
+                              : "border-[var(--hairline)] hover:bg-[var(--canvas-soft)]"
                           }`}
                           onClick={() => setAbPreference("equal")}
                           type="button"
                         >
-                          <Equal className="mx-auto size-6 text-[var(--text-muted)]" />
+                          <Equal className="mx-auto size-6 text-[var(--muted)]" />
                           <p className="mt-2 text-sm font-medium">相同</p>
                         </button>
                         <button
                           className={`flex-1 rounded-lg border p-4 text-center transition-colors ${
                             abPreference === "b"
-                              ? "border-[var(--accent)] bg-[var(--accent-subtle)]"
-                              : "border-[var(--border)] hover:bg-[var(--surface-subtle)]"
+                              ? "border-[var(--primary)] bg-[var(--primary-subtle)]"
+                              : "border-[var(--hairline)] hover:bg-[var(--canvas-soft)]"
                           }`}
                           onClick={() => setAbPreference("b")}
                           type="button"
@@ -358,13 +358,13 @@ export function ReviewWorkbench({ projectId }: { projectId: string }) {
                   </div>
                 </div>
               ) : (
-                <p className="text-xs text-[var(--text-muted)]">
+                <p className="text-xs text-[var(--muted)]">
                   该任务已审核完成。
                 </p>
               )}
             </div>
           ) : (
-            <div className="py-10 text-center text-sm text-[var(--text-muted)]">
+            <div className="py-10 text-center text-sm text-[var(--muted)]">
               <ClipboardCheck className="mx-auto size-8" />
               <p className="mt-2">选择一个任务查看详情</p>
             </div>

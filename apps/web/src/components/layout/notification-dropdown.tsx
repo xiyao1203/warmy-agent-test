@@ -28,7 +28,7 @@ export function NotificationDropdown() {
         aria-expanded={open}
         aria-haspopup="true"
         aria-label="通知"
-        className="flex h-8 shrink-0 items-center justify-center rounded-[var(--radius-sm)] px-2 text-[var(--text-muted)] transition-colors hover:bg-[var(--surface-subtle)] hover:text-[var(--text)]"
+        className="flex h-8 shrink-0 items-center justify-center rounded-[var(--radius-md)] px-2 text-[var(--muted)] transition-colors hover:bg-[var(--canvas-soft)] hover:text-[var(--ink)]"
         onClick={() => setOpen(!open)}
         type="button"
       >
@@ -37,15 +37,15 @@ export function NotificationDropdown() {
 
       {open && (
         <div
-          className="absolute right-0 top-full z-50 mt-1 min-w-[20rem] rounded-lg border border-[var(--border)] bg-[var(--surface)] shadow-lg"
+          className="absolute right-0 top-full z-50 mt-1 min-w-[20rem] rounded-lg border border-[var(--hairline)] bg-[var(--surface)] shadow-lg"
           role="menu"
         >
-          <div className="border-b border-[var(--border)] px-4 py-3">
+          <div className="border-b border-[var(--hairline)] px-4 py-3">
             <h3 className="font-semibold">通知中心</h3>
           </div>
           <div className="p-8 text-center">
-            <Bell className="mx-auto size-8 text-[var(--text-muted)]" />
-            <p className="mt-3 text-sm text-[var(--text-muted)]">暂无新通知</p>
+            <Bell className="mx-auto size-8 text-[var(--muted)]" />
+            <p className="mt-3 text-sm text-[var(--muted)]">暂无新通知</p>
             <Link
               className="mt-3 inline-flex items-center gap-2 text-sm text-[var(--primary)] hover:underline"
               href="/account?section=notifications"

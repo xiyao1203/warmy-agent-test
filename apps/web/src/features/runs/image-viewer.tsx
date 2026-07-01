@@ -50,7 +50,7 @@ export function ImageViewer({ src, alt, onFullscreen }: ImageViewerProps) {
       </div>
 
       {/* 图片容器 */}
-      <div className="flex items-center justify-center overflow-hidden rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--surface-subtle)]">
+      <div className="flex items-center justify-center overflow-hidden rounded-[var(--radius-lg)] border border-[var(--hairline)] bg-[var(--canvas-soft)]">
         <Image
           src={src}
           alt={alt}

@@ -71,9 +71,9 @@ type ImportWizardProps = {
 type WizardStep = "select" | "preview" | "result";
 
 const EXT_ICON_MAP: Record<string, React.ReactNode> = {
-  csv: <FileText className="size-4 text-[var(--accent)]" />,
-  json: <FileJson className="size-4 text-[var(--accent)]" />,
-  jsonl: <FileJson className="size-4 text-[var(--accent)]" />,
+  csv: <FileText className="size-4 text-[var(--primary)]" />,
+  json: <FileJson className="size-4 text-[var(--primary)]" />,
+  jsonl: <FileJson className="size-4 text-[var(--primary)]" />,
 };
 
 export function ImportWizard({
@@ -212,7 +212,7 @@ export function ImportWizard({
               type="file"
             />
             <div
-              className="flex cursor-pointer flex-col items-center gap-2 rounded-[var(--radius-md)] border-2 border-dashed border-[var(--border)] p-8 transition-colors hover:border-[var(--accent)]"
+              className="flex cursor-pointer flex-col items-center gap-2 rounded-[var(--radius-lg)] border-2 border-dashed border-[var(--hairline)] p-8 transition-colors hover:border-[var(--primary)]"
               onClick={() => fileRef.current?.click()}
               role="button"
               tabIndex={0}
@@ -221,16 +221,16 @@ export function ImportWizard({
                   fileRef.current?.click();
               }}
             >
-              <Upload className="size-8 text-[var(--text-muted)]" />
+              <Upload className="size-8 text-[var(--muted)]" />
               <p className="text-sm font-medium">点击选择文件</p>
-              <p className="text-xs text-[var(--text-muted)]">
+              <p className="text-xs text-[var(--muted)]">
                 JSON · JSONL · CSV
               </p>
             </div>
 
             {/* ── 模板下载 ─────────────────────────────────────────── */}
-            <div className="rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--surface-subtle)] p-3">
-              <p className="mb-2 text-xs font-medium text-[var(--text-muted)]">
+            <div className="rounded-[var(--radius-lg)] border border-[var(--hairline)] bg-[var(--canvas-soft)] p-3">
+              <p className="mb-2 text-xs font-medium text-[var(--muted)]">
                 下载模板快速开始
               </p>
               <div className="flex gap-2">
@@ -269,7 +269,7 @@ export function ImportWizard({
         {/* ── Step: preview ─────────────────────────────────────────── */}
         {step === "preview" && file && (
           <div className="mt-4 space-y-4">
-            <div className="rounded-[var(--radius-md)] border border-[var(--border)] p-4">
+            <div className="rounded-[var(--radius-lg)] border border-[var(--hairline)] p-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   {fileExt ? EXT_ICON_MAP[fileExt] : null}
@@ -277,7 +277,7 @@ export function ImportWizard({
                 </div>
                 <button
                   aria-label="移除文件"
-                  className="text-[var(--text-muted)] hover:text-[var(--danger)]"
+                  className="text-[var(--muted)] hover:text-[var(--danger)]"
                   onClick={() => {
                     setFile(null);
                     setStep("select");
@@ -289,7 +289,7 @@ export function ImportWizard({
                   <X className="size-4" />
                 </button>
               </div>
-              <p className="mt-2 text-xs text-[var(--text-muted)]">
+              <p className="mt-2 text-xs text-[var(--muted)]">
                 {formatSize(file.size)} · {fileExt?.toUpperCase()}
               </p>
             </div>
@@ -298,7 +298,7 @@ export function ImportWizard({
 
             {/* ── 预检结果 ─────────────────────────────────────────── */}
             {previewing && (
-              <div className="rounded border border-[var(--border)] p-3 text-center text-sm text-[var(--text-muted)]">
+              <div className="rounded border border-[var(--hairline)] p-3 text-center text-sm text-[var(--muted)]">
                 正在预检…
               </div>
             )}
@@ -333,7 +333,7 @@ export function ImportWizard({
             <div className="flex flex-col items-center gap-2 p-6 text-center">
               <CheckCircle className="size-10 text-[var(--success)]" />
               <p className="text-sm font-medium">导入成功</p>
-              <p className="text-xs text-[var(--text-muted)]">
+              <p className="text-xs text-[var(--muted)]">
                 共导入 {importedCount} 条用例{file ? `（${file.name}）` : ""}
               </p>
             </div>
@@ -376,7 +376,7 @@ function PreviewResult({
 
   return (
     <div
-      className={`rounded-[var(--radius-md)] border p-4 ${
+      className={`rounded-[var(--radius-lg)] border p-4 ${
         hasErrors
           ? "border-[var(--danger)]/30 bg-red-50"
           : "border-[var(--success)]/30 bg-green-50"
@@ -404,7 +404,7 @@ function PreviewResult({
                 className="rounded border border-red-200 bg-white px-2 py-1.5 text-xs"
                 key={`${item.line}-${item.field}-${index}`}
               >
-                <span className="font-mono text-[var(--text-muted)]">
+                <span className="font-mono text-[var(--muted)]">
                   第 {item.line} 行 · {item.field}
                 </span>
                 <span className="ml-1.5 rounded bg-red-100 px-1 font-mono text-[10px] text-red-700">
@@ -414,7 +414,7 @@ function PreviewResult({
               </li>
             ))}
             {errors.length > 20 && (
-              <li className="text-xs text-[var(--text-muted)]">
+              <li className="text-xs text-[var(--muted)]">
                 …还有 {errors.length - 20} 个错误未显示
               </li>
             )}

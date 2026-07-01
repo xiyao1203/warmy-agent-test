@@ -82,10 +82,10 @@ export function ModelConfigList(props: Props) {
 
   return (
     <div className="min-w-0 px-6 py-6">
-      <header className="flex flex-wrap items-start justify-between gap-4 border-b border-[var(--border)] pb-5">
+      <header className="flex flex-wrap items-start justify-between gap-4 border-b border-[var(--hairline)] pb-5">
         <div>
           <h1 className="text-xl font-semibold tracking-tight">模型配置</h1>
-          <p className="mt-1 text-sm text-[var(--text-muted)]">
+          <p className="mt-1 text-sm text-[var(--muted)]">
             项目成员共享这些模型；API Key 加密保存且不会回显。
           </p>
         </div>
@@ -99,7 +99,7 @@ export function ModelConfigList(props: Props) {
         <div className="mb-3 flex items-center gap-2">
           <Settings2
             aria-hidden="true"
-            className="size-4 text-[var(--text-muted)]"
+            className="size-4 text-[var(--muted)]"
           />
           <h2 className="text-sm font-semibold" id="defaults-heading">
             默认模型
@@ -112,18 +112,18 @@ export function ModelConfigList(props: Props) {
             );
             return (
               <label
-                className="rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--surface)] p-4"
+                className="rounded-[var(--radius-lg)] border border-[var(--hairline)] bg-[var(--surface)] p-4"
                 key={item.purpose}
               >
                 <span className="block text-sm font-medium">{item.label}</span>
-                <span className="mt-1 block text-xs text-[var(--text-muted)]">
+                <span className="mt-1 block text-xs text-[var(--muted)]">
                   {item.vision
                     ? "用于图片与多模态质量评分"
                     : "用于结构化生成与文本评测"}
                 </span>
                 <select
                   aria-label={`${item.label}默认模型`}
-                  className="mt-3 h-9 w-full rounded-[var(--radius-sm)] border border-[var(--border)] bg-[var(--surface)] px-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--focus-ring-subtle)]"
+                  className="mt-3 h-9 w-full rounded-[var(--radius-md)] border border-[var(--hairline)] bg-[var(--surface)] px-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--focus-ring-subtle)]"
                   onChange={(event) =>
                     void props.onSetDefault(item.purpose, event.target.value)
                   }
@@ -148,22 +148,22 @@ export function ModelConfigList(props: Props) {
         </div>
       </section>
 
-      <section className="mt-5 overflow-hidden rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--surface)]">
+      <section className="mt-5 overflow-hidden rounded-[var(--radius-lg)] border border-[var(--hairline)] bg-[var(--surface)]">
         {props.models.length === 0 ? (
           <div className="px-6 py-12 text-center">
             <KeyRound
               aria-hidden="true"
-              className="mx-auto size-8 text-[var(--text-subtle)]"
+              className="mx-auto size-8 text-[var(--body)]"
             />
             <h2 className="mt-3 text-sm font-semibold">还没有可用模型</h2>
-            <p className="mt-1 text-sm text-[var(--text-muted)]">
+            <p className="mt-1 text-sm text-[var(--muted)]">
               添加后才能进行 Agent 对话或模型裁判测试。
             </p>
           </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm">
-              <thead className="border-b border-[var(--border)] bg-[var(--surface-subtle)] text-xs text-[var(--text-muted)]">
+              <thead className="border-b border-[var(--hairline)] bg-[var(--canvas-soft)] text-xs text-[var(--muted)]">
                 <tr>
                   <th className="px-4 py-2.5">模型</th>
                   <th className="px-4 py-2.5">服务与凭证</th>
@@ -171,12 +171,12 @@ export function ModelConfigList(props: Props) {
                   <th className="px-4 py-2.5 text-right">操作</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[var(--border)]">
+              <tbody className="divide-y divide-[var(--hairline)]">
                 {props.models.map((model) => (
                   <tr key={model.id}>
                     <td className="px-4 py-3">
                       <div className="font-medium">{model.name}</div>
-                      <div className="mt-0.5 font-mono text-xs text-[var(--text-muted)]">
+                      <div className="mt-0.5 font-mono text-xs text-[var(--muted)]">
                         {model.model_name}
                       </div>
                     </td>
@@ -184,7 +184,7 @@ export function ModelConfigList(props: Props) {
                       <div className="max-w-64 truncate text-xs">
                         {model.base_url}
                       </div>
-                      <div className="mt-1 font-mono text-xs text-[var(--text-muted)]">
+                      <div className="mt-1 font-mono text-xs text-[var(--muted)]">
                         {model.api_key_hint}
                       </div>
                     </td>
@@ -199,7 +199,7 @@ export function ModelConfigList(props: Props) {
                         </Badge>
                       </div>
                       {connection[model.id] ? (
-                        <p className="mt-1.5 text-xs text-[var(--text-muted)]">
+                        <p className="mt-1.5 text-xs text-[var(--muted)]">
                           {connection[model.id]}
                         </p>
                       ) : null}
@@ -390,7 +390,7 @@ function PageState({ title, detail }: { title: string; detail?: string }) {
     <div className="px-6 py-12">
       <h1 className="text-sm font-semibold">{title}</h1>
       {detail ? (
-        <p className="mt-2 text-sm text-[var(--text-muted)]">{detail}</p>
+        <p className="mt-2 text-sm text-[var(--muted)]">{detail}</p>
       ) : null}
     </div>
   );

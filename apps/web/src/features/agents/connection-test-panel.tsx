@@ -71,7 +71,7 @@ export function ConnectionTestPanel({
   const config = version.config ?? {};
 
   return (
-    <div className="space-y-4 rounded border border-[var(--border)] p-4">
+    <div className="space-y-4 rounded border border-[var(--hairline)] p-4">
       <div className="flex items-center justify-between">
         <div>
           <h4 className="text-sm font-semibold">连接测试</h4>
@@ -91,7 +91,7 @@ export function ConnectionTestPanel({
       <label className="block text-sm font-medium">
         探测输入（JSON）
         <textarea
-          className="mt-1.5 min-h-20 w-full rounded border border-[var(--border)] bg-[var(--surface)] p-3 font-mono text-xs"
+          className="mt-1.5 min-h-20 w-full rounded border border-[var(--hairline)] bg-[var(--surface)] p-3 font-mono text-xs"
           disabled={disabled ?? testing}
           onChange={(event) => setProbeInput(event.target.value)}
           value={probeInput}

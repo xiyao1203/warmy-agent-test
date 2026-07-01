@@ -20,18 +20,18 @@ export function StatCard({
 }: StatCardProps) {
   return (
     <div
-      className={`rounded-[var(--radius)] border border-[var(--border)] bg-[var(--surface)] p-6 shadow-sm transition-shadow hover:shadow-md ${className}`}
+      className={`rounded-[var(--radius)] border border-[var(--hairline)] bg-[var(--surface)] p-6 shadow-sm transition-shadow hover:shadow-md ${className}`}
       {...props}
     >
       <div className="flex items-center justify-between">
         <div>
-          <p className="text-sm font-medium text-[var(--text-muted)]">
+          <p className="text-sm font-medium text-[var(--muted)]">
             {label}
           </p>
-          <p className="mt-1 text-3xl font-bold text-[var(--text)]">{value}</p>
+          <p className="mt-1 text-3xl font-bold text-[var(--ink)]">{value}</p>
         </div>
         {icon && (
-          <div className="rounded-full bg-[var(--accent-subtle)] p-3 text-[var(--accent)]">
+          <div className="rounded-full bg-[var(--primary-subtle)] p-3 text-[var(--primary)]">
             {icon}
           </div>
         )}
@@ -45,7 +45,7 @@ export function StatCard({
           >
             {trend.positive !== false ? "↑" : "↓"} {trend.value}
           </span>
-          <span className="text-[var(--text-muted)]">vs 上期</span>
+          <span className="text-[var(--muted)]">vs 上期</span>
         </div>
       )}
     </div>

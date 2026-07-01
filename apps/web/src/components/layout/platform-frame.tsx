@@ -24,10 +24,8 @@ export function PlatformFrame({ children }: { children: ReactNode }) {
     queryKey: ["projects"],
   });
 
-  // 从 URL 获取项目 ID
   const urlProjectId = pathname.match(/^\/projects\/([^/]+)/)?.[1];
 
-  // 管理当前项目 ID（优先使用 URL，其次 localStorage，最后默认第一个）
   const [storedProjectId, setStoredProjectId] = useState<string | undefined>(
     () => {
       if (typeof window !== "undefined") {
@@ -37,14 +35,12 @@ export function PlatformFrame({ children }: { children: ReactNode }) {
     },
   );
 
-  // URL 有项目 ID 时，同步到 localStorage
   useEffect(() => {
     if (urlProjectId) {
       localStorage.setItem(PROJECT_STORAGE_KEY, urlProjectId);
     }
   }, [urlProjectId]);
 
-  // 计算当前项目 ID
   const projects = projectsQuery.data ?? [];
   const currentProjectId =
     urlProjectId ??
@@ -62,7 +58,7 @@ export function PlatformFrame({ children }: { children: ReactNode }) {
 
   if (userQuery.isPending || projectsQuery.isPending) {
     return (
-      <main className="grid min-h-screen place-items-center text-sm text-[var(--text-muted)]">
+      <main className="grid min-h-screen place-items-center text-sm text-[var(--muted)]">
         正在加载工作台…
       </main>
     );
@@ -79,7 +75,7 @@ export function PlatformFrame({ children }: { children: ReactNode }) {
       <main className="grid min-h-screen place-items-center px-6 text-center">
         <div>
           <h1 className="text-base font-semibold">无法加载项目</h1>
-          <p className="mt-2 text-sm text-[var(--text-muted)]">
+          <p className="mt-2 text-sm text-[var(--muted)]">
             请检查网络连接后刷新页面。
           </p>
         </div>

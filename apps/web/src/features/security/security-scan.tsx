@@ -84,7 +84,7 @@ export function SecurityScanPage({ projectId }: { projectId: string }) {
 
   if (loading) {
     return (
-      <div className="grid min-h-[40vh] place-items-center text-sm text-[var(--text-muted)]">
+      <div className="grid min-h-[40vh] place-items-center text-sm text-[var(--muted)]">
         正在加载安全扫描…
       </div>
     );
@@ -92,13 +92,13 @@ export function SecurityScanPage({ projectId }: { projectId: string }) {
 
   return (
     <div className="min-w-0 px-6 py-6">
-      <header className="flex items-center justify-between gap-4 border-b border-[var(--border)] pb-5">
+      <header className="flex items-center justify-between gap-4 border-b border-[var(--hairline)] pb-5">
         <div>
           <h1 className="flex items-center gap-2 text-2xl font-semibold tracking-tight">
             <Shield className="size-6" />
             安全测试
           </h1>
-          <p className="mt-1 text-sm text-[var(--text-muted)]">
+          <p className="mt-1 text-sm text-[var(--muted)]">
             Promptfoo 安全扫描：注入、泄露、越狱检测。
           </p>
         </div>
@@ -106,7 +106,7 @@ export function SecurityScanPage({ projectId }: { projectId: string }) {
           <div className="flex w-full gap-2">
             <select
               aria-label="已发布 Agent 版本"
-              className="h-9 min-w-64 rounded border border-[var(--border)] bg-[var(--surface)] px-3 text-sm"
+              className="h-9 min-w-64 rounded border border-[var(--hairline)] bg-[var(--surface)] px-3 text-sm"
               disabled={triggering}
               onChange={(event) => setAgentVersionId(event.target.value)}
               value={agentVersionId}
@@ -129,7 +129,7 @@ export function SecurityScanPage({ projectId }: { projectId: string }) {
             </Button>
           </div>
           {triggerError ? (
-            <p className="text-xs text-[var(--error)]">{triggerError}</p>
+            <p className="text-xs text-[var(--danger)]">{triggerError}</p>
           ) : null}
         </div>
       </header>
@@ -138,12 +138,12 @@ export function SecurityScanPage({ projectId }: { projectId: string }) {
         {/* 扫描列表 */}
         <ul className="space-y-2">
           {scans.length === 0 ? (
-            <li className="rounded border border-dashed border-[var(--border)] p-10 text-center">
-              <ShieldCheck className="mx-auto size-8 text-[var(--text-muted)]" />
-              <p className="mt-3 text-sm font-medium text-[var(--text-muted)]">
+            <li className="rounded border border-dashed border-[var(--hairline)] p-10 text-center">
+              <ShieldCheck className="mx-auto size-8 text-[var(--muted)]" />
+              <p className="mt-3 text-sm font-medium text-[var(--muted)]">
                 暂无扫描记录
               </p>
-              <p className="mt-1 text-xs text-[var(--text-muted)]">
+              <p className="mt-1 text-xs text-[var(--muted)]">
                 点击「触发扫描」开始安全检测。
               </p>
             </li>
@@ -153,15 +153,15 @@ export function SecurityScanPage({ projectId }: { projectId: string }) {
                 <button
                   className={`flex w-full items-center gap-3 rounded border px-4 py-3 text-left text-sm transition-colors ${
                     selectedScan?.id === scan.id
-                      ? "border-[var(--accent)] bg-[var(--accent-subtle)]"
-                      : "border-[var(--border)] hover:bg-[var(--surface-subtle)]"
+                      ? "border-[var(--primary)] bg-[var(--primary-subtle)]"
+                      : "border-[var(--hairline)] hover:bg-[var(--canvas-soft)]"
                   }`}
                   onClick={() => setSelectedScan(scan)}
                   type="button"
                 >
                   <div className="min-w-0 flex-1">
                     <p className="font-mono text-xs">{scan.id.slice(0, 12)}</p>
-                    <p className="mt-0.5 text-xs text-[var(--text-muted)]">
+                    <p className="mt-0.5 text-xs text-[var(--muted)]">
                       {scan.scan_type} ·{" "}
                       {new Date(scan.created_at).toLocaleString("zh-CN")}
                     </p>
@@ -180,7 +180,7 @@ export function SecurityScanPage({ projectId }: { projectId: string }) {
                   {scan.summary.injection != null ||
                   scan.summary.leak != null ||
                   scan.summary.jailbreak != null ? (
-                    <span className="text-xs text-[var(--text-muted)]">
+                    <span className="text-xs text-[var(--muted)]">
                       {Object.entries(scan.summary)
                         .filter(([k]) => k !== "error")
                         .map(([k, v]) => `${k}: ${v}`)
@@ -190,7 +190,7 @@ export function SecurityScanPage({ projectId }: { projectId: string }) {
                   {selectedScan?.id === scan.id ? (
                     <ChevronDown className="size-4" />
                   ) : (
-                    <ChevronRight className="size-4 text-[var(--text-muted)]" />
+                    <ChevronRight className="size-4 text-[var(--muted)]" />
                   )}
                 </button>
               </li>
@@ -199,7 +199,7 @@ export function SecurityScanPage({ projectId }: { projectId: string }) {
         </ul>
 
         {/* 详情面板 */}
-        <aside className="h-fit rounded border border-[var(--border)] bg-[var(--surface)] p-5">
+        <aside className="h-fit rounded border border-[var(--hairline)] bg-[var(--surface)] p-5">
           {selectedScan ? (
             <div className="space-y-4">
               <div className="flex items-center justify-between">
@@ -221,10 +221,10 @@ export function SecurityScanPage({ projectId }: { projectId: string }) {
               <div className="grid grid-cols-3 gap-2 text-center">
                 {(["injection", "leak", "jailbreak"] as const).map((cat) => (
                   <div
-                    className="rounded border border-[var(--border)] p-2"
+                    className="rounded border border-[var(--hairline)] p-2"
                     key={cat}
                   >
-                    <div className="flex items-center justify-center gap-1 text-[var(--text-muted)]">
+                    <div className="flex items-center justify-center gap-1 text-[var(--muted)]">
                       {CATEGORY_ICONS[cat]}
                       <span className="text-xs capitalize">{cat}</span>
                     </div>
@@ -238,7 +238,7 @@ export function SecurityScanPage({ projectId }: { projectId: string }) {
               {/* 发现列表 */}
               {selectedScan.findings.length > 0 ? (
                 <div className="space-y-2">
-                  <h3 className="text-xs font-medium text-[var(--text-muted)]">
+                  <h3 className="text-xs font-medium text-[var(--muted)]">
                     发现详情（{selectedScan.findings.length} 项）
                   </h3>
                   {selectedScan.findings.map((f, i) => (
@@ -246,11 +246,11 @@ export function SecurityScanPage({ projectId }: { projectId: string }) {
                   ))}
                 </div>
               ) : (
-                <p className="text-xs text-[var(--text-muted)]">暂无发现</p>
+                <p className="text-xs text-[var(--muted)]">暂无发现</p>
               )}
             </div>
           ) : (
-            <div className="py-10 text-center text-sm text-[var(--text-muted)]">
+            <div className="py-10 text-center text-sm text-[var(--muted)]">
               <Shield className="mx-auto size-8" />
               <p className="mt-2">选择一个扫描查看详情</p>
             </div>
@@ -265,7 +265,7 @@ function FindingCard({ finding }: { finding: Finding }) {
   const [expanded, setExpanded] = useState(false);
 
   return (
-    <div className="rounded border border-[var(--border)]">
+    <div className="rounded border border-[var(--hairline)]">
       <button
         className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs"
         onClick={() => setExpanded(!expanded)}
@@ -283,18 +283,18 @@ function FindingCard({ finding }: { finding: Finding }) {
         )}
       </button>
       {expanded ? (
-        <div className="border-t border-[var(--border)] px-3 py-2 text-xs">
-          <p className="text-[var(--text-muted)]">{finding.description}</p>
+        <div className="border-t border-[var(--hairline)] px-3 py-2 text-xs">
+          <p className="text-[var(--muted)]">{finding.description}</p>
           <div className="mt-2 grid grid-cols-2 gap-2">
             <div>
-              <p className="font-medium text-[var(--text)]">攻击向量</p>
-              <p className="mt-0.5 text-[var(--text-muted)]">
+              <p className="font-medium text-[var(--ink)]">攻击向量</p>
+              <p className="mt-0.5 text-[var(--muted)]">
                 {finding.vector}
               </p>
             </div>
             <div>
-              <p className="font-medium text-[var(--text)]">响应</p>
-              <p className="mt-0.5 text-[var(--text-muted)]">
+              <p className="font-medium text-[var(--ink)]">响应</p>
+              <p className="mt-0.5 text-[var(--muted)]">
                 {finding.response}
               </p>
             </div>

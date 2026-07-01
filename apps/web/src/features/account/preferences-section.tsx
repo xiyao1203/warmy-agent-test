@@ -64,7 +64,7 @@ export function PreferencesSection() {
 
   if (isLoading) {
     return (
-      <div className="rounded-lg border border-[var(--border)] bg-[var(--card)] p-6">
+      <div className="rounded-lg border border-[var(--hairline)] bg-[var(--card)] p-6">
         <div className="animate-pulse space-y-4">
           <div className="h-4 w-24 rounded bg-[var(--muted)]" />
           <div className="h-20 w-full rounded bg-[var(--muted)]" />
@@ -76,10 +76,10 @@ export function PreferencesSection() {
 
   return (
     <div className="space-y-5">
-      <section className="rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--surface)] p-4 sm:p-5">
+      <section className="rounded-[var(--radius-lg)] border border-[var(--hairline)] bg-[var(--surface)] p-4 sm:p-5">
         <div className="mb-4">
           <h3 className="text-sm font-semibold">外观主题</h3>
-          <p className="mt-1 text-xs text-[var(--text-muted)]">
+          <p className="mt-1 text-xs text-[var(--muted)]">
             选择平台界面的显示方式。
           </p>
         </div>
@@ -88,10 +88,10 @@ export function PreferencesSection() {
             <button
               aria-pressed={theme === id}
               key={id}
-              className={`flex items-center justify-center gap-2 rounded-[var(--radius-sm)] border p-3 transition-colors ${
+              className={`flex items-center justify-center gap-2 rounded-[var(--radius-md)] border p-3 transition-colors ${
                 theme === id
-                  ? "border-[var(--accent)] bg-[var(--accent-subtle)]"
-                  : "border-[var(--border)] hover:bg-[var(--surface-subtle)]"
+                  ? "border-[var(--primary)] bg-[var(--primary-subtle)]"
+                  : "border-[var(--hairline)] hover:bg-[var(--canvas-soft)]"
               }`}
               onClick={() => handleThemeChange(id)}
               type="button"
@@ -103,10 +103,10 @@ export function PreferencesSection() {
         </div>
       </section>
 
-      <section className="rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--surface)] p-4 sm:p-5">
+      <section className="rounded-[var(--radius-lg)] border border-[var(--hairline)] bg-[var(--surface)] p-4 sm:p-5">
         <div className="mb-4">
           <h3 className="text-sm font-semibold">语言设置</h3>
-          <p className="mt-1 text-xs text-[var(--text-muted)]">
+          <p className="mt-1 text-xs text-[var(--muted)]">
             设置界面和系统消息使用的语言。
           </p>
         </div>
@@ -115,10 +115,10 @@ export function PreferencesSection() {
             <button
               aria-pressed={language === id}
               key={id}
-              className={`flex items-center justify-center gap-2 rounded-[var(--radius-sm)] border p-3 transition-colors ${
+              className={`flex items-center justify-center gap-2 rounded-[var(--radius-md)] border p-3 transition-colors ${
                 language === id
-                  ? "border-[var(--accent)] bg-[var(--accent-subtle)]"
-                  : "border-[var(--border)] hover:bg-[var(--surface-subtle)]"
+                  ? "border-[var(--primary)] bg-[var(--primary-subtle)]"
+                  : "border-[var(--hairline)] hover:bg-[var(--canvas-soft)]"
               }`}
               onClick={() => handleLanguageChange(id)}
               type="button"

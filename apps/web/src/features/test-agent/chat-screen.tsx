@@ -186,12 +186,12 @@ export function TestAgentChat({ projectId }: { projectId: string }) {
           onSelect={(id) => void selectSession(id)}
         />
 
-        <main className="flex min-w-0 flex-col bg-[var(--background)]">
-          <header className="flex items-center gap-3 border-b border-[var(--border)] px-5 py-3">
-            <Sparkles className="size-5 text-[var(--accent)]" />
+        <main className="flex min-w-0 flex-col bg-[var(--canvas)]">
+          <header className="flex items-center gap-3 border-b border-[var(--hairline)] px-5 py-3">
+            <Sparkles className="size-5 text-[var(--primary)]" />
             <div>
               <h1 className="text-sm font-semibold">超级测试 Agent</h1>
-              <p className="text-xs text-[var(--text-muted)]">
+              <p className="text-xs text-[var(--muted)]">
                 编排被测智能体、用例、执行、评测、安全与发布门禁
               </p>
             </div>
@@ -249,7 +249,7 @@ export function TestAgentChat({ projectId }: { projectId: string }) {
             )}
           </div>
 
-          <div className="border-t border-[var(--border)] p-4">
+          <div className="border-t border-[var(--hairline)] p-4">
             <div className="mx-auto flex max-w-3xl gap-2">
               <Input
                 aria-label="对话输入"
@@ -306,7 +306,7 @@ function WorkspaceTabs({
   onChange: (value: "super" | "target") => void;
 }) {
   return (
-    <div className="flex h-12 items-end gap-1 border-b border-[var(--border)] px-4">
+    <div className="flex h-12 items-end gap-1 border-b border-[var(--hairline)] px-4">
       <Button
         onClick={() => onChange("super")}
         variant={value === "super" ? "primary" : "ghost"}
@@ -328,12 +328,12 @@ function MessageBubble({ message }: { message: ChatMessage }) {
   return (
     <div className={`flex gap-3 ${user ? "flex-row-reverse" : ""}`}>
       <div
-        className={`flex size-8 shrink-0 items-center justify-center rounded-full ${user ? "bg-[var(--accent)] text-white" : "bg-[var(--surface-subtle)]"}`}
+        className={`flex size-8 shrink-0 items-center justify-center rounded-full ${user ? "bg-[var(--primary)] text-white" : "bg-[var(--canvas-soft)]"}`}
       >
         {user ? <User className="size-4" /> : <Bot className="size-4" />}
       </div>
       <div
-        className={`max-w-[82%] whitespace-pre-wrap rounded-lg px-4 py-2.5 text-sm ${user ? "bg-[var(--accent)] text-white" : "bg-[var(--surface)] text-[var(--text)] shadow-sm"}`}
+        className={`max-w-[82%] whitespace-pre-wrap rounded-lg px-4 py-2.5 text-sm ${user ? "bg-[var(--primary)] text-white" : "bg-[var(--surface)] text-[var(--ink)] shadow-sm"}`}
       >
         {message.content}
       </div>

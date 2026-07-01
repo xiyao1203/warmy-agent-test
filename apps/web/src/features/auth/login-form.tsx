@@ -95,7 +95,7 @@ export function LoginForm({
     <form className="space-y-4" noValidate onSubmit={handleSubmit}>
       {formError ? (
         <div
-          className="flex items-start gap-2 rounded-[var(--radius-sm)] border border-[var(--danger)] bg-[var(--danger-subtle)] px-3.5 py-3 text-sm text-[var(--danger)]"
+          className="flex items-start gap-2 rounded-[var(--radius-md)] border border-[var(--danger)] bg-[var(--danger-subtle)] px-3.5 py-3 text-sm text-[var(--danger)]"
           role="alert"
         >
           <AlertCircle aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
@@ -148,7 +148,7 @@ export function LoginForm({
           />
           <button
             aria-label={showPassword ? "隐藏密码" : "显示密码"}
-            className="absolute inset-y-0 right-0 flex w-10 items-center justify-center text-[var(--text-muted)] hover:text-[var(--text)]"
+            className="absolute inset-y-0 right-0 flex w-10 items-center justify-center text-[var(--muted)] hover:text-[var(--ink)]"
             onClick={() => setShowPassword((value) => !value)}
             type="button"
           >

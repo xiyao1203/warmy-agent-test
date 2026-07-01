@@ -64,7 +64,7 @@ export function ScorerList({ projectId }: { projectId: string }) {
 
   if (loading) {
     return (
-      <div className="grid min-h-[40vh] place-items-center text-sm text-[var(--text-muted)]">
+      <div className="grid min-h-[40vh] place-items-center text-sm text-[var(--muted)]">
         正在加载评分器…
       </div>
     );
@@ -72,10 +72,10 @@ export function ScorerList({ projectId }: { projectId: string }) {
 
   return (
     <div className="min-w-0 px-6 py-6">
-      <header className="flex items-center justify-between gap-4 border-b border-[var(--border)] pb-5">
+      <header className="flex items-center justify-between gap-4 border-b border-[var(--hairline)] pb-5">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">评分器</h1>
-          <p className="mt-1 text-sm text-[var(--text-muted)]">
+          <p className="mt-1 text-sm text-[var(--muted)]">
             管理项目的评分器配置，用于运行结果的多维度评估。
           </p>
         </div>
@@ -96,11 +96,11 @@ export function ScorerList({ projectId }: { projectId: string }) {
       ) : null}
 
       {scorers.length === 0 ? (
-        <div className="mt-8 rounded-[var(--radius-md)] border border-dashed border-[var(--border)] p-10 text-center">
-          <p className="text-sm font-medium text-[var(--text-muted)]">
+        <div className="mt-8 rounded-[var(--radius-lg)] border border-dashed border-[var(--hairline)] p-10 text-center">
+          <p className="text-sm font-medium text-[var(--muted)]">
             暂无评分器
           </p>
-          <p className="mt-1 text-xs text-[var(--text-muted)]">
+          <p className="mt-1 text-xs text-[var(--muted)]">
             点击「创建评分器」开始配置。
           </p>
         </div>
@@ -108,7 +108,7 @@ export function ScorerList({ projectId }: { projectId: string }) {
         <ul className="mt-5 space-y-3">
           {scorers.map((s) => (
             <li
-              className="flex items-center justify-between gap-4 rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--surface)] px-5 py-4"
+              className="flex items-center justify-between gap-4 rounded-[var(--radius-lg)] border border-[var(--hairline)] bg-[var(--surface)] px-5 py-4"
               key={s.id}
             >
               <div className="min-w-0 flex-1">
@@ -117,7 +117,7 @@ export function ScorerList({ projectId }: { projectId: string }) {
                   <Badge>{TYPE_LABELS[s.scorer_type] ?? s.scorer_type}</Badge>
                   {!s.enabled ? <Badge tone="warning">已禁用</Badge> : null}
                 </div>
-                <p className="mt-1 text-xs text-[var(--text-muted)]">
+                <p className="mt-1 text-xs text-[var(--muted)]">
                   权重 {s.weight} · 阈值 {s.threshold}
                   {s.description ? ` · ${s.description}` : ""}
                 </p>
@@ -136,7 +136,7 @@ export function ScorerList({ projectId }: { projectId: string }) {
                   ) : (
                     <ToggleLeft
                       aria-hidden="true"
-                      className="size-4 text-[var(--text-muted)]"
+                      className="size-4 text-[var(--muted)]"
                     />
                   )}
                 </Button>

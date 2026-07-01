@@ -58,25 +58,25 @@ export function RubricEditor({
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h3 className="text-sm font-medium">多维评分</h3>
-        <span className="text-sm text-[var(--text-muted)]">
+        <span className="text-sm text-[var(--muted)]">
           {totalScore} / {maxTotal}
         </span>
       </div>
 
       {dimensions.length === 0 ? (
-        <p className="text-sm text-[var(--text-muted)]">暂无评分维度</p>
+        <p className="text-sm text-[var(--muted)]">暂无评分维度</p>
       ) : (
         <div className="space-y-3">
           {dimensions.map((dimension) => (
             <div
               key={dimension.id}
-              className="rounded border border-[var(--border)] p-4"
+              className="rounded border border-[var(--hairline)] p-4"
             >
               <div className="flex items-start justify-between gap-4">
                 <div className="min-w-0 flex-1">
                   <p className="text-sm font-medium">{dimension.name}</p>
                   {dimension.description ? (
-                    <p className="mt-1 text-xs text-[var(--text-muted)]">
+                    <p className="mt-1 text-xs text-[var(--muted)]">
                       {dimension.description}
                     </p>
                   ) : null}
@@ -84,7 +84,7 @@ export function RubricEditor({
 
                 {/* 分数输入 */}
                 <div className="flex items-center gap-2">
-                  <label className="text-xs text-[var(--text-muted)]">
+                  <label className="text-xs text-[var(--muted)]">
                     分数
                   </label>
                   <Input
@@ -98,7 +98,7 @@ export function RubricEditor({
                     type="number"
                     value={dimension.score}
                   />
-                  <span className="text-xs text-[var(--text-muted)]">
+                  <span className="text-xs text-[var(--muted)]">
                     / {maxScore}
                   </span>
                 </div>
@@ -151,12 +151,12 @@ export function RubricDisplay({
       {dimensions.map((dimension) => (
         <div
           key={dimension.id}
-          className="flex items-center justify-between rounded border border-[var(--border)] px-3 py-2"
+          className="flex items-center justify-between rounded border border-[var(--hairline)] px-3 py-2"
         >
           <div>
             <p className="text-sm">{dimension.name}</p>
             {dimension.comment ? (
-              <p className="text-xs text-[var(--text-muted)]">
+              <p className="text-xs text-[var(--muted)]">
                 {dimension.comment}
               </p>
             ) : null}

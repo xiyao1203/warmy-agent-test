@@ -56,16 +56,16 @@ export function TestPlanList({
   }
   return (
     <div className="min-w-0 px-6 py-6">
-      <header className="flex items-start justify-between gap-4 border-b border-[var(--border)] pb-5">
+      <header className="flex items-start justify-between gap-4 border-b border-[var(--hairline)] pb-5">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">测试计划</h1>
-          <p className="mt-2 text-sm text-[var(--text-muted)]">
+          <p className="mt-2 text-sm text-[var(--muted)]">
             组合已发布 Agent、数据集和环境，并配置执行门禁。
           </p>
         </div>
         <CreatePlanDialog onCreate={onCreate} />
       </header>
-      <section className="mt-5 overflow-hidden rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--surface)]">
+      <section className="mt-5 overflow-hidden rounded-[var(--radius-lg)] border border-[var(--hairline)] bg-[var(--surface)]">
         {!plans.length ? (
           <EmptyState
             description="创建计划后，为它选择测试资产和运行参数。"
@@ -73,7 +73,7 @@ export function TestPlanList({
           />
         ) : (
           <Table className="w-auto min-w-[680px] table-fixed">
-            <TableHeader className="bg-[var(--surface-subtle)]">
+            <TableHeader className="bg-[var(--canvas-soft)]">
               <TableRow>
                 <TableHead className="w-[420px] pl-16">计划信息</TableHead>
                 <TableHead className="w-32 text-center">更新时间</TableHead>
@@ -83,23 +83,23 @@ export function TestPlanList({
             <TableBody>
               {plans.map((plan) => (
                 <TableRow
-                  className="transition-colors hover:bg-[var(--surface-subtle)]"
+                  className="transition-colors hover:bg-[var(--canvas-soft)]"
                   key={plan.id}
                 >
                   <TableCell>
                     <div className="flex min-w-0 items-center gap-3">
-                      <span className="grid size-8 shrink-0 place-items-center rounded-[var(--radius-sm)] bg-[var(--surface-subtle)]">
+                      <span className="grid size-8 shrink-0 place-items-center rounded-[var(--radius-md)] bg-[var(--canvas-soft)]">
                         <ClipboardCheck aria-hidden="true" className="size-4" />
                       </span>
                       <div className="min-w-0">
                         <p className="truncate font-medium">{plan.name}</p>
-                        <p className="mt-0.5 truncate text-xs text-[var(--text-muted)]">
+                        <p className="mt-0.5 truncate text-xs text-[var(--muted)]">
                           {plan.description || "暂无描述"}
                         </p>
                       </div>
                     </div>
                   </TableCell>
-                  <TableCell className="whitespace-nowrap text-center text-sm text-[var(--text-muted)]">
+                  <TableCell className="whitespace-nowrap text-center text-sm text-[var(--muted)]">
                     {new Date(plan.updated_at).toLocaleDateString("zh-CN")}
                   </TableCell>
                   <TableCell className={tableActionCellClass}>
@@ -272,7 +272,7 @@ function StatusPanel({ title }: { title: string }) {
     <div className="grid min-h-[calc(100vh-3rem)] place-items-center px-6 text-center">
       <div>
         <h1 className="text-base font-semibold">{title}</h1>
-        <p className="mt-2 max-w-md text-sm leading-6 text-[var(--text-muted)]">
+        <p className="mt-2 max-w-md text-sm leading-6 text-[var(--muted)]">
           请稍后刷新重试，或联系超级管理员。
         </p>
       </div>

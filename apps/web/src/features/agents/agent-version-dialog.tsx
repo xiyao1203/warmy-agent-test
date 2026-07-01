@@ -170,12 +170,12 @@ export function AgentVersionDialog({
         </DialogDescription>
 
         {/* ── 分段 Tab ── */}
-        <div className="mt-4 flex gap-1 border-b border-[var(--border)]">
+        <div className="mt-4 flex gap-1 border-b border-[var(--hairline)]">
           {ALL_SECTIONS.map((s) => (
             <button
               className={`px-3 py-2 text-sm font-medium transition-colors ${
                 activeSection === s
-                  ? "border-b-2 border-[var(--accent)] text-[var(--accent)]"
+                  ? "border-b-2 border-[var(--primary)] text-[var(--primary)]"
                   : "text-[var(--muted)] hover:text-[var(--foreground)]"
               }`}
               key={s}
@@ -203,7 +203,7 @@ export function AgentVersionDialog({
               <label className="block text-sm font-medium">
                 调用协议
                 <select
-                  className="mt-1.5 h-9 w-full rounded border border-[var(--border)] bg-[var(--surface)] px-3"
+                  className="mt-1.5 h-9 w-full rounded border border-[var(--hairline)] bg-[var(--surface)] px-3"
                   onChange={(event) =>
                     setProtocol(event.target.value as InvocationProtocol)
                   }
@@ -244,7 +244,7 @@ export function AgentVersionDialog({
               <label className="block text-sm font-medium">
                 请求模板（JSON，支持 {"{{ input }}"} 占位）
                 <textarea
-                  className="mt-1.5 min-h-32 w-full rounded border border-[var(--border)] bg-[var(--surface)] p-3 font-mono text-xs"
+                  className="mt-1.5 min-h-32 w-full rounded border border-[var(--hairline)] bg-[var(--surface)] p-3 font-mono text-xs"
                   onChange={(event) => setRequestTemplate(event.target.value)}
                   value={requestTemplate}
                 />
@@ -331,7 +331,7 @@ export function AgentVersionDialog({
               <label className="block text-sm font-medium">
                 系统提示词
                 <textarea
-                  className="mt-1.5 min-h-20 w-full rounded border border-[var(--border)] bg-[var(--surface)] p-3 text-xs"
+                  className="mt-1.5 min-h-20 w-full rounded border border-[var(--hairline)] bg-[var(--surface)] p-3 text-xs"
                   onChange={(event) => setSystemPrompt(event.target.value)}
                   placeholder="（仅 Trace 记录）"
                   value={systemPrompt}
@@ -368,7 +368,7 @@ export function AgentVersionDialog({
           ) : null}
 
           {/* ── 底部操作栏 ── */}
-          <div className="flex items-center justify-between border-t border-[var(--border)] pt-4">
+          <div className="flex items-center justify-between border-t border-[var(--hairline)] pt-4">
             <div className="flex gap-1">
               {ALL_SECTIONS.map((s, i) => (
                 <span

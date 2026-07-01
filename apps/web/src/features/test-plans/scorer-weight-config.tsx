@@ -66,22 +66,22 @@ export function ScorerWeightConfig({
       </div>
 
       {scorers.length === 0 ? (
-        <p className="text-sm text-[var(--text-muted)]">暂无评分器</p>
+        <p className="text-sm text-[var(--muted)]">暂无评分器</p>
       ) : (
         <div className="space-y-3">
           {scorers.map((scorer, index) => (
             <div
               key={scorer.id}
-              className="flex items-center gap-4 rounded border border-[var(--border)] p-3"
+              className="flex items-center gap-4 rounded border border-[var(--hairline)] p-3"
             >
-              <div className="flex size-8 items-center justify-center rounded-full bg-[var(--surface-subtle)] text-sm font-medium">
+              <div className="flex size-8 items-center justify-center rounded-full bg-[var(--canvas-soft)] text-sm font-medium">
                 {index + 1}
               </div>
               <div className="min-w-0 flex-1">
                 <p className="text-sm font-medium">{scorer.name}</p>
               </div>
               <div className="flex items-center gap-2">
-                <label className="text-xs text-[var(--text-muted)]">权重</label>
+                <label className="text-xs text-[var(--muted)]">权重</label>
                 <Input
                   className="w-20 text-center"
                   disabled={disabled}
@@ -93,7 +93,7 @@ export function ScorerWeightConfig({
                   type="number"
                   value={scorer.weight}
                 />
-                <span className="text-xs text-[var(--text-muted)]">%</span>
+                <span className="text-xs text-[var(--muted)]">%</span>
               </div>
             </div>
           ))}
@@ -102,9 +102,9 @@ export function ScorerWeightConfig({
 
       {/* 权重分布条 */}
       {scorers.length > 0 && (
-        <div className="h-2 overflow-hidden rounded-full bg-[var(--surface-subtle)]">
+        <div className="h-2 overflow-hidden rounded-full bg-[var(--canvas-soft)]">
           <div
-            className="h-full bg-[var(--accent)] transition-all"
+            className="h-full bg-[var(--primary)] transition-all"
             style={{ width: `${totalWeight}%` }}
           />
         </div>

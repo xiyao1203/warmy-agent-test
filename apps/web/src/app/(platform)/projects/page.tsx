@@ -35,7 +35,7 @@ export default function ProjectsPage() {
 
   if (isLoading || (isSuccess && projects && projects.length > 0)) {
     return (
-      <main className="grid min-h-screen place-items-center text-sm text-[var(--text-muted)]">
+      <main className="grid min-h-screen place-items-center text-sm text-[var(--muted)]">
         正在加载…
       </main>
     );
@@ -45,7 +45,7 @@ export default function ProjectsPage() {
     <main className="grid min-h-screen place-items-center px-6 text-center">
       <div>
         <h1 className="text-base font-semibold">欢迎使用 AgentTest</h1>
-        <p className="mt-2 text-sm text-[var(--text-muted)]">
+        <p className="mt-2 text-sm text-[var(--muted)]">
           {isSuccess ? "请先创建一个项目以开始使用。" : "正在加载…"}
         </p>
         <CreateProjectDialog

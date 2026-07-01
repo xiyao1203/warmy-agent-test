@@ -74,14 +74,14 @@ export function RunCenter({
     }
   }
   return (
-    <div className="min-w-0 bg-[var(--background)] px-6 py-6">
+    <div className="min-w-0 bg-[var(--canvas)] px-6 py-6">
       <header className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <p className="text-xs font-medium text-[var(--text-subtle)]">
+          <p className="text-xs font-medium text-[var(--body)]">
             测试执行
           </p>
           <h1 className="text-2xl font-semibold tracking-tight">运行中心</h1>
-          <p className="mt-2 text-sm text-[var(--text-muted)]">
+          <p className="mt-2 text-sm text-[var(--muted)]">
             基于已发布测试计划启动 API Agent 执行，并查看进度、结果与 Trace。
           </p>
         </div>
@@ -89,7 +89,7 @@ export function RunCenter({
           <label className="text-sm font-medium">
             测试计划版本
             <select
-              className="mt-1.5 h-9 min-w-56 rounded-[var(--radius-sm)] border border-[var(--border)] bg-[var(--surface)] px-2 text-sm"
+              className="mt-1.5 h-9 min-w-56 rounded-[var(--radius-md)] border border-[var(--hairline)] bg-[var(--surface)] px-2 text-sm"
               onChange={(event) => setVersionId(event.target.value)}
               value={versionId}
             >
@@ -138,13 +138,13 @@ export function RunCenter({
           value={String(summary.unhealthy)}
         />
       </section>
-      <section className="mt-5 overflow-hidden rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--surface)] shadow-[0_12px_40px_rgba(15,23,42,0.04)]">
-        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--border)] px-4 py-3">
+      <section className="mt-5 overflow-hidden rounded-[var(--radius-lg)] border border-[var(--hairline)] bg-[var(--surface)] shadow-[0_12px_40px_rgba(15,23,42,0.04)]">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--hairline)] px-4 py-3">
           <label className="relative min-w-[18rem] flex-1 text-sm">
             <span className="sr-only">搜索运行</span>
             <Search
               aria-hidden="true"
-              className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-[var(--text-muted)]"
+              className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-[var(--muted)]"
             />
             <Input
               aria-label="搜索运行"
@@ -158,7 +158,7 @@ export function RunCenter({
             <span className="sr-only">运行状态</span>
             <select
               aria-label="运行状态"
-              className="h-9 rounded-[var(--radius-sm)] border border-[var(--border)] bg-[var(--surface)] px-2 text-sm"
+              className="h-9 rounded-[var(--radius-md)] border border-[var(--hairline)] bg-[var(--surface)] px-2 text-sm"
               onChange={(event) => setStatusFilter(event.target.value)}
               value={statusFilter}
             >
@@ -205,7 +205,7 @@ export function RunCenter({
           />
         ) : (
           <Table>
-            <TableHeader className="bg-[var(--surface-subtle)]">
+            <TableHeader className="bg-[var(--canvas-soft)]">
               <TableRow>
                 <TableHead>运行</TableHead>
                 <TableHead>状态</TableHead>
@@ -217,17 +217,17 @@ export function RunCenter({
             <TableBody>
               {filteredRuns.map((run) => (
                 <TableRow
-                  className="hover:bg-[var(--surface-subtle)]"
+                  className="hover:bg-[var(--canvas-soft)]"
                   key={run.id}
                 >
                   <TableCell>
                     <div className="flex items-center gap-3">
-                      <span className="grid size-8 place-items-center rounded-[var(--radius-sm)] bg-[var(--surface-subtle)]">
+                      <span className="grid size-8 place-items-center rounded-[var(--radius-md)] bg-[var(--canvas-soft)]">
                         <Activity aria-hidden="true" className="size-4" />
                       </span>
                       <div>
                         <p className="font-medium">Run {run.id.slice(0, 8)}</p>
-                        <p className="mt-0.5 text-xs text-[var(--text-muted)]">
+                        <p className="mt-0.5 text-xs text-[var(--muted)]">
                           Workflow {run.workflow_id ?? "待启动"}
                         </p>
                       </div>
@@ -243,7 +243,7 @@ export function RunCenter({
                       run.cancelled_cases}{" "}
                     / {run.total_cases}
                   </TableCell>
-                  <TableCell className="text-sm text-[var(--text-muted)]">
+                  <TableCell className="text-sm text-[var(--muted)]">
                     {new Date(run.created_at).toLocaleString("zh-CN")}
                   </TableCell>
                   <TableCell className="text-right">
@@ -295,7 +295,7 @@ function StatusPanel({ title }: { title: string }) {
     <div className="grid min-h-[calc(100vh-3rem)] place-items-center px-6 text-center">
       <div>
         <h1 className="text-base font-semibold">{title}</h1>
-        <p className="mt-2 max-w-md text-sm leading-6 text-[var(--text-muted)]">
+        <p className="mt-2 max-w-md text-sm leading-6 text-[var(--muted)]">
           请稍后刷新重试，或联系超级管理员。
         </p>
       </div>
@@ -313,13 +313,13 @@ function SummaryCard({
   value: string;
 }) {
   return (
-    <article className="rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--surface)] p-4 shadow-[0_12px_40px_rgba(15,23,42,0.04)]">
+    <article className="rounded-[var(--radius-lg)] border border-[var(--hairline)] bg-[var(--surface)] p-4 shadow-[0_12px_40px_rgba(15,23,42,0.04)]">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <p className="text-xs text-[var(--text-muted)]">{label}</p>
+          <p className="text-xs text-[var(--muted)]">{label}</p>
           <p className="mt-2 text-2xl font-semibold tracking-tight">{value}</p>
         </div>
-        <span className="grid size-9 place-items-center rounded-full bg-[var(--surface-subtle)] text-[var(--text-muted)]">
+        <span className="grid size-9 place-items-center rounded-full bg-[var(--canvas-soft)] text-[var(--muted)]">
           {icon}
         </span>
       </div>

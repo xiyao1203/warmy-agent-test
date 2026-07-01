@@ -51,7 +51,7 @@ export function TestPlanDetailScreen({
           <h1 className="text-base font-semibold">
             测试计划不存在或你无权访问
           </h1>
-          <p className="mt-2 text-sm text-[var(--text-muted)]">
+          <p className="mt-2 text-sm text-[var(--muted)]">
             请返回测试计划列表检查项目和资源地址。
           </p>
         </div>

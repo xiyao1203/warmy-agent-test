@@ -33,7 +33,7 @@ export function TableRow({
 }: HTMLAttributes<HTMLTableRowElement>) {
   return (
     <tr
-      className={`border-b border-[var(--border)] last:border-b-0 ${className}`}
+      className={`border-b border-[var(--hairline)] last:border-b-0 ${className}`}
       {...props}
     />
   );
@@ -45,7 +45,7 @@ export function TableHead({
 }: ThHTMLAttributes<HTMLTableCellElement>) {
   return (
     <th
-      className={`h-9 px-3 text-xs font-medium text-[var(--text-muted)] ${className}`}
+      className={`h-9 px-3 text-xs font-medium text-[var(--muted)] ${className}`}
       {...props}
     />
   );

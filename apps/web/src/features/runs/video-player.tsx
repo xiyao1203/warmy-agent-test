@@ -71,7 +71,7 @@ export function VideoPlayer({ src, onDownload }: VideoPlayerProps) {
       <video
         ref={videoRef}
         src={src}
-        className="w-full rounded-[var(--radius-md)]"
+        className="w-full rounded-[var(--radius-lg)]"
         onTimeUpdate={handleTimeUpdate}
         onLoadedMetadata={handleLoadedMetadata}
         onPlay={() => setIsPlaying(true)}
@@ -88,7 +88,7 @@ export function VideoPlayer({ src, onDownload }: VideoPlayerProps) {
           {isMuted ? "静音" : "音量"}
         </Button>
 
-        <span className="flex-1 text-center text-sm text-[var(--text-muted)]">
+        <span className="flex-1 text-center text-sm text-[var(--muted)]">
           {formatTime(currentTime)} / {formatTime(duration)}
         </span>
 

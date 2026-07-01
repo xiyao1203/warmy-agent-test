@@ -32,9 +32,9 @@ export function HelpSearch({ topics }: HelpSearchProps) {
   return (
     <div className="space-y-4">
       <div className="relative">
-        <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-[var(--text-muted)]" />
+        <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-[var(--muted)]" />
         <input
-          className="h-10 w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] pl-10 pr-10 text-sm outline-none placeholder:text-[var(--text-subtle)] focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--focus-ring-subtle)]"
+          className="h-10 w-full rounded-lg border border-[var(--hairline)] bg-[var(--surface)] pl-10 pr-10 text-sm outline-none placeholder:text-[var(--body)] focus:border-[var(--primary)] focus:ring-2 focus:ring-[var(--focus-ring-subtle)]"
           onChange={(e) => setQuery(e.target.value)}
           placeholder="搜索帮助文档..."
           type="search"
@@ -43,7 +43,7 @@ export function HelpSearch({ topics }: HelpSearchProps) {
         {query && (
           <button
             aria-label="清空搜索"
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)] hover:text-[var(--text)]"
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--muted)] hover:text-[var(--ink)]"
             onClick={() => setQuery("")}
           >
             <X className="size-4" />
@@ -52,15 +52,15 @@ export function HelpSearch({ topics }: HelpSearchProps) {
       </div>
 
       {normalizedQuery && (
-        <p aria-live="polite" className="text-xs text-[var(--text-muted)]">
+        <p aria-live="polite" className="text-xs text-[var(--muted)]">
           找到 {filteredTopics.length} 条结果
         </p>
       )}
 
       {filteredTopics.length === 0 ? (
-        <div className="rounded-lg border border-[var(--border)] bg-[var(--card)] p-8 text-center">
-          <Search className="mx-auto size-8 text-[var(--text-muted)]" />
-          <p className="mt-3 text-sm text-[var(--text-muted)]">
+        <div className="rounded-lg border border-[var(--hairline)] bg-[var(--card)] p-8 text-center">
+          <Search className="mx-auto size-8 text-[var(--muted)]" />
+          <p className="mt-3 text-sm text-[var(--muted)]">
             没有找到相关内容
           </p>
           <div className="mt-3 flex items-center justify-center gap-3 text-sm">
@@ -70,7 +70,7 @@ export function HelpSearch({ topics }: HelpSearchProps) {
             >
               清空搜索
             </button>
-            <span aria-hidden="true" className="text-[var(--border-strong)]">
+            <span aria-hidden="true" className="text-[var(--hairline-strong)]">
               ·
             </span>
             <Link
@@ -90,14 +90,14 @@ export function HelpSearch({ topics }: HelpSearchProps) {
           {filteredTopics.map((topic) => (
             <Link
               key={topic.id}
-              className="rounded-lg border border-[var(--border)] bg-[var(--card)] p-4 transition-colors hover:border-[var(--accent)] hover:bg-[var(--accent-subtle)]"
+              className="rounded-lg border border-[var(--hairline)] bg-[var(--card)] p-4 transition-colors hover:border-[var(--primary)] hover:bg-[var(--primary-subtle)]"
               href={topic.href}
             >
-              <span className="mb-1 inline-block rounded bg-[var(--muted)] px-2 py-0.5 text-xs text-[var(--text-muted)]">
+              <span className="mb-1 inline-block rounded bg-[var(--muted)] px-2 py-0.5 text-xs text-[var(--muted)]">
                 {topic.category}
               </span>
               <h3 className="font-medium">{topic.title}</h3>
-              <p className="mt-1 text-sm text-[var(--text-muted)]">
+              <p className="mt-1 text-sm text-[var(--muted)]">
                 {topic.description}
               </p>
             </Link>

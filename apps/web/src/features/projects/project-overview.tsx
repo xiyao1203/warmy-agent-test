@@ -86,7 +86,7 @@ export function ProjectOverview({
 
   return (
     <div className="mx-auto max-w-[1180px] px-6 py-6">
-      <header className="flex flex-wrap items-start justify-between gap-4 border-b border-[var(--border)] pb-5">
+      <header className="flex flex-wrap items-start justify-between gap-4 border-b border-[var(--hairline)] pb-5">
         <div>
           <div className="flex items-center gap-2">
             <h1 className="text-2xl font-semibold tracking-tight">
@@ -94,17 +94,17 @@ export function ProjectOverview({
             </h1>
             {project.archived ? <Badge tone="warning">已归档</Badge> : null}
           </div>
-          <p className="mt-2 text-sm text-[var(--text-muted)]">
+          <p className="mt-2 text-sm text-[var(--muted)]">
             项目 ID：{project.id}
           </p>
         </div>
         <div className="text-right">
-          <p className="text-xs text-[var(--text-muted)]">我的权限</p>
+          <p className="text-xs text-[var(--muted)]">我的权限</p>
           <p className="mt-1 text-sm font-medium">{accessLabel}</p>
         </div>
       </header>
 
-      <section className="grid grid-cols-3 border-b border-[var(--border)] py-5 max-[900px]:grid-cols-1 max-[900px]:gap-4">
+      <section className="grid grid-cols-3 border-b border-[var(--hairline)] py-5 max-[900px]:grid-cols-1 max-[900px]:gap-4">
         <Metric
           icon={<Folder className="size-4" />}
           label="项目状态"
@@ -133,16 +133,16 @@ export function ProjectOverview({
       </section>
 
       <div className="grid grid-cols-[minmax(0,1.6fr)_minmax(18rem,0.7fr)] gap-6 py-6 max-[1000px]:grid-cols-1">
-        <section className="overflow-hidden rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--surface)]">
-          <div className="border-b border-[var(--border)] px-4 py-3">
+        <section className="overflow-hidden rounded-[var(--radius-lg)] border border-[var(--hairline)] bg-[var(--surface)]">
+          <div className="border-b border-[var(--hairline)] px-4 py-3">
             <h2 className="text-sm font-semibold">项目成员</h2>
-            <p className="mt-1 text-xs text-[var(--text-muted)]">
+            <p className="mt-1 text-xs text-[var(--muted)]">
               当前 API 仅提供成员标识和项目角色。
             </p>
           </div>
           {members.length ? (
             <Table>
-              <TableHeader className="bg-[var(--surface-subtle)]">
+              <TableHeader className="bg-[var(--canvas-soft)]">
                 <TableRow>
                   <TableHead>成员标识</TableHead>
                   <TableHead>项目角色</TableHead>
@@ -151,13 +151,13 @@ export function ProjectOverview({
               <TableBody>
                 {members.map((member) => (
                   <TableRow
-                    className="transition-colors hover:bg-[var(--surface-subtle)]"
+                    className="transition-colors hover:bg-[var(--canvas-soft)]"
                     key={member.user_id}
                   >
                     <TableCell className="font-mono text-xs">
                       {member.user_id}
                       {member.user_id === user.id ? (
-                        <span className="ml-2 text-[var(--text-muted)]">
+                        <span className="ml-2 text-[var(--muted)]">
                           （你）
                         </span>
                       ) : null}
@@ -179,8 +179,8 @@ export function ProjectOverview({
           )}
         </section>
 
-        <section className="rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--surface)]">
-          <div className="border-b border-[var(--border)] px-4 py-3">
+        <section className="rounded-[var(--radius-lg)] border border-[var(--hairline)] bg-[var(--surface)]">
+          <div className="border-b border-[var(--hairline)] px-4 py-3">
             <h2 className="text-sm font-semibold">测试活动</h2>
           </div>
           <EmptyState
@@ -205,12 +205,12 @@ function Metric({
   tooltip?: string;
 }) {
   return (
-    <div className="flex items-start gap-3 border-r border-[var(--border)] px-5 first:pl-0 last:border-r-0 max-[900px]:border-r-0 max-[900px]:px-0">
+    <div className="flex items-start gap-3 border-r border-[var(--hairline)] px-5 first:pl-0 last:border-r-0 max-[900px]:border-r-0 max-[900px]:px-0">
       <Tooltip content={tooltip || label}>
-        <span className="mt-0.5 text-[var(--text-muted)]">{icon}</span>
+        <span className="mt-0.5 text-[var(--muted)]">{icon}</span>
       </Tooltip>
       <div>
-        <p className="text-xs text-[var(--text-muted)]">{label}</p>
+        <p className="text-xs text-[var(--muted)]">{label}</p>
         <p className="mt-1 text-sm font-medium">{children}</p>
       </div>
     </div>
@@ -229,7 +229,7 @@ function StatusPanel({
       <div>
         <h1 className="text-base font-semibold">{title}</h1>
         {description ? (
-          <p className="mt-2 max-w-md text-sm leading-6 text-[var(--text-muted)]">
+          <p className="mt-2 max-w-md text-sm leading-6 text-[var(--muted)]">
             {description}
           </p>
         ) : null}
@@ -242,7 +242,7 @@ function LoadingSkeleton() {
   return (
     <div className="mx-auto max-w-[1180px] px-6 py-6">
       {/* Header skeleton */}
-      <div className="flex flex-wrap items-start justify-between gap-4 border-b border-[var(--border)] pb-5">
+      <div className="flex flex-wrap items-start justify-between gap-4 border-b border-[var(--hairline)] pb-5">
         <div>
           <Skeleton className="h-8 w-48" />
           <Skeleton className="mt-2 h-4 w-32" />
@@ -254,15 +254,15 @@ function LoadingSkeleton() {
       </div>
 
       {/* Metrics skeleton */}
-      <div className="grid grid-cols-3 border-b border-[var(--border)] py-5 max-[900px]:grid-cols-1 max-[900px]:gap-4">
-        <div className="flex items-start gap-3 border-r border-[var(--border)] px-5 first:pl-0 last:border-r-0 max-[900px]:border-r-0 max-[900px]:px-0">
+      <div className="grid grid-cols-3 border-b border-[var(--hairline)] py-5 max-[900px]:grid-cols-1 max-[900px]:gap-4">
+        <div className="flex items-start gap-3 border-r border-[var(--hairline)] px-5 first:pl-0 last:border-r-0 max-[900px]:border-r-0 max-[900px]:px-0">
           <Skeleton className="size-4" />
           <div>
             <Skeleton className="h-3 w-12" />
             <Skeleton className="mt-1 h-4 w-16" />
           </div>
         </div>
-        <div className="flex items-start gap-3 border-r border-[var(--border)] px-5 max-[900px]:border-r-0 max-[900px]:px-0">
+        <div className="flex items-start gap-3 border-r border-[var(--hairline)] px-5 max-[900px]:border-r-0 max-[900px]:px-0">
           <Skeleton className="size-4" />
           <div>
             <Skeleton className="h-3 w-12" />
@@ -280,8 +280,8 @@ function LoadingSkeleton() {
 
       {/* Content skeleton */}
       <div className="grid grid-cols-[minmax(0,1.6fr)_minmax(18rem,0.7fr)] gap-6 py-6 max-[1000px]:grid-cols-1">
-        <div className="overflow-hidden rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--surface)]">
-          <div className="border-b border-[var(--border)] px-4 py-3">
+        <div className="overflow-hidden rounded-[var(--radius-lg)] border border-[var(--hairline)] bg-[var(--surface)]">
+          <div className="border-b border-[var(--hairline)] px-4 py-3">
             <Skeleton className="h-4 w-20" />
             <Skeleton className="mt-1 h-3 w-48" />
           </div>
@@ -289,8 +289,8 @@ function LoadingSkeleton() {
             <SkeletonText lines={3} />
           </div>
         </div>
-        <div className="rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--surface)]">
-          <div className="border-b border-[var(--border)] px-4 py-3">
+        <div className="rounded-[var(--radius-lg)] border border-[var(--hairline)] bg-[var(--surface)]">
+          <div className="border-b border-[var(--hairline)] px-4 py-3">
             <Skeleton className="h-4 w-20" />
           </div>
           <div className="p-4">

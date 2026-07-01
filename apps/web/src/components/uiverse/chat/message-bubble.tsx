@@ -33,8 +33,8 @@ export function MessageBubble({
       <div
         className={`flex size-8 shrink-0 items-center justify-center rounded-full transition-transform duration-300 hover:scale-110 ${
           isUser
-            ? "bg-[var(--accent)] text-white"
-            : "bg-[var(--surface-subtle)] text-[var(--text)]"
+            ? "bg-[var(--primary)] text-white"
+            : "bg-[var(--canvas-soft)] text-[var(--ink)]"
         }`}
       >
         {isUser ? <User className="size-4" /> : <Bot className="size-4" />}
@@ -42,8 +42,8 @@ export function MessageBubble({
       <div
         className={`max-w-[80%] rounded-lg px-4 py-2.5 text-sm ${
           isUser
-            ? "bg-[var(--accent)] text-white"
-            : "bg-[var(--surface-subtle)] text-[var(--text)]"
+            ? "bg-[var(--primary)] text-white"
+            : "bg-[var(--canvas-soft)] text-[var(--ink)]"
         }`}
       >
         {content}

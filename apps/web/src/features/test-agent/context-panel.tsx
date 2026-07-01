@@ -30,22 +30,22 @@ export function ContextPanel({
   projectId: string;
 }) {
   return (
-    <aside className="min-h-0 overflow-y-auto border-l border-[var(--border)] bg-[var(--surface)] p-4">
+    <aside className="min-h-0 overflow-y-auto border-l border-[var(--hairline)] bg-[var(--surface)] p-4">
       <h2 className="text-sm font-semibold">关联资产</h2>
       <div className="mt-3 space-y-2">
         {artifacts.length === 0 ? (
-          <p className="text-xs text-[var(--text-muted)]">
+          <p className="text-xs text-[var(--muted)]">
             对话产生的平台资产会显示在这里。
           </p>
         ) : null}
         {artifacts.map((artifact) => (
           <Link
-            className="block rounded-[var(--radius-sm)] border border-[var(--border)] p-3 text-sm hover:border-[var(--accent)]"
+            className="block rounded-[var(--radius-md)] border border-[var(--hairline)] p-3 text-sm hover:border-[var(--primary)]"
             href={routeFor(projectId, artifact)}
             key={`${artifact.type}:${artifact.id}:${artifact.relation}`}
           >
             <span className="font-medium">{artifact.type}</span>
-            <span className="mt-1 block truncate text-xs text-[var(--text-muted)]">
+            <span className="mt-1 block truncate text-xs text-[var(--muted)]">
               {artifact.id}
             </span>
           </Link>
@@ -57,7 +57,7 @@ export function ContextPanel({
           .filter((event) => event.type.startsWith("agent."))
           .map((event) => (
             <div
-              className="rounded-[var(--radius-sm)] bg-[var(--surface-subtle)] p-2 text-xs"
+              className="rounded-[var(--radius-md)] bg-[var(--canvas-soft)] p-2 text-xs"
               key={`${event.id}:${event.type}`}
             >
               {event.type}

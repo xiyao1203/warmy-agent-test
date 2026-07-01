@@ -35,17 +35,17 @@ export function ConfirmationCard({
 
   if (decided) return null;
   return (
-    <section className="rounded-[var(--radius-md)] border border-[var(--warning)] bg-[var(--warning-subtle)] p-4">
+    <section className="rounded-[var(--radius-lg)] border border-[var(--warning)] bg-[var(--warning-subtle)] p-4">
       <div className="flex items-center gap-2 text-sm font-semibold">
         <ShieldCheck className="size-4" />
         需要确认的平台操作
       </div>
       <dl className="mt-3 grid grid-cols-[7rem_1fr] gap-2 text-xs">
-        <dt className="text-[var(--text-muted)]">子 Agent</dt>
+        <dt className="text-[var(--muted)]">子 Agent</dt>
         <dd>{String(preview?.child_agent ?? "-")}</dd>
-        <dt className="text-[var(--text-muted)]">能力</dt>
+        <dt className="text-[var(--muted)]">能力</dt>
         <dd>{String(preview?.capability ?? "-")}</dd>
-        <dt className="text-[var(--text-muted)]">原因</dt>
+        <dt className="text-[var(--muted)]">原因</dt>
         <dd>{String(preview?.rationale ?? "-")}</dd>
       </dl>
       <div className="mt-4 flex justify-end gap-2">

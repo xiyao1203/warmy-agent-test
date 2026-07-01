@@ -157,14 +157,14 @@ export function TestCaseEditor({
         </DialogDescription>
 
         {/* 分区导航 */}
-        <div className="flex gap-1 border-b border-[var(--border)] pb-2">
+        <div className="flex gap-1 border-b border-[var(--hairline)] pb-2">
           {sections.map((section) => (
             <button
               key={section.key}
               className={`rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
                 activeSection === section.key
-                  ? "bg-[var(--accent)] text-white"
-                  : "text-[var(--text-muted)] hover:bg-[var(--surface-subtle)]"
+                  ? "bg-[var(--primary)] text-white"
+                  : "text-[var(--muted)] hover:bg-[var(--canvas-soft)]"
               }`}
               onClick={() => setActiveSection(section.key)}
             >
@@ -187,7 +187,7 @@ export function TestCaseEditor({
               </Field>
               <Field label="执行模式">
                 <select
-                  className="h-9 w-full rounded-[var(--radius-sm)] border border-[var(--border)] bg-[var(--surface)] px-3"
+                  className="h-9 w-full rounded-[var(--radius-md)] border border-[var(--hairline)] bg-[var(--surface)] px-3"
                   onChange={(e) => setMode(e.target.value as "api" | "browser")}
                   value={mode}
                 >
@@ -206,7 +206,7 @@ export function TestCaseEditor({
                 <Field label="优先级">
                   <select
                     aria-label="优先级"
-                    className="h-9 w-full rounded-[var(--radius-sm)] border border-[var(--border)] bg-[var(--surface)] px-3"
+                    className="h-9 w-full rounded-[var(--radius-md)] border border-[var(--hairline)] bg-[var(--surface)] px-3"
                     onChange={(e) =>
                       setPriority(e.target.value as Priority | "")
                     }
@@ -222,7 +222,7 @@ export function TestCaseEditor({
                 <Field label="风险等级">
                   <select
                     aria-label="风险等级"
-                    className="h-9 w-full rounded-[var(--radius-sm)] border border-[var(--border)] bg-[var(--surface)] px-3"
+                    className="h-9 w-full rounded-[var(--radius-md)] border border-[var(--hairline)] bg-[var(--surface)] px-3"
                     onChange={(e) =>
                       setRiskLevel(e.target.value as RiskLevel | "")
                     }
@@ -239,7 +239,7 @@ export function TestCaseEditor({
                 <Field label="难度">
                   <select
                     aria-label="难度"
-                    className="h-9 w-full rounded-[var(--radius-sm)] border border-[var(--border)] bg-[var(--surface)] px-3"
+                    className="h-9 w-full rounded-[var(--radius-md)] border border-[var(--hairline)] bg-[var(--surface)] px-3"
                     onChange={(e) => setDifficulty(e.target.value)}
                     value={difficulty}
                   >
@@ -252,7 +252,7 @@ export function TestCaseEditor({
                 <Field label="测试分组">
                   <select
                     aria-label="测试分组"
-                    className="h-9 w-full rounded-[var(--radius-sm)] border border-[var(--border)] bg-[var(--surface)] px-3"
+                    className="h-9 w-full rounded-[var(--radius-md)] border border-[var(--hairline)] bg-[var(--surface)] px-3"
                     onChange={(e) =>
                       setTestGroup(e.target.value as TestGroup | "")
                     }
@@ -327,7 +327,7 @@ export function TestCaseEditor({
           {/* 高级选项 */}
           {activeSection === "advanced" && (
             <div className="space-y-4">
-              <div className="rounded-[var(--radius-md)] border border-[var(--border)] p-4">
+              <div className="rounded-[var(--radius-lg)] border border-[var(--hairline)] p-4">
                 <h4 className="text-sm font-medium">当前配置摘要</h4>
                 <div className="mt-2 flex flex-wrap gap-2">
                   <Badge>{mode === "api" ? "API 模式" : "浏览器模式"}</Badge>
@@ -337,7 +337,7 @@ export function TestCaseEditor({
                   {testGroup && <Badge>{testGroup}</Badge>}
                 </div>
                 {tags && (
-                  <div className="mt-2 text-xs text-[var(--text-muted)]">
+                  <div className="mt-2 text-xs text-[var(--muted)]">
                     标签：{tags}
                   </div>
                 )}
@@ -347,7 +347,7 @@ export function TestCaseEditor({
 
           {error && <p className="text-sm text-[var(--danger)]">{error}</p>}
 
-          <div className="flex justify-end gap-2 border-t border-[var(--border)] pt-4">
+          <div className="flex justify-end gap-2 border-t border-[var(--hairline)] pt-4">
             <Button onClick={() => setOpen(false)}>取消</Button>
             <Button onClick={submit} variant="primary">
               保存用例
@@ -396,7 +396,7 @@ function JsonField({
       {required && <span className="ml-1 text-[var(--danger)]">*</span>}
       <textarea
         aria-label={label}
-        className="mt-1.5 min-h-32 w-full rounded-[var(--radius-sm)] border border-[var(--border)] bg-[var(--surface)] px-3 py-2 font-mono text-xs focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)]"
+        className="mt-1.5 min-h-32 w-full rounded-[var(--radius-md)] border border-[var(--hairline)] bg-[var(--surface)] px-3 py-2 font-mono text-xs focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)]"
         onChange={(e) => onChange(e.target.value)}
         value={value}
       />

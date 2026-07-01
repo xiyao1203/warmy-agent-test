@@ -11,8 +11,8 @@ export function EmptyState({
 }) {
   return (
     <div className="flex min-h-48 flex-col items-center justify-center px-6 py-10 text-center">
-      <h2 className="text-sm font-medium text-[var(--text)]">{title}</h2>
-      <p className="mt-1 max-w-md text-sm leading-6 text-[var(--text-muted)]">
+      <h2 className="text-sm font-semibold text-[var(--ink)]">{title}</h2>
+      <p className="mt-1 max-w-md text-sm leading-6 text-[var(--muted)]">
         {description}
       </p>
       {action ? <div className="mt-4">{action}</div> : null}

@@ -88,7 +88,7 @@ export function GateList({ projectId }: { projectId: string }) {
 
   if (loading) {
     return (
-      <div className="grid min-h-[40vh] place-items-center text-sm text-[var(--text-muted)]">
+      <div className="grid min-h-[40vh] place-items-center text-sm text-[var(--muted)]">
         正在加载发布门禁…
       </div>
     );
@@ -96,13 +96,13 @@ export function GateList({ projectId }: { projectId: string }) {
 
   return (
     <div className="min-w-0 px-6 py-6">
-      <header className="flex items-center justify-between gap-4 border-b border-[var(--border)] pb-5">
+      <header className="flex items-center justify-between gap-4 border-b border-[var(--hairline)] pb-5">
         <div>
           <h1 className="flex items-center gap-2 text-2xl font-semibold tracking-tight">
             <ShieldCheck className="size-6" />
             发布门禁
           </h1>
-          <p className="mt-1 text-sm text-[var(--text-muted)]">
+          <p className="mt-1 text-sm text-[var(--muted)]">
             配置发布前必须满足的条件：通过率、关键用例、成本、安全评分。
           </p>
         </div>
@@ -113,12 +113,12 @@ export function GateList({ projectId }: { projectId: string }) {
       </header>
 
       {gates.length === 0 ? (
-        <div className="mt-8 rounded-[var(--radius-md)] border border-dashed border-[var(--border)] p-10 text-center">
-          <ShieldCheck className="mx-auto size-8 text-[var(--text-muted)]" />
-          <p className="mt-3 text-sm font-medium text-[var(--text-muted)]">
+        <div className="mt-8 rounded-[var(--radius-lg)] border border-dashed border-[var(--hairline)] p-10 text-center">
+          <ShieldCheck className="mx-auto size-8 text-[var(--muted)]" />
+          <p className="mt-3 text-sm font-medium text-[var(--muted)]">
             暂无门禁
           </p>
-          <p className="mt-1 text-xs text-[var(--text-muted)]">
+          <p className="mt-1 text-xs text-[var(--muted)]">
             点击「创建门禁」配置发布条件。
           </p>
         </div>
@@ -169,7 +169,7 @@ function GateCard({
         <>
           <select
             aria-label="选择执行记录"
-            className="h-9 max-w-48 rounded border border-[var(--border)] bg-[var(--surface)] px-2 text-sm"
+            className="h-9 max-w-48 rounded border border-[var(--hairline)] bg-[var(--surface)] px-2 text-sm"
             onChange={(event) => setRunId(event.target.value)}
             value={runId}
           >

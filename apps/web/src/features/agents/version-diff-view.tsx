@@ -71,7 +71,7 @@ export function VersionDiffView({
       {/* 操作栏 */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <ArrowLeftRight className="size-4 text-[var(--text-muted)]" />
+          <ArrowLeftRight className="size-4 text-[var(--muted)]" />
           <span className="text-sm font-medium">
             版本对比：v{v1Number ?? "?"} vs v{v2Number ?? "?"}
           </span>
@@ -79,7 +79,7 @@ export function VersionDiffView({
         <div className="flex items-center gap-2">
           {diff && (
             <>
-              <label className="flex items-center gap-2 text-xs text-[var(--text-muted)]">
+              <label className="flex items-center gap-2 text-xs text-[var(--muted)]">
                 <input
                   checked={showOnlyChanges}
                   onChange={(e) => setShowOnlyChanges(e.target.checked)}
@@ -101,33 +101,33 @@ export function VersionDiffView({
 
       {/* 错误提示 */}
       {error && (
-        <div className="rounded border border-[var(--error)] bg-[var(--error-subtle)] p-3 text-sm text-[var(--error)]">
+        <div className="rounded border border-[var(--danger)] bg-[var(--danger-subtle)] p-3 text-sm text-[var(--danger)]">
           {error}
         </div>
       )}
 
       {/* 对比结果 */}
       {diff && (
-        <div className="overflow-hidden rounded-[var(--radius-md)] border border-[var(--border)]">
+        <div className="overflow-hidden rounded-[var(--radius-lg)] border border-[var(--hairline)]">
           {/* 表头 */}
-          <div className="grid grid-cols-[200px_1fr_1fr_60px] border-b border-[var(--border)] bg-[var(--surface-subtle)] text-xs font-medium text-[var(--text-muted)]">
+          <div className="grid grid-cols-[200px_1fr_1fr_60px] border-b border-[var(--hairline)] bg-[var(--canvas-soft)] text-xs font-medium text-[var(--muted)]">
             <div className="px-4 py-2">字段</div>
-            <div className="border-l border-[var(--border)] px-4 py-2">
+            <div className="border-l border-[var(--hairline)] px-4 py-2">
               v{diff.v1.version_number}（
               {diff.v1.status === "published" ? "已发布" : "草稿"}）
             </div>
-            <div className="border-l border-[var(--border)] px-4 py-2">
+            <div className="border-l border-[var(--hairline)] px-4 py-2">
               v{diff.v2.version_number}（
               {diff.v2.status === "published" ? "已发布" : "草稿"}）
             </div>
-            <div className="border-l border-[var(--border)] px-4 py-2 text-center">
+            <div className="border-l border-[var(--hairline)] px-4 py-2 text-center">
               变更
             </div>
           </div>
 
           {/* 字段行 */}
           {filteredFields.length === 0 ? (
-            <div className="px-4 py-8 text-center text-sm text-[var(--text-muted)]">
+            <div className="px-4 py-8 text-center text-sm text-[var(--muted)]">
               {showOnlyChanges ? "没有变更的字段" : "没有可对比的字段"}
             </div>
           ) : (
@@ -140,12 +140,12 @@ export function VersionDiffView({
 
       {/* 空状态 */}
       {!diff && !loading && !error && (
-        <div className="rounded-[var(--radius-md)] border border-[var(--border)] p-8 text-center">
-          <ArrowLeftRight className="mx-auto size-8 text-[var(--text-muted)]" />
+        <div className="rounded-[var(--radius-lg)] border border-[var(--hairline)] p-8 text-center">
+          <ArrowLeftRight className="mx-auto size-8 text-[var(--muted)]" />
           <p className="mt-3 text-sm font-medium">
             点击「开始对比」查看两个版本的差异
           </p>
-          <p className="mt-1 text-xs text-[var(--text-muted)]">
+          <p className="mt-1 text-xs text-[var(--muted)]">
             对比 API 地址、模型、参数、工具、Prompt 等所有配置字段
           </p>
         </div>
@@ -162,31 +162,31 @@ function DiffRow({ field }: { field: DiffField }) {
 
   return (
     <div
-      className={`grid grid-cols-[200px_1fr_1fr_60px] border-b border-[var(--border)] last:border-b-0 ${
+      className={`grid grid-cols-[200px_1fr_1fr_60px] border-b border-[var(--hairline)] last:border-b-0 ${
         field.changed ? "bg-[var(--warning-subtle)]" : ""
       }`}
     >
       {/* 字段名 */}
-      <div className="px-4 py-2 text-xs font-medium text-[var(--text)]">
+      <div className="px-4 py-2 text-xs font-medium text-[var(--ink)]">
         {field.field}
       </div>
 
       {/* 左侧值 */}
-      <div className="border-l border-[var(--border)] px-4 py-2 text-xs">
+      <div className="border-l border-[var(--hairline)] px-4 py-2 text-xs">
         <ValueDisplay value={leftStr} changed={field.changed} side="left" />
       </div>
 
       {/* 右侧值 */}
-      <div className="border-l border-[var(--border)] px-4 py-2 text-xs">
+      <div className="border-l border-[var(--hairline)] px-4 py-2 text-xs">
         <ValueDisplay value={rightStr} changed={field.changed} side="right" />
       </div>
 
       {/* 变更标记 */}
-      <div className="flex items-center justify-center border-l border-[var(--border)]">
+      <div className="flex items-center justify-center border-l border-[var(--hairline)]">
         {field.changed ? (
           <Check className="size-4 text-[var(--warning)]" />
         ) : (
-          <X className="size-4 text-[var(--text-muted)]" />
+          <X className="size-4 text-[var(--muted)]" />
         )}
       </div>
     </div>
@@ -203,14 +203,14 @@ function ValueDisplay({
   side: "left" | "right";
 }) {
   if (!changed) {
-    return <span className="text-[var(--text-muted)]">{value}</span>;
+    return <span className="text-[var(--muted)]">{value}</span>;
   }
 
   return (
     <span
       className={`font-medium ${
         side === "left"
-          ? "text-[var(--error)] line-through"
+          ? "text-[var(--danger)] line-through"
           : "text-[var(--success)]"
       }`}
     >

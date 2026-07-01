@@ -58,8 +58,8 @@ export function AppShell({
     currentProjectId || (projects.length > 0 ? projects[0].id : null);
 
   return (
-    <div className="min-h-screen bg-[var(--background)] text-[var(--text)]">
-      <header className="grid h-14 grid-cols-[minmax(16rem,1fr)_minmax(18rem,32rem)_minmax(16rem,1fr)] items-center gap-4 border-b border-[var(--border)] bg-[var(--surface)] px-4 max-[900px]:grid-cols-[1fr_auto]">
+    <div className="min-h-screen bg-[var(--canvas)] text-[var(--ink)]">
+      <header className="grid h-14 grid-cols-[minmax(16rem,1fr)_minmax(18rem,32rem)_minmax(16rem,1fr)] items-center gap-4 border-b border-[var(--hairline)] bg-[var(--surface)] px-4 max-[900px]:grid-cols-[1fr_auto]">
         <div className="flex min-w-0 items-center gap-5">
           <Link
             className="shrink-0 text-base font-semibold tracking-tight"
@@ -77,10 +77,10 @@ export function AppShell({
           <span className="sr-only">全局搜索</span>
           <Search
             aria-hidden="true"
-            className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-[var(--text-muted)]"
+            className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-[var(--muted)]"
           />
           <input
-            className="h-9 w-full rounded-[var(--radius-sm)] border border-[var(--border)] bg-[var(--surface)] pl-9 pr-3 text-sm outline-none placeholder:text-[var(--text-subtle)] focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--focus-ring-subtle)]"
+            className="h-9 w-full rounded-[var(--radius-lg)] border border-[var(--hairline)] bg-[var(--surface)] pl-9 pr-3 text-sm outline-none placeholder:text-[var(--body)] focus:border-[var(--primary)] focus:ring-2 focus:ring-[var(--focus-ring-subtle)]"
             placeholder="搜索（⌘K）"
             type="search"
           />
@@ -105,8 +105,8 @@ export function AppShell({
             : "grid min-h-[calc(100vh-3.5rem)] grid-cols-[14rem_minmax(0,1fr)] max-[1279px]:grid-cols-[4rem_minmax(0,1fr)]"
         }
       >
-        <aside className="flex flex-col border-r border-[var(--border)] bg-[var(--surface)] p-2">
-          <p className="px-3 pb-2 pt-2 text-xs font-medium text-[var(--text-subtle)] max-[1279px]:sr-only">
+        <aside className="flex flex-col border-r border-[var(--hairline)] bg-[var(--surface)] p-2">
+          <p className="px-3 pb-2 pt-2 text-xs font-medium text-[var(--body)] max-[1279px]:sr-only">
             项目导航
           </p>
           <nav aria-label="项目导航" className="space-y-1">
@@ -212,12 +212,12 @@ export function AppShell({
             ) : null}
           </nav>
           {canManageUsers(user) ? (
-            <div className="mt-auto border-t border-[var(--border)] pt-3">
-              <p className="px-3 pb-1.5 text-xs font-medium text-[var(--text-subtle)] max-[1279px]:sr-only">
+            <div className="mt-auto border-t border-[var(--hairline)] pt-3">
+              <p className="px-3 pb-1.5 text-xs font-medium text-[var(--body)] max-[1279px]:sr-only">
                 系统管理
               </p>
               <Link
-                className="flex h-9 items-center gap-3 rounded-[var(--radius-sm)] px-3 text-sm text-[var(--text-muted)] hover:bg-[var(--surface-subtle)] hover:text-[var(--text)] max-[1279px]:justify-center max-[1279px]:px-0"
+                className="flex h-9 items-center gap-3 rounded-[var(--radius-lg)] px-3 text-sm text-[var(--muted)] hover:bg-[var(--canvas-soft)] hover:text-[var(--ink)] max-[1279px]:justify-center max-[1279px]:px-0"
                 href="/system/users"
                 title="用户管理"
               >
@@ -229,7 +229,7 @@ export function AppShell({
         </aside>
         <main className="min-w-0">{children}</main>
         {workspaceMode === "agent" ? (
-          <aside className="border-l border-[var(--border)] bg-[var(--surface)] max-[1279px]:hidden" />
+          <aside className="border-l border-[var(--hairline)] bg-[var(--surface)] max-[1279px]:hidden" />
         ) : null}
       </div>
     </div>
@@ -242,10 +242,10 @@ function OverviewNavLink({ href }: { href: string }) {
 
   return (
     <Link
-      className={`flex h-9 items-center gap-3 rounded-[var(--radius-sm)] px-3 text-sm transition-colors max-[1279px]:justify-center max-[1279px]:px-0 ${
+      className={`flex h-9 items-center gap-3 rounded-[var(--radius-lg)] px-3 text-sm transition-colors max-[1279px]:justify-center max-[1279px]:px-0 ${
         isActive
-          ? "bg-[var(--accent-subtle)] font-medium text-[var(--accent)]"
-          : "text-[var(--text-muted)] hover:bg-[var(--surface-subtle)] hover:text-[var(--text)]"
+          ? "bg-[var(--primary-subtle)] font-medium text-[var(--primary)]"
+          : "text-[var(--muted)] hover:bg-[var(--canvas-soft)] hover:text-[var(--ink)]"
       }`}
       href={href}
       title="概览"
@@ -271,10 +271,10 @@ function ProjectNavLink({
 
   return (
     <Link
-      className={`flex h-9 items-center gap-3 rounded-[var(--radius-sm)] px-3 text-sm transition-colors max-[1279px]:justify-center max-[1279px]:px-0 ${
+      className={`flex h-9 items-center gap-3 rounded-[var(--radius-lg)] px-3 text-sm transition-colors max-[1279px]:justify-center max-[1279px]:px-0 ${
         isActive
-          ? "bg-[var(--accent-subtle)] font-medium text-[var(--accent)]"
-          : "text-[var(--text-muted)] hover:bg-[var(--surface-subtle)] hover:text-[var(--text)]"
+          ? "bg-[var(--primary-subtle)] font-medium text-[var(--primary)]"
+          : "text-[var(--muted)] hover:bg-[var(--canvas-soft)] hover:text-[var(--ink)]"
       }`}
       href={href}
       title={label}

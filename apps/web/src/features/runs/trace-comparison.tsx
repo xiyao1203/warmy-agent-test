@@ -96,7 +96,7 @@ export function TraceComparison({
       case "changed":
         return "text-[var(--warning)]";
       default:
-        return "text-[var(--text)]";
+        return "text-[var(--ink)]";
     }
   };
 
@@ -112,17 +112,17 @@ export function TraceComparison({
       {/* 标题 */}
       <div className="flex items-center justify-between">
         <h3 className="text-sm font-medium">版本轨迹对比</h3>
-        <div className="flex gap-4 text-xs text-[var(--text-muted)]">
+        <div className="flex gap-4 text-xs text-[var(--muted)]">
           <span>{labelA}</span>
           <span>{labelB}</span>
         </div>
       </div>
 
       {/* 对比表格 */}
-      <div className="overflow-hidden rounded border border-[var(--border)]">
+      <div className="overflow-hidden rounded border border-[var(--hairline)]">
         <table className="w-full text-sm">
           <thead>
-            <tr className="border-b border-[var(--border)] bg-[var(--surface-subtle)]">
+            <tr className="border-b border-[var(--hairline)] bg-[var(--canvas-soft)]">
               <th className="px-4 py-2 text-left font-medium">Span 名称</th>
               <th className="px-4 py-2 text-right font-medium">{labelA}</th>
               <th className="px-4 py-2 text-right font-medium">{labelB}</th>
@@ -133,7 +133,7 @@ export function TraceComparison({
             {diffs.map((diff) => (
               <tr
                 key={diff.name}
-                className={`border-b border-[var(--border)] last:border-0 ${
+                className={`border-b border-[var(--hairline)] last:border-0 ${
                   diff.status === "changed" ? "bg-[var(--warning-subtle)]" : ""
                 }`}
               >
@@ -160,7 +160,7 @@ export function TraceComparison({
       </div>
 
       {/* 统计摘要 */}
-      <div className="flex gap-4 text-xs text-[var(--text-muted)]">
+      <div className="flex gap-4 text-xs text-[var(--muted)]">
         <span>新增: {diffs.filter((d) => d.status === "added").length}</span>
         <span>移除: {diffs.filter((d) => d.status === "removed").length}</span>
         <span>变化: {diffs.filter((d) => d.status === "changed").length}</span>

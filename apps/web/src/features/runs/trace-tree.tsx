@@ -42,10 +42,10 @@ function TraceTreeNode({ depth = 0, span }: TraceTreeNodeProps) {
 
   return (
     <div
-      className={depth > 0 ? "ml-5 border-l border-[var(--border)] pl-3" : ""}
+      className={depth > 0 ? "ml-5 border-l border-[var(--hairline)] pl-3" : ""}
     >
       <button
-        className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-sm hover:bg-[var(--surface-subtle)]"
+        className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-sm hover:bg-[var(--canvas-soft)]"
         onClick={() => hasChildren && setExpanded(!expanded)}
         type="button"
       >
@@ -65,7 +65,7 @@ function TraceTreeNode({ depth = 0, span }: TraceTreeNodeProps) {
         <span className="flex-1 truncate font-medium">
           {span.name ?? span.id ?? `span-${depth}`}
         </span>
-        <span className="flex items-center gap-2 text-xs text-[var(--text-muted)]">
+        <span className="flex items-center gap-2 text-xs text-[var(--muted)]">
           {span.duration_ms != null ? (
             <span className="flex items-center gap-0.5">
               <Clock aria-hidden="true" className="size-3" />
@@ -132,7 +132,7 @@ function buildTree(spans: TraceSpan[]): TraceSpan[] {
 export function TraceTree({ spans }: { spans: TraceSpan[] }) {
   if (spans.length === 0) {
     return (
-      <div className="rounded border border-dashed border-[var(--border)] p-6 text-center text-sm text-[var(--text-muted)]">
+      <div className="rounded border border-dashed border-[var(--hairline)] p-6 text-center text-sm text-[var(--muted)]">
         暂无 Trace 数据
       </div>
     );
@@ -141,7 +141,7 @@ export function TraceTree({ spans }: { spans: TraceSpan[] }) {
   const tree = buildTree(spans);
 
   return (
-    <div className="space-y-0.5 rounded border border-[var(--border)] bg-[var(--surface)] p-2">
+    <div className="space-y-0.5 rounded border border-[var(--hairline)] bg-[var(--surface)] p-2">
       {tree.map((span, i) => (
         <TraceTreeNode key={span.id ?? i} span={span} />
       ))}
@@ -164,7 +164,7 @@ export function TraceTimeline({ spans }: { spans: TraceSpan[] }) {
 
         return (
           <div className="flex items-center gap-3 text-xs" key={span.id ?? i}>
-            <span className="w-24 truncate text-right text-[var(--text-muted)]">
+            <span className="w-24 truncate text-right text-[var(--muted)]">
               {span.name ?? `span-${i}`}
             </span>
             <div className="flex-1">
@@ -177,7 +177,7 @@ export function TraceTimeline({ spans }: { spans: TraceSpan[] }) {
                 </span>
               </div>
             </div>
-            <span className="w-16 text-right text-[var(--text-muted)]">
+            <span className="w-16 text-right text-[var(--muted)]">
               {span.token_count != null ? `${span.token_count} tok` : ""}
             </span>
           </div>

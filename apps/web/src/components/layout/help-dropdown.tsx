@@ -69,7 +69,7 @@ export function HelpDropdown() {
         aria-expanded={open}
         aria-haspopup="true"
         aria-label="帮助中心"
-        className="grid size-8 place-items-center rounded-[var(--radius-sm)] text-[var(--text-muted)] transition-colors hover:bg-[var(--surface-subtle)] hover:text-[var(--text)]"
+        className="grid size-8 place-items-center rounded-[var(--radius-lg)] text-[var(--muted)] transition-colors hover:bg-[var(--canvas-soft)] hover:text-[var(--ink)]"
         onClick={() => setOpen(!open)}
         type="button"
       >
@@ -77,39 +77,39 @@ export function HelpDropdown() {
       </button>
 
       {open && (
-        <div className="absolute right-0 top-full z-50 mt-1 min-w-[18rem] rounded-lg border border-[var(--border)] bg-[var(--surface)] py-1 shadow-lg">
-          <div className="border-b border-[var(--border)] px-4 py-3">
+        <div className="absolute right-0 top-full z-50 mt-1 min-w-[18rem] rounded-lg border border-[var(--hairline)] bg-[var(--surface)] py-1">
+          <div className="border-b border-[var(--hairline)] px-4 py-3">
             <p className="text-sm font-semibold">帮助中心</p>
-            <p className="mt-0.5 text-xs text-[var(--text-muted)]">
+            <p className="mt-0.5 text-xs text-[var(--muted)]">
               获取帮助、学习最佳实践
             </p>
           </div>
           {menuItems.map((item) => (
             <Link
-              className="flex items-start gap-3 px-4 py-2.5 text-sm transition-colors hover:bg-[var(--surface-subtle)]"
+              className="flex items-start gap-3 px-4 py-2.5 text-sm transition-colors hover:bg-[var(--canvas-soft)]"
               href={item.href}
               key={item.label}
               onClick={() => setOpen(false)}
             >
-              <span className="mt-0.5 text-[var(--text-muted)]">
+              <span className="mt-0.5 text-[var(--muted)]">
                 {item.icon}
               </span>
               <div>
                 <p className="font-medium">{item.label}</p>
-                <p className="text-xs text-[var(--text-muted)]">
+                <p className="text-xs text-[var(--muted)]">
                   {item.description}
                 </p>
               </div>
             </Link>
           ))}
-          <div className="border-t border-[var(--border)]" />
+          <div className="border-t border-[var(--hairline)]" />
           <div className="px-4 py-2">
-            <p className="text-xs font-medium text-[var(--text-muted)]">
+            <p className="text-xs font-medium text-[var(--muted)]">
               外部资源
             </p>
           </div>
           <a
-            className="flex items-center gap-2 px-4 py-2 text-sm text-[var(--text-muted)] transition-colors hover:bg-[var(--surface-subtle)] hover:text-[var(--text)]"
+            className="flex items-center gap-2 px-4 py-2 text-sm text-[var(--muted)] transition-colors hover:bg-[var(--canvas-soft)] hover:text-[var(--ink)]"
             href="https://github.com/xiyao1203/warmy-agent-test"
             onClick={() => setOpen(false)}
             rel="noopener noreferrer"
@@ -117,10 +117,10 @@ export function HelpDropdown() {
           >
             <ExternalLink className="size-4" />
             GitHub 仓库
-            <span className="ml-auto text-xs text-[var(--text-subtle)]">↗</span>
+            <span className="ml-auto text-xs text-[var(--body)]">↗</span>
           </a>
           <a
-            className="flex items-center gap-2 px-4 py-2 text-sm text-[var(--text-muted)] transition-colors hover:bg-[var(--surface-subtle)] hover:text-[var(--text)]"
+            className="flex items-center gap-2 px-4 py-2 text-sm text-[var(--muted)] transition-colors hover:bg-[var(--canvas-soft)] hover:text-[var(--ink)]"
             href="https://github.com/xiyao1203/warmy-agent-test/blob/main/CHANGELOG.md"
             onClick={() => setOpen(false)}
             rel="noopener noreferrer"
@@ -128,7 +128,7 @@ export function HelpDropdown() {
           >
             <ExternalLink className="size-4" />
             更新日志
-            <span className="ml-auto text-xs text-[var(--text-subtle)]">↗</span>
+            <span className="ml-auto text-xs text-[var(--body)]">↗</span>
           </a>
         </div>
       )}

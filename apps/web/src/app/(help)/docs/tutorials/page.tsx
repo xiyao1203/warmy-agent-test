@@ -50,11 +50,11 @@ export default function TutorialsPage() {
   return (
     <div className="space-y-8">
       <header className="max-w-3xl">
-        <p className="text-sm font-medium text-[var(--text-muted)]">
+        <p className="text-sm font-medium text-[var(--muted)]">
           帮助中心 / 教程
         </p>
         <h1 className="mt-2 text-2xl font-semibold tracking-tight">产品教程</h1>
-        <p className="mt-2 text-sm leading-6 text-[var(--text-muted)]">
+        <p className="mt-2 text-sm leading-6 text-[var(--muted)]">
           按工作流程阅读平台核心能力。当前提供图文指南，不展示尚未接入的视频播放入口。
         </p>
       </header>
@@ -63,27 +63,27 @@ export default function TutorialsPage() {
         <h2 className="sr-only" id="tutorial-list-title">
           教程目录
         </h2>
-        <div className="overflow-hidden rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--surface)]">
+        <div className="overflow-hidden rounded-[var(--radius-lg)] border border-[var(--hairline)] bg-[var(--surface)]">
           {tutorials.map(({ description, duration, icon: Icon, title }) => (
             <article
-              className="flex items-start gap-4 border-b border-[var(--border)] px-4 py-4 last:border-b-0 sm:px-5"
+              className="flex items-start gap-4 border-b border-[var(--hairline)] px-4 py-4 last:border-b-0 sm:px-5"
               key={title}
             >
-              <span className="flex size-9 shrink-0 items-center justify-center rounded-[var(--radius-sm)] border border-[var(--border)] bg-[var(--background)] text-[var(--text-muted)]">
+              <span className="flex size-9 shrink-0 items-center justify-center rounded-[var(--radius-md)] border border-[var(--hairline)] bg-[var(--canvas)] text-[var(--muted)]">
                 <Icon className="size-4" />
               </span>
               <div className="min-w-0 flex-1">
                 <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
                   <h3 className="text-sm font-semibold">{title}</h3>
-                  <span className="text-xs text-[var(--text-subtle)]">
+                  <span className="text-xs text-[var(--body)]">
                     {duration}
                   </span>
                 </div>
-                <p className="mt-1 text-sm leading-5 text-[var(--text-muted)]">
+                <p className="mt-1 text-sm leading-5 text-[var(--muted)]">
                   {description}
                 </p>
               </div>
-              <span className="shrink-0 rounded-full bg-[var(--surface-subtle)] px-2 py-1 text-xs font-medium text-[var(--text-muted)]">
+              <span className="shrink-0 rounded-full bg-[var(--canvas-soft)] px-2 py-1 text-xs font-medium text-[var(--muted)]">
                 阅读指南
               </span>
             </article>

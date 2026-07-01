@@ -21,10 +21,10 @@ function NavigationLinks({ pathname }: { pathname: string }) {
       <Link
         aria-current={isActive ? "page" : undefined}
         className={cn(
-          "flex shrink-0 items-center gap-2 rounded-[var(--radius-sm)] px-3 py-2 text-sm font-medium transition-colors",
+          "flex shrink-0 items-center gap-2 rounded-[var(--radius-md)] px-3 py-2 text-sm font-medium transition-colors",
           isActive
-            ? "bg-[var(--surface-subtle)] text-[var(--text)]"
-            : "text-[var(--text-muted)] hover:bg-[var(--surface-subtle)] hover:text-[var(--text)]",
+            ? "bg-[var(--canvas-soft)] text-[var(--ink)]"
+            : "text-[var(--muted)] hover:bg-[var(--canvas-soft)] hover:text-[var(--ink)]",
         )}
         href={href}
         key={href}
@@ -40,22 +40,22 @@ export function HelpShell({ children }: HelpShellProps) {
   const pathname = usePathname() || "/docs";
 
   return (
-    <div className="min-h-screen bg-[var(--background)]">
-      <header className="sticky top-0 z-50 border-b border-[var(--border)] bg-[var(--surface)]/95 backdrop-blur-sm">
+    <div className="min-h-screen bg-[var(--canvas)]">
+      <header className="sticky top-0 z-50 border-b border-[var(--hairline)] bg-[var(--surface)]/95 backdrop-blur-sm">
         <div className="mx-auto flex h-14 max-w-[1180px] items-center justify-between gap-4 px-4 sm:px-6">
           <div className="flex min-w-0 items-center gap-4">
             <Link
-              className="flex shrink-0 items-center gap-2 text-sm font-medium text-[var(--text-muted)] transition-colors hover:text-[var(--text)]"
+              className="flex shrink-0 items-center gap-2 text-sm font-medium text-[var(--muted)] transition-colors hover:text-[var(--ink)]"
               href="/projects"
             >
               <ArrowLeft className="size-4" />
               返回应用
             </Link>
-            <span className="hidden h-4 w-px bg-[var(--border)] sm:block" />
+            <span className="hidden h-4 w-px bg-[var(--hairline)] sm:block" />
             <span className="truncate text-sm font-semibold">帮助中心</span>
           </div>
           <Link
-            className="flex shrink-0 items-center gap-2 rounded-[var(--radius-sm)] border border-[var(--border)] px-3 py-1.5 text-sm font-medium transition-colors hover:bg-[var(--surface-subtle)]"
+            className="flex shrink-0 items-center gap-2 rounded-[var(--radius-md)] border border-[var(--hairline)] px-3 py-1.5 text-sm font-medium transition-colors hover:bg-[var(--canvas-soft)]"
             href="/feedback"
           >
             <MessageSquare className="size-4" />
@@ -66,7 +66,7 @@ export function HelpShell({ children }: HelpShellProps) {
 
       <nav
         aria-label="帮助中心移动目录"
-        className="overflow-x-auto border-b border-[var(--border)] bg-[var(--surface)] px-4 py-2 lg:hidden"
+        className="overflow-x-auto border-b border-[var(--hairline)] bg-[var(--surface)] px-4 py-2 lg:hidden"
       >
         <div className="flex min-w-max gap-1">
           <NavigationLinks pathname={pathname} />
@@ -74,7 +74,7 @@ export function HelpShell({ children }: HelpShellProps) {
       </nav>
 
       <div className="mx-auto grid max-w-[1180px] grid-cols-1 lg:grid-cols-[12rem_minmax(0,1fr)]">
-        <aside className="hidden border-r border-[var(--border)] px-4 py-8 lg:block">
+        <aside className="hidden border-r border-[var(--hairline)] px-4 py-8 lg:block">
           <nav aria-label="帮助中心目录" className="sticky top-22 space-y-1">
             <NavigationLinks pathname={pathname} />
           </nav>

@@ -14,12 +14,12 @@ export function TypingIndicator({
         {[0, 1, 2].map((i) => (
           <span
             key={i}
-            className="inline-block size-2 animate-bounce rounded-full bg-[var(--accent)]"
+            className="inline-block size-2 animate-bounce rounded-full bg-[var(--primary)]"
             style={{ animationDelay: `${i * 150}ms` }}
           />
         ))}
       </div>
-      <span className="text-xs text-[var(--text-muted)]">AI 正在思考...</span>
+      <span className="text-xs text-[var(--muted)]">AI 正在思考...</span>
     </div>
   );
 }

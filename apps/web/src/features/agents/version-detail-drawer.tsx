@@ -52,9 +52,9 @@ export function VersionDetailDrawer({
       />
 
       {/* 抽屉内容 */}
-      <div className="relative z-10 w-full max-w-md overflow-y-auto border-l border-[var(--border)] bg-[var(--surface)] p-6 shadow-xl">
+      <div className="relative z-10 w-full max-w-md overflow-y-auto border-l border-[var(--hairline)] bg-[var(--surface)] p-6 shadow-xl">
         {/* 头部 */}
-        <div className="flex items-center justify-between border-b border-[var(--border)] pb-4">
+        <div className="flex items-center justify-between border-b border-[var(--hairline)] pb-4">
           <div>
             <h2 className="text-lg font-semibold">
               版本 v{version.version_number} 详情
@@ -71,7 +71,7 @@ export function VersionDetailDrawer({
           </div>
           <button
             onClick={onClose}
-            className="rounded p-1 hover:bg-[var(--surface-subtle)]"
+            className="rounded p-1 hover:bg-[var(--canvas-soft)]"
             aria-label="关闭"
           >
             <svg className="size-5" viewBox="0 0 20 20" fill="currentColor">
@@ -214,13 +214,13 @@ export function VersionDetailDrawer({
                 {tools.map((tool, i) => (
                   <div
                     key={i}
-                    className="rounded border border-[var(--border)] bg-[var(--surface-subtle)] p-2 text-xs"
+                    className="rounded border border-[var(--hairline)] bg-[var(--canvas-soft)] p-2 text-xs"
                   >
                     <span className="font-medium">
                       {tool.name || `工具 ${i + 1}`}
                     </span>
                     {tool.description && (
-                      <p className="mt-1 text-[var(--text-muted)]">
+                      <p className="mt-1 text-[var(--muted)]">
                         {tool.description}
                       </p>
                     )}
@@ -248,7 +248,7 @@ function Section({
 }) {
   return (
     <div>
-      <div className="flex items-center gap-2 text-sm font-semibold text-[var(--text)]">
+      <div className="flex items-center gap-2 text-sm font-semibold text-[var(--ink)]">
         {icon}
         {title}
       </div>
@@ -270,7 +270,7 @@ function Field({
 }) {
   return (
     <div className="flex flex-col gap-1 sm:flex-row sm:items-start sm:justify-between">
-      <dt className="text-[var(--text-muted)]">{label}</dt>
+      <dt className="text-[var(--muted)]">{label}</dt>
       <dd
         className={`max-w-60 ${monospace ? "font-mono text-xs" : ""} ${
           multiline ? "whitespace-pre-wrap" : "truncate"
@@ -284,7 +284,7 @@ function Field({
 
 function JsonBlock({ data }: { data: unknown }) {
   return (
-    <pre className="max-h-40 overflow-auto rounded border border-[var(--border)] bg-[var(--surface-subtle)] p-3 text-xs font-mono">
+    <pre className="max-h-40 overflow-auto rounded border border-[var(--hairline)] bg-[var(--canvas-soft)] p-3 text-xs font-mono">
       {JSON.stringify(data, null, 2)}
     </pre>
   );

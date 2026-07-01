@@ -104,7 +104,7 @@ export function AgentDetail({
             <Skeleton key={i} className="h-9 w-24" />
           ))}
         </div>
-        <Skeleton className="mt-5 h-64 rounded-[var(--radius-md)]" />
+        <Skeleton className="mt-5 h-64 rounded-[var(--radius-lg)]" />
       </div>
     );
   }
@@ -115,7 +115,7 @@ export function AgentDetail({
   return (
     <div className="min-w-0 px-6 py-6">
       <Link
-        className="inline-flex items-center gap-1.5 text-sm text-[var(--text-muted)] hover:text-[var(--text)]"
+        className="inline-flex items-center gap-1.5 text-sm text-[var(--muted)] hover:text-[var(--ink)]"
         href={`/projects/${agent.project_id}/agents`}
       >
         <ArrowLeft aria-hidden="true" className="size-4" />
@@ -123,12 +123,12 @@ export function AgentDetail({
       </Link>
 
       {/* ── 顶部固定区 ─────────────────────────────────────────────────── */}
-      <header className="mt-4 flex items-start justify-between gap-4 border-b border-[var(--border)] pb-5">
+      <header className="mt-4 flex items-start justify-between gap-4 border-b border-[var(--hairline)] pb-5">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">
             {agent.name}
           </h1>
-          <p className="mt-2 text-sm text-[var(--text-muted)]">
+          <p className="mt-2 text-sm text-[var(--muted)]">
             {agent.description || "暂无描述"}
           </p>
         </div>
@@ -141,15 +141,15 @@ export function AgentDetail({
       </header>
 
       {/* ── Tabs ───────────────────────────────────────────────────────── */}
-      <nav className="mt-4 flex gap-1 border-b border-[var(--border)]">
+      <nav className="mt-4 flex gap-1 border-b border-[var(--hairline)]">
         {TABS.map((tab) => (
           <button
             key={tab.key}
             onClick={() => setActiveTab(tab.key)}
             className={`flex h-10 items-center gap-2 px-4 text-sm font-medium transition-colors ${
               activeTab === tab.key
-                ? "border-b-2 border-[var(--accent)] text-[var(--accent)]"
-                : "text-[var(--text-muted)] hover:text-[var(--text)]"
+                ? "border-b-2 border-[var(--primary)] text-[var(--primary)]"
+                : "text-[var(--muted)] hover:text-[var(--ink)]"
             }`}
           >
             {tab.icon}
@@ -255,27 +255,27 @@ function OverviewTab({
 }) {
   return (
     <div className="space-y-4">
-      <div className="rounded-[var(--radius-md)] border border-[var(--border)] p-4">
+      <div className="rounded-[var(--radius-lg)] border border-[var(--hairline)] p-4">
         <h3 className="text-sm font-semibold">Agent 信息</h3>
         <dl className="mt-3 space-y-2 text-sm">
           <div className="flex justify-between">
-            <dt className="text-[var(--text-muted)]">类型</dt>
+            <dt className="text-[var(--muted)]">类型</dt>
             <dd className="font-medium">
               {agent.agent_type === "canvas" ? "画布 Agent" : "通用 HTTP"}
             </dd>
           </div>
           <div className="flex justify-between">
-            <dt className="text-[var(--text-muted)]">版本数</dt>
+            <dt className="text-[var(--muted)]">版本数</dt>
             <dd className="font-medium">{versions.length}</dd>
           </div>
           <div className="flex justify-between">
-            <dt className="text-[var(--text-muted)]">已发布</dt>
+            <dt className="text-[var(--muted)]">已发布</dt>
             <dd className="font-medium">
               {versions.filter((v) => v.status === "published").length}
             </dd>
           </div>
           <div className="flex justify-between">
-            <dt className="text-[var(--text-muted)]">草稿</dt>
+            <dt className="text-[var(--muted)]">草稿</dt>
             <dd className="font-medium">
               {versions.filter((v) => v.status === "draft").length}
             </dd>
@@ -284,9 +284,9 @@ function OverviewTab({
       </div>
 
       {latestPublished && (
-        <div className="rounded-[var(--radius-md)] border border-[var(--border)] p-4">
+        <div className="rounded-[var(--radius-lg)] border border-[var(--hairline)] p-4">
           <h3 className="text-sm font-semibold">当前版本</h3>
-          <p className="mt-2 text-sm text-[var(--text-muted)]">
+          <p className="mt-2 text-sm text-[var(--muted)]">
             版本 v{latestPublished.version_number} ·{" "}
             {String(latestPublished.config.model ?? "未指定模型")} ·{" "}
             {String(latestPublished.config.api_url ?? "未配置 API")}
@@ -301,7 +301,7 @@ function ConfigTab({ versions }: { versions: AgentVersionResponse[] }) {
   const current = versions.find((v) => v.status === "published") || versions[0];
   if (!current) {
     return (
-      <p className="text-sm text-[var(--text-muted)]">
+      <p className="text-sm text-[var(--muted)]">
         暂无配置，请先创建版本。
       </p>
     );
@@ -320,14 +320,14 @@ function ConfigTab({ versions }: { versions: AgentVersionResponse[] }) {
   ];
 
   return (
-    <div className="rounded-[var(--radius-md)] border border-[var(--border)] p-4">
+    <div className="rounded-[var(--radius-lg)] border border-[var(--hairline)] p-4">
       <h3 className="text-sm font-semibold">
         版本 v{current.version_number} 配置
       </h3>
       <dl className="mt-3 space-y-2 text-sm">
         {fields.map((f) => (
           <div key={f.key} className="flex justify-between">
-            <dt className="text-[var(--text-muted)]">{f.label}</dt>
+            <dt className="text-[var(--muted)]">{f.label}</dt>
             <dd className="max-w-60 truncate font-medium">
               {String(config[f.key] ?? "未设置")}
             </dd>
@@ -381,9 +381,9 @@ function VersionsTab({
 
   if (!versions.length) {
     return (
-      <div className="rounded-[var(--radius-md)] border border-[var(--border)] p-8 text-center">
+      <div className="rounded-[var(--radius-lg)] border border-[var(--hairline)] p-8 text-center">
         <p className="text-sm font-medium">暂无版本</p>
-        <p className="mt-1 text-sm text-[var(--text-muted)]">
+        <p className="mt-1 text-sm text-[var(--muted)]">
           创建第一个连接配置后即可发布测试。
         </p>
       </div>
@@ -397,7 +397,7 @@ function VersionsTab({
     <div className="space-y-4">
       {/* 操作栏 */}
       <div className="flex items-center justify-between">
-        <p className="text-sm text-[var(--text-muted)]">
+        <p className="text-sm text-[var(--muted)]">
           共 {versions.length} 个版本
           {currentVersionId && " · 当前版本已标记"}
           {baselineVersionId && " · 基线版本已标记"}
@@ -423,10 +423,10 @@ function VersionsTab({
 
           return (
             <article
-              className={`flex items-center justify-between gap-4 rounded-[var(--radius-md)] border bg-[var(--surface)] px-4 py-3 transition-colors ${
+              className={`flex items-center justify-between gap-4 rounded-[var(--radius-lg)] border bg-[var(--surface)] px-4 py-3 transition-colors ${
                 isSelected
-                  ? "border-[var(--accent)] ring-1 ring-[var(--accent)]"
-                  : "border-[var(--border)]"
+                  ? "border-[var(--primary)] ring-1 ring-[var(--primary)]"
+                  : "border-[var(--hairline)]"
               }`}
               key={version.id}
             >
@@ -465,13 +465,13 @@ function VersionsTab({
                       </Badge>
                     )}
                     {version.status === "published" && (
-                      <span className="inline-flex items-center gap-1 text-xs text-[var(--text-muted)]">
+                      <span className="inline-flex items-center gap-1 text-xs text-[var(--muted)]">
                         <LockKeyhole aria-hidden="true" className="size-3.5" />
                         已锁定
                       </span>
                     )}
                   </div>
-                  <p className="mt-1 text-xs text-[var(--text-muted)]">
+                  <p className="mt-1 text-xs text-[var(--muted)]">
                     {String(version.config.api_url ?? "未配置 API 地址")}
                   </p>
                 </div>
@@ -556,7 +556,7 @@ function VersionsTab({
 
 function RunsTab() {
   return (
-    <p className="text-sm text-[var(--text-muted)]">
+    <p className="text-sm text-[var(--muted)]">
       运行记录需在「测试执行」页面查看。请访问左侧导航的「测试执行」。
     </p>
   );
@@ -564,7 +564,7 @@ function RunsTab() {
 
 function ArtifactsTab() {
   return (
-    <p className="text-sm text-[var(--text-muted)]">
+    <p className="text-sm text-[var(--muted)]">
       产物列表需在运行详情页面查看。请先运行测试后在「测试执行」页面查看产物。
     </p>
   );
