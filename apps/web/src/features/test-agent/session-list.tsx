@@ -1,6 +1,12 @@
 "use client";
 
-import { Search, MessageSquarePlus, Trash2, Loader2 } from "lucide-react";
+import {
+  ChevronsLeft,
+  MessageSquarePlus,
+  Search,
+  Trash2,
+  Loader2,
+} from "lucide-react";
 import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -15,6 +21,7 @@ export function SessionList({
   onCreate,
   onDelete,
   onSelect,
+  onToggleCollapse,
 }: {
   activeId: string | null;
   items: SessionSummary[];
@@ -22,6 +29,7 @@ export function SessionList({
   onCreate: () => void;
   onDelete: (id: string) => void;
   onSelect: (id: string) => void;
+  onToggleCollapse: () => void;
 }) {
   const [search, setSearch] = useState("");
   const [confirming, setConfirming] = useState<string | null>(null);
@@ -45,10 +53,19 @@ export function SessionList({
 
   return (
     <aside className="flex min-h-0 flex-col overflow-hidden border-r border-[var(--hairline)] bg-[var(--surface)]">
-      {/* New session button */}
-      <div className="shrink-0 border-b border-[var(--hairline)] p-3">
-        <Button className="w-full" onClick={onCreate} variant="secondary">
-          <MessageSquarePlus className="size-4" />
+      {/* Collapse + new session header */}
+      <div className="flex shrink-0 items-center gap-1 border-b border-[var(--hairline)] p-2">
+        <button
+          aria-label="收起会话列表"
+          className="rounded p-1 text-[var(--muted)] transition-colors hover:bg-[var(--canvas-soft)] hover:text-[var(--ink)]"
+          onClick={onToggleCollapse}
+          title="收起会话列表"
+          type="button"
+        >
+          <ChevronsLeft className="size-4" />
+        </button>
+        <Button className="flex-1 text-xs" onClick={onCreate} variant="secondary">
+          <MessageSquarePlus className="size-3.5" />
           新建对话
         </Button>
       </div>

@@ -6,6 +6,7 @@ import {
   AlertTriangle,
   Bot,
   CheckCircle2,
+  ChevronDown,
   ClipboardCheck,
   Database,
   FlaskConical,
@@ -17,6 +18,7 @@ import {
   ShieldCheck,
   XCircle,
 } from "lucide-react";
+import { useState } from "react";
 
 const agentIcons: Record<string, typeof Bot> = {
   target_agent: Bot,
@@ -54,8 +56,13 @@ export type TaskState = {
 };
 
 export function ToolCallCard({ task }: { task: TaskState }) {
+  const [expanded, setExpanded] = useState(false);
   const IconComp = agentIcons[task.childAgent] ?? Bot;
   const label = agentLabels[task.childAgent] ?? task.childAgent;
+  const hasDetails =
+    task.inputSummary ||
+    (task.status === "completed" && task.output) ||
+    task.status === "failed";
 
   const statusConfig = STATUS_MAP[task.status];
 
@@ -68,61 +75,86 @@ export function ToolCallCard({ task }: { task: TaskState }) {
       }`}
     >
       {/* Header row */}
-      <div className="flex items-center gap-2.5 px-3 py-2.5">
-        <span className="flex size-6 shrink-0 items-center justify-center rounded bg-[var(--canvas-soft)] text-[var(--muted)]">
-          <IconComp className="size-3.5" />
+      <button
+        className="flex w-full items-center gap-2.5 px-3 py-2 text-left transition-colors hover:bg-[var(--canvas-soft)]/50"
+        disabled={!hasDetails}
+        onClick={() => hasDetails && setExpanded((v) => !v)}
+        type="button"
+      >
+        <span className="flex size-5 shrink-0 items-center justify-center rounded bg-[var(--canvas-soft)] text-[var(--muted)]">
+          <IconComp className="size-3" />
         </span>
         <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-2">
-            <span className="text-xs font-medium text-[var(--ink)]">
+          <div className="flex items-center gap-1.5">
+            <span className="text-[0.7rem] font-medium text-[var(--ink)]">
               {label}
             </span>
-            <span className="text-[0.7rem] text-[var(--muted)]">·</span>
-            <span className="truncate text-xs text-[var(--muted)]">
-              {task.capability}
+            <span className="text-[0.65rem] text-[var(--muted)]">
+              · {task.capability}
             </span>
           </div>
-          {task.inputSummary ? (
-            <p className="mt-0.5 truncate text-[0.65rem] text-[var(--muted)]/60">
-              {task.inputSummary}
-            </p>
-          ) : null}
         </div>
         <span
-          className={`flex shrink-0 items-center gap-1 text-xs ${statusConfig.tone}`}
+          className={`flex shrink-0 items-center gap-1 text-[0.65rem] ${statusConfig.tone}`}
         >
           {React.createElement(statusConfig.icon, {
             className: `size-3 ${statusConfig.spin ? "animate-spin" : ""}`,
           })}
           {statusConfig.label}
         </span>
-      </div>
+        {hasDetails ? (
+          <ChevronDown
+            className={`size-3 shrink-0 text-[var(--muted)] transition-transform duration-200 ${
+              expanded ? "rotate-180" : ""
+            }`}
+          />
+        ) : null}
+      </button>
 
-      {/* Output on success */}
-      {task.status === "completed" && task.output ? (
-        <div className="border-t border-[var(--hairline)] bg-[var(--canvas-soft)]/30 px-3 py-2">
-          <p className="text-xs text-[var(--muted)]">
-            {formatOutput(task.output)}
-          </p>
-        </div>
-      ) : null}
+      {/* Expandable details */}
+      {expanded ? (
+        <div className="border-t border-[var(--hairline)] bg-[var(--canvas-soft)]/20">
+          {task.inputSummary ? (
+            <div className="px-3 py-2">
+              <p className="text-[0.6rem] font-medium uppercase tracking-wide text-[var(--muted)]">
+                输入
+              </p>
+              <p className="mt-1 text-xs text-[var(--muted)]">
+                {task.inputSummary}
+              </p>
+            </div>
+          ) : null}
 
-      {/* Error + retry on failure */}
-      {task.status === "failed" ? (
-        <div className="flex items-center justify-between border-t border-[var(--danger)]/20 bg-[var(--danger-subtle)]/10 px-3 py-2">
-          <span className="flex items-center gap-1.5 text-xs text-[var(--danger)]">
-            <AlertTriangle className="size-3" />
-            {task.errorDetail ?? "执行失败"}
-          </span>
-          {task.onRetry ? (
-            <button
-              className="flex items-center gap-1 rounded px-2 py-0.5 text-xs text-[var(--primary)] transition-colors hover:bg-[var(--primary)]/10"
-              onClick={() => task.onRetry?.(task.taskId)}
-              type="button"
-            >
-              <RefreshCw className="size-3" />
-              重试
-            </button>
+          {/* Output on success */}
+          {task.status === "completed" && task.output ? (
+            <div className="border-t border-[var(--hairline)] px-3 py-2">
+              <p className="text-[0.6rem] font-medium uppercase tracking-wide text-[var(--muted)]">
+                结果
+              </p>
+              <p className="mt-1 text-xs text-[var(--muted)]">
+                {formatOutput(task.output)}
+              </p>
+            </div>
+          ) : null}
+
+          {/* Error + retry on failure */}
+          {task.status === "failed" ? (
+            <div className="flex items-center justify-between px-3 py-2">
+              <span className="flex items-center gap-1.5 text-xs text-[var(--danger)]">
+                <AlertTriangle className="size-3" />
+                {task.errorDetail ?? "执行失败"}
+              </span>
+              {task.onRetry ? (
+                <button
+                  className="flex items-center gap-1 rounded px-2 py-0.5 text-xs text-[var(--primary)] transition-colors hover:bg-[var(--primary)]/10"
+                  onClick={() => task.onRetry?.(task.taskId)}
+                  type="button"
+                >
+                  <RefreshCw className="size-3" />
+                  重试
+                </button>
+              ) : null}
+            </div>
           ) : null}
         </div>
       ) : null}

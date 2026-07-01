@@ -1,6 +1,6 @@
 "use client";
 
-import { Send, Sparkles, Square } from "lucide-react";
+import { ArrowDown, ChevronsRight, Send, Sparkles, Square } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -49,11 +49,17 @@ export function TestAgentChat({ projectId }: { projectId: string }) {
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [lastFailedInput, setLastFailedInput] = useState<string | null>(null);
+  const [sidebarOpen, setSidebarOpen] = useState(() => {
+    if (typeof window === "undefined") return true;
+    return localStorage.getItem("chat-sidebar-open") !== "false";
+  });
   const scrollRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
   const sessionRef = useRef<string | null>(null);
   const abortRef = useRef<AbortController | null>(null);
   const sseCloseRef = useRef<(() => void) | null>(null);
   const pinnedBottomRef = useRef(true);
+  const [isPinned, setIsPinned] = useState(true);
   const activeSessionId = active?.session_id ?? null;
 
   // Load sessions on mount
@@ -121,6 +127,13 @@ export function TestAgentChat({ projectId }: { projectId: string }) {
     return () => sseCloseRef.current?.();
   }, [activeSessionId, projectId]);
 
+  // Auto-focus input on mount and after sending
+  useEffect(() => {
+    if (!sending && !loadingHistory) {
+      inputRef.current?.focus();
+    }
+  }, [sending, loadingHistory]);
+
   // Smooth auto-scroll — only when user is near bottom
   useEffect(() => {
     const el = scrollRef.current;
@@ -135,8 +148,10 @@ export function TestAgentChat({ projectId }: { projectId: string }) {
     const el = scrollRef.current;
     if (!el) return;
     const threshold = 80;
-    pinnedBottomRef.current =
+    const atBottom =
       el.scrollHeight - el.scrollTop - el.clientHeight < threshold;
+    pinnedBottomRef.current = atBottom;
+    setIsPinned(atBottom);
   }, []);
 
   function applySession(session: ChatResponse) {
@@ -204,8 +219,30 @@ export function TestAgentChat({ projectId }: { projectId: string }) {
     setError(null);
     pinnedBottomRef.current = true;
     abortRef.current = new AbortController();
+
+    // Optimistically show the user message immediately
+    const pendingUserMessage: ChatMessage = {
+      role: "user",
+      content,
+      timestamp: new Date().toISOString(),
+    };
+    setMessages((current) => [...current, pendingUserMessage]);
+
     try {
-      const session = active ?? (await newSession());
+      const session: ChatResponse =
+        active ?? (await createSession(projectId));
+      if (!active) {
+        // Update session state manually — applySession would wipe the
+        // optimistic user message we just added above.
+        setActive(session);
+        setArtifacts(session.artifacts);
+        setSessions((current) => [session, ...current]);
+        window.history.replaceState(
+          {},
+          "",
+          `${window.location.pathname}?session=${session.session_id}`,
+        );
+      }
       const response = await sendChatMessage(
         projectId,
         session.session_id,
@@ -219,6 +256,10 @@ export function TestAgentChat({ projectId }: { projectId: string }) {
       ]);
     } catch (reason) {
       if (reason instanceof DOMException && reason.name === "AbortError") return;
+      // Remove the optimistic message on failure
+      setMessages((current) =>
+        current.filter((msg) => msg.timestamp !== pendingUserMessage.timestamp),
+      );
       setInput(content);
       setLastFailedInput(content);
       setError(
@@ -232,9 +273,17 @@ export function TestAgentChat({ projectId }: { projectId: string }) {
     }
   }
 
+  const handleToggleSidebar = useCallback(() => {
+    setSidebarOpen((prev) => {
+      const next = !prev;
+      localStorage.setItem("chat-sidebar-open", String(next));
+      return next;
+    });
+  }, []);
+
   if (workspace === "target") {
     return (
-      <div className="flex h-full flex-col">
+      <div className="flex h-full flex-col overflow-hidden">
         <WorkspaceTabs value={workspace} onChange={setWorkspace} />
         <TargetChatScreen projectId={projectId} />
       </div>
@@ -242,42 +291,81 @@ export function TestAgentChat({ projectId }: { projectId: string }) {
   }
 
   return (
-    <div className="flex h-full flex-col">
+    <div className="flex h-full flex-col overflow-hidden">
       <WorkspaceTabs value={workspace} onChange={setWorkspace} />
-      <div className="min-h-0 flex-1 grid grid-cols-[16rem_minmax(0,1fr)_19rem] max-[1100px]:grid-cols-[14rem_minmax(0,1fr)] max-[760px]:grid-cols-1">
-        <SessionList
-          activeId={active?.session_id ?? null}
-          items={sessions}
-          loading={loadingHistory}
-          onCreate={() => void newSession()}
-          onDelete={(id) => void handleDelete(id)}
-          onSelect={(id) => void selectSession(id)}
-        />
 
-        <main className="flex min-h-0 min-w-0 flex-col bg-[var(--canvas)]">
-          <header className="flex items-center gap-3 border-b border-[var(--hairline)] px-5 py-3">
-            <Sparkles className="size-5 text-[var(--primary)]" />
-            <div>
-              <h1 className="text-sm font-semibold">超级测试 Agent</h1>
-              <p className="text-xs text-[var(--muted)]">
-                编排被测智能体、用例、执行、评测、安全与发布门禁
-              </p>
-            </div>
-          </header>
+      <div className="relative min-h-0 flex-1 overflow-hidden">
+        {/* Floating sidebar overlay */}
+        <aside
+          className={`absolute bottom-0 left-0 top-0 z-20 w-64 transition-transform duration-300 ease-in-out ${
+            sidebarOpen ? "translate-x-0" : "-translate-x-full"
+          }`}
+        >
+          <SessionList
+            activeId={active?.session_id ?? null}
+            items={sessions}
+            loading={loadingHistory}
+            onCreate={() => void newSession()}
+            onDelete={(id) => void handleDelete(id)}
+            onSelect={(id) => void selectSession(id)}
+            onToggleCollapse={handleToggleSidebar}
+          />
+        </aside>
+
+        {/* Backdrop when sidebar is open on narrow screens */}
+        {sidebarOpen ? (
+          <div
+            aria-hidden="true"
+            className="absolute inset-0 z-10 bg-black/20 transition-opacity max-[760px]:block hidden"
+            onClick={handleToggleSidebar}
+          />
+        ) : null}
+
+        {/* Floating toggle when sidebar is closed */}
+        {!sidebarOpen ? (
+          <button
+            aria-label="展开会话列表"
+            className="absolute left-0 top-3 z-30 rounded-r-lg border border-l-0 border-[var(--hairline)] bg-[var(--surface)] p-1.5 text-[var(--muted)] shadow-sm transition-colors hover:bg-[var(--canvas-soft)] hover:text-[var(--ink)]"
+            onClick={handleToggleSidebar}
+            title="展开会话列表"
+            type="button"
+          >
+            <ChevronsRight className="size-4" />
+          </button>
+        ) : null}
+
+        {/* Main + context panel */}
+        <div className="grid h-full grid-cols-[minmax(0,1fr)_19rem] max-[1100px]:grid-cols-1 overflow-hidden">
+
+        <main className="relative flex min-h-0 min-w-0 flex-col bg-[var(--canvas)]">
+          {messages.length === 0 && !sending && !streamingContent ? (
+            <header className="flex items-center gap-3 border-b border-[var(--hairline)] px-5 py-3">
+              <Sparkles className="size-5 text-[var(--primary)]" />
+              <div>
+                <h1 className="text-sm font-semibold">超级测试 Agent</h1>
+                <p className="text-xs text-[var(--muted)]">
+                  编排被测智能体、用例、执行、评测、安全与发布门禁
+                </p>
+              </div>
+            </header>
+          ) : null}
 
           <div
             className="chat-scroll min-h-0 flex-1 overflow-y-auto px-5 py-4"
             onScroll={handleScroll}
             ref={scrollRef}
           >
-            {messages.length === 0 ? (
+            {messages.length === 0 && !sending && !streamingContent ? (
               <ChatEmptyState
+                description="告诉我你想测试什么，我会帮你编排完整的测试流程"
                 onSuggestionClick={setInput}
                 suggestions={[
-                  "测试 Agent v2.3 并与 v2.2 做实验对比",
-                  "为登录场景生成回归用例和测试计划",
-                  "执行安全红队测试并评估发布门禁",
+                  "为登录 API 生成回归测试用例并执行",
+                  "对比 Agent v2.3 和 v2.2 的评分差异",
+                  "执行安全红队测试并检查发布门禁",
+                  "帮我注册一个 HTTP Agent 并创建测试计划",
                 ]}
+                title="有什么我可以帮你的？"
               />
             ) : (
               <Timeline
@@ -304,6 +392,27 @@ export function TestAgentChat({ projectId }: { projectId: string }) {
             )}
           </div>
 
+          {/* Scroll-to-bottom floating button */}
+          {!isPinned && (sending || streamingContent) ? (
+            <div className="flex justify-center">
+              <button
+                aria-label="滚动到底部"
+                className="absolute bottom-20 z-10 rounded-full border border-[var(--hairline)] bg-[var(--surface)] p-2 text-[var(--muted)] shadow-md transition-all hover:bg-[var(--canvas-soft)] hover:text-[var(--ink)] hover:shadow-lg"
+                onClick={() => {
+                  const el = scrollRef.current;
+                  if (el) {
+                    el.scrollTo({ top: el.scrollHeight, behavior: "smooth" });
+                    pinnedBottomRef.current = true;
+                    setIsPinned(true);
+                  }
+                }}
+                type="button"
+              >
+                <ArrowDown className="size-4" />
+              </button>
+            </div>
+          ) : null}
+
           <div className="shrink-0 border-t border-[var(--hairline)] p-4">
             <div className="mx-auto flex max-w-3xl gap-2">
               <Input
@@ -318,6 +427,7 @@ export function TestAgentChat({ projectId }: { projectId: string }) {
                   }
                 }}
                 placeholder="向超级测试 Agent 描述目标…"
+                ref={inputRef}
                 value={input}
               />
               {sending ? (
@@ -349,6 +459,7 @@ export function TestAgentChat({ projectId }: { projectId: string }) {
             projectId={projectId}
           />
         </div>
+      </div>
       </div>
     </div>
   );

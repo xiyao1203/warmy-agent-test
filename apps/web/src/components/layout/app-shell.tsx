@@ -76,7 +76,7 @@ export function AppShell({
   const sidebarWidth = collapsed ? "3.5rem" : "14rem";
 
   return (
-    <div className="min-h-screen bg-[var(--canvas)] text-[var(--ink)]">
+    <div className="h-screen bg-[var(--canvas)] text-[var(--ink)]">
       <header className="grid h-14 grid-cols-[minmax(16rem,1fr)_minmax(18rem,32rem)_minmax(16rem,1fr)] items-center gap-4 border-b border-[var(--hairline)] bg-[var(--canvas)] px-4 max-[900px]:grid-cols-[1fr_auto]">
         <div className="flex min-w-0 items-center gap-5">
           <Link
@@ -118,7 +118,7 @@ export function AppShell({
         </div>
       </header>
       <div
-        className="flex min-h-[calc(100vh-3.5rem)]"
+        className="flex h-[calc(100vh-3.5rem)]"
       >
         <aside
           className="flex shrink-0 flex-col border-r border-[var(--hairline)] bg-[var(--surface)] p-2 transition-[width] duration-200"
@@ -129,7 +129,7 @@ export function AppShell({
               项目导航
             </p>
           )}
-          <nav aria-label="项目导航" className="flex-1 space-y-1">
+          <nav aria-label="项目导航" className="flex-1 space-y-1 overflow-y-auto min-h-0">
             <OverviewNavLink collapsed={collapsed} href={projectHref} />
             {activeProjectId ? (
               <>
@@ -286,7 +286,7 @@ export function AppShell({
             </button>
           </div>
         </aside>
-        <main className="min-w-0 flex-1">{children}</main>
+        <main className="min-w-0 flex-1 overflow-y-auto">{children}</main>
         {workspaceMode === "agent" ? (
           <aside className="border-l border-[var(--hairline)] bg-[var(--surface)] max-[1279px]:hidden" />
         ) : null}

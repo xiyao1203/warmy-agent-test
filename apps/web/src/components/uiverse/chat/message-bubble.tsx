@@ -46,8 +46,12 @@ export function MessageBubble({
         {isUser ? <User className="size-4" /> : <Bot className="size-4" />}
       </div>
       <div className="max-w-[80%]">
-        {isUser && timestamp ? (
-          <span className="mb-1 block text-right text-[0.6rem] text-[var(--muted)]">
+        {timestamp ? (
+          <span
+            className={`mb-1 block text-[0.6rem] text-[var(--muted)] ${
+              isUser ? "text-right" : "text-left"
+            }`}
+          >
             {formatTime(timestamp)}
           </span>
         ) : null}
