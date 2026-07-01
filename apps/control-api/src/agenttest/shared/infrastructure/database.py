@@ -1,6 +1,7 @@
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from contextvars import ContextVar, Token
+from functools import lru_cache
 from types import TracebackType
 from typing import Any
 
@@ -23,18 +24,30 @@ _current_session: ContextVar[AsyncSession | None] = ContextVar(
 )
 
 
-def create_database_engine(database_url: str) -> AsyncEngine:
-    """创建数据库引擎，根据 URL 类型自动调整参数。
+@lru_cache(maxsize=2)
+def _cached_create_engine(database_url: str) -> AsyncEngine:
+    """缓存的引擎工厂，相同 URL 只创建一次引擎实例。
 
-    PostgreSQL 使用 pool_pre_ping 检测连接有效性，
-    SQLite 需要 check_same_thread=False 以支持异步访问。
+    SQLite 使用 check_same_thread=False 以支持异步访问，
+    PostgreSQL 配置连接池参数以优化并发性能。
     """
     if database_url.startswith("sqlite"):
         return create_async_engine(
             database_url,
             connect_args={"check_same_thread": False},
         )
-    return create_async_engine(database_url, pool_pre_ping=True)
+    return create_async_engine(
+        database_url,
+        pool_pre_ping=True,
+        pool_size=20,
+        max_overflow=10,
+        pool_recycle=3600,
+    )
+
+
+def create_database_engine(database_url: str) -> AsyncEngine:
+    """创建/复用数据库引擎，自动按 URL 类型配置参数。"""
+    return _cached_create_engine(database_url)
 
 
 def create_session_factory(engine: AsyncEngine) -> async_sessionmaker[AsyncSession]:

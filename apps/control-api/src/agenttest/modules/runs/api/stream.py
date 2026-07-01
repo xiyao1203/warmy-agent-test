@@ -82,7 +82,8 @@ def create_run_stream_router(
                     yield f"data: {json.dumps({'event': 'completed', 'status': status})}\n\n"
                     break
 
-                await asyncio.sleep(2)
+                poll_interval = getattr(settings, "run_stream_poll_seconds", 1)
+                await asyncio.sleep(poll_interval)
 
         return StreamingResponse(
             event_generator(),

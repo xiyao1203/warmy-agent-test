@@ -56,11 +56,48 @@ class SqlAlchemyChatSessionRepository(ChatSessionRepository):
         statement = statement.order_by(TestAgentSessionModel.updated_at.desc())
         async with session_scope(self._session_factory) as database:
             models = list((await database.scalars(statement)).all())
+            if not models:
+                return []
+            session_ids = [model.id for model in models]
+            messages_statement = (
+                select(TestAgentMessageModel)
+                .where(
+                    TestAgentMessageModel.project_id == project_id.value,
+                    TestAgentMessageModel.session_id.in_(session_ids),
+                )
+                .order_by(TestAgentMessageModel.sequence)
+            )
+            all_messages = list((await database.scalars(messages_statement)).all())
+        messages_by_session: dict[UUID, list[TestAgentMessageModel]] = {}
+        for msg in all_messages:
+            messages_by_session.setdefault(msg.session_id, []).append(msg)
         sessions: list[ChatSession] = []
         for model in models:
-            restored = await self.get(project_id, ChatSessionId(model.id))
-            if restored is not None:
-                sessions.append(restored)
+            messages = messages_by_session.get(model.id, [])
+            sessions.append(
+                ChatSession(
+                    session_id=ChatSessionId(model.id),
+                    project_id=model.project_id,
+                    created_by=model.created_by,
+                    messages=[
+                        ChatMessage(
+                            message_id=message.id,
+                            sequence=message.sequence,
+                            role=message.role,
+                            content=message.content,
+                            timestamp=message.created_at,
+                        )
+                        for message in messages
+                    ],
+                    plan_draft=dict(model.plan_draft),
+                    status=SessionStatus(model.status),
+                    created_at=model.created_at,
+                    updated_at=model.updated_at,
+                    title=model.title,
+                    protocol_version=model.protocol_version,
+                    archived_at=model.archived_at,
+                )
+            )
         return sessions
 
     async def get(
@@ -412,17 +449,43 @@ class SqlAlchemyTargetChatRepository:
 
     async def list_sessions(self, project_id: ProjectId) -> list[TargetChatSession]:
         statement = (
-            select(TargetAgentChatSessionModel.id)
+            select(TargetAgentChatSessionModel)
             .where(TargetAgentChatSessionModel.project_id == project_id.value)
             .order_by(TargetAgentChatSessionModel.updated_at.desc())
         )
         async with session_scope(self._session_factory) as database:
-            ids = list((await database.scalars(statement)).all())
+            models = list((await database.scalars(statement)).all())
+            if not models:
+                return []
+            session_ids = [model.id for model in models]
+            turns_statement = (
+                select(TargetAgentChatTurnModel)
+                .where(
+                    TargetAgentChatTurnModel.project_id == project_id.value,
+                    TargetAgentChatTurnModel.session_id.in_(session_ids),
+                )
+                .order_by(TargetAgentChatTurnModel.sequence)
+            )
+            all_turns = list((await database.scalars(turns_statement)).all())
+        turns_by_session: dict[UUID, list[TargetAgentChatTurnModel]] = {}
+        for turn in all_turns:
+            turns_by_session.setdefault(turn.session_id, []).append(turn)
         result: list[TargetChatSession] = []
-        for session_id in ids:
-            item = await self.get_session(project_id, session_id)
-            if item is not None:
-                result.append(item)
+        for model in models:
+            turns = turns_by_session.get(model.id, [])
+            result.append(
+                TargetChatSession(
+                    session_id=model.id,
+                    project_id=model.project_id,
+                    agent_version_id=model.agent_version_id,
+                    environment_template_id=model.environment_template_id,
+                    status=model.status,
+                    created_by=model.created_by,
+                    created_at=model.created_at,
+                    updated_at=model.updated_at,
+                    turns=[_target_turn_to_domain(item) for item in turns],
+                )
+            )
         return result
 
     async def add_turn(self, turn: TargetChatTurn) -> None:

@@ -3,6 +3,7 @@ from pathlib import Path
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.gzip import GZipMiddleware
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
 from starlette.responses import Response
@@ -271,6 +272,9 @@ def create_app(
         allow_methods=["*"],
         allow_headers=["*"],
     )
+
+    # GZip 响应压缩，阈值 500 字节
+    app.add_middleware(GZipMiddleware, minimum_size=500)
 
     app.include_router(health_router, prefix="/api/v1")
     dependencies = auth_dependencies or build_auth_dependencies(resolved_settings)
