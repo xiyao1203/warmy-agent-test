@@ -3,6 +3,7 @@ from __future__ import annotations
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
+from agenttest.modules.agents.domain.invocation import invocation_from_stored_config
 from agenttest.modules.agents.infrastructure.persistence.models import (
     AgentModel,
     AgentVersionModel,
@@ -95,7 +96,9 @@ class SqlAlchemyRunSource:
                 "id": "generic-http",
                 "version": "1.0.0",
                 "agent_type": agent.agent_type,
-                "agent_config": dict(agent_version.config),
+                "agent_config": invocation_from_stored_config(
+                    dict(agent_version.config)
+                ).model_dump(mode="json"),
             },
             cases=[
                 RunDefinitionCase(

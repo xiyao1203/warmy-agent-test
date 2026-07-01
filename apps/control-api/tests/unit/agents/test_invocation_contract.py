@@ -4,6 +4,7 @@ import pytest
 from agenttest.modules.agents.domain.invocation import (
     AgentInvocationConfig,
     InvocationProtocol,
+    invocation_from_stored_config,
 )
 from pydantic import ValidationError
 
@@ -52,3 +53,14 @@ def test_invocation_config_rejects_unknown_or_secret_fields() -> None:
                 "api_key": "must-not-be-stored-here",
             }
         )
+
+
+def test_legacy_agent_config_is_normalized_without_inventing_credentials() -> None:
+    config = invocation_from_stored_config(
+        {"api_url": "https://agent.example/run", "timeout": 18}
+    )
+
+    assert config.endpoint_url.unicode_string() == "https://agent.example/run"
+    assert config.timeout_seconds == 18
+    assert config.protocol is InvocationProtocol.SYNC_JSON
+    assert config.credential_binding_ids == []

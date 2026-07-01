@@ -30,3 +30,16 @@ class AgentInvocationConfig(BaseModel):
     response_path: str = Field(default="output", min_length=1)
     timeout_seconds: int = Field(default=30, ge=1, le=600)
     credential_binding_ids: list[UUID] = Field(default_factory=list)
+
+
+def invocation_from_stored_config(config: dict[str, object]) -> AgentInvocationConfig:
+    """Read the typed contract and the pre-contract AgentConfig shape."""
+
+    if "endpoint_url" in config:
+        return AgentInvocationConfig.model_validate(config)
+    legacy = {
+        "endpoint_url": config.get("api_url"),
+        "protocol": InvocationProtocol.SYNC_JSON,
+        "timeout_seconds": config.get("timeout", 30),
+    }
+    return AgentInvocationConfig.model_validate(legacy)

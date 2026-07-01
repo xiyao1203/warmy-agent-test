@@ -7,6 +7,35 @@ from agenttest_api_runner.callback import ControlPlaneCallback, ResultCallbackTa
 from agenttest_api_runner.contracts import RunCaseResult, RunCaseTask
 
 
+def build_agent_request(
+    agent_config: dict[str, object],
+    case_input: dict[str, object],
+) -> AgentRequest:
+    headers_raw = agent_config.get("headers", {})
+    headers = headers_raw if isinstance(headers_raw, dict) else {}
+    timeout_raw = agent_config.get("timeout_seconds", 30)
+    timeout_seconds = float(timeout_raw) if isinstance(timeout_raw, int | float | str) else 30.0
+    protocol = str(agent_config.get("protocol", agent_config.get("mode", "sync")))
+    mode = {
+        "sync_json": "sync",
+        "openai_chat": "sync",
+        "sse": "stream",
+        "async_poll": "poll",
+    }.get(protocol, protocol)
+    if mode not in {"sync", "stream", "poll"}:
+        raise ValueError(f"Unsupported invocation protocol: {protocol}")
+    endpoint = agent_config.get("endpoint_url", agent_config.get("url"))
+    if not isinstance(endpoint, str) or not endpoint:
+        raise ValueError("Agent invocation endpoint_url is required")
+    return AgentRequest(
+        url=endpoint,
+        mode=mode,  # type: ignore[arg-type]
+        headers={str(key): str(value) for key, value in headers.items()},
+        input=case_input,
+        timeout_seconds=timeout_seconds,
+    )
+
+
 @activity.defn
 async def execute_agent_case(
     task: RunCaseTask,
@@ -14,19 +43,7 @@ async def execute_agent_case(
 ) -> RunCaseResult:
     activity.heartbeat({"run_case_id": task.run_case_id, "phase": "execute"})
     adapter = GenericHttpAgentAdapter()
-    headers_raw = agent_config.get("headers", {})
-    headers = headers_raw if isinstance(headers_raw, dict) else {}
-    timeout_raw = agent_config.get("timeout_seconds", 30)
-    timeout_seconds = float(timeout_raw) if isinstance(timeout_raw, int | float | str) else 30.0
-    result = await adapter.execute(
-        AgentRequest(
-            url=str(agent_config["url"]),
-            mode=str(agent_config.get("mode", "sync")),  # type: ignore[arg-type]
-            headers={str(key): str(value) for key, value in headers.items()},
-            input=task.input,
-            timeout_seconds=timeout_seconds,
-        )
-    )
+    result = await adapter.execute(build_agent_request(agent_config, task.input))
     return RunCaseResult(
         run_case_id=task.run_case_id,
         status=_evaluate_assertions(result.output, task.assertions),
