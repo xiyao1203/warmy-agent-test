@@ -1,10 +1,12 @@
 "use client";
 
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { User, Settings, Bell, Shield } from "lucide-react";
+import { LogOut, User, Settings, Bell, Shield } from "lucide-react";
+import { useState } from "react";
 import { cn } from "@/lib/utils";
 
+import { logout } from "@/features/auth";
 import {
   accountSections,
   normalizeAccountSection,
@@ -24,7 +26,19 @@ interface AccountCenterProps {
 
 export function AccountCenter({ children }: AccountCenterProps) {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const activeSection = normalizeAccountSection(searchParams.get("section"));
+  const [logoutBusy, setLogoutBusy] = useState(false);
+
+  async function handleLogout() {
+    setLogoutBusy(true);
+    try {
+      await logout();
+      router.push("/login");
+    } finally {
+      setLogoutBusy(false);
+    }
+  }
 
   return (
     <div className="mx-auto max-w-[1040px] px-4 py-8 sm:px-6 lg:py-10">
@@ -48,7 +62,7 @@ export function AccountCenter({ children }: AccountCenterProps) {
               aria-current={activeSection === section.id ? "page" : undefined}
               key={section.id}
               className={cn(
-                "flex shrink-0 items-center gap-2 rounded-[var(--radius-md)] px-3 py-2 text-sm font-medium transition-colors",
+                "flex shrink-0 items-center gap-2 rounded-[var(--radius-sm)] px-3 py-2 text-sm font-medium transition-colors",
                 activeSection === section.id
                   ? "bg-[var(--canvas-soft)] text-[var(--ink)]"
                   : "text-[var(--muted)] hover:bg-[var(--canvas-soft)] hover:text-[var(--ink)]",
@@ -59,6 +73,17 @@ export function AccountCenter({ children }: AccountCenterProps) {
               {section.label}
             </Link>
           ))}
+          <div className="mt-2 border-t border-[var(--hairline)] pt-2">
+            <button
+              className="flex w-full shrink-0 items-center gap-2 rounded-[var(--radius-sm)] px-3 py-2 text-sm font-medium text-[var(--danger)] transition-colors hover:bg-[var(--danger-subtle)] disabled:opacity-50"
+              disabled={logoutBusy}
+              onClick={handleLogout}
+              type="button"
+            >
+              <LogOut className="size-4" />
+              {logoutBusy ? "退出中..." : "退出登录"}
+            </button>
+          </div>
         </nav>
 
         <aside className="hidden lg:block">
@@ -68,7 +93,7 @@ export function AccountCenter({ children }: AccountCenterProps) {
                 aria-current={activeSection === section.id ? "page" : undefined}
                 key={section.id}
                 className={cn(
-                  "flex items-start gap-3 rounded-[var(--radius-md)] px-3 py-2.5 text-sm font-medium transition-colors",
+                  "flex items-start gap-3 rounded-[var(--radius-sm)] px-3 py-2.5 text-sm font-medium transition-colors",
                   activeSection === section.id
                     ? "bg-[var(--canvas-soft)] text-[var(--ink)]"
                     : "text-[var(--muted)] hover:bg-[var(--canvas-soft)] hover:text-[var(--ink)]",
@@ -84,6 +109,24 @@ export function AccountCenter({ children }: AccountCenterProps) {
                 </div>
               </Link>
             ))}
+            <div className="mt-2 border-t border-[var(--hairline)] pt-2">
+              <button
+                className="flex w-full items-start gap-3 rounded-[var(--radius-sm)] px-3 py-2.5 text-sm font-medium text-[var(--danger)] transition-colors hover:bg-[var(--danger-subtle)] disabled:opacity-50"
+                disabled={logoutBusy}
+                onClick={handleLogout}
+                type="button"
+              >
+                <span className="mt-0.5">
+                  <LogOut className="size-4" />
+                </span>
+                <div className="min-w-0 text-left">
+                  <div>{logoutBusy ? "退出中..." : "退出登录"}</div>
+                  <div className="mt-0.5 text-xs font-normal leading-4 text-[var(--muted)]">
+                    安全退出当前账号
+                  </div>
+                </div>
+              </button>
+            </div>
           </nav>
         </aside>
 
