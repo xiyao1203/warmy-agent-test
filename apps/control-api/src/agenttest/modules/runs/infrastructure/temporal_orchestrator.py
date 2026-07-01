@@ -81,11 +81,16 @@ def _payload(
     control_api_base_url: str | None,
     internal_api_token: str | None,
 ) -> dict[str, object]:
-    agent_config = run.config_snapshot.get("agent", run.config_snapshot)
+    agent_config = run.plugin_snapshot.get("agent_config")
+    if not isinstance(agent_config, dict):
+        agent_config = run.config_snapshot.get("agent", run.config_snapshot)
     payload: dict[str, object] = {
         "run_id": str(run.run_id.value),
         "idempotency_key": run.idempotency_key,
         "agent_config": agent_config,
+        "environment": run.plugin_snapshot.get("environment_config", {}),
+        "execution_policy": run.config_snapshot,
+        "scorer_configs": run.plugin_snapshot.get("scorer_configs", []),
         "cases": [
             {
                 "run_case_id": str(case.run_case_id.value),

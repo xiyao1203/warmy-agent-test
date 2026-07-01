@@ -163,7 +163,7 @@ def test_test_case_requires_input() -> None:
             case_id=TestCaseId(uuid4()),
             dataset_version_id=_make_version_id(),
             name="Test",
-            input={},
+            input=None,
             execution_mode=ExecutionMode.API,
         )
 

@@ -26,6 +26,9 @@ export function TestPlanVersionDialog({
   agentVersions,
   datasetVersions,
   environments,
+  gates,
+  runs,
+  scorers,
   onSubmit,
   triggerLabel,
   version,
@@ -33,6 +36,9 @@ export function TestPlanVersionDialog({
   agentVersions: VersionAssetOption[];
   datasetVersions: VersionAssetOption[];
   environments: VersionAssetOption[];
+  gates: VersionAssetOption[];
+  runs: VersionAssetOption[];
+  scorers: VersionAssetOption[];
   onSubmit: (payload: CreateTestPlanVersionRequest) => Promise<unknown>;
   triggerLabel: string;
   version?: TestPlanVersionResponse;
@@ -62,8 +68,14 @@ export function TestPlanVersionDialog({
   const [baselineRunId, setBaselineRunId] = useState(
     String(config.baseline_run_id ?? ""),
   );
-  const [releaseGateType, setReleaseGateType] = useState(
-    String((config.release_gate as Record<string, unknown>)?.type ?? ""),
+  const [releaseGateId, setReleaseGateId] = useState(
+    String(config.release_gate_id ?? ""),
+  );
+  const [scorerIds, setScorerIds] = useState<string[]>(
+    Array.isArray(config.scorer_ids) ? config.scorer_ids.map(String) : [],
+  );
+  const [observationOnly, setObservationOnly] = useState(
+    Boolean(config.observation_only ?? false),
   );
   const [error, setError] = useState("");
   const publishedAgents = agentVersions.filter(
@@ -82,7 +94,9 @@ export function TestPlanVersionDialog({
           concurrency,
           max_retries: maxRetries,
           pass_threshold: passThreshold,
-          release_gate: releaseGateType ? { type: releaseGateType } : {},
+          release_gate_id: releaseGateId || null,
+          scorer_ids: scorerIds,
+          observation_only: observationOnly,
           runs_per_case: runsPerCase,
           timeout,
         },
@@ -161,28 +175,54 @@ export function TestPlanVersionDialog({
           />
           <div className="col-span-2">
             <label className="block text-sm font-medium">
-              基线运行 ID（可选）
-              <Input
-                className="mt-1.5"
-                onChange={(e) => setBaselineRunId(e.target.value)}
-                placeholder="留空则无基线"
+              基线运行（可选）
+              <AssetSelect
+                onChange={setBaselineRunId}
+                options={runs}
                 value={baselineRunId}
               />
             </label>
           </div>
           <div className="col-span-2">
             <label className="block text-sm font-medium">
-              发布门禁类型
-              <select
-                aria-label="发布门禁类型"
-                className="mt-1.5 h-9 w-full rounded-[var(--radius-sm)] border border-[var(--border)] bg-[var(--surface)] px-3"
-                onChange={(e) => setReleaseGateType(e.target.value)}
-                value={releaseGateType}
-              >
-                <option value="">无门禁</option>
-                <option value="all_pass">全部通过</option>
-                <option value="threshold">达到阈值</option>
-              </select>
+              发布门禁（可选）
+              <AssetSelect
+                onChange={setReleaseGateId}
+                options={gates}
+                value={releaseGateId}
+              />
+            </label>
+          </div>
+          <div className="col-span-2 rounded border border-[var(--border)] p-3">
+            <p className="text-sm font-medium">评分器</p>
+            <div className="mt-2 flex flex-wrap gap-3">
+              {scorers.map((scorer) => (
+                <label
+                  className="flex items-center gap-2 text-sm"
+                  key={scorer.id}
+                >
+                  <input
+                    checked={scorerIds.includes(scorer.id)}
+                    onChange={(event) =>
+                      setScorerIds((current) =>
+                        event.target.checked
+                          ? [...current, scorer.id]
+                          : current.filter((id) => id !== scorer.id),
+                      )
+                    }
+                    type="checkbox"
+                  />
+                  {scorer.label}
+                </label>
+              ))}
+            </div>
+            <label className="mt-3 flex items-center gap-2 text-sm">
+              <input
+                checked={observationOnly}
+                onChange={(event) => setObservationOnly(event.target.checked)}
+                type="checkbox"
+              />
+              仅观察模式（不配置评分器时必须显式开启）
             </label>
           </div>
         </div>
@@ -197,6 +237,31 @@ export function TestPlanVersionDialog({
         </div>
       </DialogContent>
     </Dialog>
+  );
+}
+
+function AssetSelect({
+  onChange,
+  options,
+  value,
+}: {
+  onChange: (value: string) => void;
+  options: VersionAssetOption[];
+  value: string;
+}) {
+  return (
+    <select
+      className="mt-1.5 h-9 w-full rounded border border-[var(--border)] bg-[var(--surface)] px-3"
+      onChange={(event) => onChange(event.target.value)}
+      value={value}
+    >
+      <option value="">未选择</option>
+      {options.map((option) => (
+        <option key={option.id} value={option.id}>
+          {option.label}
+        </option>
+      ))}
+    </select>
   );
 }
 

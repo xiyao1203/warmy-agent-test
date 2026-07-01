@@ -4,6 +4,11 @@ import type { AgentVersionResponse } from "@warmy/generated-api-client";
 import { Clock, Cpu, GitBranch, Layers, Wrench } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { useState } from "react";
+
+import { validateAgentConnection } from "./api";
 
 type VersionDetailDrawerProps = {
   version: AgentVersionResponse;
@@ -11,6 +16,8 @@ type VersionDetailDrawerProps = {
   isBaseline?: boolean;
   open: boolean;
   onClose: () => void;
+  projectId: string;
+  agentId: string;
 };
 
 export function VersionDetailDrawer({
@@ -19,7 +26,11 @@ export function VersionDetailDrawer({
   isBaseline = false,
   open,
   onClose,
+  projectId,
+  agentId,
 }: VersionDetailDrawerProps) {
+  const [probe, setProbe] = useState("你好");
+  const [validation, setValidation] = useState("");
   if (!open) return null;
 
   const config = version.config as Record<string, unknown>;
@@ -104,6 +115,14 @@ export function VersionDetailDrawer({
             />
             <Field label="模型" value={String(config.model ?? "未指定")} />
             <Field
+              label="调用协议"
+              value={String(config.protocol ?? "sync_json")}
+            />
+            <Field
+              label="响应路径"
+              value={String(config.response_path ?? "output")}
+            />
+            <Field
               label="代码版本"
               value={String(config.code_version ?? "未设置")}
             />
@@ -112,6 +131,34 @@ export function VersionDetailDrawer({
               value={String(config.git_commit ?? "未设置")}
               monospace
             />
+          </Section>
+          <Section title="真实连接测试" icon={<Cpu className="size-4" />}>
+            <Input
+              onChange={(event) => setProbe(event.target.value)}
+              value={probe}
+            />
+            <Button
+              onClick={async () => {
+                setValidation("测试中…");
+                try {
+                  const result = await validateAgentConnection(
+                    projectId,
+                    agentId,
+                    version.id,
+                    { message: probe },
+                  );
+                  setValidation(
+                    `HTTP ${result.status_code} · ${result.latency_ms}ms`,
+                  );
+                } catch {
+                  setValidation("连接失败，请检查端点、网络和凭证绑定。");
+                }
+              }}
+              variant="secondary"
+            >
+              测试连接
+            </Button>
+            {validation && <p className="text-xs">{validation}</p>}
           </Section>
 
           {/* 模型参数 */}

@@ -29,6 +29,14 @@
             ],
             "title": "Cost Limit"
           },
+          "credential_binding_ids": {
+            "items": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "title": "Credential Binding Ids",
+            "type": "array"
+          },
           "git_commit": {
             "anyOf": [
               {
@@ -81,6 +89,21 @@
             },
             "title": "Model Params",
             "type": "object"
+          },
+          "protocol": {
+            "$ref": "#/components/schemas/InvocationProtocol",
+            "default": "sync_json"
+          },
+          "request_template": {
+            "additionalProperties": true,
+            "title": "Request Template",
+            "type": "object"
+          },
+          "response_path": {
+            "default": "output",
+            "minLength": 1,
+            "title": "Response Path",
+            "type": "string"
           },
           "system_prompt": {
             "anyOf": [
@@ -374,6 +397,14 @@
             "title": "Run Case Id",
             "type": "string"
           },
+          "scores": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/ApplyRunCaseScoreRequest"
+            },
+            "title": "Scores",
+            "type": "array"
+          },
           "status": {
             "title": "Status",
             "type": "string"
@@ -393,6 +424,44 @@
           "status"
         ],
         "title": "ApplyRunCaseResultRequest",
+        "type": "object"
+      },
+      "ApplyRunCaseScoreRequest": {
+        "properties": {
+          "confidence": {
+            "default": 1.0,
+            "title": "Confidence",
+            "type": "number"
+          },
+          "explanation": {
+            "default": "",
+            "title": "Explanation",
+            "type": "string"
+          },
+          "passed": {
+            "title": "Passed",
+            "type": "boolean"
+          },
+          "score": {
+            "title": "Score",
+            "type": "number"
+          },
+          "scorer_type": {
+            "title": "Scorer Type",
+            "type": "string"
+          },
+          "scorer_version_id": {
+            "title": "Scorer Version Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "scorer_version_id",
+          "scorer_type",
+          "score",
+          "passed"
+        ],
+        "title": "ApplyRunCaseScoreRequest",
         "type": "object"
       },
       "ApplyRunResultRequest": {
@@ -697,6 +766,47 @@
         "title": "CreateAgentVersionRequest",
         "type": "object"
       },
+      "CreateCredentialBindingRequest": {
+        "properties": {
+          "alias": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Alias",
+            "type": "string"
+          },
+          "injection_location": {
+            "pattern": "^(header|query|cookie)$",
+            "title": "Injection Location",
+            "type": "string"
+          },
+          "injection_name": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Injection Name",
+            "type": "string"
+          },
+          "kind": {
+            "pattern": "^(api_key|bearer|basic|cookie|custom)$",
+            "title": "Kind",
+            "type": "string"
+          },
+          "value": {
+            "maxLength": 10000,
+            "minLength": 1,
+            "title": "Value",
+            "type": "string"
+          }
+        },
+        "required": [
+          "alias",
+          "kind",
+          "injection_location",
+          "injection_name",
+          "value"
+        ],
+        "title": "CreateCredentialBindingRequest",
+        "type": "object"
+      },
       "CreateDatasetRequest": {
         "properties": {
           "description": {
@@ -756,6 +866,18 @@
           "template_type"
         ],
         "title": "CreateEnvironmentTemplateRequest",
+        "type": "object"
+      },
+      "CreateEnvironmentVersionRequest": {
+        "description": "Request body for creating a new environment version.",
+        "properties": {
+          "config": {
+            "additionalProperties": true,
+            "title": "Config",
+            "type": "object"
+          }
+        },
+        "title": "CreateEnvironmentVersionRequest",
         "type": "object"
       },
       "CreateExperimentRequest": {
@@ -993,7 +1115,6 @@
         "properties": {
           "config_json": {
             "additionalProperties": true,
-            "default": {},
             "title": "Config Json",
             "type": "object"
           },
@@ -1556,42 +1677,129 @@
         "title": "EnvironmentTemplateResponse",
         "type": "object"
       },
-      "EvaluateGateRequest": {
+      "EnvironmentVersionListResponse": {
         "properties": {
-          "actual_cost": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/EnvironmentVersionResponse"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "next_cursor": {
             "anyOf": [
               {
-                "type": "number"
+                "type": "string"
               },
               {
                 "type": "null"
               }
             ],
-            "title": "Actual Cost"
-          },
-          "actual_pass_rate": {
-            "title": "Actual Pass Rate",
-            "type": "number"
-          },
-          "critical_passed": {
-            "title": "Critical Passed",
-            "type": "boolean"
-          },
-          "security_score": {
-            "anyOf": [
-              {
-                "type": "number"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Security Score"
+            "title": "Next Cursor"
           }
         },
         "required": [
-          "actual_pass_rate",
-          "critical_passed"
+          "items"
+        ],
+        "title": "EnvironmentVersionListResponse",
+        "type": "object"
+      },
+      "EnvironmentVersionResponse": {
+        "description": "Public response for an environment version (never includes secrets).",
+        "properties": {
+          "config": {
+            "additionalProperties": true,
+            "title": "Config",
+            "type": "object"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "created_by": {
+            "format": "uuid",
+            "title": "Created By",
+            "type": "string"
+          },
+          "environment_template_id": {
+            "format": "uuid",
+            "title": "Environment Template Id",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "project_id": {
+            "format": "uuid",
+            "title": "Project Id",
+            "type": "string"
+          },
+          "published_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Published At"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          },
+          "version_number": {
+            "title": "Version Number",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "project_id",
+          "environment_template_id",
+          "version_number",
+          "status",
+          "config",
+          "published_at",
+          "created_by",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "EnvironmentVersionResponse",
+        "type": "object"
+      },
+      "EvaluateGateRequest": {
+        "properties": {
+          "experiment_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Experiment Id"
+          },
+          "run_id": {
+            "format": "uuid",
+            "title": "Run Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "run_id"
         ],
         "title": "EvaluateGateRequest",
         "type": "object"
@@ -1747,6 +1955,64 @@
         "title": "HealthResponse",
         "type": "object"
       },
+      "ImportPreviewError": {
+        "properties": {
+          "code": {
+            "title": "Code",
+            "type": "string"
+          },
+          "field": {
+            "title": "Field",
+            "type": "string"
+          },
+          "line": {
+            "title": "Line",
+            "type": "integer"
+          },
+          "message": {
+            "title": "Message",
+            "type": "string"
+          }
+        },
+        "required": [
+          "line",
+          "field",
+          "code",
+          "message"
+        ],
+        "title": "ImportPreviewError",
+        "type": "object"
+      },
+      "ImportPreviewResponse": {
+        "properties": {
+          "errors": {
+            "items": {
+              "$ref": "#/components/schemas/ImportPreviewError"
+            },
+            "title": "Errors",
+            "type": "array"
+          },
+          "preview": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Preview",
+            "type": "array"
+          },
+          "valid_count": {
+            "title": "Valid Count",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "valid_count",
+          "errors",
+          "preview"
+        ],
+        "title": "ImportPreviewResponse",
+        "type": "object"
+      },
       "ImportTestCasesRequest": {
         "properties": {
           "content": {
@@ -1790,6 +2056,16 @@
         ],
         "title": "ImportTestCasesResponse",
         "type": "object"
+      },
+      "InvocationProtocol": {
+        "enum": [
+          "sync_json",
+          "openai_chat",
+          "sse",
+          "async_poll"
+        ],
+        "title": "InvocationProtocol",
+        "type": "string"
       },
       "Language": {
         "description": "语言枚举。",
@@ -2390,11 +2666,34 @@
       },
       "SecurityScanRequest": {
         "properties": {
-          "agent_endpoint": {
-            "format": "uri",
-            "minLength": 1,
-            "title": "Agent Endpoint",
+          "agent_version_id": {
+            "format": "uuid",
+            "title": "Agent Version Id",
             "type": "string"
+          },
+          "environment_version_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Environment Version Id"
+          },
+          "run_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Run Id"
           },
           "scan_type": {
             "default": "full",
@@ -2404,10 +2703,22 @@
             ],
             "title": "Scan Type",
             "type": "string"
+          },
+          "security_profile_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Security Profile Id"
           }
         },
         "required": [
-          "agent_endpoint"
+          "agent_version_id"
         ],
         "title": "SecurityScanRequest",
         "type": "object"
@@ -2726,6 +3037,11 @@
             "title": "Max Retries",
             "type": "integer"
           },
+          "observation_only": {
+            "default": false,
+            "title": "Observation Only",
+            "type": "boolean"
+          },
           "pass_threshold": {
             "default": 1.0,
             "maximum": 1.0,
@@ -2738,10 +3054,34 @@
             "title": "Release Gate",
             "type": "object"
           },
+          "release_gate_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Release Gate Id"
+          },
           "retry_policy": {
             "additionalProperties": true,
             "title": "Retry Policy",
             "type": "object"
+          },
+          "review_policy_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Review Policy Id"
           },
           "runs_per_case": {
             "default": 1,
@@ -2749,12 +3089,28 @@
             "title": "Runs Per Case",
             "type": "integer"
           },
+          "scorer_ids": {
+            "items": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "title": "Scorer Ids",
+            "type": "array"
+          },
           "scorers": {
             "items": {
               "additionalProperties": true,
               "type": "object"
             },
             "title": "Scorers",
+            "type": "array"
+          },
+          "security_profile_ids": {
+            "items": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "title": "Security Profile Ids",
             "type": "array"
           },
           "timeout": {
@@ -3015,6 +3371,36 @@
         "title": "Theme",
         "type": "string"
       },
+      "TrialScorerRequest": {
+        "properties": {
+          "input": {
+            "anyOf": [
+              {},
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Input"
+          },
+          "output": {
+            "title": "Output"
+          },
+          "reference": {
+            "anyOf": [
+              {},
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reference"
+          }
+        },
+        "required": [
+          "output"
+        ],
+        "title": "TrialScorerRequest",
+        "type": "object"
+      },
       "UpdateAccountRequest": {
         "properties": {
           "credential_encrypted": {
@@ -3188,6 +3574,25 @@
           }
         },
         "title": "UpdateEnvironmentTemplateRequest",
+        "type": "object"
+      },
+      "UpdateEnvironmentVersionRequest": {
+        "description": "Request body for updating a draft environment version.",
+        "properties": {
+          "config": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Config"
+          }
+        },
+        "title": "UpdateEnvironmentVersionRequest",
         "type": "object"
       },
       "UpdateModelConfigRequest": {
@@ -5087,6 +5492,95 @@
         ]
       }
     },
+    "/api/v1/projects/{project_id}/agents/{agent_id}/versions/{version_id}/validate-connection": {
+      "post": {
+        "operationId": "validate_connection_api_v1_projects__project_id__agents__agent_id__versions__version_id__validate_connection_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Project Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "agent_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Agent Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "version_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Version Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "x-csrf-token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Csrf-Token"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": true,
+                "title": "Payload",
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Validate Connection",
+        "tags": [
+          "agents"
+        ]
+      }
+    },
     "/api/v1/projects/{project_id}/agents{agent_id}/baseline-version": {
       "patch": {
         "operationId": "set_baseline_version_endpoint_api_v1_projects__project_id__agents_agent_id__baseline_version_patch",
@@ -5462,6 +5956,174 @@
         "summary": "Project Audit",
         "tags": [
           "audit"
+        ]
+      }
+    },
+    "/api/v1/projects/{project_id}/credentials": {
+      "get": {
+        "operationId": "list_credentials_api_v1_projects__project_id__credentials_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Project Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Credentials",
+        "tags": [
+          "credentials"
+        ]
+      },
+      "post": {
+        "operationId": "create_credential_api_v1_projects__project_id__credentials_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Project Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "x-csrf-token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Csrf-Token"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateCredentialBindingRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Create Credential",
+        "tags": [
+          "credentials"
+        ]
+      }
+    },
+    "/api/v1/projects/{project_id}/credentials/{credential_id}": {
+      "delete": {
+        "operationId": "delete_credential_api_v1_projects__project_id__credentials__credential_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Project Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "credential_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Credential Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "x-csrf-token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Csrf-Token"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Delete Credential",
+        "tags": [
+          "credentials"
         ]
       }
     },
@@ -6497,6 +7159,95 @@
         ]
       }
     },
+    "/api/v1/projects/{project_id}/datasets/{dataset_id}/versions/{version_id}/imports:preview": {
+      "post": {
+        "operationId": "preview_import_api_v1_projects__project_id__datasets__dataset_id__versions__version_id__imports_preview_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Project Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "dataset_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Dataset Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "version_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Version Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "x-csrf-token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Csrf-Token"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ImportTestCasesRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImportPreviewResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Preview Import",
+        "tags": [
+          "datasets"
+        ]
+      }
+    },
     "/api/v1/projects/{project_id}/datasets/{dataset_id}/versions/{version_id}/publish": {
       "post": {
         "operationId": "publish_version_api_v1_projects__project_id__datasets__dataset_id__versions__version_id__publish_post",
@@ -7063,6 +7814,365 @@
           }
         },
         "summary": "Update Template",
+        "tags": [
+          "environment-templates"
+        ]
+      }
+    },
+    "/api/v1/projects/{project_id}/environment-templates/{template_id}/versions": {
+      "get": {
+        "operationId": "list_versions_api_v1_projects__project_id__environment_templates__template_id__versions_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Project Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "template_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Template Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EnvironmentVersionListResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Versions",
+        "tags": [
+          "environment-templates"
+        ]
+      },
+      "post": {
+        "operationId": "create_version_api_v1_projects__project_id__environment_templates__template_id__versions_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Project Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "template_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Template Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "x-csrf-token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Csrf-Token"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateEnvironmentVersionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EnvironmentVersionResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Create Version",
+        "tags": [
+          "environment-templates"
+        ]
+      }
+    },
+    "/api/v1/projects/{project_id}/environment-templates/{template_id}/versions/{version_id}": {
+      "get": {
+        "operationId": "get_version_api_v1_projects__project_id__environment_templates__template_id__versions__version_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Project Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "template_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Template Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "version_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Version Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EnvironmentVersionResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Version",
+        "tags": [
+          "environment-templates"
+        ]
+      },
+      "patch": {
+        "operationId": "update_version_api_v1_projects__project_id__environment_templates__template_id__versions__version_id__patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Project Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "template_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Template Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "version_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Version Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "x-csrf-token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Csrf-Token"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateEnvironmentVersionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EnvironmentVersionResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Update Version",
+        "tags": [
+          "environment-templates"
+        ]
+      }
+    },
+    "/api/v1/projects/{project_id}/environment-templates/{template_id}/versions/{version_id}/publish": {
+      "post": {
+        "operationId": "publish_version_api_v1_projects__project_id__environment_templates__template_id__versions__version_id__publish_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Project Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "template_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Template Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "version_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Version Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "x-csrf-token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Csrf-Token"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EnvironmentVersionResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Publish Version",
         "tags": [
           "environment-templates"
         ]
@@ -10360,6 +11470,83 @@
         ]
       }
     },
+    "/api/v1/projects/{project_id}/scorers/{scorer_id}/trial": {
+      "post": {
+        "operationId": "trial_scorer_api_v1_projects__project_id__scorers__scorer_id__trial_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Project Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "scorer_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Scorer Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "x-csrf-token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Csrf-Token"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TrialScorerRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Trial Scorer",
+        "tags": [
+          "scorers"
+        ]
+      }
+    },
     "/api/v1/projects/{project_id}/security/policies": {
       "get": {
         "operationId": "list_policies_api_v1_projects__project_id__security_policies_get",
@@ -12449,6 +13636,67 @@
           }
         },
         "summary": "Publish Version",
+        "tags": [
+          "test-plans"
+        ]
+      }
+    },
+    "/api/v1/projects/{project_id}/test-plans/{plan_id}/versions/{version_id}/readiness": {
+      "get": {
+        "operationId": "check_readiness_api_v1_projects__project_id__test_plans__plan_id__versions__version_id__readiness_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Project Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "plan_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Plan Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "version_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Version Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Check Readiness",
         "tags": [
           "test-plans"
         ]

@@ -18,6 +18,7 @@ from agenttest.modules.datasets.api.schemas import (
     DatasetVersionListResponse,
     DatasetVersionResponse,
     ExportTestCasesResponse,
+    ImportPreviewResponse,
     ImportTestCasesRequest,
     ImportTestCasesResponse,
     TestCaseListResponse,
@@ -150,6 +151,16 @@ class DeleteCaseExecutor(Protocol):
 
 
 class ImportExportExecutor(Protocol):
+    async def preview_test_cases(
+        self,
+        *,
+        actor: User,
+        dataset: Dataset,
+        version: DatasetVersion,
+        format: str,
+        content: str,
+    ) -> dict[str, object]: ...
+
     async def import_test_cases(
         self,
         *,
@@ -619,6 +630,38 @@ def create_dataset_router(
         except DatasetVersionNotEditableError as error:
             return conflict(str(error))
         return Response(status_code=204)
+
+    @router.post(
+        "/{dataset_id}/versions/{version_id}/imports:preview",
+        response_model=ImportPreviewResponse,
+    )
+    async def preview_import(
+        request: Request,
+        project_id: UUID,
+        dataset_id: UUID,
+        version_id: UUID,
+        payload: ImportTestCasesRequest,
+        x_csrf_token: str | None = Header(default=None),
+    ) -> ImportPreviewResponse | JSONResponse:
+        actor = await writer(request, x_csrf_token)
+        if isinstance(actor, JSONResponse):
+            return actor
+        try:
+            dataset, version = await project_version(actor, project_id, dataset_id, version_id)
+            result = await dependencies.import_export.preview_test_cases(
+                actor=actor,
+                dataset=dataset,
+                version=version,
+                format=payload.format,
+                content=payload.content,
+            )
+        except (DatasetNotFoundError, DatasetVersionNotFoundError, ProjectNotFoundError):
+            return asset_not_found()
+        except PermissionError:
+            return permission_denied()
+        except ValueError as error:
+            return invalid_request(str(error))
+        return ImportPreviewResponse.model_validate(result)
 
     @router.post(
         "/{dataset_id}/versions/{version_id}/import",

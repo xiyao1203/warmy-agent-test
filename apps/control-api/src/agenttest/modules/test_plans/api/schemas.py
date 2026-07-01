@@ -34,9 +34,19 @@ class TestPlanConfigRequest(BaseModel):
     cost_budget: float | None = Field(default=None, ge=0.0)
     baseline_run_id: str | None = None
     release_gate: dict[str, object] = Field(default_factory=dict)
+    scorer_ids: list[UUID] = Field(default_factory=list)
+    security_profile_ids: list[UUID] = Field(default_factory=list)
+    review_policy_id: UUID | None = None
+    release_gate_id: UUID | None = None
+    observation_only: bool = False
 
     def to_domain(self) -> TestPlanConfig:
-        return TestPlanConfig(**self.model_dump())
+        data = self.model_dump()
+        for key in ("scorer_ids", "security_profile_ids"):
+            data[key] = [str(item) for item in data[key]]
+        for key in ("review_policy_id", "release_gate_id"):
+            data[key] = str(data[key]) if data[key] else None
+        return TestPlanConfig(**data)
 
 
 class CreateTestPlanVersionRequest(BaseModel):

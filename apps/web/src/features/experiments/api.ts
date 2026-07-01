@@ -15,6 +15,25 @@ export type ExperimentItem = {
   updated_at: string;
 };
 
+export type ExperimentRun = {
+  id: string;
+  status: string;
+  created_at: string;
+  test_plan_version_id: string;
+};
+
+export async function listExperimentRuns(projectId: string) {
+  const response = await fetch(
+    `${API_BASE}/api/v1/projects/${projectId}/runs?limit=100`,
+    { credentials: "include" },
+  );
+  if (!response.ok) throw await responseProblem(response, "加载执行记录失败");
+  const data = await response.json();
+  return (data.items as ExperimentRun[]).filter((run) =>
+    ["passed", "failed", "error"].includes(run.status),
+  );
+}
+
 export async function listExperiments(projectId: string) {
   const res = await fetch(
     `${API_BASE}/api/v1/projects/${projectId}/experiments?limit=100`,

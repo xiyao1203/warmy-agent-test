@@ -79,6 +79,19 @@ class ImportTestCasesResponse(BaseModel):
     items: list["TestCaseResponse"]
 
 
+class ImportPreviewError(BaseModel):
+    line: int
+    field: str
+    code: str
+    message: str
+
+
+class ImportPreviewResponse(BaseModel):
+    valid_count: int
+    errors: list[ImportPreviewError]
+    preview: list[dict[str, object]]
+
+
 class ExportTestCasesResponse(BaseModel):
     format: Literal["json", "jsonl", "csv"]
     content: str

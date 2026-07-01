@@ -18,6 +18,7 @@ from agenttest.modules.agents.domain.entities import (
     AgentVersion,
     AgentVersionId,
 )
+from agenttest.modules.agents.domain.invocation import invocation_from_stored_config
 from agenttest.modules.agents.domain.value_objects import (
     AgentConfig,
     AgentType,
@@ -132,6 +133,7 @@ class SqlAlchemyAgentVersionRepository:
         return (result or 0) + 1
 
     async def add(self, version: AgentVersion) -> None:
+        invocation = invocation_from_stored_config(version.config.to_dict()).model_dump(mode="json")
         async with transaction_scope(self._session_factory) as session:
             session.add(
                 AgentVersionModel(
@@ -140,6 +142,9 @@ class SqlAlchemyAgentVersionRepository:
                     version_number=version.version_number,
                     status=version.status.value,
                     config=version.config.to_dict(),
+                    schema_version=1,
+                    invocation_config=invocation,
+                    readiness_status="ready",
                     published_at=version.published_at,
                     created_at=version.created_at,
                     updated_at=version.updated_at,
@@ -148,6 +153,7 @@ class SqlAlchemyAgentVersionRepository:
             )
 
     async def save(self, version: AgentVersion) -> None:
+        invocation = invocation_from_stored_config(version.config.to_dict()).model_dump(mode="json")
         async with transaction_scope(self._session_factory) as session:
             await session.execute(
                 update(AgentVersionModel)
@@ -155,6 +161,9 @@ class SqlAlchemyAgentVersionRepository:
                 .values(
                     status=version.status.value,
                     config=version.config.to_dict(),
+                    schema_version=1,
+                    invocation_config=invocation,
+                    readiness_status="ready",
                     published_at=version.published_at,
                     updated_at=version.updated_at,
                 )

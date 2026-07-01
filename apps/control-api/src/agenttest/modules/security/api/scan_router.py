@@ -2,12 +2,12 @@
 
 from __future__ import annotations
 
-from typing import Literal
+from typing import Literal, Protocol
 from uuid import UUID
 
 from fastapi import APIRouter, Header, Request
 from fastapi.responses import JSONResponse
-from pydantic import AnyHttpUrl, BaseModel
+from pydantic import BaseModel
 
 from agenttest.modules.identity.public import InvalidSessionError
 from agenttest.modules.projects.public import ProjectNotFoundError
@@ -22,8 +22,15 @@ from agenttest.shared.api.auth_guard import require_actor, require_writer
 
 
 class SecurityScanRequest(BaseModel):
-    agent_endpoint: AnyHttpUrl
+    agent_version_id: UUID
+    run_id: UUID | None = None
+    environment_version_id: UUID | None = None
+    security_profile_id: UUID | None = None
     scan_type: Literal["full", "quick"] = "full"
+
+
+class SecurityTargetResolver(Protocol):
+    async def endpoint_for(self, project_id: UUID, agent_version_id: UUID) -> str | None: ...
 
 
 def create_security_scan_router(
@@ -32,6 +39,7 @@ def create_security_scan_router(
     actor_for,
     check_project,
     settings,
+    target_resolver: SecurityTargetResolver,
 ) -> APIRouter:
     router = APIRouter(
         prefix="/projects/{project_id}/security/scans",
@@ -73,7 +81,20 @@ def create_security_scan_router(
         except InvalidSessionError:
             return JSONResponse(status_code=401, content={"detail": "认证失败"})
 
-        scan = SecurityScan.create(project_id=project_id, scan_type=body.scan_type)
+        agent_endpoint = await target_resolver.endpoint_for(project_id, body.agent_version_id)
+        if agent_endpoint is None:
+            return JSONResponse(
+                status_code=422,
+                content={"detail": "请选择本项目已发布且可执行的 Agent 版本"},
+            )
+        scan = SecurityScan.create(
+            project_id=project_id,
+            scan_type=body.scan_type,
+            run_id=body.run_id,
+            agent_version_id=body.agent_version_id,
+            environment_version_id=body.environment_version_id,
+            security_profile_id=body.security_profile_id,
+        )
         await repo.add(scan)
 
         scan.status = ScanStatus.RUNNING
@@ -81,12 +102,12 @@ def create_security_scan_router(
 
         try:
             validate_agent_endpoint(
-                str(body.agent_endpoint),
+                agent_endpoint,
                 allow_private_network=settings.security_scan_allow_private_network,
             )
             scanner = create_scanner(settings.promptfoo_bin)
             findings = await scanner.run_scan(
-                agent_endpoint=str(body.agent_endpoint),
+                agent_endpoint=agent_endpoint,
                 scan_type=body.scan_type,
             )
             scan.complete(findings)
@@ -125,6 +146,14 @@ def _scan_to_dict(scan: SecurityScan) -> dict:
         "project_id": str(scan.project_id),
         "status": scan.status.value,
         "scan_type": scan.scan_type,
+        "run_id": str(scan.run_id) if scan.run_id else None,
+        "agent_version_id": str(scan.agent_version_id) if scan.agent_version_id else None,
+        "environment_version_id": (
+            str(scan.environment_version_id) if scan.environment_version_id else None
+        ),
+        "security_profile_id": (
+            str(scan.security_profile_id) if scan.security_profile_id else None
+        ),
         "findings": scan.findings,
         "summary": scan.summary,
         "created_at": scan.created_at.isoformat(),

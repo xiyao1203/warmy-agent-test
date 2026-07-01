@@ -7,11 +7,16 @@ from uuid import UUID
 from pydantic import BaseModel, Field
 
 from agenttest.modules.agents.domain.entities import Agent, AgentVersion
+from agenttest.modules.agents.domain.invocation import InvocationProtocol
 from agenttest.modules.agents.domain.value_objects import (
     AgentConfig,
     AgentType,
     VersionStatus,
 )
+
+
+def _default_request_template() -> dict[str, object]:
+    return {"input": "{{ input }}"}
 
 
 class CreateAgentRequest(BaseModel):
@@ -34,6 +39,10 @@ class AgentConfigRequest(BaseModel):
     system_prompt: str | None = None
     tools: list[dict[str, str]] = Field(default_factory=list)
     timeout: int = 30
+    protocol: InvocationProtocol = InvocationProtocol.SYNC_JSON
+    request_template: dict[str, object] = Field(default_factory=_default_request_template)
+    response_path: str = Field(default="output", min_length=1)
+    credential_binding_ids: list[UUID] = Field(default_factory=list)
     max_steps: int | None = None
     cost_limit: float | None = None
 

@@ -53,7 +53,12 @@ class InMemoryRunRepository:
     async def save(self, run: Run) -> None:
         self.run = run
 
-    async def save_result(self, run: Run, cases: list[RunCase]) -> None:
+    async def save_result(
+        self,
+        run: Run,
+        cases: list[RunCase],
+        scores: dict[str, list[dict[str, object]]] | None = None,
+    ) -> None:
         self.saved_results += 1
         self.run = run
         self.cases = cases

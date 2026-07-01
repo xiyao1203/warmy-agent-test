@@ -3,11 +3,16 @@
 from __future__ import annotations
 
 from base64 import b64decode, b64encode
+from dataclasses import asdict
 from datetime import datetime
+from uuid import UUID
 
-from sqlalchemy import delete, select, update
+from sqlalchemy import delete, func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
+from agenttest.modules.environments.application.versions import (
+    EnvironmentVersionRecord,
+)
 from agenttest.modules.environments.domain.entities import (
     EnvironmentTemplate,
     EnvironmentTemplateId,
@@ -15,6 +20,7 @@ from agenttest.modules.environments.domain.entities import (
 from agenttest.modules.environments.domain.value_objects import TemplateType
 from agenttest.modules.environments.infrastructure.persistence.models import (
     EnvironmentTemplateModel,
+    EnvironmentVersionModel,
 )
 from agenttest.modules.identity.public import UserId
 from agenttest.modules.projects.public import ProjectId
@@ -130,3 +136,84 @@ def _encode_cursor(ts: datetime) -> str:
 
 def _decode_cursor(cursor: str) -> datetime:
     return datetime.fromisoformat(b64decode(cursor.encode()).decode())
+
+
+# ── Version repository ────────────────────────────────────────────────────
+
+
+class SqlAlchemyEnvironmentVersionRepository:
+    """环境版本的 SQLAlchemy 仓库实现。"""
+
+    def __init__(self, session_factory: async_sessionmaker[AsyncSession]) -> None:
+        self._session_factory = session_factory
+
+    async def get_by_id(
+        self, version_id: UUID, project_id: ProjectId
+    ) -> EnvironmentVersionRecord | None:
+        async with session_scope(self._session_factory) as session:
+            model = await session.get(EnvironmentVersionModel, version_id)
+            if model and model.project_id != project_id.value:
+                return None
+        return _to_version(model) if model else None
+
+    async def list_by_template(
+        self, template_id: EnvironmentTemplateId, project_id: ProjectId
+    ) -> list[EnvironmentVersionRecord]:
+        async with session_scope(self._session_factory) as session:
+            rows = list(
+                (
+                    await session.scalars(
+                        select(EnvironmentVersionModel)
+                        .where(
+                            EnvironmentVersionModel.environment_template_id == template_id.value,
+                            EnvironmentVersionModel.project_id == project_id.value,
+                        )
+                        .order_by(EnvironmentVersionModel.version_number.desc())
+                    )
+                ).all()
+            )
+        return [_to_version(item) for item in rows]
+
+    async def get_next_version_number(
+        self, template_id: EnvironmentTemplateId, project_id: ProjectId
+    ) -> int:
+        async with session_scope(self._session_factory) as session:
+            result = await session.scalar(
+                select(func.max(EnvironmentVersionModel.version_number)).where(
+                    EnvironmentVersionModel.environment_template_id == template_id.value,
+                    EnvironmentVersionModel.project_id == project_id.value,
+                )
+            )
+        return (result or 0) + 1
+
+    async def add(self, version: EnvironmentVersionRecord) -> None:
+        async with transaction_scope(self._session_factory) as session:
+            session.add(EnvironmentVersionModel(**asdict(version)))
+
+    async def save(self, version: EnvironmentVersionRecord) -> None:
+        async with transaction_scope(self._session_factory) as session:
+            await session.execute(
+                update(EnvironmentVersionModel)
+                .where(EnvironmentVersionModel.id == version.id)
+                .values(
+                    status=version.status,
+                    config=version.config,
+                    published_at=version.published_at,
+                    updated_at=version.updated_at,
+                )
+            )
+
+
+def _to_version(model: EnvironmentVersionModel) -> EnvironmentVersionRecord:
+    return EnvironmentVersionRecord(
+        id=model.id,
+        project_id=model.project_id,
+        environment_template_id=model.environment_template_id,
+        version_number=model.version_number,
+        status=model.status,
+        config=model.config,
+        published_at=model.published_at,
+        created_by=model.created_by,
+        created_at=model.created_at,
+        updated_at=model.updated_at,
+    )

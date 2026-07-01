@@ -17,7 +17,6 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { EmptyState } from "@/components/ui/empty-state";
-import { ImportWizard } from "./import-wizard";
 import { Input } from "@/components/ui/input";
 import {
   Table,
@@ -75,9 +74,6 @@ export function DatasetList({
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <Tooltip content="从文件导入测试用例">
-            <ImportWizard />
-          </Tooltip>
           <Tooltip content="创建新的数据集">
             <CreateDatasetDialog onCreate={onCreate} />
           </Tooltip>

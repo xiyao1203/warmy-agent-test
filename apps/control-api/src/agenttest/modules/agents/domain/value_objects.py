@@ -9,6 +9,9 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from enum import StrEnum
 from urllib.parse import urlparse
+from uuid import UUID
+
+from agenttest.modules.agents.domain.invocation import InvocationProtocol
 
 
 class AgentType(StrEnum):
@@ -67,6 +70,10 @@ class AgentConfig:
     system_prompt: str | None = None
     tools: list[dict[str, str]] = field(default_factory=list)
     timeout: int = 30
+    protocol: InvocationProtocol = InvocationProtocol.SYNC_JSON
+    request_template: dict[str, object] = field(default_factory=lambda: {"input": "{{ input }}"})
+    response_path: str = "output"
+    credential_binding_ids: list[UUID] = field(default_factory=list)
     max_steps: int | None = None
     cost_limit: float | None = None
     system_prompt_version: str | None = None
@@ -87,6 +94,8 @@ class AgentConfig:
             raise ValueError("max_steps must be positive")
         if self.cost_limit is not None and self.cost_limit < 0:
             raise ValueError("cost_limit must be non-negative")
+        if not self.response_path.strip():
+            raise ValueError("response_path is required")
 
     def to_dict(self) -> dict[str, object]:
         """序列化为普通字典，用于 PostgreSQL JSONB 列存储。"""
@@ -99,6 +108,10 @@ class AgentConfig:
             "system_prompt": self.system_prompt,
             "tools": list(self.tools),
             "timeout": self.timeout,
+            "protocol": self.protocol.value,
+            "request_template": dict(self.request_template),
+            "response_path": self.response_path,
+            "credential_binding_ids": [str(item) for item in self.credential_binding_ids],
             "max_steps": self.max_steps,
             "cost_limit": self.cost_limit,
             "system_prompt_version": self.system_prompt_version,
@@ -118,6 +131,8 @@ class AgentConfig:
         timeout_raw = data.get("timeout", 30)
         max_steps_raw = data.get("max_steps")
         cost_limit_raw = data.get("cost_limit")
+        raw_request_template = data.get("request_template") or {"input": "{{ input }}"}
+        raw_credentials = data.get("credential_binding_ids") or []
         return cls(
             api_url=str(data["api_url"]),
             code_version=str(data["code_version"]) if data.get("code_version") else None,
@@ -127,6 +142,18 @@ class AgentConfig:
             system_prompt=str(data["system_prompt"]) if data.get("system_prompt") else None,
             tools=list(raw_tools) if isinstance(raw_tools, list) else [],  # type: ignore[arg-type]
             timeout=int(timeout_raw) if isinstance(timeout_raw, (int, float, str)) else 30,
+            protocol=InvocationProtocol(str(data.get("protocol") or "sync_json")),
+            request_template=(
+                dict(raw_request_template)
+                if isinstance(raw_request_template, dict)
+                else {"input": "{{ input }}"}
+            ),
+            response_path=str(data.get("response_path") or "output"),
+            credential_binding_ids=(
+                [UUID(str(item)) for item in raw_credentials]
+                if isinstance(raw_credentials, list)
+                else []
+            ),
             max_steps=int(max_steps_raw) if isinstance(max_steps_raw, (int, float, str)) else None,
             cost_limit=(
                 float(cost_limit_raw) if isinstance(cost_limit_raw, (int, float, str)) else None

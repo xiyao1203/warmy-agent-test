@@ -23,6 +23,9 @@ class RunTask:
     idempotency_key: str
     cases: list[RunCaseTask]
     agent_config: dict[str, object]
+    environment: dict[str, object] = field(default_factory=dict)
+    execution_policy: dict[str, object] = field(default_factory=dict)
+    scorer_configs: list[dict[str, object]] = field(default_factory=list)
     callback: ResultCallbackConfig | None = None
 
 
@@ -34,6 +37,16 @@ class ReportArtifact:
 
 
 @dataclass(frozen=True, slots=True)
+class CaseScore:
+    scorer_version_id: str
+    scorer_type: str
+    score: float
+    passed: bool
+    explanation: str = ""
+    confidence: float = 1.0
+
+
+@dataclass(frozen=True, slots=True)
 class RunCaseResult:
     run_case_id: str
     status: str
@@ -42,6 +55,7 @@ class RunCaseResult:
     error_type: str | None = None
     error_message: str | None = None
     duration_ms: int | None = None
+    scores: list[CaseScore] = field(default_factory=list)
 
 
 @dataclass(frozen=True, slots=True)

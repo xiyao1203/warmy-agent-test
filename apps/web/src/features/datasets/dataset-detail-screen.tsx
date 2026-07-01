@@ -7,6 +7,8 @@ import {
   getDataset,
   listDatasetVersions,
   listTestCases,
+  importTestCases,
+  previewTestCaseImport,
 } from "./api";
 import { DatasetDetail } from "./dataset-detail";
 
@@ -75,6 +77,7 @@ export function DatasetDetailScreen({
     <DatasetDetail
       cases={casesQuery.data ?? []}
       currentVersionId={latestVersion?.id}
+      currentVersionPublished={latestVersion?.status === "published"}
       dataset={datasetQuery.data}
       onDeleteCases={async (caseIds) => {
         if (!latestVersion) return;
@@ -82,6 +85,20 @@ export function DatasetDetailScreen({
           await deleteTestCase(projectId, datasetId, latestVersion.id, cid);
         }
         await refreshCases();
+      }}
+      onImport={async (content, format) => {
+        if (!latestVersion) throw new Error("请先创建草稿版本");
+        return importTestCases(projectId, datasetId, latestVersion.id, {
+          content,
+          format,
+        });
+      }}
+      onPreviewImport={async (content, format) => {
+        if (!latestVersion) throw new Error("请先创建草稿版本");
+        return previewTestCaseImport(projectId, datasetId, latestVersion.id, {
+          content,
+          format,
+        });
       }}
       onRefresh={refreshCases}
       projectId={projectId}

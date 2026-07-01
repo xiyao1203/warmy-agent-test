@@ -2,15 +2,19 @@
 
 from __future__ import annotations
 
+import json
 from datetime import UTC, datetime
 from uuid import UUID
 
 from fastapi import APIRouter, Header, Request
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel
+from pydantic import BaseModel, Field, ValidationError
 
 from agenttest.modules.identity.public import InvalidSessionError
 from agenttest.modules.projects.public import ProjectId, ProjectNotFoundError
+from agenttest.modules.scorers.application.evaluate import evaluate_deterministic
+from agenttest.modules.scorers.application.model_judge import ModelJudge
+from agenttest.modules.scorers.domain.config import ModelScorerConfig, parse_scorer_config
 from agenttest.modules.scorers.domain.entities import Scorer, ScorerId
 from agenttest.modules.scorers.domain.value_objects import ScorerType
 from agenttest.modules.scorers.infrastructure.persistence.repositories import (
@@ -24,7 +28,7 @@ class CreateScorerRequest(BaseModel):
     scorer_type: str
     weight: float = 1.0
     threshold: float = 0.8
-    config_json: dict[str, object] = {}
+    config_json: dict[str, object] = Field(default_factory=dict)
     description: str | None = None
 
 
@@ -37,12 +41,20 @@ class UpdateScorerRequest(BaseModel):
     enabled: bool | None = None
 
 
+class TrialScorerRequest(BaseModel):
+    output: object
+    input: object | None = None
+    reference: object | None = None
+
+
 def create_scorer_router(
     *,
     session_factory,
     actor_for,
     check_project,
     settings,
+    model_judge: ModelJudge | None = None,
+    repo: SqlAlchemyScorerRepository | None = None,
 ) -> APIRouter:
     """创建评分器 CRUD 路由。"""
     router = APIRouter(
@@ -50,7 +62,8 @@ def create_scorer_router(
         tags=["scorers"],
     )
 
-    repo = SqlAlchemyScorerRepository(session_factory)
+    if repo is None:
+        repo = SqlAlchemyScorerRepository(session_factory)
 
     @router.get("")
     async def list_scorers(
@@ -103,6 +116,10 @@ def create_scorer_router(
                 status_code=422,
                 content={"detail": f"无效的评分器类型: {body.scorer_type}"},
             )
+        try:
+            validated_config = parse_scorer_config(scorer_type.value, body.config_json)
+        except (ValueError, ValidationError) as error:
+            return JSONResponse(status_code=422, content={"detail": str(error)})
 
         try:
             scorer = Scorer.create(
@@ -112,7 +129,7 @@ def create_scorer_router(
                 scorer_type=scorer_type,
                 weight=body.weight,
                 threshold=body.threshold,
-                config_json=body.config_json,
+                config_json=validated_config.model_dump(mode="json", exclude={"type"}),
                 description=body.description,
             )
         except ValueError as e:
@@ -174,7 +191,11 @@ def create_scorer_router(
             except ValueError as e:
                 return JSONResponse(status_code=422, content={"detail": str(e)})
         if body.config_json is not None:
-            scorer.config_json = body.config_json
+            try:
+                validated_config = parse_scorer_config(scorer.scorer_type.value, body.config_json)
+            except (ValueError, ValidationError) as error:
+                return JSONResponse(status_code=422, content={"detail": str(error)})
+            scorer.config_json = validated_config.model_dump(mode="json", exclude={"type"})
             scorer.updated_at = datetime.now(UTC)
         if body.description is not None:
             scorer.description = body.description
@@ -204,6 +225,54 @@ def create_scorer_router(
             return JSONResponse(status_code=404, content={"detail": "评分器不存在"})
         await repo.delete(ScorerId(scorer_id))
         return {"status": "deleted", "scorer_id": str(scorer_id)}
+
+    @router.post("/{scorer_id}/trial")
+    async def trial_scorer(
+        request: Request,
+        project_id: UUID,
+        scorer_id: UUID,
+        body: TrialScorerRequest,
+        x_csrf_token: str | None = Header(default=None),
+    ):
+        actor = await require_writer(request, actor_for, settings, x_csrf_token)
+        if isinstance(actor, JSONResponse):
+            return actor
+        scorer = await repo.get_by_id_and_project(ScorerId(scorer_id), ProjectId(project_id))
+        if scorer is None:
+            return JSONResponse(status_code=404, content={"detail": "评分器不存在"})
+        try:
+            config = parse_scorer_config(scorer.scorer_type.value, scorer.config_json)
+            if isinstance(config, ModelScorerConfig):
+                if model_judge is None:
+                    return JSONResponse(status_code=503, content={"detail": "模型评分运行时不可用"})
+                judged = await model_judge.judge_text(
+                    actor,
+                    ProjectId(project_id),
+                    input_text=json.dumps(body.input, ensure_ascii=False),
+                    output_text=json.dumps(body.output, ensure_ascii=False),
+                    rubric=config.rubric,
+                )
+                return {
+                    "score": judged.score,
+                    "passed": judged.passed,
+                    "explanation": judged.explanation,
+                    "confidence": judged.confidence,
+                    "model_config_id": judged.model_config_id,
+                    "model_name": judged.model_name,
+                }
+            result = evaluate_deterministic(
+                config,
+                output=body.output,
+                reference=body.reference,
+            )
+            return {
+                "score": result.score,
+                "passed": result.passed,
+                "explanation": result.explanation,
+                "confidence": result.confidence,
+            }
+        except (ValueError, ValidationError) as error:
+            return JSONResponse(status_code=422, content={"detail": str(error)})
 
     return router
 

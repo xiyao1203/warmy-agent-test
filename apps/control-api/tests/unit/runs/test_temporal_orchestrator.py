@@ -63,6 +63,30 @@ def make_run() -> tuple[Run, list[RunCase]]:
     return run, [case]
 
 
+def test_temporal_payload_uses_agent_snapshot_not_plan_configuration() -> None:
+    run, cases = make_run()
+    run.config_snapshot.clear()
+    run.config_snapshot.update({"concurrency": 4, "retry": {"max_attempts": 2}})
+    run.plugin_snapshot["agent_config"] = {
+        "endpoint_url": "https://agent.example/run",
+        "protocol": "sync_json",
+        "response_path": "output",
+        "timeout_seconds": 12,
+    }
+    run.plugin_snapshot["environment_config"] = {
+        "variables": {"tenant": "staging"},
+        "headers": {"x-tenant": "demo"},
+    }
+
+    from agenttest.modules.runs.infrastructure.temporal_orchestrator import _payload
+
+    payload = _payload(run, cases, control_api_base_url=None, internal_api_token=None)
+
+    assert payload["agent_config"] == run.plugin_snapshot["agent_config"]
+    assert payload["environment"] == run.plugin_snapshot["environment_config"]
+    assert payload["execution_policy"] == run.config_snapshot
+
+
 @pytest.mark.asyncio
 async def test_temporal_orchestrator_starts_run_workflow_with_snapshot_payload() -> None:
     run, cases = make_run()

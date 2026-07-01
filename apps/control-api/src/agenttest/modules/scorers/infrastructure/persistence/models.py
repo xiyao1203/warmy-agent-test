@@ -12,6 +12,7 @@ from sqlalchemy import (
     Index,
     String,
     Text,
+    UniqueConstraint,
 )
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -36,3 +37,22 @@ class ScorerModel(Base):
     enabled: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+
+
+class ScorerVersionModel(Base):
+    __tablename__ = "scorer_versions"
+    __table_args__ = (
+        UniqueConstraint("scorer_id", "version_number", name="uq_scorer_versions_number"),
+        UniqueConstraint("project_id", "id", name="uq_scorer_versions_project_id"),
+    )
+
+    id: Mapped[UUID] = mapped_column(primary_key=True)
+    project_id: Mapped[UUID] = mapped_column(ForeignKey("projects.id", ondelete="CASCADE"))
+    scorer_id: Mapped[UUID] = mapped_column(ForeignKey("scorers.id", ondelete="CASCADE"))
+    version_number: Mapped[int]
+    status: Mapped[str] = mapped_column(String(32))
+    config: Mapped[dict] = mapped_column(JSON)
+    published_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    created_by: Mapped[UUID] = mapped_column(ForeignKey("users.id"))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))

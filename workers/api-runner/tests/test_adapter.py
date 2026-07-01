@@ -88,3 +88,33 @@ async def test_adapter_classifies_target_error() -> None:
             )
         )
     await client.aclose()
+
+
+@pytest.mark.asyncio
+async def test_adapter_renders_request_template_and_extracts_response_path() -> None:
+    async def handler(request: httpx.Request) -> httpx.Response:
+        assert json.loads(request.content) == {
+            "messages": [{"role": "user", "content": "hello"}],
+            "tenant": "staging",
+        }
+        return httpx.Response(
+            200,
+            json={"choices": [{"message": {"content": "hello world"}}]},
+        )
+
+    client = httpx.AsyncClient(transport=httpx.MockTransport(handler))
+    result = await GenericHttpAgentAdapter(client=client).execute(
+        AgentRequest(
+            url="https://agent.example/v1/chat",
+            input={"message": "hello"},
+            variables={"tenant": "staging"},
+            request_template={
+                "messages": [{"role": "user", "content": "{{ input.message }}"}],
+                "tenant": "{{ env.tenant }}",
+            },
+            response_path="choices.0.message.content",
+        )
+    )
+
+    assert result.output == {"value": "hello world"}
+    await client.aclose()

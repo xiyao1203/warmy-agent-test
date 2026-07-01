@@ -15,6 +15,11 @@ from agenttest.modules.agents.domain.entities import (
     AgentVersion,
     AgentVersionId,
 )
+from agenttest.modules.agents.domain.invocation import (
+    AgentInvocationConfig,
+    InvocationProtocol,
+    invocation_from_stored_config,
+)
 from agenttest.modules.agents.domain.value_objects import (
     AgentConfig,
     AgentType,
@@ -25,13 +30,16 @@ __all__ = [
     "Agent",
     "AgentConfig",
     "AgentId",
+    "AgentInvocationConfig",
     "AgentType",
     "AgentVersion",
     "AgentVersionId",
     "AgentVersionRef",
     "CreateAgentCommand",
     "PublishAgentVersionCommand",
+    "InvocationProtocol",
     "VersionStatus",
+    "invocation_from_stored_config",
 ]
 
 

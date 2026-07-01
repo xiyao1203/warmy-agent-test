@@ -46,7 +46,7 @@ async def test_callback_posts_run_result_to_control_plane_with_internal_token() 
     assert requests[0].read() == (
         b'{"cases":[{"run_case_id":"case-1","status":"passed",'
         b'"output":{"message":"ok"},"trace":[{"name":"http.request"}],'
-        b'"error_type":null,"error_message":null,"duration_ms":12}]}'
+        b'"error_type":null,"error_message":null,"duration_ms":12,"scores":[]}]}'
     )
     await client.aclose()
 

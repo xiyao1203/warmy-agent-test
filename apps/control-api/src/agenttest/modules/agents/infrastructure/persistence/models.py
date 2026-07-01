@@ -2,6 +2,7 @@ from datetime import datetime
 from uuid import UUID
 
 from sqlalchemy import (
+    JSON,
     DateTime,
     ForeignKey,
     Index,
@@ -55,6 +56,9 @@ class AgentVersionModel(Base):
     version_number: Mapped[int] = mapped_column(Integer)
     status: Mapped[str] = mapped_column(String(32))
     config: Mapped[dict] = mapped_column(JSONB)
+    schema_version: Mapped[int] = mapped_column(Integer, default=1)
+    invocation_config: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+    readiness_status: Mapped[str] = mapped_column(String(32), default="ready")
     published_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))

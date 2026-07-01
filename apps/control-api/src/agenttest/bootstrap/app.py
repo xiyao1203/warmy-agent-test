@@ -7,7 +7,9 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
 from starlette.responses import Response
 
+from agenttest.bootstrap.gate_evidence import SqlAlchemyGateEvidence
 from agenttest.bootstrap.project_access import ProjectAccessAdapter
+from agenttest.bootstrap.review_collector import SqlAlchemyRunReviewCollector
 from agenttest.bootstrap.run_source import SqlAlchemyRunSource
 from agenttest.bootstrap.settings import Settings, get_settings
 from agenttest.entrypoints.http.health import router as health_router
@@ -27,6 +29,9 @@ from agenttest.modules.agents.application.queries import (
     GetAgentVersionHandler,
     ListAgentsHandler,
     ListAgentVersionsHandler,
+)
+from agenttest.modules.agents.infrastructure.connection_validator import (
+    HttpAgentConnectionValidator,
 )
 from agenttest.modules.agents.infrastructure.persistence.repositories import (
     SqlAlchemyAgentRepository,
@@ -80,8 +85,16 @@ from agenttest.modules.environments.application.queries import (
     GetEnvironmentTemplateHandler,
     ListEnvironmentTemplatesHandler,
 )
+from agenttest.modules.environments.application.versions import (
+    CreateEnvironmentVersionHandler,
+    GetEnvironmentVersionHandler,
+    ListEnvironmentVersionsHandler,
+    PublishEnvironmentVersionHandler,
+    UpdateEnvironmentVersionHandler,
+)
 from agenttest.modules.environments.infrastructure.persistence.repositories import (
     SqlAlchemyEnvironmentTemplateRepository,
+    SqlAlchemyEnvironmentVersionRepository,
 )
 from agenttest.modules.feedback.api.router import (
     FeedbackApiDependencies,
@@ -159,6 +172,9 @@ from agenttest.modules.projects.infrastructure.persistence.repositories import (
 )
 from agenttest.modules.reports.api.router import create_report_router
 from agenttest.modules.reports.application.service import ReportService
+from agenttest.modules.reviews.infrastructure.persistence.repositories import (
+    SqlAlchemyReviewTaskRepository,
+)
 from agenttest.modules.runs.api.router import RunApiDependencies, create_run_router
 from agenttest.modules.runs.application.commands import (
     ApplyRunResultHandler,
@@ -413,6 +429,7 @@ def create_app(
 
     # ── Security Scan API ───────────────────────────────────────────────
     _register_security_scan_endpoints(app, resolved_settings, dependencies)
+    _register_credential_endpoints(app, resolved_settings, dependencies)
 
     # ── Release Gate API ────────────────────────────────────────────────
     _register_gate_endpoints(app, resolved_settings, dependencies)
@@ -738,6 +755,9 @@ def build_agent_dependencies(settings: Settings) -> AgentApiDependencies:
             audit=audit,
         ),
         uow_factory=lambda: SqlAlchemyUnitOfWork(session_factory),
+        connection_validator=HttpAgentConnectionValidator(
+            allow_private_network=settings.security_scan_allow_private_network
+        ),
     )
 
 
@@ -902,6 +922,7 @@ def build_environment_dependencies(settings: Settings) -> EnvironmentApiDependen
     engine = create_database_engine(str(settings.database_url))
     session_factory = create_session_factory(engine)
     templates = SqlAlchemyEnvironmentTemplateRepository(session_factory)
+    versions = SqlAlchemyEnvironmentVersionRepository(session_factory)
     projects = SqlAlchemyProjectRepository(session_factory)
     access = ProjectAccessAdapter(projects)
     audit = AuditRecorder(SqlAlchemyAuditRepository(session_factory))
@@ -925,6 +946,34 @@ def build_environment_dependencies(settings: Settings) -> EnvironmentApiDependen
             audit=audit,
         ),
         delete_template=DeleteEnvironmentTemplateHandler(
+            templates=templates,
+            project_access=access,
+            audit=audit,
+        ),
+        list_versions=ListEnvironmentVersionsHandler(
+            versions=versions,
+            templates=templates,
+            project_access=access,
+        ),
+        get_version=GetEnvironmentVersionHandler(
+            versions=versions,
+            templates=templates,
+            project_access=access,
+        ),
+        create_version=CreateEnvironmentVersionHandler(
+            versions=versions,
+            templates=templates,
+            project_access=access,
+            audit=audit,
+        ),
+        update_version=UpdateEnvironmentVersionHandler(
+            versions=versions,
+            templates=templates,
+            project_access=access,
+            audit=audit,
+        ),
+        publish_version=PublishEnvironmentVersionHandler(
+            versions=versions,
             templates=templates,
             project_access=access,
             audit=audit,
@@ -989,7 +1038,12 @@ def build_run_dependencies(settings: Settings) -> RunApiDependencies:
             project_access=access,
             orchestrator=orchestrator,
         ),
-        apply_result=ApplyRunResultHandler(runs=runs),
+        apply_result=ApplyRunResultHandler(
+            runs=runs,
+            review_collector=SqlAlchemyRunReviewCollector(
+                SqlAlchemyReviewTaskRepository(session_factory)
+            ),
+        ),
         uow_factory=lambda: SqlAlchemyUnitOfWork(session_factory),
     )
 
@@ -1322,6 +1376,7 @@ def _register_scorer_endpoints(
 ) -> None:
     """注册评分器 CRUD API。"""
     from agenttest.modules.scorers.api.router import create_scorer_router
+    from agenttest.modules.scorers.application.model_judge import ModelJudge
     from agenttest.shared.infrastructure.database import (
         create_database_engine,
         create_session_factory,
@@ -1354,6 +1409,15 @@ def _register_scorer_endpoints(
         actor_for=actor_for,
         check_project=check_project,
         settings=settings,
+        model_judge=ModelJudge(
+            build_model_config_service(settings),
+            TemporalModelInvoker(
+                address=settings.temporal_address,
+                namespace=settings.temporal_namespace,
+                task_queue=settings.model_runner_task_queue,
+                allow_private_network=settings.model_allow_private_network,
+            ),
+        ),
     )
     app.include_router(router, prefix="/api/v1")
 
@@ -1478,13 +1542,61 @@ def _register_security_scan_endpoints(
             return None
         return await auth_deps.current_user.execute(token)
 
+    from agenttest.bootstrap.security_target import SqlAlchemySecurityTargetResolver
+
     router = create_security_scan_router(
         session_factory=session_factory,
         actor_for=actor_for,
         check_project=check_project,
         settings=settings,
+        target_resolver=SqlAlchemySecurityTargetResolver(session_factory),
     )
     app.include_router(router, prefix="/api/v1")
+
+
+def _register_credential_endpoints(app: FastAPI, settings: Settings, auth_deps) -> None:
+    from agenttest.modules.environments.api.credential_router import create_credential_router
+    from agenttest.modules.environments.application.credentials import CredentialBindingService
+    from agenttest.modules.environments.infrastructure.credential_store import (
+        SqlAlchemyCredentialRepository,
+    )
+    from agenttest.modules.projects.public import ProjectNotFoundError
+
+    engine = create_database_engine(str(settings.database_url))
+    session_factory = create_session_factory(engine)
+
+    async def check_project(project_id):
+        from sqlalchemy import text
+
+        async with session_factory() as session:
+            result = await session.execute(
+                text("SELECT 1 FROM projects WHERE id = :pid"), {"pid": project_id}
+            )
+            if result.scalar() is None:
+                raise ProjectNotFoundError
+
+    async def actor_for(request: Request):
+        token = request.cookies.get(settings.session_cookie_name)
+        if not token:
+            return None
+        return await auth_deps.current_user.execute(token)
+
+    cipher = (
+        AesGcmCredentialCipher(settings.model_credential_key)
+        if settings.model_credential_key
+        else None
+    )
+    app.include_router(
+        create_credential_router(
+            actor_for=actor_for,
+            check_project=check_project,
+            settings=settings,
+            service=CredentialBindingService(
+                SqlAlchemyCredentialRepository(session_factory), cipher
+            ),
+        ),
+        prefix="/api/v1",
+    )
 
 
 def _register_gate_endpoints(
@@ -1493,6 +1605,7 @@ def _register_gate_endpoints(
     auth_deps,
 ) -> None:
     """注册发布门禁 API。"""
+    from agenttest.bootstrap.gate_evidence import SqlAlchemyGateEvidence
     from agenttest.modules.gates.api.router import create_gate_router
     from agenttest.shared.infrastructure.database import (
         create_database_engine,
@@ -1529,6 +1642,7 @@ def _register_gate_endpoints(
         actor_for=actor_for,
         check_project=check_project,
         settings=settings,
+        evidence_reader=SqlAlchemyGateEvidence(session_factory),
     )
     app.include_router(router, prefix="/api/v1")
 
@@ -1600,6 +1714,7 @@ def _register_test_agent_endpoints(
             accounts=SqlAlchemyTestAccountRepository(session_factory),
             promptfoo_bin=settings.promptfoo_bin,
             allow_private_security_targets=settings.security_scan_allow_private_network,
+            gate_evidence=SqlAlchemyGateEvidence(session_factory),
         )
     )
 

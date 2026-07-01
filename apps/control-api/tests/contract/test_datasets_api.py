@@ -358,7 +358,14 @@ def test_dataset_import_reports_line_errors_without_partial_state() -> None:
     )
 
     assert imported.status_code == 400
-    assert imported.json()["errors"] == [{"line": 2, "reason": "name is required"}]
+    assert imported.json()["errors"] == [
+        {
+            "line": 2,
+            "field": "name",
+            "code": "invalid_value",
+            "message": "name must be non-empty",
+        }
+    ]
     assert cases.json()["items"] == []
 
 

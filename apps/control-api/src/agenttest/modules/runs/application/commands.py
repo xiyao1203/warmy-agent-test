@@ -6,6 +6,7 @@ from agenttest.modules.identity.public import User
 from agenttest.modules.projects.public import ProjectId
 from agenttest.modules.runs.application.ports import (
     ProjectAccessPort,
+    ReviewCollectorPort,
     RunOrchestrator,
     RunRepository,
     RunSourcePort,
@@ -29,6 +30,16 @@ class CreateRunResult:
 
 
 @dataclass(frozen=True, slots=True)
+class ApplyRunCaseScore:
+    scorer_version_id: str
+    scorer_type: str
+    score: float
+    passed: bool
+    explanation: str = ""
+    confidence: float = 1.0
+
+
+@dataclass(frozen=True, slots=True)
 class ApplyRunCaseResult:
     run_case_id: RunCaseId
     status: RunCaseStatus
@@ -37,6 +48,7 @@ class ApplyRunCaseResult:
     error_type: str | None = None
     error_message: str | None = None
     duration_ms: int | None = None
+    scores: list[ApplyRunCaseScore] | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -133,8 +145,14 @@ class CancelRunHandler:
 
 
 class ApplyRunResultHandler:
-    def __init__(self, *, runs: RunRepository) -> None:
+    def __init__(
+        self,
+        *,
+        runs: RunRepository,
+        review_collector: ReviewCollectorPort | None = None,
+    ) -> None:
         self._runs = runs
+        self._review_collector = review_collector
 
     async def execute(self, command: ApplyRunResultCommand) -> Run:
         run = await self._runs.get_by_id(command.project_id, command.run_id)
@@ -148,6 +166,7 @@ class ApplyRunResultHandler:
             raise ValueError("Run result must include every run case")
 
         cases_by_id = {case.run_case_id: case for case in cases}
+        score_map: dict[str, list[dict[str, object]]] = {}
         for result in command.cases:
             case = cases_by_id.get(result.run_case_id)
             if case is None:
@@ -162,6 +181,18 @@ class ApplyRunResultHandler:
                     trace=result.trace or [],
                     duration_ms=result.duration_ms or 0,
                 )
+                if result.scores:
+                    score_map[str(case.run_case_id.value)] = [
+                        {
+                            "scorer_version_id": s.scorer_version_id,
+                            "scorer_type": s.scorer_type,
+                            "score": s.score,
+                            "passed": s.passed,
+                            "explanation": s.explanation,
+                            "confidence": s.confidence,
+                        }
+                        for s in result.scores
+                    ]
                 continue
             case.fail(
                 status=result.status,
@@ -181,7 +212,9 @@ class ApplyRunResultHandler:
             error_cases=error_cases,
             cancelled_cases=cancelled_cases,
         )
-        await self._runs.save_result(run, cases)
+        await self._runs.save_result(run, cases, score_map if score_map else None)
+        if self._review_collector is not None:
+            await self._review_collector.collect(run.project_id, run.run_id)
         return run
 
 

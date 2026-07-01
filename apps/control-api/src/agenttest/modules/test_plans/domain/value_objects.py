@@ -43,6 +43,11 @@ class TestPlanConfig:
     cost_budget: float | None = None
     baseline_run_id: str | None = None
     release_gate: dict[str, object] = field(default_factory=dict)
+    scorer_ids: list[str] = field(default_factory=list)
+    security_profile_ids: list[str] = field(default_factory=list)
+    review_policy_id: str | None = None
+    release_gate_id: str | None = None
+    observation_only: bool = False
 
     def __post_init__(self) -> None:
         if self.runs_per_case < 1:
@@ -72,6 +77,11 @@ class TestPlanConfig:
             "cost_budget": self.cost_budget,
             "baseline_run_id": self.baseline_run_id,
             "release_gate": self.release_gate,
+            "scorer_ids": self.scorer_ids,
+            "security_profile_ids": self.security_profile_ids,
+            "review_policy_id": self.review_policy_id,
+            "release_gate_id": self.release_gate_id,
+            "observation_only": self.observation_only,
         }
 
     @classmethod
@@ -88,6 +98,8 @@ class TestPlanConfig:
         pt_raw = data.get("pass_threshold", 1.0)
         br_raw = data.get("baseline_run_id")
         rg_raw = data.get("release_gate") or {}
+        scorer_ids_raw = data.get("scorer_ids") or []
+        security_profile_ids_raw = data.get("security_profile_ids") or []
         return cls(
             api_browser_ratio=float(abr_raw) if isinstance(abr_raw, (int, float, str)) else 0.0,
             runs_per_case=int(rpc_raw) if isinstance(rpc_raw, (int, float, str)) else 1,
@@ -102,6 +114,17 @@ class TestPlanConfig:
             ),
             baseline_run_id=str(br_raw) if isinstance(br_raw, str) else None,
             release_gate=(dict(rg_raw) if isinstance(rg_raw, dict) else {}),  # type: ignore[arg-type]
+            scorer_ids=[str(item) for item in scorer_ids_raw]
+            if isinstance(scorer_ids_raw, list)
+            else [],
+            security_profile_ids=[str(item) for item in security_profile_ids_raw]
+            if isinstance(security_profile_ids_raw, list)
+            else [],
+            review_policy_id=str(data["review_policy_id"])
+            if data.get("review_policy_id")
+            else None,
+            release_gate_id=str(data["release_gate_id"]) if data.get("release_gate_id") else None,
+            observation_only=bool(data.get("observation_only", False)),
         )
 
     def dry_run_preview(self, *, num_cases: int = 0) -> dict[str, object]:

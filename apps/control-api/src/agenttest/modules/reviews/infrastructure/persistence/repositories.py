@@ -94,11 +94,19 @@ class SqlAlchemyReviewTaskRepository:
                     "JOIN runs r ON rc.run_id = r.id "
                     "WHERE r.project_id = :pid AND r.id = :rid "
                     "AND rc.status IN ('passed', 'failed') "
+                    "AND (rc.status = 'failed' OR EXISTS ("
+                    "  SELECT 1 FROM scores s WHERE s.run_case_id = rc.id "
+                    "  AND s.confidence < :threshold"
+                    ")) "
                     "AND NOT EXISTS ("
                     "  SELECT 1 FROM review_tasks rt WHERE rt.run_case_id = rc.id"
                     ")"
                 ),
-                {"pid": project_id.value, "rid": run_id},
+                {
+                    "pid": project_id.value,
+                    "rid": run_id,
+                    "threshold": confidence_threshold,
+                },
             )
             case_ids = [row[0] for row in result.all()]
 

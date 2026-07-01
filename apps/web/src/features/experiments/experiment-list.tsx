@@ -23,7 +23,13 @@ import { Input } from "@/components/ui/input";
 import { ListCard, ListCardMeta } from "@/components/ui/list-card";
 
 import type { ExperimentItem } from "./api";
-import { createExperiment, listExperiments, runExperiment } from "./api";
+import type { ExperimentRun } from "./api";
+import {
+  createExperiment,
+  listExperimentRuns,
+  listExperiments,
+  runExperiment,
+} from "./api";
 
 const STATUS_TONES: Record<
   string,
@@ -320,6 +326,14 @@ function CreateExperimentDialog({
   const [runBId, setRunBId] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const [runs, setRuns] = useState<ExperimentRun[]>([]);
+
+  useEffect(() => {
+    if (open)
+      void listExperimentRuns(projectId)
+        .then(setRuns)
+        .catch(() => setRuns([]));
+  }, [open, projectId]);
 
   async function handleCreate() {
     if (!name.trim() || !runAId.trim() || !runBId.trim()) {
@@ -364,22 +378,12 @@ function CreateExperimentDialog({
             />
           </label>
           <label className="block text-sm font-medium">
-            运行 A ID
-            <Input
-              className="mt-1.5"
-              onChange={(e) => setRunAId(e.target.value)}
-              placeholder="基线运行 UUID"
-              value={runAId}
-            />
+            基线运行 A
+            <RunSelect onChange={setRunAId} runs={runs} value={runAId} />
           </label>
           <label className="block text-sm font-medium">
-            运行 B ID
-            <Input
-              className="mt-1.5"
-              onChange={(e) => setRunBId(e.target.value)}
-              placeholder="对比运行 UUID"
-              value={runBId}
-            />
+            对比运行 B
+            <RunSelect onChange={setRunBId} runs={runs} value={runBId} />
           </label>
         </div>
         {error ? (
@@ -398,5 +402,30 @@ function CreateExperimentDialog({
         </div>
       </DialogContent>
     </Dialog>
+  );
+}
+
+function RunSelect({
+  onChange,
+  runs,
+  value,
+}: {
+  onChange: (value: string) => void;
+  runs: ExperimentRun[];
+  value: string;
+}) {
+  return (
+    <select
+      className="mt-1.5 h-9 w-full rounded border border-[var(--border)] bg-[var(--surface)] px-3 text-sm"
+      onChange={(event) => onChange(event.target.value)}
+      value={value}
+    >
+      <option value="">选择执行记录</option>
+      {runs.map((run) => (
+        <option key={run.id} value={run.id}>
+          {run.status} · {new Date(run.created_at).toLocaleString("zh-CN")}
+        </option>
+      ))}
+    </select>
   );
 }

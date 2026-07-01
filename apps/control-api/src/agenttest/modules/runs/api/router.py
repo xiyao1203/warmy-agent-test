@@ -21,6 +21,7 @@ from agenttest.modules.runs.api.schemas import (
 )
 from agenttest.modules.runs.application.commands import (
     ApplyRunCaseResult,
+    ApplyRunCaseScore,
     ApplyRunResultCommand,
     CreateRunCommand,
     CreateRunResult,
@@ -294,6 +295,19 @@ def create_run_router(
                                 error_type=item.error_type,
                                 error_message=item.error_message,
                                 duration_ms=item.duration_ms,
+                                scores=[
+                                    ApplyRunCaseScore(
+                                        scorer_version_id=s.scorer_version_id,
+                                        scorer_type=s.scorer_type,
+                                        score=s.score,
+                                        passed=s.passed,
+                                        explanation=s.explanation,
+                                        confidence=s.confidence,
+                                    )
+                                    for s in item.scores
+                                ]
+                                if item.scores
+                                else None,
                             )
                             for item in payload.cases
                         ],

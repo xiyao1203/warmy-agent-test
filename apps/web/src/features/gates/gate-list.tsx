@@ -15,12 +15,19 @@ import {
 import { Input } from "@/components/ui/input";
 import { Tooltip } from "@/components/uiverse";
 
-import type { GateItem, GateResult } from "./api";
-import { createGate, deleteGate, evaluateGate, listGates } from "./api";
+import type { GateItem, GateResult, GateRun } from "./api";
+import {
+  createGate,
+  deleteGate,
+  evaluateGate,
+  listGateRuns,
+  listGates,
+} from "./api";
 
 export function GateList({ projectId }: { projectId: string }) {
   const [gates, setGates] = useState<GateItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [runs, setRuns] = useState<GateRun[]>([]);
   const [createOpen, setCreateOpen] = useState(false);
   const [evalResult, setEvalResult] = useState<{
     gateId: string;
@@ -53,17 +60,22 @@ export function GateList({ projectId }: { projectId: string }) {
     };
   }, [projectId]);
 
+  useEffect(() => {
+    void listGateRuns(projectId)
+      .then(setRuns)
+      .catch(() => setRuns([]));
+  }, [projectId]);
+
   async function handleDelete(gateId: string) {
     if (!confirm("确定删除此门禁？")) return;
     await deleteGate(projectId, gateId);
     await reload();
   }
 
-  async function handleEvaluate(gate: GateItem) {
+  async function handleEvaluate(gate: GateItem, runId: string) {
     try {
       const res = await evaluateGate(projectId, gate.id, {
-        actual_pass_rate: 0.85,
-        critical_passed: true,
+        run_id: runId,
       });
       setEvalResult({ gateId: gate.id, result: res.result });
     } catch {
@@ -117,7 +129,8 @@ export function GateList({ projectId }: { projectId: string }) {
               gate={gate}
               key={gate.id}
               onDelete={() => handleDelete(gate.id)}
-              onEvaluate={() => handleEvaluate(gate)}
+              onEvaluate={(runId) => handleEvaluate(gate, runId)}
+              runs={runs}
               result={
                 evalResult?.gateId === gate.id ? evalResult.result : undefined
               }
@@ -140,18 +153,39 @@ function GateCard({
   gate,
   onDelete,
   onEvaluate,
+  runs,
   result,
 }: {
   gate: GateItem;
   onDelete: () => Promise<void>;
-  onEvaluate: () => Promise<void>;
+  onEvaluate: (runId: string) => Promise<void>;
+  runs: GateRun[];
   result?: GateResult;
 }) {
+  const [runId, setRunId] = useState("");
   return (
     <ListCard
       actions={
         <>
-          <Button onClick={onEvaluate} variant="ghost">
+          <select
+            aria-label="选择执行记录"
+            className="h-9 max-w-48 rounded border border-[var(--border)] bg-[var(--surface)] px-2 text-sm"
+            onChange={(event) => setRunId(event.target.value)}
+            value={runId}
+          >
+            <option value="">选择真实执行记录</option>
+            {runs.map((run) => (
+              <option key={run.id} value={run.id}>
+                {run.status} ·{" "}
+                {new Date(run.created_at).toLocaleString("zh-CN")}
+              </option>
+            ))}
+          </select>
+          <Button
+            disabled={!runId}
+            onClick={() => onEvaluate(runId)}
+            variant="ghost"
+          >
             评估
           </Button>
           <Tooltip content="删除门禁">

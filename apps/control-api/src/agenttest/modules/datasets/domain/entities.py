@@ -271,7 +271,7 @@ class TestCase:
         normalized_name = name.strip()
         if not normalized_name:
             raise ValueError("Test case name is required")
-        if not input:
+        if input is None:
             raise ValueError("Test case input is required")
         now = datetime.now(UTC)
         return cls(
