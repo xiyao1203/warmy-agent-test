@@ -93,7 +93,7 @@ export function TargetChatScreen({ projectId }: { projectId: string }) {
   }
 
   return (
-    <div className="flex h-[calc(100vh-7rem)] flex-col">
+    <div className="flex min-h-0 flex-1 flex-col">
       <div className="flex flex-wrap gap-3 border-b border-[var(--hairline)] p-4">
         <select
           aria-label="被测 Agent 版本"

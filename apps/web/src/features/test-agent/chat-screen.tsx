@@ -9,6 +9,7 @@ import { ChatEmptyState, TypingIndicator } from "@/components/uiverse";
 
 import {
   createSession,
+  deleteSession,
   getSession,
   listSessions,
   sendChatMessage,
@@ -135,6 +136,25 @@ export function TestAgentChat({ projectId }: { projectId: string }) {
     return session;
   }
 
+  async function handleDelete(sessionId: string) {
+    try {
+      const response = await deleteSession(projectId, sessionId);
+      if (!response.ok) throw new Error("删除失败");
+      setSessions((current) =>
+        current.filter((item) => item.session_id !== sessionId),
+      );
+      if (activeSessionId === sessionId) {
+        setActive(null);
+        setMessages([]);
+        setArtifacts([]);
+        setEvents([]);
+        window.history.replaceState({}, "", window.location.pathname);
+      }
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : "删除会话失败");
+    }
+  }
+
   async function handleSend() {
     const content = input.trim();
     if (!content || sending) return;
@@ -167,7 +187,7 @@ export function TestAgentChat({ projectId }: { projectId: string }) {
 
   if (workspace === "target") {
     return (
-      <div>
+      <div className="flex h-full flex-col">
         <WorkspaceTabs value={workspace} onChange={setWorkspace} />
         <TargetChatScreen projectId={projectId} />
       </div>
@@ -175,18 +195,19 @@ export function TestAgentChat({ projectId }: { projectId: string }) {
   }
 
   return (
-    <div>
+    <div className="flex h-full flex-col">
       <WorkspaceTabs value={workspace} onChange={setWorkspace} />
-      <div className="grid h-[calc(100vh-3.5rem)] grid-cols-[16rem_minmax(0,1fr)_19rem] overflow-hidden max-[1100px]:grid-cols-[14rem_minmax(0,1fr)] max-[760px]:grid-cols-1">
+      <div className="min-h-0 flex-1 grid grid-cols-[16rem_minmax(0,1fr)_19rem] max-[1100px]:grid-cols-[14rem_minmax(0,1fr)] max-[760px]:grid-cols-1">
         <SessionList
           activeId={active?.session_id ?? null}
           items={sessions}
           loading={loadingHistory}
           onCreate={() => void newSession()}
+          onDelete={(id) => void handleDelete(id)}
           onSelect={(id) => void selectSession(id)}
         />
 
-        <main className="flex min-w-0 flex-col bg-[var(--canvas)]">
+        <main className="flex min-h-0 min-w-0 flex-col bg-[var(--canvas)]">
           <header className="flex items-center gap-3 border-b border-[var(--hairline)] px-5 py-3">
             <Sparkles className="size-5 text-[var(--primary)]" />
             <div>
@@ -249,7 +270,7 @@ export function TestAgentChat({ projectId }: { projectId: string }) {
             )}
           </div>
 
-          <div className="border-t border-[var(--hairline)] p-4">
+          <div className="shrink-0 border-t border-[var(--hairline)] p-4">
             <div className="mx-auto flex max-w-3xl gap-2">
               <Input
                 aria-label="对话输入"

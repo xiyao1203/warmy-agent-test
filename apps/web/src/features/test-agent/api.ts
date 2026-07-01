@@ -93,6 +93,14 @@ export function getSession(projectId: string, sessionId: string) {
   return request<ChatResponse>(`${base(projectId)}/sessions/${sessionId}`);
 }
 
+export function deleteSession(projectId: string, sessionId: string) {
+  return fetch(`${base(projectId)}/sessions/${sessionId}`, {
+    method: "DELETE",
+    credentials: "include",
+    headers: csrfHeaders() as Record<string, string>,
+  });
+}
+
 export function sendChatMessage(
   projectId: string,
   sessionId: string,
