@@ -141,7 +141,7 @@ export function RunDetail({
               </dl>
             </div>
           </section>
-          <aside className="h-fit rounded-[var(--radius-lg)] border border-[var(--hairline)] bg-[var(--surface)] p-5 shadow-[0_12px_40px_rgba(15,23,42,0.04)]">
+          <aside className="h-fit rounded-[var(--radius-lg)] border border-[var(--hairline)] bg-[var(--surface)] p-5">
             <div className="flex items-center justify-between gap-3">
               <h2 className="text-base font-semibold">执行摘要</h2>
               <Badge tone={canCancel ? "accent" : "neutral"}>
@@ -218,7 +218,7 @@ export function RunDetail({
           ) : (
             cases.map((item) => (
               <article
-                className="rounded-[var(--radius-lg)] border border-[var(--hairline)] bg-[var(--surface)] p-4 shadow-[0_12px_40px_rgba(15,23,42,0.04)]"
+                className="rounded-[var(--radius-lg)] border border-[var(--hairline)] bg-[var(--surface)] p-4"
                 key={item.id}
               >
                 <div className="flex flex-wrap items-center justify-between gap-3">

@@ -92,7 +92,7 @@ export function ReportDownloadButton({
             className="fixed inset-0 z-40"
             onClick={() => setIsOpen(false)}
           />
-          <div className="absolute right-0 top-full z-50 mt-2 w-64 rounded-[var(--radius-lg)] border border-[var(--hairline)] bg-[var(--surface)] p-2 shadow-[var(--overlay)]">
+          <div className="absolute right-0 top-full z-50 mt-2 w-64 rounded-[var(--radius-lg)] border border-[var(--hairline)] bg-[var(--surface)] p-2">
             <p className="px-2 pb-2 text-xs font-medium text-[var(--muted)]">
               选择报告格式
             </p>

@@ -13,6 +13,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { EmptyState } from "@/components/ui/empty-state";
+import { Skeleton } from "@/components/uiverse";
 import { Input } from "@/components/ui/input";
 import {
   Table,
@@ -65,8 +66,18 @@ export function TestAccountList({
 }: TestAccountListProps) {
   if (loading) {
     return (
-      <div className="grid min-h-[200px] place-items-center text-sm">
-        <p className="text-[var(--muted)]">正在加载测试账号…</p>
+      <div className="mt-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <Skeleton className="h-6 w-28" />
+            <Skeleton className="mt-1.5 h-4 w-56" />
+          </div>
+        </div>
+        <section className="mt-4 overflow-hidden rounded-[var(--radius-lg)] border border-[var(--hairline)] bg-[var(--surface)]">
+          {[1, 2, 3, 4].map((i) => (
+            <Skeleton className="h-11 w-full border-b border-[var(--hairline)] last:border-b-0" key={i} />
+          ))}
+        </section>
       </div>
     );
   }

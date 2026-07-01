@@ -38,7 +38,7 @@ export function UserDropdown({
         aria-expanded={open}
         aria-haspopup="true"
         aria-label="用户菜单"
-        className="flex h-8 shrink-0 items-center gap-2 rounded-[var(--radius-lg)] px-2 text-sm transition-colors hover:bg-[var(--canvas-soft)]"
+        className="flex h-8 shrink-0 items-center gap-2 rounded-[var(--radius-md)] px-2 text-sm transition-colors hover:bg-[var(--canvas-soft)]"
         onClick={() => setOpen(!open)}
         title={`${displayName} · ${email}`}
         type="button"
@@ -51,7 +51,7 @@ export function UserDropdown({
 
       {open && (
         <div
-          className="absolute right-0 top-full z-50 mt-1 min-w-[14rem] rounded-lg border border-[var(--hairline)] bg-[var(--surface)] py-1"
+          className="absolute right-0 top-full z-50 mt-1 min-w-[14rem] rounded-[var(--radius-lg)] border border-[var(--hairline)] bg-[var(--surface)] py-1"
           role="menu"
         >
           <div className="border-b border-[var(--hairline)] px-4 py-3">

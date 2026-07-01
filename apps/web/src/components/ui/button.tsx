@@ -30,7 +30,7 @@ export function Button({
 
   return (
     <Component
-      className={`inline-flex h-9 items-center justify-center gap-2 rounded-[var(--radius-lg)] border px-4 text-sm font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${variants[variant]} ${className}`}
+      className={`inline-flex h-9 items-center justify-center gap-1.5 rounded-[var(--radius-md)] border px-4 text-sm font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${variants[variant]} ${className}`}
       {...props}
       disabled={loading || props.disabled}
     >

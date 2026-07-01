@@ -49,7 +49,7 @@ export function ProjectSwitcher({
       <Popover.Portal>
         <Popover.Content
           align="start"
-          className="z-50 w-72 rounded-[var(--radius-lg)] border border-[var(--hairline)] bg-[var(--surface)] p-2 shadow-[var(--overlay)]"
+          className="z-50 w-72 rounded-[var(--radius-lg)] border border-[var(--hairline)] bg-[var(--surface)] p-2"
           side="bottom"
           sideOffset={6}
         >

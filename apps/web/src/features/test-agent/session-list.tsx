@@ -109,7 +109,7 @@ export function SessionList({
 
               {/* Delete button */}
               {confirming === item.session_id ? (
-                <div className="absolute bottom-1.5 right-1.5 flex items-center gap-1 rounded bg-[var(--surface)] p-1 shadow-[var(--shadow-md)]">
+                <div className="absolute bottom-1.5 right-1.5 flex items-center gap-1 rounded border border-[var(--hairline)] bg-[var(--surface)] p-1">
                   <span className="ml-1 text-[0.6rem] text-[var(--danger)]">
                     确认删除？
                   </span>

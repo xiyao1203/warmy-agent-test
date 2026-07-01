@@ -45,7 +45,7 @@ export function ConfirmationCard({
   const args = preview?.arguments as Record<string, unknown> | undefined;
 
   return (
-    <section className="animate-fadeIn overflow-hidden rounded-[var(--radius-lg)] border border-[var(--warning)]/40 bg-[var(--surface)] shadow-sm">
+    <section className="animate-fadeIn overflow-hidden rounded-[var(--radius-lg)] border border-[var(--warning)]/40 bg-[var(--surface)]">
       <div className="flex items-center gap-2.5 border-b border-[var(--hairline)] bg-[var(--warning-subtle)]/30 px-4 py-3">
         <span className="flex size-7 items-center justify-center rounded-full bg-[var(--warning)]/15">
           <AlertTriangle className="size-3.5 text-[var(--warning)]" />

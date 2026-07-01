@@ -27,6 +27,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { Skeleton } from "@/components/uiverse";
 import { problemMessage } from "@/lib/api/problem";
 
 type Props = {
@@ -57,8 +58,24 @@ export function ModelConfigList(props: Props) {
   >();
   const [busy, setBusy] = useState<string | null>(null);
   const [connection, setConnection] = useState<Record<string, string>>({});
+  const [deleteTarget, setDeleteTarget] = useState<ModelConfigResponse | null>(null);
+  const [deleteBusy, setDeleteBusy] = useState(false);
 
-  if (props.loading) return <PageState title="正在加载模型配置…" />;
+  if (props.loading) {
+    return (
+      <div className="min-w-0 px-6 py-6">
+        <header className="border-b border-[var(--hairline)] pb-5">
+          <Skeleton className="h-6 w-28" />
+          <Skeleton className="mt-2 h-4 w-72" />
+        </header>
+        <div className="mt-5 space-y-3">
+          {[1, 2, 3].map((i) => (
+            <Skeleton className="h-16 w-full rounded-[var(--radius-lg)]" key={i} />
+          ))}
+        </div>
+      </div>
+    );
+  }
   if (props.error)
     return <PageState title="模型配置暂时不可用" detail={props.error} />;
 
@@ -222,10 +239,7 @@ export function ModelConfigList(props: Props) {
                         </Button>
                         <Button
                           aria-label={`删除 ${model.name}`}
-                          onClick={() => {
-                            if (window.confirm(`确定删除“${model.name}”吗？`))
-                              void props.onDelete(model.id);
-                          }}
+                          onClick={() => setDeleteTarget(model)}
                           variant="danger"
                         >
                           <Trash2 className="size-3.5" />
@@ -248,6 +262,36 @@ export function ModelConfigList(props: Props) {
           onUpdate={props.onUpdate}
         />
       ) : null}
+
+      <Dialog onOpenChange={() => setDeleteTarget(null)} open={deleteTarget !== null}>
+        <DialogContent>
+          <DialogTitle>确认删除</DialogTitle>
+          <DialogDescription>
+            确定要删除模型「{deleteTarget?.name}」吗？此操作不可撤销。
+          </DialogDescription>
+          <div className="mt-5 flex justify-end gap-3">
+            <Button onClick={() => setDeleteTarget(null)} variant="secondary">
+              取消
+            </Button>
+            <Button
+              loading={deleteBusy}
+              onClick={async () => {
+                if (!deleteTarget) return;
+                setDeleteBusy(true);
+                try {
+                  await props.onDelete(deleteTarget.id);
+                  setDeleteTarget(null);
+                } finally {
+                  setDeleteBusy(false);
+                }
+              }}
+              variant="danger"
+            >
+              确认删除
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

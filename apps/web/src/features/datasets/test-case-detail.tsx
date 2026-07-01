@@ -31,7 +31,7 @@ export function TestCaseDetail({
       />
 
       {/* 抽屉内容 */}
-      <div className="relative z-10 w-full max-w-lg overflow-y-auto border-l border-[var(--hairline)] bg-[var(--surface)] p-6 shadow-xl">
+      <div className="relative z-10 w-full max-w-lg overflow-y-auto border-l border-[var(--hairline)] bg-[var(--surface)] p-6">
         {/* 头部 */}
         <div className="flex items-center justify-between border-b border-[var(--hairline)] pb-4">
           <div>

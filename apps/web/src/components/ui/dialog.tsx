@@ -35,7 +35,7 @@ export function DialogContent({
     <DialogPrimitive.Portal>
       <DialogPrimitive.Overlay className="fixed inset-0 z-40 bg-[var(--overlay)]" />
       <DialogPrimitive.Content
-        className={`fixed left-1/2 top-1/2 z-50 w-[min(32rem,calc(100vw-2rem))] -translate-x-1/2 -translate-y-1/2 rounded-[var(--radius-lg)] border border-[var(--hairline)] bg-[var(--surface)] p-6 focus:outline-none ${className}`}
+        className={`fixed left-1/2 top-1/2 z-50 w-[min(32rem,calc(100vw-2rem))] -translate-x-1/2 -translate-y-1/2 rounded-[var(--radius-lg)] border border-[var(--hairline)] bg-[var(--surface)] p-6 shadow-none focus:outline-none ${className}`}
         {...props}
       >
         {children}

@@ -5,7 +5,14 @@ import { useCallback, useEffect, useState } from "react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
+import { Skeleton } from "@/components/uiverse";
 import type { ScorerItem } from "./api";
 import { deleteScorer, listScorers, updateScorer } from "./api";
 import { ScorerEditorDialog } from "./scorer-editor";
@@ -22,6 +29,8 @@ export function ScorerList({ projectId }: { projectId: string }) {
   const [error, setError] = useState("");
   const [editorOpen, setEditorOpen] = useState(false);
   const [editItem, setEditItem] = useState<ScorerItem | undefined>();
+  const [deleteTarget, setDeleteTarget] = useState<ScorerItem | null>(null);
+  const [deleteBusy, setDeleteBusy] = useState(false);
 
   const reload = useCallback(async () => {
     setLoading(true);
@@ -57,15 +66,28 @@ export function ScorerList({ projectId }: { projectId: string }) {
   }
 
   async function handleDelete(id: string) {
-    if (!confirm("确定删除此评分器？")) return;
-    await deleteScorer(projectId, id);
-    await reload();
+    setDeleteBusy(true);
+    try {
+      await deleteScorer(projectId, id);
+      setDeleteTarget(null);
+      await reload();
+    } finally {
+      setDeleteBusy(false);
+    }
   }
 
   if (loading) {
     return (
-      <div className="grid min-h-[40vh] place-items-center text-sm text-[var(--muted)]">
-        正在加载评分器…
+      <div className="min-w-0 px-6 py-6">
+        <header className="border-b border-[var(--hairline)] pb-5">
+          <Skeleton className="h-7 w-32" />
+          <Skeleton className="mt-2 h-4 w-72" />
+        </header>
+        <div className="mt-5 space-y-3">
+          {[1, 2, 3].map((i) => (
+            <Skeleton className="h-16 w-full rounded-[var(--radius-lg)]" key={i} />
+          ))}
+        </div>
       </div>
     );
   }
@@ -152,7 +174,7 @@ export function ScorerList({ projectId }: { projectId: string }) {
                 </Button>
                 <Button
                   aria-label="删除"
-                  onClick={() => handleDelete(s.id)}
+                  onClick={() => setDeleteTarget(s)}
                   variant="ghost"
                 >
                   <Trash2
@@ -173,6 +195,29 @@ export function ScorerList({ projectId }: { projectId: string }) {
         scorer={editItem}
         onOpenChange={setEditorOpen}
       />
+
+      <Dialog onOpenChange={() => setDeleteTarget(null)} open={deleteTarget !== null}>
+        <DialogContent>
+          <DialogTitle>确认删除</DialogTitle>
+          <DialogDescription>
+            确定要删除评分器「{deleteTarget?.name}」吗？此操作不可撤销。
+          </DialogDescription>
+          <div className="mt-5 flex justify-end gap-3">
+            <Button onClick={() => setDeleteTarget(null)} variant="secondary">
+              取消
+            </Button>
+            <Button
+              loading={deleteBusy}
+              onClick={() => {
+                if (deleteTarget) void handleDelete(deleteTarget.id);
+              }}
+              variant="danger"
+            >
+              确认删除
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

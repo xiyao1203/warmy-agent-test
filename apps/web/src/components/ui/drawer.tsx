@@ -19,7 +19,7 @@ export function DrawerContent({
     <DialogPrimitive.Portal>
       <DialogPrimitive.Overlay className="fixed inset-0 z-40 bg-[var(--overlay)]" />
       <DialogPrimitive.Content
-        className={`fixed inset-y-0 right-0 z-50 w-[min(26rem,calc(100vw-2rem))] border-l border-[var(--hairline)] bg-[var(--surface)] p-5 focus:outline-none ${className}`}
+        className={`fixed inset-y-0 right-0 z-50 w-[min(26rem,calc(100vw-2rem))] border-l border-[var(--hairline)] bg-[var(--surface)] p-5 shadow-none focus:outline-none ${className}`}
         {...props}
       >
         {children}

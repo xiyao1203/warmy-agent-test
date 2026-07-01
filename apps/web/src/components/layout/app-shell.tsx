@@ -77,7 +77,7 @@ export function AppShell({
 
   return (
     <div className="min-h-screen bg-[var(--canvas)] text-[var(--ink)]">
-      <header className="grid h-14 grid-cols-[minmax(16rem,1fr)_minmax(18rem,32rem)_minmax(16rem,1fr)] items-center gap-4 border-b border-[var(--hairline)] bg-[var(--surface)] px-4 max-[900px]:grid-cols-[1fr_auto]">
+      <header className="grid h-14 grid-cols-[minmax(16rem,1fr)_minmax(18rem,32rem)_minmax(16rem,1fr)] items-center gap-4 border-b border-[var(--hairline)] bg-[var(--canvas)] px-4 max-[900px]:grid-cols-[1fr_auto]">
         <div className="flex min-w-0 items-center gap-5">
           <Link
             className="shrink-0 text-base font-semibold tracking-tight"
@@ -98,7 +98,7 @@ export function AppShell({
             className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-[var(--muted)]"
           />
           <input
-            className="h-9 w-full rounded-[var(--radius-lg)] border border-[var(--hairline)] bg-[var(--surface)] pl-9 pr-3 text-sm outline-none placeholder:text-[var(--body)] focus:border-[var(--primary)] focus:ring-2 focus:ring-[var(--focus-ring-subtle)]"
+            className="h-9 w-full rounded-[var(--radius-md)] border border-[var(--hairline)] bg-[var(--surface)] pl-9 pr-3 text-sm outline-none placeholder:text-[var(--body)] focus:border-[var(--primary)] focus:ring-2 focus:ring-[var(--focus-ring-subtle)]"
             placeholder="搜索（⌘K）"
             type="search"
           />
@@ -125,7 +125,7 @@ export function AppShell({
           style={{ width: sidebarWidth }}
         >
           {!collapsed && (
-            <p className="px-3 pb-2 pt-2 text-[11px] font-semibold uppercase tracking-[0.66px] text-[var(--muted)]">
+            <p className="px-3 pb-2 pt-2 text-[11px] font-semibold uppercase tracking-[0.66px] text-[var(--body)]">
               项目导航
             </p>
           )}
@@ -246,12 +246,12 @@ export function AppShell({
           {canManageUsers(user) ? (
             <div className="mt-auto border-t border-[var(--hairline)] pt-3">
               {!collapsed && (
-                <p className="px-3 pb-1.5 text-[11px] font-semibold uppercase tracking-[0.66px] text-[var(--muted)]">
+                <p className="px-3 pb-1.5 text-[11px] font-semibold uppercase tracking-[0.66px] text-[var(--body)]">
                   系统管理
                 </p>
               )}
               <Link
-                className={`flex h-9 items-center gap-3 rounded-[var(--radius-lg)] text-sm text-[var(--muted)] transition-colors hover:bg-[var(--canvas-soft)] hover:text-[var(--ink)] ${
+                className={`flex h-9 items-center gap-3 rounded-[var(--radius-sm)] text-sm text-[var(--muted)] transition-colors hover:bg-[var(--canvas-soft)] hover:text-[var(--ink)] ${
                   collapsed
                     ? "justify-center px-0"
                     : "px-3"
@@ -268,7 +268,7 @@ export function AppShell({
             <button
               aria-expanded={!collapsed}
               aria-label={collapsed ? "展开侧边栏" : "收起侧边栏"}
-              className={`flex h-9 w-full items-center gap-3 rounded-[var(--radius-lg)] text-sm text-[var(--muted)] transition-colors hover:bg-[var(--canvas-soft)] hover:text-[var(--ink)] ${
+              className={`flex h-9 w-full items-center gap-3 rounded-[var(--radius-sm)] text-sm text-[var(--muted)] transition-colors hover:bg-[var(--canvas-soft)] hover:text-[var(--ink)] ${
                 collapsed
                   ? "justify-center px-0"
                   : "px-3"
@@ -307,7 +307,7 @@ function OverviewNavLink({
 
   return (
     <Link
-      className={`flex h-9 items-center gap-3 rounded-[var(--radius-lg)] text-sm transition-colors ${
+      className={`flex h-9 items-center gap-3 rounded-[var(--radius-sm)] text-sm transition-colors ${
         collapsed ? "justify-center px-0" : "px-3"
       } ${
         isActive
@@ -340,7 +340,7 @@ function ProjectNavLink({
 
   return (
     <Link
-      className={`flex h-9 items-center gap-3 rounded-[var(--radius-lg)] text-sm transition-colors ${
+      className={`flex h-9 items-center gap-3 rounded-[var(--radius-sm)] text-sm transition-colors ${
         collapsed ? "justify-center px-0" : "px-3"
       } ${
         isActive

@@ -13,7 +13,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Tooltip } from "@/components/uiverse";
+import { Skeleton, Tooltip } from "@/components/uiverse";
 
 import type { GateItem, GateResult, GateRun } from "./api";
 import {
@@ -28,6 +28,9 @@ export function GateList({ projectId }: { projectId: string }) {
   const [gates, setGates] = useState<GateItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [runs, setRuns] = useState<GateRun[]>([]);
+  const [deleteTarget, setDeleteTarget] = useState<GateItem | null>(null);
+  const [deleteBusy, setDeleteBusy] = useState(false);
+
   const [createOpen, setCreateOpen] = useState(false);
   const [evalResult, setEvalResult] = useState<{
     gateId: string;
@@ -67,9 +70,14 @@ export function GateList({ projectId }: { projectId: string }) {
   }, [projectId]);
 
   async function handleDelete(gateId: string) {
-    if (!confirm("确定删除此门禁？")) return;
-    await deleteGate(projectId, gateId);
-    await reload();
+    setDeleteBusy(true);
+    try {
+      await deleteGate(projectId, gateId);
+      setDeleteTarget(null);
+      await reload();
+    } finally {
+      setDeleteBusy(false);
+    }
   }
 
   async function handleEvaluate(gate: GateItem, runId: string) {
@@ -88,8 +96,16 @@ export function GateList({ projectId }: { projectId: string }) {
 
   if (loading) {
     return (
-      <div className="grid min-h-[40vh] place-items-center text-sm text-[var(--muted)]">
-        正在加载发布门禁…
+      <div className="min-w-0 px-6 py-6">
+        <header className="border-b border-[var(--hairline)] pb-5">
+          <Skeleton className="h-7 w-40" />
+          <Skeleton className="mt-2 h-4 w-80" />
+        </header>
+        <div className="mt-5 space-y-3">
+          {[1, 2, 3].map((i) => (
+            <Skeleton className="h-20 w-full" key={i} />
+          ))}
+        </div>
       </div>
     );
   }
@@ -128,7 +144,7 @@ export function GateList({ projectId }: { projectId: string }) {
             <GateCard
               gate={gate}
               key={gate.id}
-              onDelete={() => handleDelete(gate.id)}
+              onDelete={() => setDeleteTarget(gate)}
               onEvaluate={(runId) => handleEvaluate(gate, runId)}
               runs={runs}
               result={
@@ -145,6 +161,29 @@ export function GateList({ projectId }: { projectId: string }) {
         open={createOpen}
         projectId={projectId}
       />
+
+      <Dialog onOpenChange={() => setDeleteTarget(null)} open={deleteTarget !== null}>
+        <DialogContent>
+          <DialogTitle>确认删除</DialogTitle>
+          <DialogDescription>
+            确定要删除门禁「{deleteTarget?.name}」吗？此操作不可撤销。
+          </DialogDescription>
+          <div className="mt-5 flex justify-end gap-3">
+            <Button onClick={() => setDeleteTarget(null)} variant="secondary">
+              取消
+            </Button>
+            <Button
+              loading={deleteBusy}
+              onClick={() => {
+                if (deleteTarget) void handleDelete(deleteTarget.id);
+              }}
+              variant="danger"
+            >
+              确认删除
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
@@ -157,7 +196,7 @@ function GateCard({
   result,
 }: {
   gate: GateItem;
-  onDelete: () => Promise<void>;
+  onDelete: () => void;
   onEvaluate: (runId: string) => Promise<void>;
   runs: GateRun[];
   result?: GateResult;

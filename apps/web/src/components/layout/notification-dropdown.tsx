@@ -37,7 +37,7 @@ export function NotificationDropdown() {
 
       {open && (
         <div
-          className="absolute right-0 top-full z-50 mt-1 min-w-[20rem] rounded-lg border border-[var(--hairline)] bg-[var(--surface)] shadow-lg"
+          className="absolute right-0 top-full z-50 mt-1 min-w-[20rem] rounded-[var(--radius-lg)] border border-[var(--hairline)] bg-[var(--surface)]"
           role="menu"
         >
           <div className="border-b border-[var(--hairline)] px-4 py-3">

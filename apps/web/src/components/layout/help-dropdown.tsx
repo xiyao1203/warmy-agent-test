@@ -69,7 +69,7 @@ export function HelpDropdown() {
         aria-expanded={open}
         aria-haspopup="true"
         aria-label="帮助中心"
-        className="grid size-8 place-items-center rounded-[var(--radius-lg)] text-[var(--muted)] transition-colors hover:bg-[var(--canvas-soft)] hover:text-[var(--ink)]"
+        className="grid size-8 place-items-center rounded-[var(--radius-md)] text-[var(--muted)] transition-colors hover:bg-[var(--canvas-soft)] hover:text-[var(--ink)]"
         onClick={() => setOpen(!open)}
         type="button"
       >

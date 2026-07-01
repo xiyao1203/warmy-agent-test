@@ -138,7 +138,7 @@ export function RunCenter({
           value={String(summary.unhealthy)}
         />
       </section>
-      <section className="mt-5 overflow-hidden rounded-[var(--radius-lg)] border border-[var(--hairline)] bg-[var(--surface)] shadow-[0_12px_40px_rgba(15,23,42,0.04)]">
+      <section className="mt-5 overflow-hidden rounded-[var(--radius-lg)] border border-[var(--hairline)] bg-[var(--surface)]">
         <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--hairline)] px-4 py-3">
           <label className="relative min-w-[18rem] flex-1 text-sm">
             <span className="sr-only">搜索运行</span>
@@ -313,7 +313,7 @@ function SummaryCard({
   value: string;
 }) {
   return (
-    <article className="rounded-[var(--radius-lg)] border border-[var(--hairline)] bg-[var(--surface)] p-4 shadow-[0_12px_40px_rgba(15,23,42,0.04)]">
+    <article className="rounded-[var(--radius-lg)] border border-[var(--hairline)] bg-[var(--surface)] p-4">
       <div className="flex items-start justify-between gap-3">
         <div>
           <p className="text-xs text-[var(--muted)]">{label}</p>
