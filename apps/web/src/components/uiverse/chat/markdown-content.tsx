@@ -1,9 +1,12 @@
 "use client";
 
-import type { ComponentPropsWithoutRef } from "react";
+import type { ComponentPropsWithoutRef, MouseEvent } from "react";
+import { useCallback, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeHighlight from "rehype-highlight";
+
+import { Check, Copy } from "lucide-react";
 
 type MarkdownContentProps = {
   content: string;
@@ -48,16 +51,58 @@ function CodeBlock({
     );
   }
 
+  return <CodeBlockWithCopy className={className} language={match[1]} {...props}>{children}</CodeBlockWithCopy>;
+}
+
+function CodeBlockWithCopy({
+  children,
+  className,
+  language,
+  ...props
+}: ComponentPropsWithoutRef<"code"> & { language: string }) {
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = useCallback(
+    (e: MouseEvent) => {
+      e.stopPropagation();
+      const text = String(children).replace(/\n$/, "");
+      void navigator.clipboard.writeText(text).then(() => {
+        setCopied(true);
+        setTimeout(() => setCopied(false), 1500);
+      });
+    },
+    [children],
+  );
+
   return (
     <div className="group relative my-2">
-      {match[1] ? (
-        <span className="absolute right-2 top-1.5 rounded px-1.5 py-0.5 text-[0.65rem] font-mono uppercase text-[var(--muted)]">
-          {match[1]}
+      <div className="flex items-center justify-between rounded-t-[var(--radius-md)] bg-[var(--canvas)] px-3 py-1 border-b border-[var(--hairline)]">
+        <span className="text-[0.65rem] font-mono font-medium uppercase text-[var(--muted)]">
+          {language}
         </span>
-      ) : null}
-      <code className={className} {...props}>
+        <button
+          aria-label={copied ? "已复制" : "复制代码"}
+          className="flex items-center gap-1 rounded px-1.5 py-0.5 text-[0.65rem] text-[var(--muted)] opacity-0 transition-all hover:bg-[var(--canvas-soft)] hover:text-[var(--ink)] group-hover:opacity-100"
+          onClick={handleCopy}
+          type="button"
+        >
+          {copied ? (
+            <>
+              <Check className="size-3 text-[var(--success)]" />
+              已复制
+            </>
+          ) : (
+            <>
+              <Copy className="size-3" />
+              复制
+            </>
+          )}
+        </button>
+      </div>
+      <code className={`${className} block rounded-t-none`} {...props}>
         {children}
       </code>
     </div>
   );
 }
+

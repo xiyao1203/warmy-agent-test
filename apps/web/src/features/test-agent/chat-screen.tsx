@@ -1,7 +1,7 @@
 "use client";
 
-import { Send, Sparkles } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { Send, Sparkles, Square } from "lucide-react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -48,10 +48,15 @@ export function TestAgentChat({ projectId }: { projectId: string }) {
   const [loadingHistory, setLoadingHistory] = useState(true);
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [lastFailedInput, setLastFailedInput] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const sessionRef = useRef<string | null>(null);
+  const abortRef = useRef<AbortController | null>(null);
+  const sseCloseRef = useRef<(() => void) | null>(null);
+  const pinnedBottomRef = useRef(true);
   const activeSessionId = active?.session_id ?? null;
 
+  // Load sessions on mount
   useEffect(() => {
     let alive = true;
     const requested = new URLSearchParams(window.location.search).get(
@@ -81,10 +86,12 @@ export function TestAgentChat({ projectId }: { projectId: string }) {
     };
   }, [projectId]);
 
+  // SSE subscription
   useEffect(() => {
     if (!activeSessionId) return;
     sessionRef.current = activeSessionId;
-    return subscribeToSession(projectId, activeSessionId, (event) => {
+    sseCloseRef.current?.();
+    sseCloseRef.current = subscribeToSession(projectId, activeSessionId, (event) => {
       if (sessionRef.current !== activeSessionId) return;
       setEvents((current) =>
         current.some((item) => item.id === event.id && item.type === event.type)
@@ -111,12 +118,26 @@ export function TestAgentChat({ projectId }: { projectId: string }) {
       }
       if (event.type === "message.completed") setStreamingContent("");
     });
+    return () => sseCloseRef.current?.();
   }, [activeSessionId, projectId]);
 
+  // Smooth auto-scroll — only when user is near bottom
   useEffect(() => {
-    if (scrollRef.current)
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    const el = scrollRef.current;
+    if (!el) return;
+    if (pinnedBottomRef.current) {
+      el.scrollTo({ top: el.scrollHeight, behavior: "smooth" });
+    }
   }, [messages, events, sending]);
+
+  // Track manual scrolling to unpin auto-scroll
+  const handleScroll = useCallback(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const threshold = 80;
+    pinnedBottomRef.current =
+      el.scrollHeight - el.scrollTop - el.clientHeight < threshold;
+  }, []);
 
   function applySession(session: ChatResponse) {
     setActive(session);
@@ -166,18 +187,30 @@ export function TestAgentChat({ projectId }: { projectId: string }) {
     }
   }
 
+  function stopGenerating() {
+    abortRef.current?.abort();
+    sseCloseRef.current?.();
+    sseCloseRef.current = null;
+    setSending(false);
+    setStreamingContent("");
+  }
+
   async function handleSend() {
     const content = input.trim();
     if (!content || sending) return;
     setInput("");
+    setLastFailedInput(null);
     setSending(true);
     setError(null);
+    pinnedBottomRef.current = true;
+    abortRef.current = new AbortController();
     try {
       const session = active ?? (await newSession());
       const response = await sendChatMessage(
         projectId,
         session.session_id,
         content,
+        abortRef.current.signal,
       );
       applySession(response);
       setSessions((current) => [
@@ -185,7 +218,9 @@ export function TestAgentChat({ projectId }: { projectId: string }) {
         ...current.filter((item) => item.session_id !== response.session_id),
       ]);
     } catch (reason) {
+      if (reason instanceof DOMException && reason.name === "AbortError") return;
       setInput(content);
+      setLastFailedInput(content);
       setError(
         reason instanceof TestAgentApiError || reason instanceof Error
           ? reason.message
@@ -193,6 +228,7 @@ export function TestAgentChat({ projectId }: { projectId: string }) {
       );
     } finally {
       setSending(false);
+      abortRef.current = null;
     }
   }
 
@@ -231,6 +267,7 @@ export function TestAgentChat({ projectId }: { projectId: string }) {
 
           <div
             className="chat-scroll min-h-0 flex-1 overflow-y-auto px-5 py-4"
+            onScroll={handleScroll}
             ref={scrollRef}
           >
             {messages.length === 0 ? (
@@ -247,8 +284,18 @@ export function TestAgentChat({ projectId }: { projectId: string }) {
                 active={active}
                 error={error}
                 events={events}
+                lastFailedInput={lastFailedInput}
                 messages={messages}
-                onErrorClear={() => setError(null)}
+                onErrorClear={() => {
+                  setError(null);
+                  setLastFailedInput(null);
+                }}
+                onRetry={() => {
+                  if (lastFailedInput) {
+                    setInput(lastFailedInput);
+                    void handleSend();
+                  }
+                }}
                 onSessionReload={(id) => void selectSession(id)}
                 projectId={projectId}
                 sending={sending}
@@ -273,15 +320,24 @@ export function TestAgentChat({ projectId }: { projectId: string }) {
                 placeholder="向超级测试 Agent 描述目标…"
                 value={input}
               />
-              <Button
-                aria-label="发送"
-                disabled={sending || !input.trim()}
-                loading={sending}
-                onClick={() => void handleSend()}
-                variant="primary"
-              >
-                <Send className="size-4" />
-              </Button>
+              {sending ? (
+                <Button
+                  aria-label="停止生成"
+                  onClick={stopGenerating}
+                  variant="secondary"
+                >
+                  <Square className="size-4" />
+                </Button>
+              ) : (
+                <Button
+                  aria-label="发送"
+                  disabled={!input.trim()}
+                  onClick={() => void handleSend()}
+                  variant="primary"
+                >
+                  <Send className="size-4" />
+                </Button>
+              )}
             </div>
           </div>
         </main>
@@ -304,8 +360,10 @@ type TimelineProps = {
   active: ChatResponse | null;
   error: string | null;
   events: AgentEvent[];
+  lastFailedInput: string | null;
   messages: ChatMessage[];
   onErrorClear: () => void;
+  onRetry: () => void;
   onSessionReload: (sessionId: string) => void;
   projectId: string;
   sending: boolean;
@@ -316,55 +374,47 @@ function Timeline({
   active,
   error,
   events,
+  lastFailedInput,
   messages,
   onErrorClear,
+  onRetry,
   onSessionReload,
   projectId,
   sending,
   streamingContent,
 }: TimelineProps) {
-  const toolEvents = events.filter(
-    (e) =>
-      e.type === "agent.delegated" ||
-      e.type === "agent.progress" ||
-      e.type === "agent.completed" ||
-      e.type === "agent.failed",
-  );
-
-  // Group tool events by task_id into TaskState objects
+  // Tool events grouped by task_id
   const taskStates: TaskState[] = (() => {
     const groups = new Map<
       string,
-      {
-        delegated: AgentEvent | null;
-        latest: AgentEvent;
-      }
+      { delegated: AgentEvent | null; latest: AgentEvent }
     >();
-    for (const event of toolEvents) {
+    const order: string[] = [];
+    for (const event of events) {
+      if (
+        !["agent.delegated", "agent.progress", "agent.completed", "agent.failed"].includes(event.type)
+      ) continue;
       const tid = String(event.payload.task_id ?? "");
       if (!tid) continue;
+      if (!groups.has(tid)) order.push(tid);
       const existing = groups.get(tid);
       if (!existing) {
         groups.set(tid, { delegated: null, latest: event });
       } else {
         existing.latest = event;
       }
-      // Track the delegated event for input_summary
       if (event.type === "agent.delegated") {
-        const entry = groups.get(tid)!;
-        entry.delegated = event;
+        groups.get(tid)!.delegated = event;
       }
     }
-    return Array.from(groups.entries()).map(([tid, group]) => {
+    return order.map((tid) => {
+      const group = groups.get(tid)!;
       const inputSummary = group.delegated
         ? String(group.delegated.payload.input_summary ?? "")
         : "";
       const childAgent = group.delegated
         ? String(group.delegated.payload.child_agent ?? "")
-        : (() => {
-            const p = group.latest.payload;
-            return String(p.child_agent ?? "");
-          })();
+        : String(group.latest.payload.child_agent ?? "");
       const capability = group.delegated
         ? String(group.delegated.payload.capability ?? "")
         : String(group.latest.payload.capability ?? "");
@@ -392,15 +442,21 @@ function Timeline({
       };
     });
   })();
-  const reasoningEvents = events.filter(
-    (e) => e.type === "agent.reasoning",
-  );
+
+  const reasoningEvents = events.filter((e) => e.type === "agent.reasoning");
   const errorEvents = events.filter(
     (e) => e.type === "error" && !e.payload.task_id,
   );
   const pendingConfs = events.filter(
     (e) => e.type === "tool.confirmation_required",
   );
+
+  // Build a map: step number → reasoning event
+  const reasoningByStep = new Map<number, AgentEvent>();
+  for (const evt of reasoningEvents) {
+    const step = Number(evt.payload.step ?? 0);
+    if (step > 0) reasoningByStep.set(step, evt);
+  }
 
   const batchConfirm = async (approved: boolean) => {
     const ids = pendingConfs.map((e) =>
@@ -443,34 +499,49 @@ function Timeline({
         </div>
       ) : null}
 
-      {/* Tool call cards — grouped by task_id */}
+      {/* Tool cards interleaved with reasoning (by insertion order) */}
       {taskStates.length > 0 ? (
         <div className="mt-3 space-y-1">
-          {taskStates.map((task) => (
-            <div
-              className="timeline-item animate-slideIn"
-              key={`task:${task.taskId}`}
-            >
-              <ToolCallCard task={task} />
-            </div>
-          ))}
+          {taskStates.map((task, i) => {
+            const step = i + 1;
+            const reasoning = reasoningByStep.get(step);
+            return (
+              <div key={`task:${task.taskId}`}>
+                {reasoning ? (
+                  <div className="timeline-item animate-fadeIn mb-1">
+                    <ReasoningBlock
+                      capability={String(reasoning.payload.capability ?? "")}
+                      content={String(reasoning.payload.content ?? "")}
+                      step={Number(reasoning.payload.step ?? step)}
+                      total={Number(reasoning.payload.total ?? taskStates.length)}
+                    />
+                  </div>
+                ) : null}
+                <div className="timeline-item animate-slideIn">
+                  <ToolCallCard task={task} />
+                </div>
+              </div>
+            );
+          })}
         </div>
       ) : null}
 
-      {/* Reasoning blocks */}
-      {reasoningEvents.map((event) => (
-        <div
-          className="timeline-item animate-fadeIn"
-          key={`reasoning:${event.id}`}
-        >
-          <ReasoningBlock
-            capability={String(event.payload.capability ?? "")}
-            content={String(event.payload.content ?? "")}
-            step={Number(event.payload.step ?? 0)}
-            total={Number(event.payload.total ?? 0)}
-          />
-        </div>
-      ))}
+      {/* Remaining reasoning events not matched to a task */}
+      {reasoningEvents
+        .filter((evt) => !reasoningByStep.has(Number(evt.payload.step ?? 0)))
+        .map((evt) => (
+          <div
+            className="timeline-item animate-fadeIn"
+            key={`reasoning:${evt.id}`}
+          >
+            <ReasoningBlock
+              capability={String(evt.payload.capability ?? "")}
+              content={String(evt.payload.content ?? "")}
+              step={Number(evt.payload.step ?? 0)}
+              total={Number(evt.payload.total ?? 0)}
+            />
+          </div>
+        ))}
 
       {/* Error events */}
       {errorEvents.map((event) => (
@@ -539,14 +610,33 @@ function Timeline({
           role="alert"
         >
           <div className="flex items-center justify-between">
-            <p className="text-xs text-[var(--danger)]">{error}</p>
-            <button
-              className="text-xs text-[var(--muted)] hover:text-[var(--ink)]"
-              onClick={onErrorClear}
-              type="button"
-            >
-              关闭
-            </button>
+            <div className="min-w-0 flex-1">
+              <p className="text-xs text-[var(--danger)]">{error}</p>
+              {lastFailedInput ? (
+                <p className="mt-0.5 truncate text-[0.65rem] text-[var(--muted)]">
+                  消息: {lastFailedInput.slice(0, 60)}
+                  {lastFailedInput.length > 60 ? "…" : ""}
+                </p>
+              ) : null}
+            </div>
+            <div className="flex shrink-0 items-center gap-1.5">
+              {lastFailedInput ? (
+                <button
+                  className="rounded px-2 py-0.5 text-xs text-[var(--primary)] hover:bg-[var(--primary)]/10 transition-colors"
+                  onClick={onRetry}
+                  type="button"
+                >
+                  重试
+                </button>
+              ) : null}
+              <button
+                className="rounded px-2 py-0.5 text-xs text-[var(--muted)] hover:text-[var(--ink)] transition-colors"
+                onClick={onErrorClear}
+                type="button"
+              >
+                关闭
+              </button>
+            </div>
           </div>
         </div>
       ) : null}
@@ -602,6 +692,7 @@ function ChatMessageBubble({
       content={message.content}
       isStreaming={isStreaming}
       role={message.role}
+      timestamp={message.timestamp}
     />
   );
 }

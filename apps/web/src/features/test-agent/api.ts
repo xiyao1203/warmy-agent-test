@@ -75,6 +75,16 @@ async function request<T>(url: string, init?: RequestInit): Promise<T> {
   return response.json() as Promise<T>;
 }
 
+async function requestWithAbort<T>(url: string, init?: RequestInit & { signal?: AbortSignal }): Promise<T> {
+  const { signal, ...rest } = init ?? {};
+  const response = await fetch(url, { credentials: "include", ...rest, signal });
+  if (!response.ok) {
+    const problem = await responseProblem(response, "测试 Agent 调用失败");
+    throw new TestAgentApiError(problem.status, problem.message);
+  }
+  return response.json() as Promise<T>;
+}
+
 const base = (projectId: string) =>
   `${API_BASE}/api/v1/projects/${projectId}/test-agent`;
 
@@ -105,8 +115,9 @@ export function sendChatMessage(
   projectId: string,
   sessionId: string,
   message: string,
+  signal?: AbortSignal,
 ) {
-  return request<ChatResponse>(
+  return requestWithAbort<ChatResponse>(
     `${base(projectId)}/sessions/${sessionId}/messages`,
     {
       method: "POST",
@@ -115,6 +126,7 @@ export function sendChatMessage(
         ...(csrfHeaders() as Record<string, string>),
       },
       body: JSON.stringify({ message }),
+      signal,
     },
   );
 }
