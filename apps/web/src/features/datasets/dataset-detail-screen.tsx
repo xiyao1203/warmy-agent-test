@@ -77,6 +77,7 @@ export function DatasetDetailScreen({
     <DatasetDetail
       cases={casesQuery.data ?? []}
       currentVersionId={latestVersion?.id}
+      currentVersionPublished={latestVersion?.status === "published"}
       dataset={datasetQuery.data}
       onDeleteCases={async (caseIds) => {
         if (!latestVersion) return;
@@ -85,27 +86,17 @@ export function DatasetDetailScreen({
         }
         await refreshCases();
       }}
-      onImport={async (file) => {
+      onImport={async (content, format) => {
         if (!latestVersion) throw new Error("请先创建草稿版本");
-        const format = file.name.endsWith(".jsonl")
-          ? "jsonl"
-          : file.name.endsWith(".csv")
-            ? "csv"
-            : "json";
-        await importTestCases(projectId, datasetId, latestVersion.id, {
-          content: await file.text(),
+        return importTestCases(projectId, datasetId, latestVersion.id, {
+          content,
           format,
         });
       }}
-      onPreviewImport={async (file) => {
+      onPreviewImport={async (content, format) => {
         if (!latestVersion) throw new Error("请先创建草稿版本");
-        const format = file.name.endsWith(".jsonl")
-          ? "jsonl"
-          : file.name.endsWith(".csv")
-            ? "csv"
-            : "json";
         return previewTestCaseImport(projectId, datasetId, latestVersion.id, {
-          content: await file.text(),
+          content,
           format,
         });
       }}

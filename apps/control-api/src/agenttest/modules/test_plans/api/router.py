@@ -425,6 +425,41 @@ def create_test_plan_router(
             return conflict(str(error))
         return TestPlanVersionResponse.from_domain(version)
 
+    @router.get(
+        "/{plan_id}/versions/{version_id}/readiness",
+    )
+    async def check_readiness(
+        request: Request,
+        project_id: UUID,
+        plan_id: UUID,
+        version_id: UUID,
+    ):
+        actor = await actor_for(request)
+        if isinstance(actor, JSONResponse):
+            return actor
+        try:
+            version = await scoped_version(actor, project_id, plan_id, version_id)
+        except (
+            TestPlanNotFoundError,
+            TestPlanVersionNotFoundError,
+            ProjectNotFoundError,
+        ):
+            return not_found()
+
+        missing: list[str] = []
+        if version.agent_version_id is None:
+            missing.append("Agent 版本")
+        if version.dataset_version_id is None:
+            missing.append("数据集版本")
+        if not version.config.observation_only and not version.config.scorer_ids:
+            missing.append("评分器（或显式开启仅观察模式）")
+
+        return {
+            "ready": len(missing) == 0,
+            "blocking_issues": missing,
+            "status": version.status.value,
+        }
+
     @router.post(
         "/{plan_id}/versions/{version_id}/publish",
         response_model=TestPlanVersionResponse,

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime
-from uuid import uuid4
+from uuid import UUID, uuid4
 
 from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
@@ -89,7 +89,12 @@ class SqlAlchemyRunRepository:
                 )
             )
 
-    async def save_result(self, run: Run, cases: list[RunCase]) -> None:
+    async def save_result(
+        self,
+        run: Run,
+        cases: list[RunCase],
+        scores: dict[str, list[dict[str, object]]] | None = None,
+    ) -> None:
         async with transaction_scope(self._session_factory) as session:
             await session.execute(
                 update(RunModel)
@@ -128,57 +133,124 @@ class SqlAlchemyRunRepository:
                         completed_at=case.completed_at,
                     )
                 )
-            summary = build_evaluation_summary(
-                [
-                    CaseScoreInput(
-                        run_case_id=str(case.run_case_id.value),
-                        status=case.status.value,
-                    )
-                    for case in cases
-                ]
-            )
             now = datetime.now(UTC)
             evaluation_id = uuid4()
-            session.add(
-                RunEvaluationModel(
-                    id=evaluation_id,
-                    project_id=run.project_id.value,
-                    run_id=run.run_id.value,
-                    status=summary.status,
-                    aggregate_score=summary.aggregate_score,
-                    pass_rate=summary.pass_rate,
-                    total_cost=None,
-                    token_usage={},
-                    summary={
-                        "passed_cases": run.passed_cases,
-                        "failed_cases": run.failed_cases,
-                        "error_cases": run.error_cases,
-                        "cancelled_cases": run.cancelled_cases,
-                    },
-                    created_at=now,
-                    updated_at=now,
-                )
-            )
-            score_by_case = {item.run_case_id: item for item in summary.scores}
-            session.add_all(
-                [
-                    ScoreModel(
-                        id=uuid4(),
+            if scores:
+                # ── 使用 Worker 返回的真实评分器结果 ─────────────────
+                all_scores: list[dict[str, object]] = []
+                for case_id_str, case_scores in scores.items():
+                    for s in case_scores:
+                        all_scores.append({**s, "run_case_id": case_id_str})
+                passed_count = sum(1 for s in all_scores if s.get("passed"))
+                total = len(all_scores)
+                if total:
+                    # mypy narrows dict values as object; float coercion is safe here
+                    score_sum: float = sum(
+                        float(s.get("score", 0) or 0)  # type: ignore[arg-type,misc]
+                        for s in all_scores
+                    )
+                    aggregate = score_sum / total
+                else:
+                    aggregate = 0.0
+                pass_rate = passed_count / total if total else 0.0
+                session.add(
+                    RunEvaluationModel(
+                        id=evaluation_id,
                         project_id=run.project_id.value,
-                        evaluation_id=evaluation_id,
-                        run_case_id=case.run_case_id.value,
-                        scorer_version_id=None,
-                        score=score_by_case[str(case.run_case_id.value)].score,
-                        passed=score_by_case[str(case.run_case_id.value)].passed,
-                        confidence=score_by_case[str(case.run_case_id.value)].confidence,
-                        explanation=score_by_case[str(case.run_case_id.value)].explanation,
-                        metadata_json={"source": "assertions"},
+                        run_id=run.run_id.value,
+                        status="completed",
+                        aggregate_score=aggregate,
+                        pass_rate=pass_rate,
+                        total_cost=None,
+                        token_usage={},
+                        summary={
+                            "passed_cases": run.passed_cases,
+                            "failed_cases": run.failed_cases,
+                            "error_cases": run.error_cases,
+                            "cancelled_cases": run.cancelled_cases,
+                            "scorer_scores": len(all_scores),
+                        },
                         created_at=now,
                         updated_at=now,
                     )
-                    for case in cases
-                ]
-            )
+                )
+                session.add_all(
+                    [
+                        ScoreModel(
+                            id=uuid4(),
+                            project_id=run.project_id.value,
+                            evaluation_id=evaluation_id,
+                            run_case_id=UUID(str(s["run_case_id"]))  # type: ignore[arg-type]
+                            if isinstance(s["run_case_id"], str)
+                            else UUID(str(s["run_case_id"])),  # type: ignore[arg-type]
+                            scorer_version_id=(
+                                UUID(s["scorer_version_id"])  # type: ignore[arg-type]
+                                if isinstance(s.get("scorer_version_id"), str)
+                                and s.get("scorer_version_id")
+                                else None
+                            ),
+                            score=float(s.get("score", 0) or 0),  # type: ignore[arg-type]
+                            passed=bool(s.get("passed", False)),
+                            confidence=float(s.get("confidence", 1.0) or 1.0),  # type: ignore[arg-type]
+                            explanation=str(s.get("explanation", "")),
+                            metadata_json={"scorer_type": s.get("scorer_type", "")},
+                            created_at=now,
+                            updated_at=now,
+                        )
+                        for s in all_scores
+                    ]
+                )
+            else:
+                # ── 无评分器时的后备评估（基于断言状态） ─────────
+                summary = build_evaluation_summary(
+                    [
+                        CaseScoreInput(
+                            run_case_id=str(case.run_case_id.value),
+                            status=case.status.value,
+                        )
+                        for case in cases
+                    ]
+                )
+                session.add(
+                    RunEvaluationModel(
+                        id=evaluation_id,
+                        project_id=run.project_id.value,
+                        run_id=run.run_id.value,
+                        status=summary.status,
+                        aggregate_score=summary.aggregate_score,
+                        pass_rate=summary.pass_rate,
+                        total_cost=None,
+                        token_usage={},
+                        summary={
+                            "passed_cases": run.passed_cases,
+                            "failed_cases": run.failed_cases,
+                            "error_cases": run.error_cases,
+                            "cancelled_cases": run.cancelled_cases,
+                        },
+                        created_at=now,
+                        updated_at=now,
+                    )
+                )
+                score_by_case = {item.run_case_id: item for item in summary.scores}
+                session.add_all(
+                    [
+                        ScoreModel(
+                            id=uuid4(),
+                            project_id=run.project_id.value,
+                            evaluation_id=evaluation_id,
+                            run_case_id=case.run_case_id.value,
+                            scorer_version_id=None,
+                            score=score_by_case[str(case.run_case_id.value)].score,
+                            passed=score_by_case[str(case.run_case_id.value)].passed,
+                            confidence=score_by_case[str(case.run_case_id.value)].confidence,
+                            explanation=score_by_case[str(case.run_case_id.value)].explanation,
+                            metadata_json={"source": "assertions"},
+                            created_at=now,
+                            updated_at=now,
+                        )
+                        for case in cases
+                    ]
+                )
 
     async def list_cases(
         self,

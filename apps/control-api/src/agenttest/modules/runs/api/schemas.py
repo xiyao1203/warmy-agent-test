@@ -80,6 +80,15 @@ class RunCaseListResponse(BaseModel):
     items: list[RunCaseResponse]
 
 
+class ApplyRunCaseScoreRequest(BaseModel):
+    scorer_version_id: str
+    scorer_type: str
+    score: float
+    passed: bool
+    explanation: str = ""
+    confidence: float = 1.0
+
+
 class ApplyRunCaseResultRequest(BaseModel):
     run_case_id: UUID
     status: str
@@ -88,6 +97,7 @@ class ApplyRunCaseResultRequest(BaseModel):
     error_type: str | None = None
     error_message: str | None = None
     duration_ms: int | None = None
+    scores: list[ApplyRunCaseScoreRequest] = []
 
 
 class ApplyRunResultRequest(BaseModel):

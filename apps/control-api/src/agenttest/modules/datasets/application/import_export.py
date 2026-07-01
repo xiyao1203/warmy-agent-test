@@ -252,6 +252,24 @@ def _validate_import_record(line: int, raw: dict[str, object]) -> list[dict[str,
         not isinstance(tags, list) or not all(isinstance(item, str) for item in tags)
     ):
         errors.append(_import_error(line, "tags", "invalid_type", "tags must be a list of strings"))
+    for field_name, enum_cls, valid_values in (
+        ("priority", Priority, [p.value for p in Priority]),
+        ("risk_level", RiskLevel, [r.value for r in RiskLevel]),
+        ("test_group", TestGroup, [g.value for g in TestGroup]),
+    ):
+        value = raw.get(field_name)
+        if value is not None:
+            try:
+                enum_cls(str(value))
+            except ValueError:
+                errors.append(
+                    _import_error(
+                        line,
+                        field_name,
+                        "invalid_enum",
+                        f"{field_name} must be one of: {', '.join(valid_values)}",
+                    )
+                )
     return errors
 
 
@@ -343,11 +361,15 @@ def _build_test_case(
         except ValueError as exc:
             raise ValueError(f"Invalid test_group: {raw['test_group']}") from exc
 
+    input_value = raw.get("input")
+    if not isinstance(input_value, dict):
+        raise ValueError("input must be a JSON object")
+
     return TestCase.create(
         case_id=TestCaseId.new(),
         dataset_version_id=version_id,  # type: ignore[arg-type]
         name=name,
-        input=raw["input"] if isinstance(raw["input"], dict) else {},
+        input=input_value,
         execution_mode=execution_mode,
         assertions=_as_list(raw.get("assertions")),
         scorers=_as_list(raw.get("scorers")),

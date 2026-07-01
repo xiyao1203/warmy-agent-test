@@ -29,9 +29,7 @@ export function ConnectionTestPanel({
   version,
   versionId,
 }: ConnectionTestPanelProps) {
-  const [probeInput, setProbeInput] = useState(
-    '{\n  "message": "hello"\n}',
-  );
+  const [probeInput, setProbeInput] = useState('{\n  "message": "hello"\n}');
   const [testing, setTesting] = useState(false);
   const [result, setResult] = useState<TestResult>(null);
   const [error, setError] = useState("");
@@ -64,9 +62,7 @@ export function ConnectionTestPanel({
       );
       setResult(data);
     } catch (caught) {
-      setError(
-        caught instanceof Error ? caught.message : "连接测试失败",
-      );
+      setError(caught instanceof Error ? caught.message : "连接测试失败");
     } finally {
       setTesting(false);
     }

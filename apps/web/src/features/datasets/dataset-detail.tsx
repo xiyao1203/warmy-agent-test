@@ -4,6 +4,7 @@ import type {
   CreateTestCaseRequest,
   DatasetResponse,
   DatasetVersionResponse,
+  ImportPreviewResponse,
   TestCaseResponse,
 } from "@warmy/generated-api-client";
 import { CheckSquare, Eye, Square, Trash2 } from "lucide-react";
@@ -32,21 +33,27 @@ type DatasetDetailProps = {
   versions?: DatasetVersionResponse[];
   cases?: TestCaseResponse[];
   currentVersionId?: string;
+  /** 当前版本是否为已发布（禁止导入） */
+  currentVersionPublished?: boolean;
   loading?: boolean;
   onDeleteCases?: (caseIds: string[]) => Promise<unknown>;
   onCreateCase?: (payload: CreateTestCaseRequest) => Promise<unknown>;
   onRefresh?: () => void;
-  onImport?: (file: File) => Promise<unknown>;
-  onPreviewImport?: (file: File) => Promise<{
-    valid_count: number;
-    errors: Array<{ line: number; field: string; message: string }>;
-  }>;
+  onImport?: (
+    content: string,
+    format: "json" | "jsonl" | "csv",
+  ) => Promise<{ imported_count: number }>;
+  onPreviewImport?: (
+    content: string,
+    format: "json" | "jsonl" | "csv",
+  ) => Promise<ImportPreviewResponse>;
   projectId: string;
 };
 
 export function DatasetDetail({
   cases = [],
   currentVersionId,
+  currentVersionPublished = false,
   dataset,
   loading = false,
   onDeleteCases,
@@ -136,6 +143,7 @@ export function DatasetDetail({
           </p>
         </div>
         <ImportWizard
+          disabled={currentVersionPublished}
           onImport={onImport}
           onPreview={onPreviewImport}
           onSuccess={onRefresh}

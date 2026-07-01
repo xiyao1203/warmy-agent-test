@@ -5,9 +5,6 @@ from __future__ import annotations
 from uuid import UUID
 
 import pytest
-from fastapi import FastAPI
-from fastapi.testclient import TestClient
-
 from agenttest.bootstrap.settings import Settings
 from agenttest.modules.agents.api.router import AgentApiDependencies, create_agent_router
 from agenttest.modules.agents.application.commands import (
@@ -37,7 +34,8 @@ from agenttest.modules.agents.infrastructure.connection_validator import (
 from agenttest.modules.identity.public import Email, SystemRole, User, UserId
 from agenttest.modules.projects.domain.policies import ProjectNotFoundError
 from agenttest.modules.projects.public import ProjectId
-
+from fastapi import FastAPI
+from fastapi.testclient import TestClient
 
 # ── 从 test_agents_api 复制的共享测试辅助 ───────────────────────────────────
 
@@ -209,7 +207,6 @@ def client_for_connection(
         ),
         connection_validator=validator,
     )
-    from agenttest.modules.agents.api.router import create_agent_router
 
     app = FastAPI()
     app.include_router(
@@ -459,7 +456,6 @@ async def test_real_validator_rejects_credential_bindings() -> None:
         api_url="https://agent.example.com",
     )
     # 通过设置 credential_binding_ids 为非空列表来触发拒绝
-    from uuid import UUID
 
     config = AgentConfig(
         api_url="https://agent.example.com",

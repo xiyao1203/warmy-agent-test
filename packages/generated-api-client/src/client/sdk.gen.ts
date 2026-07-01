@@ -36,6 +36,9 @@ import type {
   ChangePasswordApiV1AuthChangePasswordPostData,
   ChangePasswordApiV1AuthChangePasswordPostErrors,
   ChangePasswordApiV1AuthChangePasswordPostResponses,
+  CheckReadinessApiV1ProjectsProjectIdTestPlansPlanIdVersionsVersionIdReadinessGetData,
+  CheckReadinessApiV1ProjectsProjectIdTestPlansPlanIdVersionsVersionIdReadinessGetErrors,
+  CheckReadinessApiV1ProjectsProjectIdTestPlansPlanIdVersionsVersionIdReadinessGetResponses,
   ConvertToRegressionApiV1ProjectsProjectIdTestAgentTargetChatsSessionIdTurnsTurnIdRegressionCasesPostData,
   ConvertToRegressionApiV1ProjectsProjectIdTestAgentTargetChatsSessionIdTurnsTurnIdRegressionCasesPostErrors,
   ConvertToRegressionApiV1ProjectsProjectIdTestAgentTargetChatsSessionIdTurnsTurnIdRegressionCasesPostResponses,
@@ -3976,6 +3979,29 @@ export const publishVersionApiV1ProjectsProjectIdTestPlansPlanIdVersionsVersionI
       ThrowOnError
     >({
       url: "/api/v1/projects/{project_id}/test-plans/{plan_id}/versions/{version_id}/publish",
+      ...options,
+    });
+
+/**
+ * Check Readiness
+ */
+export const checkReadinessApiV1ProjectsProjectIdTestPlansPlanIdVersionsVersionIdReadinessGet =
+  <ThrowOnError extends boolean = false>(
+    options: Options<
+      CheckReadinessApiV1ProjectsProjectIdTestPlansPlanIdVersionsVersionIdReadinessGetData,
+      ThrowOnError
+    >,
+  ): RequestResult<
+    CheckReadinessApiV1ProjectsProjectIdTestPlansPlanIdVersionsVersionIdReadinessGetResponses,
+    CheckReadinessApiV1ProjectsProjectIdTestPlansPlanIdVersionsVersionIdReadinessGetErrors,
+    ThrowOnError
+  > =>
+    (options.client ?? client).get<
+      CheckReadinessApiV1ProjectsProjectIdTestPlansPlanIdVersionsVersionIdReadinessGetResponses,
+      CheckReadinessApiV1ProjectsProjectIdTestPlansPlanIdVersionsVersionIdReadinessGetErrors,
+      ThrowOnError
+    >({
+      url: "/api/v1/projects/{project_id}/test-plans/{plan_id}/versions/{version_id}/readiness",
       ...options,
     });
 

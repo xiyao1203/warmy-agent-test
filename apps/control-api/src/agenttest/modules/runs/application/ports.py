@@ -63,7 +63,12 @@ class RunRepository(Protocol):
 
     async def save(self, run: Run) -> None: ...
 
-    async def save_result(self, run: Run, cases: list[RunCase]) -> None: ...
+    async def save_result(
+        self,
+        run: Run,
+        cases: list[RunCase],
+        scores: dict[str, list[dict[str, object]]] | None = None,
+    ) -> None: ...
 
     async def list_cases(
         self,

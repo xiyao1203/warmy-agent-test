@@ -54,6 +54,7 @@ def create_scorer_router(
     check_project,
     settings,
     model_judge: ModelJudge | None = None,
+    repo: SqlAlchemyScorerRepository | None = None,
 ) -> APIRouter:
     """创建评分器 CRUD 路由。"""
     router = APIRouter(
@@ -61,7 +62,8 @@ def create_scorer_router(
         tags=["scorers"],
     )
 
-    repo = SqlAlchemyScorerRepository(session_factory)
+    if repo is None:
+        repo = SqlAlchemyScorerRepository(session_factory)
 
     @router.get("")
     async def list_scorers(

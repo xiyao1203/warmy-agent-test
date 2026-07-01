@@ -204,11 +204,13 @@ class CreateEnvironmentVersionHandler:
 
         if self._audit:
             await self._audit.record(
-                actor=actor,
+                actor_user_id=actor.user_id,
                 action="environment_version.created",
-                resource_id=str(record.id),
-                resource_type="environment_version",
+                object_type="environment_version",
+                object_id=record.id,  # type: ignore[arg-type]
                 project_id=command.project_id,
+                changes={},
+                source_ip=None,
             )
 
         return record
@@ -266,11 +268,13 @@ class UpdateEnvironmentVersionHandler:
 
         if self._audit:
             await self._audit.record(
-                actor=actor,
+                actor_user_id=actor.user_id,
                 action="environment_version.updated",
-                resource_id=str(updated.id),
-                resource_type="environment_version",
+                object_type="environment_version",
+                object_id=updated.id,  # type: ignore[arg-type]
                 project_id=command.project_id,
+                changes={},
+                source_ip=None,
             )
 
         return updated
@@ -327,11 +331,13 @@ class PublishEnvironmentVersionHandler:
 
         if self._audit:
             await self._audit.record(
-                actor=actor,
+                actor_user_id=actor.user_id,
                 action="environment_version.published",
-                resource_id=str(published.id),
-                resource_type="environment_version",
+                object_type="environment_version",
+                object_id=published.id,  # type: ignore[arg-type]
                 project_id=command.project_id,
+                changes={},
+                source_ip=None,
             )
 
         return published

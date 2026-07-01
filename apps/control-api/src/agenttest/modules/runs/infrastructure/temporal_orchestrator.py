@@ -90,6 +90,7 @@ def _payload(
         "agent_config": agent_config,
         "environment": run.plugin_snapshot.get("environment_config", {}),
         "execution_policy": run.config_snapshot,
+        "scorer_configs": run.plugin_snapshot.get("scorer_configs", []),
         "cases": [
             {
                 "run_case_id": str(case.run_case_id.value),

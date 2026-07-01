@@ -13641,6 +13641,67 @@
         ]
       }
     },
+    "/api/v1/projects/{project_id}/test-plans/{plan_id}/versions/{version_id}/readiness": {
+      "get": {
+        "operationId": "check_readiness_api_v1_projects__project_id__test_plans__plan_id__versions__version_id__readiness_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Project Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "plan_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Plan Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "version_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Version Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Check Readiness",
+        "tags": [
+          "test-plans"
+        ]
+      }
+    },
     "/api/v1/system/audit": {
       "get": {
         "operationId": "global_audit_api_v1_system_audit_get",

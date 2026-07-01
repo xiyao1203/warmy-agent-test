@@ -39,6 +39,17 @@ class ControlPlaneCallback:
                             "error_type": case.error_type,
                             "error_message": case.error_message,
                             "duration_ms": case.duration_ms,
+                            "scores": [
+                                {
+                                    "scorer_version_id": s.scorer_version_id,
+                                    "scorer_type": s.scorer_type,
+                                    "score": s.score,
+                                    "passed": s.passed,
+                                    "explanation": s.explanation,
+                                    "confidence": s.confidence,
+                                }
+                                for s in case.scores
+                            ],
                         }
                         for case in task.result.cases
                     ]

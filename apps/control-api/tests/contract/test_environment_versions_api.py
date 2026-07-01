@@ -4,9 +4,6 @@ from __future__ import annotations
 
 from uuid import UUID
 
-from fastapi import FastAPI
-from fastapi.testclient import TestClient
-
 from agenttest.bootstrap.settings import Settings
 from agenttest.modules.environments.api.router import (
     EnvironmentApiDependencies,
@@ -24,7 +21,6 @@ from agenttest.modules.environments.application.queries import (
 from agenttest.modules.environments.application.versions import (
     CreateEnvironmentVersionHandler,
     EnvironmentVersionRecord,
-    EnvironmentVersionRepository,
     GetEnvironmentVersionHandler,
     ListEnvironmentVersionsHandler,
     PublishEnvironmentVersionHandler,
@@ -34,10 +30,10 @@ from agenttest.modules.environments.domain.entities import (
     EnvironmentTemplate,
     EnvironmentTemplateId,
 )
-from agenttest.modules.environments.domain.value_objects import TemplateType
 from agenttest.modules.identity.public import Email, SystemRole, User, UserId
 from agenttest.modules.projects.public import ProjectId, ProjectNotFoundError
-
+from fastapi import FastAPI
+from fastapi.testclient import TestClient
 
 # ── In-memory repositories ────────────────────────────────────────────────
 
@@ -278,16 +274,18 @@ def test_create_and_list_versions() -> None:
     template_id = create_template(client, project_id)
 
     csrf = {"X-CSRF-Token": "csrf-token"}
-    v1 = client.post(
+    r1 = client.post(
         f"/api/v1/projects/{project_id.value}/environment-templates/{template_id}/versions",
         headers=csrf,
         json={"config": {"variables": {"A": "1"}}},
     )
-    v2 = client.post(
+    assert r1.status_code == 201
+    r2 = client.post(
         f"/api/v1/projects/{project_id.value}/environment-templates/{template_id}/versions",
         headers=csrf,
         json={"config": {"variables": {"B": "2"}}},
     )
+    assert r2.status_code == 201
 
     listed = client.get(
         f"/api/v1/projects/{project_id.value}/environment-templates/{template_id}/versions"

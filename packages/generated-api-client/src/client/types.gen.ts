@@ -8166,6 +8166,46 @@ export type PublishVersionApiV1ProjectsProjectIdTestPlansPlanIdVersionsVersionId
 export type PublishVersionApiV1ProjectsProjectIdTestPlansPlanIdVersionsVersionIdPublishPostResponse =
   PublishVersionApiV1ProjectsProjectIdTestPlansPlanIdVersionsVersionIdPublishPostResponses[keyof PublishVersionApiV1ProjectsProjectIdTestPlansPlanIdVersionsVersionIdPublishPostResponses];
 
+export type CheckReadinessApiV1ProjectsProjectIdTestPlansPlanIdVersionsVersionIdReadinessGetData =
+  {
+    body?: never;
+    path: {
+      /**
+       * Project Id
+       */
+      project_id: string;
+      /**
+       * Plan Id
+       */
+      plan_id: string;
+      /**
+       * Version Id
+       */
+      version_id: string;
+    };
+    query?: never;
+    url: "/api/v1/projects/{project_id}/test-plans/{plan_id}/versions/{version_id}/readiness";
+  };
+
+export type CheckReadinessApiV1ProjectsProjectIdTestPlansPlanIdVersionsVersionIdReadinessGetErrors =
+  {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+  };
+
+export type CheckReadinessApiV1ProjectsProjectIdTestPlansPlanIdVersionsVersionIdReadinessGetError =
+  CheckReadinessApiV1ProjectsProjectIdTestPlansPlanIdVersionsVersionIdReadinessGetErrors[keyof CheckReadinessApiV1ProjectsProjectIdTestPlansPlanIdVersionsVersionIdReadinessGetErrors];
+
+export type CheckReadinessApiV1ProjectsProjectIdTestPlansPlanIdVersionsVersionIdReadinessGetResponses =
+  {
+    /**
+     * Successful Response
+     */
+    200: unknown;
+  };
+
 export type GlobalAuditApiV1SystemAuditGetData = {
   body?: never;
   path?: never;

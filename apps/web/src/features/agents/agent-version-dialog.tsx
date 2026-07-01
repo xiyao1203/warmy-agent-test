@@ -42,7 +42,12 @@ const SECTION_LABELS: Record<Section, string> = {
   metadata: "元数据",
 };
 
-const ALL_SECTIONS: Section[] = ["connection", "mappings", "limits", "metadata"];
+const ALL_SECTIONS: Section[] = [
+  "connection",
+  "mappings",
+  "limits",
+  "metadata",
+];
 
 export function AgentVersionDialog({
   agentId,
@@ -160,8 +165,8 @@ export function AgentVersionDialog({
           {isEditing ? "编辑 Agent 版本" : "创建 Agent 版本"}
         </DialogTitle>
         <DialogDescription>
-          配置真实调用协议、请求映射、响应提取和执行限制。标有
-          &ldquo;仅 Trace 记录&rdquo;的字段不影响执行行为。
+          配置真实调用协议、请求映射、响应提取和执行限制。标有 &ldquo;仅 Trace
+          记录&rdquo;的字段不影响执行行为。
         </DialogDescription>
 
         {/* ── 分段 Tab ── */}
@@ -253,7 +258,8 @@ export function AgentVersionDialog({
                   value={responsePath}
                 />
                 <span className="mt-1 text-xs text-[var(--muted)]">
-                  从 Agent 响应 JSON 中提取实际输出的路径，支持点号分隔的嵌套字段。
+                  从 Agent 响应 JSON
+                  中提取实际输出的路径，支持点号分隔的嵌套字段。
                 </span>
               </label>
             </>

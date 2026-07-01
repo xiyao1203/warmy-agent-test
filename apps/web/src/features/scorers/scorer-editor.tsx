@@ -123,6 +123,13 @@ export function ScorerEditorDialog({
               <option value="model">模型（Model）</option>
               <option value="reference">参考（Reference）</option>
             </select>
+            <span className="mt-1 block text-xs text-[var(--text-muted)]">
+              {scorerType === "rule"
+                ? "基于固定规则比较输出与期望值"
+                : scorerType === "model"
+                  ? "通过模型按评分标准（Rubric）评估输出质量"
+                  : "比较输出与参考答案的一致性"}
+            </span>
           </label>
           <div className="grid grid-cols-2 gap-4">
             <label className="block text-sm font-medium">
@@ -136,6 +143,9 @@ export function ScorerEditorDialog({
                 type="number"
                 value={weight}
               />
+              <span className="mt-1 block text-xs text-[var(--text-muted)]">
+                多评分器加权时的相对权重（0-10）
+              </span>
             </label>
             <label className="block text-sm font-medium">
               通过阈值
@@ -148,6 +158,9 @@ export function ScorerEditorDialog({
                 type="number"
                 value={threshold}
               />
+              <span className="mt-1 block text-xs text-[var(--text-muted)]">
+                分数 ≥ 此值视为通过（0.00-1.00）
+              </span>
             </label>
           </div>
           {scorerType === "model" ? (
@@ -159,6 +172,9 @@ export function ScorerEditorDialog({
                 placeholder="明确描述 0-1 分的判断标准"
                 value={rubric}
               />
+              <span className="mt-1 block text-xs text-[var(--text-muted)]">
+                模型将严格按此标准打分，建议明确写出各分数段的条件
+              </span>
             </label>
           ) : (
             <div className="grid grid-cols-2 gap-4">
@@ -172,6 +188,11 @@ export function ScorerEditorDialog({
                   <option value="contains">包含</option>
                   <option value="exact">完全相等</option>
                 </select>
+                <span className="mt-1 block text-xs text-[var(--text-muted)]">
+                  {scorerType === "rule"
+                    ? "输出是否包含/等于期望值"
+                    : "输出是否包含/等于参考答案"}
+                </span>
               </label>
               {scorerType === "rule" && (
                 <label className="block text-sm font-medium">
@@ -181,6 +202,9 @@ export function ScorerEditorDialog({
                     onChange={(event) => setExpected(event.target.value)}
                     value={expected}
                   />
+                  <span className="mt-1 block text-xs text-[var(--text-muted)]">
+                    期望在输出中找到的值
+                  </span>
                 </label>
               )}
             </div>
@@ -197,10 +221,13 @@ export function ScorerEditorDialog({
           {scorer && (
             <div className="rounded border border-[var(--border)] p-3">
               <p className="text-sm font-medium">真实试评</p>
+              <p className="mt-1 text-xs text-[var(--text-muted)]">
+                输入样例数据验证评分器是否按预期工作。
+              </p>
               <Input
                 className="mt-2"
                 onChange={(event) => setSampleOutput(event.target.value)}
-                placeholder="样例输出"
+                placeholder="样例输出（必填）"
                 value={sampleOutput}
               />
               {scorerType === "reference" && (
@@ -230,7 +257,13 @@ export function ScorerEditorDialog({
               >
                 运行试评
               </Button>
-              {trialResult && <p className="mt-2 text-xs">{trialResult}</p>}
+              {trialResult ? (
+                <p
+                  className={`mt-2 rounded px-2 py-1 text-xs ${trialResult.startsWith("通过") ? "bg-[var(--success-subtle)] text-[var(--success)]" : trialResult.startsWith("未通过") ? "bg-[var(--warning-subtle)] text-[var(--warning)]" : "bg-[var(--danger-subtle)] text-[var(--danger)]"}`}
+                >
+                  {trialResult}
+                </p>
+              ) : null}
             </div>
           )}
         </div>

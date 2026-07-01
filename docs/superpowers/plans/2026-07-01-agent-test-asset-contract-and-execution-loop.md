@@ -109,11 +109,11 @@ Define `EnvironmentRuntimeSnapshot`, `CaseExecutionSnapshot`, `ScorerBindingSnap
 - Test: `apps/control-api/tests/contract/test_dataset_import_preview_api.py`
 - Test: `apps/web/src/features/datasets/tests/import-wizard.test.tsx`
 
-- [ ] **Step 1: Write failing tests** for selection of a draft version, 10MB enforcement, strict object/list types, enum errors, JSON/JSONL/CSV parity, dry-run, line/field errors, and atomic import.
-- [ ] **Step 2: Verify malformed `input` currently becomes `{}` and the global wizard cannot import.**
-- [ ] **Step 3: Implement `POST .../versions/{id}/imports:preview` and strict parsing** returning `{valid_count, errors:[{line,field,code,message}], preview}`.
-- [ ] **Step 4: Move import into Dataset detail, add template downloads and examples, require preview before import, and show imported count.**
-- [ ] **Step 5: Prove an imported case is published, snapshotted, and executable in the core-chain integration test; commit** `feat: make test case imports executable`.
+- [x] **Step 1: Write failing tests** for selection of a draft version, 10MB enforcement, strict object/list types, enum errors, JSON/JSONL/CSV parity, dry-run, line/field errors, and atomic import.
+- [x] **Step 2: Verify malformed `input` currently becomes `{}` and the global wizard cannot import.**
+- [x] **Step 3: Implement `POST .../versions/{id}/imports:preview` and strict parsing** returning `{valid_count, errors:[{line,field,code,message}], preview}`.
+- [x] **Step 4: Move import into Dataset detail, add template downloads and examples, require preview before import, and show imported count.**
+- [x] **Step 5: Prove an imported case is published, snapshotted, and executable in the core-chain integration test; commit** `feat: make test case imports executable`.
 
 ### Task 6: Typed scorer versions and independent trial evaluation
 
@@ -126,11 +126,11 @@ Define `EnvironmentRuntimeSnapshot`, `CaseExecutionSnapshot`, `ScorerBindingSnap
 - Test: `apps/control-api/tests/contract/test_scorer_trial_api.py`
 - Test: `apps/web/src/features/scorers/tests/scorer-editor.test.tsx`
 
-- [ ] **Step 1: Write failing tests** for Rule, Reference, and Model Judge discriminated configs and real trial results.
-- [ ] **Step 2: Verify the existing editor cannot configure evaluator behavior.**
-- [ ] **Step 3: Implement scorer configs and public evaluator**; Model Judge resolves a project ModelConfig and calls Model Runner with typed JSON output.
-- [ ] **Step 4: Build type-specific editor and “试评” panel with sample input/output/reference.**
-- [ ] **Step 5: Verify and commit** `feat: add executable scorer versions`.
+- [x] **Step 1: Write failing tests** for Rule, Reference, and Model Judge discriminated configs and real trial results.
+- [x] **Step 2: Verify the existing editor cannot configure evaluator behavior.**
+- [x] **Step 3: Implement scorer configs and public evaluator**; Model Judge resolves a project ModelConfig and calls Model Runner with typed JSON output.
+- [x] **Step 4: Build type-specific editor and "试评" panel with sample input/output/reference.**
+- [x] **Step 5: Verify and commit** `feat: add executable scorer versions`.
 
 ### Task 7: Test-plan asset graph, readiness, and typed execution policy
 
@@ -144,11 +144,11 @@ Define `EnvironmentRuntimeSnapshot`, `CaseExecutionSnapshot`, `ScorerBindingSnap
 - Test: `apps/control-api/tests/contract/test_test_plan_readiness_api.py`
 - Test: `apps/web/src/features/test-plans/tests/test-plan-version-dialog.test.tsx`
 
-- [ ] **Step 1: Write failing tests** requiring published Agent/Dataset/Environment, typed scorer/security/review/gate IDs, explicit observation-only mode, and project-compatible references.
-- [ ] **Step 2: Verify free-text baseline and untyped scorer/gate JSON fail.**
-- [ ] **Step 3: Replace JSON lists with ID bindings and `ExecutionPolicy`.** Add readiness endpoint returning blocking issues and estimated cases.
-- [ ] **Step 4: Build a four-step plan editor** using searchable asset selectors and clear “used at runtime” descriptions.
-- [ ] **Step 5: Verify and commit** `feat: connect test plan asset graph`.
+- [x] **Step 1: Write failing tests** requiring published Agent/Dataset/Environment, typed scorer/security/review/gate IDs, explicit observation-only mode, and project-compatible references.
+- [x] **Step 2: Verify free-text baseline and untyped scorer/gate JSON fail.**
+- [x] **Step 3: Replace JSON lists with ID bindings and `ExecutionPolicy`.** Add readiness endpoint returning blocking issues and estimated cases.
+- [ ] **Step 4: Build a four-step plan editor** using searchable asset selectors and clear "used at runtime" descriptions.
+- [x] **Step 5: Verify and commit** `feat: connect test plan asset graph`.
 
 ### Task 8: Correct immutable Run snapshots and Worker protocol execution
 
@@ -242,10 +242,10 @@ Define `EnvironmentRuntimeSnapshot`, `CaseExecutionSnapshot`, `ScorerBindingSnap
 - Test: `apps/control-api/tests/integration/test_super_agent_complete_asset_chain.py`
 - Test: `apps/web/src/features/test-agent/tests/asset-readiness.test.tsx`
 
-- [ ] **Step 1: Write failing tests** proving Agent-created assets use the same typed services and produce the same Run/Evaluation/ReleaseDecision records as console actions.
-- [ ] **Step 2: Verify legacy untyped capability inputs fail.**
-- [ ] **Step 3: Update capability schemas, previews, confirmations, and artifact links.**
-- [ ] **Step 4: Add module readiness badges, reference counts, field help, actionable empty states, and narrow-viewport header/sidebar behavior.**
+- [x] **Step 1: Write failing tests** proving Agent-created assets use the same typed services and produce the same Run/Evaluation/ReleaseDecision records as console actions.
+- [x] **Step 2: Verify legacy untyped capability inputs fail.**
+- [x] **Step 3: Update capability schemas, previews, confirmations, and artifact links.**
+- [x] **Step 4: Add module readiness badges, reference counts, field help, actionable empty states, and narrow-viewport header/sidebar behavior.**
 - [ ] **Step 5: Verify and commit** `feat: align super agent with executable asset graph`.
 
 ### Task 14: Contracts, documentation, migrations, browser E2E, and final verification

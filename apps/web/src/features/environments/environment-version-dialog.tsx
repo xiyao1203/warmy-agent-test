@@ -36,7 +36,12 @@ const SECTION_LABELS: Record<Section, string> = {
   sandbox: "沙箱",
 };
 
-const ALL_SECTIONS: Section[] = ["config", "credentials", "sandbox", "metadata"];
+const ALL_SECTIONS: Section[] = [
+  "config",
+  "credentials",
+  "sandbox",
+  "metadata",
+];
 
 export function EnvironmentVersionDialog({
   credentials,
@@ -61,7 +66,9 @@ export function EnvironmentVersionDialog({
 
   // ── 凭证 ──
   const existingBindings = (config.credential_binding_ids ?? []) as string[];
-  const [credentialIds, setCredentialIds] = useState<string[]>([...existingBindings]);
+  const [credentialIds, setCredentialIds] = useState<string[]>([
+    ...existingBindings,
+  ]);
 
   // ── 沙箱 ──
   const [sandboxConfig, setSandboxConfig] = useState(
@@ -72,15 +79,16 @@ export function EnvironmentVersionDialog({
   const [description, setDescription] = useState(
     String(config.description ?? ""),
   );
-  const [tags, setTags] = useState(
-    (config.tags as string[])?.join(", ") ?? "",
-  );
+  const [tags, setTags] = useState((config.tags as string[])?.join(", ") ?? "");
 
   // ── 提交状态 ──
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
-  function parseJson(raw: string, label: string): Record<string, unknown> | null {
+  function parseJson(
+    raw: string,
+    label: string,
+  ): Record<string, unknown> | null {
     try {
       const parsed = JSON.parse(raw) as unknown;
       if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
@@ -124,16 +132,16 @@ export function EnvironmentVersionDialog({
         const updatePayload: UpdateEnvironmentVersionRequest = {
           config: versionConfig,
         };
-        await (onSubmit as (p: UpdateEnvironmentVersionRequest) => Promise<void>)(
-          updatePayload,
-        );
+        await (
+          onSubmit as (p: UpdateEnvironmentVersionRequest) => Promise<void>
+        )(updatePayload);
       } else {
         const createPayload: CreateEnvironmentVersionRequest = {
           config: versionConfig,
         };
-        await (onSubmit as (p: CreateEnvironmentVersionRequest) => Promise<void>)(
-          createPayload,
-        );
+        await (
+          onSubmit as (p: CreateEnvironmentVersionRequest) => Promise<void>
+        )(createPayload);
       }
       setOpen(false);
     } catch (caught) {

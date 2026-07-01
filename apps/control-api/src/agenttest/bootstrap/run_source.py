@@ -21,6 +21,10 @@ from agenttest.modules.environments.infrastructure.persistence.models import (
 )
 from agenttest.modules.projects.public import ProjectId
 from agenttest.modules.runs.application.ports import RunDefinition, RunDefinitionCase
+from agenttest.modules.scorers.infrastructure.persistence.models import (
+    ScorerModel,
+    ScorerVersionModel,
+)
 from agenttest.modules.test_plans.infrastructure.persistence.models import (
     TestPlanModel,
     TestPlanVersionModel,
@@ -121,6 +125,39 @@ class SqlAlchemyRunSource:
                     for item in credential_rows
                 ]
             environment_config["credential_bindings"] = credentials
+            # ── 加载已发布评分器版本配置 ────────────────────────────
+            scorer_ids_raw = plan_version.config.get("scorer_ids", [])
+            scorer_configs: list[dict[str, object]] = []
+            if isinstance(scorer_ids_raw, list) and scorer_ids_raw:
+                scorer_rows = list(
+                    (
+                        await session.scalars(
+                            select(ScorerVersionModel, ScorerModel)
+                            .join(ScorerModel, ScorerModel.id == ScorerVersionModel.scorer_id)
+                            .where(
+                                ScorerVersionModel.id.in_(
+                                    [
+                                        UUID(str(item))
+                                        for item in scorer_ids_raw
+                                        if isinstance(item, str)
+                                    ]
+                                ),
+                                ScorerVersionModel.status == "published",
+                                ScorerVersionModel.project_id == project_id.value,
+                            )
+                        )
+                    ).all()
+                )
+                for scorer_version, scorer in scorer_rows:
+                    scorer_configs.append(
+                        {
+                            "scorer_version_id": str(scorer_version.id),
+                            "scorer_type": scorer.scorer_type,
+                            "weight": scorer.weight,
+                            "threshold": scorer.threshold,
+                            "config": dict(scorer_version.config),
+                        }
+                    )
             cases = list(
                 (
                     await session.scalars(
@@ -147,6 +184,7 @@ class SqlAlchemyRunSource:
                     dict(agent_version.config)
                 ).model_dump(mode="json"),
                 "environment_config": environment_config,
+                "scorer_configs": scorer_configs,
             },
             cases=[
                 RunDefinitionCase(

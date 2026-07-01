@@ -200,7 +200,9 @@ function TemplateRow({
   }
 
   const draftVersion = versions.find((v) => v.status === "draft");
-  const publishedCount = versions.filter((v) => v.status === "published").length;
+  const publishedCount = versions.filter(
+    (v) => v.status === "published",
+  ).length;
 
   return (
     <>
@@ -220,9 +222,7 @@ function TemplateRow({
         </TableCell>
         <TableCell className="text-center">
           <Badge
-            tone={
-              template.template_type === "preset" ? "accent" : "neutral"
-            }
+            tone={template.template_type === "preset" ? "accent" : "neutral"}
           >
             {typeLabels[template.template_type] ?? template.template_type}
           </Badge>
@@ -340,7 +340,9 @@ function VersionPanel({
       </div>
 
       {versions.length === 0 ? (
-        <p className="text-[var(--text-muted)]">尚无版本。点击上方按钮创建第一个版本。</p>
+        <p className="text-[var(--text-muted)]">
+          尚无版本。点击上方按钮创建第一个版本。
+        </p>
       ) : (
         <div className="space-y-2">
           {versions.map((v) => (
@@ -349,14 +351,10 @@ function VersionPanel({
               key={v.id}
             >
               <div className="flex items-center gap-3">
-                <Badge
-                  tone={v.status === "published" ? "accent" : "neutral"}
-                >
+                <Badge tone={v.status === "published" ? "accent" : "neutral"}>
                   v{v.version_number}
                 </Badge>
-                <Badge
-                  tone={v.status === "published" ? "accent" : "neutral"}
-                >
+                <Badge tone={v.status === "published" ? "accent" : "neutral"}>
                   {v.status === "published" ? "已发布" : "草稿"}
                 </Badge>
                 <span className="text-xs text-[var(--text-muted)]">
@@ -369,7 +367,9 @@ function VersionPanel({
                     credentials={credentials}
                     triggerLabel="编辑"
                     version={v}
-                    onSubmit={async (payload: UpdateEnvironmentVersionRequest) => {
+                    onSubmit={async (
+                      payload: UpdateEnvironmentVersionRequest,
+                    ) => {
                       if (onUpdateVersion) {
                         await onUpdateVersion(
                           template.id,
