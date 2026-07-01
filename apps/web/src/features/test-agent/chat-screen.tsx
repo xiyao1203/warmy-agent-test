@@ -46,6 +46,7 @@ export function TestAgentChat({ projectId }: { projectId: string }) {
   const [streamingContent, setStreamingContent] = useState("");
   const [input, setInput] = useState("");
   const [loadingHistory, setLoadingHistory] = useState(true);
+  const [loadingSession, setLoadingSession] = useState(false);
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [lastFailedInput, setLastFailedInput] = useState<string | null>(null);
@@ -162,6 +163,7 @@ export function TestAgentChat({ projectId }: { projectId: string }) {
     setMessages(session.messages);
     setArtifacts(session.artifacts);
     setStreamingContent("");
+    setEvents([]);
     window.history.replaceState(
       {},
       "",
@@ -172,10 +174,13 @@ export function TestAgentChat({ projectId }: { projectId: string }) {
   async function selectSession(sessionId: string) {
     setError(null);
     setEvents([]);
+    setLoadingSession(true);
     try {
       applySession(await getSession(projectId, sessionId));
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : "会话加载失败");
+    } finally {
+      setLoadingSession(false);
     }
   }
 
@@ -320,7 +325,7 @@ export function TestAgentChat({ projectId }: { projectId: string }) {
         {sidebarOpen ? (
           <div
             aria-hidden="true"
-            className="absolute inset-0 z-10 bg-black/20 transition-opacity max-[760px]:block hidden"
+            className="absolute inset-0 z-10 bg-black/20 transition-opacity max-[1100px]:block hidden"
             onClick={handleToggleSidebar}
           />
         ) : null}
@@ -363,6 +368,14 @@ export function TestAgentChat({ projectId }: { projectId: string }) {
             onScroll={handleScroll}
             ref={scrollRef}
           >
+            {/* Session loading indicator */}
+            {loadingSession ? (
+              <div className="mx-auto max-w-3xl">
+                <div className="mb-2 h-0.5 w-full overflow-hidden rounded-full bg-[var(--canvas-soft)]">
+                  <div className="h-full w-1/3 animate-[loading-bar_1.5s_ease-in-out_infinite] rounded-full bg-[var(--primary)]" />
+                </div>
+              </div>
+            ) : null}
             {messages.length === 0 && !sending && !streamingContent ? (
               <ChatEmptyState
                 description="告诉我你想测试什么，我会帮你编排完整的测试流程"
@@ -378,20 +391,8 @@ export function TestAgentChat({ projectId }: { projectId: string }) {
             ) : (
               <Timeline
                 active={active}
-                error={error}
                 events={events}
-                lastFailedInput={lastFailedInput}
                 messages={messages}
-                onErrorClear={() => {
-                  setError(null);
-                  setLastFailedInput(null);
-                }}
-                onRetry={() => {
-                  if (lastFailedInput) {
-                    setInput(lastFailedInput);
-                    void handleSend();
-                  }
-                }}
                 onSessionReload={(id) => void selectSession(id)}
                 projectId={projectId}
                 sending={sending}
@@ -400,8 +401,8 @@ export function TestAgentChat({ projectId }: { projectId: string }) {
             )}
           </div>
 
-          {/* Scroll-to-bottom floating button */}
-          {!isPinned && (sending || streamingContent) ? (
+          {/* Scroll-to-bottom floating button — any time user scrolls up */}
+          {!isPinned ? (
             <div className="flex justify-center">
               <button
                 aria-label="滚动到底部"
@@ -418,6 +419,52 @@ export function TestAgentChat({ projectId }: { projectId: string }) {
               >
                 <ArrowDown className="size-4" />
               </button>
+            </div>
+          ) : null}
+
+          {/* Error banner — fixed above input bar */}
+          {error ? (
+            <div
+              className="shrink-0 border-t border-[var(--danger)]/30 bg-[var(--danger-subtle)]/20 px-4 py-2.5"
+              role="alert"
+            >
+              <div className="mx-auto flex max-w-3xl items-center justify-between gap-3">
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs text-[var(--danger)]">{error}</p>
+                  {lastFailedInput ? (
+                    <p className="mt-0.5 truncate text-[0.65rem] text-[var(--muted)]">
+                      消息: {lastFailedInput.slice(0, 60)}
+                      {lastFailedInput.length > 60 ? "…" : ""}
+                    </p>
+                  ) : null}
+                </div>
+                <div className="flex shrink-0 items-center gap-1.5">
+                  {lastFailedInput ? (
+                    <button
+                      className="rounded px-2 py-0.5 text-xs text-[var(--primary)] transition-colors hover:bg-[var(--primary)]/10"
+                      onClick={() => {
+                        if (lastFailedInput) {
+                          setInput(lastFailedInput);
+                          void handleSend();
+                        }
+                      }}
+                      type="button"
+                    >
+                      重试
+                    </button>
+                  ) : null}
+                  <button
+                    className="rounded px-2 py-0.5 text-xs text-[var(--muted)] transition-colors hover:text-[var(--ink)]"
+                    onClick={() => {
+                      setError(null);
+                      setLastFailedInput(null);
+                    }}
+                    type="button"
+                  >
+                    关闭
+                  </button>
+                </div>
+              </div>
             </div>
           ) : null}
 
@@ -477,12 +524,8 @@ export function TestAgentChat({ projectId }: { projectId: string }) {
 
 type TimelineProps = {
   active: ChatResponse | null;
-  error: string | null;
   events: AgentEvent[];
-  lastFailedInput: string | null;
   messages: ChatMessage[];
-  onErrorClear: () => void;
-  onRetry: () => void;
   onSessionReload: (sessionId: string) => void;
   projectId: string;
   sending: boolean;
@@ -491,12 +534,8 @@ type TimelineProps = {
 
 function Timeline({
   active,
-  error,
   events,
-  lastFailedInput,
   messages,
-  onErrorClear,
-  onRetry,
   onSessionReload,
   projectId,
   sending,
@@ -590,19 +629,69 @@ function Timeline({
     );
   };
 
+  /* ───── Time helpers for message grouping ───── */
+  function getTimeGapMinutes(a: string, b: string): number {
+    try {
+      return Math.abs(new Date(b).getTime() - new Date(a).getTime()) / 60_000;
+    } catch {
+      return 0;
+    }
+  }
+
+  function formatRelativeDate(iso: string): string {
+    try {
+      const date = new Date(iso);
+      const now = new Date();
+      const diffMs = now.getTime() - date.getTime();
+      const diffMin = Math.floor(diffMs / 60_000);
+      if (diffMin < 1) return "刚刚";
+      if (diffMin < 60) return `${diffMin} 分钟前`;
+      const diffHr = Math.floor(diffMin / 60);
+      if (diffHr < 24) return `${diffHr} 小时前`;
+      const diffDay = Math.floor(diffHr / 24);
+      if (diffDay < 7) return `${diffDay} 天前`;
+      return date.toLocaleDateString("zh-CN", {
+        month: "numeric",
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+    } catch {
+      return "";
+    }
+  }
+
   return (
     <div className="mx-auto max-w-3xl space-y-1">
-      {messages.map((message, index) => (
-        <div
-          className="timeline-item animate-fadeIn"
-          key={`${message.timestamp}:${index}`}
-        >
-          <ChatMessageBubble
-            message={message}
-            key={`${message.timestamp}:${index}`}
-          />
-        </div>
-      ))}
+      {messages.map((message, index) => {
+        const showDivider =
+          index > 0 &&
+          message.timestamp !== "streaming" &&
+          messages[index - 1].timestamp !== "streaming" &&
+          getTimeGapMinutes(
+            messages[index - 1].timestamp,
+            message.timestamp,
+          ) > 5;
+        return (
+          <div key={`${message.timestamp}:${index}`}>
+            {showDivider ? (
+              <div className="flex items-center gap-3 py-2">
+                <div className="h-px flex-1 bg-[var(--hairline)]" />
+                <span className="shrink-0 text-[0.6rem] text-[var(--muted)]">
+                  {formatRelativeDate(message.timestamp)}
+                </span>
+                <div className="h-px flex-1 bg-[var(--hairline)]" />
+              </div>
+            ) : null}
+            <div className="timeline-item animate-fadeIn">
+              <ChatMessageBubble
+                message={message}
+                key={`${message.timestamp}:${index}`}
+              />
+            </div>
+          </div>
+        );
+      })}
 
       {/* Streaming message */}
       {streamingContent ? (
@@ -719,44 +808,6 @@ function Timeline({
               />
             </div>
           ))}
-        </div>
-      ) : null}
-
-      {/* Global error banner */}
-      {error ? (
-        <div
-          className="timeline-item animate-fadeIn mt-3 rounded-[var(--radius-md)] border border-[var(--danger)]/30 bg-[var(--danger-subtle)]/20 px-3 py-2.5"
-          role="alert"
-        >
-          <div className="flex items-center justify-between">
-            <div className="min-w-0 flex-1">
-              <p className="text-xs text-[var(--danger)]">{error}</p>
-              {lastFailedInput ? (
-                <p className="mt-0.5 truncate text-[0.65rem] text-[var(--muted)]">
-                  消息: {lastFailedInput.slice(0, 60)}
-                  {lastFailedInput.length > 60 ? "…" : ""}
-                </p>
-              ) : null}
-            </div>
-            <div className="flex shrink-0 items-center gap-1.5">
-              {lastFailedInput ? (
-                <button
-                  className="rounded px-2 py-0.5 text-xs text-[var(--primary)] hover:bg-[var(--primary)]/10 transition-colors"
-                  onClick={onRetry}
-                  type="button"
-                >
-                  重试
-                </button>
-              ) : null}
-              <button
-                className="rounded px-2 py-0.5 text-xs text-[var(--muted)] hover:text-[var(--ink)] transition-colors"
-                onClick={onErrorClear}
-                type="button"
-              >
-                关闭
-              </button>
-            </div>
-          </div>
         </div>
       ) : null}
 

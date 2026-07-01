@@ -1,7 +1,7 @@
 "use client";
 
-import { Bot, User } from "lucide-react";
-import { useEffect, useState } from "react";
+import { Bot, Check, Copy, User } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
 
 import { MarkdownContent } from "./markdown-content";
 
@@ -21,6 +21,7 @@ export function MessageBubble({
   timestamp,
 }: MessageBubbleProps) {
   const [visible, setVisible] = useState(!animate);
+  const [copied, setCopied] = useState(false);
   const isUser = role === "user";
 
   useEffect(() => {
@@ -29,6 +30,13 @@ export function MessageBubble({
       return () => clearTimeout(timer);
     }
   }, [animate]);
+
+  const handleCopy = useCallback(() => {
+    void navigator.clipboard.writeText(content).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  }, [content]);
 
   return (
     <div
@@ -56,7 +64,7 @@ export function MessageBubble({
           </span>
         ) : null}
         <div
-          className={`rounded-lg px-4 py-2.5 text-sm ${
+          className={`group/bubble relative rounded-lg px-4 py-2.5 text-sm ${
             isUser
               ? "bg-[var(--primary)] text-white"
               : "bg-[var(--canvas-soft)] text-[var(--ink)]"
@@ -67,6 +75,25 @@ export function MessageBubble({
           ) : (
             <MarkdownContent content={content} isStreaming={isStreaming} />
           )}
+          {/* Copy button — appears on hover */}
+          {!isStreaming ? (
+            <button
+              aria-label={copied ? "已复制" : "复制消息"}
+              className={`absolute -top-1 rounded-md p-1 text-[var(--muted)] opacity-0 transition-all hover:text-[var(--ink)] group-hover/bubble:opacity-100 ${
+                isUser
+                  ? "right-0 -translate-y-full"
+                  : "left-0 -translate-y-full"
+              }`}
+              onClick={handleCopy}
+              type="button"
+            >
+              {copied ? (
+                <Check className="size-3 text-[var(--success)]" />
+              ) : (
+                <Copy className="size-3" />
+              )}
+            </button>
+          ) : null}
         </div>
       </div>
     </div>
