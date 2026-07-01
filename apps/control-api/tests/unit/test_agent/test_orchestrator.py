@@ -99,6 +99,7 @@ async def test_high_impact_action_waits_for_confirmation_then_creates_real_link(
     assert completed.status is TaskStatus.COMPLETED
     assert repo.links[0].artifact_type == "run"
     assert [event[0] for event in repo.events] == [
+        "agent.delegated",
         "tool.confirmation_required",
         "agent.progress",
         "asset.created",
