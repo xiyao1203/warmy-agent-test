@@ -1,26 +1,31 @@
+/* ============================================
+   Apple Design System — Design Tokens
+   Based on DESIGN-apple.md
+   ============================================ */
+
 :root {
   /* === Surface === */
-  --canvas: #f7f7f4;
-  --canvas-soft: #fafaf7;
+  --canvas: #ffffff;
+  --canvas-soft: #f5f5f7;
   --surface: #ffffff;
-  --surface-strong: #e6e5e0;
+  --surface-strong: #e8e8ed;
 
-  /* === Hairlines (no shadows — hairline-only depth) === */
-  --hairline: #e6e5e0;
-  --hairline-soft: #efeee8;
-  --hairline-strong: #cfcdc4;
+  /* === Hairlines (no shadows — color-only depth) === */
+  --hairline: #e0e0e0;
+  --hairline-soft: #f0f0f0;
+  --hairline-strong: #d2d2d7;
 
   /* === Text === */
-  --ink: #26251e;
-  --body: #5a5852;
-  --muted: #807d72;
-  --muted-soft: #a09c92;
+  --ink: #1d1d1f;
+  --body: #333333;
+  --muted: #7a7a7a;
+  --muted-soft: #a0a0a0;
 
-  /* === Brand (single voltage: Warmy Orange) === */
-  --primary: #f54e00;
-  --primary-active: #d04200;
-  --primary-rgb: 245, 78, 0;
-  --primary-subtle: #fff0e8;
+  /* === Brand (single accent: Apple Action Blue) === */
+  --primary: #0066cc;
+  --primary-active: #0071e3;
+  --primary-rgb: 0, 102, 204;
+  --primary-subtle: rgba(0, 102, 204, 0.08);
 
   /* === Semantic === */
   --success: #1f8a65;
@@ -31,21 +36,24 @@
   --danger-subtle: #ffebe9;
 
   /* === Focus & Overlay === */
-  --focus-ring: #f54e00;
-  --focus-ring-subtle: rgb(245 78 0 / 0.2);
-  --overlay: rgb(38 37 30 / 0.45);
+  --focus-ring: #0066cc;
+  --focus-ring-subtle: rgba(0, 102, 204, 0.2);
+  --overlay: rgba(0, 0, 0, 0.45);
 
-  /* === Radius === */
-  --radius-sm: 6px;
-  --radius-md: 8px;
-  --radius-lg: 12px;
+  /* === Radius (Apple scale: {rounded.sm} {rounded.md} {rounded.lg}) === */
+  --radius-sm: 8px;
+  --radius-md: 11px;
+  --radius-lg: 18px;
   --radius-pill: 9999px;
 
   /* === Typography === */
-  --font-sans: "Inter", system-ui, "Helvetica Neue", Helvetica, Arial, sans-serif;
-  --font-code: "JetBrains Mono", "Fira Code", monospace;
+  --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", system-ui, sans-serif;
+  --font-code: "SF Mono", "JetBrains Mono", "Fira Code", monospace;
 
-  /* === Backward-compatible aliases (migrate to new names gradually) === */
+  /* === Product shadow (single purpose: product imagery only) === */
+  --shadow-product: rgba(0, 0, 0, 0.22) 3px 5px 30px 0;
+
+  /* === Backward-compatible aliases === */
   --background: var(--canvas);
   --surface-subtle: var(--canvas-soft);
   --border: var(--hairline);
@@ -60,8 +68,6 @@
   --accent-text: var(--primary);
   --accent-rgb: var(--primary-rgb);
   --selected: var(--primary-subtle);
-
-  /* No shadow — but keep as empty to not break existing references */
   --shadow-overlay: none;
 }
 
@@ -69,78 +75,72 @@
 @media (prefers-color-scheme: dark) {
   :root:not(.light) {
     /* === Surface === */
-    --canvas: #0c0c0e;
-    --canvas-soft: #161618;
-    --surface: #161618;
-    --surface-strong: #1d1d20;
+    --canvas: #000000;
+    --canvas-soft: #1d1d1f;
+    --surface: #1d1d1f;
+    --surface-strong: #272729;
 
     /* === Hairlines === */
-    --hairline: rgba(255, 255, 255, 0.12);
-    --hairline-soft: rgba(255, 255, 255, 0.06);
-    --hairline-strong: rgba(255, 255, 255, 0.22);
+    --hairline: rgba(255, 255, 255, 0.16);
+    --hairline-soft: rgba(255, 255, 255, 0.08);
+    --hairline-strong: rgba(255, 255, 255, 0.24);
 
     /* === Text === */
     --ink: #ffffff;
-    --body: rgba(255, 255, 255, 0.85);
-    --muted: rgba(255, 255, 255, 0.60);
-    --muted-soft: rgba(255, 255, 255, 0.40);
+    --body: #cccccc;
+    --muted: rgba(255, 255, 255, 0.56);
+    --muted-soft: rgba(255, 255, 255, 0.36);
 
-    /* === Brand === */
-    --primary: #f54e00;
-    --primary-active: #d04200;
-    --primary-rgb: 245, 78, 0;
-    --primary-subtle: rgba(245, 78, 0, 0.12);
+    /* === Brand (Sky Link Blue on dark) === */
+    --primary: #2997ff;
+    --primary-active: #40a9ff;
+    --primary-rgb: 41, 151, 255;
+    --primary-subtle: rgba(41, 151, 255, 0.15);
 
     /* === Semantic === */
-    --success: #1f8a65;
     --success-subtle: rgba(31, 138, 101, 0.15);
-    --warning: #d29922;
     --warning-subtle: rgba(210, 153, 34, 0.15);
-    --danger: #cf2d56;
     --danger-subtle: rgba(207, 45, 86, 0.15);
 
     /* === Focus & Overlay === */
-    --focus-ring: #f54e00;
-    --focus-ring-subtle: rgb(245 78 0 / 0.25);
-    --overlay: rgb(0 0 0 / 0.72);
+    --focus-ring: #2997ff;
+    --focus-ring-subtle: rgba(41, 151, 255, 0.25);
+    --overlay: rgba(0, 0, 0, 0.72);
   }
 }
 
 /* ===== Dark Mode: Manual Class Toggle ===== */
 .dark {
   /* === Surface === */
-  --canvas: #0c0c0e;
-  --canvas-soft: #161618;
-  --surface: #161618;
-  --surface-strong: #1d1d20;
+  --canvas: #000000;
+  --canvas-soft: #1d1d1f;
+  --surface: #1d1d1f;
+  --surface-strong: #272729;
 
   /* === Hairlines === */
-  --hairline: rgba(255, 255, 255, 0.12);
-  --hairline-soft: rgba(255, 255, 255, 0.06);
-  --hairline-strong: rgba(255, 255, 255, 0.22);
+  --hairline: rgba(255, 255, 255, 0.16);
+  --hairline-soft: rgba(255, 255, 255, 0.08);
+  --hairline-strong: rgba(255, 255, 255, 0.24);
 
   /* === Text === */
   --ink: #ffffff;
-  --body: rgba(255, 255, 255, 0.85);
-  --muted: rgba(255, 255, 255, 0.60);
-  --muted-soft: rgba(255, 255, 255, 0.40);
+  --body: #cccccc;
+  --muted: rgba(255, 255, 255, 0.56);
+  --muted-soft: rgba(255, 255, 255, 0.36);
 
-  /* === Brand === */
-  --primary: #f54e00;
-  --primary-active: #d04200;
-  --primary-rgb: 245, 78, 0;
-  --primary-subtle: rgba(245, 78, 0, 0.12);
+  /* === Brand (Sky Link Blue on dark) === */
+  --primary: #2997ff;
+  --primary-active: #40a9ff;
+  --primary-rgb: 41, 151, 255;
+  --primary-subtle: rgba(41, 151, 255, 0.15);
 
   /* === Semantic === */
-  --success: #1f8a65;
   --success-subtle: rgba(31, 138, 101, 0.15);
-  --warning: #d29922;
   --warning-subtle: rgba(210, 153, 34, 0.15);
-  --danger: #cf2d56;
   --danger-subtle: rgba(207, 45, 86, 0.15);
 
   /* === Focus & Overlay === */
-  --focus-ring: #f54e00;
-  --focus-ring-subtle: rgb(245 78 0 / 0.25);
-  --overlay: rgb(0 0 0 / 0.72);
+  --focus-ring: #2997ff;
+  --focus-ring-subtle: rgba(41, 151, 255, 0.25);
+  --overlay: rgba(0, 0, 0, 0.72);
 }

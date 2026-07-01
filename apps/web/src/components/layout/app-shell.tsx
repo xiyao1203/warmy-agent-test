@@ -83,7 +83,7 @@ export function AppShell({
             className="shrink-0 text-base font-semibold tracking-tight"
             href={projectHref}
           >
-            {collapsed ? "WAT" : "Warmy Agent Test"}
+            {collapsed ? "AT" : "Agent Test"}
           </Link>
           <ProjectSwitcher
             currentProjectId={currentProjectId}
