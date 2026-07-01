@@ -244,7 +244,7 @@ export function AppShell({
             ) : null}
           </nav>
           {canManageUsers(user) ? (
-            <div className="mt-auto border-t border-[var(--hairline)] pt-3">
+            <div className="border-t border-[var(--hairline)] pt-3">
               {!collapsed && (
                 <p className="px-3 pb-1.5 text-[11px] font-semibold uppercase tracking-[0.66px] text-[var(--body)]">
                   系统管理
@@ -264,7 +264,7 @@ export function AppShell({
               </Link>
             </div>
           ) : null}
-          <div className="border-t border-[var(--hairline)] pt-2">
+          <div className="mt-auto border-t border-[var(--hairline)] pt-2">
             <button
               aria-expanded={!collapsed}
               aria-label={collapsed ? "展开侧边栏" : "收起侧边栏"}
