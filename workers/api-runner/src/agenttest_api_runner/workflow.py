@@ -20,6 +20,11 @@ with workflow.unsafe.imports_passed_through():
         RunResult,
         RunTask,
     )
+    from agenttest_api_runner.playwright_activity import (
+        PlaywrightResult,
+        PlaywrightTaskInput,
+        run_playwright_case,
+    )
     from agenttest_api_runner.reports import build_reports
     from agenttest_api_runner.scorer_activities import evaluate_scorers_sync
 
@@ -94,28 +99,53 @@ class RunWorkflow:
                 )
                 continue
             try:
-                # ── Browser Harness 前置采集（可选） ──────────────────
-                capture_url = task.agent_config.get("pre_capture_url")
-                if capture_url and isinstance(capture_url, str):
-                    await workflow.execute_activity(
-                        capture_page_snapshot,
-                        CapturePageInput(
-                            url=capture_url,
-                            run_case_id=case.run_case_id,
-                        ),
-                        start_to_close_timeout=timedelta(seconds=30),
-                        retry_policy=RetryPolicy(
-                            maximum_attempts=2,
-                        ),
+                # ── 执行模式分发 ─────────────────────────────────
+                if case.execution_mode == "browser":
+                    browser_url = str(
+                        case.input.get(
+                            "url",
+                            task.agent_config.get(
+                                "canvas_url",
+                                task.agent_config.get("endpoint_url", ""),
+                            ),
+                        )
                     )
+                    browser_steps = _browser_steps(case.input)
+                    playwright_result = await workflow.execute_activity(
+                        run_playwright_case,
+                        PlaywrightTaskInput(
+                            run_case_id=case.run_case_id,
+                            url=browser_url,
+                            steps=browser_steps,
+                        ),
+                        start_to_close_timeout=activity_timeout,
+                        heartbeat_timeout=timedelta(seconds=30),
+                        retry_policy=activity_retry_policy,
+                    )
+                    result = _playwright_to_run_case(playwright_result, case)
+                else:
+                    # ── Browser Harness 前置采集（可选） ──────────────────
+                    capture_url = task.agent_config.get("pre_capture_url")
+                    if capture_url and isinstance(capture_url, str):
+                        await workflow.execute_activity(
+                            capture_page_snapshot,
+                            CapturePageInput(
+                                url=capture_url,
+                                run_case_id=case.run_case_id,
+                            ),
+                            start_to_close_timeout=timedelta(seconds=30),
+                            retry_policy=RetryPolicy(
+                                maximum_attempts=2,
+                            ),
+                        )
 
-                result = await workflow.execute_activity(
-                    execute_agent_case,
-                    args=[case, task.agent_config, task.environment],
-                    start_to_close_timeout=activity_timeout,
-                    heartbeat_timeout=timedelta(seconds=30),
-                    retry_policy=activity_retry_policy,
-                )
+                    result = await workflow.execute_activity(
+                        execute_agent_case,
+                        args=[case, task.agent_config, task.environment],
+                        start_to_close_timeout=activity_timeout,
+                        heartbeat_timeout=timedelta(seconds=30),
+                        retry_policy=activity_retry_policy,
+                    )
                 # ── 执行确定性评分器 ───────────────────────────────
                 if task.scorer_configs and result.status == "passed" and result.output:
                     scorer_results = evaluate_scorers_sync(
@@ -203,6 +233,7 @@ def normalize_run_task(task: RunTask | dict[str, object]) -> RunTask:
             run_case_id=str(case["run_case_id"]),
             input=dict(case.get("input", {})),
             assertions=list(case.get("assertions", [])),
+            execution_mode=str(case.get("execution_mode", "api")),
         )
         for case in case_items
         if isinstance(case, dict)
@@ -216,6 +247,7 @@ def normalize_run_task(task: RunTask | dict[str, object]) -> RunTask:
         idempotency_key=str(task["idempotency_key"]),
         cases=cases,
         agent_config=dict(agent_config_raw) if isinstance(agent_config_raw, dict) else {},
+        agent_type=str(task.get("agent_type", "generic_http")),
         environment=dict(environment_raw) if isinstance(environment_raw, dict) else {},
         execution_policy=(
             dict(execution_policy_raw) if isinstance(execution_policy_raw, dict) else {}
@@ -226,4 +258,59 @@ def normalize_run_task(task: RunTask | dict[str, object]) -> RunTask:
             else []
         ),
         callback=callback,
+    )
+
+
+def _browser_steps(case_input: dict[str, object]) -> list[dict[str, str]]:
+    """从用例 input 中提取 Playwright 操作步骤。"""
+    raw = case_input.get("steps")
+    if isinstance(raw, list):
+        return [
+            {
+                "action": str(step.get("action", "")),
+                "target": str(step.get("target", "")),
+                "value": str(step.get("value", "")),
+            }
+            for step in raw
+            if isinstance(step, dict)
+        ]
+    return []
+
+
+def _playwright_to_run_case(
+    playwright_result: PlaywrightResult,
+    case: RunCaseTask,
+) -> RunCaseResult:
+    """将 Playwright 执行结果转换为 RunCaseResult。"""
+    status = playwright_result.status
+    if status == "passed":
+        # 运行 API 风格的断言检查（contains/exact）
+        output = {
+            "page_title": playwright_result.page_title,
+            "final_url": playwright_result.final_url,
+        }
+        from agenttest_api_runner.activities import _evaluate_assertions
+        assertion_status = _evaluate_assertions(output, case.assertions)
+        if assertion_status != "passed":
+            status = assertion_status
+        return RunCaseResult(
+            run_case_id=case.run_case_id,
+            status=status,
+            output=output,
+            trace=[
+                {
+                    "step_index": s.step_index,
+                    "action": s.action,
+                    "target": s.target,
+                    "status": s.status,
+                    "error": s.error,
+                }
+                for s in playwright_result.steps
+            ],
+            error_message=playwright_result.error_message,
+        )
+    return RunCaseResult(
+        run_case_id=case.run_case_id,
+        status=status,
+        error_message=playwright_result.error_message,
     )

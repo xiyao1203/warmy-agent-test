@@ -106,11 +106,13 @@ async def test_temporal_orchestrator_starts_run_workflow_with_snapshot_payload()
     assert payload["run_id"] == str(run.run_id.value)
     assert payload["idempotency_key"] == "temporal-start"
     assert payload["agent_config"] == {"url": "https://agent.example/run", "mode": "sync"}
+    assert payload["agent_type"] == "generic_http"
     assert payload["cases"] == [
         {
             "run_case_id": str(cases[0].run_case_id.value),
             "input": {"message": "hello"},
             "assertions": [{"type": "contains", "value": "hello"}],
+            "execution_mode": "api",
         }
     ]
     assert payload["callback"] == {

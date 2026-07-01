@@ -61,7 +61,7 @@ class Events:
 
 
 class Conversation:
-    async def respond(self, actor, project_id, *, history, stream_callback=None):
+    async def respond(self, actor, project_id, *, history, stream_callback=None, action_context=None):
         assert history[-1] == ("user", "你好")
         return ConversationResponse(content="你好，请告诉我要测试哪个 Agent。")
 

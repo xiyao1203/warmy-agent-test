@@ -1,14 +1,22 @@
 "use client";
 
-import { Bot, Send, Sparkles, User } from "lucide-react";
+import { Send, Sparkles } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ChatEmptyState, TypingIndicator } from "@/components/uiverse";
+import {
+  ChatEmptyState,
+  MessageBubble as UIMessageBubble,
+  ReasoningBlock,
+  ToolCallCard,
+  TypingIndicator,
+} from "@/components/uiverse";
+import type { TaskState } from "@/components/uiverse";
 
 import {
   createSession,
+  decideConfirmationsBatch,
   deleteSession,
   getSession,
   listSessions,
@@ -23,8 +31,8 @@ import type {
   ChatResponse,
   SessionSummary,
 } from "./api";
-import { ContextPanel } from "./context-panel";
 import { ConfirmationCard } from "./confirmation-card";
+import { ContextPanel } from "./context-panel";
 import { SessionList } from "./session-list";
 import { TargetChatScreen } from "./target-chat-screen";
 
@@ -41,6 +49,7 @@ export function TestAgentChat({ projectId }: { projectId: string }) {
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const sessionRef = useRef<string | null>(null);
   const activeSessionId = active?.session_id ?? null;
 
   useEffect(() => {
@@ -74,7 +83,9 @@ export function TestAgentChat({ projectId }: { projectId: string }) {
 
   useEffect(() => {
     if (!activeSessionId) return;
+    sessionRef.current = activeSessionId;
     return subscribeToSession(projectId, activeSessionId, (event) => {
+      if (sessionRef.current !== activeSessionId) return;
       setEvents((current) =>
         current.some((item) => item.id === event.id && item.type === event.type)
           ? current
@@ -105,13 +116,12 @@ export function TestAgentChat({ projectId }: { projectId: string }) {
   useEffect(() => {
     if (scrollRef.current)
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-  }, [messages, sending]);
+  }, [messages, events, sending]);
 
   function applySession(session: ChatResponse) {
     setActive(session);
     setMessages(session.messages);
     setArtifacts(session.artifacts);
-    setEvents([]);
     window.history.replaceState(
       {},
       "",
@@ -121,6 +131,7 @@ export function TestAgentChat({ projectId }: { projectId: string }) {
 
   async function selectSession(sessionId: string) {
     setError(null);
+    setEvents([]);
     try {
       applySession(await getSession(projectId, sessionId));
     } catch (reason) {
@@ -219,7 +230,7 @@ export function TestAgentChat({ projectId }: { projectId: string }) {
           </header>
 
           <div
-            className="min-h-0 flex-1 overflow-y-auto px-5 py-4"
+            className="chat-scroll min-h-0 flex-1 overflow-y-auto px-5 py-4"
             ref={scrollRef}
           >
             {messages.length === 0 ? (
@@ -232,41 +243,17 @@ export function TestAgentChat({ projectId }: { projectId: string }) {
                 ]}
               />
             ) : (
-              <div className="mx-auto max-w-3xl space-y-4">
-                {messages.map((message, index) => (
-                  <MessageBubble
-                    key={`${message.timestamp}:${index}`}
-                    message={message}
-                  />
-                ))}
-                {streamingContent ? (
-                  <MessageBubble
-                    message={{
-                      role: "assistant",
-                      content: streamingContent,
-                      timestamp: "streaming",
-                    }}
-                  />
-                ) : null}
-                {active
-                  ? events
-                      .filter(
-                        (event) => event.type === "tool.confirmation_required",
-                      )
-                      .map((event) => (
-                        <ConfirmationCard
-                          event={event}
-                          key={`${event.id}:${String(event.payload.confirmation_id)}`}
-                          onDecided={() =>
-                            void selectSession(active.session_id)
-                          }
-                          projectId={projectId}
-                          sessionId={active.session_id}
-                        />
-                      ))
-                  : null}
-                {sending && !streamingContent ? <TypingIndicator /> : null}
-              </div>
+              <Timeline
+                active={active}
+                error={error}
+                events={events}
+                messages={messages}
+                onErrorClear={() => setError(null)}
+                onSessionReload={(id) => void selectSession(id)}
+                projectId={projectId}
+                sending={sending}
+                streamingContent={streamingContent}
+              />
             )}
           </div>
 
@@ -296,14 +283,6 @@ export function TestAgentChat({ projectId }: { projectId: string }) {
                 <Send className="size-4" />
               </Button>
             </div>
-            {error ? (
-              <p
-                className="mx-auto mt-2 max-w-3xl text-sm text-[var(--danger)]"
-                role="alert"
-              >
-                {error}
-              </p>
-            ) : null}
           </div>
         </main>
 
@@ -318,6 +297,270 @@ export function TestAgentChat({ projectId }: { projectId: string }) {
     </div>
   );
 }
+
+/* ───── Timeline ───── */
+
+type TimelineProps = {
+  active: ChatResponse | null;
+  error: string | null;
+  events: AgentEvent[];
+  messages: ChatMessage[];
+  onErrorClear: () => void;
+  onSessionReload: (sessionId: string) => void;
+  projectId: string;
+  sending: boolean;
+  streamingContent: string;
+};
+
+function Timeline({
+  active,
+  error,
+  events,
+  messages,
+  onErrorClear,
+  onSessionReload,
+  projectId,
+  sending,
+  streamingContent,
+}: TimelineProps) {
+  const toolEvents = events.filter(
+    (e) =>
+      e.type === "agent.delegated" ||
+      e.type === "agent.progress" ||
+      e.type === "agent.completed" ||
+      e.type === "agent.failed",
+  );
+
+  // Group tool events by task_id into TaskState objects
+  const taskStates: TaskState[] = (() => {
+    const groups = new Map<
+      string,
+      {
+        delegated: AgentEvent | null;
+        latest: AgentEvent;
+      }
+    >();
+    for (const event of toolEvents) {
+      const tid = String(event.payload.task_id ?? "");
+      if (!tid) continue;
+      const existing = groups.get(tid);
+      if (!existing) {
+        groups.set(tid, { delegated: null, latest: event });
+      } else {
+        existing.latest = event;
+      }
+      // Track the delegated event for input_summary
+      if (event.type === "agent.delegated") {
+        const entry = groups.get(tid)!;
+        entry.delegated = event;
+      }
+    }
+    return Array.from(groups.entries()).map(([tid, group]) => {
+      const inputSummary = group.delegated
+        ? String(group.delegated.payload.input_summary ?? "")
+        : "";
+      const childAgent = group.delegated
+        ? String(group.delegated.payload.child_agent ?? "")
+        : (() => {
+            const p = group.latest.payload;
+            return String(p.child_agent ?? "");
+          })();
+      const capability = group.delegated
+        ? String(group.delegated.payload.capability ?? "")
+        : String(group.latest.payload.capability ?? "");
+      const statusMap: Record<string, TaskState["status"]> = {
+        "agent.delegated": "delegated",
+        "agent.progress": "running",
+        "agent.completed": "completed",
+        "agent.failed": "failed",
+      };
+      const status = statusMap[group.latest.type] ?? "delegated";
+      return {
+        taskId: tid,
+        childAgent,
+        capability,
+        inputSummary,
+        status,
+        output:
+          group.latest.type === "agent.completed"
+            ? (group.latest.payload.output as Record<string, unknown> | null) ?? null
+            : null,
+        errorDetail:
+          group.latest.type === "agent.failed"
+            ? String(group.latest.payload.detail ?? null)
+            : null,
+      };
+    });
+  })();
+  const reasoningEvents = events.filter(
+    (e) => e.type === "agent.reasoning",
+  );
+  const errorEvents = events.filter(
+    (e) => e.type === "error" && !e.payload.task_id,
+  );
+  const pendingConfs = events.filter(
+    (e) => e.type === "tool.confirmation_required",
+  );
+
+  const batchConfirm = async (approved: boolean) => {
+    const ids = pendingConfs.map((e) =>
+      String(e.payload.confirmation_id),
+    );
+    if (ids.length === 0 || !active) return;
+    await decideConfirmationsBatch(
+      projectId,
+      active.session_id,
+      ids,
+      approved,
+    );
+  };
+
+  return (
+    <div className="mx-auto max-w-3xl space-y-1">
+      {messages.map((message, index) => (
+        <div
+          className="timeline-item animate-fadeIn"
+          key={`${message.timestamp}:${index}`}
+        >
+          <ChatMessageBubble
+            message={message}
+            key={`${message.timestamp}:${index}`}
+          />
+        </div>
+      ))}
+
+      {/* Streaming message */}
+      {streamingContent ? (
+        <div className="timeline-item animate-fadeIn">
+          <ChatMessageBubble
+            isStreaming
+            message={{
+              role: "assistant",
+              content: streamingContent,
+              timestamp: "streaming",
+            }}
+          />
+        </div>
+      ) : null}
+
+      {/* Tool call cards — grouped by task_id */}
+      {taskStates.length > 0 ? (
+        <div className="mt-3 space-y-1">
+          {taskStates.map((task) => (
+            <div
+              className="timeline-item animate-slideIn"
+              key={`task:${task.taskId}`}
+            >
+              <ToolCallCard task={task} />
+            </div>
+          ))}
+        </div>
+      ) : null}
+
+      {/* Reasoning blocks */}
+      {reasoningEvents.map((event) => (
+        <div
+          className="timeline-item animate-fadeIn"
+          key={`reasoning:${event.id}`}
+        >
+          <ReasoningBlock
+            capability={String(event.payload.capability ?? "")}
+            content={String(event.payload.content ?? "")}
+            step={Number(event.payload.step ?? 0)}
+            total={Number(event.payload.total ?? 0)}
+          />
+        </div>
+      ))}
+
+      {/* Error events */}
+      {errorEvents.map((event) => (
+        <div
+          className="timeline-item animate-fadeIn"
+          key={`error:${event.id}`}
+        >
+          <div className="rounded-[var(--radius-md)] border border-[var(--danger)]/30 bg-[var(--danger-subtle)]/20 px-3 py-2.5">
+            <p className="text-xs text-[var(--danger)]">
+              {String(event.payload.detail ?? "执行出错")}
+            </p>
+          </div>
+        </div>
+      ))}
+
+      {/* Confirmation cards */}
+      {active && pendingConfs.length > 0 ? (
+        <div className="mt-3 space-y-3">
+          {pendingConfs.length > 1 ? (
+            <div className="timeline-item animate-fadeIn rounded-[var(--radius-lg)] border border-[var(--warning)]/30 bg-[var(--warning-subtle)]/20 p-3">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-semibold text-[var(--warning)]">
+                  {pendingConfs.length} 项待确认操作
+                </span>
+                <div className="flex gap-1.5">
+                  <Button
+                    className="h-7 text-xs"
+                    onClick={() => void batchConfirm(false)}
+                    variant="secondary"
+                  >
+                    全部拒绝
+                  </Button>
+                  <Button
+                    className="h-7 text-xs"
+                    onClick={() => void batchConfirm(true)}
+                    variant="primary"
+                  >
+                    全部批准
+                  </Button>
+                </div>
+              </div>
+            </div>
+          ) : null}
+          {pendingConfs.map((event) => (
+            <div
+              className="timeline-item animate-fadeIn"
+              key={`conf:${event.id}:${String(event.payload.confirmation_id)}`}
+            >
+              <ConfirmationCard
+                event={event}
+                onDecided={() => {
+                  if (active) onSessionReload(active.session_id);
+                }}
+                projectId={projectId}
+                sessionId={active.session_id}
+              />
+            </div>
+          ))}
+        </div>
+      ) : null}
+
+      {/* Global error banner */}
+      {error ? (
+        <div
+          className="timeline-item animate-fadeIn mt-3 rounded-[var(--radius-md)] border border-[var(--danger)]/30 bg-[var(--danger-subtle)]/20 px-3 py-2.5"
+          role="alert"
+        >
+          <div className="flex items-center justify-between">
+            <p className="text-xs text-[var(--danger)]">{error}</p>
+            <button
+              className="text-xs text-[var(--muted)] hover:text-[var(--ink)]"
+              onClick={onErrorClear}
+              type="button"
+            >
+              关闭
+            </button>
+          </div>
+        </div>
+      ) : null}
+
+      {sending && !streamingContent ? (
+        <div className="timeline-item animate-fadeIn">
+          <TypingIndicator />
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+/* ───── Workspace Tabs ───── */
 
 function WorkspaceTabs({
   value,
@@ -344,20 +587,21 @@ function WorkspaceTabs({
   );
 }
 
-function MessageBubble({ message }: { message: ChatMessage }) {
-  const user = message.role === "user";
+/* ───── Message Bubble (thin wrapper) ───── */
+
+function ChatMessageBubble({
+  message,
+  isStreaming,
+}: {
+  message: ChatMessage;
+  isStreaming?: boolean;
+}) {
   return (
-    <div className={`flex gap-3 ${user ? "flex-row-reverse" : ""}`}>
-      <div
-        className={`flex size-8 shrink-0 items-center justify-center rounded-full ${user ? "bg-[var(--primary)] text-white" : "bg-[var(--canvas-soft)]"}`}
-      >
-        {user ? <User className="size-4" /> : <Bot className="size-4" />}
-      </div>
-      <div
-        className={`max-w-[82%] whitespace-pre-wrap rounded-lg px-4 py-2.5 text-sm ${user ? "bg-[var(--primary)] text-white" : "bg-[var(--surface)] text-[var(--ink)] shadow-sm"}`}
-      >
-        {message.content}
-      </div>
-    </div>
+    <UIMessageBubble
+      animate
+      content={message.content}
+      isStreaming={isStreaming}
+      role={message.role}
+    />
   );
 }

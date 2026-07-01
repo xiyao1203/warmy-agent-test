@@ -63,6 +63,41 @@ class GateEvaluationInput(BaseModel):
     run_id: str
 
 
+class AnalyzeEndpointInput(BaseModel):
+    agent_version_id: str
+    probe_input: dict[str, object] | None = None
+
+
+class AutoGenerateCasesInput(BaseModel):
+    agent_version_id: str
+    dataset_name: str = Field(min_length=1, max_length=200)
+    scenario_hints: list[str] | None = Field(default=None, max_length=20)
+
+
+class ReportInput(BaseModel):
+    run_id: str
+
+
+class CreateAgentVersionInput(BaseModel):
+    agent_id: str
+    config: dict[str, object] = Field(
+        description=(
+            "AgentConfig 配置字典。必填: api_url。可选: protocol (默认 sync_json), "
+            "request_template (默认 {\"input\": \"{{ input }}\"}), "
+            "response_path (默认 output), timeout (默认 30), "
+            "credential_binding_ids (凭证绑定 ID 列表), model, system_prompt"
+        )
+    )
+
+
+class CreateCredentialInput(BaseModel):
+    name: str = Field(min_length=1, max_length=200)
+    username: str = Field(min_length=1, max_length=200)
+    credential: str = Field(min_length=1, max_length=500)
+    account_type: str = Field(default="user")
+    description: str | None = Field(default=None, max_length=2000)
+
+
 class PlatformCapabilityGateway(Protocol):
     async def execute(
         self, capability: str, context: object, payload: BaseModel
@@ -129,6 +164,28 @@ def capability_specs() -> list[CapabilitySpec]:
             "review_gate",
             RiskLevel.HIGH_IMPACT,
             GateEvaluationInput,
+        ),
+        CapabilitySpec(
+            "agents.analyze_endpoint", "target_agent", RiskLevel.READ, AnalyzeEndpointInput
+        ),
+        CapabilitySpec(
+            "datasets.auto_generate_cases",
+            "test_data",
+            RiskLevel.DRAFT_WRITE,
+            AutoGenerateCasesInput,
+        ),
+        CapabilitySpec("reports.generate", "execution", RiskLevel.READ, ReportInput),
+        CapabilitySpec(
+            "agents.create_version",
+            "target_agent",
+            RiskLevel.DRAFT_WRITE,
+            CreateAgentVersionInput,
+        ),
+        CapabilitySpec(
+            "credentials.create",
+            "environment",
+            RiskLevel.DRAFT_WRITE,
+            CreateCredentialInput,
         ),
     ]
 

@@ -46,6 +46,8 @@ class PlaywrightResult:
     final_url: str
     page_title: str
     screenshots: list[str] = field(default_factory=list)
+    canvas_nodes: list[dict[str, object]] = field(default_factory=list)
+    canvas_connections: list[dict[str, object]] = field(default_factory=list)
     trace_path: str | None = None
     error_message: str | None = None
 
@@ -65,6 +67,8 @@ async def run_playwright_case(inp: PlaywrightTaskInput) -> PlaywrightResult:
 
     step_results: list[PlaywrightStepResult] = []
     screenshots: list[str] = []
+    canvas_nodes: list[dict[str, object]] = []
+    canvas_connections: list[dict[str, object]] = []
     final_url = inp.url
     page_title = ""
 
@@ -116,6 +120,30 @@ async def run_playwright_case(inp: PlaywrightTaskInput) -> PlaywrightResult:
                         )
                     )
 
+            # ── 采集 Canvas 状态（关闭浏览器前） ───────────────────
+            all_steps_passed = all(s.status == "passed" for s in step_results)
+            if all_steps_passed:
+                try:
+                    import json
+
+                    canvas_raw = await page.evaluate(
+                        "(() => { try { return JSON.stringify({ nodes: window.__canvasState?.nodes || [], connections: window.__canvasState?.connections || [] }); } catch(e) { return '{}'; } })()"  # noqa: E501
+                    )
+                    parsed = json.loads(canvas_raw) if isinstance(canvas_raw, str) else {}
+                    raw_nodes = parsed.get("nodes", [])
+                    raw_connections = parsed.get("connections", [])
+                    if isinstance(raw_nodes, list):
+                        canvas_nodes = [
+                            dict(n) for n in raw_nodes if isinstance(n, dict)
+                        ]
+                    if isinstance(raw_connections, list):
+                        canvas_connections = [
+                            dict(c) for c in raw_connections
+                            if isinstance(c, dict)
+                        ]
+                except Exception:
+                    pass
+
             await browser.close()
 
     except Exception as exc:
@@ -126,6 +154,8 @@ async def run_playwright_case(inp: PlaywrightTaskInput) -> PlaywrightResult:
             final_url=final_url,
             page_title=page_title,
             screenshots=screenshots,
+            canvas_nodes=canvas_nodes,
+            canvas_connections=canvas_connections,
             error_message=str(exc),
         )
 
@@ -137,6 +167,8 @@ async def run_playwright_case(inp: PlaywrightTaskInput) -> PlaywrightResult:
         final_url=final_url,
         page_title=page_title,
         screenshots=screenshots,
+        canvas_nodes=canvas_nodes,
+        canvas_connections=canvas_connections,
     )
 
 

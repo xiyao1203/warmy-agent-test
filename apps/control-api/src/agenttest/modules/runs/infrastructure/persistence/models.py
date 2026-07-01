@@ -82,6 +82,9 @@ class RunCaseModel(Base):
     )
     test_case_id: Mapped[UUID] = mapped_column(ForeignKey("test_cases.id"), nullable=False)
     name: Mapped[str] = mapped_column(String(500), nullable=False)
+    execution_mode: Mapped[str] = mapped_column(
+        String(32), nullable=False, default="api", server_default="api"
+    )
     status: Mapped[str] = mapped_column(String(32), nullable=False)
     input_snapshot: Mapped[dict] = mapped_column(JSON, nullable=False)
     assertion_snapshot: Mapped[list] = mapped_column(JSON, nullable=False)

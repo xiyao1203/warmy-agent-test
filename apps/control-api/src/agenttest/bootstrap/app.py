@@ -1703,6 +1703,13 @@ def _register_test_agent_endpoints(
     engine = create_database_engine(str(settings.database_url))
     session_factory = create_session_factory(engine)
     orchestration = SqlAlchemyOrchestrationRepository(session_factory)
+    model_config_service = build_model_config_service(settings)
+    temporal_invoker = TemporalModelInvoker(
+        address=settings.temporal_address,
+        namespace=settings.temporal_namespace,
+        task_queue=settings.model_runner_task_queue,
+        allow_private_network=settings.model_allow_private_network,
+    )
     registry = build_platform_registry(
         HandlerPlatformGateway(
             agents=build_agent_dependencies(settings),
@@ -1719,6 +1726,8 @@ def _register_test_agent_endpoints(
             promptfoo_bin=settings.promptfoo_bin,
             allow_private_security_targets=settings.security_scan_allow_private_network,
             gate_evidence=SqlAlchemyGateEvidence(session_factory),
+            models=model_config_service,
+            invoker=temporal_invoker,
         )
     )
 
@@ -1759,13 +1768,8 @@ def _register_test_agent_endpoints(
         check_project=check_project,
         settings=settings,
         conversation=SuperAgentConversation(
-            build_model_config_service(settings),
-            TemporalModelInvoker(
-                address=settings.temporal_address,
-                namespace=settings.temporal_namespace,
-                task_queue=settings.model_runner_task_queue,
-                allow_private_network=settings.model_allow_private_network,
-            ),
+            model_config_service,
+            temporal_invoker,
             capabilities=registry.describe_all(),
         ),
         agent_orchestrator=SuperAgentOrchestrator(registry, orchestration),

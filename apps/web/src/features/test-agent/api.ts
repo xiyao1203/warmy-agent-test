@@ -143,6 +143,32 @@ export function decideConfirmation(
   );
 }
 
+export function decideConfirmationsBatch(
+  projectId: string,
+  sessionId: string,
+  confirmationIds: string[],
+  approved: boolean,
+) {
+  return request<{
+    results: {
+      task_id: string;
+      status: string;
+      output: Record<string, unknown> | null;
+      error: Record<string, unknown> | null;
+    }[];
+  }>(
+    `${base(projectId)}/confirmations/batch?session_id=${sessionId}`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...(csrfHeaders() as Record<string, string>),
+      },
+      body: JSON.stringify({ confirmation_ids: confirmationIds, approved }),
+    },
+  );
+}
+
 export function subscribeToSession(
   projectId: string,
   sessionId: string,
@@ -157,9 +183,11 @@ export function subscribeToSession(
     "message.started",
     "message.delta",
     "message.completed",
+    "agent.reasoning",
     "agent.delegated",
     "agent.progress",
     "agent.completed",
+    "agent.failed",
     "tool.confirmation_required",
     "asset.created",
     "asset.updated",

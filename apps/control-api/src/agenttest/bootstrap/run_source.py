@@ -164,7 +164,6 @@ class SqlAlchemyRunSource:
                         select(TestCaseModel)
                         .where(
                             TestCaseModel.dataset_version_id == dataset_version.id,
-                            TestCaseModel.execution_mode == "api",
                         )
                         .order_by(TestCaseModel.sort_order)
                     )
@@ -192,6 +191,7 @@ class SqlAlchemyRunSource:
                     name=case.name,
                     input_snapshot=dict(case.input),
                     assertion_snapshot=list(case.assertions),
+                    execution_mode=str(case.execution_mode),
                 )
                 for case in cases
             ],

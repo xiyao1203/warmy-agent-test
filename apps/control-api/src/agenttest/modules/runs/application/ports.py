@@ -16,6 +16,7 @@ class RunDefinitionCase:
     name: str
     input_snapshot: dict[str, object]
     assertion_snapshot: list[dict[str, object]]
+    execution_mode: str = "api"
 
 
 @dataclass(frozen=True, slots=True)

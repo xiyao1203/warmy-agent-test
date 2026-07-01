@@ -23,4 +23,8 @@ export { TypingIndicator } from "./feedback/typing-indicator";
 
 // Chat
 export { ChatEmptyState } from "./chat/empty-state";
+export { MarkdownContent } from "./chat/markdown-content";
 export { MessageBubble } from "./chat/message-bubble";
+export { ReasoningBlock } from "./chat/reasoning-block";
+export { ToolCallCard } from "./chat/tool-call-card";
+export type { TaskState } from "./chat/tool-call-card";

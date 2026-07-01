@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import json
 from typing import Protocol
 from uuid import UUID
@@ -42,6 +43,11 @@ class ConfirmationDecision(BaseModel):
     approved: bool
 
 
+class BatchConfirmationDecision(BaseModel):
+    confirmation_ids: list[UUID] = Field(min_length=1, max_length=50)
+    approved: bool
+
+
 class ModelDeltaCallback(BaseModel):
     content: str = Field(min_length=1, max_length=100_000)
 
@@ -54,6 +60,7 @@ class ConversationPort(Protocol):
         *,
         history: list[tuple[str, str]],
         stream_callback: ModelStreamCallback | None = None,
+        action_context: dict[str, object] | None = None,
     ) -> ConversationResponse: ...
 
 
@@ -158,6 +165,17 @@ def create_test_agent_router(
             "message.started",
             {"role": "assistant"},
         )
+        # Build action_context from existing artifact links so the LLM
+        # can reference IDs produced by earlier actions in the session.
+        existing_links = await orchestration.list_artifact_links(
+            ProjectId(project_id), session.session_id
+        )
+        action_context: dict[str, object] = {}
+        if existing_links:
+            action_context["_previous_artifacts"] = [
+                {"type": link.artifact_type, "id": str(link.artifact_id)}
+                for link in existing_links
+            ]
         try:
             result = await conversation.respond(
                 actor,
@@ -171,6 +189,7 @@ def create_test_agent_router(
                     ),
                     internal_token=settings.internal_api_token,
                 ),
+                action_context=action_context if action_context else None,
             )
         except ModelDefaultMissingError:
             await orchestration.append_event(
@@ -198,16 +217,23 @@ def create_test_agent_router(
         await sessions.save(session)
         if agent_orchestrator is not None:
             context = OrchestrationContext(actor, ProjectId(project_id), session.session_id.value)
+            # Emit reasoning events before delegating actions (Codex-style
+            # expandable thinking disclosure).
+            for i, intent in enumerate(result.actions):
+                if intent.rationale:
+                    await orchestration.append_event(
+                        ProjectId(project_id),
+                        session.session_id,
+                        "agent.reasoning",
+                        {
+                            "step": i + 1,
+                            "total": len(result.actions),
+                            "capability": intent.capability,
+                            "child_agent": intent.child_agent,
+                            "content": intent.rationale,
+                        },
+                    )
             for index, intent in enumerate(result.actions):
-                await orchestration.append_event(
-                    ProjectId(project_id),
-                    session.session_id,
-                    "agent.delegated",
-                    {
-                        "child_agent": intent.child_agent,
-                        "capability": intent.capability,
-                    },
-                )
                 await agent_orchestrator.delegate(
                     context,
                     intent,
@@ -298,14 +324,31 @@ def create_test_agent_router(
         if session is None:
             return JSONResponse(status_code=404, content={"detail": "会话不存在"})
         after = int(last_event_id) if last_event_id and last_event_id.isdigit() else 0
-        events = await orchestration.list_events(
-            ProjectId(project_id), session.session_id, after=after
-        )
 
         async def generate():
-            for event in events:
-                payload = json.dumps(event.payload, ensure_ascii=False, separators=(",", ":"))
-                yield f"id: {event.sequence}\nevent: {event.event_type}\ndata: {payload}\n\n"
+            last_seq = after
+            idle_ticks = 0
+            while idle_ticks < 40:
+                events = await orchestration.list_events(
+                    ProjectId(project_id), session.session_id, after=last_seq
+                )
+                if events:
+                    idle_ticks = 0
+                    for event in events:
+                        last_seq = max(last_seq, event.sequence)
+                        payload = json.dumps(
+                            event.payload, ensure_ascii=False, separators=(",", ":")
+                        )
+                        yield (
+                            f"id: {event.sequence}\n"
+                            f"event: {event.event_type}\n"
+                            f"data: {payload}\n\n"
+                        )
+                else:
+                    idle_ticks += 1
+                if await request.is_disconnected():
+                    return
+                await asyncio.sleep(0.5)
 
         return StreamingResponse(
             generate(),
@@ -342,6 +385,48 @@ def create_test_agent_router(
             "status": task.status.value,
             "output": task.output,
             "error": task.error,
+        }
+
+    @router.post("/confirmations/batch")
+    async def decide_confirmations_batch(
+        request: Request,
+        project_id: UUID,
+        body: BatchConfirmationDecision,
+        x_csrf_token: str | None = Header(default=None),
+    ):
+        actor = await authorize_write(request, project_id, x_csrf_token)
+        if isinstance(actor, JSONResponse):
+            return actor
+        if agent_orchestrator is None:
+            return JSONResponse(
+                status_code=503,
+                content={"detail": "超级 Agent 编排器未配置"},
+            )
+        session_id = request.query_params.get("session_id")
+        if not session_id:
+            return JSONResponse(
+                status_code=422, content={"detail": "session_id is required"}
+            )
+        try:
+            tasks = await agent_orchestrator.decide_confirmations_batch(
+                OrchestrationContext(actor, ProjectId(project_id), UUID(session_id)),
+                body.confirmation_ids,
+                approved=body.approved,
+            )
+        except ValueError as exc:
+            return JSONResponse(
+                status_code=422, content={"detail": str(exc)}
+            )
+        return {
+            "results": [
+                {
+                    "task_id": str(t.task_id),
+                    "status": t.status.value,
+                    "output": t.output,
+                    "error": t.error,
+                }
+                for t in tasks
+            ]
         }
 
     return router

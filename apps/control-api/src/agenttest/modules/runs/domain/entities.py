@@ -144,9 +144,10 @@ class RunCase:
     name: str
     input_snapshot: dict[str, object]
     assertion_snapshot: list[dict[str, object]]
-    status: RunCaseStatus
-    created_at: datetime
-    updated_at: datetime
+    execution_mode: str = "api"
+    status: RunCaseStatus = RunCaseStatus.QUEUED
+    created_at: datetime = field(default_factory=lambda: datetime.now(UTC))
+    updated_at: datetime = field(default_factory=lambda: datetime.now(UTC))
     started_at: datetime | None = None
     completed_at: datetime | None = None
     output: dict[str, object] | None = None
@@ -165,6 +166,7 @@ class RunCase:
         name: str,
         input_snapshot: dict[str, object],
         assertion_snapshot: list[dict[str, object]],
+        execution_mode: str = "api",
     ) -> RunCase:
         if not name.strip():
             raise ValueError("Run case name is required")
@@ -176,6 +178,7 @@ class RunCase:
             name=name.strip(),
             input_snapshot=dict(input_snapshot),
             assertion_snapshot=list(assertion_snapshot),
+            execution_mode=execution_mode,
             status=RunCaseStatus.QUEUED,
             created_at=now,
             updated_at=now,

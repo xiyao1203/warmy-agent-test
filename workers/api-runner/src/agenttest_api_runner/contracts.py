@@ -15,6 +15,7 @@ class RunCaseTask:
     run_case_id: str
     input: dict[str, object]
     assertions: list[dict[str, object]]
+    execution_mode: str = "api"
 
 
 @dataclass(frozen=True, slots=True)
@@ -23,6 +24,7 @@ class RunTask:
     idempotency_key: str
     cases: list[RunCaseTask]
     agent_config: dict[str, object]
+    agent_type: str = "generic_http"
     environment: dict[str, object] = field(default_factory=dict)
     execution_policy: dict[str, object] = field(default_factory=dict)
     scorer_configs: list[dict[str, object]] = field(default_factory=list)

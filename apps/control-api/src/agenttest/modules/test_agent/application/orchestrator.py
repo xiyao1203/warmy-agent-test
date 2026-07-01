@@ -57,6 +57,16 @@ class SuperAgentOrchestrator:
             input=payload.model_dump(mode="json"),
         )
         await self._repository.add_task(task)
+        await self._event(
+            context,
+            "agent.delegated",
+            {
+                "task_id": str(task.task_id),
+                "child_agent": child_agent,
+                "capability": capability.name,
+                "input_summary": _summarize_args(payload.model_dump(mode="json")),
+            },
+        )
         if capability.risk is RiskLevel.READ:
             return await self._execute(context, task, capability, payload)
 
@@ -111,6 +121,26 @@ class SuperAgentOrchestrator:
         capability, payload = self._registry.resolve(task.child_agent, task.capability, task.input)
         return await self._execute(context, task, capability, payload)
 
+    async def decide_confirmations_batch(
+        self,
+        context: OrchestrationContext,
+        confirmation_ids: list[UUID],
+        *,
+        approved: bool,
+    ) -> list[AgentTask]:
+        """Batch-approve or reject multiple confirmations in a single call."""
+        tasks: list[AgentTask] = []
+        errors: list[str] = []
+        for cid in confirmation_ids:
+            try:
+                task = await self.decide_confirmation(context, cid, approved=approved)
+                tasks.append(task)
+            except ValueError as exc:
+                errors.append(f"{cid}: {exc}")
+        if errors and not tasks:
+            raise ValueError(f"All confirmations failed: {'; '.join(errors)}")
+        return tasks
+
     async def _execute(self, context, task, capability, payload) -> AgentTask:
         task.start()
         await self._repository.save_task(task)
@@ -152,6 +182,16 @@ class SuperAgentOrchestrator:
             await self._repository.save_task(task)
             await self._event(
                 context,
+                "agent.failed",
+                {
+                    "task_id": str(task.task_id),
+                    "child_agent": task.child_agent,
+                    "capability": task.capability,
+                    "detail": str(error),
+                },
+            )
+            await self._event(
+                context,
                 "error",
                 {"task_id": str(task.task_id), "detail": str(error)},
             )
@@ -175,3 +215,15 @@ class SuperAgentOrchestrator:
             event_type,
             payload,
         )
+
+
+def _summarize_args(args: dict[str, object], max_len: int = 120) -> str:
+    """Summarize action arguments for display in event payloads."""
+    parts: list[str] = []
+    for key, val in args.items():
+        val_str = str(val)
+        if len(val_str) > 40:
+            val_str = val_str[:37] + "..."
+        parts.append(f"{key}={val_str}")
+    summary = ", ".join(parts)
+    return summary[:max_len]

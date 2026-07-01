@@ -7,7 +7,13 @@ from uuid import UUID, uuid4
 
 from pydantic import BaseModel
 
+from agenttest.modules.agents.application.commands import CreateAgentVersionCommand
+from agenttest.modules.agents.infrastructure.connection_validator import (
+    HttpAgentConnectionValidator,
+)
 from agenttest.modules.agents.public import (
+    AgentConfig,
+    AgentId,
     AgentType,
     AgentVersionId,
     CreateAgentCommand,
@@ -27,6 +33,11 @@ from agenttest.modules.environments.public import (
 )
 from agenttest.modules.experiments.public import Experiment, ExperimentId
 from agenttest.modules.gates.public import ReleaseGateId, evaluate_evidence
+from agenttest.modules.model_configs.public import (
+    InvocationMessage,
+    ModelInvoker,
+    ModelPurpose,
+)
 from agenttest.modules.runs.public import CreateRunCommand, RunId
 from agenttest.modules.scorers.public import Scorer, ScorerId, ScorerType
 from agenttest.modules.security.public import (
@@ -35,6 +46,7 @@ from agenttest.modules.security.public import (
     create_scanner,
     validate_agent_endpoint,
 )
+from agenttest.modules.test_accounts.domain.entities import TestAccount
 from agenttest.modules.test_accounts.public import TestAccountId
 from agenttest.modules.test_agent.application.orchestrator import OrchestrationContext
 from agenttest.modules.test_plans.public import (
@@ -65,6 +77,8 @@ class HandlerPlatformGateway:
         promptfoo_bin: str,
         allow_private_security_targets: bool,
         gate_evidence,
+        models=None,
+        invoker: ModelInvoker | None = None,
     ) -> None:
         self._agents = agents
         self._datasets = datasets
@@ -80,6 +94,8 @@ class HandlerPlatformGateway:
         self._promptfoo_bin = promptfoo_bin
         self._allow_private_security_targets = allow_private_security_targets
         self._gate_evidence = gate_evidence
+        self._models = models
+        self._invoker = invoker
 
     async def execute(
         self,
@@ -254,6 +270,17 @@ class HandlerPlatformGateway:
             )
             return _created("run", item.run_id.value, _run(item), relation="updated")
 
+        if capability == "agents.analyze_endpoint":
+            return await self._analyze_endpoint(context, values)
+        if capability == "agents.create_version":
+            return await self._create_agent_version(context, values)
+        if capability == "datasets.auto_generate_cases":
+            return await self._auto_generate_cases(context, values)
+        if capability == "reports.generate":
+            return await self._generate_report(context, values)
+        if capability == "credentials.create":
+            return await self._create_credential(context, values)
+
         return await self._execute_quality(capability, context, values)
 
     async def _execute_quality(self, capability, context, values):
@@ -374,6 +401,264 @@ class HandlerPlatformGateway:
             )
         raise KeyError(f"Unsupported platform capability: {capability}")
 
+    async def _analyze_endpoint(self, context, values):
+        """Probe an agent's API endpoint and return contract information."""
+        version = await self._agents.get_version.execute(
+            context.actor,
+            AgentVersionId(UUID(str(values["agent_version_id"]))),
+        )
+        agent = await self._agents.get_agent.execute(context.actor, version.agent_id)
+        if agent.project_id != context.project_id:
+            raise ValueError("Agent version does not exist in project")
+
+        config = version.config
+        validate_agent_endpoint(
+            config.api_url,
+            allow_private_network=self._allow_private_security_targets,
+        )
+
+        validator = HttpAgentConnectionValidator(
+            allow_private_network=self._allow_private_security_targets,
+        )
+        probe = dict(values.get("probe_input") or {"input": "Hello, this is a probe test"})
+        result = await validator.validate(config, probe)
+
+        return {
+            "agent_name": agent.name,
+            "agent_type": agent.agent_type.value,
+            "endpoint": config.api_url,
+            "timeout_ms": config.timeout,
+            "connection": {
+                "status_code": result.status_code,
+                "latency_ms": result.latency_ms,
+            },
+            "response_preview": _serializable(result.response_preview),
+            "response_schema": _infer_json_schema(result.response_preview),
+            "artifacts": [
+                _artifact("agent_version", version.version_id.value, relation="analyzed")
+            ],
+        }
+
+    async def _auto_generate_cases(self, context, values):
+        """Use LLM to generate structured test cases for an agent."""
+        if self._invoker is None or self._models is None:
+            raise ValueError("LLM invoker is not configured for case generation")
+
+        version = await self._agents.get_version.execute(
+            context.actor,
+            AgentVersionId(UUID(str(values["agent_version_id"]))),
+        )
+        agent = await self._agents.get_agent.execute(context.actor, version.agent_id)
+        if agent.project_id != context.project_id:
+            raise ValueError("Agent version does not exist in project")
+
+        config = await self._models.resolve_default(
+            context.actor, context.project_id, ModelPurpose.TEST_AGENT_CHAT
+        )
+
+        hints = values.get("scenario_hints") or []
+        hints_text = ""
+        if hints:
+            hints_text = "\n".join(f"- {h}" for h in hints)
+
+        is_canvas = agent.agent_type.value == "canvas"
+        canvas_url = str(values.get("canvas_url", version.config.api_url))
+
+        if is_canvas:
+            prompt = (
+                "你是画布 Agent 测试用例生成专家。被测 Agent 通过画布（Canvas）与用户交互，"
+                "测试需要在浏览器中打开画布页面，输入提示词，等待画布生成结果后验证。\n\n"
+                f"被测 Agent:\n"
+                f"- 名称: {agent.name}\n"
+                f"- 类型: canvas\n"
+                f"- 画布 URL: {canvas_url}\n"
+                f"- 描述: {agent.description or '未提供'}\n"
+                + (f"\n场景提示:\n{hints_text}\n" if hints else "")
+                + "\n请生成 JSON 数组 cases，每个元素包含:\n"
+                "- name: 用例名称\n"
+                "- execution_mode: \"browser\"\n"
+                "- input: { url: 画布页面地址, steps: [Playwright 操作步骤] }\n"
+                "  steps 每项: action (goto/fill/click/wait), target (CSS选择器), value (输入)\n"
+                "- assertions: canvas 专用断言规则列表\n"
+                "  支持: { type: \"canvas_schema\" }, "
+                "{ type: \"node_count\", min_count: N }, "
+                "{ type: \"node_types\", required_types: [\"text\", \"image\"] }, "
+                "{ type: \"required_connection\", from_type: \"text\", to_type: \"image\" }, "
+                "{ type: \"no_orphan_nodes\" }\n"
+                "- tags: 标签列表\n\n"
+                "按以下分类各生成 2-3 条: 基础画布操作、复杂链路、边界异常。\n"
+                '返回 JSON: {"cases": [...]}'
+            )
+        else:
+            prompt = (
+                "你是测试用例生成专家。根据被测 Agent 信息生成结构化测试用例。\n\n"
+                f"被测 Agent:\n"
+                f"- 名称: {agent.name}\n"
+                f"- 类型: {agent.agent_type.value}\n"
+                f"- API: {version.config.api_url}\n"
+                f"- 描述: {agent.description or '未提供'}\n"
+                + (f"\n场景提示:\n{hints_text}\n" if hints else "")
+                + "\n请生成 JSON 数组 cases，每个元素包含:\n"
+                "- name: 用例名称\n"
+                "- input: 输入参数字典\n"
+                "- execution_mode: \"api\"\n"
+                "- assertions: 断言规则列表\n"
+                "- tags: 标签列表\n\n"
+                "按以下分类各生成 2-3 条: 正常场景、边界条件、异常输入。\n"
+                '返回 JSON: {"cases": [...]}'
+            )
+
+        result = await self._invoker.invoke(
+            config,
+            [InvocationMessage(role="system", content=prompt)],
+            response_format={"type": "json_object"},
+            timeout_seconds=60,
+            max_tokens=4096,
+        )
+
+        import json
+
+        try:
+            parsed = json.loads(result.content)
+            cases = parsed.get("cases", [])
+        except (json.JSONDecodeError, TypeError) as exc:
+            raise ValueError("LLM did not return valid JSON for test cases") from exc
+
+        if not cases or not isinstance(cases, list):
+            raise ValueError("No valid test cases generated")
+
+        default_execution_mode = "browser" if is_canvas else "api"
+
+        async with self._datasets.uow_factory():
+            dataset = await self._datasets.create_dataset.execute(
+                context.actor,
+                CreateDatasetCommand(
+                    project_id=context.project_id,
+                    name=str(values["dataset_name"]),
+                    description=f"由超级 Agent 为 {agent.name} 自动生成",
+                ),
+            )
+            version = await self._datasets.create_version.execute(
+                context.actor, CreateDatasetVersionCommand(dataset.dataset_id)
+            )
+            case_ids = []
+            for index, raw in enumerate(cases):
+                case_input = dict(raw.get("input") or {})
+                if not case_input:
+                    if is_canvas:
+                        case_input = {"url": canvas_url, "steps": []}
+                    else:
+                        case_input = {"input": f"auto_generated_case_{index + 1}"}
+                exc_mode = ExecutionMode(
+                    str(raw.get("execution_mode", default_execution_mode))
+                )
+                case = await self._datasets.add_case.execute(
+                    context.actor,
+                    AddTestCaseCommand(
+                        dataset_version_id=version.version_id,
+                        name=str(raw.get("name") or f"Auto Case {index + 1}"),
+                        input=case_input,
+                        execution_mode=exc_mode,
+                        assertions=list(raw.get("assertions") or []),
+                        scorers=list(raw.get("scorers") or []),
+                        tags=list(raw.get("tags") or []),
+                    ),
+                )
+                case_ids.append(str(case.case_id.value))
+
+        result_obj = _created(
+            "dataset", dataset.dataset_id.value, {"case_ids": case_ids}
+        )
+        result_obj["artifacts"].append(
+            _artifact("dataset_version", version.version_id.value)
+        )
+        return result_obj
+
+    async def _generate_report(self, context, values):
+        """Build a test run report summary."""
+        run_id = UUID(str(values["run_id"]))
+        run = await self._runs.get_run.execute(
+            context.actor, context.project_id, RunId(run_id)
+        )
+        cases = await self._runs.list_cases.execute(
+            context.actor, context.project_id, RunId(run_id)
+        )
+
+        duration_ms = None
+        if run.started_at is not None and run.completed_at is not None:
+            duration_ms = int(
+                (run.completed_at - run.started_at).total_seconds() * 1000
+            )
+
+        return {
+            "run_id": str(run_id),
+            "status": run.status.value,
+            "started_at": run.started_at.isoformat() if run.started_at else None,
+            "completed_at": run.completed_at.isoformat() if run.completed_at else None,
+            "duration_ms": duration_ms,
+            "total_cases": run.total_cases,
+            "passed_cases": run.passed_cases,
+            "failed_cases": run.failed_cases,
+            "error_cases": run.error_cases,
+            "cancelled_cases": run.cancelled_cases,
+            "cases_summary": [
+                {
+                    "name": c.name,
+                    "status": c.status.value,
+                    "duration_ms": c.duration_ms,
+                }
+                for c in cases
+            ],
+            "artifacts": [_artifact("run", run_id, relation="reported")],
+        }
+
+    async def _create_agent_version(self, context, values):
+        """为 Agent 创建新版本，写入完整的运行时配置。"""
+        raw_config = dict(values["config"])
+        if "api_url" not in raw_config or not raw_config["api_url"]:
+            raise ValueError("config.api_url is required")
+        config = AgentConfig.from_dict(raw_config)
+        agent_id = AgentId(UUID(str(values["agent_id"])))
+
+        agent = await self._agents.get_agent.execute(context.actor, agent_id)
+        if agent.project_id != context.project_id:
+            raise ValueError("Agent does not exist in project")
+
+        version = await self._agents.create_version.execute(
+            context.actor,
+            CreateAgentVersionCommand(agent_id=agent_id, config=config),
+        )
+        return _created(
+            "agent_version",
+            version.version_id.value,
+            {
+                "version_number": version.version_number,
+                "status": version.status.value,
+                "api_url": config.api_url,
+            },
+        )
+
+    async def _create_credential(self, context, values):
+        """为被测 Agent 创建测试凭证（用户名/密码或 API Key）。"""
+        account = TestAccount.create(
+            project_id=context.project_id.value,
+            name=str(values["name"]),
+            username=str(values["username"]),
+            credential_encrypted=str(values["credential"]),
+            account_type=str(values.get("account_type", "user")),
+            description=_optional(values.get("description")),
+        )
+        await self._accounts.add(account)
+        return _created(
+            "credential",
+            account.account_id.value,
+            {
+                "name": account.name,
+                "username": account.username,
+                "account_type": account.account_type,
+            },
+        )
+
 
 def _artifact(kind: str, value: UUID, relation: str = "created") -> dict[str, str]:
     return {"type": kind, "id": str(value), "relation": relation}
@@ -445,3 +730,40 @@ def _review(item):
 
 def _gate(item):
     return {"id": str(item.gate_id.value), "name": item.name, "enabled": item.enabled}
+
+
+def _serializable(value: object) -> object:
+    """Convert a value to JSON-serializable form for safe inclusion in capability results."""
+    if isinstance(value, (str, int, float, bool, type(None))):
+        return value
+    if isinstance(value, dict):
+        return {str(k): _serializable(v) for k, v in value.items()}
+    if isinstance(value, (list, tuple)):
+        return [_serializable(v) for v in value]
+    if isinstance(value, UUID):
+        return str(value)
+    return str(value)[:500]
+
+
+def _infer_json_schema(value: object) -> dict[str, object]:
+    """Infer a simple JSON schema from a parsed value for LLM consumption."""
+    if isinstance(value, dict):
+        return {
+            "type": "object",
+            "properties": {
+                str(k): _infer_json_schema(v) for k, v in value.items()
+            },
+            "sample_keys": [str(k) for k in value.keys()][:20],
+        }
+    if isinstance(value, list):
+        items = [_infer_json_schema(v) for v in value[:3]]
+        return {"type": "array", "length": len(value), "sample_items": items}
+    if isinstance(value, str):
+        return {"type": "string", "max_length": min(len(value), 500)}
+    if isinstance(value, bool):
+        return {"type": "boolean"}
+    if isinstance(value, int):
+        return {"type": "integer"}
+    if isinstance(value, float):
+        return {"type": "number"}
+    return {"type": "null"}

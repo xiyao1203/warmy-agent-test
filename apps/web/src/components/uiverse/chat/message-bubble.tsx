@@ -3,15 +3,19 @@
 import { Bot, User } from "lucide-react";
 import { useEffect, useState } from "react";
 
+import { MarkdownContent } from "./markdown-content";
+
 type MessageBubbleProps = {
   content: string;
   role: "assistant" | "user";
   animate?: boolean;
+  isStreaming?: boolean;
 };
 
 export function MessageBubble({
   animate = true,
   content,
+  isStreaming = false,
   role,
 }: MessageBubbleProps) {
   const [visible, setVisible] = useState(!animate);
@@ -46,7 +50,11 @@ export function MessageBubble({
             : "bg-[var(--canvas-soft)] text-[var(--ink)]"
         }`}
       >
-        {content}
+        {isUser ? (
+          <p className="whitespace-pre-wrap leading-relaxed">{content}</p>
+        ) : (
+          <MarkdownContent content={content} isStreaming={isStreaming} />
+        )}
       </div>
     </div>
   );
