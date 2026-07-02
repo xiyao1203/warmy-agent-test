@@ -26,7 +26,7 @@ jobs:
           --health-retries 12
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: astral-sh/setup-uv@v5
       - run: |
           uv run alembic -c apps/control-api/alembic.ini upgrade head
