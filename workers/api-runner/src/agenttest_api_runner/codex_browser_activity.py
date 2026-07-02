@@ -12,6 +12,11 @@ from datetime import UTC, datetime
 
 from temporalio import activity
 
+try:
+    from agenttest_plugin_codex.contracts import BrowserMode
+except ImportError:  # pragma: no cover — 插件未安装时回退
+    BrowserMode = None  # type: ignore[assignment]
+
 
 @dataclass(frozen=True, slots=True)
 class CodexBrowserTaskInput:
@@ -23,6 +28,11 @@ class CodexBrowserTaskInput:
     headless: bool = True
     timeout_seconds: int = 120
     model: str = "gpt-4o"
+    model_provider: str = ""
+    browser_profile_id: str = ""
+    browser_mode: str = "ephemeral"
+    storage_state_key: str = ""
+    credentials: dict[str, str] = field(default_factory=dict)
 
 
 @dataclass(frozen=True, slots=True)
@@ -52,7 +62,10 @@ async def run_codex_browser_case(inp: CodexBrowserTaskInput) -> CodexBrowserResu
 
     try:
         from agenttest_plugin_codex.adapter import CodexBrowserAdapter
-        from agenttest_plugin_codex.contracts import CodexBrowserInput
+        from agenttest_plugin_codex.contracts import (
+            CodexBrowserInput,
+            StorageStateConfig,
+        )
     except ImportError:
         return CodexBrowserResult(
             run_case_id=inp.run_case_id,
@@ -63,6 +76,7 @@ async def run_codex_browser_case(inp: CodexBrowserTaskInput) -> CodexBrowserResu
 
     adapter = CodexBrowserAdapter()
     try:
+        resolved_mode = _resolve_browser_mode(inp.browser_mode)
         result = await adapter.execute(
             CodexBrowserInput(
                 test_intent=inp.test_intent,
@@ -70,6 +84,14 @@ async def run_codex_browser_case(inp: CodexBrowserTaskInput) -> CodexBrowserResu
                 headless=inp.headless,
                 timeout_seconds=inp.timeout_seconds,
                 model=inp.model,
+                model_provider=inp.model_provider,
+                browser_profile_id=inp.browser_profile_id,
+                browser_mode=resolved_mode,
+                storage_state=StorageStateConfig(
+                    enabled=bool(inp.storage_state_key),
+                ),
+                storage_state_key=inp.storage_state_key,
+                credentials=inp.credentials,
             )
         )
     except Exception as exc:
@@ -96,6 +118,20 @@ async def run_codex_browser_case(inp: CodexBrowserTaskInput) -> CodexBrowserResu
 
 def _elapsed_ms(started: datetime) -> int:
     return int((datetime.now(UTC) - started).total_seconds() * 1000)
+
+
+def _resolve_browser_mode(raw: str) -> BrowserMode:
+    """将字符串解析为 BrowserMode，无效值或插件未安装时回退到 EPHEMERAL。"""
+    if BrowserMode is None:
+        from agenttest_plugin_codex.contracts import BrowserMode as BM
+        try:
+            return BM(raw)
+        except ValueError:
+            return BM.EPHEMERAL
+    try:
+        return BrowserMode(raw)
+    except ValueError:
+        return BrowserMode.EPHEMERAL
 
 
 def build_allure_json_result(

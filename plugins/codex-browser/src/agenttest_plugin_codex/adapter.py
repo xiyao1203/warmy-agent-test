@@ -1,18 +1,28 @@
 """Codex Browser Agent Adapter。
 
 实现 AgentAdapter 协议，调用 Codex CLI 执行浏览器探索式测试。
+支持临时实例和持久实例两种浏览器生命周期模式。
 """
 
 from __future__ import annotations
 
 from time import monotonic
 
+from agenttest_plugin_codex.chrome_pool import start_profile as pool_start_profile
 from agenttest_plugin_codex.codex_invoker import (
     CodexRawOutput,
+    capture_storage_state,
+    ensure_persistent_chrome,
     extract_json_result,
     invoke_codex,
+    load_storage_state,
 )
-from agenttest_plugin_codex.contracts import CodexBrowserInput, CodexBrowserResult
+from agenttest_plugin_codex.contracts import (
+    BrowserMode,
+    CodexBrowserInput,
+    CodexBrowserResult,
+)
+from agenttest_plugin_codex.profile_registry import get_profile
 
 
 class CodexBrowserAdapter:
@@ -37,6 +47,39 @@ class CodexBrowserAdapter:
         """
         started = monotonic()
 
+        # ── 持久模式：确保 Chrome 就绪 ──────────────────
+        cdp_endpoint = request.cdp_endpoint
+        storage_state_path = ""
+
+        if request.browser_profile_id:
+            # 从 registry 加载 Profile，启动 Chrome
+            profile = get_profile("", request.browser_profile_id)
+            if profile is not None:
+                cdp_endpoint = await pool_start_profile(
+                    profile, headless=request.headless,
+                )
+                if profile.storage_state_path:
+                    storage_state_path = profile.storage_state_path
+        elif request.browser_mode == BrowserMode.PERSISTENT and not cdp_endpoint:
+            try:
+                cdp_endpoint = await ensure_persistent_chrome(
+                    headless=request.headless,
+                )
+            except Exception as exc:
+                return CodexBrowserResult(
+                    status="error",
+                    error_message=f"持久 Chrome 启动失败: {exc}",
+                )
+
+        # ── 解析 storageState（profile 已提供则跳过） ────
+        if not storage_state_path:
+            if request.storage_state.enabled and request.storage_state_key:
+                storage_state_path = load_storage_state(
+                    key=request.storage_state_key,
+                    storage_dir=request.storage_state.storage_dir,
+                    ttl_hours=request.storage_state.ttl_hours,
+                ) or ""
+
         try:
             raw = await invoke_codex(
                 test_intent=request.test_intent,
@@ -44,6 +87,11 @@ class CodexBrowserAdapter:
                 headless=request.headless,
                 timeout_seconds=request.timeout_seconds,
                 model=request.model,
+                model_provider=request.model_provider,
+                browser_mode=request.browser_mode,
+                cdp_endpoint=cdp_endpoint,
+                storage_state_path=storage_state_path,
+                credentials=request.credentials or None,
             )
         except Exception as exc:
             return CodexBrowserResult(
@@ -59,6 +107,28 @@ class CodexBrowserAdapter:
         execution_log = _build_log(raw, json_result, duration_seconds)
         generated_script = _extract_script(json_result)
 
+        # ── storageState 采集（持久模式 + 登录操作） ────
+        storage_state_updated = False
+        new_storage_state_path = ""
+        if (
+            request.browser_mode == BrowserMode.PERSISTENT
+            and request.storage_state.enabled
+            and request.storage_state_key
+            and cdp_endpoint
+            and status != "error"
+        ):
+            login_detected = _detect_login_activity(json_result, request.credentials)
+            if login_detected or not storage_state_path:
+                # 登录操作已执行 或 首次无 storageState → 采集保存
+                new_storage_state_path = await capture_storage_state(
+                    cdp_endpoint=cdp_endpoint,
+                    target_url=request.target_url,
+                    key=request.storage_state_key,
+                    storage_dir=request.storage_state.storage_dir,
+                    existing_storage_state_path=storage_state_path,
+                )
+                storage_state_updated = bool(new_storage_state_path)
+
         return CodexBrowserResult(
             status=status,
             screenshots=screenshots,
@@ -70,11 +140,40 @@ class CodexBrowserAdapter:
                 if status == "error"
                 else None
             ),
+            storage_state_updated=storage_state_updated,
+            storage_state_path=new_storage_state_path,
         )
 
 
 def _normalise_status(raw: str) -> str:
     return {"pass": "passed", "fail": "failed"}.get(raw, raw)
+
+
+def _detect_login_activity(
+    result: dict[str, object],
+    credentials: dict[str, str] | None = None,
+) -> bool:
+    """检测 Codex 执行步骤中是否包含登录操作。
+
+    判断依据：
+    1. 步骤 action 含登录关键词
+    2. 有凭据时，步骤中出现了用户名/密码填写动作
+    """
+    login_keywords = ("登录", "login", "signin", "sign-in", "认证")
+    steps = result.get("steps", [])
+    if not isinstance(steps, list):
+        return False
+    for step in steps:
+        if not isinstance(step, dict):
+            continue
+        action = str(step.get("action", "")).lower()
+        if any(kw in action for kw in login_keywords):
+            return True
+        if credentials:
+            cred_values = [v.lower() for v in credentials.values() if v]
+            if any(v in action for v in cred_values):
+                return True
+    return False
 
 
 def _extract_screenshots(result: dict[str, object]) -> list[str]:

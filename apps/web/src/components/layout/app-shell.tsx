@@ -9,6 +9,7 @@ import {
   ClipboardCheck,
   Database,
   FlaskConical,
+  Globe,
   KeyRound,
   LayoutDashboard,
   MessageSquareText,
@@ -176,6 +177,14 @@ export function AppShell({
                     <KeyRound aria-hidden="true" className="size-4 shrink-0" />
                   }
                   label="环境与凭证"
+                />
+                <ProjectNavLink
+                  collapsed={collapsed}
+                  href={`/projects/${activeProjectId}/browser-profiles`}
+                  icon={
+                    <Globe aria-hidden="true" className="size-4 shrink-0" />
+                  }
+                  label="浏览器实例"
                 />
                 <ProjectNavLink
                   collapsed={collapsed}

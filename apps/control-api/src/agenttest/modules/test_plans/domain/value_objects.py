@@ -48,6 +48,7 @@ class TestPlanConfig:
     review_policy_id: str | None = None
     release_gate_id: str | None = None
     observation_only: bool = False
+    browser_profile_id: str = ""
 
     def __post_init__(self) -> None:
         if self.runs_per_case < 1:
@@ -82,6 +83,7 @@ class TestPlanConfig:
             "review_policy_id": self.review_policy_id,
             "release_gate_id": self.release_gate_id,
             "observation_only": self.observation_only,
+            "browser_profile_id": self.browser_profile_id,
         }
 
     @classmethod
@@ -125,6 +127,7 @@ class TestPlanConfig:
             else None,
             release_gate_id=str(data["release_gate_id"]) if data.get("release_gate_id") else None,
             observation_only=bool(data.get("observation_only", False)),
+            browser_profile_id=str(data.get("browser_profile_id", "")),
         )
 
     def dry_run_preview(self, *, num_cases: int = 0) -> dict[str, object]:

@@ -601,6 +601,30 @@
         "title": "AutoEnqueueRequest",
         "type": "object"
       },
+      "BatchConfirmationDecision": {
+        "properties": {
+          "approved": {
+            "title": "Approved",
+            "type": "boolean"
+          },
+          "confirmation_ids": {
+            "items": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "maxItems": 50,
+            "minItems": 1,
+            "title": "Confirmation Ids",
+            "type": "array"
+          }
+        },
+        "required": [
+          "confirmation_ids",
+          "approved"
+        ],
+        "title": "BatchConfirmationDecision",
+        "type": "object"
+      },
       "ChangePasswordRequest": {
         "additionalProperties": false,
         "properties": {
@@ -631,18 +655,6 @@
             "minLength": 1,
             "title": "Message",
             "type": "string"
-          },
-          "session_id": {
-            "anyOf": [
-              {
-                "format": "uuid",
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Session Id"
           }
         },
         "required": [
@@ -764,6 +776,31 @@
           "config"
         ],
         "title": "CreateAgentVersionRequest",
+        "type": "object"
+      },
+      "CreateBrowserProfileRequest": {
+        "properties": {
+          "name": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+          },
+          "target_domain": {
+            "default": "",
+            "title": "Target Domain",
+            "type": "string"
+          },
+          "user_data_dir": {
+            "default": "",
+            "title": "User Data Dir",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "title": "CreateBrowserProfileRequest",
         "type": "object"
       },
       "CreateCredentialBindingRequest": {
@@ -2363,6 +2400,25 @@
         "title": "ProjectResponse",
         "type": "object"
       },
+      "RegenerateRequest": {
+        "properties": {
+          "message": {
+            "anyOf": [
+              {
+                "maxLength": 20000,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Message"
+          }
+        },
+        "title": "RegenerateRequest",
+        "type": "object"
+      },
       "RenameProjectRequest": {
         "additionalProperties": false,
         "properties": {
@@ -3013,6 +3069,11 @@
             ],
             "title": "Baseline Run Id"
           },
+          "browser_profile_id": {
+            "default": "",
+            "title": "Browser Profile Id",
+            "type": "string"
+          },
           "concurrency": {
             "default": 1,
             "minimum": 1.0,
@@ -3502,6 +3563,36 @@
           "config"
         ],
         "title": "UpdateAgentVersionRequest",
+        "type": "object"
+      },
+      "UpdateBrowserProfileRequest": {
+        "properties": {
+          "name": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "target_domain": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Target Domain"
+          }
+        },
+        "title": "UpdateBrowserProfileRequest",
         "type": "object"
       },
       "UpdateDatasetRequest": {
@@ -5956,6 +6047,290 @@
         "summary": "Project Audit",
         "tags": [
           "audit"
+        ]
+      }
+    },
+    "/api/v1/projects/{project_id}/browser-profiles": {
+      "get": {
+        "operationId": "list_profiles_api_v1_projects__project_id__browser_profiles_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Profiles",
+        "tags": [
+          "browser-profiles"
+        ]
+      },
+      "post": {
+        "operationId": "create_profile_api_v1_projects__project_id__browser_profiles_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "x-csrf-token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Csrf-Token"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateBrowserProfileRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Create Profile",
+        "tags": [
+          "browser-profiles"
+        ]
+      }
+    },
+    "/api/v1/projects/{project_id}/browser-profiles/{profile_id}": {
+      "delete": {
+        "operationId": "delete_profile_api_v1_projects__project_id__browser_profiles__profile_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "profile_id",
+            "required": true,
+            "schema": {
+              "title": "Profile Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "x-csrf-token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Csrf-Token"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Delete Profile",
+        "tags": [
+          "browser-profiles"
+        ]
+      },
+      "get": {
+        "operationId": "get_profile_api_v1_projects__project_id__browser_profiles__profile_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "profile_id",
+            "required": true,
+            "schema": {
+              "title": "Profile Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Profile",
+        "tags": [
+          "browser-profiles"
+        ]
+      },
+      "patch": {
+        "operationId": "update_profile_api_v1_projects__project_id__browser_profiles__profile_id__patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "profile_id",
+            "required": true,
+            "schema": {
+              "title": "Profile Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "x-csrf-token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Csrf-Token"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateBrowserProfileRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Update Profile",
+        "tags": [
+          "browser-profiles"
         ]
       }
     },
@@ -9806,6 +10181,65 @@
       }
     },
     "/api/v1/projects/{project_id}/model-defaults/{purpose}": {
+      "delete": {
+        "description": "取消项目某个用途的默认模型绑定。",
+        "operationId": "delete_default_api_v1_projects__project_id__model_defaults__purpose__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Project Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "purpose",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/ModelPurpose"
+            }
+          },
+          {
+            "in": "header",
+            "name": "x-csrf-token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Csrf-Token"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Delete Default",
+        "tags": [
+          "model-configs"
+        ]
+      },
       "put": {
         "operationId": "set_default_api_v1_projects__project_id__model_defaults__purpose__put",
         "parameters": [
@@ -12063,9 +12497,9 @@
         ]
       }
     },
-    "/api/v1/projects/{project_id}/test-agent/chat": {
+    "/api/v1/projects/{project_id}/test-agent/confirmations/batch": {
       "post": {
-        "operationId": "legacy_chat_api_v1_projects__project_id__test_agent_chat_post",
+        "operationId": "decide_confirmations_batch_api_v1_projects__project_id__test_agent_confirmations_batch_post",
         "parameters": [
           {
             "in": "path",
@@ -12098,7 +12532,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/ChatRequest"
+                "$ref": "#/components/schemas/BatchConfirmationDecision"
               }
             }
           },
@@ -12124,7 +12558,7 @@
             "description": "Validation Error"
           }
         },
-        "summary": "Legacy Chat",
+        "summary": "Decide Confirmations Batch",
         "tags": [
           "test-agent"
         ]
@@ -12553,6 +12987,90 @@
           }
         },
         "summary": "Post Message",
+        "tags": [
+          "test-agent"
+        ]
+      }
+    },
+    "/api/v1/projects/{project_id}/test-agent/sessions/{session_id}/messages/regenerate": {
+      "post": {
+        "operationId": "regenerate_message_api_v1_projects__project_id__test_agent_sessions__session_id__messages_regenerate_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Project Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "session_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Session Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "x-csrf-token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Csrf-Token"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/RegenerateRequest"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Body"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Regenerate Message",
         "tags": [
           "test-agent"
         ]

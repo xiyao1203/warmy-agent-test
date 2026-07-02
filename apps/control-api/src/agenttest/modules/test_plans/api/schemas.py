@@ -39,6 +39,7 @@ class TestPlanConfigRequest(BaseModel):
     review_policy_id: UUID | None = None
     release_gate_id: UUID | None = None
     observation_only: bool = False
+    browser_profile_id: str = ""
 
     def to_domain(self) -> TestPlanConfig:
         data = self.model_dump()

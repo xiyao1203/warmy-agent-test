@@ -72,6 +72,9 @@ import type {
   CreatePolicyApiV1ProjectsProjectIdSecurityPoliciesPostData,
   CreatePolicyApiV1ProjectsProjectIdSecurityPoliciesPostErrors,
   CreatePolicyApiV1ProjectsProjectIdSecurityPoliciesPostResponses,
+  CreateProfileApiV1ProjectsProjectIdBrowserProfilesPostData,
+  CreateProfileApiV1ProjectsProjectIdBrowserProfilesPostErrors,
+  CreateProfileApiV1ProjectsProjectIdBrowserProfilesPostResponses,
   CreateProjectApiV1ProjectsPostData,
   CreateProjectApiV1ProjectsPostErrors,
   CreateProjectApiV1ProjectsPostResponses,
@@ -113,6 +116,9 @@ import type {
   DecideConfirmationApiV1ProjectsProjectIdTestAgentConfirmationsConfirmationIdPostData,
   DecideConfirmationApiV1ProjectsProjectIdTestAgentConfirmationsConfirmationIdPostErrors,
   DecideConfirmationApiV1ProjectsProjectIdTestAgentConfirmationsConfirmationIdPostResponses,
+  DecideConfirmationsBatchApiV1ProjectsProjectIdTestAgentConfirmationsBatchPostData,
+  DecideConfirmationsBatchApiV1ProjectsProjectIdTestAgentConfirmationsBatchPostErrors,
+  DecideConfirmationsBatchApiV1ProjectsProjectIdTestAgentConfirmationsBatchPostResponses,
   DeleteAccountApiV1ProjectsProjectIdTestAccountsAccountIdDeleteData,
   DeleteAccountApiV1ProjectsProjectIdTestAccountsAccountIdDeleteErrors,
   DeleteAccountApiV1ProjectsProjectIdTestAccountsAccountIdDeleteResponses,
@@ -131,9 +137,15 @@ import type {
   DeleteDatasetApiV1ProjectsProjectIdDatasetsDatasetIdDeleteData,
   DeleteDatasetApiV1ProjectsProjectIdDatasetsDatasetIdDeleteErrors,
   DeleteDatasetApiV1ProjectsProjectIdDatasetsDatasetIdDeleteResponses,
+  DeleteDefaultApiV1ProjectsProjectIdModelDefaultsPurposeDeleteData,
+  DeleteDefaultApiV1ProjectsProjectIdModelDefaultsPurposeDeleteErrors,
+  DeleteDefaultApiV1ProjectsProjectIdModelDefaultsPurposeDeleteResponses,
   DeleteGateApiV1ProjectsProjectIdGatesGateIdDeleteData,
   DeleteGateApiV1ProjectsProjectIdGatesGateIdDeleteErrors,
   DeleteGateApiV1ProjectsProjectIdGatesGateIdDeleteResponses,
+  DeleteProfileApiV1ProjectsProjectIdBrowserProfilesProfileIdDeleteData,
+  DeleteProfileApiV1ProjectsProjectIdBrowserProfilesProfileIdDeleteErrors,
+  DeleteProfileApiV1ProjectsProjectIdBrowserProfilesProfileIdDeleteResponses,
   DeleteScorerApiV1ProjectsProjectIdScorersScorerIdDeleteData,
   DeleteScorerApiV1ProjectsProjectIdScorersScorerIdDeleteErrors,
   DeleteScorerApiV1ProjectsProjectIdScorersScorerIdDeleteResponses,
@@ -203,6 +215,9 @@ import type {
   GetPlanApiV1ProjectsProjectIdTestPlansPlanIdGetData,
   GetPlanApiV1ProjectsProjectIdTestPlansPlanIdGetErrors,
   GetPlanApiV1ProjectsProjectIdTestPlansPlanIdGetResponses,
+  GetProfileApiV1ProjectsProjectIdBrowserProfilesProfileIdGetData,
+  GetProfileApiV1ProjectsProjectIdBrowserProfilesProfileIdGetErrors,
+  GetProfileApiV1ProjectsProjectIdBrowserProfilesProfileIdGetResponses,
   GetProjectApiV1ProjectsProjectIdGetData,
   GetProjectApiV1ProjectsProjectIdGetErrors,
   GetProjectApiV1ProjectsProjectIdGetResponses,
@@ -258,9 +273,6 @@ import type {
   JudgeVisionApiV1ProjectsProjectIdModelJudgesVisionPostData,
   JudgeVisionApiV1ProjectsProjectIdModelJudgesVisionPostErrors,
   JudgeVisionApiV1ProjectsProjectIdModelJudgesVisionPostResponses,
-  LegacyChatApiV1ProjectsProjectIdTestAgentChatPostData,
-  LegacyChatApiV1ProjectsProjectIdTestAgentChatPostErrors,
-  LegacyChatApiV1ProjectsProjectIdTestAgentChatPostResponses,
   ListAccountsApiV1ProjectsProjectIdTestAccountsGetData,
   ListAccountsApiV1ProjectsProjectIdTestAccountsGetErrors,
   ListAccountsApiV1ProjectsProjectIdTestAccountsGetResponses,
@@ -303,6 +315,9 @@ import type {
   ListPoliciesApiV1ProjectsProjectIdSecurityPoliciesGetData,
   ListPoliciesApiV1ProjectsProjectIdSecurityPoliciesGetErrors,
   ListPoliciesApiV1ProjectsProjectIdSecurityPoliciesGetResponses,
+  ListProfilesApiV1ProjectsProjectIdBrowserProfilesGetData,
+  ListProfilesApiV1ProjectsProjectIdBrowserProfilesGetErrors,
+  ListProfilesApiV1ProjectsProjectIdBrowserProfilesGetResponses,
   ListProjectsApiV1ProjectsGetData,
   ListProjectsApiV1ProjectsGetResponses,
   ListReviewsApiV1ProjectsProjectIdReviewsGetData,
@@ -371,6 +386,9 @@ import type {
   PublishVersionApiV1ProjectsProjectIdTestPlansPlanIdVersionsVersionIdPublishPostData,
   PublishVersionApiV1ProjectsProjectIdTestPlansPlanIdVersionsVersionIdPublishPostErrors,
   PublishVersionApiV1ProjectsProjectIdTestPlansPlanIdVersionsVersionIdPublishPostResponses,
+  RegenerateMessageApiV1ProjectsProjectIdTestAgentSessionsSessionIdMessagesRegeneratePostData,
+  RegenerateMessageApiV1ProjectsProjectIdTestAgentSessionsSessionIdMessagesRegeneratePostErrors,
+  RegenerateMessageApiV1ProjectsProjectIdTestAgentSessionsSessionIdMessagesRegeneratePostResponses,
   RejectReviewApiV1ProjectsProjectIdReviewsTaskIdRejectPostData,
   RejectReviewApiV1ProjectsProjectIdReviewsTaskIdRejectPostErrors,
   RejectReviewApiV1ProjectsProjectIdReviewsTaskIdRejectPostResponses,
@@ -449,6 +467,9 @@ import type {
   UpdateProfileApiV1AuthMePatchData,
   UpdateProfileApiV1AuthMePatchErrors,
   UpdateProfileApiV1AuthMePatchResponses,
+  UpdateProfileApiV1ProjectsProjectIdBrowserProfilesProfileIdPatchData,
+  UpdateProfileApiV1ProjectsProjectIdBrowserProfilesProfileIdPatchErrors,
+  UpdateProfileApiV1ProjectsProjectIdBrowserProfilesProfileIdPatchResponses,
   UpdateScorerApiV1ProjectsProjectIdScorersScorerIdPatchData,
   UpdateScorerApiV1ProjectsProjectIdScorersScorerIdPatchErrors,
   UpdateScorerApiV1ProjectsProjectIdScorersScorerIdPatchResponses,
@@ -1121,6 +1142,129 @@ export const projectAuditApiV1ProjectsProjectIdAuditGet = <
     ProjectAuditApiV1ProjectsProjectIdAuditGetErrors,
     ThrowOnError
   >({ url: "/api/v1/projects/{project_id}/audit", ...options });
+
+/**
+ * List Profiles
+ */
+export const listProfilesApiV1ProjectsProjectIdBrowserProfilesGet = <
+  ThrowOnError extends boolean = false,
+>(
+  options: Options<
+    ListProfilesApiV1ProjectsProjectIdBrowserProfilesGetData,
+    ThrowOnError
+  >,
+): RequestResult<
+  ListProfilesApiV1ProjectsProjectIdBrowserProfilesGetResponses,
+  ListProfilesApiV1ProjectsProjectIdBrowserProfilesGetErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).get<
+    ListProfilesApiV1ProjectsProjectIdBrowserProfilesGetResponses,
+    ListProfilesApiV1ProjectsProjectIdBrowserProfilesGetErrors,
+    ThrowOnError
+  >({ url: "/api/v1/projects/{project_id}/browser-profiles", ...options });
+
+/**
+ * Create Profile
+ */
+export const createProfileApiV1ProjectsProjectIdBrowserProfilesPost = <
+  ThrowOnError extends boolean = false,
+>(
+  options: Options<
+    CreateProfileApiV1ProjectsProjectIdBrowserProfilesPostData,
+    ThrowOnError
+  >,
+): RequestResult<
+  CreateProfileApiV1ProjectsProjectIdBrowserProfilesPostResponses,
+  CreateProfileApiV1ProjectsProjectIdBrowserProfilesPostErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).post<
+    CreateProfileApiV1ProjectsProjectIdBrowserProfilesPostResponses,
+    CreateProfileApiV1ProjectsProjectIdBrowserProfilesPostErrors,
+    ThrowOnError
+  >({
+    url: "/api/v1/projects/{project_id}/browser-profiles",
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...options.headers,
+    },
+  });
+
+/**
+ * Delete Profile
+ */
+export const deleteProfileApiV1ProjectsProjectIdBrowserProfilesProfileIdDelete =
+  <ThrowOnError extends boolean = false>(
+    options: Options<
+      DeleteProfileApiV1ProjectsProjectIdBrowserProfilesProfileIdDeleteData,
+      ThrowOnError
+    >,
+  ): RequestResult<
+    DeleteProfileApiV1ProjectsProjectIdBrowserProfilesProfileIdDeleteResponses,
+    DeleteProfileApiV1ProjectsProjectIdBrowserProfilesProfileIdDeleteErrors,
+    ThrowOnError
+  > =>
+    (options.client ?? client).delete<
+      DeleteProfileApiV1ProjectsProjectIdBrowserProfilesProfileIdDeleteResponses,
+      DeleteProfileApiV1ProjectsProjectIdBrowserProfilesProfileIdDeleteErrors,
+      ThrowOnError
+    >({
+      url: "/api/v1/projects/{project_id}/browser-profiles/{profile_id}",
+      ...options,
+    });
+
+/**
+ * Get Profile
+ */
+export const getProfileApiV1ProjectsProjectIdBrowserProfilesProfileIdGet = <
+  ThrowOnError extends boolean = false,
+>(
+  options: Options<
+    GetProfileApiV1ProjectsProjectIdBrowserProfilesProfileIdGetData,
+    ThrowOnError
+  >,
+): RequestResult<
+  GetProfileApiV1ProjectsProjectIdBrowserProfilesProfileIdGetResponses,
+  GetProfileApiV1ProjectsProjectIdBrowserProfilesProfileIdGetErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).get<
+    GetProfileApiV1ProjectsProjectIdBrowserProfilesProfileIdGetResponses,
+    GetProfileApiV1ProjectsProjectIdBrowserProfilesProfileIdGetErrors,
+    ThrowOnError
+  >({
+    url: "/api/v1/projects/{project_id}/browser-profiles/{profile_id}",
+    ...options,
+  });
+
+/**
+ * Update Profile
+ */
+export const updateProfileApiV1ProjectsProjectIdBrowserProfilesProfileIdPatch =
+  <ThrowOnError extends boolean = false>(
+    options: Options<
+      UpdateProfileApiV1ProjectsProjectIdBrowserProfilesProfileIdPatchData,
+      ThrowOnError
+    >,
+  ): RequestResult<
+    UpdateProfileApiV1ProjectsProjectIdBrowserProfilesProfileIdPatchResponses,
+    UpdateProfileApiV1ProjectsProjectIdBrowserProfilesProfileIdPatchErrors,
+    ThrowOnError
+  > =>
+    (options.client ?? client).patch<
+      UpdateProfileApiV1ProjectsProjectIdBrowserProfilesProfileIdPatchResponses,
+      UpdateProfileApiV1ProjectsProjectIdBrowserProfilesProfileIdPatchErrors,
+      ThrowOnError
+    >({
+      url: "/api/v1/projects/{project_id}/browser-profiles/{profile_id}",
+      ...options,
+      headers: {
+        "Content-Type": "application/json",
+        ...options.headers,
+      },
+    });
 
 /**
  * List Credentials
@@ -2507,6 +2651,32 @@ export const listDefaultsApiV1ProjectsProjectIdModelDefaultsGet = <
   >({ url: "/api/v1/projects/{project_id}/model-defaults", ...options });
 
 /**
+ * Delete Default
+ *
+ * 取消项目某个用途的默认模型绑定。
+ */
+export const deleteDefaultApiV1ProjectsProjectIdModelDefaultsPurposeDelete = <
+  ThrowOnError extends boolean = false,
+>(
+  options: Options<
+    DeleteDefaultApiV1ProjectsProjectIdModelDefaultsPurposeDeleteData,
+    ThrowOnError
+  >,
+): RequestResult<
+  DeleteDefaultApiV1ProjectsProjectIdModelDefaultsPurposeDeleteResponses,
+  DeleteDefaultApiV1ProjectsProjectIdModelDefaultsPurposeDeleteErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).delete<
+    DeleteDefaultApiV1ProjectsProjectIdModelDefaultsPurposeDeleteResponses,
+    DeleteDefaultApiV1ProjectsProjectIdModelDefaultsPurposeDeleteErrors,
+    ThrowOnError
+  >({
+    url: "/api/v1/projects/{project_id}/model-defaults/{purpose}",
+    ...options,
+  });
+
+/**
  * Set Default
  */
 export const setDefaultApiV1ProjectsProjectIdModelDefaultsPurposePut = <
@@ -3391,32 +3561,31 @@ export const updateAccountApiV1ProjectsProjectIdTestAccountsAccountIdPatch = <
   });
 
 /**
- * Legacy Chat
+ * Decide Confirmations Batch
  */
-export const legacyChatApiV1ProjectsProjectIdTestAgentChatPost = <
-  ThrowOnError extends boolean = false,
->(
-  options: Options<
-    LegacyChatApiV1ProjectsProjectIdTestAgentChatPostData,
+export const decideConfirmationsBatchApiV1ProjectsProjectIdTestAgentConfirmationsBatchPost =
+  <ThrowOnError extends boolean = false>(
+    options: Options<
+      DecideConfirmationsBatchApiV1ProjectsProjectIdTestAgentConfirmationsBatchPostData,
+      ThrowOnError
+    >,
+  ): RequestResult<
+    DecideConfirmationsBatchApiV1ProjectsProjectIdTestAgentConfirmationsBatchPostResponses,
+    DecideConfirmationsBatchApiV1ProjectsProjectIdTestAgentConfirmationsBatchPostErrors,
     ThrowOnError
-  >,
-): RequestResult<
-  LegacyChatApiV1ProjectsProjectIdTestAgentChatPostResponses,
-  LegacyChatApiV1ProjectsProjectIdTestAgentChatPostErrors,
-  ThrowOnError
-> =>
-  (options.client ?? client).post<
-    LegacyChatApiV1ProjectsProjectIdTestAgentChatPostResponses,
-    LegacyChatApiV1ProjectsProjectIdTestAgentChatPostErrors,
-    ThrowOnError
-  >({
-    url: "/api/v1/projects/{project_id}/test-agent/chat",
-    ...options,
-    headers: {
-      "Content-Type": "application/json",
-      ...options.headers,
-    },
-  });
+  > =>
+    (options.client ?? client).post<
+      DecideConfirmationsBatchApiV1ProjectsProjectIdTestAgentConfirmationsBatchPostResponses,
+      DecideConfirmationsBatchApiV1ProjectsProjectIdTestAgentConfirmationsBatchPostErrors,
+      ThrowOnError
+    >({
+      url: "/api/v1/projects/{project_id}/test-agent/confirmations/batch",
+      ...options,
+      headers: {
+        "Content-Type": "application/json",
+        ...options.headers,
+      },
+    });
 
 /**
  * Decide Confirmation
@@ -3577,6 +3746,33 @@ export const postMessageApiV1ProjectsProjectIdTestAgentSessionsSessionIdMessages
       ThrowOnError
     >({
       url: "/api/v1/projects/{project_id}/test-agent/sessions/{session_id}/messages",
+      ...options,
+      headers: {
+        "Content-Type": "application/json",
+        ...options.headers,
+      },
+    });
+
+/**
+ * Regenerate Message
+ */
+export const regenerateMessageApiV1ProjectsProjectIdTestAgentSessionsSessionIdMessagesRegeneratePost =
+  <ThrowOnError extends boolean = false>(
+    options: Options<
+      RegenerateMessageApiV1ProjectsProjectIdTestAgentSessionsSessionIdMessagesRegeneratePostData,
+      ThrowOnError
+    >,
+  ): RequestResult<
+    RegenerateMessageApiV1ProjectsProjectIdTestAgentSessionsSessionIdMessagesRegeneratePostResponses,
+    RegenerateMessageApiV1ProjectsProjectIdTestAgentSessionsSessionIdMessagesRegeneratePostErrors,
+    ThrowOnError
+  > =>
+    (options.client ?? client).post<
+      RegenerateMessageApiV1ProjectsProjectIdTestAgentSessionsSessionIdMessagesRegeneratePostResponses,
+      RegenerateMessageApiV1ProjectsProjectIdTestAgentSessionsSessionIdMessagesRegeneratePostErrors,
+      ThrowOnError
+    >({
+      url: "/api/v1/projects/{project_id}/test-agent/sessions/{session_id}/messages/regenerate",
       ...options,
       headers: {
         "Content-Type": "application/json",

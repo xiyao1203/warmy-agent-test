@@ -1,9 +1,10 @@
 {
   "id": "codex-browser",
   "name": "Codex Browser Agent Plugin",
-  "version": "1.0.0",
+  "version": "1.2.0",
   "sdk_version": 1,
   "entry_point": "agenttest_plugin_codex",
+  "requires": ["playwright>=1.50"],
   "capabilities": [
     "agent_adapter",
     "artifact_adapter"
@@ -13,7 +14,27 @@
     "properties": {
       "model": { "type": "string", "default": "gpt-4o" },
       "headless": { "type": "boolean", "default": true },
-      "timeout_seconds": { "type": "integer", "default": 120 }
+      "timeout_seconds": { "type": "integer", "default": 120 },
+      "browser_mode": {
+        "type": "string",
+        "enum": ["ephemeral", "persistent"],
+        "default": "ephemeral",
+        "description": "ephemeral=每次新建Chrome, persistent=复用长驻实例"
+      },
+      "cdp_port": {
+        "type": "integer",
+        "default": 9222,
+        "description": "持久模式下 Chrome 的 CDP 调试端口"
+      },
+      "storage_state": {
+        "type": "object",
+        "properties": {
+          "enabled": { "type": "boolean", "default": true },
+          "storage_dir": { "type": "string", "default": "/data/storage-states" },
+          "ttl_hours": { "type": "integer", "default": 24 },
+          "auto_refresh": { "type": "boolean", "default": true }
+        }
+      }
     }
   }
 }

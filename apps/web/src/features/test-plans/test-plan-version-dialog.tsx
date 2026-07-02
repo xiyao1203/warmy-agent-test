@@ -4,8 +4,9 @@ import type {
   CreateTestPlanVersionRequest,
   TestPlanVersionResponse,
 } from "@warmy/generated-api-client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
+import { listBrowserProfiles } from "@/features/browser-profiles/api";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -154,6 +155,25 @@ export function TestPlanVersionDialog({
     Number(config.runs_per_case ?? 1),
   );
   const [maxRetries, setMaxRetries] = useState(Number(config.max_retries ?? 0));
+  const [browserProfileId, setBrowserProfileId] = useState(
+    String(config.browser_profile_id ?? ""),
+  );
+
+  // 浏览器实例列表
+  const [browserProfileOptions, setBrowserProfileOptions] = useState<
+    { id: string; label: string }[]
+  >([]);
+
+  useEffect(() => {
+    if (!projectId || !open) return;
+    listBrowserProfiles(projectId)
+      .then((profiles) =>
+        setBrowserProfileOptions(
+          profiles.map((p) => ({ id: p.profile_id, label: p.name })),
+        ),
+      )
+      .catch(() => setBrowserProfileOptions([]));
+  }, [projectId, open]);
 
   // Step 3 — 评估配置
   const [passThreshold, setPassThreshold] = useState(
@@ -258,6 +278,7 @@ export function TestPlanVersionDialog({
           security_profile_ids: securityProfileIds,
           runs_per_case: runsPerCase,
           timeout,
+          browser_profile_id: browserProfileId,
         },
         dataset_version_id: datasetVersionId || null,
         environment_template_id: environmentId || null,
@@ -331,6 +352,12 @@ export function TestPlanVersionDialog({
             min={0}
             onChange={setMaxRetries}
             value={maxRetries}
+          />
+          <SelectField
+            label="浏览器实例"
+            onChange={setBrowserProfileId}
+            options={browserProfileOptions}
+            value={browserProfileId}
           />
         </>
       ) : stepIndex === 2 ? (

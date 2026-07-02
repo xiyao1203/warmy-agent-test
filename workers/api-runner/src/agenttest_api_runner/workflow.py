@@ -123,6 +123,15 @@ class RunWorkflow:
                             test_intent=codex_intent,
                             target_url=codex_url,
                             timeout_seconds=int(case.input.get("timeout", 120)),
+                            model=str(case.input.get("model", "gpt-4o")),
+                            model_provider=str(case.input.get("model_provider", "")),
+                            browser_profile_id=str(
+                                case.input.get("browser_profile_id", "")
+                                or task.execution_policy.get("browser_profile_id", "")
+                            ),
+                            browser_mode=str(case.input.get("browser_mode", "ephemeral")),
+                            storage_state_key=str(case.input.get("storage_state_key", "")),
+                            credentials=_extract_credentials(case.input),
                         ),
                         start_to_close_timeout=timedelta(
                             seconds=int(case.input.get("timeout", 120))
@@ -308,6 +317,14 @@ def _browser_steps(case_input: dict[str, object]) -> list[dict[str, str]]:
             if isinstance(step, dict)
         ]
     return []
+
+
+def _extract_credentials(case_input: dict[str, object]) -> dict[str, str]:
+    """从用例 input 中提取测试凭据。"""
+    creds = case_input.get("credentials")
+    if isinstance(creds, dict):
+        return {str(k): str(v) for k, v in creds.items()}
+    return {}
 
 
 def _codex_to_run_case(
