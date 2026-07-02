@@ -490,7 +490,7 @@ export function TestAgentChat({ projectId }: { projectId: string }) {
             <div
               aria-busy={state.sending || state.loadingSession}
               aria-live="polite"
-              className="chat-scroll min-h-0 flex-1 overflow-y-auto px-5 py-4"
+              className="chat-scroll min-h-0 flex-1 overflow-y-auto px-5 py-4 pb-8"
               onScroll={handleScroll}
               ref={scrollRef}
               role="log"
@@ -537,10 +537,10 @@ export function TestAgentChat({ projectId }: { projectId: string }) {
 
             {/* Scroll-to-bottom */}
             {!state.isPinned && (state.messages.length > 0 || state.streamingContent) ? (
-              <div className="flex justify-center">
+              <div className="absolute bottom-20 left-1/2 z-10 -translate-x-1/2">
                 <button
                   aria-label="滚动到底部"
-                  className="absolute bottom-20 z-10 rounded-full border border-[var(--hairline)] bg-[var(--surface)] p-2 text-[var(--muted)] shadow-md transition-all hover:bg-[var(--canvas-soft)] hover:text-[var(--ink)] hover:shadow-lg"
+                  className="rounded-full border border-[var(--hairline)] bg-[var(--surface)] p-2 text-[var(--muted)] shadow-md transition-all hover:bg-[var(--canvas-soft)] hover:text-[var(--ink)] hover:shadow-lg"
                   onClick={() => {
                     scrollRef.current?.scrollTo({
                       top: scrollRef.current.scrollHeight,

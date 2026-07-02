@@ -139,16 +139,15 @@ export function MessageBubble({
           {/* Hover controls — copy + feedback + edit + regenerate */}
           {!isStreaming ? (
             <div
-              className={`absolute flex gap-0.5 opacity-0 transition-all group-hover/bubble:opacity-100 ${
-                isUser
-                  ? "-left-9 top-1/2 -translate-y-1/2 flex-col"
-                  : "-bottom-7 right-0"
+              className={`mt-1 flex gap-0.5 invisible opacity-0 group-hover/bubble:visible group-hover/bubble:opacity-100 transition-all ${
+                isUser ? "justify-end" : "justify-start"
               }`}
+              aria-label="消息操作"
             >
               {/* Copy */}
               <button
                 aria-label={copied ? "已复制" : "复制消息"}
-                className="rounded-md p-1 text-[var(--muted)] transition-colors hover:text-[var(--ink)]"
+                className="rounded-md p-1.5 text-[var(--muted)] transition-colors hover:bg-[var(--canvas-soft)] hover:text-[var(--ink)]"
                 onClick={handleCopy}
                 type="button"
               >
@@ -162,7 +161,7 @@ export function MessageBubble({
               {isUser && onEdit && !editing ? (
                 <button
                   aria-label="编辑消息"
-                  className="rounded-md p-1 text-[var(--muted)] transition-colors hover:text-[var(--ink)]"
+                  className="rounded-md p-1.5 text-[var(--muted)] transition-colors hover:bg-[var(--canvas-soft)] hover:text-[var(--ink)]"
                   onClick={() => {
                     setEditText(content);
                     setEditing(true);
@@ -177,10 +176,10 @@ export function MessageBubble({
                 <>
                   <button
                     aria-label="有帮助"
-                    className={`rounded-md p-1 transition-colors ${
+                    className={`rounded-md p-1.5 transition-colors ${
                       rated === "up"
                         ? "text-[var(--success)]"
-                        : "text-[var(--muted)] hover:text-[var(--ink)]"
+                        : "text-[var(--muted)] hover:bg-[var(--canvas-soft)] hover:text-[var(--ink)]"
                     }`}
                     onClick={() => setRated(rated === "up" ? null : "up")}
                     type="button"
@@ -189,10 +188,10 @@ export function MessageBubble({
                   </button>
                   <button
                     aria-label="无帮助"
-                    className={`rounded-md p-1 transition-colors ${
+                    className={`rounded-md p-1.5 transition-colors ${
                       rated === "down"
                         ? "text-[var(--danger)]"
-                        : "text-[var(--muted)] hover:text-[var(--ink)]"
+                        : "text-[var(--muted)] hover:bg-[var(--canvas-soft)] hover:text-[var(--ink)]"
                     }`}
                     onClick={() => setRated(rated === "down" ? null : "down")}
                     type="button"
@@ -205,7 +204,7 @@ export function MessageBubble({
               {!isUser && isLastAssistant && onRegenerate ? (
                 <button
                   aria-label="重新生成回复"
-                  className="rounded-md p-1 text-[var(--muted)] transition-colors hover:text-[var(--ink)]"
+                  className="rounded-md p-1.5 text-[var(--muted)] transition-colors hover:bg-[var(--canvas-soft)] hover:text-[var(--ink)]"
                   onClick={() => onRegenerate()}
                   type="button"
                 >

@@ -11,6 +11,7 @@
 from __future__ import annotations
 
 import json
+import re
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from typing import Protocol
@@ -336,10 +337,12 @@ class SuperAgentConversation:
             actor, project_id, ModelPurpose.TEST_AGENT_CHAT,
         )
         prompt = (
-            "总结以下对话的核心主题，输出一个极简标题（2~6个汉字）。"
-            "标题是对整个对话的提炼，不是从对话中截取片段。"
-            "只返回标题本身，不加引号、标点或解释。"
-            "示例：问候、登录测试、API调试、安全扫描、Canvas画布"
+            "为以下对话起一个极简中文标题（2~6个汉字），直接输出的标题本身。\n"
+            "规则：\n"
+            "- 标题概括整个对话主题，不是截取对话中的某句话。\n"
+            "- 只输出纯标题文字。\n"
+            "- 禁止输出引号、标点、解释、前缀（如'标题：''总结'）或任何元描述。\n"
+            "参考示例：问候、登录测试、API调试、安全扫描、Canvas画布"
         )
         result = await self._invoker.invoke(
             config,
@@ -350,5 +353,17 @@ class SuperAgentConversation:
             ],
             timeout_seconds=15, max_tokens=16,
         )
-        title = result.content.strip()[:12]
+        raw = result.content.strip()
+        # Strip common prompt-leakage patterns (before truncation)
+        leakage_patterns = [
+            r'^我们被要求.*?主题',
+            r'^总结(一下|如下|对话)?[：:，。]?\s*',
+            r'^标题[是为：:]\s*',
+            r'^对话(主题|标题)[是为：:]\s*',
+        ]
+        for pat in leakage_patterns:
+            raw = re.sub(pat, '', raw).strip()
+        # Strip any leading colons/punctuation that may remain after cleanup
+        raw = re.sub(r'^[：:，,。.、]\s*', '', raw).strip()
+        title = raw[:12]
         return title if title else "新对话"
