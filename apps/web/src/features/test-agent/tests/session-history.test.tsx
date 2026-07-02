@@ -98,16 +98,17 @@ test("creates a durable session before the first message", async () => {
   });
   render(<TestAgentChat projectId="project-1" />);
 
-  fireEvent.change(screen.getByPlaceholderText("向超级测试 Agent 描述目标…"), {
+  fireEvent.change(screen.getByPlaceholderText(/向超级测试 Agent 描述目标/), {
     target: { value: "你好" },
   });
-  fireEvent.click(screen.getByRole("button", { name: "发送" }));
+  fireEvent.click(screen.getByRole("button", { name: /发送/ }));
 
   await waitFor(() => expect(createSession).toHaveBeenCalledWith("project-1"));
   expect(sendChatMessage).toHaveBeenCalledWith(
     "project-1",
     "session-2",
     "你好",
+    expect.anything(),
   );
   expect(await screen.findByText("你想测试哪个 Agent？")).toBeVisible();
 });

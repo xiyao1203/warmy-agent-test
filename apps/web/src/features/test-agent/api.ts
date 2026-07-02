@@ -254,10 +254,12 @@ export function subscribeToSession(
   for (const type of eventTypes) {
     source.addEventListener(type, (raw) => {
       const message = raw as MessageEvent<string>;
+      const data = message.data?.trim();
+      if (!data || data === "undefined") return;
       onEvent({
         id: Number(message.lastEventId || 0),
         type,
-        payload: JSON.parse(message.data) as Record<string, unknown>,
+        payload: JSON.parse(data) as Record<string, unknown>,
       });
     });
   }

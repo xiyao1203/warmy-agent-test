@@ -1,10 +1,16 @@
 "use client";
 
 import { ArrowDown, ChevronsRight, CornerDownLeft, StopCircle } from "lucide-react";
-import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type KeyboardEvent,
+  type MouseEvent,
+} from "react";
 
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import {
   ChatEmptyState,
   FollowUpChips,
@@ -26,43 +32,18 @@ import {
   subscribeToSession,
   TestAgentApiError,
 } from "./api";
-import type {
-  AgentEvent,
-  ArtifactLink,
-  ChatMessage,
-  ChatResponse,
-  SessionSummary,
-} from "./api";
+import type { AgentEvent, ChatMessage, ChatResponse } from "./api";
+import { useChatReducer } from "./chat-reducer";
 import { ConfirmationCard } from "./confirmation-card";
 import { ContextPanel } from "./context-panel";
 import { SessionList } from "./session-list";
 import { TargetChatScreen } from "./target-chat-screen";
 
+// ── 主组件 ───────────────────────────────────────────────────────
+
 export function TestAgentChat({ projectId }: { projectId: string }) {
-  const [workspace, setWorkspace] = useState<"super" | "target">("super");
-  const [sessions, setSessions] = useState<SessionSummary[]>([]);
-  const [active, setActive] = useState<ChatResponse | null>(null);
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
-  const [artifacts, setArtifacts] = useState<ArtifactLink[]>([]);
-  const [events, setEvents] = useState<AgentEvent[]>([]);
-  const [streamingContent, setStreamingContent] = useState("");
-  const [reasoningStream, setReasoningStream] = useState("");
-  const [input, setInput] = useState("");
-  const [loadingHistory, setLoadingHistory] = useState(true);
-  const [loadingSession, setLoadingSession] = useState(false);
-  const [sending, setSending] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [lastFailedInput, setLastFailedInput] = useState<string | null>(null);
-  const [sidebarOpen, setSidebarOpen] = useState(() => {
-    if (typeof window === "undefined") return true;
-    return localStorage.getItem("chat-sidebar-open") !== "false";
-  });
-  const [sidebarWidth, setSidebarWidth] = useState(() => {
-    if (typeof window === "undefined") return 272;
-    const saved = localStorage.getItem("chat-sidebar-width");
-    return saved ? Math.max(200, Math.min(480, Number(saved))) : 272;
-  });
-  const resizingRef = useRef(false);
+  const { state, dispatch, applySession, addSseEvent } = useChatReducer();
+
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const sessionRef = useRef<string | null>(null);
@@ -71,265 +52,165 @@ export function TestAgentChat({ projectId }: { projectId: string }) {
   const pinnedBottomRef = useRef(true);
   const acceptDeltasRef = useRef(true);
   const streamingContentRef = useRef("");
-  const handleRegenerateRef = useRef<(editedMessage?: string) => Promise<void>>(async () => {});
-  const [isPinned, setIsPinned] = useState(true);
-  const activeSessionId = active?.session_id ?? null;
+  const resizingRef = useRef(false);
 
-  // Load sessions on mount
+  const activeSessionId = state.activeSession?.session_id ?? null;
+
+  // ── Mount: load sessions ──
   useEffect(() => {
     let alive = true;
-    const requested = new URLSearchParams(window.location.search).get(
-      "session",
-    );
+    const requested = new URLSearchParams(window.location.search).get("session");
     listSessions(projectId)
       .then(async (response) => {
         if (!alive) return;
-        setSessions(response.items);
+        dispatch({ type: "SET_SESSIONS", sessions: response.items });
         if (requested) {
           const session = await getSession(projectId, requested);
-          if (!alive) return;
-          applySession(session);
+          if (!alive) applySession(session);
         }
       })
       .catch((reason: unknown) => {
-        if (alive)
-          setError(
-            reason instanceof Error ? reason.message : "会话历史加载失败",
-          );
+        if (alive) {
+          dispatch({
+            type: "SET_ERROR",
+            error: reason instanceof Error ? reason.message : "会话历史加载失败",
+          });
+        }
       })
       .finally(() => {
-        if (alive) setLoadingHistory(false);
+        if (alive) dispatch({ type: "SET_LOADING_HISTORY", value: false });
       });
     return () => {
       alive = false;
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [projectId]);
 
-  // SSE subscription
+  // ── SSE subscription ──
   useEffect(() => {
     if (!activeSessionId) return;
     sessionRef.current = activeSessionId;
     sseCloseRef.current?.();
     sseCloseRef.current = subscribeToSession(projectId, activeSessionId, (event) => {
       if (sessionRef.current !== activeSessionId) return;
-      setEvents((current) =>
-        current.some((item) => item.id === event.id && item.type === event.type)
-          ? current
-          : [...current, event],
-      );
-      if (event.type === "asset.created") {
-        const next = {
-          type: String(event.payload.type),
-          id: String(event.payload.id),
-          relation: String(event.payload.relation ?? "created"),
-        };
-        setArtifacts((current) =>
-          current.some((item) => item.type === next.type && item.id === next.id)
-            ? current
-            : [...current, next],
-        );
-      }
-      if (event.type === "message.started") {
-        streamingContentRef.current = "";
-        setStreamingContent("");
-        setReasoningStream("");
-      }
-      if (event.type === "agent.reasoning_delta") {
-        setReasoningStream(
-          (current) => current + String(event.payload.content ?? ""),
-        );
-      }
-      if (event.type === "agent.reasoning") {
-        setReasoningStream("");
-      }
-      if (event.type === "message.delta" && acceptDeltasRef.current) {
-        setStreamingContent(
-          (current) => {
-            const next = current + String(event.payload.content ?? "");
-            streamingContentRef.current = next;
-            return next;
-          },
-        );
-      }
-      // message.completed is intentionally NOT clearing streamingContent —
-      // applySession handles the cleanup when the POST response arrives,
-      // preventing a flash between the streaming bubble disappearing
-      // and the completed message bubble appearing.
+      addSseEvent(event);
     });
     return () => sseCloseRef.current?.();
-  }, [activeSessionId, projectId]);
+  }, [activeSessionId, projectId, addSseEvent]);
 
-  // Auto-focus input on initial load only (not after every send)
+  // ── Auto-focus ──
   useEffect(() => {
-    if (!loadingHistory) {
-      inputRef.current?.focus();
-    }
-  }, [loadingHistory]);
+    if (!state.loadingHistory) inputRef.current?.focus();
+  }, [state.loadingHistory]);
 
-  // Listen for code-action events from MarkdownContent code blocks
-  useEffect(() => {
-    const handler = (e: Event) => {
-      const detail = (e as CustomEvent).detail as {
-        action: "run" | "explain";
-        code: string;
-        language: string;
-      };
-      if (detail.action === "explain") {
-        setInput(`解释以下 ${detail.language} 代码的作用`);
-      } else if (detail.action === "run") {
-        setInput(`运行以下 ${detail.language} 代码并报告结果`);
-      }
-    };
-    window.addEventListener("code-action", handler);
-    return () => window.removeEventListener("code-action", handler);
-  }, []);
-
-  // Smooth auto-scroll — only when user is near bottom
+  // ── Smooth auto-scroll ──
   useEffect(() => {
     const el = scrollRef.current;
     if (!el) return;
     if (pinnedBottomRef.current) {
       el.scrollTo({ top: el.scrollHeight, behavior: "smooth" });
     }
-  }, [messages, events, sending]);
+  }, [state.messages, state.events, state.sending, state.streamingContent]);
 
-  // Track manual scrolling to unpin auto-scroll
   const handleScroll = useCallback(() => {
     const el = scrollRef.current;
     if (!el) return;
-    const threshold = 80;
-    const atBottom =
-      el.scrollHeight - el.scrollTop - el.clientHeight < threshold;
+    const atBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 80;
     pinnedBottomRef.current = atBottom;
-    setIsPinned(atBottom);
-  }, []);
+    dispatch({ type: "SET_PINNED", value: atBottom });
+  }, [dispatch]);
 
-  function applySession(session: ChatResponse) {
-    acceptDeltasRef.current = false;
-    setActive(session);
-    setMessages(session.messages);
-    setArtifacts(session.artifacts);
-    setStreamingContent("");
-    setReasoningStream("");
-    setEvents([]);
-    window.history.replaceState(
-      {},
-      "",
-      `${window.location.pathname}?session=${session.session_id}`,
-    );
-  }
+  // ── Session actions ──
+  const selectSession = useCallback(
+    async (sessionId: string) => {
+      dispatch({ type: "SET_ERROR", error: null });
+      dispatch({ type: "SET_LOADING_SESSION", value: true });
+      dispatch({ type: "CLEAR_EVENTS" });
+      try {
+        applySession(await getSession(projectId, sessionId));
+      } catch (reason) {
+        dispatch({
+          type: "SET_ERROR",
+          error: reason instanceof Error ? reason.message : "会话加载失败",
+        });
+      } finally {
+        dispatch({ type: "SET_LOADING_SESSION", value: false });
+      }
+    },
+    [projectId, applySession, dispatch],
+  );
 
-  async function selectSession(sessionId: string) {
-    setError(null);
-    setEvents([]);
-    setLoadingSession(true);
-    try {
-      applySession(await getSession(projectId, sessionId));
-    } catch (reason) {
-      setError(reason instanceof Error ? reason.message : "会话加载失败");
-    } finally {
-      setLoadingSession(false);
-    }
-  }
-
-  async function newSession() {
-    setError(null);
+  const newSession = useCallback(async () => {
+    dispatch({ type: "SET_ERROR", error: null });
     const session = await createSession(projectId);
     applySession(session);
-    setSessions((current) => [session, ...current]);
     return session;
-  }
+  }, [projectId, applySession, dispatch]);
 
-  async function handleDelete(sessionId: string) {
-    try {
-      const response = await deleteSession(projectId, sessionId);
-      if (!response.ok) throw new Error("删除失败");
-      const remaining = sessions.filter(
-        (item) => item.session_id !== sessionId,
-      );
-      setSessions(remaining);
-      if (activeSessionId === sessionId) {
-        if (remaining.length > 0) {
-          // Auto-select the most recent remaining session
-          await selectSession(remaining[0].session_id);
-        } else {
-          setActive(null);
-          setMessages([]);
-          setArtifacts([]);
-          setEvents([]);
-          window.history.replaceState({}, "", window.location.pathname);
+  const handleDelete = useCallback(
+    async (sessionId: string) => {
+      try {
+        const response = await deleteSession(projectId, sessionId);
+        if (!response.ok) throw new Error("删除失败");
+        const remaining = state.sessions.filter((i) => i.session_id !== sessionId);
+        dispatch({ type: "SET_SESSIONS", sessions: remaining });
+        if (activeSessionId === sessionId) {
+          if (remaining.length > 0) {
+            await selectSession(remaining[0].session_id);
+          } else {
+            dispatch({ type: "CLEAR_SESSION" });
+            if (typeof window !== "undefined") {
+              window.history.replaceState({}, "", window.location.pathname);
+            }
+          }
         }
+      } catch (reason) {
+        dispatch({
+          type: "SET_ERROR",
+          error: reason instanceof Error ? reason.message : "删除会话失败",
+        });
       }
-    } catch (reason) {
-      setError(reason instanceof Error ? reason.message : "删除会话失败");
-    }
-  }
+    },
+    [projectId, state.sessions, activeSessionId, selectSession, dispatch],
+  );
 
+  // ── Send / Regenerate ──
   function stopGenerating() {
     abortRef.current?.abort();
     sseCloseRef.current?.();
     sseCloseRef.current = null;
     acceptDeltasRef.current = false;
-    // Save partially generated content as a message instead of discarding it
     const partial = streamingContentRef.current.trim();
     if (partial) {
-      setMessages((current) => [
-        ...current,
-        {
-          role: "assistant" as const,
+      dispatch({
+        type: "APPEND_MESSAGE",
+        message: {
+          role: "assistant",
           content: partial,
           timestamp: new Date().toISOString(),
         },
-      ]);
+      });
     }
-    setSending(false);
-    setStreamingContent("");
-    setReasoningStream("");
+    dispatch({ type: "SET_SENDING", value: false });
+    dispatch({ type: "CLEAR_STREAMING" });
   }
 
   async function handleRegenerate(editedMessage?: string) {
     if (!activeSessionId) return;
-    setSending(true);
-    setError(null);
+    dispatch({ type: "SET_SENDING", value: true });
+    dispatch({ type: "SET_ERROR", error: null });
     pinnedBottomRef.current = true;
     acceptDeltasRef.current = true;
     abortRef.current = new AbortController();
 
-    // Clear old tool cards / confirmations from previous turn
-    setEvents((current) =>
-      current.filter(
-        (e) => e.type === "message.started" || e.type === "message.delta",
-      ),
-    );
+    // Save current messages as a branch before regenerating
+    dispatch({ type: "SAVE_BRANCH_SNAPSHOT" });
+    dispatch({ type: "FILTER_EVENTS", keepTypes: ["message.started", "message.delta"] });
+    dispatch({ type: "REMOVE_LAST_ASSISTANT_MESSAGE" });
 
-    // Optimistically remove last assistant message so old reply isn't shown
-    setMessages((current) => {
-      const last = current[current.length - 1];
-      if (last && last.role === "assistant") {
-        return current.slice(0, -1);
-      }
-      return current;
-    });
-    // If editing, also remove the corresponding user message
     if (editedMessage) {
-      setMessages((current) => {
-        const lastUser = (() => {
-          for (let i = current.length - 1; i >= 0; i--) {
-            if (current[i].role === "user") return i;
-          }
-          return -1;
-        })();
-        if (lastUser >= 0) {
-          const updated = [...current];
-          updated[lastUser] = { ...updated[lastUser], content: editedMessage };
-          // Remove assistant after edited user message
-          if (lastUser + 1 < updated.length && updated[lastUser + 1].role === "assistant") {
-            return updated.slice(0, lastUser + 1);
-          }
-          return updated;
-        }
-        return current;
-      });
+      dispatch({ type: "REPLACE_LAST_USER_MESSAGE", content: editedMessage });
+      dispatch({ type: "REMOVE_LAST_ASSISTANT_MESSAGE" });
     }
 
     try {
@@ -340,70 +221,48 @@ export function TestAgentChat({ projectId }: { projectId: string }) {
         abortRef.current.signal,
       );
       applySession(response);
-      setSessions((current) => [
-        response,
-        ...current.filter((item) => item.session_id !== response.session_id),
-      ]);
     } catch (reason) {
       if (reason instanceof DOMException && reason.name === "AbortError") return;
-      setError(
-        reason instanceof TestAgentApiError || reason instanceof Error
-          ? reason.message
-          : "重新生成失败，请重试。",
-      );
+      dispatch({
+        type: "SET_ERROR",
+        error:
+          reason instanceof TestAgentApiError || reason instanceof Error
+            ? reason.message
+            : "重新生成失败，请重试。",
+      });
     } finally {
-      setSending(false);
+      dispatch({ type: "SET_SENDING", value: false });
       abortRef.current = null;
     }
   }
 
-  // Keep ref in sync for stable callback
-  handleRegenerateRef.current = handleRegenerate;
-
-  const handleEdit = useCallback((newContent: string) => {
-    void handleRegenerateRef.current(newContent);
-  }, []);
-
   async function handleSend() {
-    const content = input.trim();
-    if (!content || sending) return;
-    setInput("");
-    setLastFailedInput(null);
-    setSending(true);
-    setError(null);
+    const content = state.input.trim();
+    if (!content || state.sending) return;
+    dispatch({ type: "SET_INPUT", value: "" });
+    dispatch({ type: "SET_ERROR", error: null, lastInput: null });
+    dispatch({ type: "SET_SENDING", value: true });
     pinnedBottomRef.current = true;
     acceptDeltasRef.current = true;
     abortRef.current = new AbortController();
 
-    // Clear old tool cards / confirmations from previous turn
-    setEvents((current) =>
-      current.filter(
-        (e) => e.type === "message.started" || e.type === "message.delta",
-      ),
-    );
+    dispatch({ type: "FILTER_EVENTS", keepTypes: ["message.started", "message.delta"] });
 
-    // Optimistically show the user message immediately
     const pendingUserMessage: ChatMessage = {
       role: "user",
       content,
       timestamp: new Date().toISOString(),
     };
-    setMessages((current) => [...current, pendingUserMessage]);
+    dispatch({ type: "APPEND_MESSAGE", message: pendingUserMessage });
 
     try {
-      const session: ChatResponse =
-        active ?? (await createSession(projectId));
-      if (!active) {
-        // Update session state manually — applySession would wipe the
-        // optimistic user message we just added above.
-        setActive(session);
-        setArtifacts(session.artifacts);
-        setSessions((current) => [session, ...current]);
-        window.history.replaceState(
-          {},
-          "",
-          `${window.location.pathname}?session=${session.session_id}`,
-        );
+      const session: ChatResponse = state.activeSession ?? (await createSession(projectId));
+      if (!state.activeSession) {
+        // Activate session metadata without wiping optimistic user message
+        sessionRef.current = session.session_id;
+        applySession(session);
+        // Restore optimistic user message that applySession wiped
+        dispatch({ type: "APPEND_MESSAGE", message: pendingUserMessage });
       }
       const response = await sendChatMessage(
         projectId,
@@ -412,98 +271,149 @@ export function TestAgentChat({ projectId }: { projectId: string }) {
         abortRef.current.signal,
       );
       applySession(response);
-      setSessions((current) => [
-        response,
-        ...current.filter((item) => item.session_id !== response.session_id),
-      ]);
     } catch (reason) {
       if (reason instanceof DOMException && reason.name === "AbortError") return;
-      // Remove the optimistic message on failure
-      setMessages((current) =>
-        current.filter((msg) => msg.timestamp !== pendingUserMessage.timestamp),
-      );
-      setInput(content);
-      setLastFailedInput(content);
-      setError(
-        reason instanceof TestAgentApiError || reason instanceof Error
-          ? reason.message
-          : "对话失败，请重试。",
-      );
+      dispatch({ type: "REMOVE_LAST_USER_MESSAGE" });
+      dispatch({ type: "SET_INPUT", value: content });
+      dispatch({
+        type: "SET_ERROR",
+        error:
+          reason instanceof TestAgentApiError || reason instanceof Error
+            ? reason.message
+            : "对话失败，请重试。",
+        lastInput: content,
+      });
     } finally {
-      setSending(false);
+      dispatch({ type: "SET_SENDING", value: false });
       abortRef.current = null;
     }
   }
 
+  // ── Sidebar ──
   const handleToggleSidebar = useCallback(() => {
-    setSidebarOpen((prev) => {
-      const next = !prev;
-      localStorage.setItem("chat-sidebar-open", String(next));
-      return next;
-    });
-  }, []);
+    dispatch({ type: "TOGGLE_SIDEBAR" });
+  }, [dispatch]);
 
-  // Resize handle for sidebar
-  const handleResizeStart = useCallback((e: React.MouseEvent) => {
-    e.preventDefault();
-    resizingRef.current = true;
-    const startX = e.clientX;
-    const startWidth = sidebarWidth;
+  const handleResizeStart = useCallback(
+    (e: MouseEvent) => {
+      e.preventDefault();
+      resizingRef.current = true;
+      const startX = e.clientX;
+      const startWidth = state.sidebarWidth;
 
-    const onMove = (ev: MouseEvent) => {
-      if (!resizingRef.current) return;
-      const delta = ev.clientX - startX;
-      setSidebarWidth(Math.max(200, Math.min(480, startWidth + delta)));
-    };
-    const onUp = () => {
-      resizingRef.current = false;
-      setSidebarWidth((w) => {
-        localStorage.setItem("chat-sidebar-width", String(w));
-        return w;
-      });
-      window.removeEventListener("mousemove", onMove);
-      window.removeEventListener("mouseup", onUp);
-      document.body.style.cursor = "";
-      document.body.style.userSelect = "";
-    };
-    document.body.style.cursor = "col-resize";
-    document.body.style.userSelect = "none";
-    window.addEventListener("mousemove", onMove);
-    window.addEventListener("mouseup", onUp);
-  }, [sidebarWidth]);
+      const onMove = (ev: globalThis.MouseEvent) => {
+        if (!resizingRef.current) return;
+        dispatch({
+          type: "SET_SIDEBAR_WIDTH",
+          width: Math.max(200, Math.min(480, startWidth + (ev.clientX - startX))),
+        });
+      };
+      const onUp = () => {
+        resizingRef.current = false;
+        window.removeEventListener("mousemove", onMove);
+        window.removeEventListener("mouseup", onUp);
+        document.body.style.cursor = "";
+        document.body.style.userSelect = "";
+      };
+      document.body.style.cursor = "col-resize";
+      document.body.style.userSelect = "none";
+      window.addEventListener("mousemove", onMove);
+      window.addEventListener("mouseup", onUp);
+    },
+    [state.sidebarWidth, dispatch],
+  );
 
-  if (workspace === "target") {
+  // ── Keyboard shortcuts ──
+  const handleKeyDown = useCallback(
+    (e: KeyboardEvent<HTMLTextAreaElement>) => {
+      // Ctrl+Enter: send immediately
+      if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
+        e.preventDefault();
+        void handleSend();
+        return;
+      }
+      // Enter (no shift): send
+      if (e.key === "Enter" && !e.shiftKey) {
+        e.preventDefault();
+        void handleSend();
+        return;
+      }
+      // Ctrl+K: new session
+      if (e.key === "k" && (e.ctrlKey || e.metaKey)) {
+        e.preventDefault();
+        void newSession();
+      }
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [state.input, state.sending, state.activeSession],
+  );
+
+  // ── Target Chat workspace ──
+  if (state.workspace === "target") {
     return (
       <div className="flex h-full flex-col overflow-hidden">
-        <WorkspaceTabs value={workspace} onChange={setWorkspace} />
+        <WorkspaceTabs
+          value={state.workspace}
+          onChange={(v) => dispatch({ type: "SET_WORKSPACE", value: v })}
+        />
         <TargetChatScreen projectId={projectId} />
       </div>
     );
   }
 
+  // ── Build task states from events ──
+  const taskStates = buildTaskStates(state.events);
+  const reasoningEvents = state.events.filter((e) => e.type === "agent.reasoning");
+  const reasoningByStep = new Map<number, AgentEvent>();
+  for (const evt of reasoningEvents) {
+    const step = Number(evt.payload.step ?? 0);
+    if (step > 0) reasoningByStep.set(step, evt);
+  }
+  const errorEvents = state.events.filter((e) => e.type === "error" && !e.payload.task_id);
+  const pendingConfs = state.events.filter((e) => e.type === "tool.confirmation_required");
+
+  const batchConfirm = async (approved: boolean) => {
+    const ids = pendingConfs.map((e) => String(e.payload.confirmation_id));
+    if (ids.length === 0 || !state.activeSession) return;
+    try {
+      await decideConfirmationsBatch(projectId, state.activeSession.session_id, ids, approved);
+    } finally {
+      void selectSession(state.activeSession.session_id);
+    }
+  };
+
+  const lastAssistantIndex = (() => {
+    for (let i = state.messages.length - 1; i >= 0; i--) {
+      if (state.messages[i].role === "assistant") return i;
+    }
+    return -1;
+  })();
+
   return (
     <div className="flex h-full flex-col overflow-hidden">
-      <WorkspaceTabs value={workspace} onChange={setWorkspace} />
+      <WorkspaceTabs
+        value={state.workspace}
+        onChange={(v) => dispatch({ type: "SET_WORKSPACE", value: v })}
+      />
 
       <div className="relative min-h-0 flex-1 overflow-hidden">
-        {/* Floating sidebar overlay */}
+        {/* ── Sidebar ── */}
         <aside
           className={`absolute bottom-0 left-0 top-0 z-20 transition-transform duration-300 ease-in-out ${
-            sidebarOpen ? "translate-x-0" : "-translate-x-full"
+            state.sidebarOpen ? "translate-x-0" : "-translate-x-full"
           }`}
-          style={{ width: sidebarWidth }}
+          style={{ width: state.sidebarWidth }}
         >
           <SessionList
-            activeId={active?.session_id ?? null}
-            items={sessions}
-            loading={loadingHistory}
+            activeId={state.activeSession?.session_id ?? null}
+            items={state.sessions}
+            loading={state.loadingHistory}
             onCreate={() => void newSession()}
             onDelete={(id) => void handleDelete(id)}
             onSelect={(id) => void selectSession(id)}
             onToggleCollapse={handleToggleSidebar}
           />
-          {/* Resize handle */}
-          {sidebarOpen ? (
+          {state.sidebarOpen ? (
             <div
               aria-label="拖拽调整侧边栏宽度"
               className="absolute bottom-0 right-0 top-0 z-30 w-1 cursor-col-resize transition-colors hover:bg-[var(--primary)]/30"
@@ -513,8 +423,7 @@ export function TestAgentChat({ projectId }: { projectId: string }) {
           ) : null}
         </aside>
 
-        {/* Backdrop when sidebar is open on narrow screens */}
-        {sidebarOpen ? (
+        {state.sidebarOpen ? (
           <div
             aria-hidden="true"
             className="absolute inset-0 z-10 bg-black/20 transition-opacity max-[1100px]:block hidden"
@@ -522,388 +431,349 @@ export function TestAgentChat({ projectId }: { projectId: string }) {
           />
         ) : null}
 
-        {/* Main + context panel — shifts right when sidebar opens */}
+        {/* ── Main + Context ── */}
         <div
-          className={`grid h-full grid-cols-[minmax(0,1fr)_19rem] max-[1100px]:grid-cols-1 overflow-hidden transition-[margin] duration-300 ease-in-out`}
-          style={{ marginLeft: sidebarOpen ? sidebarWidth : 0 }}
+          className="grid h-full grid-cols-[minmax(0,1fr)_19rem] max-[1100px]:grid-cols-1 overflow-hidden transition-[margin] duration-300 ease-in-out"
+          style={{ marginLeft: state.sidebarOpen ? state.sidebarWidth : 0 }}
         >
+          <main className="relative flex min-h-0 min-w-0 flex-col bg-[var(--canvas)]">
+            {/* Header */}
+            <header className="flex shrink-0 items-center justify-between border-b border-[var(--hairline)] bg-[var(--canvas)] px-4 py-2.5">
+              <button
+                aria-label="切换侧边栏"
+                className="rounded-lg p-1.5 text-[var(--muted)] transition-colors hover:bg-[var(--canvas-soft)] hover:text-[var(--ink)]"
+                onClick={handleToggleSidebar}
+                type="button"
+              >
+                <ChevronsRight
+                  className={`size-4 transition-transform ${state.sidebarOpen ? "rotate-180" : ""}`}
+                />
+              </button>
+              <span className="mx-3 truncate text-sm font-medium text-[var(--ink)]">
+                {state.activeSession?.title ?? "超级测试 Agent"}
+              </span>
+              <div className="flex items-center gap-1">
+                <button
+                  aria-label="新建会话 (Ctrl+K)"
+                  className="rounded-lg p-1.5 text-[var(--muted)] transition-colors hover:bg-[var(--canvas-soft)] hover:text-[var(--ink)]"
+                  onClick={() => void newSession()}
+                  title="新建会话 (Ctrl+K)"
+                  type="button"
+                >
+                  <span className="text-lg leading-none">+</span>
+                </button>
+              </div>
+            </header>
 
-        <main className="relative flex min-h-0 min-w-0 flex-col bg-[var(--canvas)]">
-          {/* Header always visible with sidebar toggle */}
-          <header className="flex shrink-0 items-center justify-between border-b border-[var(--hairline)] bg-[var(--canvas)] px-4 py-2.5">
-            <button
-              aria-label="切换侧边栏"
-              className="rounded-lg p-1.5 text-[var(--muted)] transition-colors hover:bg-[var(--canvas-soft)] hover:text-[var(--ink)]"
-              onClick={handleToggleSidebar}
-              type="button"
+            {/* Scrollable chat area */}
+            <div
+              aria-busy={state.sending || state.loadingSession}
+              aria-live="polite"
+              className="chat-scroll min-h-0 flex-1 overflow-y-auto px-5 py-4"
+              onScroll={handleScroll}
+              ref={scrollRef}
+              role="log"
             >
-              <ChevronsRight className={`size-4 transition-transform ${sidebarOpen ? "rotate-180" : ""}`} />
-            </button>
-            <span className="text-sm font-medium text-[var(--ink)] truncate mx-3">
-              {active?.title ?? "超级测试 Agent"}
-            </span>
-            <div className="w-8" />
-          </header>
+              {state.loadingSession ? (
+                <LoadingBar />
+              ) : state.messages.length === 0 && !state.sending && !state.streamingContent ? (
+                <ChatEmptyState
+                  description="告诉我你想测试什么，我会帮你编排完整的测试流程"
+                  onSuggestionClick={(text) => dispatch({ type: "SET_INPUT", value: text })}
+                  suggestions={[
+                    "为登录 API 生成回归测试用例并执行",
+                    "对比 Agent v2.3 和 v2.2 的评分差异",
+                    "执行安全红队测试并检查发布门禁",
+                    "帮我注册一个 HTTP Agent 并创建测试计划",
+                  ]}
+                  title="有什么我可以帮你的？"
+                />
+              ) : (
+                <MessageTimeline
+                  activeSession={state.activeSession}
+                  branches={state.branches}
+                  branchViewIndex={state.branchViewIndex}
+                  errorEvents={errorEvents}
+                  lastAssistantIndex={lastAssistantIndex}
+                  messages={state.messages}
+                  onEdit={(c) => void handleRegenerate(c)}
+                  onRegenerate={() => void handleRegenerate()}
+                  onSessionReload={(id) => void selectSession(id)}
+                  onSuggestionClick={(text) => dispatch({ type: "SET_INPUT", value: text })}
+                  onViewBranch={(i) => dispatch({ type: "VIEW_BRANCH", index: i })}
+                  pendingConfs={pendingConfs}
+                  projectId={projectId}
+                  reasoningByStep={reasoningByStep}
+                  reasoningEvents={reasoningEvents}
+                  reasoningStream={state.reasoningStream}
+                  sending={state.sending}
+                  streamingContent={state.streamingContent}
+                  taskStates={taskStates}
+                  batchConfirm={batchConfirm}
+                />
+              )}
+            </div>
 
-          <div
-            className="chat-scroll min-h-0 flex-1 overflow-y-auto px-5 py-4"
-            onScroll={handleScroll}
-            ref={scrollRef}
-          >
-            {/* Session loading indicator */}
-            {loadingSession ? (
-              <div className="mx-auto max-w-3xl">
-                <div className="mb-2 h-0.5 w-full overflow-hidden rounded-full bg-[var(--canvas-soft)]">
-                  <div className="h-full w-1/3 animate-[loading-bar_1.5s_ease-in-out_infinite] rounded-full bg-[var(--primary)]" />
+            {/* Scroll-to-bottom */}
+            {!state.isPinned && (state.messages.length > 0 || state.streamingContent) ? (
+              <div className="flex justify-center">
+                <button
+                  aria-label="滚动到底部"
+                  className="absolute bottom-20 z-10 rounded-full border border-[var(--hairline)] bg-[var(--surface)] p-2 text-[var(--muted)] shadow-md transition-all hover:bg-[var(--canvas-soft)] hover:text-[var(--ink)] hover:shadow-lg"
+                  onClick={() => {
+                    scrollRef.current?.scrollTo({
+                      top: scrollRef.current.scrollHeight,
+                      behavior: "smooth",
+                    });
+                    pinnedBottomRef.current = true;
+                    dispatch({ type: "SET_PINNED", value: true });
+                  }}
+                  type="button"
+                >
+                  <ArrowDown className="size-4" />
+                </button>
+              </div>
+            ) : null}
+
+            {/* Error banner */}
+            {state.error ? (
+              <div
+                aria-live="assertive"
+                className="shrink-0 border-t border-[var(--danger)]/30 bg-[var(--danger-subtle)]/20 px-4 py-2.5"
+                role="alert"
+              >
+                <div className="mx-auto flex max-w-3xl items-center justify-between gap-3">
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xs text-[var(--danger)]">{state.error}</p>
+                    {state.lastFailedInput ? (
+                      <p className="mt-0.5 truncate text-[0.65rem] text-[var(--muted)]">
+                        消息: {state.lastFailedInput.slice(0, 60)}
+                        {state.lastFailedInput.length > 60 ? "…" : ""}
+                      </p>
+                    ) : null}
+                  </div>
+                  <div className="flex shrink-0 items-center gap-1.5">
+                    {state.lastFailedInput ? (
+                      <button
+                        className="rounded px-2 py-0.5 text-xs text-[var(--primary)] transition-colors hover:bg-[var(--primary)]/10"
+                        onClick={() => {
+                          dispatch({
+                            type: "SET_INPUT",
+                            value: state.lastFailedInput ?? "",
+                          });
+                          void handleSend();
+                        }}
+                        type="button"
+                      >
+                        重试
+                      </button>
+                    ) : null}
+                    <button
+                      className="rounded px-2 py-0.5 text-xs text-[var(--muted)] transition-colors hover:text-[var(--ink)]"
+                      onClick={() =>
+                        dispatch({ type: "SET_ERROR", error: null, lastInput: null })
+                      }
+                      type="button"
+                    >
+                      关闭
+                    </button>
+                  </div>
                 </div>
               </div>
             ) : null}
-            {messages.length === 0 && !sending && !streamingContent ? (
-              <ChatEmptyState
-                description="告诉我你想测试什么，我会帮你编排完整的测试流程"
-                onSuggestionClick={setInput}
-                suggestions={[
-                  "为登录 API 生成回归测试用例并执行",
-                  "对比 Agent v2.3 和 v2.2 的评分差异",
-                  "执行安全红队测试并检查发布门禁",
-                  "帮我注册一个 HTTP Agent 并创建测试计划",
-                ]}
-                title="有什么我可以帮你的？"
-              />
-            ) : (
-              <Timeline
-                active={active}
-                events={events}
-                messages={messages}
-                onEdit={handleEdit}
-                onRegenerate={() => void handleRegenerate()}
-                onSessionReload={(id) => void selectSession(id)}
-                onSuggestionClick={setInput}
-                projectId={projectId}
-                reasoningStream={reasoningStream}
-                sending={sending}
-                streamingContent={streamingContent}
-              />
-            )}
-          </div>
 
-          {/* Scroll-to-bottom floating button — any time user scrolls up */}
-          {!isPinned ? (
-            <div className="flex justify-center">
-              <button
-                aria-label="滚动到底部"
-                className="absolute bottom-20 z-10 rounded-full border border-[var(--hairline)] bg-[var(--surface)] p-2 text-[var(--muted)] shadow-md transition-all hover:bg-[var(--canvas-soft)] hover:text-[var(--ink)] hover:shadow-lg"
-                onClick={() => {
-                  const el = scrollRef.current;
-                  if (el) {
-                    el.scrollTo({ top: el.scrollHeight, behavior: "smooth" });
-                    pinnedBottomRef.current = true;
-                    setIsPinned(true);
-                  }
-                }}
-                type="button"
-              >
-                <ArrowDown className="size-4" />
-              </button>
-            </div>
-          ) : null}
-
-          {/* Error banner — fixed above input bar */}
-          {error ? (
-            <div
-              className="shrink-0 border-t border-[var(--danger)]/30 bg-[var(--danger-subtle)]/20 px-4 py-2.5"
-              role="alert"
-            >
-              <div className="mx-auto flex max-w-3xl items-center justify-between gap-3">
-                <div className="min-w-0 flex-1">
-                  <p className="text-xs text-[var(--danger)]">{error}</p>
-                  {lastFailedInput ? (
-                    <p className="mt-0.5 truncate text-[0.65rem] text-[var(--muted)]">
-                      消息: {lastFailedInput.slice(0, 60)}
-                      {lastFailedInput.length > 60 ? "…" : ""}
-                    </p>
-                  ) : null}
+            {/* Composer (input bar) */}
+            <div className="shrink-0 border-t border-[var(--hairline)] px-4 py-3">
+              <div className="mx-auto mb-2 flex max-w-3xl items-center gap-2">
+                <div className="h-1 flex-1 overflow-hidden rounded-full bg-[var(--canvas-soft)]">
+                  <div
+                    className="h-full rounded-full bg-[var(--primary)]/40 transition-all"
+                    style={{ width: `${Math.min(100, state.messages.length * 6)}%` }}
+                  />
                 </div>
-                <div className="flex shrink-0 items-center gap-1.5">
-                  {lastFailedInput ? (
+                <span className="shrink-0 text-[0.6rem] text-[var(--muted)]">
+                  {state.messages.length > 0 ? `${state.messages.length} 条消息` : "新对话"}
+                </span>
+              </div>
+              <div className="mx-auto flex max-w-3xl gap-2">
+                <div className="relative flex-1">
+                  <textarea
+                    aria-label="对话输入"
+                    className="w-full resize-none rounded-2xl border border-[var(--hairline)] bg-[var(--canvas-soft)] px-4 py-3 pr-10 text-[0.9375rem] leading-6 text-[var(--ink)] placeholder-[var(--muted)] transition-shadow focus:border-[var(--hairline-strong)] focus:shadow-md focus:outline-none disabled:opacity-50"
+                    disabled={state.sending}
+                    onChange={(e) => {
+                      dispatch({ type: "SET_INPUT", value: e.target.value });
+                      e.target.style.height = "auto";
+                      e.target.style.height = `${Math.min(e.target.scrollHeight, 200)}px`;
+                    }}
+                    onKeyDown={handleKeyDown}
+                    placeholder="向超级测试 Agent 描述目标… (Ctrl+K 新会话, Ctrl+Enter 发送)"
+                    ref={inputRef}
+                    rows={1}
+                    value={state.input}
+                  />
+                  {state.sending ? (
                     <button
-                      className="rounded px-2 py-0.5 text-xs text-[var(--primary)] transition-colors hover:bg-[var(--primary)]/10"
-                      onClick={() => {
-                        if (lastFailedInput) {
-                          setInput(lastFailedInput);
-                          void handleSend();
-                        }
-                      }}
+                      aria-label="停止生成"
+                      className="absolute bottom-2 right-2 rounded-lg p-1.5 text-[var(--muted)] transition-colors hover:bg-[var(--danger-subtle)] hover:text-[var(--danger)]"
+                      onClick={stopGenerating}
                       type="button"
                     >
-                      重试
+                      <StopCircle className="size-5" />
                     </button>
-                  ) : null}
-                  <button
-                    className="rounded px-2 py-0.5 text-xs text-[var(--muted)] transition-colors hover:text-[var(--ink)]"
-                    onClick={() => {
-                      setError(null);
-                      setLastFailedInput(null);
-                    }}
-                    type="button"
-                  >
-                    关闭
-                  </button>
+                  ) : (
+                    <button
+                      aria-label="发送 (Enter)"
+                      className={`absolute bottom-2 right-2 rounded-lg p-1.5 transition-all ${
+                        state.input.trim()
+                          ? "bg-[var(--primary)] text-white hover:bg-[var(--primary-hover)]"
+                          : "cursor-default text-[var(--muted)]"
+                      }`}
+                      disabled={!state.input.trim()}
+                      onClick={() => void handleSend()}
+                      type="button"
+                    >
+                      <CornerDownLeft className="size-5" />
+                    </button>
+                  )}
                 </div>
               </div>
+              <p className="mx-auto mt-2 max-w-3xl text-center text-[0.65rem] text-[var(--muted)]">
+                超级测试 Agent 可能产生不准确信息，请验证关键结果。
+              </p>
             </div>
-          ) : null}
+          </main>
 
-          <div className="shrink-0 border-t border-[var(--hairline)] px-4 py-3">
-            {/* Context window indicator */}
-            <div className="mx-auto mb-2 max-w-3xl flex items-center gap-2">
-              <div className="h-1 flex-1 overflow-hidden rounded-full bg-[var(--canvas-soft)]">
-                <div
-                  className="h-full rounded-full bg-[var(--primary)]/40 transition-all"
-                  style={{ width: `${Math.min(100, messages.length * 6)}%` }}
-                />
-              </div>
-              <span className="shrink-0 text-[0.6rem] text-[var(--muted)]">
-                {messages.length > 0 ? `${messages.length} 条消息` : "新对话"}
-              </span>
-            </div>
-            <div className="mx-auto flex max-w-3xl gap-2">
-              <div className="relative flex-1">
-                <textarea
-                  aria-label="对话输入"
-                  className="w-full resize-none rounded-2xl border border-[var(--hairline)] bg-[var(--canvas-soft)] px-4 py-3 pr-10 text-[0.9375rem] leading-6 text-[var(--ink)] placeholder-[var(--muted)] transition-shadow focus:border-[var(--hairline-strong)] focus:shadow-md focus:outline-none disabled:opacity-50"
-                  disabled={sending}
-                  onChange={(event) => {
-                    setInput(event.target.value);
-                    // Auto-resize
-                    const el = event.target;
-                    el.style.height = "auto";
-                    el.style.height = `${Math.min(el.scrollHeight, 200)}px`;
-                  }}
-                  onKeyDown={(event) => {
-                    if (event.key === "Enter" && !event.shiftKey) {
-                      event.preventDefault();
-                      void handleSend();
-                    }
-                  }}
-                  placeholder="向超级测试 Agent 描述目标…"
-                  ref={inputRef}
-                  rows={1}
-                  value={input}
-                />
-                {sending ? (
-                  <button
-                    aria-label="停止生成"
-                    className="absolute bottom-2 right-2 rounded-lg p-1.5 text-[var(--muted)] transition-colors hover:bg-[var(--danger-subtle)] hover:text-[var(--danger)]"
-                    onClick={stopGenerating}
-                    type="button"
-                  >
-                    <StopCircle className="size-5" />
-                  </button>
-                ) : (
-                  <button
-                    aria-label="发送"
-                    className={`absolute bottom-2 right-2 rounded-lg p-1.5 transition-all ${
-                      input.trim()
-                        ? "bg-[var(--primary)] text-white hover:bg-[var(--primary-hover)]"
-                        : "cursor-default text-[var(--muted)]"
-                    }`}
-                    disabled={!input.trim()}
-                    onClick={() => void handleSend()}
-                    type="button"
-                  >
-                    <CornerDownLeft className="size-5" />
-                  </button>
-                )}
-              </div>
-            </div>
-            <p className="mx-auto mt-2 max-w-3xl text-center text-[0.65rem] text-[var(--muted)]">
-              超级测试 Agent 可能产生不准确信息，请验证关键结果。
-            </p>
+          {/* Context panel */}
+          <div className="max-[1100px]:hidden">
+            <ContextPanel
+              artifacts={state.artifacts}
+              events={state.events}
+              projectId={projectId}
+            />
           </div>
-        </main>
-
-        <div className="max-[1100px]:hidden">
-          <ContextPanel
-            artifacts={artifacts}
-            events={events}
-            projectId={projectId}
-          />
         </div>
-      </div>
       </div>
     </div>
   );
 }
 
-/* ───── Timeline ───── */
+// ── Sub-components ───────────────────────────────────────────────
 
 type TimelineProps = {
-  active: ChatResponse | null;
-  events: AgentEvent[];
+  activeSession: ChatResponse | null;
+  branches: import("./chat-reducer").BranchSnapshot[];
+  branchViewIndex: number;
+  errorEvents: AgentEvent[];
+  lastAssistantIndex: number;
   messages: ChatMessage[];
   onEdit: (newContent: string) => void;
   onRegenerate: () => void;
   onSessionReload: (sessionId: string) => void;
   onSuggestionClick: (text: string) => void;
+  onViewBranch: (index: number) => void;
+  pendingConfs: AgentEvent[];
   projectId: string;
+  reasoningByStep: Map<number, AgentEvent>;
+  reasoningEvents: AgentEvent[];
   reasoningStream: string;
   sending: boolean;
   streamingContent: string;
+  taskStates: TaskState[];
+  batchConfirm: (approved: boolean) => Promise<void>;
 };
 
-function Timeline({
-  active,
-  events,
+function MessageTimeline({
+  activeSession,
+  branches,
+  branchViewIndex,
+  errorEvents,
+  lastAssistantIndex,
   messages,
   onEdit,
   onRegenerate,
   onSessionReload,
   onSuggestionClick,
+  onViewBranch,
+  pendingConfs,
   projectId,
+  reasoningByStep,
+  reasoningEvents,
   reasoningStream,
   sending,
   streamingContent,
+  taskStates,
+  batchConfirm,
 }: TimelineProps) {
-  // Tool events grouped by task_id
-  const taskStates: TaskState[] = (() => {
-    const groups = new Map<
-      string,
-      { delegated: AgentEvent | null; latest: AgentEvent }
-    >();
-    const order: string[] = [];
-    for (const event of events) {
-      if (
-        !["agent.delegated", "agent.progress", "agent.completed", "agent.failed"].includes(event.type)
-      ) continue;
-      const tid = String(event.payload.task_id ?? "");
-      if (!tid) continue;
-      if (!groups.has(tid)) order.push(tid);
-      const existing = groups.get(tid);
-      if (!existing) {
-        groups.set(tid, { delegated: null, latest: event });
-      } else {
-        existing.latest = event;
-      }
-      if (event.type === "agent.delegated") {
-        groups.get(tid)!.delegated = event;
-      }
-    }
-    return order.map((tid) => {
-      const group = groups.get(tid)!;
-      const inputSummary = group.delegated
-        ? String(group.delegated.payload.input_summary ?? "")
-        : "";
-      const childAgent = group.delegated
-        ? String(group.delegated.payload.child_agent ?? "")
-        : String(group.latest.payload.child_agent ?? "");
-      const capability = group.delegated
-        ? String(group.delegated.payload.capability ?? "")
-        : String(group.latest.payload.capability ?? "");
-      const statusMap: Record<string, TaskState["status"]> = {
-        "agent.delegated": "delegated",
-        "agent.progress": "running",
-        "agent.completed": "completed",
-        "agent.failed": "failed",
-      };
-      const status = statusMap[group.latest.type] ?? "delegated";
-      return {
-        taskId: tid,
-        childAgent,
-        capability,
-        inputSummary,
-        status,
-        output:
-          group.latest.type === "agent.completed"
-            ? (group.latest.payload.output as Record<string, unknown> | null) ?? null
-            : null,
-        errorDetail:
-          group.latest.type === "agent.failed"
-            ? String(group.latest.payload.detail ?? null)
-            : null,
-      };
-    });
-  })();
-
-  const reasoningEvents = events.filter((e) => e.type === "agent.reasoning");
-  const errorEvents = events.filter(
-    (e) => e.type === "error" && !e.payload.task_id,
-  );
-  const pendingConfs = events.filter(
-    (e) => e.type === "tool.confirmation_required",
-  );
-
-  // Build a map: step number → reasoning event
-  const reasoningByStep = new Map<number, AgentEvent>();
-  for (const evt of reasoningEvents) {
-    const step = Number(evt.payload.step ?? 0);
-    if (step > 0) reasoningByStep.set(step, evt);
-  }
-
-  const batchConfirm = async (approved: boolean) => {
-    const ids = pendingConfs.map((e) =>
-      String(e.payload.confirmation_id),
-    );
-    if (ids.length === 0 || !active) return;
-    try {
-      await decideConfirmationsBatch(
-        projectId,
-        active.session_id,
-        ids,
-        approved,
-      );
-    } finally {
-      onSessionReload(active.session_id);
-    }
-  };
-
-  /* ───── Time helpers for message grouping ───── */
-  function getTimeGapMinutes(a: string, b: string): number {
-    const ta = new Date(a).getTime();
-    const tb = new Date(b).getTime();
-    if (Number.isNaN(ta) || Number.isNaN(tb)) return 0;
-    return Math.abs(tb - ta) / 60_000;
-  }
-
-  function formatRelativeDate(iso: string): string {
-    const date = new Date(iso);
-    if (Number.isNaN(date.getTime())) return "";
-    const now = new Date();
-    const diffMs = now.getTime() - date.getTime();
-    const diffMin = Math.floor(diffMs / 60_000);
-    if (diffMin < 1) return "刚刚";
-    if (diffMin < 60) return `${diffMin} 分钟前`;
-    const diffHr = Math.floor(diffMin / 60);
-    if (diffHr < 24) return `${diffHr} 小时前`;
-    const diffDay = Math.floor(diffHr / 24);
-    if (diffDay < 7) return `${diffDay} 天前`;
-    return date.toLocaleDateString("zh-CN", {
-      month: "numeric",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  }
+  const branchCount = branches.length;
+  const viewingBranch = branchViewIndex >= 0;
+  const currentBranchLabel = viewingBranch
+    ? `分支 ${branchViewIndex + 1}/${branchCount + 1}`
+    : null;
 
   return (
     <div className="mx-auto max-w-3xl">
+      {/* ── Branch navigation bar ── */}
+      {viewingBranch ? (
+        <div className="mb-4 flex items-center justify-between rounded-[var(--radius-md)] border border-[var(--primary)]/30 bg-[var(--primary-subtle)]/15 px-3 py-2">
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-medium text-[var(--primary)]">
+              {currentBranchLabel}
+            </span>
+            <span className="text-[0.65rem] text-[var(--muted)]">
+              查看历史生成 · 共 {branchCount + 1} 个版本
+            </span>
+          </div>
+          <div className="flex items-center gap-1">
+            <button
+              aria-label="上一个分支"
+              className="rounded px-2 py-1 text-xs text-[var(--muted)] transition-colors hover:bg-[var(--canvas-soft)] hover:text-[var(--ink)] disabled:opacity-30"
+              disabled={branchViewIndex <= 0}
+              onClick={() => onViewBranch(branchViewIndex - 1)}
+              type="button"
+            >
+              ← 上一个
+            </button>
+            <button
+              aria-label="返回当前版本"
+              className="rounded px-2 py-1 text-xs font-medium text-[var(--primary)] transition-colors hover:bg-[var(--primary)]/10"
+              onClick={() => onViewBranch(-1)}
+              type="button"
+            >
+              返回最新
+            </button>
+            <button
+              aria-label="下一个分支"
+              className="rounded px-2 py-1 text-xs text-[var(--muted)] transition-colors hover:bg-[var(--canvas-soft)] hover:text-[var(--ink)] disabled:opacity-30"
+              disabled={branchViewIndex >= branchCount - 1}
+              onClick={() => onViewBranch(branchViewIndex + 1)}
+              type="button"
+            >
+              下一个 →
+            </button>
+          </div>
+        </div>
+      ) : branchCount > 0 ? (
+        <div className="mb-4 flex items-center gap-2 rounded-[var(--radius-md)] border border-[var(--hairline)] bg-[var(--canvas-soft)]/50 px-3 py-1.5">
+          <span className="text-[0.65rem] text-[var(--muted)]">
+            {branchCount} 个历史版本可用
+          </span>
+          <button
+            aria-label="查看历史分支"
+            className="rounded px-2 py-0.5 text-[0.65rem] font-medium text-[var(--primary)] transition-colors hover:bg-[var(--primary)]/10"
+            onClick={() => onViewBranch(branchCount - 1)}
+            type="button"
+          >
+            查看 →
+          </button>
+        </div>
+      ) : null}
+
       {/* ── Completed messages ── */}
       {messages.map((message, index) => {
         const showDivider =
           index > 0 &&
-          message.timestamp !== "streaming" &&
-          messages[index - 1].timestamp !== "streaming" &&
-          getTimeGapMinutes(
-            messages[index - 1].timestamp,
-            message.timestamp,
-          ) > 5;
-        // Last assistant message (when not streaming/sending)
-        const lastAssistantIndex = (() => {
-          for (let i = messages.length - 1; i >= 0; i--) {
-            if (messages[i].role === "assistant") return i;
-          }
-          return -1;
-        })();
+          getTimeGapMinutes(messages[index - 1].timestamp, message.timestamp) > 5;
         const isLastAssistant =
           message.role === "assistant" &&
           index === lastAssistantIndex &&
@@ -932,23 +802,19 @@ function Timeline({
         );
       })}
 
-      {/* ── Follow-up chips after last completed assistant reply ── */}
+      {/* ── Follow-up chips ── */}
       {messages.length > 0 &&
       messages[messages.length - 1].role === "assistant" &&
       !sending &&
       !streamingContent ? (
         <FollowUpChips
-          items={[
-            "能详细说明一下吗？",
-            "帮我生成测试用例",
-            "检查是否有安全风险",
-          ]}
+          items={["能详细说明一下吗？", "帮我生成测试用例", "检查是否有安全风险"]}
           onClick={onSuggestionClick}
         />
       ) : null}
 
-      {/* ── Tool cards + reasoning: inlined BETWEEN last message and streaming assistant reply ── */}
-      {taskStates.length > 0 || reasoningEvents.length > 0 ? (
+      {/* ── Tool cards + reasoning ── */}
+      {(taskStates.length > 0 || reasoningEvents.length > 0) && (
         <div className="mb-8 space-y-1.5">
           {taskStates.map((task, i) => {
             const step = i + 1;
@@ -971,14 +837,10 @@ function Timeline({
               </div>
             );
           })}
-          {/* Remaining reasoning events not matched to a task */}
           {reasoningEvents
             .filter((evt) => !reasoningByStep.has(Number(evt.payload.step ?? 0)))
             .map((evt) => (
-              <div
-                className="timeline-item animate-fadeIn"
-                key={`reasoning:${evt.id}`}
-              >
+              <div className="timeline-item animate-fadeIn" key={`reasoning:${evt.id}`}>
                 <ReasoningBlock
                   capability={String(evt.payload.capability ?? "")}
                   content={String(evt.payload.content ?? "")}
@@ -988,9 +850,9 @@ function Timeline({
               </div>
             ))}
         </div>
-      ) : null}
+      )}
 
-      {/* ── Streaming reasoning block ── */}
+      {/* ── Streaming reasoning ── */}
       {reasoningStream ? (
         <div className="timeline-item animate-fadeIn mb-4">
           <ReasoningBlock
@@ -1003,16 +865,12 @@ function Timeline({
         </div>
       ) : null}
 
-      {/* ── Streaming / pending assistant reply ── */}
+      {/* ── Streaming assistant reply ── */}
       {streamingContent ? (
         <div className="timeline-item mb-8 animate-fadeIn">
           <ChatMessageBubble
             isStreaming
-            message={{
-              role: "assistant",
-              content: streamingContent,
-              timestamp: "",
-            }}
+            message={{ role: "assistant", content: streamingContent, timestamp: "" }}
           />
         </div>
       ) : sending && !reasoningStream ? (
@@ -1033,7 +891,7 @@ function Timeline({
       ))}
 
       {/* ── Confirmation cards ── */}
-      {active && pendingConfs.length > 0 ? (
+      {activeSession && pendingConfs.length > 0 ? (
         <div className="space-y-3">
           {pendingConfs.length > 1 ? (
             <div className="timeline-item animate-fadeIn rounded-[var(--radius-lg)] border border-[var(--warning)]/30 bg-[var(--warning-subtle)]/20 p-3">
@@ -1068,10 +926,10 @@ function Timeline({
               <ConfirmationCard
                 event={event}
                 onDecided={() => {
-                  if (active) onSessionReload(active.session_id);
+                  if (activeSession) onSessionReload(activeSession.session_id);
                 }}
                 projectId={projectId}
-                sessionId={active.session_id}
+                sessionId={activeSession.session_id}
               />
             </div>
           ))}
@@ -1081,7 +939,7 @@ function Timeline({
   );
 }
 
-/* ───── Workspace Tabs ───── */
+// ── Workspace Tabs ──────────────────────────────────────────────
 
 function WorkspaceTabs({
   value,
@@ -1092,10 +950,7 @@ function WorkspaceTabs({
 }) {
   return (
     <div className="flex h-12 items-end gap-1 border-b border-[var(--hairline)] px-4">
-      <Button
-        onClick={() => onChange("super")}
-        variant={value === "super" ? "primary" : "ghost"}
-      >
+      <Button onClick={() => onChange("super")} variant={value === "super" ? "primary" : "ghost"}>
         超级 Agent
       </Button>
       <Button
@@ -1108,7 +963,7 @@ function WorkspaceTabs({
   );
 }
 
-/* ───── Message Bubble (thin wrapper) ───── */
+// ── Message Bubble ──────────────────────────────────────────────
 
 function ChatMessageBubble({
   isLastAssistant,
@@ -1135,4 +990,98 @@ function ChatMessageBubble({
       timestamp={message.timestamp}
     />
   );
+}
+
+// ── Loading bar ─────────────────────────────────────────────────
+
+function LoadingBar() {
+  return (
+    <div className="mx-auto max-w-3xl">
+      <div className="mb-2 h-0.5 w-full overflow-hidden rounded-full bg-[var(--canvas-soft)]">
+        <div className="h-full w-1/3 animate-[loading-bar_1.5s_ease-in-out_infinite] rounded-full bg-[var(--primary)]" />
+      </div>
+    </div>
+  );
+}
+
+// ── Helpers ─────────────────────────────────────────────────────
+
+function buildTaskStates(events: AgentEvent[]): TaskState[] {
+  const groups = new Map<string, { delegated: AgentEvent | null; latest: AgentEvent }>();
+  const order: string[] = [];
+  for (const event of events) {
+    if (
+      !["agent.delegated", "agent.progress", "agent.completed", "agent.failed"].includes(
+        event.type,
+      )
+    )
+      continue;
+    const tid = String(event.payload.task_id ?? "");
+    if (!tid) continue;
+    if (!groups.has(tid)) order.push(tid);
+    const existing = groups.get(tid);
+    if (!existing) {
+      groups.set(tid, { delegated: null, latest: event });
+    } else {
+      existing.latest = event;
+    }
+    if (event.type === "agent.delegated") {
+      groups.get(tid)!.delegated = event;
+    }
+  }
+  return order.map((tid) => {
+    const group = groups.get(tid)!;
+    const statusMap: Record<string, TaskState["status"]> = {
+      "agent.delegated": "delegated",
+      "agent.progress": "running",
+      "agent.completed": "completed",
+      "agent.failed": "failed",
+    };
+    return {
+      taskId: tid,
+      childAgent: group.delegated
+        ? String(group.delegated.payload.child_agent ?? "")
+        : String(group.latest.payload.child_agent ?? ""),
+      capability: group.delegated
+        ? String(group.delegated.payload.capability ?? "")
+        : String(group.latest.payload.capability ?? ""),
+      inputSummary: group.delegated
+        ? String(group.delegated.payload.input_summary ?? "")
+        : "",
+      status: statusMap[group.latest.type] ?? "delegated",
+      output:
+        group.latest.type === "agent.completed"
+          ? ((group.latest.payload.output as Record<string, unknown> | null) ?? null)
+          : null,
+      errorDetail:
+        group.latest.type === "agent.failed"
+          ? String(group.latest.payload.detail ?? null)
+          : null,
+    };
+  });
+}
+
+function getTimeGapMinutes(a: string, b: string): number {
+  const ta = new Date(a).getTime();
+  const tb = new Date(b).getTime();
+  if (Number.isNaN(ta) || Number.isNaN(tb)) return 0;
+  return Math.abs(tb - ta) / 60_000;
+}
+
+function formatRelativeDate(iso: string): string {
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return "";
+  const diffMin = Math.floor((Date.now() - date.getTime()) / 60_000);
+  if (diffMin < 1) return "刚刚";
+  if (diffMin < 60) return `${diffMin} 分钟前`;
+  const diffHr = Math.floor(diffMin / 60);
+  if (diffHr < 24) return `${diffHr} 小时前`;
+  const diffDay = Math.floor(diffHr / 24);
+  if (diffDay < 7) return `${diffDay} 天前`;
+  return date.toLocaleDateString("zh-CN", {
+    month: "numeric",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
 }
