@@ -101,11 +101,11 @@ export function TestAgentChat({ projectId }: { projectId: string }) {
       )
         return;
 
-      // 前端 delta 超时检测：收到 delta 时重置计时器，800ms 无新 delta 自动结束流式状态
+      // 前端 delta 超时检测：收到 delta 时重置计时器，800ms 无新 delta 自动结束光标闪烁
       if (event.type === "message.delta") {
         if (streamDoneTimerRef.current) clearTimeout(streamDoneTimerRef.current);
         streamDoneTimerRef.current = setTimeout(() => {
-          dispatch({ type: "SET_SENDING", value: false });
+          dispatch({ type: "SET_STREAMING_ACTIVE", value: false });
           streamDoneTimerRef.current = null;
         }, 800);
       }
@@ -118,6 +118,7 @@ export function TestAgentChat({ projectId }: { projectId: string }) {
           clearTimeout(streamDoneTimerRef.current);
           streamDoneTimerRef.current = null;
         }
+        dispatch({ type: "SET_STREAMING_ACTIVE", value: false });
       }
 
       addSseEvent(event);
@@ -218,12 +219,14 @@ export function TestAgentChat({ projectId }: { projectId: string }) {
       });
     }
     dispatch({ type: "SET_SENDING", value: false });
+    dispatch({ type: "SET_STREAMING_ACTIVE", value: false });
     dispatch({ type: "CLEAR_STREAMING" });
   }
 
   async function handleRegenerate(editedMessage?: string) {
     if (!activeSessionId) return;
     dispatch({ type: "SET_SENDING", value: true });
+    dispatch({ type: "SET_STREAMING_ACTIVE", value: true });
     dispatch({ type: "SET_ERROR", error: null });
     pinnedBottomRef.current = true;
     acceptDeltasRef.current = true;
@@ -266,6 +269,7 @@ export function TestAgentChat({ projectId }: { projectId: string }) {
     dispatch({ type: "SET_INPUT", value: "" });
     dispatch({ type: "SET_ERROR", error: null, lastInput: null });
     dispatch({ type: "SET_SENDING", value: true });
+    dispatch({ type: "SET_STREAMING_ACTIVE", value: true });
     pinnedBottomRef.current = true;
     acceptDeltasRef.current = true;
     abortRef.current = new AbortController();
@@ -546,6 +550,7 @@ export function TestAgentChat({ projectId }: { projectId: string }) {
                   reasoningEvents={reasoningEvents}
                   reasoningStream={state.reasoningStream}
                   sending={state.sending}
+                  streamingActive={state.streamingActive}
                   streamingContent={state.streamingContent}
                   taskStates={taskStates}
                   batchConfirm={batchConfirm}
@@ -714,6 +719,7 @@ type TimelineProps = {
   reasoningEvents: AgentEvent[];
   reasoningStream: string;
   sending: boolean;
+  streamingActive: boolean;
   streamingContent: string;
   taskStates: TaskState[];
   batchConfirm: (approved: boolean) => Promise<void>;
@@ -734,6 +740,7 @@ function MessageTimeline({
   reasoningEvents,
   reasoningStream,
   sending,
+  streamingActive,
   streamingContent,
   taskStates,
   batchConfirm,
@@ -837,7 +844,7 @@ function MessageTimeline({
       {streamingContent ? (
         <div className="timeline-item mb-8 animate-fadeIn">
           <ChatMessageBubble
-            isStreaming={sending}
+            isStreaming={streamingActive}
             message={{ role: "assistant", content: streamingContent, timestamp: "" }}
           />
         </div>

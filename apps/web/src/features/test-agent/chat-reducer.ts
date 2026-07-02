@@ -25,6 +25,7 @@ export type ChatState = {
   loadingHistory: boolean;
   loadingSession: boolean;
   sending: boolean;
+  streamingActive: boolean;
   error: string | null;
   lastFailedInput: string | null;
   sidebarOpen: boolean;
@@ -46,6 +47,7 @@ export function initialChatState(): ChatState {
     loadingHistory: true,
     loadingSession: false,
     sending: false,
+    streamingActive: false,
     error: null,
     lastFailedInput: null,
     sidebarOpen:
@@ -86,6 +88,7 @@ export type ChatAction =
   | { type: "SET_INPUT"; value: string }
   | { type: "ADD_ARTIFACT"; artifact: ArtifactLink }
   | { type: "SET_SENDING"; value: boolean }
+  | { type: "SET_STREAMING_ACTIVE"; value: boolean }
   | { type: "SET_ERROR"; error: string | null; lastInput?: string | null }
   | { type: "SET_WORKSPACE"; value: "super" | "target" }
   | { type: "SET_LOADING_HISTORY"; value: boolean }
@@ -110,6 +113,7 @@ export function chatReducer(state: ChatState, action: ChatAction): ChatState {
         artifacts: s.artifacts,
         streamingContent: "",
         reasoningStream: "",
+        streamingActive: false,
         events: [],
         sessions: [s, ...state.sessions.filter((i) => i.session_id !== s.session_id)],
       };
@@ -215,6 +219,9 @@ export function chatReducer(state: ChatState, action: ChatAction): ChatState {
     case "SET_SENDING":
       return { ...state, sending: action.value };
 
+    case "SET_STREAMING_ACTIVE":
+      return { ...state, streamingActive: action.value };
+
     case "SET_ERROR":
       return {
         ...state,
@@ -298,14 +305,14 @@ export function useChatReducer() {
       if (event.type === "message.delta") {
         dispatch({ type: "APPEND_STREAMING", content: String(event.payload.content ?? "") });
       }
-      // 流式完成：不等 POST 返回，立即结束流式状态（保留已显示内容）
+      // 流式完成：不等 POST 返回，立即结束光标闪烁（保留已显示内容）
       if (
         event.type === "message.completed" ||
         event.type === "agent.completed" ||
         event.type === "run.completed"
       ) {
         dispatch({ type: "CLEAR_REASONING" });
-        dispatch({ type: "SET_SENDING", value: false });
+        dispatch({ type: "SET_STREAMING_ACTIVE", value: false });
       }
     },
     [dispatch],
