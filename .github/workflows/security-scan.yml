@@ -12,7 +12,7 @@ jobs:
     if: false  # 模型 API 就绪后启用
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
@@ -24,7 +24,7 @@ jobs:
   ruff-security:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: astral-sh/setup-uv@v5
       - run: uv run ruff check --select S apps/control-api/src/
       - run: uv run ruff check --select S workers/api-runner/src/
