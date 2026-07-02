@@ -38,6 +38,14 @@ class ChatRequest(BaseModel):
     message: str = Field(min_length=1, max_length=20_000)
 
 
+class RegenerateRequest(BaseModel):
+    message: str | None = Field(default=None, min_length=1, max_length=20_000)
+
+
+class EditMessageRequest(BaseModel):
+    content: str = Field(min_length=1, max_length=20_000)
+
+
 class ConfirmationDecision(BaseModel):
     approved: bool
 
@@ -49,6 +57,7 @@ class BatchConfirmationDecision(BaseModel):
 
 class ModelDeltaCallback(BaseModel):
     content: str = Field(min_length=1, max_length=100_000)
+    event_type: str = Field(default="message.delta", max_length=64)
 
 
 class ConversationPort(Protocol):
@@ -59,6 +68,7 @@ class ConversationPort(Protocol):
         *,
         history: list[tuple[str, str]],
         stream_callback: ModelStreamCallback | None = None,
+        reasoning_stream_callback: ModelStreamCallback | None = None,
         action_context: dict[str, object] | None = None,
     ) -> ConversationResponse: ...
 
@@ -186,6 +196,14 @@ def create_test_agent_router(
                     ),
                     internal_token=settings.internal_api_token,
                 ),
+                reasoning_stream_callback=ModelStreamCallback(
+                    url=(
+                        f"{str(settings.control_api_base_url).rstrip('/')}/api/v1/"
+                        f"projects/{project_id}/test-agent/sessions/"
+                        f"{session.session_id.value}/model-events/reasoning"
+                    ),
+                    internal_token=settings.internal_api_token,
+                ),
                 action_context=action_context if action_context else None,
             )
         except ModelDefaultMissingError:
@@ -277,10 +295,31 @@ def create_test_agent_router(
         session = await sessions.get(ProjectId(project_id), ChatSessionId(session_id))
         if session is None:
             return JSONResponse(status_code=404, content={"detail": "会话不存在"})
+        event_type = body.event_type if body.event_type else "message.delta"
         event = await orchestration.append_event(
             ProjectId(project_id),
             session.session_id,
-            "message.delta",
+            event_type,
+            {"content": body.content},
+        )
+        return {"sequence": event.sequence}
+
+    @router.post("/sessions/{session_id}/model-events/reasoning", include_in_schema=False)
+    async def append_reasoning_delta(
+        project_id: UUID,
+        session_id: UUID,
+        body: ModelDeltaCallback,
+        x_internal_token: str | None = Header(default=None),
+    ):
+        if x_internal_token != settings.internal_api_token:
+            return JSONResponse(status_code=401, content={"detail": "Invalid internal token"})
+        session = await sessions.get(ProjectId(project_id), ChatSessionId(session_id))
+        if session is None:
+            return JSONResponse(status_code=404, content={"detail": "会话不存在"})
+        event = await orchestration.append_event(
+            ProjectId(project_id),
+            session.session_id,
+            "agent.reasoning_delta",
             {"content": body.content},
         )
         return {"sequence": event.sequence}
@@ -300,6 +339,51 @@ def create_test_agent_router(
         if session is None:
             return JSONResponse(status_code=404, content={"detail": "会话不存在"})
         return await send_message(actor, project_id, session, body.message)
+
+    @router.post("/sessions/{session_id}/messages/regenerate")
+    async def regenerate_message(
+        request: Request,
+        project_id: UUID,
+        session_id: UUID,
+        body: RegenerateRequest | None = None,
+        x_csrf_token: str | None = Header(default=None),
+    ):
+        actor = await authorize_write(request, project_id, x_csrf_token)
+        if isinstance(actor, JSONResponse):
+            return actor
+        session = await sessions.get(ProjectId(project_id), ChatSessionId(session_id))
+        if session is None:
+            return JSONResponse(status_code=404, content={"detail": "会话不存在"})
+
+        messages = session.messages
+        # Find the last user message and remove the last assistant response
+        if not messages:
+            return JSONResponse(status_code=422, content={"detail": "没有可重生成的消息"})
+
+        last_user_msg = None
+        for m in reversed(messages):
+            if m.role == "user":
+                last_user_msg = m
+                break
+        if last_user_msg is None:
+            return JSONResponse(status_code=422, content={"detail": "没有可重生成的用户消息"})
+
+        # Get the override message or use the original
+        message = (body.message if body and body.message else None) or last_user_msg.content
+
+        # Remove the last assistant message if it exists after the last user message
+        last_msg = messages[-1]
+        if last_msg.role == "assistant" and last_msg.sequence > last_user_msg.sequence:
+            session.remove_messages_from(last_msg.sequence)
+            await sessions.save(session)
+
+        # If the message content changed (edit), update the user message too
+        if message != last_user_msg.content:
+            session.remove_messages_from(last_user_msg.sequence)
+            session.add_user_message(message)
+            await sessions.save(session)
+
+        return await send_message(actor, project_id, session, message)
 
     @router.get("/sessions/{session_id}/events")
     async def stream_events(
@@ -447,6 +531,8 @@ def _session_response(session: ChatSession, links) -> dict[str, object]:
         **_session_summary(session),
         "messages": [
             {
+                "message_id": str(message.message_id),
+                "sequence": message.sequence,
                 "role": message.role,
                 "content": message.content,
                 "timestamp": message.timestamp.isoformat(),

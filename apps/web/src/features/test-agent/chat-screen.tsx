@@ -21,6 +21,7 @@ import {
   deleteSession,
   getSession,
   listSessions,
+  regenerateMessage,
   sendChatMessage,
   subscribeToSession,
   TestAgentApiError,
@@ -45,6 +46,7 @@ export function TestAgentChat({ projectId }: { projectId: string }) {
   const [artifacts, setArtifacts] = useState<ArtifactLink[]>([]);
   const [events, setEvents] = useState<AgentEvent[]>([]);
   const [streamingContent, setStreamingContent] = useState("");
+  const [reasoningStream, setReasoningStream] = useState("");
   const [input, setInput] = useState("");
   const [loadingHistory, setLoadingHistory] = useState(true);
   const [loadingSession, setLoadingSession] = useState(false);
@@ -69,6 +71,7 @@ export function TestAgentChat({ projectId }: { projectId: string }) {
   const pinnedBottomRef = useRef(true);
   const acceptDeltasRef = useRef(true);
   const streamingContentRef = useRef("");
+  const handleRegenerateRef = useRef<(editedMessage?: string) => Promise<void>>(async () => {});
   const [isPinned, setIsPinned] = useState(true);
   const activeSessionId = active?.session_id ?? null;
 
@@ -129,6 +132,15 @@ export function TestAgentChat({ projectId }: { projectId: string }) {
       if (event.type === "message.started") {
         streamingContentRef.current = "";
         setStreamingContent("");
+        setReasoningStream("");
+      }
+      if (event.type === "agent.reasoning_delta") {
+        setReasoningStream(
+          (current) => current + String(event.payload.content ?? ""),
+        );
+      }
+      if (event.type === "agent.reasoning") {
+        setReasoningStream("");
       }
       if (event.type === "message.delta" && acceptDeltasRef.current) {
         setStreamingContent(
@@ -198,6 +210,7 @@ export function TestAgentChat({ projectId }: { projectId: string }) {
     setMessages(session.messages);
     setArtifacts(session.artifacts);
     setStreamingContent("");
+    setReasoningStream("");
     setEvents([]);
     window.history.replaceState(
       {},
@@ -271,7 +284,85 @@ export function TestAgentChat({ projectId }: { projectId: string }) {
     }
     setSending(false);
     setStreamingContent("");
+    setReasoningStream("");
   }
+
+  async function handleRegenerate(editedMessage?: string) {
+    if (!activeSessionId) return;
+    setSending(true);
+    setError(null);
+    pinnedBottomRef.current = true;
+    acceptDeltasRef.current = true;
+    abortRef.current = new AbortController();
+
+    // Clear old tool cards / confirmations from previous turn
+    setEvents((current) =>
+      current.filter(
+        (e) => e.type === "message.started" || e.type === "message.delta",
+      ),
+    );
+
+    // Optimistically remove last assistant message so old reply isn't shown
+    setMessages((current) => {
+      const last = current[current.length - 1];
+      if (last && last.role === "assistant") {
+        return current.slice(0, -1);
+      }
+      return current;
+    });
+    // If editing, also remove the corresponding user message
+    if (editedMessage) {
+      setMessages((current) => {
+        const lastUser = (() => {
+          for (let i = current.length - 1; i >= 0; i--) {
+            if (current[i].role === "user") return i;
+          }
+          return -1;
+        })();
+        if (lastUser >= 0) {
+          const updated = [...current];
+          updated[lastUser] = { ...updated[lastUser], content: editedMessage };
+          // Remove assistant after edited user message
+          if (lastUser + 1 < updated.length && updated[lastUser + 1].role === "assistant") {
+            return updated.slice(0, lastUser + 1);
+          }
+          return updated;
+        }
+        return current;
+      });
+    }
+
+    try {
+      const response = await regenerateMessage(
+        projectId,
+        activeSessionId,
+        editedMessage,
+        abortRef.current.signal,
+      );
+      applySession(response);
+      setSessions((current) => [
+        response,
+        ...current.filter((item) => item.session_id !== response.session_id),
+      ]);
+    } catch (reason) {
+      if (reason instanceof DOMException && reason.name === "AbortError") return;
+      setError(
+        reason instanceof TestAgentApiError || reason instanceof Error
+          ? reason.message
+          : "重新生成失败，请重试。",
+      );
+    } finally {
+      setSending(false);
+      abortRef.current = null;
+    }
+  }
+
+  // Keep ref in sync for stable callback
+  handleRegenerateRef.current = handleRegenerate;
+
+  const handleEdit = useCallback((newContent: string) => {
+    void handleRegenerateRef.current(newContent);
+  }, []);
 
   async function handleSend() {
     const content = input.trim();
@@ -283,6 +374,13 @@ export function TestAgentChat({ projectId }: { projectId: string }) {
     pinnedBottomRef.current = true;
     acceptDeltasRef.current = true;
     abortRef.current = new AbortController();
+
+    // Clear old tool cards / confirmations from previous turn
+    setEvents((current) =>
+      current.filter(
+        (e) => e.type === "message.started" || e.type === "message.delta",
+      ),
+    );
 
     // Optimistically show the user message immediately
     const pendingUserMessage: ChatMessage = {
@@ -477,9 +575,12 @@ export function TestAgentChat({ projectId }: { projectId: string }) {
                 active={active}
                 events={events}
                 messages={messages}
+                onEdit={handleEdit}
+                onRegenerate={() => void handleRegenerate()}
                 onSessionReload={(id) => void selectSession(id)}
                 onSuggestionClick={setInput}
                 projectId={projectId}
+                reasoningStream={reasoningStream}
                 sending={sending}
                 streamingContent={streamingContent}
               />
@@ -641,9 +742,12 @@ type TimelineProps = {
   active: ChatResponse | null;
   events: AgentEvent[];
   messages: ChatMessage[];
+  onEdit: (newContent: string) => void;
+  onRegenerate: () => void;
   onSessionReload: (sessionId: string) => void;
   onSuggestionClick: (text: string) => void;
   projectId: string;
+  reasoningStream: string;
   sending: boolean;
   streamingContent: string;
 };
@@ -652,9 +756,12 @@ function Timeline({
   active,
   events,
   messages,
+  onEdit,
+  onRegenerate,
   onSessionReload,
   onSuggestionClick,
   projectId,
+  reasoningStream,
   sending,
   streamingContent,
 }: TimelineProps) {
@@ -738,12 +845,16 @@ function Timeline({
       String(e.payload.confirmation_id),
     );
     if (ids.length === 0 || !active) return;
-    await decideConfirmationsBatch(
-      projectId,
-      active.session_id,
-      ids,
-      approved,
-    );
+    try {
+      await decideConfirmationsBatch(
+        projectId,
+        active.session_id,
+        ids,
+        approved,
+      );
+    } finally {
+      onSessionReload(active.session_id);
+    }
   };
 
   /* ───── Time helpers for message grouping ───── */
@@ -786,6 +897,18 @@ function Timeline({
             messages[index - 1].timestamp,
             message.timestamp,
           ) > 5;
+        // Last assistant message (when not streaming/sending)
+        const lastAssistantIndex = (() => {
+          for (let i = messages.length - 1; i >= 0; i--) {
+            if (messages[i].role === "assistant") return i;
+          }
+          return -1;
+        })();
+        const isLastAssistant =
+          message.role === "assistant" &&
+          index === lastAssistantIndex &&
+          !sending &&
+          !streamingContent;
         return (
           <div key={`${message.timestamp}:${index}`}>
             {showDivider ? (
@@ -798,7 +921,12 @@ function Timeline({
               </div>
             ) : null}
             <div className="timeline-item mb-8 animate-fadeIn last:mb-0">
-              <ChatMessageBubble message={message} />
+              <ChatMessageBubble
+                isLastAssistant={isLastAssistant}
+                message={message}
+                onEdit={message.role === "user" ? onEdit : undefined}
+                onRegenerate={isLastAssistant ? onRegenerate : undefined}
+              />
             </div>
           </div>
         );
@@ -862,6 +990,19 @@ function Timeline({
         </div>
       ) : null}
 
+      {/* ── Streaming reasoning block ── */}
+      {reasoningStream ? (
+        <div className="timeline-item animate-fadeIn mb-4">
+          <ReasoningBlock
+            capability="规划中"
+            content={reasoningStream}
+            isStreaming
+            step={1}
+            total={1}
+          />
+        </div>
+      ) : null}
+
       {/* ── Streaming / pending assistant reply ── */}
       {streamingContent ? (
         <div className="timeline-item mb-8 animate-fadeIn">
@@ -870,11 +1011,11 @@ function Timeline({
             message={{
               role: "assistant",
               content: streamingContent,
-              timestamp: "streaming",
+              timestamp: "",
             }}
           />
         </div>
-      ) : sending ? (
+      ) : sending && !reasoningStream ? (
         <div className="timeline-item mb-8 animate-fadeIn">
           <TypingIndicator />
         </div>
@@ -970,17 +1111,26 @@ function WorkspaceTabs({
 /* ───── Message Bubble (thin wrapper) ───── */
 
 function ChatMessageBubble({
+  isLastAssistant,
   message,
   isStreaming,
+  onEdit,
+  onRegenerate,
 }: {
+  isLastAssistant?: boolean;
   message: ChatMessage;
   isStreaming?: boolean;
+  onEdit?: (newContent: string) => void;
+  onRegenerate?: () => void;
 }) {
   return (
     <UIMessageBubble
       animate
       content={message.content}
+      isLastAssistant={isLastAssistant}
       isStreaming={isStreaming}
+      onEdit={onEdit}
+      onRegenerate={onRegenerate}
       role={message.role}
       timestamp={message.timestamp}
     />

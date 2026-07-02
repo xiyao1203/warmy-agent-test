@@ -3,7 +3,12 @@
 import { CornerDownLeft, RefreshCw, StopCircle } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 
-import { MessageBubble, TypingIndicator } from "@/components/uiverse";
+import {
+  ChatEmptyState,
+  FollowUpChips,
+  MessageBubble,
+  TypingIndicator,
+} from "@/components/uiverse";
 
 import { listAgents, listAgentVersions } from "@/features/agents/api";
 import { listEnvironmentTemplates } from "@/features/environments/api";
@@ -233,13 +238,16 @@ export function TargetChatScreen({ projectId }: { projectId: string }) {
             </div>
           </div>
         ) : !hasSession ? (
-          <div className="flex h-full flex-col items-center justify-center px-4">
-            <p className="text-[0.9375rem] text-[var(--muted)]">
-              {versionLabel
-                ? `已选择 ${versionLabel}，发送消息开始测试`
-                : "选择一个已发布的 Agent 版本，然后发送消息开始对话测试"}
-            </p>
-          </div>
+          <ChatEmptyState
+            description={versionLabel
+              ? `已选择 ${versionLabel}，发送消息开始测试`
+              : "选择一个已发布的 Agent 版本，然后发送消息开始对话测试"}
+            onSuggestionClick={setInput}
+            suggestions={versionLabel
+              ? ["你好，介绍一下你自己", "你能做什么？", "帮我完成一个简单任务"]
+              : []}
+            title="被测 Agent 对话"
+          />
         ) : (
           <div className="mx-auto max-w-3xl">
             {turns.map((turn) => {
@@ -284,6 +292,15 @@ export function TargetChatScreen({ projectId }: { projectId: string }) {
               <div className="mb-8">
                 <TypingIndicator />
               </div>
+            ) : turns.length > 0 ? (
+              <FollowUpChips
+                items={[
+                  "再试一次",
+                  "能详细说明一下吗？",
+                  "换个方式回答",
+                ]}
+                onClick={setInput}
+              />
             ) : null}
           </div>
         )}
@@ -310,6 +327,18 @@ export function TargetChatScreen({ projectId }: { projectId: string }) {
       ) : null}
 
       <div className="shrink-0 border-t border-[var(--hairline)] px-4 py-3">
+        {/* Context window indicator */}
+        <div className="mx-auto mb-2 flex max-w-3xl items-center gap-2">
+          <div className="h-1 flex-1 overflow-hidden rounded-full bg-[var(--canvas-soft)]">
+            <div
+              className="h-full rounded-full bg-[var(--primary)]/40 transition-all"
+              style={{ width: `${Math.min(100, turns.length * 10)}%` }}
+            />
+          </div>
+          <span className="shrink-0 text-[0.6rem] text-[var(--muted)]">
+            {turns.length > 0 ? `${turns.length} 轮对话` : "新对话"}
+          </span>
+        </div>
         <div className="mx-auto flex max-w-3xl gap-2">
           <div className="relative flex-1">
             <textarea
@@ -359,6 +388,9 @@ export function TargetChatScreen({ projectId }: { projectId: string }) {
             )}
           </div>
         </div>
+        <p className="mx-auto mt-2 max-w-3xl text-center text-[0.65rem] text-[var(--muted)]">
+          被测 Agent 回复由目标模型生成，结果可能不准确。
+        </p>
       </div>
     </div>
   );

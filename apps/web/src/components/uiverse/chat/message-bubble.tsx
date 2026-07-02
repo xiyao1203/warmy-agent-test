@@ -1,7 +1,7 @@
 "use client";
 
-import { Bot, Check, Copy, ThumbsDown, ThumbsUp, User } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
+import { Bot, Check, Copy, Pencil, RefreshCw, ThumbsDown, ThumbsUp, User } from "lucide-react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import { MarkdownContent } from "./markdown-content";
 
@@ -11,18 +11,27 @@ type MessageBubbleProps = {
   animate?: boolean;
   isStreaming?: boolean;
   timestamp?: string;
+  isLastAssistant?: boolean;
+  onRegenerate?: () => void;
+  onEdit?: (newContent: string) => void;
 };
 
 export function MessageBubble({
   animate = true,
   content,
+  isLastAssistant = false,
   isStreaming = false,
+  onEdit,
+  onRegenerate,
   role,
   timestamp,
 }: MessageBubbleProps) {
   const [visible, setVisible] = useState(!animate);
   const [copied, setCopied] = useState(false);
   const [rated, setRated] = useState<"up" | "down" | null>(null);
+  const [editing, setEditing] = useState(false);
+  const [editText, setEditText] = useState(content);
+  const editInputRef = useRef<HTMLTextAreaElement>(null);
   const isUser = role === "user";
 
   useEffect(() => {
@@ -32,12 +41,40 @@ export function MessageBubble({
     }
   }, [animate]);
 
+  useEffect(() => {
+    if (editing && editInputRef.current) {
+      editInputRef.current.focus();
+    }
+  }, [editing]);
+
   const handleCopy = useCallback(() => {
     void navigator.clipboard.writeText(content).then(() => {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     });
   }, [content]);
+
+  const handleEditSubmit = useCallback(() => {
+    const trimmed = editText.trim();
+    if (trimmed && trimmed !== content) {
+      onEdit?.(trimmed);
+    }
+    setEditing(false);
+  }, [editText, content, onEdit]);
+
+  const handleEditKeyDown = useCallback(
+    (e: React.KeyboardEvent) => {
+      if (e.key === "Enter" && !e.shiftKey) {
+        e.preventDefault();
+        handleEditSubmit();
+      }
+      if (e.key === "Escape") {
+        setEditText(content);
+        setEditing(false);
+      }
+    },
+    [handleEditSubmit, content],
+  );
 
   return (
     <div
@@ -72,16 +109,39 @@ export function MessageBubble({
           }`}
         >
           {isUser ? (
-            <p className="whitespace-pre-wrap">{content}</p>
+            editing ? (
+              <div className="flex flex-col gap-2">
+                <textarea
+                  ref={editInputRef}
+                  value={editText}
+                  onChange={(e) => setEditText(e.target.value)}
+                  onKeyDown={handleEditKeyDown}
+                  className="w-full resize-none rounded-xl border border-[var(--hairline)] bg-white/90 px-3 py-2 text-sm text-[var(--ink)] outline-none focus:border-[var(--primary)] min-h-[2.5rem]"
+                  rows={2}
+                />
+                <div className="flex items-center justify-end gap-1 text-[0.7rem] text-white/60">
+                  <span>Enter 提交 · Esc 取消</span>
+                  <button
+                    onClick={handleEditSubmit}
+                    className="rounded-md bg-white/20 px-2 py-0.5 transition-colors hover:bg-white/30"
+                    type="button"
+                  >
+                    确认
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <p className="whitespace-pre-wrap">{content}</p>
+            )
           ) : (
             <MarkdownContent content={content} isStreaming={isStreaming} />
           )}
-          {/* Hover controls — copy + feedback */}
+          {/* Hover controls — copy + feedback + edit + regenerate */}
           {!isStreaming ? (
             <div
               className={`absolute flex gap-0.5 opacity-0 transition-all group-hover/bubble:opacity-100 ${
                 isUser
-                  ? "-left-9 top-1/2 -translate-y-1/2"
+                  ? "-left-9 top-1/2 -translate-y-1/2 flex-col"
                   : "-bottom-7 right-0"
               }`}
             >
@@ -98,6 +158,20 @@ export function MessageBubble({
                   <Copy className="size-3.5" />
                 )}
               </button>
+              {/* Edit — user messages only */}
+              {isUser && onEdit && !editing ? (
+                <button
+                  aria-label="编辑消息"
+                  className="rounded-md p-1 text-[var(--muted)] transition-colors hover:text-[var(--ink)]"
+                  onClick={() => {
+                    setEditText(content);
+                    setEditing(true);
+                  }}
+                  type="button"
+                >
+                  <Pencil className="size-3.5" />
+                </button>
+              ) : null}
               {/* Feedback — assistant only */}
               {!isUser ? (
                 <>
@@ -126,6 +200,17 @@ export function MessageBubble({
                     <ThumbsDown className="size-3.5" />
                   </button>
                 </>
+              ) : null}
+              {/* Regenerate — last assistant message only */}
+              {!isUser && isLastAssistant && onRegenerate ? (
+                <button
+                  aria-label="重新生成回复"
+                  className="rounded-md p-1 text-[var(--muted)] transition-colors hover:text-[var(--ink)]"
+                  onClick={() => onRegenerate()}
+                  type="button"
+                >
+                  <RefreshCw className="size-3.5" />
+                </button>
               ) : null}
             </div>
           ) : null}

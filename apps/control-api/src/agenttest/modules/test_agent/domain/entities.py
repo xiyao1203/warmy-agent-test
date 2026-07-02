@@ -104,6 +104,19 @@ class ChatSession:
         self.archived_at = now
         self.updated_at = now
 
+    def remove_messages_from(self, sequence: int) -> list[ChatMessage]:
+        """移除从指定 sequence 开始的所有消息，返回被移除的消息列表。"""
+        removed: list[ChatMessage] = []
+        kept: list[ChatMessage] = []
+        for message in self.messages:
+            if message.sequence >= sequence:
+                removed.append(message)
+            else:
+                kept.append(message)
+        self.messages = kept
+        self.updated_at = datetime.now(UTC)
+        return removed
+
     def add_user_message(self, content: str) -> None:
         """添加用户消息。"""
         self.messages.append(

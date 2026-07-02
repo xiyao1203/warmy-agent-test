@@ -74,6 +74,7 @@ class SuperAgentConversation:
         *,
         history: list[tuple[str, str]],
         stream_callback: ModelStreamCallback | None = None,
+        reasoning_stream_callback: ModelStreamCallback | None = None,
         action_context: dict[str, object] | None = None,
     ) -> ConversationResponse:
         config = await self._models.resolve_default(
@@ -149,7 +150,7 @@ class SuperAgentConversation:
         if not content:
             raise ValueError("模型返回了空回复")
         actions = (
-            await self._plan_actions(config, history, action_context)
+            await self._plan_actions(config, history, action_context, reasoning_stream_callback)
             if self._capabilities
             else []
         )
@@ -165,6 +166,7 @@ class SuperAgentConversation:
         config: ModelConfiguration,
         history: list[tuple[str, str]],
         action_context: dict[str, object] | None = None,
+        stream_callback: ModelStreamCallback | None = None,
     ) -> list[ActionIntent]:
         allowed = {(str(item["child_agent"]), str(item["name"])) for item in self._capabilities}
         context_block = ""
@@ -199,14 +201,24 @@ class SuperAgentConversation:
             '"capability":"...","arguments":{},"rationale":"..."}]}.\n'
             f"capabilities={json.dumps(self._capabilities, ensure_ascii=False)}"
         )
-        result = await self._invoker.invoke(
-            config,
-            [InvocationMessage(role="system", content=prompt)]
-            + [InvocationMessage(role=role, content=content) for role, content in history],
-            response_format={"type": "json_object"},
-            timeout_seconds=60,
-            max_tokens=2048,
-        )
+        if stream_callback is not None:
+            result = await self._invoker.stream(
+                config,
+                [InvocationMessage(role="system", content=prompt)]
+                + [InvocationMessage(role=role, content=content) for role, content in history],
+                callback=stream_callback,
+                timeout_seconds=60,
+                max_tokens=2048,
+            )
+        else:
+            result = await self._invoker.invoke(
+                config,
+                [InvocationMessage(role="system", content=prompt)]
+                + [InvocationMessage(role=role, content=content) for role, content in history],
+                response_format={"type": "json_object"},
+                timeout_seconds=60,
+                max_tokens=2048,
+            )
         try:
             plan = _ActionPlan.model_validate_json(result.content)
         except ValidationError:

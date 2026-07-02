@@ -7,6 +7,7 @@ import {
   Bot,
   CheckCircle2,
   ChevronDown,
+  Clock,
   ClipboardCheck,
   Database,
   FlaskConical,
@@ -168,7 +169,7 @@ const STATUS_MAP: Record<
 > = {
   delegated: {
     label: "已委派",
-    icon: Loader2,
+    icon: Clock,
     tone: "text-[var(--muted)]",
     spin: false,
   },

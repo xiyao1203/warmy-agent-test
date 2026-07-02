@@ -3,6 +3,8 @@ import { csrfHeaders } from "@/lib/api/csrf";
 import { responseProblem } from "@/lib/api/problem";
 
 export type ChatMessage = {
+  message_id?: string;
+  sequence?: number;
   role: "user" | "assistant";
   content: string;
   timestamp: string;
@@ -131,6 +133,47 @@ export function sendChatMessage(
   );
 }
 
+export function regenerateMessage(
+  projectId: string,
+  sessionId: string,
+  editedMessage?: string,
+  signal?: AbortSignal,
+) {
+  return requestWithAbort<ChatResponse>(
+    `${base(projectId)}/sessions/${sessionId}/messages/regenerate`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...(csrfHeaders() as Record<string, string>),
+      },
+      body: JSON.stringify(
+        editedMessage ? { message: editedMessage } : {},
+      ),
+      signal,
+    },
+  );
+}
+
+export function editMessage(
+  projectId: string,
+  sessionId: string,
+  sequence: number,
+  content: string,
+) {
+  return requestWithAbort<ChatResponse>(
+    `${base(projectId)}/sessions/${sessionId}/messages/${sequence}`,
+    {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        ...(csrfHeaders() as Record<string, string>),
+      },
+      body: JSON.stringify({ content }),
+    },
+  );
+}
+
 export function decideConfirmation(
   projectId: string,
   sessionId: string,
@@ -196,6 +239,7 @@ export function subscribeToSession(
     "message.delta",
     "message.completed",
     "agent.reasoning",
+    "agent.reasoning_delta",
     "agent.delegated",
     "agent.progress",
     "agent.completed",
