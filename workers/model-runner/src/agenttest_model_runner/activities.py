@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import time
 from typing import Any
 
 import httpx
@@ -85,6 +86,8 @@ class ModelActivities:
             allow_private_network=bool(payload.get("allow_private_network", False)),
         )
         callback = payload.get("callback")
+        timeout_seconds = float(payload.get("timeout_seconds", 60))
+        started_at = time.monotonic()
         chunks: list[str] = []
         try:
             async for chunk in self._adapter.stream(request):
@@ -100,8 +103,17 @@ class ModelActivities:
                             response.raise_for_status()
                         except Exception:
                             pass
-                    activity.heartbeat({"chunks": len(chunks)})
+                activity.heartbeat({"chunks": len(chunks)})
+                # 接近超时时提前结束流式循环，返回已累积内容
+                elapsed = time.monotonic() - started_at
+                if elapsed > timeout_seconds - 5:
+                    activity.logger.warning(
+                        "approaching timeout (elapsed=%.1fs, limit=%.1fs), ending stream early",
+                        elapsed,
+                        timeout_seconds,
+                    )
+                    break
         except asyncio.CancelledError:
-            # 优雅取消：返回已累积内容
+            # 优雅取消：返回已累积内容，provider 连接由 async generator aclose 清理
             activity.logger.warning("stream-model cancelled, returning accumulated chunks")
         return {"content": "".join(chunks)}

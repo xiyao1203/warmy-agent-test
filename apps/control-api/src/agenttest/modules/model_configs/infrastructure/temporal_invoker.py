@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from datetime import timedelta
 from typing import Any
 from uuid import uuid4
 
@@ -141,6 +142,7 @@ class TemporalModelInvoker:
                 payload,
                 id=workflow_id,
                 task_queue=self._task_queue,
+                execution_timeout=timedelta(seconds=timeout_seconds + 30),
             )
             result = await handle.result()
         except Exception as error:
