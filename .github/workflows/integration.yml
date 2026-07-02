@@ -27,7 +27,7 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v5
+      - uses: astral-sh/setup-uv@v7
       - run: |
           uv run alembic -c apps/control-api/alembic.ini upgrade head
         env:
