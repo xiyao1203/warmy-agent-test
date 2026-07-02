@@ -12,13 +12,6 @@ import type {
 
 // ── State shape ───────────────────────────────────────────────────
 
-export type BranchSnapshot = {
-  messages: ChatMessage[];
-  events: AgentEvent[];
-  artifacts: ArtifactLink[];
-  timestamp: number;
-};
-
 export type ChatState = {
   workspace: "super" | "target";
   sessions: SessionSummary[];
@@ -37,10 +30,6 @@ export type ChatState = {
   sidebarOpen: boolean;
   sidebarWidth: number;
   isPinned: boolean;
-  /** Branch history: snapshots of previous generations, newest first */
-  branches: BranchSnapshot[];
-  /** Index into branches array (-1 = current/live branch) */
-  branchViewIndex: number;
 };
 
 export function initialChatState(): ChatState {
@@ -71,8 +60,6 @@ export function initialChatState(): ChatState {
           )
         : 272,
     isPinned: true,
-    branches: [],
-    branchViewIndex: -1,
   };
 }
 
@@ -105,10 +92,7 @@ export type ChatAction =
   | { type: "SET_LOADING_SESSION"; value: boolean }
   | { type: "TOGGLE_SIDEBAR" }
   | { type: "SET_SIDEBAR_WIDTH"; width: number }
-  | { type: "SET_PINNED"; value: boolean }
-  | { type: "SAVE_BRANCH_SNAPSHOT" }
-  | { type: "VIEW_BRANCH"; index: number }
-  | { type: "CLEAR_BRANCHES" };
+  | { type: "SET_PINNED"; value: boolean };
 
 // ── Reducer ──────────────────────────────────────────────────────
 
@@ -264,43 +248,6 @@ export function chatReducer(state: ChatState, action: ChatAction): ChatState {
 
     case "SET_PINNED":
       return { ...state, isPinned: action.value };
-
-    case "SAVE_BRANCH_SNAPSHOT": {
-      if (state.messages.length === 0) return state;
-      const snapshot: BranchSnapshot = {
-        messages: state.messages,
-        events: state.events,
-        artifacts: state.artifacts,
-        timestamp: Date.now(),
-      };
-      return {
-        ...state,
-        branches: [snapshot, ...state.branches].slice(0, 20),
-        branchViewIndex: -1,
-      };
-    }
-
-    case "VIEW_BRANCH": {
-      if (action.index < -1 || action.index >= state.branches.length) return state;
-      if (action.index === -1) {
-        // Restore current (live) branch — requires caller to have applied session
-        return { ...state, branchViewIndex: -1 };
-      }
-      const snap = state.branches[action.index];
-      if (!snap) return state;
-      return {
-        ...state,
-        branchViewIndex: action.index,
-        messages: snap.messages,
-        events: snap.events,
-        artifacts: snap.artifacts,
-        streamingContent: "",
-        reasoningStream: "",
-      };
-    }
-
-    case "CLEAR_BRANCHES":
-      return { ...state, branches: [], branchViewIndex: -1 };
 
     default:
       return state;

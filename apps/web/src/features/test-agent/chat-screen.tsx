@@ -53,6 +53,7 @@ export function TestAgentChat({ projectId }: { projectId: string }) {
   const acceptDeltasRef = useRef(true);
   const streamingContentRef = useRef("");
   const resizingRef = useRef(false);
+  const streamDoneTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const activeSessionId = state.activeSession?.session_id ?? null;
 
@@ -99,6 +100,26 @@ export function TestAgentChat({ projectId }: { projectId: string }) {
         (event.type === "message.delta" || event.type === "agent.reasoning_delta")
       )
         return;
+
+      // 前端 delta 超时检测：收到 delta 时重置计时器，800ms 无新 delta 自动结束流式状态
+      if (event.type === "message.delta") {
+        if (streamDoneTimerRef.current) clearTimeout(streamDoneTimerRef.current);
+        streamDoneTimerRef.current = setTimeout(() => {
+          dispatch({ type: "SET_SENDING", value: false });
+          streamDoneTimerRef.current = null;
+        }, 800);
+      }
+      if (
+        event.type === "message.completed" ||
+        event.type === "agent.completed" ||
+        event.type === "run.completed"
+      ) {
+        if (streamDoneTimerRef.current) {
+          clearTimeout(streamDoneTimerRef.current);
+          streamDoneTimerRef.current = null;
+        }
+      }
+
       addSseEvent(event);
     });
     return () => sseCloseRef.current?.();
@@ -208,8 +229,6 @@ export function TestAgentChat({ projectId }: { projectId: string }) {
     acceptDeltasRef.current = true;
     abortRef.current = new AbortController();
 
-    // Save current messages as a branch before regenerating
-    dispatch({ type: "SAVE_BRANCH_SNAPSHOT" });
     dispatch({ type: "FILTER_EVENTS", keepTypes: ["message.started", "message.delta"] });
     dispatch({ type: "REMOVE_LAST_ASSISTANT_MESSAGE" });
 
@@ -514,8 +533,6 @@ export function TestAgentChat({ projectId }: { projectId: string }) {
               ) : (
                 <MessageTimeline
                   activeSession={state.activeSession}
-                  branches={state.branches}
-                  branchViewIndex={state.branchViewIndex}
                   errorEvents={errorEvents}
                   lastAssistantIndex={lastAssistantIndex}
                   messages={state.messages}
@@ -523,7 +540,6 @@ export function TestAgentChat({ projectId }: { projectId: string }) {
                   onRegenerate={() => void handleRegenerate()}
                   onSessionReload={(id) => void selectSession(id)}
                   onSuggestionClick={(text) => dispatch({ type: "SET_INPUT", value: text })}
-                  onViewBranch={(i) => dispatch({ type: "VIEW_BRANCH", index: i })}
                   pendingConfs={pendingConfs}
                   projectId={projectId}
                   reasoningByStep={reasoningByStep}
@@ -685,8 +701,6 @@ export function TestAgentChat({ projectId }: { projectId: string }) {
 
 type TimelineProps = {
   activeSession: ChatResponse | null;
-  branches: import("./chat-reducer").BranchSnapshot[];
-  branchViewIndex: number;
   errorEvents: AgentEvent[];
   lastAssistantIndex: number;
   messages: ChatMessage[];
@@ -694,7 +708,6 @@ type TimelineProps = {
   onRegenerate: () => void;
   onSessionReload: (sessionId: string) => void;
   onSuggestionClick: (text: string) => void;
-  onViewBranch: (index: number) => void;
   pendingConfs: AgentEvent[];
   projectId: string;
   reasoningByStep: Map<number, AgentEvent>;
@@ -708,8 +721,6 @@ type TimelineProps = {
 
 function MessageTimeline({
   activeSession,
-  branches,
-  branchViewIndex,
   errorEvents,
   lastAssistantIndex,
   messages,
@@ -717,7 +728,6 @@ function MessageTimeline({
   onRegenerate,
   onSessionReload,
   onSuggestionClick,
-  onViewBranch,
   pendingConfs,
   projectId,
   reasoningByStep,
@@ -728,70 +738,8 @@ function MessageTimeline({
   taskStates,
   batchConfirm,
 }: TimelineProps) {
-  const branchCount = branches.length;
-  const viewingBranch = branchViewIndex >= 0;
-  const currentBranchLabel = viewingBranch
-    ? `分支 ${branchViewIndex + 1}/${branchCount + 1}`
-    : null;
-
   return (
     <div className="mx-auto max-w-3xl">
-      {/* ── Branch navigation bar ── */}
-      {viewingBranch ? (
-        <div className="mb-4 flex items-center justify-between rounded-[var(--radius-md)] border border-[var(--primary)]/30 bg-[var(--primary-subtle)]/15 px-3 py-2">
-          <div className="flex items-center gap-2">
-            <span className="text-xs font-medium text-[var(--primary)]">
-              {currentBranchLabel}
-            </span>
-            <span className="text-[0.65rem] text-[var(--muted)]">
-              查看历史生成 · 共 {branchCount + 1} 个版本
-            </span>
-          </div>
-          <div className="flex items-center gap-1">
-            <button
-              aria-label="上一个分支"
-              className="rounded px-2 py-1 text-xs text-[var(--muted)] transition-colors hover:bg-[var(--canvas-soft)] hover:text-[var(--ink)] disabled:opacity-30"
-              disabled={branchViewIndex <= 0}
-              onClick={() => onViewBranch(branchViewIndex - 1)}
-              type="button"
-            >
-              ← 上一个
-            </button>
-            <button
-              aria-label="返回当前版本"
-              className="rounded px-2 py-1 text-xs font-medium text-[var(--primary)] transition-colors hover:bg-[var(--primary)]/10"
-              onClick={() => onViewBranch(-1)}
-              type="button"
-            >
-              返回最新
-            </button>
-            <button
-              aria-label="下一个分支"
-              className="rounded px-2 py-1 text-xs text-[var(--muted)] transition-colors hover:bg-[var(--canvas-soft)] hover:text-[var(--ink)] disabled:opacity-30"
-              disabled={branchViewIndex >= branchCount - 1}
-              onClick={() => onViewBranch(branchViewIndex + 1)}
-              type="button"
-            >
-              下一个 →
-            </button>
-          </div>
-        </div>
-      ) : branchCount > 0 ? (
-        <div className="mb-4 flex items-center gap-2 rounded-[var(--radius-md)] border border-[var(--hairline)] bg-[var(--canvas-soft)]/50 px-3 py-1.5">
-          <span className="text-[0.65rem] text-[var(--muted)]">
-            {branchCount} 个历史版本可用
-          </span>
-          <button
-            aria-label="查看历史分支"
-            className="rounded px-2 py-0.5 text-[0.65rem] font-medium text-[var(--primary)] transition-colors hover:bg-[var(--primary)]/10"
-            onClick={() => onViewBranch(branchCount - 1)}
-            type="button"
-          >
-            查看 →
-          </button>
-        </div>
-      ) : null}
-
       {/* ── Completed messages ── */}
       {messages.map((message, index) => {
         const showDivider =
