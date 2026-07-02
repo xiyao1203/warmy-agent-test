@@ -351,6 +351,15 @@ export function useChatReducer() {
       if (event.type === "message.delta") {
         dispatch({ type: "APPEND_STREAMING", content: String(event.payload.content ?? "") });
       }
+      // 流式完成：不等 POST 返回，立即结束流式状态（保留已显示内容）
+      if (
+        event.type === "message.completed" ||
+        event.type === "agent.completed" ||
+        event.type === "run.completed"
+      ) {
+        dispatch({ type: "CLEAR_REASONING" });
+        dispatch({ type: "SET_SENDING", value: false });
+      }
     },
     [dispatch],
   );

@@ -889,7 +889,7 @@ function MessageTimeline({
       {streamingContent ? (
         <div className="timeline-item mb-8 animate-fadeIn">
           <ChatMessageBubble
-            isStreaming
+            isStreaming={sending}
             message={{ role: "assistant", content: streamingContent, timestamp: "" }}
           />
         </div>

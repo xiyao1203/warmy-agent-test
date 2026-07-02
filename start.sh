@@ -219,21 +219,40 @@ check_uv() {
 
 check_db_choice() {
     info "检测数据库..."
-    # 优先检测 Docker 容器中的 PostgreSQL
+
+    # 1. 检测已运行的 PostgreSQL
     if docker ps --format '{{.Names}}' 2>/dev/null | grep -q "postgresql"; then
         ok "检测到 PostgreSQL Docker 容器运行中，将使用 PostgreSQL"
         export AGENTTEST_DATABASE_URL="postgresql+asyncpg://agenttest:agenttest-local@localhost:5432/agenttest"
-    elif pg_isready -q 2>/dev/null; then
+        return
+    fi
+    if pg_isready -q 2>/dev/null; then
         ok "检测到 PostgreSQL 运行中，将使用 PostgreSQL"
         export AGENTTEST_DATABASE_URL="postgresql+asyncpg://agenttest:agenttest-local@localhost:5432/agenttest"
-    elif lsof -i :5432 -sTCP:LISTEN &>/dev/null 2>&1; then
+        return
+    fi
+    if lsof -i :5432 -sTCP:LISTEN &>/dev/null 2>&1; then
         ok "检测到端口 5432 监听中，将使用 PostgreSQL"
         export AGENTTEST_DATABASE_URL="postgresql+asyncpg://agenttest:agenttest-local@localhost:5432/agenttest"
-    else
-        warn "PostgreSQL 未运行，将使用本地 SQLite (data/local.db)"
-        mkdir -p data
-        export AGENTTEST_DATABASE_URL="sqlite+aiosqlite:///data/local.db"
+        return
     fi
+
+    # 2. 未检测到，尝试通过 Docker Compose 自动启动
+    local compose_file="$SCRIPT_DIR/infra/compose/compose.yaml"
+    if command -v docker &>/dev/null && docker info &>/dev/null 2>&1 && [ -f "$compose_file" ]; then
+        info "PostgreSQL 未运行，尝试通过 Docker Compose 启动..."
+        if docker compose -f "$compose_file" up -d --wait postgresql 2>&1 | tail -3; then
+            ok "PostgreSQL Docker 容器已启动，将使用 PostgreSQL"
+            export AGENTTEST_DATABASE_URL="postgresql+asyncpg://agenttest:agenttest-local@localhost:5432/agenttest"
+            return
+        fi
+        warn "Docker Compose 启动 PostgreSQL 失败"
+    fi
+
+    # 3. Docker 不可用，降级到 SQLite
+    warn "PostgreSQL 不可用，将使用本地 SQLite (data/local.db)"
+    mkdir -p "$SCRIPT_DIR/data"
+    export AGENTTEST_DATABASE_URL="sqlite+aiosqlite:///$SCRIPT_DIR/data/local.db"
 }
 
 # ── 依赖安装 ──────────────────────────────────────────────────────────────────
@@ -283,8 +302,8 @@ init_database() {
     header "初始化数据库"
     if echo "$AGENTTEST_DATABASE_URL" | grep -q "sqlite"; then
         # SQLite: 只需确保目录存在，Alembic 会自动创建数据库文件
-        mkdir -p data
-        ok "SQLite 数据库路径已就绪 (data/local.db)"
+        mkdir -p "$SCRIPT_DIR/data"
+        ok "SQLite 数据库路径已就绪 ($SCRIPT_DIR/data/local.db)"
     fi
     # 无论何种数据库，都运行迁移确保表结构最新
     info "运行数据库迁移..."
