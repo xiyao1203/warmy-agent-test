@@ -61,6 +61,7 @@ export function TestAgentChat({ projectId }: { projectId: string }) {
   const sseCloseRef = useRef<(() => void) | null>(null);
   const pinnedBottomRef = useRef(true);
   const acceptDeltasRef = useRef(true);
+  const streamingContentRef = useRef("");
   const [isPinned, setIsPinned] = useState(true);
   const activeSessionId = active?.session_id ?? null;
 
@@ -119,11 +120,16 @@ export function TestAgentChat({ projectId }: { projectId: string }) {
         );
       }
       if (event.type === "message.started") {
+        streamingContentRef.current = "";
         setStreamingContent("");
       }
       if (event.type === "message.delta" && acceptDeltasRef.current) {
         setStreamingContent(
-          (current) => current + String(event.payload.content ?? ""),
+          (current) => {
+            const next = current + String(event.payload.content ?? "");
+            streamingContentRef.current = next;
+            return next;
+          },
         );
       }
       // message.completed is intentionally NOT clearing streamingContent —
@@ -226,6 +232,18 @@ export function TestAgentChat({ projectId }: { projectId: string }) {
     sseCloseRef.current?.();
     sseCloseRef.current = null;
     acceptDeltasRef.current = false;
+    // Save partially generated content as a message instead of discarding it
+    const partial = streamingContentRef.current.trim();
+    if (partial) {
+      setMessages((current) => [
+        ...current,
+        {
+          role: "assistant" as const,
+          content: partial,
+          timestamp: new Date().toISOString(),
+        },
+      ]);
+    }
     setSending(false);
     setStreamingContent("");
   }
