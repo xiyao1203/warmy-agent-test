@@ -67,7 +67,7 @@ export function TestAgentChat({ projectId }: { projectId: string }) {
         dispatch({ type: "SET_SESSIONS", sessions: response.items });
         if (requested) {
           const session = await getSession(projectId, requested);
-          if (!alive) applySession(session);
+          if (alive) applySession(session);
         }
       })
       .catch((reason: unknown) => {
