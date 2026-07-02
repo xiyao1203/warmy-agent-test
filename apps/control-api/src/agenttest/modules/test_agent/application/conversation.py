@@ -233,9 +233,10 @@ class SuperAgentConversation:
             actor, project_id, ModelPurpose.TEST_AGENT_CHAT,
         )
         prompt = (
-            "你是标题生成器。根据对话内容生成极简标题，不超过6个汉字。"
+            "总结以下对话的核心主题，输出一个极简标题（2~6个汉字）。"
+            "标题是对整个对话的提炼，不是从对话中截取片段。"
             "只返回标题本身，不加引号、标点或解释。"
-            "例如：登录测试、API调试、性能优化、安全扫描"
+            "示例：问候、登录测试、API调试、安全扫描、Canvas画布"
         )
         result = await self._invoker.invoke(
             config,
@@ -245,7 +246,7 @@ class SuperAgentConversation:
                 for role, content in history
             ],
             timeout_seconds=15,
-            max_tokens=32,
+            max_tokens=16,
         )
-        title = result.content.strip()[:20]
+        title = result.content.strip()[:12]
         return title if title else "新对话"
