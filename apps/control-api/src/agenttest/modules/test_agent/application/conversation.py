@@ -336,25 +336,31 @@ class SuperAgentConversation:
         config = await self._models.resolve_default(
             actor, project_id, ModelPurpose.TEST_AGENT_CHAT,
         )
-        prompt = (
-            "标题："
-        )
+        # Format conversation into a compact summary and append the instruction
+        # as the LAST user message, so the model naturally outputs just the title.
+        lines: list[str] = []
+        for role, content in history[-6:]:  # last 6 messages for context
+            label = "用户" if role == "user" else "助手"
+            lines.append(f"{label}：{content[:120]}")
+        conv_text = "\n".join(lines)
+        user_prompt = f"{conv_text}\n\n为这段对话取一个2-6字中文标题。只回复标题本身。"
         result = await self._invoker.invoke(
             config,
-            [InvocationMessage(role="system", content=prompt)]
-            + [
-                InvocationMessage(role=role, content=content)
-                for role, content in history
+            [
+                InvocationMessage(role="system", content="你是标题提取器。"),
+                InvocationMessage(role="user", content=user_prompt),
             ],
-            timeout_seconds=15, max_tokens=16,
+            timeout_seconds=15, max_tokens=12,
         )
         raw = result.content.strip()
-        # Detect prompt-leakage: if output contains meta-task language,
-        # the model recited the instruction instead of producing a title.
+        # Detect prompt-leakage / meta-language: if the model recited anything
+        # that looks like an instruction or explanation, fall back immediately.
         leakage_markers = [
             "我们被要求", "为对话生成", "为以下对话",
             "总结以下", "总结对话", "输出标题",
             "请为", "生成标题", "起一个", "起标题",
+            "我们需要", "用中文", "对话标题", "标题是",
+            "这段对话", "本次对话", "当前对话",
         ]
         if any(marker in raw for marker in leakage_markers):
             return "新对话"
