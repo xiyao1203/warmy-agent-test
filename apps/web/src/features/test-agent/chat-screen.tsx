@@ -873,15 +873,12 @@ function MessageTimeline({
         </div>
       )}
 
-      {/* ── Streaming reasoning ── */}
+      {/* ── Streaming reasoning (Codex-style: inline before reply) ── */}
       {reasoningStream ? (
-        <div className="timeline-item animate-fadeIn mb-4">
+        <div className="timeline-item mb-2 animate-fadeIn">
           <ReasoningBlock
-            capability="规划中"
             content={reasoningStream}
-            isStreaming
-            step={1}
-            total={1}
+            isStreaming={!streamingContent}
           />
         </div>
       ) : null}

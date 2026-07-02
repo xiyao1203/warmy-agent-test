@@ -1,8 +1,7 @@
 "use client";
 
-import { useState } from "react";
-
 import { Brain, ChevronDown } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 
 export function ReasoningBlock({
   content,
@@ -12,49 +11,71 @@ export function ReasoningBlock({
   isStreaming,
 }: {
   content: string;
-  step: number;
-  total: number;
-  capability: string;
+  step?: number;
+  total?: number;
+  capability?: string;
   isStreaming?: boolean;
 }) {
-  const [open, setOpen] = useState(isStreaming ?? false);
+  const [open, setOpen] = useState(true);
+  const wasStreaming = useRef(isStreaming);
 
-  // Auto-open when streaming
-  const openState = isStreaming ? true : open;
+  // Auto-collapse 600ms after streaming ends (Codex-style)
+  useEffect(() => {
+    if (wasStreaming.current && !isStreaming) {
+      const timer = setTimeout(() => setOpen(false), 600);
+      return () => clearTimeout(timer);
+    }
+    wasStreaming.current = isStreaming;
+  }, [isStreaming]);
+
+  const isOpen = isStreaming ? true : open;
+  const hasStep = step !== undefined && total !== undefined && total > 0;
 
   return (
-    <div className="my-1.5 animate-fadeIn overflow-hidden rounded-[var(--radius-md)] border border-purple-200/60 bg-purple-50/40 dark:border-purple-800/30 dark:bg-purple-950/20">
+    <div className="my-1 animate-fadeIn overflow-hidden rounded-lg border border-[var(--hairline)] bg-[var(--canvas-soft)]/60 transition-colors">
       <button
-        className="flex w-full items-center gap-2.5 px-3 py-2 text-left transition-colors hover:bg-purple-100/50 dark:hover:bg-purple-900/20"
+        aria-expanded={isOpen}
+        className="flex w-full items-center gap-2 px-3 py-1.5 text-left transition-colors hover:bg-[var(--canvas-soft)]"
         onClick={() => setOpen((v) => !v)}
         type="button"
       >
-        <span className="flex size-5 shrink-0 items-center justify-center rounded bg-purple-100 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400">
-          <Brain className={`size-3 ${isStreaming ? "animate-pulse" : openState ? "" : "animate-pulse"}`} />
+        <span className="flex size-4 shrink-0 items-center justify-center text-[var(--muted)]">
+          <Brain className={`size-3 ${isStreaming ? "animate-pulse" : ""}`} />
         </span>
-        <span className="min-w-0 flex-1 text-[0.7rem] font-medium text-purple-700 dark:text-purple-300">
-          {isStreaming ? "分析中…" : `思考 · Step ${step}/${total}`}
+        <span className="min-w-0 flex-1 truncate text-[0.7rem] text-[var(--muted)]">
+          {isStreaming
+            ? "思考中…"
+            : hasStep
+              ? `思考 · Step ${step}/${total}`
+              : "思考"}
         </span>
-        <span className="hidden truncate text-[0.65rem] text-purple-500/70 sm:inline">
-          {capability}
-        </span>
+        {capability ? (
+          <span className="hidden truncate text-[0.65rem] text-[var(--muted)]/60 sm:inline">
+            {capability}
+          </span>
+        ) : null}
         <ChevronDown
-          className={`size-3 shrink-0 text-purple-400 transition-transform duration-200 ${
-            openState ? "rotate-180" : ""
+          className={`size-3 shrink-0 text-[var(--muted)]/50 transition-transform duration-200 ${
+            isOpen ? "rotate-180" : ""
           }`}
         />
       </button>
-      {openState ? (
-        <div className="border-t border-purple-200/50 px-3 py-2.5 dark:border-purple-800/20">
-          <p className="whitespace-pre-wrap text-xs leading-relaxed text-[var(--muted)]">
-            {content}
-            {isStreaming ? (
-              <span className="ml-0.5 inline-block h-3 w-0.5 animate-pulse bg-purple-400 align-middle" />
-            ) : null}
-          </p>
+      <div
+        className={`grid transition-all duration-300 ease-out ${
+          isOpen ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"
+        }`}
+      >
+        <div className="overflow-hidden">
+          <div className="border-t border-[var(--hairline)] px-3 py-2">
+            <p className="whitespace-pre-wrap text-[0.75rem] leading-relaxed text-[var(--muted)]">
+              {content}
+              {isStreaming ? (
+                <span className="ml-0.5 inline-block h-3.5 w-0.5 animate-pulse bg-[var(--ink)]/30 align-middle" />
+              ) : null}
+            </p>
+          </div>
         </div>
-      ) : null}
+      </div>
     </div>
   );
 }
-
