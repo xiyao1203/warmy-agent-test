@@ -1,18 +1,19 @@
 "use client";
 
-import { Bot, Send, User } from "lucide-react";
-import { useEffect, useState } from "react";
+import { CornerDownLeft, RefreshCw } from "lucide-react";
+import { useCallback, useEffect, useRef, useState } from "react";
+
+import { MessageBubble, TypingIndicator } from "@/components/uiverse";
 
 import { listAgents, listAgentVersions } from "@/features/agents/api";
 import { listEnvironmentTemplates } from "@/features/environments/api";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 
 import {
   createTargetChat,
   listTargetChats,
   sendTargetMessage,
   type TargetChatSession,
+  type TargetChatTurn,
 } from "./api";
 
 type Option = { id: string; label: string };
@@ -23,17 +24,27 @@ export function TargetChatScreen({ projectId }: { projectId: string }) {
   const [versionId, setVersionId] = useState("");
   const [environmentId, setEnvironmentId] = useState("");
   const [session, setSession] = useState<TargetChatSession | null>(null);
+  const [turns, setTurns] = useState<TargetChatTurn[]>([]);
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [loadingInit, setLoadingInit] = useState(true);
+
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
+  const pinnedBottomRef = useRef(true);
 
   useEffect(() => {
-    Promise.all([
-      listAgents(projectId),
-      listEnvironmentTemplates(projectId),
-      listTargetChats(projectId),
-    ])
-      .then(async ([agentPage, templates, history]) => {
+    let alive = true;
+    listTargetChats(projectId)
+      .then(async (history) => {
+        if (!alive) return;
+        const [agentPage, templates] = await Promise.all([
+          listAgents(projectId),
+          listEnvironmentTemplates(projectId),
+        ]);
+        if (!alive) return;
+
         const agents = agentPage.items;
         const groups = await Promise.all(
           agents.map(async (agent) => ({
@@ -46,7 +57,7 @@ export function TargetChatScreen({ projectId }: { projectId: string }) {
             .filter((item) => item.status === "published")
             .map((item) => ({
               id: item.id,
-              label: `${agent.name} · v${item.version_number}`,
+              label: `${agent.name} \u00b7 v${item.version_number}`,
             })),
         );
         setVersions(published);
@@ -54,12 +65,37 @@ export function TargetChatScreen({ projectId }: { projectId: string }) {
         setEnvironments(
           templates.map((item) => ({ id: item.id, label: item.name })),
         );
-        setSession(history.items[0] ?? null);
+
+        const latest = history.items[0] ?? null;
+        if (latest) {
+          setSession(latest);
+          setTurns(latest.turns);
+        }
       })
       .catch((reason: unknown) =>
         setError(reason instanceof Error ? reason.message : "配置加载失败"),
-      );
+      )
+      .finally(() => {
+        if (alive) setLoadingInit(false);
+      });
+    return () => {
+      alive = false;
+    };
   }, [projectId]);
+
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el || !pinnedBottomRef.current) return;
+    el.scrollTo({ top: el.scrollHeight, behavior: "smooth" });
+  }, [turns, sending]);
+
+  const handleScroll = useCallback(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const threshold = 80;
+    pinnedBottomRef.current =
+      el.scrollHeight - el.scrollTop - el.clientHeight < threshold;
+  }, []);
 
   async function ensureSession() {
     if (session) return session;
@@ -72,8 +108,11 @@ export function TargetChatScreen({ projectId }: { projectId: string }) {
   async function send() {
     const content = input.trim();
     if (!content || sending) return;
+    setInput("");
     setSending(true);
     setError(null);
+    pinnedBottomRef.current = true;
+
     try {
       const active = await ensureSession();
       const turn = await sendTargetMessage(
@@ -81,8 +120,7 @@ export function TargetChatScreen({ projectId }: { projectId: string }) {
         active.session_id,
         content,
       );
-      setSession({ ...active, turns: [...active.turns, turn] });
-      setInput("");
+      setTurns((current) => [...current, turn]);
     } catch (reason) {
       setError(
         reason instanceof Error ? reason.message : "被测 Agent 调用失败",
@@ -92,12 +130,26 @@ export function TargetChatScreen({ projectId }: { projectId: string }) {
     }
   }
 
+  function extractOutputText(
+    output: Record<string, unknown> | null | undefined,
+  ): string {
+    if (!output) return "";
+    if (typeof output.message === "string") return output.message;
+    if (typeof output.content === "string") return output.content;
+    if (typeof output.text === "string") return output.text;
+    return JSON.stringify(output, null, 2);
+  }
+
+  const versionLabel = versions.find((v) => v.id === versionId)?.label;
+  const hasSession = session !== null && turns.length > 0;
+
   return (
-    <div className="flex min-h-0 flex-1 flex-col">
-      <div className="flex flex-wrap gap-3 border-b border-[var(--hairline)] p-4">
+    <div className="flex min-h-0 flex-1 flex-col overflow-hidden bg-[var(--canvas)]">
+      {/* Header */}
+      <header className="flex shrink-0 items-center gap-3 border-b border-[var(--hairline)] px-4 py-2.5">
         <select
           aria-label="被测 Agent 版本"
-          className="rounded-md border border-[var(--hairline)] bg-[var(--surface)] px-3 py-2 text-sm"
+          className="min-w-0 flex-1 rounded-lg border border-[var(--hairline)] bg-[var(--surface)] px-3 py-1.5 text-[0.8125rem] text-[var(--ink)]"
           disabled={Boolean(session)}
           onChange={(event) => setVersionId(event.target.value)}
           value={versionId}
@@ -111,7 +163,7 @@ export function TargetChatScreen({ projectId }: { projectId: string }) {
         </select>
         <select
           aria-label="测试环境"
-          className="rounded-md border border-[var(--hairline)] bg-[var(--surface)] px-3 py-2 text-sm"
+          className="min-w-0 flex-1 rounded-lg border border-[var(--hairline)] bg-[var(--surface)] px-3 py-1.5 text-[0.8125rem] text-[var(--ink)]"
           disabled={Boolean(session)}
           onChange={(event) => setEnvironmentId(event.target.value)}
           value={environmentId}
@@ -123,80 +175,149 @@ export function TargetChatScreen({ projectId }: { projectId: string }) {
             </option>
           ))}
         </select>
-        <Button onClick={() => setSession(null)} variant="secondary">
-          新建测试会话
-        </Button>
-      </div>
-      <div className="min-h-0 flex-1 space-y-4 overflow-y-auto p-5">
-        {session?.turns.length ? (
-          session.turns.map((turn) => (
-            <div className="space-y-3" key={turn.turn_id}>
-              <Bubble
-                icon={<User className="size-4" />}
-                text={String(turn.input.message ?? "")}
-                user
-              />
-              <Bubble
-                icon={<Bot className="size-4" />}
-                text={JSON.stringify(turn.output, null, 2)}
-              />
-              <p className="pl-11 text-xs text-[var(--muted)]">
-                耗时 {turn.duration_ms ?? "-"} ms · Trace{" "}
-                {turn.trace?.length ?? 0} 条 · 评分 {turn.scores?.length ?? 0}{" "}
-                项
-              </p>
+        {hasSession ? (
+          <button
+            aria-label="新建测试会话"
+            className="shrink-0 rounded-lg p-1.5 text-[var(--muted)] transition-colors hover:bg-[var(--canvas-soft)] hover:text-[var(--ink)]"
+            onClick={() => {
+              setSession(null);
+              setTurns([]);
+              setError(null);
+            }}
+            title="新建测试会话"
+            type="button"
+          >
+            <RefreshCw className="size-4" />
+          </button>
+        ) : null}
+      </header>
+
+      {/* Messages area */}
+      <div
+        className="chat-scroll min-h-0 flex-1 overflow-y-auto px-5 py-4"
+        onScroll={handleScroll}
+        ref={scrollRef}
+      >
+        {loadingInit ? (
+          <div className="mx-auto max-w-3xl">
+            <div className="mb-2 h-0.5 w-full overflow-hidden rounded-full bg-[var(--canvas-soft)]">
+              <div className="h-full w-1/3 animate-[loading-bar_1.5s_ease-in-out_infinite] rounded-full bg-[var(--primary)]" />
             </div>
-          ))
+          </div>
+        ) : !hasSession ? (
+          <div className="flex h-full flex-col items-center justify-center px-4">
+            <p className="text-[0.9375rem] text-[var(--muted)]">
+              {versionLabel
+                ? `已选择 ${versionLabel}，发送消息开始测试`
+                : "选择一个已发布的 Agent 版本，然后发送消息开始对话测试"}
+            </p>
+          </div>
         ) : (
-          <p className="text-sm text-[var(--muted)]">
-            选择版本后直接与真实被测 Agent 对话；每轮结果、Trace
-            与耗时都会持久化。
-          </p>
+          <div className="mx-auto max-w-3xl">
+            {turns.map((turn) => (
+              <div className="mb-8 last:mb-0" key={turn.turn_id}>
+                <MessageBubble
+                  content={String(turn.input.message ?? "")}
+                  role="user"
+                  timestamp={turn.created_at}
+                />
+                <div className="mt-6">
+                  <MessageBubble
+                    content={
+                      turn.error
+                        ? `调用失败: ${String(turn.error.message ?? turn.error)}`
+                        : extractOutputText(turn.output)
+                    }
+                    role="assistant"
+                    timestamp={turn.created_at}
+                  />
+                </div>
+                <div className="mt-1.5 pl-11 text-[0.65rem] text-[var(--muted)]">
+                  耗时 {turn.duration_ms ?? "-"} ms
+                  {turn.trace?.length
+                    ? ` \u00b7 Trace ${turn.trace.length} 条`
+                    : ""}
+                  {turn.scores?.length
+                    ? ` \u00b7 评分 ${turn.scores.length} 项`
+                    : ""}
+                  {turn.token_usage
+                    ? ` \u00b7 Token ${JSON.stringify(turn.token_usage)}`
+                    : null}
+                </div>
+              </div>
+            ))}
+
+            {sending ? (
+              <div className="mb-8">
+                <TypingIndicator />
+              </div>
+            ) : null}
+          </div>
         )}
       </div>
-      <div className="border-t border-[var(--hairline)] p-4">
-        <div className="flex gap-2">
-          <Input
-            aria-label="被测 Agent 对话输入"
-            onChange={(event) => setInput(event.target.value)}
-            value={input}
-          />
-          <Button
-            disabled={!input.trim() || sending}
-            loading={sending}
-            onClick={() => void send()}
-            variant="primary"
-          >
-            <Send className="size-4" />
-          </Button>
-        </div>
-        {error ? (
-          <p className="mt-2 text-sm text-[var(--danger)]" role="alert">
-            {error}
-          </p>
-        ) : null}
-      </div>
-    </div>
-  );
-}
 
-function Bubble({
-  icon,
-  text,
-  user = false,
-}: {
-  icon: React.ReactNode;
-  text: string;
-  user?: boolean;
-}) {
-  return (
-    <div className={`flex gap-3 ${user ? "flex-row-reverse" : ""}`}>
-      <span className="flex size-8 items-center justify-center rounded-full bg-[var(--canvas-soft)]">
-        {icon}
-      </span>
-      <pre className="max-w-[80%] whitespace-pre-wrap rounded-lg bg-[var(--surface)] px-4 py-3 text-sm">
-        {text}
-      </pre>
+      {/* Error banner */}
+      {error ? (
+        <div
+          className="shrink-0 border-t border-[var(--danger)]/30 bg-[var(--danger-subtle)]/20 px-4 py-2.5"
+          role="alert"
+        >
+          <div className="mx-auto flex max-w-3xl items-center justify-between gap-3">
+            <p className="min-w-0 flex-1 text-xs text-[var(--danger)]">
+              {error}
+            </p>
+            <button
+              className="shrink-0 rounded px-2 py-0.5 text-xs text-[var(--muted)] transition-colors hover:text-[var(--ink)]"
+              onClick={() => setError(null)}
+              type="button"
+            >
+              关闭
+            </button>
+          </div>
+        </div>
+      ) : null}
+
+      {/* Input area */}
+      <div className="shrink-0 border-t border-[var(--hairline)] px-4 py-3">
+        <div className="mx-auto flex max-w-3xl gap-2">
+          <div className="relative flex-1">
+            <textarea
+              aria-label="被测 Agent 对话输入"
+              className="w-full resize-none rounded-2xl border border-[var(--hairline)] bg-[var(--canvas-soft)] px-4 py-3 pr-10 text-[0.9375rem] leading-6 text-[var(--ink)] placeholder-[var(--muted)] transition-shadow focus:border-[var(--hairline-strong)] focus:shadow-md focus:outline-none disabled:opacity-50"
+              disabled={sending}
+              onChange={(event) => {
+                setInput(event.target.value);
+                const el = event.target;
+                el.style.height = "auto";
+                el.style.height = `${Math.min(el.scrollHeight, 200)}px`;
+              }}
+              onKeyDown={(event) => {
+                if (event.key === "Enter" && !event.shiftKey) {
+                  event.preventDefault();
+                  void send();
+                }
+              }}
+              placeholder="向被测 Agent 发送消息…"
+              ref={inputRef}
+              rows={1}
+              value={input}
+            />
+            <button
+              aria-label="发送"
+              className={`absolute bottom-2 right-2 rounded-lg p-1.5 transition-all ${
+                input.trim() && !sending
+                  ? "bg-[var(--primary)] text-white hover:bg-[var(--primary-hover)]"
+                  : "cursor-default text-[var(--muted)]"
+              }`}
+              disabled={!input.trim() || sending}
+              onClick={() => void send()}
+              type="button"
+            >
+              <CornerDownLeft className="size-5" />
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
