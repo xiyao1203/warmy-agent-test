@@ -163,9 +163,11 @@ def create_test_agent_router(
         project_id: UUID,
         session: ChatSession,
         message: str,
+        add_user_message: bool = True,
     ):
-        session.add_user_message(message)
-        await sessions.save(session)
+        if add_user_message:
+            session.add_user_message(message)
+            await sessions.save(session)
         await orchestration.append_event(
             ProjectId(project_id),
             session.session_id,
@@ -383,7 +385,7 @@ def create_test_agent_router(
             session.add_user_message(message)
             await sessions.save(session)
 
-        return await send_message(actor, project_id, session, message)
+        return await send_message(actor, project_id, session, message, add_user_message=False)
 
     @router.get("/sessions/{session_id}/events")
     async def stream_events(
