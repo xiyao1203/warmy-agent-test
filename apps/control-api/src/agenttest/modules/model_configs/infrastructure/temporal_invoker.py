@@ -105,6 +105,7 @@ class TemporalModelInvoker:
         messages: list[InvocationMessage],
         *,
         callback: ModelStreamCallback,
+        reasoning_callback: ModelStreamCallback | None = None,
         timeout_seconds: int = 60,
         max_tokens: int = 2048,
         stream_ctx: StreamContext | None = None,
@@ -130,6 +131,11 @@ class TemporalModelInvoker:
         }
         if callback is not None:
             payload["callback"] = {"url": callback.url, "internal_token": callback.internal_token}
+        if reasoning_callback is not None:
+            payload["reasoning_callback"] = {
+                "url": reasoning_callback.url,
+                "internal_token": reasoning_callback.internal_token,
+            }
 
         workflow_id = f"model-streaming-{uuid4()}"
         if stream_ctx is not None:

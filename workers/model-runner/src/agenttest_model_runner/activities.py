@@ -58,7 +58,7 @@ class ModelActivities:
 
     @activity.defn(name="stream-model")
     async def stream_model(self, payload: dict[str, Any]) -> dict[str, Any]:
-        """逐块读取供应商 SSE，并同步写入 Control API 的持久事件流。
+        """逐块读取供应商 SSE，按 kind 分别路由到 content / reasoning 回调。
 
         支持优雅取消：
         - 检测 Temporal Activity heartbeat 取消状态
@@ -86,18 +86,26 @@ class ModelActivities:
             allow_private_network=bool(payload.get("allow_private_network", False)),
         )
         callback = payload.get("callback")
+        reasoning_callback = payload.get("reasoning_callback")
         timeout_seconds = float(payload.get("timeout_seconds", 60))
         started_at = time.monotonic()
         chunks: list[str] = []
         try:
-            async for chunk in self._adapter.stream(request):
-                chunks.append(chunk)
-                if callback:
+            async for kind, chunk in self._adapter.stream(request):
+                # Reasoning is streamed via callback, only accumulate content in return
+                if kind == "content":
+                    chunks.append(chunk)
+                target = None
+                if kind == "reasoning" and reasoning_callback:
+                    target = reasoning_callback
+                elif kind == "content" and callback:
+                    target = callback
+                if target:
                     async with httpx.AsyncClient(timeout=10) as client:
                         try:
                             response = await client.post(
-                                str(callback["url"]),
-                                headers={"X-Internal-Token": str(callback["internal_token"])},
+                                str(target["url"]),
+                                headers={"X-Internal-Token": str(target["internal_token"])},
                                 json={"content": chunk},
                             )
                             response.raise_for_status()

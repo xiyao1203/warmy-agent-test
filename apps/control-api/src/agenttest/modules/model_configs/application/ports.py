@@ -69,6 +69,7 @@ class ModelInvoker(Protocol):
         messages: list[InvocationMessage],
         *,
         callback: ModelStreamCallback | None = None,
+        reasoning_callback: ModelStreamCallback | None = None,
         timeout_seconds: int = 60,
         max_tokens: int = 2048,
         stream_ctx: StreamContext | None = None,

@@ -107,4 +107,24 @@ async def test_stream_yields_real_provider_deltas_in_order() -> None:
 
     chunks = [chunk async for chunk in adapter.stream(request())]
 
-    assert chunks == ["你", "好"]
+    assert chunks == [("content", "你"), ("content", "好")]
+
+
+@pytest.mark.asyncio
+async def test_stream_separates_reasoning_from_content() -> None:
+    async def handler(http_request: httpx.Request) -> httpx.Response:
+        return httpx.Response(
+            200,
+            headers={"content-type": "text/event-stream"},
+            text=(
+                'data: {"choices":[{"delta":{"reasoning_content":"让我想想"}}]}\n\n'
+                'data: {"choices":[{"delta":{"content":"你好"}}]}\n\n'
+                "data: [DONE]\n\n"
+            ),
+        )
+
+    adapter = OpenAICompatibleAdapter(transport=httpx.MockTransport(handler))
+
+    chunks = [chunk async for chunk in adapter.stream(request())]
+
+    assert chunks == [("reasoning", "让我想想"), ("content", "你好")]

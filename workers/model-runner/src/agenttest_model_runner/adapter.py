@@ -109,8 +109,12 @@ class OpenAICompatibleAdapter:
         except (ValueError, KeyError, IndexError, TypeError) as error:
             raise ModelProtocolError("模型服务响应不符合 OpenAI-Compatible 契约") from error
 
-    async def stream(self, request: ModelInvocationRequest) -> AsyncIterator[str]:
-        """从真实 OpenAI-Compatible SSE 响应中逐块产出内容。"""
+    async def stream(self, request: ModelInvocationRequest) -> AsyncIterator[tuple[str, str]]:
+        """从真实 OpenAI-Compatible SSE 响应中逐块产出 (kind, text) 对。
+
+        kind 为 "reasoning"（推理过程）或 "content"（正文），
+        由调用方分别路由到 reasoning 回调和 content 回调。
+        """
 
         _validate_target(request.base_url, request.allow_private_network)
         payload: dict[str, object] = {
@@ -156,13 +160,18 @@ class OpenAICompatibleAdapter:
                         try:
                             body = json.loads(raw)
                             delta = body["choices"][0]["delta"]
-                            content = delta.get("content") or delta.get("reasoning_content") or ""
+                            reasoning = delta.get("reasoning_content") or ""
+                            content_text = delta.get("content") or ""
+                            if not content_text and not reasoning:
+                                continue
                         except (json.JSONDecodeError, KeyError, IndexError, TypeError) as error:
                             raise ModelProtocolError(
                                 "模型流式响应不符合 OpenAI-Compatible 契约"
                             ) from error
-                        if isinstance(content, str) and content:
-                            yield content
+                        if isinstance(reasoning, str) and reasoning:
+                            yield ("reasoning", reasoning)
+                        if isinstance(content_text, str) and content_text:
+                            yield ("content", content_text)
         except (httpx.TimeoutException, httpx.NetworkError) as error:
             raise ModelTransientError("模型服务网络连接或响应超时") from error
 

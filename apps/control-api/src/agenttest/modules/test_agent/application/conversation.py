@@ -118,6 +118,7 @@ class SuperAgentConversation:
         else:
             result = await self._invoker.stream(
                 config, messages, callback=stream_callback,
+                reasoning_callback=reasoning_stream_callback,
                 timeout_seconds=60, max_tokens=2048,
             )
         content = result.content.strip()
