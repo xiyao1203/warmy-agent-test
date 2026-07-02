@@ -98,6 +98,8 @@ export function TestPlanDetail({
           datasetVersions={datasetVersions}
           environments={environments}
           gates={gates}
+          planId={plan.id}
+          projectId={plan.project_id}
           runs={runs}
           scorers={scorers}
           onSubmit={onCreateVersion}
@@ -152,6 +154,8 @@ export function TestPlanDetail({
                       datasetVersions={datasetVersions}
                       environments={environments}
                       gates={gates}
+                      planId={plan.id}
+                      projectId={plan.project_id}
                       runs={runs}
                       scorers={scorers}
                       onSubmit={(payload) =>

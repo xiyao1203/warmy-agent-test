@@ -12,6 +12,7 @@ from ..application.ports import (
     InvocationResult,
     ModelRuntimeUnavailableError,
     ModelStreamCallback,
+    StreamContext,
 )
 from ..domain.entities import ModelConfiguration
 
@@ -105,8 +106,13 @@ class TemporalModelInvoker:
         callback: ModelStreamCallback,
         timeout_seconds: int = 60,
         max_tokens: int = 2048,
+        stream_ctx: StreamContext | None = None,
     ) -> InvocationResult:
-        """执行真实流式 Workflow；每个供应商增量由 Worker 持久回调。"""
+        """执行真实流式 Workflow；每个供应商增量由 Worker 持久回调。
+
+        使用 start_workflow 获取 WorkflowHandle 以便外部取消。
+        若提供 stream_ctx，会填充 workflow_id 供调用方取消。
+        """
 
         if not self._address:
             raise ModelRuntimeUnavailableError("部署未配置 Model Runner")
@@ -123,16 +129,41 @@ class TemporalModelInvoker:
         }
         if callback is not None:
             payload["callback"] = {"url": callback.url, "internal_token": callback.internal_token}
+
+        workflow_id = f"model-streaming-{uuid4()}"
+        if stream_ctx is not None:
+            stream_ctx.workflow_id = workflow_id
+
         try:
             client = await Client.connect(self._address, namespace=self._namespace)
-            result = await client.execute_workflow(
+            handle = await client.start_workflow(
                 "model-streaming",
                 payload,
-                id=f"model-streaming-{uuid4()}",
+                id=workflow_id,
                 task_queue=self._task_queue,
             )
+            result = await handle.result()
         except Exception as error:
             raise ModelRuntimeUnavailableError("Model Runner 流式调用失败") from error
+        finally:
+            if stream_ctx is not None:
+                stream_ctx.workflow_id = None
+
         if not isinstance(result, dict) or not isinstance(result.get("content"), str):
             raise ModelRuntimeUnavailableError("Model Runner 返回无效流式结果")
         return InvocationResult(content=result["content"])
+
+    async def cancel_workflow(self, workflow_id: str) -> None:
+        """取消正在运行的 Temporal 流式 Workflow。
+
+        向 Temporal Server 发送取消信号，触发 Workflow 的取消处理逻辑。
+        若 workflow 已完成或不存在，忽略错误静默返回。
+        """
+        if not self._address or not workflow_id:
+            return
+        try:
+            client = await Client.connect(self._address, namespace=self._namespace)
+            handle = client.get_workflow_handle(workflow_id)
+            await handle.cancel()
+        except Exception:
+            pass

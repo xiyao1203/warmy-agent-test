@@ -41,6 +41,7 @@ from agenttest.modules.model_configs.public import (
     InvocationMessage,
     InvocationResult,
     ModelStreamCallback,
+    StreamContext,
 )
 
 
@@ -175,6 +176,12 @@ class TemporalModel(Model):
 
         启动本地 HTTP server 作为回调端点，Worker 逐 chunk POST，
         Agent 通过 asyncio.Queue 实时产出 PydanticAI delta 事件。
+        支持 Temporal Workflow 取消信号传播。
+
+        安全设计：
+        - Callback token 每次请求随机生成（per-request rotation）
+        - 服务器仅绑定 127.0.0.1，不暴露到外部网络
+        - Worker 仅通过 callback URL 单向推送，无法访问任何 Control API 资源
         """
         invocation_messages = _to_invocation_messages(messages)
         tools = _build_tools_payload(model_request_parameters)
@@ -203,6 +210,9 @@ class TemporalModel(Model):
             internal_token=callback_token,
         )
 
+        # ── 可取消的流式上下文 ──
+        stream_ctx = StreamContext()
+
         # ── 后台启动流式 Workflow ──
         stream_result: list[InvocationResult | None] = [None]
         stream_error: list[Exception | None] = [None]
@@ -214,6 +224,7 @@ class TemporalModel(Model):
                     callback=callback,
                     timeout_seconds=int(timeout),
                     max_tokens=int(max_tokens),
+                    stream_ctx=stream_ctx,
                 )
                 stream_result[0] = result
             except Exception as exc:
@@ -261,7 +272,7 @@ class TemporalModel(Model):
                 while True:
                     try:
                         chunk = await asyncio.wait_for(
-                            chunk_queue.get(), timeout=timeout + 30,
+                            chunk_queue.get(), timeout=timeout + 15,
                         )
                     except TimeoutError:
                         break
@@ -304,6 +315,9 @@ class TemporalModel(Model):
         try:
             yield _IncrementalStreamedResponse()
         finally:
+            # 取消顺序：先取消 Temporal workflow → 关闭本地 server → 取消本地 task
+            if stream_ctx.workflow_id:
+                await self._invoker.cancel_workflow(stream_ctx.workflow_id)
             server.close()
             await server.wait_closed()
             if not stream_task.done():

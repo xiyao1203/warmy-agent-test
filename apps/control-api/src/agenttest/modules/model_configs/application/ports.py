@@ -39,6 +39,17 @@ class ModelStreamCallback:
     internal_token: str
 
 
+@dataclass
+class StreamContext:
+    """流式调用可取消上下文。
+
+    由 TemporalModelInvoker 在 stream() 启动后填充 workflow_id，
+    调用方可通过 cancel_workflow() 方法取消正在运行的 Temporal workflow。
+    """
+
+    workflow_id: str | None = None
+
+
 class ModelInvoker(Protocol):
     """Control API 发起独立 Worker 模型调用的端口。"""
 
@@ -60,7 +71,10 @@ class ModelInvoker(Protocol):
         callback: ModelStreamCallback | None = None,
         timeout_seconds: int = 60,
         max_tokens: int = 2048,
+        stream_ctx: StreamContext | None = None,
     ) -> InvocationResult: ...
+
+    async def cancel_workflow(self, workflow_id: str) -> None: ...
 
 
 class ModelRuntimeUnavailableError(Exception):

@@ -102,7 +102,7 @@ describe("TestPlanList", () => {
 });
 
 describe("TestPlanDetail", () => {
-  it("creates a configured version using only published assets", async () => {
+  it("creates a configured version using four-step wizard", async () => {
     const onCreateVersion = vi.fn().mockResolvedValue(undefined);
     render(
       <TestPlanDetail
@@ -118,6 +118,8 @@ describe("TestPlanDetail", () => {
     expect(screen.getByText("版本 v1")).toBeVisible();
     fireEvent.click(screen.getByRole("button", { name: "创建版本" }));
 
+    // Step 1: 选择测试资产
+    expect(screen.getByText("选择测试资产")).toBeVisible();
     expect(
       screen.queryByRole("option", { name: "客服 Agent v1" }),
     ).not.toBeInTheDocument();
@@ -135,6 +137,12 @@ describe("TestPlanDetail", () => {
     fireEvent.change(screen.getByLabelText("环境模板"), {
       target: { value: "environment-1" },
     });
+
+    // Step 1 -> Step 2
+    fireEvent.click(screen.getByRole("button", { name: "下一步" }));
+
+    // Step 2: 执行配置
+    expect(screen.getByText("执行配置")).toBeVisible();
     fireEvent.change(screen.getByLabelText("并发数"), {
       target: { value: "4" },
     });
@@ -144,9 +152,21 @@ describe("TestPlanDetail", () => {
     fireEvent.change(screen.getByLabelText("每条用例运行次数"), {
       target: { value: "2" },
     });
+
+    // Step 2 -> Step 3
+    fireEvent.click(screen.getByRole("button", { name: "下一步" }));
+
+    // Step 3: 评估设置
+    expect(screen.getByText("评估设置")).toBeVisible();
     fireEvent.change(screen.getByLabelText("通过阈值"), {
       target: { value: "0.95" },
     });
+
+    // Step 3 -> Step 4
+    fireEvent.click(screen.getByRole("button", { name: "下一步" }));
+
+    // Step 4: 门禁配置
+    expect(screen.getByText("门禁配置")).toBeVisible();
     fireEvent.click(screen.getByRole("button", { name: "保存版本" }));
 
     await waitFor(() => expect(onCreateVersion).toHaveBeenCalledTimes(1));
@@ -163,6 +183,53 @@ describe("TestPlanDetail", () => {
         }),
       }),
     );
+  });
+
+  it("navigates back and forth between steps", async () => {
+    const onCreateVersion = vi.fn().mockResolvedValue(undefined);
+    render(
+      <TestPlanDetail
+        agentVersions={agentVersions}
+        datasetVersions={datasetVersions}
+        environments={environments}
+        onCreateVersion={onCreateVersion}
+        plan={plan}
+        versions={[draftVersion]}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "创建版本" }));
+
+    // Go to Step 2
+    fireEvent.click(screen.getByRole("button", { name: "下一步" }));
+    expect(screen.getByText("执行配置")).toBeVisible();
+
+    // Back to Step 1
+    fireEvent.click(screen.getByRole("button", { name: "上一步" }));
+    expect(screen.getByText("选择测试资产")).toBeVisible();
+  });
+
+  it("toggles observation mode in step 3", async () => {
+    render(
+      <TestPlanDetail
+        agentVersions={agentVersions}
+        datasetVersions={datasetVersions}
+        environments={environments}
+        plan={plan}
+        versions={[draftVersion]}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "创建版本" }));
+    // Advance to Step 3
+    fireEvent.click(screen.getByRole("button", { name: "下一步" }));
+    fireEvent.click(screen.getByRole("button", { name: "下一步" }));
+
+    expect(
+      screen.getByRole("checkbox", {
+        name: "仅观察模式（不配置评分器时必须显式开启）",
+      }),
+    ).toBeVisible();
   });
 
   it("publishes drafts and renders published versions read-only", async () => {

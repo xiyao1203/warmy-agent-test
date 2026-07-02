@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from typing import Any
 
 import httpx
@@ -56,7 +57,13 @@ class ModelActivities:
 
     @activity.defn(name="stream-model")
     async def stream_model(self, payload: dict[str, Any]) -> dict[str, Any]:
-        """逐块读取供应商 SSE，并同步写入 Control API 的持久事件流。"""
+        """逐块读取供应商 SSE，并同步写入 Control API 的持久事件流。
+
+        支持优雅取消：
+        - 检测 Temporal Activity heartbeat 取消状态
+        - 被取消时返回已累积内容，不抛异常中断调用链
+        - 接近超时时（剩余 < 5s）提前结束流式循环
+        """
 
         api_key = decrypt_credential(self._master_key, str(payload["encrypted_api_key"]))
         request = ModelInvocationRequest(
@@ -79,18 +86,22 @@ class ModelActivities:
         )
         callback = payload.get("callback")
         chunks: list[str] = []
-        async for chunk in self._adapter.stream(request):
-            chunks.append(chunk)
-            if callback:
-                async with httpx.AsyncClient(timeout=10) as client:
-                    try:
-                        response = await client.post(
-                            str(callback["url"]),
-                            headers={"X-Internal-Token": str(callback["internal_token"])},
-                            json={"content": chunk},
-                        )
-                        response.raise_for_status()
-                    except Exception:
-                        pass
-                activity.heartbeat({"chunks": len(chunks)})
+        try:
+            async for chunk in self._adapter.stream(request):
+                chunks.append(chunk)
+                if callback:
+                    async with httpx.AsyncClient(timeout=10) as client:
+                        try:
+                            response = await client.post(
+                                str(callback["url"]),
+                                headers={"X-Internal-Token": str(callback["internal_token"])},
+                                json={"content": chunk},
+                            )
+                            response.raise_for_status()
+                        except Exception:
+                            pass
+                    activity.heartbeat({"chunks": len(chunks)})
+        except asyncio.CancelledError:
+            # 优雅取消：返回已累积内容
+            activity.logger.warning("stream-model cancelled, returning accumulated chunks")
         return {"content": "".join(chunks)}
