@@ -106,8 +106,8 @@ export function TestAgentChat({ projectId }: { projectId: string }) {
 
   // ── Auto-focus ──
   useEffect(() => {
-    if (!state.loadingHistory) inputRef.current?.focus();
-  }, [state.loadingHistory]);
+    if (!state.loadingHistory && !state.sending) inputRef.current?.focus();
+  }, [state.loadingHistory, state.sending]);
 
   // ── Smooth auto-scroll ──
   useEffect(() => {
@@ -292,6 +292,8 @@ export function TestAgentChat({ projectId }: { projectId: string }) {
         abortRef.current.signal,
       );
       applySession(response);
+      // Gate residual SSE deltas that arrive after session is fully loaded
+      acceptDeltasRef.current = false;
     } catch (reason) {
       if (reason instanceof DOMException && reason.name === "AbortError") return;
       dispatch({ type: "REMOVE_LAST_USER_MESSAGE" });
