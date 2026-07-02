@@ -29,7 +29,13 @@ class ModelActivities:
             model_name=str(payload["model_name"]),
             api_key=api_key,
             messages=[
-                ChatMessage(role=item["role"], content=item["content"])
+                ChatMessage(
+                    role=item["role"],
+                    content=item.get("content"),
+                    tool_calls=item.get("tool_calls"),
+                    tool_call_id=item.get("tool_call_id"),
+                    name=item.get("name"),
+                )
                 for item in payload["messages"]
             ],
             response_format=payload.get("response_format"),
@@ -58,23 +64,33 @@ class ModelActivities:
             model_name=str(payload["model_name"]),
             api_key=api_key,
             messages=[
-                ChatMessage(role=item["role"], content=item["content"])
+                ChatMessage(
+                    role=item["role"],
+                    content=item.get("content"),
+                    tool_calls=item.get("tool_calls"),
+                    tool_call_id=item.get("tool_call_id"),
+                    name=item.get("name"),
+                )
                 for item in payload["messages"]
             ],
             timeout_seconds=float(payload.get("timeout_seconds", 60)),
             max_tokens=int(payload.get("max_tokens", 2048)),
             allow_private_network=bool(payload.get("allow_private_network", False)),
         )
-        callback = payload["callback"]
+        callback = payload.get("callback")
         chunks: list[str] = []
-        async with httpx.AsyncClient(timeout=10) as client:
-            async for chunk in self._adapter.stream(request):
-                chunks.append(chunk)
-                response = await client.post(
-                    str(callback["url"]),
-                    headers={"X-Internal-Token": str(callback["internal_token"])},
-                    json={"content": chunk},
-                )
-                response.raise_for_status()
+        async for chunk in self._adapter.stream(request):
+            chunks.append(chunk)
+            if callback:
+                async with httpx.AsyncClient(timeout=10) as client:
+                    try:
+                        response = await client.post(
+                            str(callback["url"]),
+                            headers={"X-Internal-Token": str(callback["internal_token"])},
+                            json={"content": chunk},
+                        )
+                        response.raise_for_status()
+                    except Exception:
+                        pass
                 activity.heartbeat({"chunks": len(chunks)})
         return {"content": "".join(chunks)}

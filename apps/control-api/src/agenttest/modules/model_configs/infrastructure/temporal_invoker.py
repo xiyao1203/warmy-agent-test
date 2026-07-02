@@ -32,6 +32,23 @@ class TemporalModelInvoker:
         self._task_queue = task_queue
         self._allow_private_network = allow_private_network
 
+    @staticmethod
+    def _serialize_messages(messages: list[InvocationMessage]) -> list[dict[str, Any]]:
+        """序列化消息列表（含 tool_calls / tool_call_id 透传）。"""
+        result: list[dict[str, Any]] = []
+        for item in messages:
+            msg: dict[str, Any] = {"role": item.role}
+            if item.content is not None:
+                msg["content"] = item.content
+            if item.tool_calls is not None:
+                msg["tool_calls"] = item.tool_calls
+            if item.tool_call_id is not None:
+                msg["tool_call_id"] = item.tool_call_id
+            if item.name is not None:
+                msg["name"] = item.name
+            result.append(msg)
+        return result
+
     async def invoke(
         self,
         config: ModelConfiguration,
@@ -52,7 +69,7 @@ class TemporalModelInvoker:
             "base_url": config.base_url,
             "model_name": config.model_name,
             "encrypted_api_key": config.encrypted_api_key,
-            "messages": [{"role": item.role, "content": item.content} for item in messages],
+            "messages": self._serialize_messages(messages),
             "response_format": response_format,
             "timeout_seconds": timeout_seconds,
             "max_tokens": max_tokens,
@@ -99,12 +116,13 @@ class TemporalModelInvoker:
             "base_url": config.base_url,
             "model_name": config.model_name,
             "encrypted_api_key": config.encrypted_api_key,
-            "messages": [{"role": item.role, "content": item.content} for item in messages],
+            "messages": self._serialize_messages(messages),
             "timeout_seconds": timeout_seconds,
             "max_tokens": max_tokens,
             "allow_private_network": self._allow_private_network,
-            "callback": {"url": callback.url, "internal_token": callback.internal_token},
         }
+        if callback is not None:
+            payload["callback"] = {"url": callback.url, "internal_token": callback.internal_token}
         try:
             client = await Client.connect(self._address, namespace=self._namespace)
             result = await client.execute_workflow(

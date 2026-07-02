@@ -8,10 +8,13 @@ from typing import Any
 
 @dataclass(frozen=True, slots=True)
 class ChatMessage:
-    """OpenAI-Compatible 对话消息。"""
+    """OpenAI-Compatible 对话消息（支持 tool calling）。"""
 
     role: str
-    content: str | list[dict[str, Any]]
+    content: str | list[dict[str, Any]] | None
+    tool_calls: list[dict[str, Any]] | None = None
+    tool_call_id: str | None = None
+    name: str | None = None
 
 
 @dataclass(frozen=True, slots=True)

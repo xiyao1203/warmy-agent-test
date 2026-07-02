@@ -35,13 +35,30 @@ class OpenAICompatibleAdapter:
     def __init__(self, *, transport: httpx.AsyncBaseTransport | None = None) -> None:
         self._transport = transport
 
+    @staticmethod
+    def _serialize_messages(request: ModelInvocationRequest) -> list[dict[str, object]]:
+        """序列化消息列表（含 tool_calls / tool_call_id 透传）。"""
+        result: list[dict[str, object]] = []
+        for item in request.messages:
+            msg: dict[str, object] = {"role": item.role}
+            if item.content is not None:
+                msg["content"] = item.content
+            if item.tool_calls is not None:
+                msg["tool_calls"] = item.tool_calls
+            if item.tool_call_id is not None:
+                msg["tool_call_id"] = item.tool_call_id
+            if item.name is not None:
+                msg["name"] = item.name
+            result.append(msg)
+        return result
+
     async def invoke(self, request: ModelInvocationRequest) -> ModelInvocationResult:
         """执行 Chat Completions，并返回结构化用量与延迟。"""
 
         _validate_target(request.base_url, request.allow_private_network)
         payload: dict[str, object] = {
             "model": request.model_name,
-            "messages": [{"role": item.role, "content": item.content} for item in request.messages],
+            "messages": self._serialize_messages(request),
             "temperature": request.temperature,
             "max_tokens": request.max_tokens,
         }
@@ -98,7 +115,7 @@ class OpenAICompatibleAdapter:
         _validate_target(request.base_url, request.allow_private_network)
         payload: dict[str, object] = {
             "model": request.model_name,
-            "messages": [{"role": item.role, "content": item.content} for item in request.messages],
+            "messages": self._serialize_messages(request),
             "temperature": request.temperature,
             "max_tokens": request.max_tokens,
             "stream": True,

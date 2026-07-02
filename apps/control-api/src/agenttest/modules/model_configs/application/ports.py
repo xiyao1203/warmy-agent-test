@@ -10,10 +10,13 @@ from ..domain.entities import ModelConfiguration
 
 @dataclass(frozen=True, slots=True)
 class InvocationMessage:
-    """与供应商无关的模型消息。"""
+    """与供应商无关的模型消息（支持 tool calling 透传）。"""
 
     role: str
-    content: str | list[dict[str, object]]
+    content: str | list[dict[str, object]] | None
+    tool_calls: list[dict[str, object]] | None = None
+    tool_call_id: str | None = None
+    name: str | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -54,7 +57,7 @@ class ModelInvoker(Protocol):
         config: ModelConfiguration,
         messages: list[InvocationMessage],
         *,
-        callback: ModelStreamCallback,
+        callback: ModelStreamCallback | None = None,
         timeout_seconds: int = 60,
         max_tokens: int = 2048,
     ) -> InvocationResult: ...

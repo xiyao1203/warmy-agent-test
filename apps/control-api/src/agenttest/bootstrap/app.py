@@ -1710,26 +1710,25 @@ def _register_test_agent_endpoints(
         task_queue=settings.model_runner_task_queue,
         allow_private_network=settings.model_allow_private_network,
     )
-    registry = build_platform_registry(
-        HandlerPlatformGateway(
-            agents=build_agent_dependencies(settings),
-            datasets=build_dataset_dependencies(settings),
-            environments=build_environment_dependencies(settings),
-            plans=build_test_plan_dependencies(settings),
-            runs=build_run_dependencies(settings),
-            scorers=SqlAlchemyScorerRepository(session_factory),
-            experiments=SqlAlchemyExperimentRepository(session_factory),
-            reviews=SqlAlchemyReviewTaskRepository(session_factory),
-            gates=SqlAlchemyReleaseGateRepository(session_factory),
-            security=SqlAlchemySecurityScanRepository(session_factory),
-            accounts=SqlAlchemyTestAccountRepository(session_factory),
-            promptfoo_bin=settings.promptfoo_bin,
-            allow_private_security_targets=settings.security_scan_allow_private_network,
-            gate_evidence=SqlAlchemyGateEvidence(session_factory),
-            models=model_config_service,
-            invoker=temporal_invoker,
-        )
+    gateway = HandlerPlatformGateway(
+        agents=build_agent_dependencies(settings),
+        datasets=build_dataset_dependencies(settings),
+        environments=build_environment_dependencies(settings),
+        plans=build_test_plan_dependencies(settings),
+        runs=build_run_dependencies(settings),
+        scorers=SqlAlchemyScorerRepository(session_factory),
+        experiments=SqlAlchemyExperimentRepository(session_factory),
+        reviews=SqlAlchemyReviewTaskRepository(session_factory),
+        gates=SqlAlchemyReleaseGateRepository(session_factory),
+        security=SqlAlchemySecurityScanRepository(session_factory),
+        accounts=SqlAlchemyTestAccountRepository(session_factory),
+        promptfoo_bin=settings.promptfoo_bin,
+        allow_private_security_targets=settings.security_scan_allow_private_network,
+        gate_evidence=SqlAlchemyGateEvidence(session_factory),
+        models=model_config_service,
+        invoker=temporal_invoker,
     )
+    registry = build_platform_registry(gateway)
 
     async def check_project(project_id):
         from sqlalchemy import text
@@ -1771,6 +1770,7 @@ def _register_test_agent_endpoints(
             model_config_service,
             temporal_invoker,
             capabilities=registry.describe_all(),
+            platform_gateway=gateway,
         ),
         agent_orchestrator=SuperAgentOrchestrator(registry, orchestration),
     )

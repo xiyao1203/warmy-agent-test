@@ -17,6 +17,7 @@ dependencies = [
   "structlog",
   "temporalio==1.29.0",
   "uvicorn[standard]",
+  "pydantic-ai>=0.7.2",
 ]
 
 [dependency-groups]
