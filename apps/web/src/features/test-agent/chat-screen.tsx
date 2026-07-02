@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
   ChatEmptyState,
+  FollowUpChips,
   MessageBubble as UIMessageBubble,
   ReasoningBlock,
   ToolCallCard,
@@ -54,6 +55,12 @@ export function TestAgentChat({ projectId }: { projectId: string }) {
     if (typeof window === "undefined") return true;
     return localStorage.getItem("chat-sidebar-open") !== "false";
   });
+  const [sidebarWidth, setSidebarWidth] = useState(() => {
+    if (typeof window === "undefined") return 272;
+    const saved = localStorage.getItem("chat-sidebar-width");
+    return saved ? Math.max(200, Math.min(480, Number(saved))) : 272;
+  });
+  const resizingRef = useRef(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const sessionRef = useRef<string | null>(null);
@@ -146,6 +153,24 @@ export function TestAgentChat({ projectId }: { projectId: string }) {
       inputRef.current?.focus();
     }
   }, [loadingHistory]);
+
+  // Listen for code-action events from MarkdownContent code blocks
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const detail = (e as CustomEvent).detail as {
+        action: "run" | "explain";
+        code: string;
+        language: string;
+      };
+      if (detail.action === "explain") {
+        setInput(`解释以下 ${detail.language} 代码的作用`);
+      } else if (detail.action === "run") {
+        setInput(`运行以下 ${detail.language} 代码并报告结果`);
+      }
+    };
+    window.addEventListener("code-action", handler);
+    return () => window.removeEventListener("code-action", handler);
+  }, []);
 
   // Smooth auto-scroll — only when user is near bottom
   useEffect(() => {
@@ -320,6 +345,35 @@ export function TestAgentChat({ projectId }: { projectId: string }) {
     });
   }, []);
 
+  // Resize handle for sidebar
+  const handleResizeStart = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    resizingRef.current = true;
+    const startX = e.clientX;
+    const startWidth = sidebarWidth;
+
+    const onMove = (ev: MouseEvent) => {
+      if (!resizingRef.current) return;
+      const delta = ev.clientX - startX;
+      setSidebarWidth(Math.max(200, Math.min(480, startWidth + delta)));
+    };
+    const onUp = () => {
+      resizingRef.current = false;
+      setSidebarWidth((w) => {
+        localStorage.setItem("chat-sidebar-width", String(w));
+        return w;
+      });
+      window.removeEventListener("mousemove", onMove);
+      window.removeEventListener("mouseup", onUp);
+      document.body.style.cursor = "";
+      document.body.style.userSelect = "";
+    };
+    document.body.style.cursor = "col-resize";
+    document.body.style.userSelect = "none";
+    window.addEventListener("mousemove", onMove);
+    window.addEventListener("mouseup", onUp);
+  }, [sidebarWidth]);
+
   if (workspace === "target") {
     return (
       <div className="flex h-full flex-col overflow-hidden">
@@ -336,9 +390,10 @@ export function TestAgentChat({ projectId }: { projectId: string }) {
       <div className="relative min-h-0 flex-1 overflow-hidden">
         {/* Floating sidebar overlay */}
         <aside
-          className={`absolute bottom-0 left-0 top-0 z-20 w-64 transition-transform duration-300 ease-in-out ${
+          className={`absolute bottom-0 left-0 top-0 z-20 transition-transform duration-300 ease-in-out ${
             sidebarOpen ? "translate-x-0" : "-translate-x-full"
           }`}
+          style={{ width: sidebarWidth }}
         >
           <SessionList
             activeId={active?.session_id ?? null}
@@ -349,6 +404,15 @@ export function TestAgentChat({ projectId }: { projectId: string }) {
             onSelect={(id) => void selectSession(id)}
             onToggleCollapse={handleToggleSidebar}
           />
+          {/* Resize handle */}
+          {sidebarOpen ? (
+            <div
+              aria-label="拖拽调整侧边栏宽度"
+              className="absolute bottom-0 right-0 top-0 z-30 w-1 cursor-col-resize transition-colors hover:bg-[var(--primary)]/30"
+              onMouseDown={handleResizeStart}
+              role="separator"
+            />
+          ) : null}
         </aside>
 
         {/* Backdrop when sidebar is open on narrow screens */}
@@ -362,9 +426,8 @@ export function TestAgentChat({ projectId }: { projectId: string }) {
 
         {/* Main + context panel — shifts right when sidebar opens */}
         <div
-          className={`grid h-full grid-cols-[minmax(0,1fr)_19rem] max-[1100px]:grid-cols-1 overflow-hidden transition-[margin] duration-300 ease-in-out ${
-            sidebarOpen ? "ml-64" : "ml-0"
-          }`}
+          className={`grid h-full grid-cols-[minmax(0,1fr)_19rem] max-[1100px]:grid-cols-1 overflow-hidden transition-[margin] duration-300 ease-in-out`}
+          style={{ marginLeft: sidebarOpen ? sidebarWidth : 0 }}
         >
 
         <main className="relative flex min-h-0 min-w-0 flex-col bg-[var(--canvas)]">
@@ -415,6 +478,7 @@ export function TestAgentChat({ projectId }: { projectId: string }) {
                 events={events}
                 messages={messages}
                 onSessionReload={(id) => void selectSession(id)}
+                onSuggestionClick={setInput}
                 projectId={projectId}
                 sending={sending}
                 streamingContent={streamingContent}
@@ -490,6 +554,18 @@ export function TestAgentChat({ projectId }: { projectId: string }) {
           ) : null}
 
           <div className="shrink-0 border-t border-[var(--hairline)] px-4 py-3">
+            {/* Context window indicator */}
+            <div className="mx-auto mb-2 max-w-3xl flex items-center gap-2">
+              <div className="h-1 flex-1 overflow-hidden rounded-full bg-[var(--canvas-soft)]">
+                <div
+                  className="h-full rounded-full bg-[var(--primary)]/40 transition-all"
+                  style={{ width: `${Math.min(100, messages.length * 6)}%` }}
+                />
+              </div>
+              <span className="shrink-0 text-[0.6rem] text-[var(--muted)]">
+                {messages.length > 0 ? `${messages.length} 条消息` : "新对话"}
+              </span>
+            </div>
             <div className="mx-auto flex max-w-3xl gap-2">
               <div className="relative flex-1">
                 <textarea
@@ -566,6 +642,7 @@ type TimelineProps = {
   events: AgentEvent[];
   messages: ChatMessage[];
   onSessionReload: (sessionId: string) => void;
+  onSuggestionClick: (text: string) => void;
   projectId: string;
   sending: boolean;
   streamingContent: string;
@@ -576,6 +653,7 @@ function Timeline({
   events,
   messages,
   onSessionReload,
+  onSuggestionClick,
   projectId,
   sending,
   streamingContent,
@@ -698,6 +776,7 @@ function Timeline({
 
   return (
     <div className="mx-auto max-w-3xl">
+      {/* ── Completed messages ── */}
       {messages.map((message, index) => {
         const showDivider =
           index > 0 &&
@@ -719,38 +798,37 @@ function Timeline({
               </div>
             ) : null}
             <div className="timeline-item mb-8 animate-fadeIn last:mb-0">
-              <ChatMessageBubble
-                message={message}
-              />
+              <ChatMessageBubble message={message} />
             </div>
           </div>
         );
       })}
 
-      {/* Streaming message */}
-      {streamingContent ? (
-        <div className="timeline-item mb-8 animate-fadeIn">
-          <ChatMessageBubble
-            isStreaming
-            message={{
-              role: "assistant",
-              content: streamingContent,
-              timestamp: "streaming",
-            }}
-          />
-        </div>
+      {/* ── Follow-up chips after last completed assistant reply ── */}
+      {messages.length > 0 &&
+      messages[messages.length - 1].role === "assistant" &&
+      !sending &&
+      !streamingContent ? (
+        <FollowUpChips
+          items={[
+            "能详细说明一下吗？",
+            "帮我生成测试用例",
+            "检查是否有安全风险",
+          ]}
+          onClick={onSuggestionClick}
+        />
       ) : null}
 
-      {/* Tool cards interleaved with reasoning (by insertion order) */}
-      {taskStates.length > 0 ? (
-        <div className="mt-3 space-y-1">
+      {/* ── Tool cards + reasoning: inlined BETWEEN last message and streaming assistant reply ── */}
+      {taskStates.length > 0 || reasoningEvents.length > 0 ? (
+        <div className="mb-8 space-y-1.5">
           {taskStates.map((task, i) => {
             const step = i + 1;
             const reasoning = reasoningByStep.get(step);
             return (
               <div key={`task:${task.taskId}`}>
                 {reasoning ? (
-                  <div className="timeline-item animate-fadeIn mb-1">
+                  <div className="timeline-item animate-fadeIn mb-1.5">
                     <ReasoningBlock
                       capability={String(reasoning.payload.capability ?? "")}
                       content={String(reasoning.payload.content ?? "")}
@@ -765,32 +843,46 @@ function Timeline({
               </div>
             );
           })}
+          {/* Remaining reasoning events not matched to a task */}
+          {reasoningEvents
+            .filter((evt) => !reasoningByStep.has(Number(evt.payload.step ?? 0)))
+            .map((evt) => (
+              <div
+                className="timeline-item animate-fadeIn"
+                key={`reasoning:${evt.id}`}
+              >
+                <ReasoningBlock
+                  capability={String(evt.payload.capability ?? "")}
+                  content={String(evt.payload.content ?? "")}
+                  step={Number(evt.payload.step ?? 0)}
+                  total={Number(evt.payload.total ?? 0)}
+                />
+              </div>
+            ))}
         </div>
       ) : null}
 
-      {/* Remaining reasoning events not matched to a task */}
-      {reasoningEvents
-        .filter((evt) => !reasoningByStep.has(Number(evt.payload.step ?? 0)))
-        .map((evt) => (
-          <div
-            className="timeline-item animate-fadeIn"
-            key={`reasoning:${evt.id}`}
-          >
-            <ReasoningBlock
-              capability={String(evt.payload.capability ?? "")}
-              content={String(evt.payload.content ?? "")}
-              step={Number(evt.payload.step ?? 0)}
-              total={Number(evt.payload.total ?? 0)}
-            />
-          </div>
-        ))}
+      {/* ── Streaming / pending assistant reply ── */}
+      {streamingContent ? (
+        <div className="timeline-item mb-8 animate-fadeIn">
+          <ChatMessageBubble
+            isStreaming
+            message={{
+              role: "assistant",
+              content: streamingContent,
+              timestamp: "streaming",
+            }}
+          />
+        </div>
+      ) : sending ? (
+        <div className="timeline-item mb-8 animate-fadeIn">
+          <TypingIndicator />
+        </div>
+      ) : null}
 
-      {/* Error events */}
+      {/* ── Error events ── */}
       {errorEvents.map((event) => (
-        <div
-          className="timeline-item animate-fadeIn"
-          key={`error:${event.id}`}
-        >
+        <div className="timeline-item animate-fadeIn mb-4" key={`error:${event.id}`}>
           <div className="rounded-[var(--radius-md)] border border-[var(--danger)]/30 bg-[var(--danger-subtle)]/20 px-3 py-2.5">
             <p className="text-xs text-[var(--danger)]">
               {String(event.payload.detail ?? "执行出错")}
@@ -799,9 +891,9 @@ function Timeline({
         </div>
       ))}
 
-      {/* Confirmation cards */}
+      {/* ── Confirmation cards ── */}
       {active && pendingConfs.length > 0 ? (
-        <div className="mt-3 space-y-3">
+        <div className="space-y-3">
           {pendingConfs.length > 1 ? (
             <div className="timeline-item animate-fadeIn rounded-[var(--radius-lg)] border border-[var(--warning)]/30 bg-[var(--warning-subtle)]/20 p-3">
               <div className="flex items-center justify-between">
@@ -842,12 +934,6 @@ function Timeline({
               />
             </div>
           ))}
-        </div>
-      ) : null}
-
-      {sending && !streamingContent ? (
-        <div className="timeline-item animate-fadeIn">
-          <TypingIndicator />
         </div>
       ) : null}
     </div>

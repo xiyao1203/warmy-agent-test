@@ -1,6 +1,6 @@
 "use client";
 
-import { Bot, Check, Copy, User } from "lucide-react";
+import { Bot, Check, Copy, ThumbsDown, ThumbsUp, User } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 
 import { MarkdownContent } from "./markdown-content";
@@ -22,6 +22,7 @@ export function MessageBubble({
 }: MessageBubbleProps) {
   const [visible, setVisible] = useState(!animate);
   const [copied, setCopied] = useState(false);
+  const [rated, setRated] = useState<"up" | "down" | null>(null);
   const isUser = role === "user";
 
   useEffect(() => {
@@ -75,24 +76,58 @@ export function MessageBubble({
           ) : (
             <MarkdownContent content={content} isStreaming={isStreaming} />
           )}
-          {/* Copy button — appears on hover */}
+          {/* Hover controls — copy + feedback */}
           {!isStreaming ? (
-            <button
-              aria-label={copied ? "已复制" : "复制消息"}
-              className={`absolute rounded-md p-1 text-[var(--muted)] opacity-0 transition-all hover:text-[var(--ink)] group-hover/bubble:opacity-100 ${
+            <div
+              className={`absolute flex gap-0.5 opacity-0 transition-all group-hover/bubble:opacity-100 ${
                 isUser
                   ? "-left-9 top-1/2 -translate-y-1/2"
-                  : "-right-9 top-1/2 -translate-y-1/2"
+                  : "-bottom-7 right-0"
               }`}
-              onClick={handleCopy}
-              type="button"
             >
-              {copied ? (
-                <Check className="size-3.5 text-[var(--success)]" />
-              ) : (
-                <Copy className="size-3.5" />
-              )}
-            </button>
+              {/* Copy */}
+              <button
+                aria-label={copied ? "已复制" : "复制消息"}
+                className="rounded-md p-1 text-[var(--muted)] transition-colors hover:text-[var(--ink)]"
+                onClick={handleCopy}
+                type="button"
+              >
+                {copied ? (
+                  <Check className="size-3.5 text-[var(--success)]" />
+                ) : (
+                  <Copy className="size-3.5" />
+                )}
+              </button>
+              {/* Feedback — assistant only */}
+              {!isUser ? (
+                <>
+                  <button
+                    aria-label="有帮助"
+                    className={`rounded-md p-1 transition-colors ${
+                      rated === "up"
+                        ? "text-[var(--success)]"
+                        : "text-[var(--muted)] hover:text-[var(--ink)]"
+                    }`}
+                    onClick={() => setRated(rated === "up" ? null : "up")}
+                    type="button"
+                  >
+                    <ThumbsUp className="size-3.5" />
+                  </button>
+                  <button
+                    aria-label="无帮助"
+                    className={`rounded-md p-1 transition-colors ${
+                      rated === "down"
+                        ? "text-[var(--danger)]"
+                        : "text-[var(--muted)] hover:text-[var(--ink)]"
+                    }`}
+                    onClick={() => setRated(rated === "down" ? null : "down")}
+                    type="button"
+                  >
+                    <ThumbsDown className="size-3.5" />
+                  </button>
+                </>
+              ) : null}
+            </div>
           ) : null}
         </div>
       </div>

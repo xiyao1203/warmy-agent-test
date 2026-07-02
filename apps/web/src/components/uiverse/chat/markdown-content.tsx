@@ -6,7 +6,7 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeHighlight from "rehype-highlight";
 
-import { Check, Copy } from "lucide-react";
+import { Check, Copy, Play, Sparkles } from "lucide-react";
 
 type MarkdownContentProps = {
   content: string;
@@ -74,30 +74,62 @@ function CodeBlockWithCopy({
     [children],
   );
 
+  const dispatchCodeAction = useCallback(
+    (action: "run" | "explain") => {
+      const codeText = String(children).replace(/\n$/, "");
+      window.dispatchEvent(
+        new CustomEvent("code-action", {
+          detail: { action, code: codeText, language },
+        }),
+      );
+    },
+    [children, language],
+  );
+
   return (
     <div className="group relative my-2">
       <div className="flex items-center justify-between rounded-t-[var(--radius-md)] bg-[var(--canvas)] px-3 py-1 border-b border-[var(--hairline)]">
         <span className="text-[0.65rem] font-mono font-medium uppercase text-[var(--muted)]">
           {language}
         </span>
-        <button
-          aria-label={copied ? "已复制" : "复制代码"}
-          className="flex items-center gap-1 rounded px-1.5 py-0.5 text-[0.65rem] text-[var(--muted)] opacity-0 transition-all hover:bg-[var(--canvas-soft)] hover:text-[var(--ink)] group-hover:opacity-100"
-          onClick={handleCopy}
-          type="button"
-        >
-          {copied ? (
-            <>
-              <Check className="size-3 text-[var(--success)]" />
-              已复制
-            </>
-          ) : (
-            <>
-              <Copy className="size-3" />
-              复制
-            </>
-          )}
-        </button>
+        <div className="flex items-center gap-0.5 opacity-0 transition-all group-hover:opacity-100">
+          <button
+            aria-label="复制代码"
+            className="flex items-center gap-1 rounded px-1.5 py-0.5 text-[0.65rem] text-[var(--muted)] transition-colors hover:bg-[var(--canvas-soft)] hover:text-[var(--ink)]"
+            onClick={handleCopy}
+            type="button"
+          >
+            {copied ? (
+              <>
+                <Check className="size-3 text-[var(--success)]" />
+                <span className="hidden sm:inline">已复制</span>
+              </>
+            ) : (
+              <>
+                <Copy className="size-3" />
+                <span className="hidden sm:inline">复制</span>
+              </>
+            )}
+          </button>
+          <button
+            aria-label="运行代码"
+            className="flex items-center gap-1 rounded px-1.5 py-0.5 text-[0.65rem] text-[var(--muted)] transition-colors hover:bg-[var(--canvas-soft)] hover:text-[var(--ink)]"
+            onClick={() => dispatchCodeAction("run")}
+            type="button"
+          >
+            <Play className="size-3" />
+            <span className="hidden sm:inline">运行</span>
+          </button>
+          <button
+            aria-label="解释代码"
+            className="flex items-center gap-1 rounded px-1.5 py-0.5 text-[0.65rem] text-[var(--muted)] transition-colors hover:bg-[var(--canvas-soft)] hover:text-[var(--ink)]"
+            onClick={() => dispatchCodeAction("explain")}
+            type="button"
+          >
+            <Sparkles className="size-3" />
+            <span className="hidden sm:inline">解释</span>
+          </button>
+        </div>
       </div>
       <code className={`${className} block rounded-t-none`} {...props}>
         {children}

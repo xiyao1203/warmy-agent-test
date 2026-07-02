@@ -10,6 +10,7 @@ export { TypingIndicator } from "./feedback/typing-indicator";
 
 // Chat
 export { ChatEmptyState } from "./chat/empty-state";
+export { FollowUpChips } from "./chat/follow-up-chips";
 export { MarkdownContent } from "./chat/markdown-content";
 export { MessageBubble } from "./chat/message-bubble";
 export { ReasoningBlock } from "./chat/reasoning-block";
