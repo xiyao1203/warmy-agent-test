@@ -337,12 +337,7 @@ class SuperAgentConversation:
             actor, project_id, ModelPurpose.TEST_AGENT_CHAT,
         )
         prompt = (
-            "为以下对话起一个极简中文标题（2~6个汉字），直接输出的标题本身。\n"
-            "规则：\n"
-            "- 标题概括整个对话主题，不是截取对话中的某句话。\n"
-            "- 只输出纯标题文字。\n"
-            "- 禁止输出引号、标点、解释、前缀（如'标题：''总结'）或任何元描述。\n"
-            "参考示例：问候、登录测试、API调试、安全扫描、Canvas画布"
+            "标题："
         )
         result = await self._invoker.invoke(
             config,
@@ -354,16 +349,16 @@ class SuperAgentConversation:
             timeout_seconds=15, max_tokens=16,
         )
         raw = result.content.strip()
-        # Strip common prompt-leakage patterns (before truncation)
-        leakage_patterns = [
-            r'^我们被要求.*?主题',
-            r'^总结(一下|如下|对话)?[：:，。]?\s*',
-            r'^标题[是为：:]\s*',
-            r'^对话(主题|标题)[是为：:]\s*',
+        # Detect prompt-leakage: if output contains meta-task language,
+        # the model recited the instruction instead of producing a title.
+        leakage_markers = [
+            "我们被要求", "为对话生成", "为以下对话",
+            "总结以下", "总结对话", "输出标题",
+            "请为", "生成标题", "起一个", "起标题",
         ]
-        for pat in leakage_patterns:
-            raw = re.sub(pat, '', raw).strip()
-        # Strip any leading colons/punctuation that may remain after cleanup
-        raw = re.sub(r'^[：:，,。.、]\s*', '', raw).strip()
+        if any(marker in raw for marker in leakage_markers):
+            return "新对话"
+        # Strip leading punctuation / whitespace
+        raw = re.sub(r'^[：:，,。.、\s"\'「」『』【】《》]+', '', raw).strip()
         title = raw[:12]
-        return title if title else "新对话"
+        return title if len(title) >= 2 else "新对话"
