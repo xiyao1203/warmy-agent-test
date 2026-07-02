@@ -47,6 +47,9 @@ class OrchestrationRepository(Protocol):
     async def list_events(
         self, project_id: ProjectId, session_id: ChatSessionId, *, after: int = 0
     ) -> list[AgentEvent]: ...
+    async def latest_sequence(
+        self, project_id: ProjectId, session_id: ChatSessionId,
+    ) -> int: ...
     async def add_artifact_link(self, link: ArtifactLink) -> None: ...
     async def list_artifact_links(
         self, project_id: ProjectId, session_id: ChatSessionId

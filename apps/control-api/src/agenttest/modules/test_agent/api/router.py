@@ -398,7 +398,14 @@ def create_test_agent_router(
         session = await sessions.get(ProjectId(project_id), ChatSessionId(session_id))
         if session is None:
             return JSONResponse(status_code=404, content={"detail": "会话不存在"})
-        after = int(last_event_id) if last_event_id and last_event_id.isdigit() else 0
+        if last_event_id and last_event_id.isdigit():
+            after = int(last_event_id)
+        else:
+            # Initial connect: start from the latest event to avoid replaying history
+            latest = await orchestration.latest_sequence(
+                ProjectId(project_id), session.session_id
+            )
+            after = latest
 
         async def generate():
             last_seq = after

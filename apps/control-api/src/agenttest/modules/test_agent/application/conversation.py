@@ -332,14 +332,13 @@ class SuperAgentConversation:
         project_id: ProjectId,
         history: list[tuple[str, str]],
     ) -> str:
-        """用模型将对话历史提炼为精短标题（≤6 字）。"""
+        """用模型将对话历史提炼为精短标题，失败则截取首条用户消息。"""
+        # ── Try AI title generation ──
         config = await self._models.resolve_default(
             actor, project_id, ModelPurpose.TEST_AGENT_CHAT,
         )
-        # Format conversation into a compact summary and append the instruction
-        # as the LAST user message, so the model naturally outputs just the title.
         lines: list[str] = []
-        for role, content in history[-6:]:  # last 6 messages for context
+        for role, content in history[-6:]:
             label = "用户" if role == "user" else "助手"
             lines.append(f"{label}：{content[:120]}")
         conv_text = "\n".join(lines)
@@ -353,8 +352,7 @@ class SuperAgentConversation:
             timeout_seconds=15, max_tokens=12,
         )
         raw = result.content.strip()
-        # Detect prompt-leakage / meta-language: if the model recited anything
-        # that looks like an instruction or explanation, fall back immediately.
+        # Detect prompt-leakage / meta-language
         leakage_markers = [
             "我们被要求", "为对话生成", "为以下对话",
             "总结以下", "总结对话", "输出标题",
@@ -362,9 +360,13 @@ class SuperAgentConversation:
             "我们需要", "用中文", "对话标题", "标题是",
             "这段对话", "本次对话", "当前对话",
         ]
-        if any(marker in raw for marker in leakage_markers):
-            return "新对话"
-        # Strip leading punctuation / whitespace
-        raw = re.sub(r'^[：:，,。.、\s"\'「」『』【】《》]+', '', raw).strip()
-        title = raw[:12]
-        return title if len(title) >= 2 else "新对话"
+        if not any(marker in raw for marker in leakage_markers):
+            cleaned = re.sub(r'^[：:，,。.、\s"\'「」『』【】《》]+', '', raw).strip()
+            if len(cleaned) >= 2:
+                return cleaned[:12]
+        # ── Fallback: truncate first user message ──
+        for role, content in history:
+            if role == "user":
+                clean = content.strip()[:12]
+                return clean if len(clean) >= 2 else "新对话"
+        return "新对话"

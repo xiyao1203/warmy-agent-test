@@ -353,6 +353,18 @@ class SqlAlchemyOrchestrationRepository(OrchestrationRepository):
             for model in models
         ]
 
+    async def latest_sequence(
+        self, project_id: ProjectId, session_id: ChatSessionId,
+    ) -> int:
+        async with session_scope(self._session_factory) as database:
+            result = await database.scalar(
+                select(func.max(TestAgentEventModel.sequence)).where(
+                    TestAgentEventModel.project_id == project_id.value,
+                    TestAgentEventModel.session_id == session_id.value,
+                )
+            )
+        return int(result or 0)
+
     async def add_artifact_link(self, link: ArtifactLink) -> None:
         async with transaction_scope(self._session_factory) as database:
             database.add(
