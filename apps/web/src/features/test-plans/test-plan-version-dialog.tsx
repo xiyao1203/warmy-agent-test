@@ -167,6 +167,9 @@ export function TestPlanVersionDialog({
   );
 
   // Step 4 — 门禁
+  const [costBudget, setCostBudget] = useState(
+    config.cost_budget != null ? String(config.cost_budget) : "",
+  );
   const [baselineRunId, setBaselineRunId] = useState(
     String(config.baseline_run_id ?? ""),
   );
@@ -245,6 +248,7 @@ export function TestPlanVersionDialog({
         config: {
           baseline_run_id: baselineRunId || null,
           concurrency,
+          cost_budget: costBudget ? parseFloat(costBudget) : null,
           max_retries: maxRetries,
           observation_only: observationOnly,
           pass_threshold: passThreshold,
@@ -383,7 +387,23 @@ export function TestPlanVersionDialog({
         </>
       ) : (
         <>
+          <NumberField
+            label="费用预算（可选）"
+            min={0}
+            onChange={(value) => setCostBudget(String(value))}
+            step={0.01}
+            value={costBudget ? parseFloat(costBudget) : 0}
+          />
+          <AssetSelectField
+            label="审查策略（可选）"
+            onChange={setReviewPolicyId}
+            options={[]}
+            value={reviewPolicyId}
+          />
           <div className="col-span-2">
+            <p className="mb-1 text-xs text-[var(--muted)]">
+              安全扫描配置与审查策略暂由管理员配置
+            </p>
             <AssetSelectField
               label="基线运行（可选）"
               onChange={setBaselineRunId}
