@@ -227,13 +227,14 @@ class SuperAgentConversation:
         project_id: ProjectId,
         history: list[tuple[str, str]],
     ) -> str:
-        """用模型将对话历史提炼为一个简短标题（≤10 字）。"""
+        """用模型将对话历史提炼为精短标题（≤6 字）。"""
         config = await self._models.resolve_default(
             actor, project_id, ModelPurpose.TEST_AGENT_CHAT,
         )
         prompt = (
-            "你是一个对话标题生成器。根据以下对话，生成一个简短标题（最多10个中文字）。"
+            "你是标题生成器。根据对话内容生成极简标题，不超过6个汉字。"
             "只返回标题本身，不加引号、标点或解释。"
+            "例如：登录测试、API调试、性能优化、安全扫描"
         )
         result = await self._invoker.invoke(
             config,
@@ -245,5 +246,5 @@ class SuperAgentConversation:
             timeout_seconds=15,
             max_tokens=32,
         )
-        title = result.content.strip()[:40]
+        title = result.content.strip()[:20]
         return title if title else "新对话"
