@@ -36,6 +36,15 @@ export type AgentEvent = {
   payload: Record<string, unknown>;
 };
 
+export type CodexExploreResult = {
+  status: "passed" | "failed" | "error";
+  screenshots: string[];
+  execution_log: string;
+  generated_script: string | null;
+  allure_data: Record<string, unknown> | null;
+  error_message: string | null;
+};
+
 export type TargetChatTurn = {
   turn_id: string;
   sequence: number;

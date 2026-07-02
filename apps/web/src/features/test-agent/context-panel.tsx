@@ -2,11 +2,16 @@ import {
   Bot,
   CheckCircle2,
   ClipboardCheck,
+  Code2,
   Database,
+  FileCode2,
   FlaskConical,
+  Globe,
+  Image,
   KeyRound,
   Loader2,
   MessageSquareText,
+  Monitor,
   PlayCircle,
   Scale,
   Shield,
@@ -16,7 +21,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 
-import type { AgentEvent, ArtifactLink } from "./api";
+import type { AgentEvent, ArtifactLink, CodexExploreResult } from "./api";
 
 const typeMeta: Record<
   string,
@@ -141,10 +146,12 @@ const statusConfig: Record<
 
 export function ContextPanel({
   artifacts,
+  codexResult,
   events,
   projectId,
 }: {
   artifacts: ArtifactLink[];
+  codexResult?: CodexExploreResult | null;
   events: AgentEvent[];
   projectId: string;
 }) {
@@ -231,6 +238,77 @@ export function ContextPanel({
           </div>
         )}
       </div>
+
+      {/* Codex 浏览器探索结果 */}
+      {codexResult ? (
+        <div className="border-t border-[var(--hairline)] p-4">
+          <h3 className="mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-[0.66px] text-[var(--muted)]">
+            <Globe className="size-3" /> Codex 浏览器探索
+          </h3>
+          <CodexResultCard result={codexResult} />
+        </div>
+      ) : null}
     </aside>
+  );
+}
+
+function CodexResultCard({ result }: { result: CodexExploreResult }) {
+  const statusTone = {
+    passed: "text-[var(--success)] bg-[var(--success-subtle)]",
+    failed: "text-[var(--danger)] bg-[var(--danger-subtle)]",
+    error: "text-[var(--danger)] bg-[var(--danger-subtle)]",
+  }[result.status] ?? "text-[var(--muted)] bg-[var(--canvas-soft)]";
+
+  const statusLabel = {
+    passed: "通过",
+    failed: "失败",
+    error: "错误",
+  }[result.status] ?? result.status;
+
+  const screenshotCount = result.screenshots?.length ?? 0;
+
+  return (
+    <div className="space-y-2">
+      <span
+        className={`inline-block rounded-full px-2 py-0.5 text-[0.65rem] font-medium ${statusTone}`}
+      >
+        {statusLabel}
+      </span>
+
+      {result.error_message ? (
+        <p className="text-xs text-[var(--danger)]">{result.error_message}</p>
+      ) : null}
+
+      {screenshotCount > 0 ? (
+        <div className="flex items-center gap-1.5 text-xs text-[var(--muted)]">
+          <Image className="size-3" />
+          <span>{screenshotCount} 张截图</span>
+        </div>
+      ) : null}
+
+      {result.execution_log ? (
+        <details className="text-xs">
+          <summary className="flex cursor-pointer items-center gap-1 text-[var(--muted)] hover:text-[var(--ink)]">
+            <FileCode2 className="size-3" />
+            执行日志
+          </summary>
+          <pre className="mt-1 max-h-32 overflow-auto rounded-[var(--radius-sm)] bg-[var(--canvas-soft)] p-2 text-[0.65rem] text-[var(--ink)]">
+            {result.execution_log.slice(0, 2000)}
+          </pre>
+        </details>
+      ) : null}
+
+      {result.generated_script ? (
+        <details className="text-xs">
+          <summary className="flex cursor-pointer items-center gap-1 text-[var(--muted)] hover:text-[var(--ink)]">
+            <Code2 className="size-3" />
+            生成的 Playwright 脚本
+          </summary>
+          <pre className="mt-1 max-h-48 overflow-auto rounded-[var(--radius-sm)] bg-[var(--canvas-soft)] p-2 text-[0.65rem] text-[var(--ink)]">
+            {result.generated_script}
+          </pre>
+        </details>
+      ) : null}
+    </div>
   );
 }

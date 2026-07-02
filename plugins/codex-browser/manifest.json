@@ -1,0 +1,19 @@
+{
+  "id": "codex-browser",
+  "name": "Codex Browser Agent Plugin",
+  "version": "1.0.0",
+  "sdk_version": 1,
+  "entry_point": "agenttest_plugin_codex",
+  "capabilities": [
+    "agent_adapter",
+    "artifact_adapter"
+  ],
+  "config_schema": {
+    "type": "object",
+    "properties": {
+      "model": { "type": "string", "default": "gpt-4o" },
+      "headless": { "type": "boolean", "default": true },
+      "timeout_seconds": { "type": "integer", "default": 120 }
+    }
+  }
+}

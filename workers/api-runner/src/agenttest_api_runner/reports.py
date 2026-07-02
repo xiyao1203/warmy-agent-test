@@ -2,7 +2,10 @@ from __future__ import annotations
 
 import html
 import json
+import subprocess
+import tempfile
 from dataclasses import asdict
+from pathlib import Path
 from xml.etree.ElementTree import Element, SubElement, tostring
 
 from agenttest_api_runner.contracts import ReportArtifact, RunResult
@@ -34,6 +37,11 @@ def build_reports(result: RunResult) -> list[ReportArtifact]:
             name="report.html",
             content_type="text/html; charset=utf-8",
             content=_html_report(result, summary),
+        ),
+        ReportArtifact(
+            name="allure-results.json",
+            content_type="application/json",
+            content=_allure_results_json(result),
         ),
     ]
 
@@ -125,3 +133,75 @@ def _html_report(result: RunResult, summary: dict[str, int]) -> str:
   </table>
 </body>
 </html>"""
+
+
+def _allure_results_json(result: RunResult) -> str:
+    """生成 Allure 兼容的 results.json。"""
+    results = []
+    for case in result.cases:
+        test_case = {
+            "name": case.run_case_id,
+            "status": _allure_status(case.status),
+            "statusDetails": {
+                "message": case.error_message or "",
+            },
+            "stage": "finished",
+            "start": 0,
+            "stop": case.duration_ms or 0,
+            "attachments": [],
+        }
+        # Attach trace as text attachment
+        if case.trace:
+            trace_text = json.dumps(case.trace, ensure_ascii=False)
+            if len(trace_text) > 200000:
+                trace_text = trace_text[:200000]
+            test_case["attachments"].append({
+                "name": "trace.json",
+                "type": "application/json",
+                "source": trace_text,
+            })
+        results.append(test_case)
+    return json.dumps(
+        {"name": result.run_id, "children": results, "status": _allure_status(result.status)},
+        ensure_ascii=False,
+    )
+
+
+def _allure_status(status: str) -> str:
+    return {
+        "passed": "passed",
+        "failed": "failed",
+        "error": "broken",
+        "cancelled": "skipped",
+    }.get(status, "broken")
+
+
+def build_allure_html_report(results_dir: str | Path) -> bytes | None:
+    """调用 allure CLI 生成 HTML 报告。
+
+    Args:
+        results_dir: Allure results 目录（包含 allure-results.json）。
+
+    Returns:
+        生成的 HTML 目录的 tar.gz 字节，或 None（allure 不可用时）。
+    """
+    import io
+    import shutil
+    import tarfile
+
+    allure_path = shutil.which("allure")
+    if allure_path is None:
+        return None
+    with tempfile.TemporaryDirectory() as tmpdir:
+        subprocess.run(
+            [allure_path, "generate", str(results_dir), "-o", tmpdir, "--clean"],
+            capture_output=True,
+            timeout=60,
+        )
+        report_dir = Path(tmpdir)
+        if not report_dir.joinpath("index.html").exists():
+            return None
+        buf = io.BytesIO()
+        with tarfile.open(fileobj=buf, mode="w:gz") as tar:
+            tar.add(tmpdir, arcname="allure-report")
+        return buf.getvalue()

@@ -34,7 +34,7 @@ def test_build_reports_emits_json_junit_and_html_artifacts() -> None:
     artifacts = build_reports(make_result())
     by_name = {artifact.name: artifact for artifact in artifacts}
 
-    assert set(by_name) == {"run-result.json", "junit.xml", "report.html"}
+    assert set(by_name) == {"run-result.json", "junit.xml", "report.html", "allure-results.json"}
     assert by_name["run-result.json"].content_type == "application/json"
     payload = json.loads(by_name["run-result.json"].content)
     assert payload["run_id"] == "run-1"

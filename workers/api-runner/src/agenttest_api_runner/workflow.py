@@ -12,6 +12,11 @@ with workflow.unsafe.imports_passed_through():
         capture_page_snapshot,
     )
     from agenttest_api_runner.callback import ResultCallbackTask
+    from agenttest_api_runner.codex_browser_activity import (
+        CodexBrowserResult,
+        CodexBrowserTaskInput,
+        run_codex_browser_case,
+    )
     from agenttest_api_runner.contracts import (
         CaseScore,
         ResultCallbackConfig,
@@ -100,7 +105,35 @@ class RunWorkflow:
                 continue
             try:
                 # ── 执行模式分发 ─────────────────────────────────
-                if case.execution_mode == "browser":
+                if case.execution_mode == "codex_explore":
+                    codex_url = str(
+                        case.input.get(
+                            "url",
+                            task.agent_config.get(
+                                "canvas_url",
+                                task.agent_config.get("endpoint_url", ""),
+                            ),
+                        )
+                    )
+                    codex_intent = str(case.input.get("test_intent", ""))
+                    codex_result = await workflow.execute_activity(
+                        run_codex_browser_case,
+                        CodexBrowserTaskInput(
+                            run_case_id=case.run_case_id,
+                            test_intent=codex_intent,
+                            target_url=codex_url,
+                            timeout_seconds=int(case.input.get("timeout", 120)),
+                        ),
+                        start_to_close_timeout=timedelta(
+                            seconds=int(case.input.get("timeout", 120))
+                        ),
+                        heartbeat_timeout=timedelta(seconds=60),
+                        retry_policy=RetryPolicy(
+                            maximum_attempts=1,
+                        ),
+                    )
+                    result = _codex_to_run_case(codex_result, case)
+                elif case.execution_mode == "browser":
                     browser_url = str(
                         case.input.get(
                             "url",
@@ -275,6 +308,35 @@ def _browser_steps(case_input: dict[str, object]) -> list[dict[str, str]]:
             if isinstance(step, dict)
         ]
     return []
+
+
+def _codex_to_run_case(
+    codex_result: CodexBrowserResult,
+    case: RunCaseTask,
+) -> RunCaseResult:
+    """将 Codex 浏览器探索结果转换为 RunCaseResult。"""
+    status = codex_result.status
+    output: dict[str, object] = {
+        "status": codex_result.status,
+        "execution_log": codex_result.execution_log[:2000] if codex_result.execution_log else "",
+    }
+    if codex_result.generated_script:
+        output["generated_script"] = codex_result.generated_script
+    if codex_result.screenshots:
+        output["screenshot_count"] = len(codex_result.screenshots)
+    return RunCaseResult(
+        run_case_id=case.run_case_id,
+        status=status,
+        output=output,
+        trace=[
+            {
+                "execution_log": codex_result.execution_log,
+                "generated_script": codex_result.generated_script,
+            }
+        ],
+        error_message=codex_result.error_message,
+        duration_ms=codex_result.duration_ms,
+    )
 
 
 def _playwright_to_run_case(
