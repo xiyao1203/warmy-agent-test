@@ -93,6 +93,12 @@ export function TestAgentChat({ projectId }: { projectId: string }) {
     sseCloseRef.current?.();
     sseCloseRef.current = subscribeToSession(projectId, activeSessionId, (event) => {
       if (sessionRef.current !== activeSessionId) return;
+      // Honour acceptDeltas gate so stopGenerating can suppress streaming without closing SSE
+      if (
+        !acceptDeltasRef.current &&
+        (event.type === "message.delta" || event.type === "agent.reasoning_delta")
+      )
+        return;
       addSseEvent(event);
     });
     return () => sseCloseRef.current?.();
@@ -177,8 +183,7 @@ export function TestAgentChat({ projectId }: { projectId: string }) {
   // ── Send / Regenerate ──
   function stopGenerating() {
     abortRef.current?.abort();
-    sseCloseRef.current?.();
-    sseCloseRef.current = null;
+    // Keep SSE alive – just gate deltas with acceptDeltasRef
     acceptDeltasRef.current = false;
     const partial = streamingContentRef.current.trim();
     if (partial) {
@@ -246,6 +251,22 @@ export function TestAgentChat({ projectId }: { projectId: string }) {
     acceptDeltasRef.current = true;
     abortRef.current = new AbortController();
 
+    // Ensure SSE is open before POST (may have been closed by stopGenerating or race)
+    const ensureSseOpen = (sid: string) => {
+      sessionRef.current = sid;
+      if (!sseCloseRef.current) {
+        sseCloseRef.current = subscribeToSession(projectId, sid, (event) => {
+          if (sessionRef.current !== sid) return;
+          if (
+            !acceptDeltasRef.current &&
+            (event.type === "message.delta" || event.type === "agent.reasoning_delta")
+          )
+            return;
+          addSseEvent(event);
+        });
+      }
+    };
+
     dispatch({ type: "FILTER_EVENTS", keepTypes: ["message.started", "message.delta"] });
 
     const pendingUserMessage: ChatMessage = {
@@ -257,9 +278,9 @@ export function TestAgentChat({ projectId }: { projectId: string }) {
 
     try {
       const session: ChatResponse = state.activeSession ?? (await createSession(projectId));
+      ensureSseOpen(session.session_id);
       if (!state.activeSession) {
         // Activate session metadata without wiping optimistic user message
-        sessionRef.current = session.session_id;
         applySession(session);
         // Restore optimistic user message that applySession wiped
         dispatch({ type: "APPEND_MESSAGE", message: pendingUserMessage });
