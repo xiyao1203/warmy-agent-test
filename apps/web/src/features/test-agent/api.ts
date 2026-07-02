@@ -249,8 +249,9 @@ export function sendTargetMessage(
   projectId: string,
   sessionId: string,
   message: string,
+  signal?: AbortSignal,
 ) {
-  return request<TargetChatTurn>(
+  return requestWithAbort<TargetChatTurn>(
     `${base(projectId)}/target-chats/${sessionId}/messages`,
     {
       method: "POST",
@@ -259,6 +260,7 @@ export function sendTargetMessage(
         ...(csrfHeaders() as Record<string, string>),
       },
       body: JSON.stringify({ message }),
+      signal,
     },
   );
 }

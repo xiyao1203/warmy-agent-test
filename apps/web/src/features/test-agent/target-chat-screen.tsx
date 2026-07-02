@@ -1,6 +1,6 @@
 "use client";
 
-import { CornerDownLeft, RefreshCw } from "lucide-react";
+import { CornerDownLeft, RefreshCw, StopCircle } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { MessageBubble, TypingIndicator } from "@/components/uiverse";
@@ -33,6 +33,7 @@ export function TargetChatScreen({ projectId }: { projectId: string }) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const pinnedBottomRef = useRef(true);
+  const abortRef = useRef<AbortController | null>(null);
 
   useEffect(() => {
     let alive = true;
@@ -84,6 +85,10 @@ export function TargetChatScreen({ projectId }: { projectId: string }) {
   }, [projectId]);
 
   useEffect(() => {
+    if (!loadingInit) inputRef.current?.focus();
+  }, [loadingInit]);
+
+  useEffect(() => {
     const el = scrollRef.current;
     if (!el || !pinnedBottomRef.current) return;
     el.scrollTo({ top: el.scrollHeight, behavior: "smooth" });
@@ -97,12 +102,18 @@ export function TargetChatScreen({ projectId }: { projectId: string }) {
       el.scrollHeight - el.scrollTop - el.clientHeight < threshold;
   }, []);
 
-  async function ensureSession() {
+  async function ensureSession(): Promise<TargetChatSession> {
     if (session) return session;
     if (!versionId) throw new Error("请先发布并选择一个被测 Agent 版本");
     const created = await createTargetChat(projectId, versionId, environmentId);
     setSession(created);
     return created;
+  }
+
+  function stop() {
+    abortRef.current?.abort();
+    abortRef.current = null;
+    setSending(false);
   }
 
   async function send() {
@@ -113,20 +124,30 @@ export function TargetChatScreen({ projectId }: { projectId: string }) {
     setError(null);
     pinnedBottomRef.current = true;
 
+    const ctrl = new AbortController();
+    abortRef.current = ctrl;
+
     try {
       const active = await ensureSession();
       const turn = await sendTargetMessage(
         projectId,
         active.session_id,
         content,
+        ctrl.signal,
       );
-      setTurns((current) => [...current, turn]);
+      setTurns((cur) => [...cur, turn]);
+      setSession((cur) =>
+        cur ? { ...cur, turns: [...cur.turns, turn] } : cur,
+      );
     } catch (reason) {
+      if (reason instanceof DOMException && reason.name === "AbortError") return;
       setError(
         reason instanceof Error ? reason.message : "被测 Agent 调用失败",
       );
     } finally {
       setSending(false);
+      abortRef.current = null;
+      inputRef.current?.focus();
     }
   }
 
@@ -137,7 +158,16 @@ export function TargetChatScreen({ projectId }: { projectId: string }) {
     if (typeof output.message === "string") return output.message;
     if (typeof output.content === "string") return output.content;
     if (typeof output.text === "string") return output.text;
+    if (typeof output.response === "string") return output.response;
     return JSON.stringify(output, null, 2);
+  }
+
+  function extractErrorText(
+    err: Record<string, unknown> | null | undefined,
+  ): string {
+    if (!err) return "调用失败";
+    const msg = err.message ?? err.detail ?? err.error;
+    return typeof msg === "string" ? msg : JSON.stringify(err);
   }
 
   const versionLabel = versions.find((v) => v.id === versionId)?.label;
@@ -145,7 +175,6 @@ export function TargetChatScreen({ projectId }: { projectId: string }) {
 
   return (
     <div className="flex min-h-0 flex-1 flex-col overflow-hidden bg-[var(--canvas)]">
-      {/* Header */}
       <header className="flex shrink-0 items-center gap-3 border-b border-[var(--hairline)] px-4 py-2.5">
         <select
           aria-label="被测 Agent 版本"
@@ -192,7 +221,6 @@ export function TargetChatScreen({ projectId }: { projectId: string }) {
         ) : null}
       </header>
 
-      {/* Messages area */}
       <div
         className="chat-scroll min-h-0 flex-1 overflow-y-auto px-5 py-4"
         onScroll={handleScroll}
@@ -214,38 +242,43 @@ export function TargetChatScreen({ projectId }: { projectId: string }) {
           </div>
         ) : (
           <div className="mx-auto max-w-3xl">
-            {turns.map((turn) => (
-              <div className="mb-8 last:mb-0" key={turn.turn_id}>
-                <MessageBubble
-                  content={String(turn.input.message ?? "")}
-                  role="user"
-                  timestamp={turn.created_at}
-                />
-                <div className="mt-6">
+            {turns.map((turn) => {
+              const userContent = String(
+                (turn.input as Record<string, unknown>).message ?? "",
+              );
+              const assistantContent = turn.error
+                ? `调用失败: ${extractErrorText(turn.error)}`
+                : extractOutputText(turn.output);
+
+              return (
+                <div className="mb-8 last:mb-0" key={turn.turn_id}>
                   <MessageBubble
-                    content={
-                      turn.error
-                        ? `调用失败: ${String(turn.error.message ?? turn.error)}`
-                        : extractOutputText(turn.output)
-                    }
-                    role="assistant"
+                    content={userContent}
+                    role="user"
                     timestamp={turn.created_at}
                   />
+                  <div className="mt-6">
+                    <MessageBubble
+                      content={assistantContent}
+                      role="assistant"
+                      timestamp={turn.created_at}
+                    />
+                  </div>
+                  <div className="mt-1.5 pl-11 text-[0.65rem] text-[var(--muted)]">
+                    耗时 {turn.duration_ms ?? "-"} ms
+                    {turn.trace?.length
+                      ? ` \u00b7 Trace ${turn.trace.length} 条`
+                      : ""}
+                    {turn.scores?.length
+                      ? ` \u00b7 评分 ${turn.scores.length} 项`
+                      : ""}
+                    {turn.token_usage
+                      ? ` \u00b7 Token ${JSON.stringify(turn.token_usage)}`
+                      : null}
+                  </div>
                 </div>
-                <div className="mt-1.5 pl-11 text-[0.65rem] text-[var(--muted)]">
-                  耗时 {turn.duration_ms ?? "-"} ms
-                  {turn.trace?.length
-                    ? ` \u00b7 Trace ${turn.trace.length} 条`
-                    : ""}
-                  {turn.scores?.length
-                    ? ` \u00b7 评分 ${turn.scores.length} 项`
-                    : ""}
-                  {turn.token_usage
-                    ? ` \u00b7 Token ${JSON.stringify(turn.token_usage)}`
-                    : null}
-                </div>
-              </div>
-            ))}
+              );
+            })}
 
             {sending ? (
               <div className="mb-8">
@@ -256,7 +289,6 @@ export function TargetChatScreen({ projectId }: { projectId: string }) {
         )}
       </div>
 
-      {/* Error banner */}
       {error ? (
         <div
           className="shrink-0 border-t border-[var(--danger)]/30 bg-[var(--danger-subtle)]/20 px-4 py-2.5"
@@ -277,7 +309,6 @@ export function TargetChatScreen({ projectId }: { projectId: string }) {
         </div>
       ) : null}
 
-      {/* Input area */}
       <div className="shrink-0 border-t border-[var(--hairline)] px-4 py-3">
         <div className="mx-auto flex max-w-3xl gap-2">
           <div className="relative flex-1">
@@ -302,19 +333,30 @@ export function TargetChatScreen({ projectId }: { projectId: string }) {
               rows={1}
               value={input}
             />
-            <button
-              aria-label="发送"
-              className={`absolute bottom-2 right-2 rounded-lg p-1.5 transition-all ${
-                input.trim() && !sending
-                  ? "bg-[var(--primary)] text-white hover:bg-[var(--primary-hover)]"
-                  : "cursor-default text-[var(--muted)]"
-              }`}
-              disabled={!input.trim() || sending}
-              onClick={() => void send()}
-              type="button"
-            >
-              <CornerDownLeft className="size-5" />
-            </button>
+            {sending ? (
+              <button
+                aria-label="停止"
+                className="absolute bottom-2 right-2 rounded-lg p-1.5 text-[var(--muted)] transition-colors hover:bg-[var(--danger-subtle)] hover:text-[var(--danger)]"
+                onClick={stop}
+                type="button"
+              >
+                <StopCircle className="size-5" />
+              </button>
+            ) : (
+              <button
+                aria-label="发送"
+                className={`absolute bottom-2 right-2 rounded-lg p-1.5 transition-all ${
+                  input.trim()
+                    ? "bg-[var(--primary)] text-white hover:bg-[var(--primary-hover)]"
+                    : "cursor-default text-[var(--muted)]"
+                }`}
+                disabled={!input.trim()}
+                onClick={() => void send()}
+                type="button"
+              >
+                <CornerDownLeft className="size-5" />
+              </button>
+            )}
           </div>
         </div>
       </div>
