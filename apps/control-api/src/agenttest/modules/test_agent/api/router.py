@@ -232,6 +232,18 @@ def create_test_agent_router(
 
         session.add_assistant_message(result.content)
 
+        # 模型输出完成，立即通知前端结束流式状态，不等后续标题生成和编排
+        await orchestration.append_event(
+            ProjectId(project_id),
+            session.session_id,
+            "message.completed",
+            {
+                "content": result.content,
+                "total_tokens": result.total_tokens,
+                "latency_ms": result.latency_ms,
+            },
+        )
+
         # Generate an AI-summarised title on the first turn
         if session.title == "新对话" and session.messages:
             try:
@@ -272,16 +284,6 @@ def create_test_agent_router(
                         f"{session.messages[-1].sequence}:{index}:{intent.capability}"
                     ),
                 )
-        await orchestration.append_event(
-            ProjectId(project_id),
-            session.session_id,
-            "message.completed",
-            {
-                "content": result.content,
-                "total_tokens": result.total_tokens,
-                "latency_ms": result.latency_ms,
-            },
-        )
         links = await orchestration.list_artifact_links(ProjectId(project_id), session.session_id)
         return _session_response(session, links)
 
