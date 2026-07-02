@@ -60,7 +60,7 @@ export function SessionList({
   }
 
   return (
-    <aside className="flex min-h-0 flex-col overflow-hidden border-r border-[var(--hairline)] bg-[var(--surface)]">
+    <aside className="flex h-full min-h-0 flex-col overflow-hidden border-r border-[var(--hairline)] bg-[var(--surface)]">
       {/* New session header */}
       <div className="flex shrink-0 items-center gap-1 border-b border-[var(--hairline)] p-2">
         <Button className="flex-1 text-xs" onClick={onCreate} variant="secondary">

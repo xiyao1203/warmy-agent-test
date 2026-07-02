@@ -151,7 +151,7 @@ export function ContextPanel({
   const tasks = groupTasks(events);
 
   return (
-    <aside className="flex min-h-0 flex-col overflow-y-auto border-l border-[var(--hairline)] bg-[var(--surface)]">
+    <aside className="flex h-full min-h-0 flex-col overflow-y-auto border-l border-[var(--hairline)] bg-[var(--surface)]">
       {/* Artifacts */}
       <div className="p-4">
         <h3 className="text-xs font-semibold uppercase tracking-[0.66px] text-[var(--muted)]">

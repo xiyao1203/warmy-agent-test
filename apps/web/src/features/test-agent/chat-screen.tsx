@@ -668,7 +668,7 @@ export function TestAgentChat({ projectId }: { projectId: string }) {
           </main>
 
           {/* Context panel */}
-          <div className="max-[1100px]:hidden">
+          <div className="h-full max-[1100px]:hidden">
             <ContextPanel
               artifacts={state.artifacts}
               events={state.events}
