@@ -5,6 +5,7 @@ from agenttest.bootstrap.settings import Settings
 from agenttest.modules.identity.public import Email, SystemRole, User, UserId
 from agenttest.modules.projects.public import ProjectId
 from agenttest.modules.test_agent.application.conversation import ConversationResponse
+from agenttest.modules.test_agent.application.generations import GenerationCoordinator
 from agenttest.modules.test_agent.domain.entities import AgentEvent
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
@@ -34,7 +35,7 @@ class Events:
     def __init__(self) -> None:
         self.items = []
 
-    async def append_event(self, project_id, session_id, event_type, payload):
+    async def append_event(self, project_id, session_id, event_type, payload, generation_id=None):
         event = AgentEvent(
             event_id=uuid4(),
             project_id=project_id.value,
@@ -43,6 +44,7 @@ class Events:
             event_type=event_type,
             payload=payload,
             created_at=datetime.now(UTC),
+            generation_id=generation_id,
         )
         self.items.append(event)
         return event
@@ -59,9 +61,55 @@ class Events:
     async def list_artifact_links(self, project_id, session_id):
         return []
 
+    async def latest_sequence(self, project_id, session_id):
+        matching = await self.list_events(project_id, session_id)
+        return max((event.sequence for event in matching), default=0)
+
+
+class Generations:
+    def __init__(self) -> None:
+        self.items = {}
+
+    async def add(self, generation):
+        self.items[generation.generation_id] = generation
+
+    async def get(self, project_id, generation_id):
+        item = self.items.get(generation_id)
+        return item if item and item.project_id == project_id.value else None
+
+    async def get_active(self, project_id, session_id):
+        return next(
+            (
+                item
+                for item in self.items.values()
+                if item.project_id == project_id.value
+                and item.session_id == session_id.value
+                and item.completed_at is None
+            ),
+            None,
+        )
+
+    async def save(self, generation):
+        self.items[generation.generation_id] = generation
+
+
+class Invoker:
+    async def cancel_workflow(self, workflow_id):
+        self.cancelled = workflow_id
+
 
 class Conversation:
-    async def respond(self, actor, project_id, *, history, stream_callback=None, reasoning_stream_callback=None, action_context=None):
+    async def respond(
+        self,
+        actor,
+        project_id,
+        *,
+        history,
+        stream_callback=None,
+        reasoning_stream_callback=None,
+        action_context=None,
+        stream_context=None,
+    ):
         assert history[-1] == ("user", "你好")
         return ConversationResponse(content="你好，请告诉我要测试哪个 Agent。")
 
@@ -78,6 +126,8 @@ def build_client():
     project_id = ProjectId.new()
     sessions = Sessions()
     events = Events()
+    generations = Generations()
+    invoker = Invoker()
 
     async def actor_for(request):
         return actor
@@ -94,6 +144,7 @@ def build_client():
             check_project=check_project,
             settings=Settings(),
             conversation=Conversation(),
+            generation_coordinator=GenerationCoordinator(generations, events, invoker),
         ),
         prefix="/api/v1",
     )
@@ -114,7 +165,7 @@ def test_real_conversation_is_persisted_and_restored_from_history() -> None:
     response = client.post(
         f"/api/v1/projects/{project_id.value}/test-agent/sessions/{session_id}/messages",
         headers={"X-CSRF-Token": "csrf"},
-        json={"message": "你好"},
+        json={"message": "你好", "generation_id": str(uuid4())},
     )
     restored = client.get(f"/api/v1/projects/{project_id.value}/test-agent/sessions/{session_id}")
     history = client.get(f"/api/v1/projects/{project_id.value}/test-agent/sessions")
@@ -123,6 +174,8 @@ def test_real_conversation_is_persisted_and_restored_from_history() -> None:
     assert response.status_code == 200
     assert response.json()["messages"][-1]["content"] == "你好，请告诉我要测试哪个 Agent。"
     assert restored.json()["messages"] == response.json()["messages"]
+    assert restored.json()["event_cursor"] >= 1
+    assert any(item["kind"] == "event" for item in restored.json()["timeline"])
     assert history.json()["items"][0]["session_id"] == session_id
 
 
@@ -136,15 +189,16 @@ def test_event_stream_replays_after_last_event_id() -> None:
     client.post(
         f"/api/v1/projects/{project_id.value}/test-agent/sessions/{session_id}/messages",
         headers={"X-CSRF-Token": "csrf"},
-        json={"message": "你好"},
+        json={"message": "你好", "generation_id": str(uuid4())},
     )
 
     stream = client.get(
         f"/api/v1/projects/{project_id.value}/test-agent/sessions/{session_id}/events",
-        headers={"Last-Event-ID": "1"},
+        params={"after": 1},
     )
 
     assert stream.status_code == 200
+    assert "event: stream.ready" in stream.text
     assert "event: message.completed" in stream.text
     assert "id: 1\n" not in stream.text
 
@@ -179,3 +233,28 @@ def test_model_runner_callback_persists_each_real_delta_and_requires_token() -> 
     assert second.json()["sequence"] == first.json()["sequence"] + 1
     assert 'data: {"content":"你"}' in stream.text
     assert 'data: {"content":"好"}' in stream.text
+
+
+def test_generation_cancel_is_idempotent() -> None:
+    client, project_id = build_client()
+    created = client.post(
+        f"/api/v1/projects/{project_id.value}/test-agent/sessions",
+        headers={"X-CSRF-Token": "csrf"},
+    )
+    session_id = created.json()["session_id"]
+    generation_id = str(uuid4())
+    client.post(
+        f"/api/v1/projects/{project_id.value}/test-agent/sessions/{session_id}/messages",
+        headers={"X-CSRF-Token": "csrf"},
+        json={"message": "你好", "generation_id": generation_id},
+    )
+    cancel_url = (
+        f"/api/v1/projects/{project_id.value}/test-agent/sessions/{session_id}"
+        f"/generations/{generation_id}/cancel"
+    )
+
+    first = client.post(cancel_url, headers={"X-CSRF-Token": "csrf"})
+    second = client.post(cancel_url, headers={"X-CSRF-Token": "csrf"})
+
+    assert first.status_code == second.status_code == 200
+    assert first.json()["status"] in {"cancelling", "completed"}

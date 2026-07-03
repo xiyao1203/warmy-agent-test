@@ -34,6 +34,7 @@ from agenttest.modules.model_configs.public import (
     ModelInvoker,
     ModelPurpose,
     ModelStreamCallback,
+    StreamContext,
 )
 from agenttest.modules.projects.public import ProjectId
 from agenttest.modules.test_agent.application.context import (
@@ -69,6 +70,7 @@ class ConversationResponse:
     actions: list[ActionIntent] = field(default_factory=list)
     total_tokens: int = 0
     latency_ms: int = 0
+    cancelled: bool = False
 
 
 class SuperAgentConversation:
@@ -96,6 +98,7 @@ class SuperAgentConversation:
         stream_callback: ModelStreamCallback | None = None,
         reasoning_stream_callback: ModelStreamCallback | None = None,
         action_context: dict[str, object] | None = None,
+        stream_context: StreamContext | None = None,
     ) -> ConversationResponse:
         """生成自然语言回复 + 规划操作。
 
@@ -105,7 +108,9 @@ class SuperAgentConversation:
         3. 返回 ConversationResponse（content + actions）
         """
         config = await self._models.resolve_default(
-            actor, project_id, ModelPurpose.TEST_AGENT_CHAT,
+            actor,
+            project_id,
+            ModelPurpose.TEST_AGENT_CHAT,
         )
 
         # Step 1: 流式生成主回复
@@ -114,13 +119,20 @@ class SuperAgentConversation:
         ]
         if stream_callback is None:
             result = await self._invoker.invoke(
-                config, messages, timeout_seconds=60, max_tokens=2048,
+                config,
+                messages,
+                timeout_seconds=60,
+                max_tokens=2048,
             )
         else:
             result = await self._invoker.stream(
-                config, messages, callback=stream_callback,
+                config,
+                messages,
+                callback=stream_callback,
                 reasoning_callback=reasoning_stream_callback,
-                timeout_seconds=60, max_tokens=2048,
+                timeout_seconds=60,
+                max_tokens=2048,
+                stream_ctx=stream_context,
             )
         content = result.content.strip()
         if not content:
@@ -129,7 +141,9 @@ class SuperAgentConversation:
         # Step 2: PydanticAI Agent 路由 + 规划操作
         actions = (
             await self._pydantic_plan_actions(
-                config, history, action_context,
+                config,
+                history,
+                action_context,
             )
             if self._capabilities
             else []
@@ -139,6 +153,7 @@ class SuperAgentConversation:
             actions=actions,
             total_tokens=result.total_tokens,
             latency_ms=result.latency_ms,
+            cancelled=result.cancelled,
         )
 
     async def _pydantic_plan_actions(
@@ -207,7 +222,7 @@ class SuperAgentConversation:
                 if isinstance(result, dict):
                     artifacts = result.get("artifacts", [])
                     ids = [
-                        f"{a.get('type','')}_id={a.get('id','')}"
+                        f"{a.get('type', '')}_id={a.get('id', '')}"
                         for a in artifacts
                         if isinstance(a, dict)
                     ]
@@ -218,7 +233,8 @@ class SuperAgentConversation:
             if context_lines:
                 context_block = (
                     "先前已执行的操作及其产出（后续操作可直接引用这些 ID）:\n"
-                    + "\n".join(context_lines) + "\n"
+                    + "\n".join(context_lines)
+                    + "\n"
                 )
         prompt = (
             "你是超级测试 Agent 的操作规划器。"
@@ -235,7 +251,8 @@ class SuperAgentConversation:
                 [InvocationMessage(role="system", content=prompt)]
                 + [InvocationMessage(role=role, content=content) for role, content in history],
                 callback=stream_callback,
-                timeout_seconds=60, max_tokens=2048,
+                timeout_seconds=60,
+                max_tokens=2048,
             )
         else:
             result = await self._invoker.invoke(
@@ -243,7 +260,8 @@ class SuperAgentConversation:
                 [InvocationMessage(role="system", content=prompt)]
                 + [InvocationMessage(role=role, content=content) for role, content in history],
                 response_format={"type": "json_object"},
-                timeout_seconds=60, max_tokens=2048,
+                timeout_seconds=60,
+                max_tokens=2048,
             )
         try:
             plan = _ActionPlan.model_validate_json(result.content)
@@ -277,9 +295,7 @@ class SuperAgentConversation:
         messages: list[ModelMessage] = []
         for role, content in history:
             if role == "user":
-                messages.append(
-                    ModelRequest(parts=[UserPromptPart(content=content)])
-                )
+                messages.append(ModelRequest(parts=[UserPromptPart(content=content)]))
             elif role == "assistant":
                 messages.append(
                     ModelResponse(
@@ -335,7 +351,9 @@ class SuperAgentConversation:
         """用模型将对话历史提炼为精短标题，失败则截取首条用户消息。"""
         # ── Try AI title generation ──
         config = await self._models.resolve_default(
-            actor, project_id, ModelPurpose.TEST_AGENT_CHAT,
+            actor,
+            project_id,
+            ModelPurpose.TEST_AGENT_CHAT,
         )
         lines: list[str] = []
         for role, content in history[-6:]:
@@ -349,19 +367,32 @@ class SuperAgentConversation:
                 InvocationMessage(role="system", content="你是标题提取器。"),
                 InvocationMessage(role="user", content=user_prompt),
             ],
-            timeout_seconds=15, max_tokens=12,
+            timeout_seconds=15,
+            max_tokens=12,
         )
         raw = result.content.strip()
         # Detect prompt-leakage / meta-language
         leakage_markers = [
-            "我们被要求", "为对话生成", "为以下对话",
-            "总结以下", "总结对话", "输出标题",
-            "请为", "生成标题", "起一个", "起标题",
-            "我们需要", "用中文", "对话标题", "标题是",
-            "这段对话", "本次对话", "当前对话",
+            "我们被要求",
+            "为对话生成",
+            "为以下对话",
+            "总结以下",
+            "总结对话",
+            "输出标题",
+            "请为",
+            "生成标题",
+            "起一个",
+            "起标题",
+            "我们需要",
+            "用中文",
+            "对话标题",
+            "标题是",
+            "这段对话",
+            "本次对话",
+            "当前对话",
         ]
         if not any(marker in raw for marker in leakage_markers):
-            cleaned = re.sub(r'^[：:，,。.、\s"\'「」『』【】《》]+', '', raw).strip()
+            cleaned = re.sub(r'^[：:，,。.、\s"\'「」『』【】《》]+', "", raw).strip()
             if len(cleaned) >= 2:
                 return cleaned[:12]
         # ── Fallback: truncate first user message ──

@@ -5,7 +5,7 @@ from __future__ import annotations
 import asyncio
 import json
 from typing import Protocol
-from uuid import UUID
+from uuid import UUID, uuid4
 
 from fastapi import APIRouter, Header, Request
 from fastapi.responses import JSONResponse, StreamingResponse
@@ -16,12 +16,14 @@ from agenttest.modules.model_configs.public import (
     ModelDefaultMissingError,
     ModelRuntimeUnavailableError,
     ModelStreamCallback,
+    StreamContext,
 )
 from agenttest.modules.projects.public import ProjectId, ProjectNotFoundError
 from agenttest.modules.test_agent.application.conversation import (
     ConversationResponse,
     SuperAgentConversation,
 )
+from agenttest.modules.test_agent.application.generations import GenerationCoordinator
 from agenttest.modules.test_agent.application.orchestrator import (
     OrchestrationContext,
     SuperAgentOrchestrator,
@@ -30,12 +32,18 @@ from agenttest.modules.test_agent.application.ports import (
     ChatSessionRepository,
     OrchestrationRepository,
 )
-from agenttest.modules.test_agent.domain.entities import ChatSession, ChatSessionId
+from agenttest.modules.test_agent.domain.entities import (
+    AgentEvent,
+    ChatGeneration,
+    ChatSession,
+    ChatSessionId,
+)
 from agenttest.shared.api.auth_guard import require_actor, require_writer
 
 
 class ChatRequest(BaseModel):
     message: str = Field(min_length=1, max_length=20_000)
+    generation_id: UUID = Field(default_factory=uuid4)
 
 
 class RegenerateRequest(BaseModel):
@@ -70,6 +78,7 @@ class ConversationPort(Protocol):
         stream_callback: ModelStreamCallback | None = None,
         reasoning_stream_callback: ModelStreamCallback | None = None,
         action_context: dict[str, object] | None = None,
+        stream_context: StreamContext | None = None,
     ) -> ConversationResponse: ...
 
 
@@ -82,6 +91,7 @@ def create_test_agent_router(
     settings,
     conversation: SuperAgentConversation | ConversationPort,
     agent_orchestrator: SuperAgentOrchestrator | None = None,
+    generation_coordinator: GenerationCoordinator | None = None,
 ) -> APIRouter:
     router = APIRouter(prefix="/projects/{project_id}/test-agent", tags=["test-agent"])
 
@@ -122,13 +132,13 @@ def create_test_agent_router(
             return actor
         session = ChatSession.create(project_id=project_id, created_by=actor.user_id.value)
         await sessions.save(session)
-        await orchestration.append_event(
+        created_event = await orchestration.append_event(
             ProjectId(project_id),
             session.session_id,
             "session.created",
             {"session_id": str(session.session_id.value)},
         )
-        return _session_response(session, [])
+        return _session_response(session, [], [created_event], None)
 
     @router.get("/sessions/{session_id}")
     async def get_session(request: Request, project_id: UUID, session_id: UUID):
@@ -139,7 +149,13 @@ def create_test_agent_router(
         if session is None:
             return JSONResponse(status_code=404, content={"detail": "会话不存在"})
         links = await orchestration.list_artifact_links(ProjectId(project_id), session.session_id)
-        return _session_response(session, links)
+        events = await orchestration.list_events(ProjectId(project_id), session.session_id, after=0)
+        active = (
+            await generation_coordinator.get_active(ProjectId(project_id), session.session_id)
+            if generation_coordinator is not None
+            else None
+        )
+        return _session_response(session, links, events, active)
 
     @router.delete("/sessions/{session_id}", status_code=204)
     async def archive_session(
@@ -163,8 +179,20 @@ def create_test_agent_router(
         project_id: UUID,
         session: ChatSession,
         message: str,
+        generation_id: UUID,
         add_user_message: bool = True,
     ):
+        generation = None
+        stream_context = None
+        if generation_coordinator is not None:
+            try:
+                generation = await generation_coordinator.begin(
+                    ProjectId(project_id), session.session_id, generation_id
+                )
+                generation = await generation_coordinator.start(generation)
+                stream_context = StreamContext(workflow_id=generation.workflow_id)
+            except ValueError as error:
+                return JSONResponse(status_code=409, content={"detail": str(error)})
         if add_user_message:
             session.add_user_message(message)
             await sessions.save(session)
@@ -172,7 +200,8 @@ def create_test_agent_router(
             ProjectId(project_id),
             session.session_id,
             "message.started",
-            {"role": "assistant"},
+            {"role": "assistant", "generation_id": str(generation_id)},
+            generation_id=generation_id if generation is not None else None,
         )
         # Build action_context from existing artifact links so the LLM
         # can reference IDs produced by earlier actions in the session.
@@ -182,8 +211,7 @@ def create_test_agent_router(
         action_context: dict[str, object] = {}
         if existing_links:
             action_context["_previous_artifacts"] = [
-                {"type": link.artifact_type, "id": str(link.artifact_id)}
-                for link in existing_links
+                {"type": link.artifact_type, "id": str(link.artifact_id)} for link in existing_links
             ]
         try:
             result = await conversation.respond(
@@ -195,6 +223,7 @@ def create_test_agent_router(
                         f"{str(settings.control_api_base_url).rstrip('/')}/api/v1/"
                         f"projects/{project_id}/test-agent/sessions/"
                         f"{session.session_id.value}/model-events"
+                        f"?generation_id={generation_id}"
                     ),
                     internal_token=settings.internal_api_token,
                 ),
@@ -203,12 +232,16 @@ def create_test_agent_router(
                         f"{str(settings.control_api_base_url).rstrip('/')}/api/v1/"
                         f"projects/{project_id}/test-agent/sessions/"
                         f"{session.session_id.value}/model-events/reasoning"
+                        f"?generation_id={generation_id}"
                     ),
                     internal_token=settings.internal_api_token,
                 ),
                 action_context=action_context if action_context else None,
+                stream_context=stream_context,
             )
         except ModelDefaultMissingError:
+            if generation is not None:
+                await generation_coordinator.fail(generation, "项目尚未配置测试 Agent 默认模型")
             await orchestration.append_event(
                 ProjectId(project_id),
                 session.session_id,
@@ -220,42 +253,20 @@ def create_test_agent_router(
                 content={"detail": "项目尚未配置测试 Agent 默认模型"},
             )
         except ModelRuntimeUnavailableError as error:
+            if generation is not None:
+                await generation_coordinator.fail(generation, str(error))
             await orchestration.append_event(
                 ProjectId(project_id), session.session_id, "error", {"detail": str(error)}
             )
             return JSONResponse(status_code=503, content={"detail": str(error)})
         except ValueError as error:
+            if generation is not None:
+                await generation_coordinator.fail(generation, str(error))
             await orchestration.append_event(
                 ProjectId(project_id), session.session_id, "error", {"detail": str(error)}
             )
             return JSONResponse(status_code=422, content={"detail": str(error)})
 
-        session.add_assistant_message(result.content)
-
-        # 模型输出完成，立即通知前端结束流式状态，不等后续标题生成和编排
-        await orchestration.append_event(
-            ProjectId(project_id),
-            session.session_id,
-            "message.completed",
-            {
-                "content": result.content,
-                "total_tokens": result.total_tokens,
-                "latency_ms": result.latency_ms,
-            },
-        )
-
-        # Generate an AI-summarised title on the first turn
-        if session.title == "新对话" and session.messages:
-            try:
-                session.title = await conversation.generate_title(
-                    actor,
-                    ProjectId(project_id),
-                    [(m.role, m.content) for m in session.messages],
-                )
-            except Exception:
-                pass  # keep default title on failure
-
-        await sessions.save(session)
         if agent_orchestrator is not None:
             context = OrchestrationContext(actor, ProjectId(project_id), session.session_id.value)
             # Emit reasoning events before delegating actions (Codex-style
@@ -273,6 +284,7 @@ def create_test_agent_router(
                             "child_agent": intent.child_agent,
                             "content": intent.rationale,
                         },
+                        generation_id=generation_id if generation is not None else None,
                     )
             for index, intent in enumerate(result.actions):
                 await agent_orchestrator.delegate(
@@ -284,8 +296,37 @@ def create_test_agent_router(
                         f"{session.messages[-1].sequence}:{index}:{intent.capability}"
                     ),
                 )
+        session.add_assistant_message(result.content)
+        await orchestration.append_event(
+            ProjectId(project_id),
+            session.session_id,
+            "message.completed",
+            {
+                "content": result.content,
+                "total_tokens": result.total_tokens,
+                "latency_ms": result.latency_ms,
+                "generation_id": str(generation_id),
+            },
+            generation_id=generation_id if generation is not None else None,
+        )
+        if session.title == "新对话" and session.messages:
+            try:
+                session.title = await conversation.generate_title(
+                    actor,
+                    ProjectId(project_id),
+                    [(m.role, m.content) for m in session.messages],
+                )
+            except Exception:
+                pass
+        await sessions.save(session)
+        if generation is not None:
+            if result.cancelled:
+                await generation_coordinator.mark_cancelled(generation, result.content)
+            else:
+                await generation_coordinator.complete(generation, result.content)
         links = await orchestration.list_artifact_links(ProjectId(project_id), session.session_id)
-        return _session_response(session, links)
+        events = await orchestration.list_events(ProjectId(project_id), session.session_id, after=0)
+        return _session_response(session, links, events, None)
 
     @router.post("/sessions/{session_id}/model-events", include_in_schema=False)
     async def append_model_delta(
@@ -293,6 +334,7 @@ def create_test_agent_router(
         session_id: UUID,
         body: ModelDeltaCallback,
         x_internal_token: str | None = Header(default=None),
+        generation_id: UUID | None = None,
     ):
         if x_internal_token != settings.internal_api_token:
             return JSONResponse(status_code=401, content={"detail": "Invalid internal token"})
@@ -305,6 +347,7 @@ def create_test_agent_router(
             session.session_id,
             event_type,
             {"content": body.content},
+            generation_id=generation_id,
         )
         return {"sequence": event.sequence}
 
@@ -314,6 +357,7 @@ def create_test_agent_router(
         session_id: UUID,
         body: ModelDeltaCallback,
         x_internal_token: str | None = Header(default=None),
+        generation_id: UUID | None = None,
     ):
         if x_internal_token != settings.internal_api_token:
             return JSONResponse(status_code=401, content={"detail": "Invalid internal token"})
@@ -325,6 +369,7 @@ def create_test_agent_router(
             session.session_id,
             "agent.reasoning_delta",
             {"content": body.content},
+            generation_id=generation_id,
         )
         return {"sequence": event.sequence}
 
@@ -342,7 +387,7 @@ def create_test_agent_router(
         session = await sessions.get(ProjectId(project_id), ChatSessionId(session_id))
         if session is None:
             return JSONResponse(status_code=404, content={"detail": "会话不存在"})
-        return await send_message(actor, project_id, session, body.message)
+        return await send_message(actor, project_id, session, body.message, body.generation_id)
 
     @router.post("/sessions/{session_id}/messages/regenerate")
     async def regenerate_message(
@@ -387,7 +432,14 @@ def create_test_agent_router(
             session.add_user_message(message)
             await sessions.save(session)
 
-        return await send_message(actor, project_id, session, message, add_user_message=False)
+        return await send_message(
+            actor,
+            project_id,
+            session,
+            message,
+            uuid4(),
+            add_user_message=False,
+        )
 
     @router.get("/sessions/{session_id}/events")
     async def stream_events(
@@ -395,6 +447,7 @@ def create_test_agent_router(
         project_id: UUID,
         session_id: UUID,
         last_event_id: str | None = Header(default=None, alias="Last-Event-ID"),
+        after: int | None = None,
     ):
         actor = await authorize(request, project_id)
         if isinstance(actor, JSONResponse):
@@ -402,18 +455,18 @@ def create_test_agent_router(
         session = await sessions.get(ProjectId(project_id), ChatSessionId(session_id))
         if session is None:
             return JSONResponse(status_code=404, content={"detail": "会话不存在"})
-        if last_event_id and last_event_id.isdigit():
-            after = int(last_event_id)
+        if after is not None:
+            cursor = max(0, after)
+        elif last_event_id and last_event_id.isdigit():
+            cursor = int(last_event_id)
         else:
-            # Initial connect: start from the latest event to avoid replaying history
-            latest = await orchestration.latest_sequence(
-                ProjectId(project_id), session.session_id
-            )
-            after = latest
+            cursor = 0
 
         async def generate():
-            last_seq = after
+            last_seq = cursor
             idle_ticks = 0
+            ready_payload = json.dumps({"cursor": cursor}, separators=(",", ":"))
+            yield f"event: stream.ready\ndata: {ready_payload}\n\n"
             while idle_ticks < 40:
                 events = await orchestration.list_events(
                     ProjectId(project_id), session.session_id, after=last_seq
@@ -426,9 +479,7 @@ def create_test_agent_router(
                             event.payload, ensure_ascii=False, separators=(",", ":")
                         )
                         yield (
-                            f"id: {event.sequence}\n"
-                            f"event: {event.event_type}\n"
-                            f"data: {payload}\n\n"
+                            f"id: {event.sequence}\nevent: {event.event_type}\ndata: {payload}\n\n"
                         )
                 else:
                     idle_ticks += 1
@@ -441,6 +492,27 @@ def create_test_agent_router(
             media_type="text/event-stream",
             headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
         )
+
+    @router.post("/sessions/{session_id}/generations/{generation_id}/cancel")
+    async def cancel_generation(
+        request: Request,
+        project_id: UUID,
+        session_id: UUID,
+        generation_id: UUID,
+        x_csrf_token: str | None = Header(default=None),
+    ):
+        actor = await authorize_write(request, project_id, x_csrf_token)
+        if isinstance(actor, JSONResponse):
+            return actor
+        if generation_coordinator is None:
+            return JSONResponse(status_code=503, content={"detail": "生成协调器未配置"})
+        try:
+            generation = await generation_coordinator.cancel(
+                ProjectId(project_id), ChatSessionId(session_id), generation_id
+            )
+        except ValueError as error:
+            return JSONResponse(status_code=404, content={"detail": str(error)})
+        return _generation_response(generation)
 
     @router.post("/confirmations/{confirmation_id}")
     async def decide_confirmation(
@@ -490,9 +562,7 @@ def create_test_agent_router(
             )
         session_id = request.query_params.get("session_id")
         if not session_id:
-            return JSONResponse(
-                status_code=422, content={"detail": "session_id is required"}
-            )
+            return JSONResponse(status_code=422, content={"detail": "session_id is required"})
         try:
             tasks = await agent_orchestrator.decide_confirmations_batch(
                 OrchestrationContext(actor, ProjectId(project_id), UUID(session_id)),
@@ -500,9 +570,7 @@ def create_test_agent_router(
                 approved=body.approved,
             )
         except ValueError as exc:
-            return JSONResponse(
-                status_code=422, content={"detail": str(exc)}
-            )
+            return JSONResponse(status_code=422, content={"detail": str(exc)})
         return {
             "results": [
                 {
@@ -537,7 +605,12 @@ def _session_summary(session: ChatSession) -> dict[str, object]:
     }
 
 
-def _session_response(session: ChatSession, links) -> dict[str, object]:
+def _session_response(
+    session: ChatSession,
+    links,
+    events: list[AgentEvent],
+    active_generation: ChatGeneration | None,
+) -> dict[str, object]:
     return {
         **_session_summary(session),
         "messages": [
@@ -560,4 +633,47 @@ def _session_response(session: ChatSession, links) -> dict[str, object]:
         ],
         "plan_draft": session.plan_draft,
         "protocol_version": session.protocol_version,
+        "timeline": _timeline(session, events),
+        "event_cursor": max((event.sequence for event in events), default=0),
+        "active_generation": (
+            _generation_response(active_generation) if active_generation else None
+        ),
     }
+
+
+def _generation_response(generation: ChatGeneration) -> dict[str, object]:
+    return {
+        "generation_id": str(generation.generation_id),
+        "status": generation.status.value,
+        "partial_content": generation.partial_content,
+        "workflow_id": generation.workflow_id,
+    }
+
+
+def _timeline(session: ChatSession, events: list[AgentEvent]) -> list[dict[str, object]]:
+    raw_event_types = {"message.delta", "agent.reasoning_delta"}
+    items = [
+        {
+            "kind": "message",
+            "id": str(message.message_id),
+            "timestamp": message.timestamp.isoformat(),
+            "role": message.role,
+            "content": message.content,
+            "sequence": message.sequence,
+        }
+        for message in session.messages
+    ]
+    items.extend(
+        {
+            "kind": "event",
+            "id": str(event.event_id),
+            "timestamp": event.created_at.isoformat(),
+            "event_type": event.event_type,
+            "event_sequence": event.sequence,
+            "generation_id": str(event.generation_id) if event.generation_id else None,
+            "payload": event.payload,
+        }
+        for event in events
+        if event.event_type not in raw_event_types
+    )
+    return sorted(items, key=lambda item: (str(item["timestamp"]), str(item["id"])))

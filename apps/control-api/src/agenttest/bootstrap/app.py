@@ -1685,12 +1685,14 @@ def _register_test_agent_endpoints(
     from agenttest.modules.test_agent.api.router import create_test_agent_router
     from agenttest.modules.test_agent.api.target_chat import create_target_chat_router
     from agenttest.modules.test_agent.application.conversation import SuperAgentConversation
+    from agenttest.modules.test_agent.application.generations import GenerationCoordinator
     from agenttest.modules.test_agent.application.orchestrator import SuperAgentOrchestrator
     from agenttest.modules.test_agent.application.platform_catalog import (
         build_platform_registry,
     )
     from agenttest.modules.test_agent.application.target_chat import TargetChatService
     from agenttest.modules.test_agent.infrastructure.repositories import (
+        SqlAlchemyChatGenerationRepository,
         SqlAlchemyChatSessionRepository,
         SqlAlchemyOrchestrationRepository,
         SqlAlchemyTargetChatRepository,
@@ -1776,6 +1778,11 @@ def _register_test_agent_endpoints(
             platform_gateway=gateway,
         ),
         agent_orchestrator=SuperAgentOrchestrator(registry, orchestration),
+        generation_coordinator=GenerationCoordinator(
+            SqlAlchemyChatGenerationRepository(session_factory),
+            orchestration,
+            temporal_invoker,
+        ),
     )
     app.include_router(router, prefix="/api/v1")
     target_repository = SqlAlchemyTargetChatRepository(session_factory)
