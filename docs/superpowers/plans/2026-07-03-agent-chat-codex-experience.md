@@ -260,6 +260,8 @@ All methods append correlated semantic events and make terminal transitions idem
 
 Generate a safe action summary, delegate/execute or wait for confirmation, then produce the final user-facing response from tool results. Pass the stable `StreamContext` into every streamed model call. Never expose raw private reasoning.
 
+For write capabilities, keep the generation in `running` with a `waiting_confirmation` phase. Approval resumes the same `generation_id`, executes the capability, and generates the final answer once all tasks are terminal. Rejection emits a cancelled tool result and resumes final-answer generation with the rejection context; it must not leave the generation permanently active.
+
 - [ ] **Step 5: Run coordinator/conversation tests GREEN**
 
 Run: `uv run pytest apps/control-api/tests/unit/test_agent/test_generation_coordinator.py apps/control-api/tests/unit/test_agent/test_conversation.py apps/control-api/tests/unit/test_agent/test_orchestrator.py -q`
@@ -297,6 +299,13 @@ def test_cancel_is_idempotent(client):
     first = client.post(cancel_url, headers=csrf)
     second = client.post(cancel_url, headers=csrf)
     assert first.status_code == second.status_code == 200
+
+def test_approval_resumes_the_same_generation(client):
+    approved = client.post(confirmation_url, headers=csrf, json={"approved": True})
+    assert approved.json()["generation_id"] == generation_id
+    restored = client.get(session_url).json()
+    assert restored["active_generation"] is None
+    assert restored["timeline"][-1]["kind"] == "assistant_message"
 ```
 
 - [ ] **Step 2: Run and verify RED**
