@@ -490,10 +490,10 @@ def create_test_agent_router(
         session = await sessions.get(ProjectId(project_id), ChatSessionId(session_id))
         if session is None:
             return JSONResponse(status_code=404, content={"detail": "会话不存在"})
-        if after is not None:
-            cursor = max(0, after)
-        elif last_event_id and last_event_id.isdigit():
+        if last_event_id and last_event_id.isdigit():
             cursor = int(last_event_id)
+        elif after is not None:
+            cursor = max(0, after)
         else:
             cursor = 0
 

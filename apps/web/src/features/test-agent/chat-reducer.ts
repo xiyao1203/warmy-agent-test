@@ -110,7 +110,13 @@ export type ChatAction =
   | { type: "SET_SIDEBAR_WIDTH"; width: number }
   | { type: "SET_PINNED"; value: boolean }
   | { type: "SET_CONNECTION"; value: ChatState["connectionState"] }
-  | { type: "SET_ACTIVE_GENERATION"; value: ActiveGeneration | null };
+  | { type: "SET_ACTIVE_GENERATION"; value: ActiveGeneration | null }
+  | {
+      type: "COMMIT_STREAMING_MESSAGE";
+      eventId: number;
+      content: string;
+      timestamp: string;
+    };
 
 // ── Reducer ──────────────────────────────────────────────────────
 
@@ -352,6 +358,55 @@ export function chatReducer(state: ChatState, action: ChatAction): ChatState {
     case "SET_ACTIVE_GENERATION":
       return { ...state, activeGeneration: action.value };
 
+    case "COMMIT_STREAMING_MESSAGE": {
+      const id = `message-event-${action.eventId}`;
+      if (state.timeline.some((item) => item.id === id)) return state;
+      const content = action.content.trim();
+      if (!content) {
+        return {
+          ...state,
+          streamingContent: "",
+          reasoningStream: "",
+          streamingActive: false,
+        };
+      }
+      const lastMessage = state.messages[state.messages.length - 1];
+      if (
+        lastMessage?.role === "assistant" &&
+        lastMessage.content.trim() === content &&
+        state.streamingContent === ""
+      ) {
+        return {
+          ...state,
+          reasoningStream: "",
+          streamingActive: false,
+        };
+      }
+      const message: ChatMessage = {
+        role: "assistant",
+        content,
+        timestamp: action.timestamp,
+      };
+      return {
+        ...state,
+        messages: [...state.messages, message],
+        timeline: [
+          ...state.timeline,
+          {
+            kind: "message",
+            id,
+            timestamp: action.timestamp,
+            role: "assistant",
+            content,
+            sequence: state.messages.length + 1,
+          },
+        ],
+        streamingContent: "",
+        reasoningStream: "",
+        streamingActive: false,
+      };
+    }
+
     default:
       return state;
   }
@@ -426,6 +481,14 @@ export function useChatReducer() {
       ) {
         dispatch({ type: "CLEAR_REASONING" });
         dispatch({ type: "SET_STREAMING_ACTIVE", value: false });
+      }
+      if (event.type === "message.completed") {
+        dispatch({
+          type: "COMMIT_STREAMING_MESSAGE",
+          eventId: event.id,
+          content: String(event.payload.content ?? ""),
+          timestamp: new Date().toISOString(),
+        });
       }
       if (
         event.type === "generation.completed" ||

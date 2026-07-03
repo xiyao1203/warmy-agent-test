@@ -67,6 +67,10 @@ export function TestAgentChat({ projectId }: { projectId: string }) {
     eventCursorRef.current = state.eventCursor;
   }, [state.eventCursor]);
 
+  useEffect(() => {
+    streamingContentRef.current = state.streamingContent;
+  }, [state.streamingContent]);
+
   // ── Mount: load sessions ──
   useEffect(() => {
     let alive = true;

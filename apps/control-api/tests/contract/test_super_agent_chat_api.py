@@ -203,6 +203,30 @@ def test_event_stream_replays_after_last_event_id() -> None:
     assert "id: 1\n" not in stream.text
 
 
+def test_event_stream_prefers_browser_reconnect_cursor_over_initial_query() -> None:
+    client, project_id = build_client()
+    created = client.post(
+        f"/api/v1/projects/{project_id.value}/test-agent/sessions",
+        headers={"X-CSRF-Token": "csrf"},
+    )
+    session_id = created.json()["session_id"]
+    client.post(
+        f"/api/v1/projects/{project_id.value}/test-agent/sessions/{session_id}/messages",
+        headers={"X-CSRF-Token": "csrf"},
+        json={"message": "你好", "generation_id": str(uuid4())},
+    )
+
+    stream = client.get(
+        f"/api/v1/projects/{project_id.value}/test-agent/sessions/{session_id}/events",
+        params={"after": 1},
+        headers={"Last-Event-ID": "2"},
+    )
+
+    assert stream.status_code == 200
+    assert 'event: stream.ready\ndata: {"cursor":2}' in stream.text
+    assert "id: 2\n" not in stream.text
+
+
 def test_model_runner_callback_persists_each_real_delta_and_requires_token() -> None:
     client, project_id = build_client()
     created = client.post(

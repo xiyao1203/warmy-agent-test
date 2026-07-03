@@ -56,7 +56,14 @@ export function PlatformFrame({ children }: { children: ReactNode }) {
     [router],
   );
 
-  if (userQuery.isPending || projectsQuery.isPending) {
+  useEffect(() => {
+    if (userQuery.isError) {
+      const returnTo = encodeURIComponent(pathname);
+      router.replace(`/login?returnTo=${returnTo}`);
+    }
+  }, [pathname, router, userQuery.isError]);
+
+  if (userQuery.isPending || (userQuery.isSuccess && projectsQuery.isPending)) {
     return (
       <main className="grid min-h-screen place-items-center text-sm text-[var(--muted)]">
         正在加载工作台…
@@ -65,8 +72,6 @@ export function PlatformFrame({ children }: { children: ReactNode }) {
   }
 
   if (userQuery.isError) {
-    const returnTo = encodeURIComponent(pathname);
-    router.replace(`/login?returnTo=${returnTo}`);
     return null;
   }
 

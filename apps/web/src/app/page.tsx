@@ -2,6 +2,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 
 import { getCurrentUser } from "@/features/auth";
 
@@ -13,13 +14,12 @@ export default function HomePage() {
     retry: false,
   });
 
-  if (isSuccess) {
-    router.replace("/projects");
-    return null;
-  }
+  useEffect(() => {
+    if (isSuccess) router.replace("/projects");
+    if (isError) router.replace("/login");
+  }, [isError, isSuccess, router]);
 
-  if (isError) {
-    router.replace("/login");
+  if (isSuccess || isError) {
     return null;
   }
 

@@ -70,4 +70,52 @@ describe("chat reducer recovery", () => {
     expect(advanced.events).toHaveLength(2);
     expect(advanced.eventCursor).toBe(8);
   });
+
+  it("commits a streamed assistant response once when the request is aborted", () => {
+    const streaming = {
+      ...initialChatState(),
+      streamingContent: "已完成一半",
+      streamingActive: true,
+    };
+
+    const committed = chatReducer(streaming, {
+      type: "COMMIT_STREAMING_MESSAGE",
+      eventId: 9,
+      content: "已完成一半",
+      timestamp: "2026-07-03T00:00:01Z",
+    });
+    const duplicate = chatReducer(committed, {
+      type: "COMMIT_STREAMING_MESSAGE",
+      eventId: 9,
+      content: "已完成一半",
+      timestamp: "2026-07-03T00:00:01Z",
+    });
+
+    expect(committed.messages).toEqual([
+      expect.objectContaining({ role: "assistant", content: "已完成一半" }),
+    ]);
+    expect(committed.streamingContent).toBe("");
+    expect(committed.streamingActive).toBe(false);
+    expect(duplicate.messages).toHaveLength(1);
+  });
+
+  it("reconciles the server completion with an optimistic stopped response", () => {
+    const optimistic = chatReducer(initialChatState(), {
+      type: "APPEND_MESSAGE",
+      message: {
+        role: "assistant",
+        content: "已完成一半",
+        timestamp: "2026-07-03T00:00:00Z",
+      },
+    });
+
+    const reconciled = chatReducer(optimistic, {
+      type: "COMMIT_STREAMING_MESSAGE",
+      eventId: 10,
+      content: "已完成一半",
+      timestamp: "2026-07-03T00:00:01Z",
+    });
+
+    expect(reconciled.messages).toHaveLength(1);
+  });
 });
