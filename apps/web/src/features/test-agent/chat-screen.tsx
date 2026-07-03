@@ -754,7 +754,8 @@ export function TestAgentChat({ projectId }: { projectId: string }) {
                 <div className="relative rounded-[1.4rem] border border-[var(--hairline-strong)] bg-[var(--surface)] shadow-[0_8px_28px_rgba(0,0,0,0.06)] transition-[border-color,box-shadow] focus-within:border-[var(--primary)] focus-within:shadow-[0_10px_34px_rgba(0,0,0,0.1)]">
                   <textarea
                     aria-label="对话输入"
-                    className="block max-h-48 min-h-12 w-full resize-none bg-transparent px-4 py-3 pr-12 text-[0.9375rem] leading-6 text-[var(--ink)] placeholder:text-[var(--muted)] focus:outline-none focus-visible:shadow-none focus-visible:outline-none disabled:opacity-50"
+                    className="block max-h-48 min-h-12 w-full resize-none bg-transparent px-4 py-3 pr-12 text-[0.9375rem] leading-6 text-[var(--ink)] placeholder:text-[var(--muted)] focus:outline-none disabled:opacity-50"
+                    data-focus-owner="composer"
                     disabled={state.sending}
                     onChange={(e) => {
                       dispatch({ type: "SET_INPUT", value: e.target.value });
@@ -797,9 +798,8 @@ export function TestAgentChat({ projectId }: { projectId: string }) {
                     </button>
                   )}
                 </div>
-                <div className="mt-1.5 flex items-center justify-between px-1 text-[0.65rem] text-[var(--muted)]">
+                <div className="mt-1.5 px-1 text-[0.65rem] text-[var(--muted)]">
                   <span>Enter 发送 · Shift+Enter 换行</span>
-                  <span className="hidden sm:inline">请验证关键结果</span>
                 </div>
               </div>
             </div>

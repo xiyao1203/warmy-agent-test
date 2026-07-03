@@ -3,7 +3,7 @@ import { expect, test, vi } from "vitest";
 
 import { SessionList } from "../session-list";
 
-test("uses an inline confirmation row instead of covering adjacent sessions", () => {
+test("confirms deletion in a ChatGPT-style modal", () => {
   render(
     <SessionList
       activeId={null}
@@ -30,10 +30,12 @@ test("uses an inline confirmation row instead of covering adjacent sessions", ()
 
   fireEvent.click(screen.getByRole("button", { name: "删除 第一条会话" }));
 
-  const confirmation = screen.getByRole("group", {
-    name: "确认删除第一条会话",
-  });
-  expect(confirmation).toBeVisible();
-  expect(confirmation.className).not.toContain("absolute");
-  expect(screen.getByRole("button", { name: "第二条会话" })).toBeVisible();
+  expect(screen.getByRole("dialog")).toBeVisible();
+  expect(screen.getByRole("heading", { name: "删除对话？" })).toBeVisible();
+  expect(
+    screen.getByText("此操作将永久删除“第一条会话”，且无法撤销。"),
+  ).toBeVisible();
+  expect(
+    document.querySelector('[aria-label="第二条会话"]'),
+  ).toBeInTheDocument();
 });

@@ -99,6 +99,8 @@ class Invoker:
 
 
 class Conversation:
+    title_calls = 0
+
     async def respond(
         self,
         actor,
@@ -113,10 +115,15 @@ class Conversation:
         assert history[-1] == ("user", "你好")
         return ConversationResponse(content="你好，请告诉我要测试哪个 Agent。")
 
+    async def generate_title(self, actor, project_id, history):
+        type(self).title_calls += 1
+        return "模型标题"
+
 
 def build_client():
     from agenttest.modules.test_agent.api.router import create_test_agent_router
 
+    Conversation.title_calls = 0
     actor = User.create(
         user_id=UserId.new(),
         email=Email("chat@example.com"),
@@ -173,6 +180,8 @@ def test_real_conversation_is_persisted_and_restored_from_history() -> None:
     assert created.status_code == 201
     assert response.status_code == 200
     assert response.json()["messages"][-1]["content"] == "你好，请告诉我要测试哪个 Agent。"
+    assert response.json()["title"] == "你好"
+    assert Conversation.title_calls == 0
     assert restored.json()["messages"] == response.json()["messages"]
     assert restored.json()["event_cursor"] >= 1
     assert any(item["kind"] == "event" for item in restored.json()["timeline"])

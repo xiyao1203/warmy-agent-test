@@ -4,6 +4,12 @@ import { MessageSquarePlus, Search, Trash2, Loader2 } from "lucide-react";
 import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 
 import type { SessionSummary } from "./api";
@@ -25,6 +31,7 @@ export function SessionList({
 }) {
   const [search, setSearch] = useState("");
   const [confirming, setConfirming] = useState<string | null>(null);
+  const deleteTarget = items.find((item) => item.session_id === confirming);
 
   const filtered = search.trim()
     ? items.filter((item) =>
@@ -92,37 +99,6 @@ export function SessionList({
         ) : null}
         {filtered.map((item) => {
           const sessionStatus = statusForSession(item.session_id, item.status);
-          if (confirming === item.session_id) {
-            return (
-              <div
-                aria-label={`确认删除${item.title}`}
-                className="mb-1 flex min-h-12 items-center gap-1.5 rounded-lg border border-[var(--danger)]/20 bg-[var(--surface)] px-2.5"
-                key={item.session_id}
-                role="group"
-              >
-                <span className="min-w-0 flex-1 truncate text-xs text-[var(--ink)]">
-                  删除“{item.title}”？
-                </span>
-                <button
-                  className="min-h-8 rounded-lg px-2 text-xs font-medium text-[var(--danger)] hover:bg-[var(--danger-subtle)]"
-                  onClick={() => {
-                    onDelete(item.session_id);
-                    setConfirming(null);
-                  }}
-                  type="button"
-                >
-                  删除
-                </button>
-                <button
-                  className="min-h-8 rounded-lg px-2 text-xs text-[var(--muted)] hover:bg-[var(--canvas-soft)]"
-                  onClick={() => setConfirming(null)}
-                  type="button"
-                >
-                  取消
-                </button>
-              </div>
-            );
-          }
           return (
             <div className="group relative mb-1" key={item.session_id}>
               <button
@@ -163,6 +139,36 @@ export function SessionList({
           );
         })}
       </div>
+
+      <Dialog
+        onOpenChange={(open) => {
+          if (!open) setConfirming(null);
+        }}
+        open={Boolean(deleteTarget)}
+      >
+        <DialogContent className="max-w-md">
+          <DialogTitle>删除对话？</DialogTitle>
+          <DialogDescription>
+            此操作将永久删除“{deleteTarget?.title}”，且无法撤销。
+          </DialogDescription>
+          <div className="mt-6 flex justify-end gap-2">
+            <Button onClick={() => setConfirming(null)} variant="secondary">
+              取消
+            </Button>
+            <button
+              className="inline-flex h-9 items-center justify-center rounded-full bg-[var(--danger)] px-5 text-sm font-medium text-white hover:opacity-90"
+              onClick={() => {
+                if (!deleteTarget) return;
+                onDelete(deleteTarget.session_id);
+                setConfirming(null);
+              }}
+              type="button"
+            >
+              删除
+            </button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </aside>
   );
 }

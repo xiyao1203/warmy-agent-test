@@ -73,6 +73,11 @@ select:focus-visible {
   outline-offset: 1px;
 }
 
+textarea[data-focus-owner="composer"]:focus-visible {
+  box-shadow: none;
+  outline: none;
+}
+
 ::selection {
   background: var(--primary-subtle);
   color: var(--ink);

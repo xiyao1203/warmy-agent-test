@@ -345,14 +345,7 @@ def create_test_agent_router(
             generation_id=generation_id if generation is not None else None,
         )
         if session.title == "新对话" and session.messages:
-            try:
-                session.title = await conversation.generate_title(
-                    actor,
-                    ProjectId(project_id),
-                    [(m.role, m.content) for m in session.messages],
-                )
-            except Exception:
-                pass
+            session.title = _instant_conversation_title(message)
         await sessions.save(session)
         if generation is not None and coordinator is not None:
             if result.cancelled:
@@ -763,6 +756,14 @@ def _content_with_task_results(content: str, tasks: list[AgentTask]) -> str:
     if failed:
         lines.append("未完成：" + "、".join(task.capability for task in failed))
     return "\n\n".join(lines)
+
+
+def _instant_conversation_title(message: str) -> str:
+    """Generate a stable first-turn title without another model round trip."""
+    compact = " ".join(message.split())
+    if not compact:
+        return "新对话"
+    return compact[:20]
 
 
 async def _finish_confirmed_generation(

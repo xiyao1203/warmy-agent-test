@@ -131,6 +131,11 @@ test("renders the refined composer and panel controls", async () => {
     screen.getByPlaceholderText("向超级测试 Agent 描述目标…"),
   ).toBeVisible();
   expect(screen.getByText("Enter 发送 · Shift+Enter 换行")).toBeVisible();
+  expect(screen.queryByText("请验证关键结果")).not.toBeInTheDocument();
+  expect(screen.getByLabelText("对话输入")).toHaveAttribute(
+    "data-focus-owner",
+    "composer",
+  );
   expect(screen.getByRole("button", { name: "关闭会话历史" })).toBeVisible();
   expect(screen.getByRole("button", { name: "打开上下文" })).toBeVisible();
   expect(await screen.findByText("登录回归")).toBeVisible();
