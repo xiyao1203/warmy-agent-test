@@ -92,6 +92,37 @@ export function SessionList({
         ) : null}
         {filtered.map((item) => {
           const sessionStatus = statusForSession(item.session_id, item.status);
+          if (confirming === item.session_id) {
+            return (
+              <div
+                aria-label={`确认删除${item.title}`}
+                className="mb-1 flex min-h-12 items-center gap-1.5 rounded-lg border border-[var(--danger)]/20 bg-[var(--surface)] px-2.5"
+                key={item.session_id}
+                role="group"
+              >
+                <span className="min-w-0 flex-1 truncate text-xs text-[var(--ink)]">
+                  删除“{item.title}”？
+                </span>
+                <button
+                  className="min-h-8 rounded-lg px-2 text-xs font-medium text-[var(--danger)] hover:bg-[var(--danger-subtle)]"
+                  onClick={() => {
+                    onDelete(item.session_id);
+                    setConfirming(null);
+                  }}
+                  type="button"
+                >
+                  删除
+                </button>
+                <button
+                  className="min-h-8 rounded-lg px-2 text-xs text-[var(--muted)] hover:bg-[var(--canvas-soft)]"
+                  onClick={() => setConfirming(null)}
+                  type="button"
+                >
+                  取消
+                </button>
+              </div>
+            );
+          }
           return (
             <div className="group relative mb-1" key={item.session_id}>
               <button
@@ -116,47 +147,18 @@ export function SessionList({
               </button>
 
               {/* Delete button */}
-              {confirming === item.session_id ? (
-                <div className="absolute bottom-1.5 right-1.5 flex items-center gap-1 rounded border border-[var(--hairline)] bg-[var(--surface)] p-1">
-                  <span className="ml-1 text-[0.6rem] text-[var(--danger)]">
-                    确认删除？
-                  </span>
-                  <button
-                    className="rounded px-1.5 py-0.5 text-[0.6rem] font-medium text-[var(--danger)] hover:bg-[var(--danger-subtle)]"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onDelete(item.session_id);
-                      setConfirming(null);
-                    }}
-                    type="button"
-                  >
-                    删除
-                  </button>
-                  <button
-                    className="rounded px-1.5 py-0.5 text-[0.6rem] text-[var(--muted)] hover:bg-[var(--canvas-soft)]"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setConfirming(null);
-                    }}
-                    type="button"
-                  >
-                    取消
-                  </button>
-                </div>
-              ) : (
-                <button
-                  aria-label={`删除 ${item.title}`}
-                  className="absolute right-1 top-1/2 flex size-8 -translate-y-1/2 items-center justify-center rounded-lg text-[var(--muted)] opacity-0 transition-colors hover:bg-[var(--canvas-soft)] hover:text-[var(--danger)] focus:opacity-100 group-hover:opacity-100 max-[760px]:opacity-100"
-                  onClick={(event) => {
-                    event.stopPropagation();
-                    setConfirming(item.session_id);
-                  }}
-                  title="删除会话"
-                  type="button"
-                >
-                  <Trash2 aria-hidden="true" className="size-3.5" />
-                </button>
-              )}
+              <button
+                aria-label={`删除 ${item.title}`}
+                className="absolute right-1 top-1/2 flex size-8 -translate-y-1/2 items-center justify-center rounded-lg text-[var(--muted)] opacity-0 transition-colors hover:bg-[var(--canvas-soft)] hover:text-[var(--danger)] focus:opacity-100 group-hover:opacity-100 max-[760px]:opacity-100"
+                onClick={(event) => {
+                  event.stopPropagation();
+                  setConfirming(item.session_id);
+                }}
+                title="删除会话"
+                type="button"
+              >
+                <Trash2 aria-hidden="true" className="size-3.5" />
+              </button>
             </div>
           );
         })}

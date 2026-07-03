@@ -21,7 +21,6 @@ import {
 import { Button } from "@/components/ui/button";
 import {
   ChatEmptyState,
-  FollowUpChips,
   MessageBubble as UIMessageBubble,
   ReasoningBlock,
   ToolCallCard,
@@ -648,9 +647,6 @@ export function TestAgentChat({ projectId }: { projectId: string }) {
                   onEdit={(c) => void handleRegenerate(c)}
                   onRegenerate={() => void handleRegenerate()}
                   onSessionReload={(id) => void selectSession(id)}
-                  onSuggestionClick={(text) =>
-                    dispatch({ type: "SET_INPUT", value: text })
-                  }
                   pendingConfs={pendingConfs}
                   projectId={projectId}
                   reasoningByStep={reasoningByStep}
@@ -758,7 +754,7 @@ export function TestAgentChat({ projectId }: { projectId: string }) {
                 <div className="relative rounded-[1.4rem] border border-[var(--hairline-strong)] bg-[var(--surface)] shadow-[0_8px_28px_rgba(0,0,0,0.06)] transition-[border-color,box-shadow] focus-within:border-[var(--primary)] focus-within:shadow-[0_10px_34px_rgba(0,0,0,0.1)]">
                   <textarea
                     aria-label="对话输入"
-                    className="block max-h-48 min-h-12 w-full resize-none bg-transparent px-4 py-3 pr-12 text-[0.9375rem] leading-6 text-[var(--ink)] placeholder:text-[var(--muted)] focus:outline-none disabled:opacity-50"
+                    className="block max-h-48 min-h-12 w-full resize-none bg-transparent px-4 py-3 pr-12 text-[0.9375rem] leading-6 text-[var(--ink)] placeholder:text-[var(--muted)] focus:outline-none focus-visible:shadow-none focus-visible:outline-none disabled:opacity-50"
                     disabled={state.sending}
                     onChange={(e) => {
                       dispatch({ type: "SET_INPUT", value: e.target.value });
@@ -864,7 +860,6 @@ type TimelineProps = {
   onEdit: (newContent: string) => void;
   onRegenerate: () => void;
   onSessionReload: (sessionId: string) => void;
-  onSuggestionClick: (text: string) => void;
   pendingConfs: AgentEvent[];
   projectId: string;
   reasoningByStep: Map<number, AgentEvent>;
@@ -886,7 +881,6 @@ function MessageTimeline({
   onEdit,
   onRegenerate,
   onSessionReload,
-  onSuggestionClick,
   pendingConfs,
   projectId,
   reasoningByStep,
@@ -941,21 +935,6 @@ function MessageTimeline({
             );
           })
         : null}
-
-      {/* ── Follow-up chips ── */}
-      {messages.length > 0 &&
-      messages[messages.length - 1].role === "assistant" &&
-      !sending &&
-      !streamingContent ? (
-        <FollowUpChips
-          items={[
-            "能详细说明一下吗？",
-            "帮我生成测试用例",
-            "检查是否有安全风险",
-          ]}
-          onClick={onSuggestionClick}
-        />
-      ) : null}
 
       {/* ── Tool cards + reasoning ── */}
       {timeline.length === 0 &&

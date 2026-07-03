@@ -79,6 +79,7 @@ test("restores a persisted session from project history", async () => {
   fireEvent.click(screen.getByRole("button", { name: "登录回归" }));
 
   expect(await screen.findByText("请选择 Agent 版本")).toBeVisible();
+  expect(screen.queryByText("能详细说明一下吗？")).not.toBeInTheDocument();
   expect(getSession).toHaveBeenCalledWith("project-1", "session-1");
   expect(window.location.search).toBe("?session=session-1");
 });
