@@ -12,6 +12,8 @@ from fastapi.testclient import TestClient
 
 
 class Sessions:
+    operation_log: list[str] = []
+
     def __init__(self) -> None:
         self.items = {}
 
@@ -28,6 +30,7 @@ class Sessions:
         return item if item and item.project_id == project_id.value else None
 
     async def save(self, session):
+        type(self).operation_log.append(f"save:{len(session.messages)}")
         self.items[session.session_id.value] = session
 
 
@@ -36,6 +39,7 @@ class Events:
         self.items = []
 
     async def append_event(self, project_id, session_id, event_type, payload, generation_id=None):
+        Sessions.operation_log.append(f"event:{event_type}")
         event = AgentEvent(
             event_id=uuid4(),
             project_id=project_id.value,
@@ -124,6 +128,7 @@ def build_client():
     from agenttest.modules.test_agent.api.router import create_test_agent_router
 
     Conversation.title_calls = 0
+    Sessions.operation_log = []
     actor = User.create(
         user_id=UserId.new(),
         email=Email("chat@example.com"),
@@ -198,6 +203,9 @@ def test_real_conversation_is_persisted_and_restored_from_history() -> None:
     )
     assert timeline[reasoning_index]["payload"] == {"content": ""}
     assert reasoning_index < assistant_index
+    assert Sessions.operation_log.index("save:2") < Sessions.operation_log.index(
+        "event:message.completed"
+    )
     assert history.json()["items"][0]["session_id"] == session_id
 
 

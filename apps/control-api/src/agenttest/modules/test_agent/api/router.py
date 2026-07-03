@@ -340,6 +340,9 @@ def create_test_agent_router(
 
         final_content = _content_with_task_results(result.content, delegated_tasks)
         session.add_assistant_message(final_content)
+        if session.title == "新对话" and session.messages:
+            session.title = _instant_conversation_title(message)
+        await sessions.save(session)
         await orchestration.append_event(
             ProjectId(project_id),
             session.session_id,
@@ -352,9 +355,6 @@ def create_test_agent_router(
             },
             generation_id=generation_id if generation is not None else None,
         )
-        if session.title == "新对话" and session.messages:
-            session.title = _instant_conversation_title(message)
-        await sessions.save(session)
         if generation is not None and coordinator is not None:
             if result.cancelled:
                 await coordinator.mark_cancelled(generation, final_content)
