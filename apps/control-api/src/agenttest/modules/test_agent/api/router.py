@@ -34,9 +34,11 @@ from agenttest.modules.test_agent.application.ports import (
 )
 from agenttest.modules.test_agent.domain.entities import (
     AgentEvent,
+    AgentTask,
     ChatGeneration,
     ChatSession,
     ChatSessionId,
+    TaskStatus,
 )
 from agenttest.shared.api.auth_guard import require_actor, require_writer
 
@@ -80,6 +82,13 @@ class ConversationPort(Protocol):
         action_context: dict[str, object] | None = None,
         stream_context: StreamContext | None = None,
     ) -> ConversationResponse: ...
+
+    async def generate_title(
+        self,
+        actor: User,
+        project_id: ProjectId,
+        history: list[tuple[str, str]],
+    ) -> str: ...
 
 
 def create_test_agent_router(
@@ -182,14 +191,15 @@ def create_test_agent_router(
         generation_id: UUID,
         add_user_message: bool = True,
     ):
+        coordinator = generation_coordinator
         generation = None
         stream_context = None
-        if generation_coordinator is not None:
+        if coordinator is not None:
             try:
-                generation = await generation_coordinator.begin(
+                generation = await coordinator.begin(
                     ProjectId(project_id), session.session_id, generation_id
                 )
-                generation = await generation_coordinator.start(generation)
+                generation = await coordinator.start(generation)
                 stream_context = StreamContext(workflow_id=generation.workflow_id)
             except ValueError as error:
                 return JSONResponse(status_code=409, content={"detail": str(error)})
@@ -240,8 +250,8 @@ def create_test_agent_router(
                 stream_context=stream_context,
             )
         except ModelDefaultMissingError:
-            if generation is not None:
-                await generation_coordinator.fail(generation, "项目尚未配置测试 Agent 默认模型")
+            if generation is not None and coordinator is not None:
+                await coordinator.fail(generation, "项目尚未配置测试 Agent 默认模型")
             await orchestration.append_event(
                 ProjectId(project_id),
                 session.session_id,
@@ -253,22 +263,28 @@ def create_test_agent_router(
                 content={"detail": "项目尚未配置测试 Agent 默认模型"},
             )
         except ModelRuntimeUnavailableError as error:
-            if generation is not None:
-                await generation_coordinator.fail(generation, str(error))
+            if generation is not None and coordinator is not None:
+                await coordinator.fail(generation, str(error))
             await orchestration.append_event(
                 ProjectId(project_id), session.session_id, "error", {"detail": str(error)}
             )
             return JSONResponse(status_code=503, content={"detail": str(error)})
         except ValueError as error:
-            if generation is not None:
-                await generation_coordinator.fail(generation, str(error))
+            if generation is not None and coordinator is not None:
+                await coordinator.fail(generation, str(error))
             await orchestration.append_event(
                 ProjectId(project_id), session.session_id, "error", {"detail": str(error)}
             )
             return JSONResponse(status_code=422, content={"detail": str(error)})
 
+        delegated_tasks: list[AgentTask] = []
         if agent_orchestrator is not None:
-            context = OrchestrationContext(actor, ProjectId(project_id), session.session_id.value)
+            context = OrchestrationContext(
+                actor,
+                ProjectId(project_id),
+                session.session_id.value,
+                generation_id=generation_id if generation is not None else None,
+            )
             # Emit reasoning events before delegating actions (Codex-style
             # expandable thinking disclosure).
             for i, intent in enumerate(result.actions):
@@ -287,22 +303,41 @@ def create_test_agent_router(
                         generation_id=generation_id if generation is not None else None,
                     )
             for index, intent in enumerate(result.actions):
-                await agent_orchestrator.delegate(
-                    context,
-                    intent,
-                    child_agent=intent.child_agent,
-                    idempotency_key=(
-                        f"chat:{session.session_id.value}:"
-                        f"{session.messages[-1].sequence}:{index}:{intent.capability}"
-                    ),
+                delegated_tasks.append(
+                    await agent_orchestrator.delegate(
+                        context,
+                        intent,
+                        child_agent=intent.child_agent,
+                        idempotency_key=(
+                            f"chat:{session.session_id.value}:"
+                            f"{session.messages[-1].sequence}:{index}:{intent.capability}"
+                        ),
+                    )
                 )
-        session.add_assistant_message(result.content)
+        if any(task.status is TaskStatus.WAITING_CONFIRMATION for task in delegated_tasks):
+            await orchestration.append_event(
+                ProjectId(project_id),
+                session.session_id,
+                "generation.waiting_confirmation",
+                {"generation_id": str(generation_id)},
+                generation_id=generation_id if generation is not None else None,
+            )
+            links = await orchestration.list_artifact_links(
+                ProjectId(project_id), session.session_id
+            )
+            events = await orchestration.list_events(
+                ProjectId(project_id), session.session_id, after=0
+            )
+            return _session_response(session, links, events, generation)
+
+        final_content = _content_with_task_results(result.content, delegated_tasks)
+        session.add_assistant_message(final_content)
         await orchestration.append_event(
             ProjectId(project_id),
             session.session_id,
             "message.completed",
             {
-                "content": result.content,
+                "content": final_content,
                 "total_tokens": result.total_tokens,
                 "latency_ms": result.latency_ms,
                 "generation_id": str(generation_id),
@@ -319,11 +354,11 @@ def create_test_agent_router(
             except Exception:
                 pass
         await sessions.save(session)
-        if generation is not None:
+        if generation is not None and coordinator is not None:
             if result.cancelled:
-                await generation_coordinator.mark_cancelled(generation, result.content)
+                await coordinator.mark_cancelled(generation, final_content)
             else:
-                await generation_coordinator.complete(generation, result.content)
+                await coordinator.complete(generation, final_content)
         links = await orchestration.list_artifact_links(ProjectId(project_id), session.session_id)
         events = await orchestration.list_events(ProjectId(project_id), session.session_id, after=0)
         return _session_response(session, links, events, None)
@@ -534,16 +569,38 @@ def create_test_agent_router(
         if not session_id:
             return JSONResponse(status_code=422, content={"detail": "session_id is required"})
         task = await agent_orchestrator.decide_confirmation(
-            OrchestrationContext(actor, ProjectId(project_id), UUID(session_id)),
+            OrchestrationContext(
+                actor,
+                ProjectId(project_id),
+                UUID(session_id),
+                generation_id=(
+                    UUID(request.query_params["generation_id"])
+                    if request.query_params.get("generation_id")
+                    else None
+                ),
+            ),
             confirmation_id,
             approved=body.approved,
         )
-        return {
+        response = {
             "task_id": str(task.task_id),
             "status": task.status.value,
             "output": task.output,
             "error": task.error,
         }
+        generation_id = request.query_params.get("generation_id")
+        if generation_id and generation_coordinator is not None:
+            await _finish_confirmed_generation(
+                project_id=project_id,
+                session_id=UUID(session_id),
+                generation_id=UUID(generation_id),
+                task=task,
+                sessions=sessions,
+                orchestration=orchestration,
+                coordinator=generation_coordinator,
+            )
+            response["generation_id"] = generation_id
+        return response
 
     @router.post("/confirmations/batch")
     async def decide_confirmations_batch(
@@ -564,13 +621,29 @@ def create_test_agent_router(
         if not session_id:
             return JSONResponse(status_code=422, content={"detail": "session_id is required"})
         try:
+            generation_id = request.query_params.get("generation_id")
             tasks = await agent_orchestrator.decide_confirmations_batch(
-                OrchestrationContext(actor, ProjectId(project_id), UUID(session_id)),
+                OrchestrationContext(
+                    actor,
+                    ProjectId(project_id),
+                    UUID(session_id),
+                    generation_id=UUID(generation_id) if generation_id else None,
+                ),
                 body.confirmation_ids,
                 approved=body.approved,
             )
         except ValueError as exc:
             return JSONResponse(status_code=422, content={"detail": str(exc)})
+        if generation_id and generation_coordinator is not None and tasks:
+            await _finish_confirmed_generation(
+                project_id=project_id,
+                session_id=UUID(session_id),
+                generation_id=UUID(generation_id),
+                task=tasks[-1],
+                sessions=sessions,
+                orchestration=orchestration,
+                coordinator=generation_coordinator,
+            )
         return {
             "results": [
                 {
@@ -677,3 +750,48 @@ def _timeline(session: ChatSession, events: list[AgentEvent]) -> list[dict[str, 
         if event.event_type not in raw_event_types
     )
     return sorted(items, key=lambda item: (str(item["timestamp"]), str(item["id"])))
+
+
+def _content_with_task_results(content: str, tasks: list[AgentTask]) -> str:
+    if not tasks:
+        return content
+    completed = [task for task in tasks if task.status is TaskStatus.COMPLETED]
+    failed = [task for task in tasks if task.status is TaskStatus.FAILED]
+    lines = [content.strip()] if content.strip() else []
+    if completed:
+        lines.append("已完成：" + "、".join(task.capability for task in completed))
+    if failed:
+        lines.append("未完成：" + "、".join(task.capability for task in failed))
+    return "\n\n".join(lines)
+
+
+async def _finish_confirmed_generation(
+    *,
+    project_id: UUID,
+    session_id: UUID,
+    generation_id: UUID,
+    task: AgentTask,
+    sessions: ChatSessionRepository,
+    orchestration: OrchestrationRepository,
+    coordinator: GenerationCoordinator,
+) -> None:
+    generation = await coordinator.get(ProjectId(project_id), generation_id)
+    session = await sessions.get(ProjectId(project_id), ChatSessionId(session_id))
+    if generation is None or session is None or generation.completed_at is not None:
+        return
+    if task.status is TaskStatus.COMPLETED:
+        content = f"{task.capability} 已执行完成。"
+    elif task.status is TaskStatus.CANCELLED:
+        content = f"已取消 {task.capability}。"
+    else:
+        content = f"{task.capability} 执行失败。"
+    session.add_assistant_message(content)
+    await sessions.save(session)
+    await orchestration.append_event(
+        ProjectId(project_id),
+        session.session_id,
+        "message.completed",
+        {"content": content, "generation_id": str(generation_id)},
+        generation_id=generation_id,
+    )
+    await coordinator.complete(generation, content)

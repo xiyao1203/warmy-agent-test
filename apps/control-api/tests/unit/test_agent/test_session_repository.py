@@ -13,7 +13,11 @@ from agenttest.modules.projects.public import ProjectId
 from agenttest.modules.test_agent.domain.entities import ChatGeneration, ChatSession
 from agenttest.modules.test_agent.infrastructure.models import (
     TestAgentChatGenerationModel as ChatGenerationModel,
+)
+from agenttest.modules.test_agent.infrastructure.models import (
     TestAgentEventModel as ChatEventModel,
+)
+from agenttest.modules.test_agent.infrastructure.models import (
     TestAgentMessageModel as ChatMessageModel,
 )
 from agenttest.modules.test_agent.infrastructure.models import (

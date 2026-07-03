@@ -104,7 +104,7 @@ class TemporalModelInvoker:
         config: ModelConfiguration,
         messages: list[InvocationMessage],
         *,
-        callback: ModelStreamCallback,
+        callback: ModelStreamCallback | None = None,
         reasoning_callback: ModelStreamCallback | None = None,
         timeout_seconds: int = 60,
         max_tokens: int = 2048,

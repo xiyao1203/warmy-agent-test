@@ -231,6 +231,7 @@ export function decideConfirmation(
   sessionId: string,
   confirmationId: string,
   approved: boolean,
+  generationId?: string,
 ) {
   return request<{
     task_id: string;
@@ -238,7 +239,7 @@ export function decideConfirmation(
     output: Record<string, unknown> | null;
     error: Record<string, unknown> | null;
   }>(
-    `${base(projectId)}/confirmations/${confirmationId}?session_id=${sessionId}`,
+    `${base(projectId)}/confirmations/${confirmationId}?session_id=${sessionId}${generationId ? `&generation_id=${generationId}` : ""}`,
     {
       method: "POST",
       headers: {
@@ -255,6 +256,7 @@ export function decideConfirmationsBatch(
   sessionId: string,
   confirmationIds: string[],
   approved: boolean,
+  generationId?: string,
 ) {
   return request<{
     results: {
@@ -263,14 +265,17 @@ export function decideConfirmationsBatch(
       output: Record<string, unknown> | null;
       error: Record<string, unknown> | null;
     }[];
-  }>(`${base(projectId)}/confirmations/batch?session_id=${sessionId}`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      ...(csrfHeaders() as Record<string, string>),
+  }>(
+    `${base(projectId)}/confirmations/batch?session_id=${sessionId}${generationId ? `&generation_id=${generationId}` : ""}`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...(csrfHeaders() as Record<string, string>),
+      },
+      body: JSON.stringify({ confirmation_ids: confirmationIds, approved }),
     },
-    body: JSON.stringify({ confirmation_ids: confirmationIds, approved }),
-  });
+  );
 }
 
 export function subscribeToSession(

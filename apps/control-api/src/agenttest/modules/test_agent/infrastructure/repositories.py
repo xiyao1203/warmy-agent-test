@@ -239,7 +239,7 @@ class SqlAlchemyChatGenerationRepository:
 
     async def save(self, generation: ChatGeneration) -> None:
         async with transaction_scope(self._session_factory) as database:
-            result = await database.execute(
+            await database.execute(
                 update(TestAgentChatGenerationModel)
                 .where(
                     TestAgentChatGenerationModel.project_id == generation.project_id,
@@ -253,8 +253,6 @@ class SqlAlchemyChatGenerationRepository:
                     completed_at=generation.completed_at,
                 )
             )
-            if result.rowcount != 1:
-                raise ValueError("Generation does not exist in project")
 
 
 class SqlAlchemyOrchestrationRepository(OrchestrationRepository):

@@ -25,6 +25,7 @@ class OrchestrationContext:
     actor: User
     project_id: ProjectId
     session_id: UUID
+    generation_id: UUID | None = None
 
 
 class SuperAgentOrchestrator:
@@ -209,12 +210,26 @@ class SuperAgentOrchestrator:
         event_type: str,
         payload: dict[str, object],
     ) -> None:
-        await self._repository.append_event(
-            context.project_id,
-            ChatSessionId(context.session_id),
-            event_type,
-            payload,
+        event_payload = (
+            {"generation_id": str(context.generation_id), **payload}
+            if context.generation_id
+            else payload
         )
+        if context.generation_id:
+            await self._repository.append_event(
+                context.project_id,
+                ChatSessionId(context.session_id),
+                event_type,
+                event_payload,
+                generation_id=context.generation_id,
+            )
+        else:
+            await self._repository.append_event(
+                context.project_id,
+                ChatSessionId(context.session_id),
+                event_type,
+                event_payload,
+            )
 
 
 def _summarize_args(args: dict[str, object], max_len: int = 120) -> str:

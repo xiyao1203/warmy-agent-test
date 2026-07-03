@@ -67,6 +67,8 @@ def test_initial_migration_generates_expected_postgresql_schema() -> None:
         assert table_name in sql
     assert "invocation_config" in sql
     assert "ix_release_decisions_project_run" in sql
+    assert "test_agent_chat_generations" in sql
+    assert "fk_test_agent_events_project_generation" in sql
 
 
 def test_empty_sqlite_database_upgrades_to_head(tmp_path: Path) -> None:
@@ -75,7 +77,7 @@ def test_empty_sqlite_database_upgrades_to_head(tmp_path: Path) -> None:
 
     command.upgrade(config, "head")
 
-    assert run(current_sqlite_revision(database_url)) == "0013"
+    assert run(current_sqlite_revision(database_url)) == "0015"
 
 
 @pytest.mark.skipif(
@@ -87,11 +89,11 @@ def test_empty_database_upgrade_and_revision_cycle() -> None:
     config = alembic_config(database_url=database_url)
 
     command.upgrade(config, "head")
-    assert run(current_revision(database_url)) == "0013"
+    assert run(current_revision(database_url)) == "0015"
 
     command.downgrade(config, "base")
     command.upgrade(config, "head")
-    assert run(current_revision(database_url)) == "0013"
+    assert run(current_revision(database_url)) == "0015"
 
 
 async def current_revision(database_url: str) -> str:

@@ -500,6 +500,7 @@ export function TestAgentChat({ projectId }: { projectId: string }) {
         state.activeSession.session_id,
         ids,
         approved,
+        String(pendingConfs[0]?.payload.generation_id ?? "") || undefined,
       );
     } finally {
       void selectSession(state.activeSession.session_id);

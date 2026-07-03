@@ -25,7 +25,13 @@ export function ConfirmationCard({
   async function decide(approved: boolean) {
     setBusy(true);
     try {
-      await decideConfirmation(projectId, sessionId, confirmationId, approved);
+      await decideConfirmation(
+        projectId,
+        sessionId,
+        confirmationId,
+        approved,
+        String(event.payload.generation_id ?? "") || undefined,
+      );
       setDecided(true);
       onDecided();
     } finally {
@@ -36,9 +42,18 @@ export function ConfirmationCard({
   if (decided) return null;
 
   const riskLabels: Record<string, { label: string; color: string }> = {
-    HIGH_IMPACT: { label: "高风险", color: "text-[var(--danger)] bg-[var(--danger-subtle)]" },
-    DRAFT_WRITE: { label: "写入", color: "text-[var(--warning)] bg-[var(--warning-subtle)]" },
-    READ: { label: "只读", color: "text-[var(--info)] bg-[var(--info-subtle)]" },
+    HIGH_IMPACT: {
+      label: "高风险",
+      color: "text-[var(--danger)] bg-[var(--danger-subtle)]",
+    },
+    DRAFT_WRITE: {
+      label: "写入",
+      color: "text-[var(--warning)] bg-[var(--warning-subtle)]",
+    },
+    READ: {
+      label: "只读",
+      color: "text-[var(--info)] bg-[var(--info-subtle)]",
+    },
   };
   const risk = String(preview?.risk ?? "DRAFT_WRITE");
   const riskMeta = riskLabels[risk] ?? riskLabels.DRAFT_WRITE;
@@ -51,10 +66,16 @@ export function ConfirmationCard({
           <AlertTriangle className="size-3.5 text-[var(--warning)]" />
         </span>
         <div className="min-w-0 flex-1">
-          <p className="text-sm font-semibold text-[var(--ink)]">需要确认的平台操作</p>
-          <p className="text-xs text-[var(--muted)]">此操作将修改平台数据，请确认后执行</p>
+          <p className="text-sm font-semibold text-[var(--ink)]">
+            需要确认的平台操作
+          </p>
+          <p className="text-xs text-[var(--muted)]">
+            此操作将修改平台数据，请确认后执行
+          </p>
         </div>
-        <span className={`shrink-0 rounded-full px-2 py-0.5 text-[0.65rem] font-semibold ${riskMeta.color}`}>
+        <span
+          className={`shrink-0 rounded-full px-2 py-0.5 text-[0.65rem] font-semibold ${riskMeta.color}`}
+        >
           {riskMeta.label}
         </span>
       </div>

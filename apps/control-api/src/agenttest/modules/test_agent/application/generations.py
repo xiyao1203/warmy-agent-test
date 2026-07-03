@@ -54,6 +54,9 @@ class GenerationCoordinator:
     ) -> ChatGeneration | None:
         return await self._generations.get_active(project_id, session_id)
 
+    async def get(self, project_id: ProjectId, generation_id: UUID) -> ChatGeneration | None:
+        return await self._generations.get(project_id, generation_id)
+
     async def start(self, generation: ChatGeneration) -> ChatGeneration:
         if generation.status is GenerationStatus.PENDING:
             generation.start(f"test-agent-chat-{generation.generation_id}")

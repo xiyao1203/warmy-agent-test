@@ -129,7 +129,13 @@ export function chatReducer(state: ChatState, action: ChatAction): ChatState {
         streamingContent: "",
         reasoningStream: "",
         streamingActive: false,
-        events: [],
+        events: (s.timeline ?? [])
+          .filter((item) => item.kind === "event")
+          .map((item) => ({
+            id: item.event_sequence,
+            type: item.event_type,
+            payload: item.payload,
+          })),
         timeline:
           s.timeline ??
           s.messages.map((message, index) => ({

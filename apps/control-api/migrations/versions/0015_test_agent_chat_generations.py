@@ -41,30 +41,26 @@ def upgrade() -> None:
         "test_agent_chat_generations",
         ["project_id", "session_id", "status"],
     )
-    op.add_column("test_agent_events", sa.Column("generation_id", sa.Uuid(), nullable=True))
-    op.create_foreign_key(
-        "fk_test_agent_events_project_generation",
-        "test_agent_events",
-        "test_agent_chat_generations",
-        ["project_id", "generation_id"],
-        ["project_id", "id"],
-        ondelete="CASCADE",
-    )
-    op.create_index(
-        "ix_test_agent_events_generation",
-        "test_agent_events",
-        ["project_id", "generation_id", "sequence"],
-    )
+    with op.batch_alter_table("test_agent_events") as batch_op:
+        batch_op.add_column(sa.Column("generation_id", sa.Uuid(), nullable=True))
+        batch_op.create_foreign_key(
+            "fk_test_agent_events_project_generation",
+            "test_agent_chat_generations",
+            ["project_id", "generation_id"],
+            ["project_id", "id"],
+            ondelete="CASCADE",
+        )
+        batch_op.create_index(
+            "ix_test_agent_events_generation",
+            ["project_id", "generation_id", "sequence"],
+        )
 
 
 def downgrade() -> None:
-    op.drop_index("ix_test_agent_events_generation", table_name="test_agent_events")
-    op.drop_constraint(
-        "fk_test_agent_events_project_generation",
-        "test_agent_events",
-        type_="foreignkey",
-    )
-    op.drop_column("test_agent_events", "generation_id")
+    with op.batch_alter_table("test_agent_events") as batch_op:
+        batch_op.drop_index("ix_test_agent_events_generation")
+        batch_op.drop_constraint("fk_test_agent_events_project_generation", type_="foreignkey")
+        batch_op.drop_column("generation_id")
     op.drop_index(
         "ix_test_agent_generations_session_status",
         table_name="test_agent_chat_generations",

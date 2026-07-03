@@ -66,8 +66,8 @@ describe("chat reducer recovery", () => {
     });
     const advanced = chatReducer(unchanged, { type: "ADD_EVENT", event: next });
 
-    expect(unchanged.events).toHaveLength(0);
-    expect(advanced.events).toHaveLength(1);
+    expect(unchanged.events).toHaveLength(1);
+    expect(advanced.events).toHaveLength(2);
     expect(advanced.eventCursor).toBe(8);
   });
 });

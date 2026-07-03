@@ -37,8 +37,8 @@ class Repo:
     async def save_confirmation(self, value):
         self.confirmations[value.confirmation_id] = value
 
-    async def append_event(self, project_id, session_id, event_type, payload):
-        self.events.append((event_type, payload))
+    async def append_event(self, project_id, session_id, event_type, payload, generation_id=None):
+        self.events.append((event_type, payload, generation_id))
 
     async def add_artifact_link(self, link):
         self.links.append(link)
@@ -82,7 +82,8 @@ async def test_high_impact_action_waits_for_confirmation_then_creates_real_link(
         ]
     )
     orchestrator = SuperAgentOrchestrator(registry, repo)
-    context = OrchestrationContext(actor(), ProjectId.new(), uuid4())
+    generation_id = uuid4()
+    context = OrchestrationContext(actor(), ProjectId.new(), uuid4(), generation_id=generation_id)
 
     task = await orchestrator.delegate(
         context,
@@ -105,3 +106,5 @@ async def test_high_impact_action_waits_for_confirmation_then_creates_real_link(
         "asset.created",
         "agent.completed",
     ]
+    assert all(event[2] == generation_id for event in repo.events)
+    assert repo.events[1][1]["generation_id"] == str(generation_id)
