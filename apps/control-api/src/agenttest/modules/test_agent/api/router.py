@@ -278,6 +278,14 @@ def create_test_agent_router(
             return JSONResponse(status_code=422, content={"detail": str(error)})
 
         delegated_tasks: list[AgentTask] = []
+        if not result.actions:
+            await orchestration.append_event(
+                ProjectId(project_id),
+                session.session_id,
+                "agent.reasoning",
+                {"content": ""},
+                generation_id=generation_id if generation is not None else None,
+            )
         if agent_orchestrator is not None:
             context = OrchestrationContext(
                 actor,

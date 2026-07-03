@@ -376,7 +376,6 @@ export function chatReducer(state: ChatState, action: ChatAction): ChatState {
         return {
           ...state,
           streamingContent: "",
-          reasoningStream: "",
           streamingActive: false,
         };
       }
@@ -388,7 +387,6 @@ export function chatReducer(state: ChatState, action: ChatAction): ChatState {
       ) {
         return {
           ...state,
-          reasoningStream: "",
           streamingActive: false,
         };
       }
@@ -412,7 +410,6 @@ export function chatReducer(state: ChatState, action: ChatAction): ChatState {
           },
         ],
         streamingContent: "",
-        reasoningStream: "",
         streamingActive: false,
       };
     }
@@ -489,7 +486,6 @@ export function useChatReducer() {
         event.type === "agent.completed" ||
         event.type === "run.completed"
       ) {
-        dispatch({ type: "CLEAR_REASONING" });
         dispatch({ type: "SET_STREAMING_ACTIVE", value: false });
       }
       if (event.type === "message.completed") {

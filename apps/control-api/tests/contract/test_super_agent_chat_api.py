@@ -185,6 +185,19 @@ def test_real_conversation_is_persisted_and_restored_from_history() -> None:
     assert restored.json()["messages"] == response.json()["messages"]
     assert restored.json()["event_cursor"] >= 1
     assert any(item["kind"] == "event" for item in restored.json()["timeline"])
+    timeline = restored.json()["timeline"]
+    reasoning_index = next(
+        index
+        for index, item in enumerate(timeline)
+        if item["kind"] == "event" and item["event_type"] == "agent.reasoning"
+    )
+    assistant_index = next(
+        index
+        for index, item in enumerate(timeline)
+        if item["kind"] == "message" and item["role"] == "assistant"
+    )
+    assert timeline[reasoning_index]["payload"] == {"content": ""}
+    assert reasoning_index < assistant_index
     assert history.json()["items"][0]["session_id"] == session_id
 
 

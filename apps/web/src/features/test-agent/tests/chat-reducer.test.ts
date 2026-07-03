@@ -109,6 +109,26 @@ describe("chat reducer recovery", () => {
     expect(duplicate.messages).toHaveLength(1);
   });
 
+  it("keeps the completed reasoning summary until the next response starts", () => {
+    const streaming = {
+      ...initialChatState(),
+      reasoningStream: "正在理解请求",
+      streamingContent: "请补充测试目标",
+      streamingActive: true,
+    };
+
+    const committed = chatReducer(streaming, {
+      type: "COMMIT_STREAMING_MESSAGE",
+      eventId: 11,
+      content: "请补充测试目标",
+      timestamp: "2026-07-03T00:00:01Z",
+    });
+    expect(committed.reasoningStream).toBe("正在理解请求");
+    expect(
+      chatReducer(committed, { type: "CLEAR_STREAMING" }).reasoningStream,
+    ).toBe("");
+  });
+
   it("reconciles the server completion with an optimistic stopped response", () => {
     const optimistic = chatReducer(initialChatState(), {
       type: "APPEND_MESSAGE",
