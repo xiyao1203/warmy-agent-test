@@ -15,8 +15,16 @@ body {
   margin: 0;
   background: var(--canvas);
   color: var(--ink);
-  font-family: var(--font-sans, Inter, ui-sans-serif, system-ui, -apple-system,
-    BlinkMacSystemFont, "Segoe UI", sans-serif);
+  font-family: var(
+    --font-sans,
+    Inter,
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif
+  );
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -50,13 +58,16 @@ samp {
 
 button,
 a,
-input {
+input,
+textarea {
   outline: none;
 }
 
 button:focus-visible,
 a:focus-visible,
-input:focus-visible {
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
   box-shadow: 0 0 0 2px var(--focus-ring-subtle);
   outline: 1px solid var(--focus-ring);
   outline-offset: 1px;
@@ -65,15 +76,6 @@ input:focus-visible {
 ::selection {
   background: var(--primary-subtle);
   color: var(--ink);
-}
-
-/* ===== Smooth theme transition ===== */
-body,
-body * {
-  transition:
-    background-color 0.2s ease,
-    border-color 0.2s ease,
-    color 0.15s ease;
 }
 
 /* ===== Dark mode image/asset dimming ===== */
@@ -111,19 +113,12 @@ body * {
 }
 
 .animate-fadeIn {
-  animation: fadeIn 0.3s ease-out both;
+  animation: fadeIn 0.2s ease-out both;
 }
 
 .animate-slideIn {
-  animation: slideIn 0.25s ease-out both;
+  animation: slideIn 0.18s ease-out both;
 }
-
-/* Stagger animation delays for timeline items */
-.timeline-item:nth-child(1) { animation-delay: 0ms; }
-.timeline-item:nth-child(2) { animation-delay: 60ms; }
-.timeline-item:nth-child(3) { animation-delay: 120ms; }
-.timeline-item:nth-child(4) { animation-delay: 180ms; }
-.timeline-item:nth-child(5) { animation-delay: 240ms; }
 
 /* Smooth auto-scroll behavior */
 .chat-scroll {
@@ -137,5 +132,24 @@ body * {
   }
   100% {
     transform: translateX(400%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html:focus-within {
+    scroll-behavior: auto;
+  }
+
+  .animate-fadeIn,
+  .animate-slideIn,
+  .chat-scroll {
+    animation: none !important;
+    scroll-behavior: auto !important;
+  }
+
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
   }
 }

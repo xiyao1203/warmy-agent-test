@@ -18,7 +18,10 @@ export function MarkdownContent({
   isStreaming = false,
 }: MarkdownContentProps) {
   return (
-    <div className="prose prose-sm dark:prose-invert max-w-none [&_pre]:bg-[var(--canvas-soft)] [&_pre]:rounded-[var(--radius-md)] [&_pre]:p-3 [&_pre]:overflow-x-auto [&_code]:text-[0.85em] [&_code:not(pre_code)]:rounded [&_code:not(pre_code)]:bg-[var(--canvas-soft)] [&_code:not(pre_code)]:px-1 [&_code:not(pre_code)]:py-0.5 [&_p]:leading-relaxed [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_li]:my-0.5 [&_blockquote]:border-l-2 [&_blockquote]:border-[var(--primary)] [&_blockquote]:pl-3 [&_blockquote]:italic [&_blockquote]:text-[var(--muted)] [&_table]:w-full [&_table]:border-collapse [&_th]:border [&_th]:border-[var(--hairline)] [&_th]:px-3 [&_th]:py-1.5 [&_th]:text-left [&_td]:border [&_td]:border-[var(--hairline)] [&_td]:px-3 [&_td]:py-1.5 [&_a]:text-[var(--primary)] [&_a]:underline">
+    <div
+      className="prose prose-sm dark:prose-invert max-w-none overflow-hidden break-words [&_pre]:max-w-full [&_pre]:overflow-x-auto [&_pre]:rounded-[var(--radius-md)] [&_pre]:bg-[var(--canvas-soft)] [&_pre]:p-3 [&_code]:text-[0.85em] [&_code:not(pre_code)]:rounded [&_code:not(pre_code)]:bg-[var(--canvas-soft)] [&_code:not(pre_code)]:px-1 [&_code:not(pre_code)]:py-0.5 [&_p]:leading-7 [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_li]:my-0.5 [&_blockquote]:border-l-2 [&_blockquote]:border-[var(--primary)] [&_blockquote]:pl-3 [&_blockquote]:italic [&_blockquote]:text-[var(--muted)] [&_table]:block [&_table]:max-w-full [&_table]:overflow-x-auto [&_table]:border-collapse [&_th]:whitespace-nowrap [&_th]:border [&_th]:border-[var(--hairline)] [&_th]:px-3 [&_th]:py-1.5 [&_th]:text-left [&_td]:border [&_td]:border-[var(--hairline)] [&_td]:px-3 [&_td]:py-1.5 [&_a]:text-[var(--primary)] [&_a]:underline"
+      data-testid="markdown-content"
+    >
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
         rehypePlugins={[rehypeHighlight]}
@@ -29,7 +32,7 @@ export function MarkdownContent({
         {content}
       </ReactMarkdown>
       {isStreaming ? (
-        <span className="ml-0.5 inline-block h-[1.1em] w-1.5 animate-pulse rounded-sm bg-[var(--primary)] align-text-bottom" />
+        <span className="ml-0.5 inline-block h-[1.05em] w-0.5 animate-pulse rounded-full bg-[var(--ink)] align-text-bottom" />
       ) : null}
     </div>
   );
@@ -51,7 +54,11 @@ function CodeBlock({
     );
   }
 
-  return <CodeBlockWithCopy className={className} language={match[1]} {...props}>{children}</CodeBlockWithCopy>;
+  return (
+    <CodeBlockWithCopy className={className} language={match[1]} {...props}>
+      {children}
+    </CodeBlockWithCopy>
+  );
 }
 
 function CodeBlockWithCopy({
@@ -137,4 +144,3 @@ function CodeBlockWithCopy({
     </div>
   );
 }
-
