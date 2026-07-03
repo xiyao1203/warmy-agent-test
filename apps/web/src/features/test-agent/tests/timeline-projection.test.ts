@@ -49,9 +49,14 @@ describe("projectTimeline", () => {
   });
 
   it("preserves confirmation and cancellation positions", () => {
-    const confirmation = event("confirmation", 1, "tool.confirmation_required", {
-      confirmation_id: "confirmation-1",
-    });
+    const confirmation = event(
+      "confirmation",
+      1,
+      "tool.confirmation_required",
+      {
+        confirmation_id: "confirmation-1",
+      },
+    );
     const cancellation = event("cancelled", 2, "generation.cancelled", {
       content: "部分回答",
     });

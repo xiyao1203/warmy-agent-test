@@ -7,11 +7,10 @@ import {
   FileCode2,
   FlaskConical,
   Globe,
-  Image,
+  Image as ImageIcon,
   KeyRound,
   Loader2,
   MessageSquareText,
-  Monitor,
   PlayCircle,
   Scale,
   Shield,
@@ -294,7 +293,7 @@ function CodexResultCard({ result }: { result: CodexExploreResult }) {
 
       {screenshotCount > 0 ? (
         <div className="flex items-center gap-1.5 text-xs text-[var(--muted)]">
-          <Image className="size-3" />
+          <ImageIcon aria-hidden="true" className="size-3" />
           <span>{screenshotCount} 张截图</span>
         </div>
       ) : null}

@@ -1,11 +1,17 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
-import { AppShell } from "./app-shell";
+import { AppShell, initialSidebarCollapsed } from "./app-shell";
 
 const project = { archived: false, id: "project-1", name: "项目 A" };
 
 describe("AppShell", () => {
+  it("starts collapsed on narrow screens regardless of desktop preference", () => {
+    expect(initialSidebarCollapsed(390, "false")).toBe(true);
+    expect(initialSidebarCollapsed(1024, "false")).toBe(false);
+    expect(initialSidebarCollapsed(1024, "true")).toBe(true);
+  });
+
   it("hides system administration from ordinary users", () => {
     render(
       <AppShell

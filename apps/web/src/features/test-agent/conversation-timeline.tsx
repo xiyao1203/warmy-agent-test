@@ -15,10 +15,7 @@ import { useState } from "react";
 import { MarkdownContent, ReasoningBlock } from "@/components/uiverse";
 
 import type { TimelineItem } from "./api";
-import {
-  projectTimeline,
-  type ToolTimelineItem,
-} from "./timeline-projection";
+import { projectTimeline, type ToolTimelineItem } from "./timeline-projection";
 
 export function ConversationTimeline({ items }: { items: TimelineItem[] }) {
   return (
@@ -148,7 +145,10 @@ function ToolProcessRow({ item }: { item: ToolTimelineItem }) {
           {details.length > 0 ? (
             <dl className="mt-1.5 grid gap-1">
               {details.map(([key, value]) => (
-                <div className="grid grid-cols-[7rem_minmax(0,1fr)] gap-2" key={key}>
+                <div
+                  className="grid grid-cols-[7rem_minmax(0,1fr)] gap-2"
+                  key={key}
+                >
                   <dt className="font-mono text-[var(--body)]">{key}</dt>
                   <dd className="break-words">
                     {typeof value === "object"

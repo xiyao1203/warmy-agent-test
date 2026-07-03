@@ -15,7 +15,6 @@ export function SessionList({
   onCreate,
   onDelete,
   onSelect,
-  onToggleCollapse,
 }: {
   activeId: string | null;
   items: SessionSummary[];
@@ -23,7 +22,6 @@ export function SessionList({
   onCreate: () => void;
   onDelete: (id: string) => void;
   onSelect: (id: string) => void;
-  onToggleCollapse: () => void;
 }) {
   const [search, setSearch] = useState("");
   const [confirming, setConfirming] = useState<string | null>(null);
@@ -39,12 +37,6 @@ export function SessionList({
     archived: "bg-[var(--muted)]",
     processing: "bg-[var(--primary)] animate-pulse",
   };
-  const statusLabels: Record<string, string> = {
-    active: "进行中",
-    archived: "已归档",
-    processing: "处理中",
-  };
-
   /** Only show status dot + label for the currently active session. */
   function statusForSession(sessionId: string, status: string) {
     if (sessionId === activeId && status === "active") {

@@ -46,6 +46,13 @@ type AppShellProps = {
   workspaceMode?: "agent" | "management";
 };
 
+export function initialSidebarCollapsed(
+  viewportWidth: number,
+  storedPreference: string | null,
+) {
+  return viewportWidth < 760 || storedPreference === "true";
+}
+
 export function AppShell({
   children,
   currentProjectId,
@@ -63,7 +70,10 @@ export function AppShell({
 
   const [collapsed, setCollapsed] = useState(() => {
     if (typeof window === "undefined") return false;
-    return localStorage.getItem("sidebar-collapsed") === "true";
+    return initialSidebarCollapsed(
+      window.innerWidth,
+      localStorage.getItem("sidebar-collapsed"),
+    );
   });
 
   const toggleSidebar = useCallback(() => {
@@ -118,9 +128,7 @@ export function AppShell({
           />
         </div>
       </header>
-      <div
-        className="flex h-[calc(100vh-3.5rem)]"
-      >
+      <div className="flex h-[calc(100vh-3.5rem)]">
         <aside
           className="flex shrink-0 flex-col border-r border-[var(--hairline)] bg-[var(--surface)] p-2 transition-[width] duration-200"
           style={{ width: sidebarWidth }}
@@ -130,7 +138,10 @@ export function AppShell({
               项目导航
             </p>
           )}
-          <nav aria-label="项目导航" className="flex-1 space-y-1 overflow-y-auto min-h-0">
+          <nav
+            aria-label="项目导航"
+            className="flex-1 space-y-1 overflow-y-auto min-h-0"
+          >
             <OverviewNavLink collapsed={collapsed} href={projectHref} />
             {activeProjectId ? (
               <>
@@ -261,9 +272,7 @@ export function AppShell({
               )}
               <Link
                 className={`flex h-9 items-center gap-3 rounded-[var(--radius-sm)] text-sm text-[var(--muted)] transition-colors hover:bg-[var(--canvas-soft)] hover:text-[var(--ink)] ${
-                  collapsed
-                    ? "justify-center px-0"
-                    : "px-3"
+                  collapsed ? "justify-center px-0" : "px-3"
                 }`}
                 href="/system/users"
                 title="用户管理"
@@ -278,9 +287,7 @@ export function AppShell({
               aria-expanded={!collapsed}
               aria-label={collapsed ? "展开侧边栏" : "收起侧边栏"}
               className={`flex h-9 w-full items-center gap-3 rounded-[var(--radius-sm)] text-sm text-[var(--muted)] transition-colors hover:bg-[var(--canvas-soft)] hover:text-[var(--ink)] ${
-                collapsed
-                  ? "justify-center px-0"
-                  : "px-3"
+                collapsed ? "justify-center px-0" : "px-3"
               }`}
               onClick={toggleSidebar}
               title={collapsed ? "展开侧边栏" : "收起侧边栏"}
@@ -289,7 +296,10 @@ export function AppShell({
               {collapsed ? (
                 <PanelLeftOpen aria-hidden="true" className="size-4 shrink-0" />
               ) : (
-                <PanelLeftClose aria-hidden="true" className="size-4 shrink-0" />
+                <PanelLeftClose
+                  aria-hidden="true"
+                  className="size-4 shrink-0"
+                />
               )}
               {!collapsed && <span>收起菜单</span>}
             </button>

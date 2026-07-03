@@ -1,7 +1,11 @@
 import { describe, expect, it } from "vitest";
 
 import type { AgentEvent, ChatResponse } from "../api";
-import { chatReducer, initialChatState } from "../chat-reducer";
+import {
+  chatReducer,
+  initialChatState,
+  initialHistoryOpen,
+} from "../chat-reducer";
 
 const snapshot: ChatResponse = {
   session_id: "session-1",
@@ -33,6 +37,12 @@ const snapshot: ChatResponse = {
 };
 
 describe("chat reducer recovery", () => {
+  it("starts with history closed on narrow screens", () => {
+    expect(initialHistoryOpen(390, null)).toBe(false);
+    expect(initialHistoryOpen(1024, null)).toBe(true);
+    expect(initialHistoryOpen(1024, "false")).toBe(false);
+  });
+
   it("loads the server timeline, cursor and active generation", () => {
     const state = chatReducer(initialChatState(), {
       type: "APPLY_SESSION",

@@ -122,6 +122,10 @@ test("creates a durable session before the first message", async () => {
 test("renders the refined composer and panel controls", async () => {
   render(<TestAgentChat projectId="project-1" />);
 
+  expect(screen.getByRole("tab", { name: "超级 Agent" })).toHaveAttribute(
+    "aria-selected",
+    "true",
+  );
   expect(
     screen.getByPlaceholderText("向超级测试 Agent 描述目标…"),
   ).toBeVisible();

@@ -39,6 +39,13 @@ export type ChatState = {
   connectionState: "connecting" | "ready" | "reconnecting" | "offline";
 };
 
+export function initialHistoryOpen(
+  viewportWidth: number,
+  storedPreference: string | null,
+) {
+  return viewportWidth >= 760 && storedPreference !== "false";
+}
+
 export function initialChatState(): ChatState {
   return {
     workspace: "super",
@@ -58,7 +65,10 @@ export function initialChatState(): ChatState {
     lastFailedInput: null,
     sidebarOpen:
       typeof window !== "undefined"
-        ? localStorage.getItem("chat-sidebar-open") !== "false"
+        ? initialHistoryOpen(
+            window.innerWidth,
+            localStorage.getItem("chat-sidebar-open"),
+          )
         : true,
     sidebarWidth:
       typeof window !== "undefined"

@@ -545,7 +545,6 @@ export function TestAgentChat({ projectId }: { projectId: string }) {
             onCreate={() => void newSession()}
             onDelete={(id) => void handleDelete(id)}
             onSelect={(id) => void selectSession(id)}
-            onToggleCollapse={handleToggleSidebar}
           />
           {state.sidebarOpen ? (
             <div
@@ -1106,19 +1105,37 @@ function WorkspaceTabs({
   onChange: (value: "super" | "target") => void;
 }) {
   return (
-    <div className="flex h-12 items-end gap-1 border-b border-[var(--hairline)] px-4">
-      <Button
+    <div
+      aria-label="对话模式"
+      className="flex h-12 items-end gap-5 border-b border-[var(--hairline)] px-4"
+      role="tablist"
+    >
+      <button
+        aria-selected={value === "super"}
+        className={`h-12 border-b-2 px-1 text-sm transition-colors ${
+          value === "super"
+            ? "border-[var(--ink)] font-medium text-[var(--ink)]"
+            : "border-transparent text-[var(--muted)] hover:text-[var(--ink)]"
+        }`}
         onClick={() => onChange("super")}
-        variant={value === "super" ? "primary" : "ghost"}
+        role="tab"
+        type="button"
       >
         超级 Agent
-      </Button>
-      <Button
+      </button>
+      <button
+        aria-selected={value === "target"}
+        className={`h-12 border-b-2 px-1 text-sm transition-colors ${
+          value === "target"
+            ? "border-[var(--ink)] font-medium text-[var(--ink)]"
+            : "border-transparent text-[var(--muted)] hover:text-[var(--ink)]"
+        }`}
         onClick={() => onChange("target")}
-        variant={value === "target" ? "primary" : "ghost"}
+        role="tab"
+        type="button"
       >
         被测 Agent 对话
-      </Button>
+      </button>
     </div>
   );
 }
