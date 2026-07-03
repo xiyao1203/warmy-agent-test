@@ -28,7 +28,44 @@ export type ChatResponse = SessionSummary & {
   artifacts: ArtifactLink[];
   protocol_version: number;
   plan_draft: Record<string, unknown>;
+  timeline?: TimelineItem[];
+  event_cursor?: number;
+  active_generation?: ActiveGeneration | null;
 };
+
+export type GenerationStatus =
+  | "pending"
+  | "running"
+  | "cancelling"
+  | "completed"
+  | "cancelled"
+  | "failed";
+
+export type ActiveGeneration = {
+  generation_id: string;
+  status: GenerationStatus;
+  partial_content: string;
+  workflow_id: string | null;
+};
+
+export type TimelineItem =
+  | {
+      kind: "message";
+      id: string;
+      timestamp: string;
+      role: "user" | "assistant";
+      content: string;
+      sequence: number;
+    }
+  | {
+      kind: "event";
+      id: string;
+      timestamp: string;
+      event_type: string;
+      event_sequence: number;
+      generation_id: string | null;
+      payload: Record<string, unknown>;
+    };
 
 export type AgentEvent = {
   id: number;
@@ -86,9 +123,16 @@ async function request<T>(url: string, init?: RequestInit): Promise<T> {
   return response.json() as Promise<T>;
 }
 
-async function requestWithAbort<T>(url: string, init?: RequestInit & { signal?: AbortSignal }): Promise<T> {
+async function requestWithAbort<T>(
+  url: string,
+  init?: RequestInit & { signal?: AbortSignal },
+): Promise<T> {
   const { signal, ...rest } = init ?? {};
-  const response = await fetch(url, { credentials: "include", ...rest, signal });
+  const response = await fetch(url, {
+    credentials: "include",
+    ...rest,
+    signal,
+  });
   if (!response.ok) {
     const problem = await responseProblem(response, "测试 Agent 调用失败");
     throw new TestAgentApiError(problem.status, problem.message);
@@ -126,6 +170,7 @@ export function sendChatMessage(
   projectId: string,
   sessionId: string,
   message: string,
+  generationId: string,
   signal?: AbortSignal,
 ) {
   return requestWithAbort<ChatResponse>(
@@ -136,7 +181,7 @@ export function sendChatMessage(
         "Content-Type": "application/json",
         ...(csrfHeaders() as Record<string, string>),
       },
-      body: JSON.stringify({ message }),
+      body: JSON.stringify({ message, generation_id: generationId }),
       signal,
     },
   );
@@ -156,9 +201,7 @@ export function regenerateMessage(
         "Content-Type": "application/json",
         ...(csrfHeaders() as Record<string, string>),
       },
-      body: JSON.stringify(
-        editedMessage ? { message: editedMessage } : {},
-      ),
+      body: JSON.stringify(editedMessage ? { message: editedMessage } : {}),
       signal,
     },
   );
@@ -220,17 +263,14 @@ export function decideConfirmationsBatch(
       output: Record<string, unknown> | null;
       error: Record<string, unknown> | null;
     }[];
-  }>(
-    `${base(projectId)}/confirmations/batch?session_id=${sessionId}`,
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        ...(csrfHeaders() as Record<string, string>),
-      },
-      body: JSON.stringify({ confirmation_ids: confirmationIds, approved }),
+  }>(`${base(projectId)}/confirmations/batch?session_id=${sessionId}`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      ...(csrfHeaders() as Record<string, string>),
     },
-  );
+    body: JSON.stringify({ confirmation_ids: confirmationIds, approved }),
+  });
 }
 
 export function subscribeToSession(
@@ -238,9 +278,10 @@ export function subscribeToSession(
   sessionId: string,
   onEvent: (event: AgentEvent) => void,
   onError?: () => void,
+  after = 0,
 ) {
   const source = new EventSource(
-    `${base(projectId)}/sessions/${sessionId}/events`,
+    `${base(projectId)}/sessions/${sessionId}/events?after=${after}`,
     { withCredentials: true },
   );
   const eventTypes = [
@@ -259,21 +300,40 @@ export function subscribeToSession(
     "run.progress",
     "run.completed",
     "error",
+    "stream.ready",
   ];
   for (const type of eventTypes) {
     source.addEventListener(type, (raw) => {
       const message = raw as MessageEvent<string>;
       const data = message.data?.trim();
       if (!data || data === "undefined") return;
-      onEvent({
-        id: Number(message.lastEventId || 0),
-        type,
-        payload: JSON.parse(data) as Record<string, unknown>,
-      });
+      try {
+        onEvent({
+          id: Number(message.lastEventId || 0),
+          type,
+          payload: JSON.parse(data) as Record<string, unknown>,
+        });
+      } catch {
+        onError?.();
+      }
     });
   }
   source.onerror = () => onError?.();
   return () => source.close();
+}
+
+export function cancelGeneration(
+  projectId: string,
+  sessionId: string,
+  generationId: string,
+) {
+  return request<ActiveGeneration>(
+    `${base(projectId)}/sessions/${sessionId}/generations/${generationId}/cancel`,
+    {
+      method: "POST",
+      headers: csrfHeaders() as Record<string, string>,
+    },
+  );
 }
 
 export function listTargetChats(projectId: string) {

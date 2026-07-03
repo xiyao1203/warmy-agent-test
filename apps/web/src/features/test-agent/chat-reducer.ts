@@ -8,6 +8,8 @@ import type {
   ChatMessage,
   ChatResponse,
   SessionSummary,
+  TimelineItem,
+  ActiveGeneration,
 } from "./api";
 
 // ── State shape ───────────────────────────────────────────────────
@@ -31,6 +33,10 @@ export type ChatState = {
   sidebarOpen: boolean;
   sidebarWidth: number;
   isPinned: boolean;
+  timeline: TimelineItem[];
+  eventCursor: number;
+  activeGeneration: ActiveGeneration | null;
+  connectionState: "connecting" | "ready" | "reconnecting" | "offline";
 };
 
 export function initialChatState(): ChatState {
@@ -58,10 +64,17 @@ export function initialChatState(): ChatState {
       typeof window !== "undefined"
         ? Math.max(
             200,
-            Math.min(480, Number(localStorage.getItem("chat-sidebar-width")) || 272),
+            Math.min(
+              480,
+              Number(localStorage.getItem("chat-sidebar-width")) || 272,
+            ),
           )
         : 272,
     isPinned: true,
+    timeline: [],
+    eventCursor: 0,
+    activeGeneration: null,
+    connectionState: "connecting",
   };
 }
 
@@ -95,7 +108,9 @@ export type ChatAction =
   | { type: "SET_LOADING_SESSION"; value: boolean }
   | { type: "TOGGLE_SIDEBAR" }
   | { type: "SET_SIDEBAR_WIDTH"; width: number }
-  | { type: "SET_PINNED"; value: boolean };
+  | { type: "SET_PINNED"; value: boolean }
+  | { type: "SET_CONNECTION"; value: ChatState["connectionState"] }
+  | { type: "SET_ACTIVE_GENERATION"; value: ActiveGeneration | null };
 
 // ── Reducer ──────────────────────────────────────────────────────
 
@@ -115,7 +130,22 @@ export function chatReducer(state: ChatState, action: ChatAction): ChatState {
         reasoningStream: "",
         streamingActive: false,
         events: [],
-        sessions: [s, ...state.sessions.filter((i) => i.session_id !== s.session_id)],
+        timeline:
+          s.timeline ??
+          s.messages.map((message, index) => ({
+            kind: "message" as const,
+            id: message.message_id ?? `message-${index}-${message.timestamp}`,
+            timestamp: message.timestamp,
+            role: message.role,
+            content: message.content,
+            sequence: message.sequence ?? index + 1,
+          })),
+        eventCursor: s.event_cursor ?? 0,
+        activeGeneration: s.active_generation ?? null,
+        sessions: [
+          s,
+          ...state.sessions.filter((i) => i.session_id !== s.session_id),
+        ],
       };
     }
 
@@ -128,13 +158,32 @@ export function chatReducer(state: ChatState, action: ChatAction): ChatState {
         events: [],
         streamingContent: "",
         reasoningStream: "",
+        timeline: [],
+        eventCursor: 0,
+        activeGeneration: null,
       };
 
     case "SET_MESSAGES":
       return { ...state, messages: action.messages };
 
     case "APPEND_MESSAGE":
-      return { ...state, messages: [...state.messages, action.message] };
+      return {
+        ...state,
+        messages: [...state.messages, action.message],
+        timeline: [
+          ...state.timeline,
+          {
+            kind: "message",
+            id:
+              action.message.message_id ??
+              `message-${state.timeline.length}-${action.message.timestamp}`,
+            timestamp: action.message.timestamp,
+            role: action.message.role,
+            content: action.message.content,
+            sequence: action.message.sequence ?? state.messages.length + 1,
+          },
+        ],
+      };
 
     case "REMOVE_LAST_USER_MESSAGE": {
       const msgs = [...state.messages];
@@ -171,11 +220,37 @@ export function chatReducer(state: ChatState, action: ChatAction): ChatState {
     }
 
     case "ADD_EVENT": {
+      if (action.event.id > 0 && action.event.id <= state.eventCursor)
+        return state;
       const exists = state.events.some(
         (e) => e.id === action.event.id && e.type === action.event.type,
       );
       if (exists) return state;
-      return { ...state, events: [...state.events, action.event] };
+      const replayable = ![
+        "message.delta",
+        "agent.reasoning_delta",
+        "stream.ready",
+      ].includes(action.event.type);
+      return {
+        ...state,
+        events: [...state.events, action.event],
+        timeline: replayable
+          ? [
+              ...state.timeline,
+              {
+                kind: "event",
+                id: `event-${action.event.id}`,
+                timestamp: new Date().toISOString(),
+                event_type: action.event.type,
+                event_sequence: action.event.id,
+                generation_id:
+                  String(action.event.payload.generation_id ?? "") || null,
+                payload: action.event.payload,
+              },
+            ]
+          : state.timeline,
+        eventCursor: Math.max(state.eventCursor, action.event.id),
+      };
     }
 
     case "CLEAR_EVENTS":
@@ -191,7 +266,10 @@ export function chatReducer(state: ChatState, action: ChatAction): ChatState {
       return { ...state, streamingContent: action.content };
 
     case "APPEND_STREAMING":
-      return { ...state, streamingContent: state.streamingContent + action.content };
+      return {
+        ...state,
+        streamingContent: state.streamingContent + action.content,
+      };
 
     case "CLEAR_STREAMING":
       return { ...state, streamingContent: "", reasoningStream: "" };
@@ -200,7 +278,10 @@ export function chatReducer(state: ChatState, action: ChatAction): ChatState {
       return { ...state, reasoningStream: action.content };
 
     case "APPEND_REASONING":
-      return { ...state, reasoningStream: state.reasoningStream + action.content };
+      return {
+        ...state,
+        reasoningStream: state.reasoningStream + action.content,
+      };
 
     case "CLEAR_REASONING":
       return { ...state, reasoningStream: "" };
@@ -226,7 +307,10 @@ export function chatReducer(state: ChatState, action: ChatAction): ChatState {
       return {
         ...state,
         error: action.error,
-        lastFailedInput: action.lastInput !== undefined ? action.lastInput : state.lastFailedInput,
+        lastFailedInput:
+          action.lastInput !== undefined
+            ? action.lastInput
+            : state.lastFailedInput,
       };
 
     case "SET_WORKSPACE":
@@ -255,6 +339,12 @@ export function chatReducer(state: ChatState, action: ChatAction): ChatState {
 
     case "SET_PINNED":
       return { ...state, isPinned: action.value };
+
+    case "SET_CONNECTION":
+      return { ...state, connectionState: action.value };
+
+    case "SET_ACTIVE_GENERATION":
+      return { ...state, activeGeneration: action.value };
 
     default:
       return state;
@@ -296,14 +386,31 @@ export function useChatReducer() {
       if (event.type === "message.started") {
         dispatch({ type: "CLEAR_STREAMING" });
       }
+      if (event.type === "generation.started") {
+        dispatch({
+          type: "SET_ACTIVE_GENERATION",
+          value: {
+            generation_id: String(event.payload.generation_id ?? ""),
+            status: "running",
+            partial_content: "",
+            workflow_id: String(event.payload.workflow_id ?? "") || null,
+          },
+        });
+      }
       if (event.type === "agent.reasoning_delta") {
-        dispatch({ type: "APPEND_REASONING", content: String(event.payload.content ?? "") });
+        dispatch({
+          type: "APPEND_REASONING",
+          content: String(event.payload.content ?? ""),
+        });
       }
       if (event.type === "agent.reasoning") {
         dispatch({ type: "CLEAR_REASONING" });
       }
       if (event.type === "message.delta") {
-        dispatch({ type: "APPEND_STREAMING", content: String(event.payload.content ?? "") });
+        dispatch({
+          type: "APPEND_STREAMING",
+          content: String(event.payload.content ?? ""),
+        });
       }
       // 流式完成：不等 POST 返回，立即结束光标闪烁（保留已显示内容）
       if (
@@ -313,6 +420,13 @@ export function useChatReducer() {
       ) {
         dispatch({ type: "CLEAR_REASONING" });
         dispatch({ type: "SET_STREAMING_ACTIVE", value: false });
+      }
+      if (
+        event.type === "generation.completed" ||
+        event.type === "generation.cancelled" ||
+        event.type === "generation.failed"
+      ) {
+        dispatch({ type: "SET_ACTIVE_GENERATION", value: null });
       }
     },
     [dispatch],

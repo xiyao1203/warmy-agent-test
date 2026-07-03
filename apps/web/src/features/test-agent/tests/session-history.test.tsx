@@ -20,7 +20,12 @@ vi.mock("../api", async () => {
     createSession,
     getSession,
     sendChatMessage,
-    subscribeToSession: vi.fn(() => () => undefined),
+    subscribeToSession: vi.fn((_projectId, _sessionId, onEvent) => {
+      queueMicrotask(() =>
+        onEvent({ id: 0, type: "stream.ready", payload: { cursor: 0 } }),
+      );
+      return () => undefined;
+    }),
   };
 });
 
@@ -108,6 +113,7 @@ test("creates a durable session before the first message", async () => {
     "project-1",
     "session-2",
     "你好",
+    expect.any(String),
     expect.anything(),
   );
   expect(await screen.findByText("你想测试哪个 Agent？")).toBeVisible();

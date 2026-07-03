@@ -1,11 +1,15 @@
 "use client";
 
-import { ArrowDown, ChevronsRight, CornerDownLeft, StopCircle } from "lucide-react";
+import {
+  ArrowDown,
+  ChevronsRight,
+  CornerDownLeft,
+  StopCircle,
+} from "lucide-react";
 import {
   useCallback,
   useEffect,
   useRef,
-  useState,
   type KeyboardEvent,
   type MouseEvent,
 } from "react";
@@ -22,6 +26,7 @@ import {
 import type { TaskState } from "@/components/uiverse";
 
 import {
+  cancelGeneration,
   createSession,
   decideConfirmationsBatch,
   deleteSession,
@@ -35,6 +40,7 @@ import {
 import type { AgentEvent, ChatMessage, ChatResponse } from "./api";
 import { useChatReducer } from "./chat-reducer";
 import { ConfirmationCard } from "./confirmation-card";
+import { ConversationTimeline } from "./conversation-timeline";
 import { ContextPanel } from "./context-panel";
 import { SessionList } from "./session-list";
 import { TargetChatScreen } from "./target-chat-screen";
@@ -53,14 +59,20 @@ export function TestAgentChat({ projectId }: { projectId: string }) {
   const acceptDeltasRef = useRef(true);
   const streamingContentRef = useRef("");
   const resizingRef = useRef(false);
-  const streamDoneTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const eventCursorRef = useRef(0);
 
   const activeSessionId = state.activeSession?.session_id ?? null;
+
+  useEffect(() => {
+    eventCursorRef.current = state.eventCursor;
+  }, [state.eventCursor]);
 
   // ── Mount: load sessions ──
   useEffect(() => {
     let alive = true;
-    const requested = new URLSearchParams(window.location.search).get("session");
+    const requested = new URLSearchParams(window.location.search).get(
+      "session",
+    );
     listSessions(projectId)
       .then(async (response) => {
         if (!alive) return;
@@ -74,7 +86,8 @@ export function TestAgentChat({ projectId }: { projectId: string }) {
         if (alive) {
           dispatch({
             type: "SET_ERROR",
-            error: reason instanceof Error ? reason.message : "会话历史加载失败",
+            error:
+              reason instanceof Error ? reason.message : "会话历史加载失败",
           });
         }
       })
@@ -92,39 +105,30 @@ export function TestAgentChat({ projectId }: { projectId: string }) {
     if (!activeSessionId) return;
     sessionRef.current = activeSessionId;
     sseCloseRef.current?.();
-    sseCloseRef.current = subscribeToSession(projectId, activeSessionId, (event) => {
-      if (sessionRef.current !== activeSessionId) return;
-      // Honour acceptDeltas gate so stopGenerating can suppress streaming without closing SSE
-      if (
-        !acceptDeltasRef.current &&
-        (event.type === "message.delta" || event.type === "agent.reasoning_delta")
-      )
-        return;
+    sseCloseRef.current = subscribeToSession(
+      projectId,
+      activeSessionId,
+      (event) => {
+        if (sessionRef.current !== activeSessionId) return;
+        // Honour acceptDeltas gate so stopGenerating can suppress streaming without closing SSE
+        if (
+          !acceptDeltasRef.current &&
+          (event.type === "message.delta" ||
+            event.type === "agent.reasoning_delta")
+        )
+          return;
 
-      // 前端 delta 超时检测：收到 delta 时重置计时器，800ms 无新 delta 自动结束光标闪烁
-      if (event.type === "message.delta") {
-        if (streamDoneTimerRef.current) clearTimeout(streamDoneTimerRef.current);
-        streamDoneTimerRef.current = setTimeout(() => {
-          dispatch({ type: "SET_STREAMING_ACTIVE", value: false });
-          streamDoneTimerRef.current = null;
-        }, 800);
-      }
-      if (
-        event.type === "message.completed" ||
-        event.type === "agent.completed" ||
-        event.type === "run.completed"
-      ) {
-        if (streamDoneTimerRef.current) {
-          clearTimeout(streamDoneTimerRef.current);
-          streamDoneTimerRef.current = null;
+        if (event.type === "stream.ready") {
+          dispatch({ type: "SET_CONNECTION", value: "ready" });
+          return;
         }
-        dispatch({ type: "SET_STREAMING_ACTIVE", value: false });
-      }
-
-      addSseEvent(event);
-    });
+        addSseEvent(event);
+      },
+      () => dispatch({ type: "SET_CONNECTION", value: "reconnecting" }),
+      eventCursorRef.current,
+    );
     return () => sseCloseRef.current?.();
-  }, [activeSessionId, projectId, addSseEvent]);
+  }, [activeSessionId, projectId, addSseEvent, dispatch]);
 
   // ── Auto-focus ──
   useEffect(() => {
@@ -180,7 +184,9 @@ export function TestAgentChat({ projectId }: { projectId: string }) {
       try {
         const response = await deleteSession(projectId, sessionId);
         if (!response.ok) throw new Error("删除失败");
-        const remaining = state.sessions.filter((i) => i.session_id !== sessionId);
+        const remaining = state.sessions.filter(
+          (i) => i.session_id !== sessionId,
+        );
         dispatch({ type: "SET_SESSIONS", sessions: remaining });
         if (activeSessionId === sessionId) {
           if (remaining.length > 0) {
@@ -203,8 +209,28 @@ export function TestAgentChat({ projectId }: { projectId: string }) {
   );
 
   // ── Send / Regenerate ──
-  function stopGenerating() {
+  async function stopGenerating() {
+    const sessionId = sessionRef.current;
+    const generation = state.activeGeneration;
+    if (sessionId && generation && generation.status !== "pending") {
+      dispatch({
+        type: "SET_ACTIVE_GENERATION",
+        value: { ...generation, status: "cancelling" },
+      });
+      try {
+        await cancelGeneration(projectId, sessionId, generation.generation_id);
+      } catch (reason) {
+        dispatch({
+          type: "SET_ERROR",
+          error: reason instanceof Error ? reason.message : "取消生成失败",
+        });
+        return;
+      }
+    }
     abortRef.current?.abort();
+    if (generation?.status === "pending") {
+      dispatch({ type: "SET_ACTIVE_GENERATION", value: null });
+    }
     // Keep SSE alive – just gate deltas with acceptDeltasRef
     acceptDeltasRef.current = false;
     const partial = streamingContentRef.current.trim();
@@ -232,7 +258,10 @@ export function TestAgentChat({ projectId }: { projectId: string }) {
     acceptDeltasRef.current = true;
     abortRef.current = new AbortController();
 
-    dispatch({ type: "FILTER_EVENTS", keepTypes: ["message.started", "message.delta"] });
+    dispatch({
+      type: "FILTER_EVENTS",
+      keepTypes: ["message.started", "message.delta"],
+    });
     dispatch({ type: "REMOVE_LAST_ASSISTANT_MESSAGE" });
 
     if (editedMessage) {
@@ -249,7 +278,8 @@ export function TestAgentChat({ projectId }: { projectId: string }) {
       );
       applySession(response);
     } catch (reason) {
-      if (reason instanceof DOMException && reason.name === "AbortError") return;
+      if (reason instanceof DOMException && reason.name === "AbortError")
+        return;
       dispatch({
         type: "SET_ERROR",
         error:
@@ -275,22 +305,42 @@ export function TestAgentChat({ projectId }: { projectId: string }) {
     abortRef.current = new AbortController();
 
     // Ensure SSE is open before POST (may have been closed by stopGenerating or race)
-    const ensureSseOpen = (sid: string) => {
-      sessionRef.current = sid;
-      if (!sseCloseRef.current) {
-        sseCloseRef.current = subscribeToSession(projectId, sid, (event) => {
-          if (sessionRef.current !== sid) return;
-          if (
-            !acceptDeltasRef.current &&
-            (event.type === "message.delta" || event.type === "agent.reasoning_delta")
-          )
-            return;
-          addSseEvent(event);
-        });
-      }
-    };
+    const ensureSseOpen = (sid: string) =>
+      new Promise<void>((resolve, reject) => {
+        sessionRef.current = sid;
+        sseCloseRef.current?.();
+        const timeout = window.setTimeout(
+          () => reject(new Error("实时连接建立超时")),
+          5000,
+        );
+        sseCloseRef.current = subscribeToSession(
+          projectId,
+          sid,
+          (event) => {
+            if (sessionRef.current !== sid) return;
+            if (event.type === "stream.ready") {
+              window.clearTimeout(timeout);
+              dispatch({ type: "SET_CONNECTION", value: "ready" });
+              resolve();
+              return;
+            }
+            if (
+              !acceptDeltasRef.current &&
+              (event.type === "message.delta" ||
+                event.type === "agent.reasoning_delta")
+            )
+              return;
+            addSseEvent(event);
+          },
+          () => dispatch({ type: "SET_CONNECTION", value: "reconnecting" }),
+          state.eventCursor,
+        );
+      });
 
-    dispatch({ type: "FILTER_EVENTS", keepTypes: ["message.started", "message.delta"] });
+    dispatch({
+      type: "FILTER_EVENTS",
+      keepTypes: ["message.started", "message.delta"],
+    });
 
     const pendingUserMessage: ChatMessage = {
       role: "user",
@@ -300,8 +350,20 @@ export function TestAgentChat({ projectId }: { projectId: string }) {
     dispatch({ type: "APPEND_MESSAGE", message: pendingUserMessage });
 
     try {
-      const session: ChatResponse = state.activeSession ?? (await createSession(projectId));
-      ensureSseOpen(session.session_id);
+      const session: ChatResponse =
+        state.activeSession ?? (await createSession(projectId));
+      const generationId = crypto.randomUUID();
+      dispatch({
+        type: "SET_ACTIVE_GENERATION",
+        value: {
+          generation_id: generationId,
+          status: "pending",
+          partial_content: "",
+          workflow_id: null,
+        },
+      });
+      await ensureSseOpen(session.session_id);
+      if (abortRef.current.signal.aborted) return;
       if (!state.activeSession) {
         // Activate session metadata without wiping optimistic user message
         applySession(session);
@@ -312,13 +374,15 @@ export function TestAgentChat({ projectId }: { projectId: string }) {
         projectId,
         session.session_id,
         content,
+        generationId,
         abortRef.current.signal,
       );
       applySession(response);
       // Gate residual SSE deltas that arrive after session is fully loaded
       acceptDeltasRef.current = false;
     } catch (reason) {
-      if (reason instanceof DOMException && reason.name === "AbortError") return;
+      if (reason instanceof DOMException && reason.name === "AbortError")
+        return;
       dispatch({ type: "REMOVE_LAST_USER_MESSAGE" });
       dispatch({ type: "SET_INPUT", value: content });
       dispatch({
@@ -351,7 +415,10 @@ export function TestAgentChat({ projectId }: { projectId: string }) {
         if (!resizingRef.current) return;
         dispatch({
           type: "SET_SIDEBAR_WIDTH",
-          width: Math.max(200, Math.min(480, startWidth + (ev.clientX - startX))),
+          width: Math.max(
+            200,
+            Math.min(480, startWidth + (ev.clientX - startX)),
+          ),
         });
       };
       const onUp = () => {
@@ -409,20 +476,31 @@ export function TestAgentChat({ projectId }: { projectId: string }) {
 
   // ── Build task states from events ──
   const taskStates = buildTaskStates(state.events);
-  const reasoningEvents = state.events.filter((e) => e.type === "agent.reasoning");
+  const reasoningEvents = state.events.filter(
+    (e) => e.type === "agent.reasoning",
+  );
   const reasoningByStep = new Map<number, AgentEvent>();
   for (const evt of reasoningEvents) {
     const step = Number(evt.payload.step ?? 0);
     if (step > 0) reasoningByStep.set(step, evt);
   }
-  const errorEvents = state.events.filter((e) => e.type === "error" && !e.payload.task_id);
-  const pendingConfs = state.events.filter((e) => e.type === "tool.confirmation_required");
+  const errorEvents = state.events.filter(
+    (e) => e.type === "error" && !e.payload.task_id,
+  );
+  const pendingConfs = state.events.filter(
+    (e) => e.type === "tool.confirmation_required",
+  );
 
   const batchConfirm = async (approved: boolean) => {
     const ids = pendingConfs.map((e) => String(e.payload.confirmation_id));
     if (ids.length === 0 || !state.activeSession) return;
     try {
-      await decideConfirmationsBatch(projectId, state.activeSession.session_id, ids, approved);
+      await decideConfirmationsBatch(
+        projectId,
+        state.activeSession.session_id,
+        ids,
+        approved,
+      );
     } finally {
       void selectSession(state.activeSession.session_id);
     }
@@ -522,10 +600,14 @@ export function TestAgentChat({ projectId }: { projectId: string }) {
             >
               {state.loadingSession ? (
                 <LoadingBar />
-              ) : state.messages.length === 0 && !state.sending && !state.streamingContent ? (
+              ) : state.messages.length === 0 &&
+                !state.sending &&
+                !state.streamingContent ? (
                 <ChatEmptyState
                   description="告诉我你想测试什么，我会帮你编排完整的测试流程"
-                  onSuggestionClick={(text) => dispatch({ type: "SET_INPUT", value: text })}
+                  onSuggestionClick={(text) =>
+                    dispatch({ type: "SET_INPUT", value: text })
+                  }
                   suggestions={[
                     "为登录 API 生成回归测试用例并执行",
                     "对比 Agent v2.3 和 v2.2 的评分差异",
@@ -543,7 +625,9 @@ export function TestAgentChat({ projectId }: { projectId: string }) {
                   onEdit={(c) => void handleRegenerate(c)}
                   onRegenerate={() => void handleRegenerate()}
                   onSessionReload={(id) => void selectSession(id)}
-                  onSuggestionClick={(text) => dispatch({ type: "SET_INPUT", value: text })}
+                  onSuggestionClick={(text) =>
+                    dispatch({ type: "SET_INPUT", value: text })
+                  }
                   pendingConfs={pendingConfs}
                   projectId={projectId}
                   reasoningByStep={reasoningByStep}
@@ -553,13 +637,15 @@ export function TestAgentChat({ projectId }: { projectId: string }) {
                   streamingActive={state.streamingActive}
                   streamingContent={state.streamingContent}
                   taskStates={taskStates}
+                  timeline={state.timeline}
                   batchConfirm={batchConfirm}
                 />
               )}
             </div>
 
             {/* Scroll-to-bottom */}
-            {!state.isPinned && (state.messages.length > 0 || state.streamingContent) ? (
+            {!state.isPinned &&
+            (state.messages.length > 0 || state.streamingContent) ? (
               <div className="absolute bottom-20 left-1/2 z-10 -translate-x-1/2">
                 <button
                   aria-label="滚动到底部"
@@ -588,7 +674,9 @@ export function TestAgentChat({ projectId }: { projectId: string }) {
               >
                 <div className="mx-auto flex max-w-3xl items-center justify-between gap-3">
                   <div className="min-w-0 flex-1">
-                    <p className="text-xs text-[var(--danger)]">{state.error}</p>
+                    <p className="text-xs text-[var(--danger)]">
+                      {state.error}
+                    </p>
                     {state.lastFailedInput ? (
                       <p className="mt-0.5 truncate text-[0.65rem] text-[var(--muted)]">
                         消息: {state.lastFailedInput.slice(0, 60)}
@@ -615,7 +703,11 @@ export function TestAgentChat({ projectId }: { projectId: string }) {
                     <button
                       className="rounded px-2 py-0.5 text-xs text-[var(--muted)] transition-colors hover:text-[var(--ink)]"
                       onClick={() =>
-                        dispatch({ type: "SET_ERROR", error: null, lastInput: null })
+                        dispatch({
+                          type: "SET_ERROR",
+                          error: null,
+                          lastInput: null,
+                        })
                       }
                       type="button"
                     >
@@ -628,17 +720,17 @@ export function TestAgentChat({ projectId }: { projectId: string }) {
 
             {/* Composer (input bar) */}
             <div className="shrink-0 border-t border-[var(--hairline)] px-4 py-3">
-              <div className="mx-auto mb-2 flex max-w-3xl items-center gap-2">
-                <div className="h-1 flex-1 overflow-hidden rounded-full bg-[var(--canvas-soft)]">
-                  <div
-                    className="h-full rounded-full bg-[var(--primary)]/40 transition-all"
-                    style={{ width: `${Math.min(100, state.messages.length * 6)}%` }}
-                  />
-                </div>
-                <span className="shrink-0 text-[0.6rem] text-[var(--muted)]">
-                  {state.messages.length > 0 ? `${state.messages.length} 条消息` : "新对话"}
-                </span>
-              </div>
+              {state.connectionState === "reconnecting" ||
+              state.connectionState === "offline" ? (
+                <p
+                  className="mx-auto mb-2 max-w-3xl text-xs text-[var(--muted)]"
+                  role="status"
+                >
+                  {state.connectionState === "reconnecting"
+                    ? "正在恢复实时连接…"
+                    : "实时连接已断开"}
+                </p>
+              ) : null}
               <div className="mx-auto flex max-w-3xl gap-2">
                 <div className="relative flex-1">
                   <textarea
@@ -658,9 +750,14 @@ export function TestAgentChat({ projectId }: { projectId: string }) {
                   />
                   {state.sending ? (
                     <button
-                      aria-label="停止生成"
+                      aria-label={
+                        state.activeGeneration?.status === "cancelling"
+                          ? "取消中"
+                          : "停止生成"
+                      }
                       className="absolute bottom-2 right-2 rounded-lg p-1.5 text-[var(--muted)] transition-colors hover:bg-[var(--danger-subtle)] hover:text-[var(--danger)]"
-                      onClick={stopGenerating}
+                      onClick={() => void stopGenerating()}
+                      disabled={state.activeGeneration?.status === "cancelling"}
                       type="button"
                     >
                       <StopCircle className="size-5" />
@@ -723,6 +820,7 @@ type TimelineProps = {
   streamingContent: string;
   taskStates: TaskState[];
   batchConfirm: (approved: boolean) => Promise<void>;
+  timeline: import("./api").TimelineItem[];
 };
 
 function MessageTimeline({
@@ -744,41 +842,50 @@ function MessageTimeline({
   streamingContent,
   taskStates,
   batchConfirm,
+  timeline,
 }: TimelineProps) {
   return (
     <div className="mx-auto max-w-3xl">
-      {/* ── Completed messages ── */}
-      {messages.map((message, index) => {
-        const showDivider =
-          index > 0 &&
-          getTimeGapMinutes(messages[index - 1].timestamp, message.timestamp) > 5;
-        const isLastAssistant =
-          message.role === "assistant" &&
-          index === lastAssistantIndex &&
-          !sending &&
-          !streamingContent;
-        return (
-          <div key={`${message.timestamp}:${index}`}>
-            {showDivider ? (
-              <div className="flex items-center gap-3 py-2">
-                <div className="h-px flex-1 bg-[var(--hairline)]" />
-                <span className="shrink-0 text-[0.6rem] text-[var(--muted)]">
-                  {formatRelativeDate(message.timestamp)}
-                </span>
-                <div className="h-px flex-1 bg-[var(--hairline)]" />
+      {/* ── Persisted, server-ordered conversation timeline ── */}
+      {timeline.length > 0 ? <ConversationTimeline items={timeline} /> : null}
+
+      {/* ── Legacy message fallback ── */}
+      {timeline.length === 0
+        ? messages.map((message, index) => {
+            const showDivider =
+              index > 0 &&
+              getTimeGapMinutes(
+                messages[index - 1].timestamp,
+                message.timestamp,
+              ) > 5;
+            const isLastAssistant =
+              message.role === "assistant" &&
+              index === lastAssistantIndex &&
+              !sending &&
+              !streamingContent;
+            return (
+              <div key={`${message.timestamp}:${index}`}>
+                {showDivider ? (
+                  <div className="flex items-center gap-3 py-2">
+                    <div className="h-px flex-1 bg-[var(--hairline)]" />
+                    <span className="shrink-0 text-[0.6rem] text-[var(--muted)]">
+                      {formatRelativeDate(message.timestamp)}
+                    </span>
+                    <div className="h-px flex-1 bg-[var(--hairline)]" />
+                  </div>
+                ) : null}
+                <div className="timeline-item mb-8 animate-fadeIn last:mb-0">
+                  <ChatMessageBubble
+                    isLastAssistant={isLastAssistant}
+                    message={message}
+                    onEdit={message.role === "user" ? onEdit : undefined}
+                    onRegenerate={isLastAssistant ? onRegenerate : undefined}
+                  />
+                </div>
               </div>
-            ) : null}
-            <div className="timeline-item mb-8 animate-fadeIn last:mb-0">
-              <ChatMessageBubble
-                isLastAssistant={isLastAssistant}
-                message={message}
-                onEdit={message.role === "user" ? onEdit : undefined}
-                onRegenerate={isLastAssistant ? onRegenerate : undefined}
-              />
-            </div>
-          </div>
-        );
-      })}
+            );
+          })
+        : null}
 
       {/* ── Follow-up chips ── */}
       {messages.length > 0 &&
@@ -786,49 +893,61 @@ function MessageTimeline({
       !sending &&
       !streamingContent ? (
         <FollowUpChips
-          items={["能详细说明一下吗？", "帮我生成测试用例", "检查是否有安全风险"]}
+          items={[
+            "能详细说明一下吗？",
+            "帮我生成测试用例",
+            "检查是否有安全风险",
+          ]}
           onClick={onSuggestionClick}
         />
       ) : null}
 
       {/* ── Tool cards + reasoning ── */}
-      {(taskStates.length > 0 || reasoningEvents.length > 0) && (
-        <div className="mb-8 space-y-1.5">
-          {taskStates.map((task, i) => {
-            const step = i + 1;
-            const reasoning = reasoningByStep.get(step);
-            return (
-              <div key={`task:${task.taskId}`}>
-                {reasoning ? (
-                  <div className="timeline-item animate-fadeIn mb-1.5">
-                    <ReasoningBlock
-                      capability={String(reasoning.payload.capability ?? "")}
-                      content={String(reasoning.payload.content ?? "")}
-                      step={Number(reasoning.payload.step ?? step)}
-                      total={Number(reasoning.payload.total ?? taskStates.length)}
-                    />
+      {timeline.length === 0 &&
+        (taskStates.length > 0 || reasoningEvents.length > 0) && (
+          <div className="mb-8 space-y-1.5">
+            {taskStates.map((task, i) => {
+              const step = i + 1;
+              const reasoning = reasoningByStep.get(step);
+              return (
+                <div key={`task:${task.taskId}`}>
+                  {reasoning ? (
+                    <div className="timeline-item animate-fadeIn mb-1.5">
+                      <ReasoningBlock
+                        capability={String(reasoning.payload.capability ?? "")}
+                        content={String(reasoning.payload.content ?? "")}
+                        step={Number(reasoning.payload.step ?? step)}
+                        total={Number(
+                          reasoning.payload.total ?? taskStates.length,
+                        )}
+                      />
+                    </div>
+                  ) : null}
+                  <div className="timeline-item animate-slideIn">
+                    <ToolCallCard task={task} />
                   </div>
-                ) : null}
-                <div className="timeline-item animate-slideIn">
-                  <ToolCallCard task={task} />
                 </div>
-              </div>
-            );
-          })}
-          {reasoningEvents
-            .filter((evt) => !reasoningByStep.has(Number(evt.payload.step ?? 0)))
-            .map((evt) => (
-              <div className="timeline-item animate-fadeIn" key={`reasoning:${evt.id}`}>
-                <ReasoningBlock
-                  capability={String(evt.payload.capability ?? "")}
-                  content={String(evt.payload.content ?? "")}
-                  step={Number(evt.payload.step ?? 0)}
-                  total={Number(evt.payload.total ?? 0)}
-                />
-              </div>
-            ))}
-        </div>
-      )}
+              );
+            })}
+            {reasoningEvents
+              .filter(
+                (evt) => !reasoningByStep.has(Number(evt.payload.step ?? 0)),
+              )
+              .map((evt) => (
+                <div
+                  className="timeline-item animate-fadeIn"
+                  key={`reasoning:${evt.id}`}
+                >
+                  <ReasoningBlock
+                    capability={String(evt.payload.capability ?? "")}
+                    content={String(evt.payload.content ?? "")}
+                    step={Number(evt.payload.step ?? 0)}
+                    total={Number(evt.payload.total ?? 0)}
+                  />
+                </div>
+              ))}
+          </div>
+        )}
 
       {/* ── Streaming reasoning (Codex-style: inline before reply) ── */}
       {reasoningStream ? (
@@ -845,7 +964,11 @@ function MessageTimeline({
         <div className="timeline-item mb-8 animate-fadeIn">
           <ChatMessageBubble
             isStreaming={streamingActive}
-            message={{ role: "assistant", content: streamingContent, timestamp: "" }}
+            message={{
+              role: "assistant",
+              content: streamingContent,
+              timestamp: "",
+            }}
           />
         </div>
       ) : sending && !reasoningStream ? (
@@ -856,7 +979,10 @@ function MessageTimeline({
 
       {/* ── Error events ── */}
       {errorEvents.map((event) => (
-        <div className="timeline-item animate-fadeIn mb-4" key={`error:${event.id}`}>
+        <div
+          className="timeline-item animate-fadeIn mb-4"
+          key={`error:${event.id}`}
+        >
           <div className="rounded-[var(--radius-md)] border border-[var(--danger)]/30 bg-[var(--danger-subtle)]/20 px-3 py-2.5">
             <p className="text-xs text-[var(--danger)]">
               {String(event.payload.detail ?? "执行出错")}
@@ -925,7 +1051,10 @@ function WorkspaceTabs({
 }) {
   return (
     <div className="flex h-12 items-end gap-1 border-b border-[var(--hairline)] px-4">
-      <Button onClick={() => onChange("super")} variant={value === "super" ? "primary" : "ghost"}>
+      <Button
+        onClick={() => onChange("super")}
+        variant={value === "super" ? "primary" : "ghost"}
+      >
         超级 Agent
       </Button>
       <Button
@@ -982,13 +1111,19 @@ function LoadingBar() {
 // ── Helpers ─────────────────────────────────────────────────────
 
 function buildTaskStates(events: AgentEvent[]): TaskState[] {
-  const groups = new Map<string, { delegated: AgentEvent | null; latest: AgentEvent }>();
+  const groups = new Map<
+    string,
+    { delegated: AgentEvent | null; latest: AgentEvent }
+  >();
   const order: string[] = [];
   for (const event of events) {
     if (
-      !["agent.delegated", "agent.progress", "agent.completed", "agent.failed"].includes(
-        event.type,
-      )
+      ![
+        "agent.delegated",
+        "agent.progress",
+        "agent.completed",
+        "agent.failed",
+      ].includes(event.type)
     )
       continue;
     const tid = String(event.payload.task_id ?? "");
@@ -1026,7 +1161,8 @@ function buildTaskStates(events: AgentEvent[]): TaskState[] {
       status: statusMap[group.latest.type] ?? "delegated",
       output:
         group.latest.type === "agent.completed"
-          ? ((group.latest.payload.output as Record<string, unknown> | null) ?? null)
+          ? ((group.latest.payload.output as Record<string, unknown> | null) ??
+            null)
           : null,
       errorDetail:
         group.latest.type === "agent.failed"
