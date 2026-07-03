@@ -36,6 +36,15 @@ class ConfirmationStatus(StrEnum):
     REJECTED = "rejected"
 
 
+class GenerationStatus(StrEnum):
+    PENDING = "pending"
+    RUNNING = "running"
+    CANCELLING = "cancelling"
+    COMPLETED = "completed"
+    CANCELLED = "cancelled"
+    FAILED = "failed"
+
+
 @dataclass(frozen=True, slots=True)
 class ChatSessionId:
     value: UUID
@@ -54,6 +63,84 @@ class ChatMessage:
     role: str  # "user" | "assistant"
     content: str
     timestamp: datetime
+
+
+@dataclass(slots=True)
+class ChatGeneration:
+    generation_id: UUID
+    project_id: UUID
+    session_id: UUID
+    workflow_id: str | None
+    status: GenerationStatus
+    partial_content: str
+    started_at: datetime
+    updated_at: datetime
+    completed_at: datetime | None
+
+    @classmethod
+    def create(cls, *, project_id: UUID, session_id: UUID, generation_id: UUID) -> ChatGeneration:
+        now = datetime.now(UTC)
+        return cls(
+            generation_id=generation_id,
+            project_id=project_id,
+            session_id=session_id,
+            workflow_id=None,
+            status=GenerationStatus.PENDING,
+            partial_content="",
+            started_at=now,
+            updated_at=now,
+            completed_at=None,
+        )
+
+    def start(self, workflow_id: str) -> None:
+        if self.status is not GenerationStatus.PENDING:
+            raise ValueError("Generation cannot start from current status")
+        if not workflow_id.strip():
+            raise ValueError("Workflow id is required")
+        self.workflow_id = workflow_id
+        self.status = GenerationStatus.RUNNING
+        self.updated_at = datetime.now(UTC)
+
+    def update_partial(self, content: str) -> None:
+        if self.status not in {GenerationStatus.RUNNING, GenerationStatus.CANCELLING}:
+            return
+        self.partial_content = content
+        self.updated_at = datetime.now(UTC)
+
+    def request_cancel(self) -> None:
+        if self.status in {GenerationStatus.COMPLETED, GenerationStatus.FAILED}:
+            raise ValueError("Generation is already terminal")
+        if self.status is GenerationStatus.CANCELLED:
+            return
+        self.status = GenerationStatus.CANCELLING
+        self.updated_at = datetime.now(UTC)
+
+    def complete(self, content: str) -> None:
+        if self.status in {GenerationStatus.COMPLETED, GenerationStatus.CANCELLED}:
+            return
+        self.partial_content = content
+        self._finish(GenerationStatus.COMPLETED)
+
+    def cancel(self, content: str) -> None:
+        if self.status is GenerationStatus.CANCELLED:
+            return
+        if self.status in {GenerationStatus.COMPLETED, GenerationStatus.FAILED}:
+            raise ValueError("Generation is already terminal")
+        self.partial_content = content
+        self._finish(GenerationStatus.CANCELLED)
+
+    def fail(self) -> None:
+        if self.status is GenerationStatus.FAILED:
+            return
+        if self.status in {GenerationStatus.COMPLETED, GenerationStatus.CANCELLED}:
+            raise ValueError("Generation is already terminal")
+        self._finish(GenerationStatus.FAILED)
+
+    def _finish(self, status: GenerationStatus) -> None:
+        now = datetime.now(UTC)
+        self.status = status
+        self.updated_at = now
+        self.completed_at = now
 
 
 @dataclass(slots=True)

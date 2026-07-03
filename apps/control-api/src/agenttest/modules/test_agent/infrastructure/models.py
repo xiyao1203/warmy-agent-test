@@ -118,6 +118,12 @@ class TestAgentEventModel(Base):
             ondelete="CASCADE",
             name="fk_test_agent_events_project_session",
         ),
+        ForeignKeyConstraint(
+            ["project_id", "generation_id"],
+            ["test_agent_chat_generations.project_id", "test_agent_chat_generations.id"],
+            ondelete="CASCADE",
+            name="fk_test_agent_events_project_generation",
+        ),
         UniqueConstraint(
             "project_id", "session_id", "sequence", name="uq_test_agent_events_sequence"
         ),
@@ -127,10 +133,40 @@ class TestAgentEventModel(Base):
     id: Mapped[UUID] = mapped_column(primary_key=True)
     project_id: Mapped[UUID] = mapped_column(nullable=False)
     session_id: Mapped[UUID] = mapped_column(nullable=False)
+    generation_id: Mapped[UUID | None] = mapped_column(nullable=True)
     sequence: Mapped[int] = mapped_column(BigInteger, nullable=False)
     event_type: Mapped[str] = mapped_column(String(64), nullable=False)
     payload: Mapped[dict] = mapped_column(JSON, nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+
+
+class TestAgentChatGenerationModel(Base):
+    __tablename__ = "test_agent_chat_generations"
+    __table_args__ = (
+        ForeignKeyConstraint(
+            ["project_id", "session_id"],
+            ["test_agent_sessions.project_id", "test_agent_sessions.id"],
+            ondelete="CASCADE",
+            name="fk_test_agent_generations_project_session",
+        ),
+        UniqueConstraint("project_id", "id", name="uq_test_agent_generations_project_id"),
+        Index(
+            "ix_test_agent_generations_session_status",
+            "project_id",
+            "session_id",
+            "status",
+        ),
+    )
+
+    id: Mapped[UUID] = mapped_column(primary_key=True)
+    project_id: Mapped[UUID] = mapped_column(nullable=False)
+    session_id: Mapped[UUID] = mapped_column(nullable=False)
+    workflow_id: Mapped[str | None] = mapped_column(String(200), nullable=True)
+    status: Mapped[str] = mapped_column(String(32), nullable=False)
+    partial_content: Mapped[str] = mapped_column(Text, nullable=False, default="")
+    started_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
 
 class TestAgentConfirmationModel(Base):
