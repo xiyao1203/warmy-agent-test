@@ -2,6 +2,7 @@
 
 import {
   CheckCircle2,
+  ChevronDown,
   CircleDashed,
   Clock3,
   Loader2,
@@ -9,15 +10,23 @@ import {
   Wrench,
   XCircle,
 } from "lucide-react";
+import { useState } from "react";
 
 import { MarkdownContent, ReasoningBlock } from "@/components/uiverse";
 
 import type { TimelineItem } from "./api";
+import {
+  projectTimeline,
+  type ToolTimelineItem,
+} from "./timeline-projection";
 
 export function ConversationTimeline({ items }: { items: TimelineItem[] }) {
   return (
     <div className="space-y-6">
-      {items.map((item) => {
+      {projectTimeline(items).map((item) => {
+        if (item.kind === "tool") {
+          return <ToolProcessRow item={item} key={item.id} />;
+        }
         if (item.kind === "message") {
           return (
             <article
@@ -75,6 +84,83 @@ export function ConversationTimeline({ items }: { items: TimelineItem[] }) {
         if (!process) return null;
         return <ProcessRow key={item.id} {...process} />;
       })}
+    </div>
+  );
+}
+
+function ToolProcessRow({ item }: { item: ToolTimelineItem }) {
+  const [expanded, setExpanded] = useState(false);
+  const config = {
+    queued: { icon: CircleDashed, tone: "text-[var(--muted)]" },
+    running: { icon: Loader2, tone: "text-[var(--primary)]" },
+    completed: { icon: CheckCircle2, tone: "text-[var(--success)]" },
+    failed: { icon: XCircle, tone: "text-[var(--danger)]" },
+  }[item.status];
+  const Icon = config.icon;
+  const details = Object.entries(item.details).filter(
+    ([key]) =>
+      ![
+        "task_id",
+        "capability",
+        "child_agent",
+        "input_summary",
+        "output_summary",
+      ].includes(key),
+  );
+  const expandable = Boolean(item.summary || details.length > 0);
+
+  return (
+    <div
+      className="border-l border-[var(--hairline-strong)] py-0.5 pl-4"
+      data-kind="tool"
+      data-testid="timeline-item"
+    >
+      <button
+        aria-expanded={expandable ? expanded : undefined}
+        className="group flex min-h-9 w-full items-start gap-3 rounded-lg py-1.5 pr-2 text-left hover:bg-[var(--canvas-soft)]"
+        disabled={!expandable}
+        onClick={() => expandable && setExpanded((value) => !value)}
+        type="button"
+      >
+        <Icon
+          className={`mt-0.5 size-4 shrink-0 ${config.tone} ${item.status === "running" ? "animate-spin" : ""}`}
+        />
+        <span className="min-w-0 flex-1">
+          <span className="block text-sm font-medium text-[var(--ink)]">
+            {item.label}
+          </span>
+          {item.summary ? (
+            <span className="mt-0.5 block truncate text-xs leading-5 text-[var(--muted)]">
+              {item.summary}
+            </span>
+          ) : null}
+        </span>
+        {expandable ? (
+          <ChevronDown
+            aria-hidden="true"
+            className={`mt-0.5 size-4 shrink-0 text-[var(--muted)] transition-transform ${expanded ? "rotate-180" : ""}`}
+          />
+        ) : null}
+      </button>
+      {expanded ? (
+        <div className="ml-7 mt-1 rounded-lg bg-[var(--canvas-soft)] px-3 py-2 text-xs leading-5 text-[var(--muted)]">
+          {item.summary ? <p>{item.summary}</p> : null}
+          {details.length > 0 ? (
+            <dl className="mt-1.5 grid gap-1">
+              {details.map(([key, value]) => (
+                <div className="grid grid-cols-[7rem_minmax(0,1fr)] gap-2" key={key}>
+                  <dt className="font-mono text-[var(--body)]">{key}</dt>
+                  <dd className="break-words">
+                    {typeof value === "object"
+                      ? JSON.stringify(value)
+                      : String(value)}
+                  </dd>
+                </div>
+              ))}
+            </dl>
+          ) : null}
+        </div>
+      ) : null}
     </div>
   );
 }
