@@ -90,6 +90,7 @@ class ModelActivities:
         timeout_seconds = float(payload.get("timeout_seconds", 60))
         started_at = time.monotonic()
         chunks: list[str] = []
+        cancelled = False
         try:
             async for kind, chunk in self._adapter.stream(request):
                 # Reasoning is streamed via callback, only accumulate content in return
@@ -124,4 +125,5 @@ class ModelActivities:
         except asyncio.CancelledError:
             # 优雅取消：返回已累积内容，provider 连接由 async generator aclose 清理
             activity.logger.warning("stream-model cancelled, returning accumulated chunks")
-        return {"content": "".join(chunks)}
+            cancelled = True
+        return {"content": "".join(chunks), "cancelled": cancelled}

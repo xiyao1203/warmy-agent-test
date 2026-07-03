@@ -1,10 +1,13 @@
 """OpenAI-Compatible 真实协议适配器测试。"""
 
+import asyncio
 import json
 from dataclasses import replace
+from types import SimpleNamespace
 
 import httpx
 import pytest
+from agenttest_model_runner.activities import ModelActivities
 from agenttest_model_runner.adapter import (
     ModelPermissionError,
     ModelProtocolError,
@@ -128,3 +131,34 @@ async def test_stream_separates_reasoning_from_content() -> None:
     chunks = [chunk async for chunk in adapter.stream(request())]
 
     assert chunks == [("reasoning", "让我想想"), ("content", "你好")]
+
+
+@pytest.mark.asyncio
+async def test_stream_activity_marks_cancelled_and_preserves_partial(monkeypatch) -> None:
+    activities = ModelActivities("unused")
+
+    async def stream(_request):
+        yield "content", "partial"
+        raise asyncio.CancelledError
+
+    monkeypatch.setattr(activities._adapter, "stream", stream)
+    monkeypatch.setattr(
+        "agenttest_model_runner.activities.decrypt_credential", lambda *_args: "key"
+    )
+    monkeypatch.setattr("agenttest_model_runner.activities.activity.heartbeat", lambda *_args: None)
+    monkeypatch.setattr(
+        "agenttest_model_runner.activities.activity.logger",
+        SimpleNamespace(warning=lambda *_args: None),
+    )
+
+    result = await activities.stream_model(
+        {
+            "encrypted_api_key": "encrypted",
+            "base_url": "https://model.example/v1",
+            "model_name": "model",
+            "messages": [{"role": "user", "content": "hi"}],
+            "timeout_seconds": 60,
+        }
+    )
+
+    assert result == {"content": "partial", "cancelled": True}

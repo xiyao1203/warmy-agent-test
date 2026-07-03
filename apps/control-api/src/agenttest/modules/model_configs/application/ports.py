@@ -29,6 +29,7 @@ class InvocationResult:
     total_tokens: int = 0
     latency_ms: int = 0
     response_id: str | None = None
+    cancelled: bool = False
 
 
 @dataclass(frozen=True, slots=True)

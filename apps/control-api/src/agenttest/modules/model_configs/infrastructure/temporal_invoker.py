@@ -137,7 +137,11 @@ class TemporalModelInvoker:
                 "internal_token": reasoning_callback.internal_token,
             }
 
-        workflow_id = f"model-streaming-{uuid4()}"
+        workflow_id = (
+            stream_ctx.workflow_id
+            if stream_ctx is not None and stream_ctx.workflow_id
+            else f"model-streaming-{uuid4()}"
+        )
         if stream_ctx is not None:
             stream_ctx.workflow_id = workflow_id
 
@@ -153,13 +157,11 @@ class TemporalModelInvoker:
             result = await handle.result()
         except Exception as error:
             raise ModelRuntimeUnavailableError("Model Runner 流式调用失败") from error
-        finally:
-            if stream_ctx is not None:
-                stream_ctx.workflow_id = None
-
         if not isinstance(result, dict) or not isinstance(result.get("content"), str):
             raise ModelRuntimeUnavailableError("Model Runner 返回无效流式结果")
-        return InvocationResult(content=result["content"])
+        return InvocationResult(
+            content=result["content"], cancelled=bool(result.get("cancelled", False))
+        )
 
     async def cancel_workflow(self, workflow_id: str) -> None:
         """取消正在运行的 Temporal 流式 Workflow。
