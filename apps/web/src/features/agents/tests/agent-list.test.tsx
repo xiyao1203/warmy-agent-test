@@ -72,7 +72,7 @@ describe("AgentList", () => {
     const actions = screen.getByRole("group", { name: "客服 Agent 操作" });
     expect(actions).toHaveClass("whitespace-nowrap");
     expect(
-      screen.getByRole("link", { name: "查看客服 Agent" }),
+      screen.getByRole("link", { name: "管理客服 Agent" }),
     ).toHaveAttribute("href", "/projects/project-1/agents/agent-1");
     expect(
       screen.getByRole("button", { name: "删除客服 Agent" }),
@@ -107,6 +107,8 @@ describe("AgentDetail", () => {
       />,
     );
 
+    fireEvent.click(screen.getByRole("button", { name: "版本历史" }));
+
     expect(screen.getByText("版本 v1")).toBeVisible();
     expect(screen.getByText("草稿")).toBeVisible();
 
@@ -137,6 +139,8 @@ describe("AgentDetail", () => {
         ]}
       />,
     );
+
+    fireEvent.click(screen.getByRole("button", { name: "版本历史" }));
 
     expect(screen.getByText("已锁定")).toBeVisible();
     expect(

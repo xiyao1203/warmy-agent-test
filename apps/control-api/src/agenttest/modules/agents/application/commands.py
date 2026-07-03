@@ -73,6 +73,17 @@ class PublishAgentVersionCommand:
     version_id: AgentVersionId
 
 
+@dataclass(frozen=True, slots=True)
+class SetAgentVersionPointerCommand:
+    agent_id: AgentId
+    version_id: AgentVersionId
+
+
+@dataclass(frozen=True, slots=True)
+class DeleteAgentCommand:
+    agent_id: AgentId
+
+
 # ── Handlers ──────────────────────────────────────────────────────────────────
 
 
@@ -270,6 +281,9 @@ class PublishAgentVersionHandler:
         await self._project_access.ensure_editor(actor, agent.project_id)
         version.publish()
         await self._versions.save(version)
+        if agent.current_version_id is None:
+            agent.set_current_version(version.version_id)
+            await self._agents.save(agent)
         await _record(
             self._audit,
             actor=actor,
@@ -283,6 +297,110 @@ class PublishAgentVersionHandler:
             },
         )
         return version
+
+
+class SetCurrentAgentVersionHandler:
+    def __init__(
+        self,
+        *,
+        agents: AgentRepository,
+        versions: AgentVersionRepository,
+        project_access: ProjectAccessPort,
+        audit: AuditWriter | None = None,
+    ) -> None:
+        self._agents, self._versions, self._project_access, self._audit = (
+            agents,
+            versions,
+            project_access,
+            audit,
+        )
+
+    async def execute(self, actor: User, command: SetAgentVersionPointerCommand) -> Agent:
+        agent = await _required_agent(self._agents, command.agent_id)
+        version = await _required_version(self._versions, command.version_id)
+        await self._project_access.ensure_editor(actor, agent.project_id)
+        if version.agent_id != agent.agent_id or not version.is_published:
+            raise ValueError("Current version must be a published version of this Agent")
+        agent.set_current_version(version.version_id)
+        await self._agents.save(agent)
+        await _record(
+            self._audit,
+            actor=actor,
+            action="agents.current_version.set",
+            project_id=agent.project_id,
+            object_type="agent",
+            object_id=agent.agent_id.value,
+            changes={"current_version_id": {"after": str(version.version_id.value)}},
+        )
+        return agent
+
+
+class SetBaselineAgentVersionHandler:
+    def __init__(
+        self,
+        *,
+        agents: AgentRepository,
+        versions: AgentVersionRepository,
+        project_access: ProjectAccessPort,
+        audit: AuditWriter | None = None,
+    ) -> None:
+        self._agents, self._versions, self._project_access, self._audit = (
+            agents,
+            versions,
+            project_access,
+            audit,
+        )
+
+    async def execute(self, actor: User, command: SetAgentVersionPointerCommand) -> Agent:
+        agent = await _required_agent(self._agents, command.agent_id)
+        version = await _required_version(self._versions, command.version_id)
+        await self._project_access.ensure_editor(actor, agent.project_id)
+        if version.agent_id != agent.agent_id or not version.is_published:
+            raise ValueError("Baseline version must be a published version of this Agent")
+        agent.set_baseline_version(version.version_id)
+        await self._agents.save(agent)
+        await _record(
+            self._audit,
+            actor=actor,
+            action="agents.baseline_version.set",
+            project_id=agent.project_id,
+            object_type="agent",
+            object_id=agent.agent_id.value,
+            changes={"baseline_version_id": {"after": str(version.version_id.value)}},
+        )
+        return agent
+
+
+class DeleteAgentHandler:
+    def __init__(
+        self,
+        *,
+        agents: AgentRepository,
+        versions: AgentVersionRepository,
+        project_access: ProjectAccessPort,
+        audit: AuditWriter | None = None,
+    ) -> None:
+        self._agents, self._versions, self._project_access, self._audit = (
+            agents,
+            versions,
+            project_access,
+            audit,
+        )
+
+    async def execute(self, actor: User, command: DeleteAgentCommand) -> None:
+        agent = await _required_agent(self._agents, command.agent_id)
+        await self._project_access.ensure_editor(actor, agent.project_id)
+        if await self._versions.list_by_agent(agent.agent_id):
+            raise ValueError("Agent has versions and cannot be deleted")
+        await self._agents.delete(agent.agent_id)
+        await _record(
+            self._audit,
+            actor=actor,
+            action="agents.deleted",
+            project_id=agent.project_id,
+            object_type="agent",
+            object_id=agent.agent_id.value,
+        )
 
 
 # ── Helpers ───────────────────────────────────────────────────────────────────

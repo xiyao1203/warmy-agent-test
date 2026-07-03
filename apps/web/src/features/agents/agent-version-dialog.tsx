@@ -96,6 +96,32 @@ export function AgentVersionDialog({
     String(config.code_version ?? ""),
   );
   const [gitCommit, setGitCommit] = useState(String(config.git_commit ?? ""));
+  const [webUrl, setWebUrl] = useState(String(config.web_url ?? ""));
+  const [modelParams, setModelParams] = useState(
+    JSON.stringify(config.model_params ?? {}, null, 2),
+  );
+  const [tools, setTools] = useState(
+    JSON.stringify(config.tools ?? [], null, 2),
+  );
+  const [credentialIds, setCredentialIds] = useState(
+    Array.isArray(config.credential_binding_ids)
+      ? config.credential_binding_ids.join(", ")
+      : "",
+  );
+  const [systemPromptVersion, setSystemPromptVersion] = useState(
+    String(config.system_prompt_version ?? ""),
+  );
+  const [knowledgeVersion, setKnowledgeVersion] = useState(
+    String(config.knowledge_version ?? ""),
+  );
+  const [adapterId, setAdapterId] = useState(String(config.adapter_id ?? ""));
+  const [adapterVersion, setAdapterVersion] = useState(
+    String(config.adapter_version ?? ""),
+  );
+  const [pluginId, setPluginId] = useState(String(config.plugin_id ?? ""));
+  const [pluginVersion, setPluginVersion] = useState(
+    String(config.plugin_version ?? ""),
+  );
 
   // ── 提交状态 ──
   const [error, setError] = useState("");
@@ -108,6 +134,8 @@ export function AgentVersionDialog({
     }
 
     let parsedTemplate: Record<string, unknown>;
+    let parsedModelParams: Record<string, string | number | boolean>;
+    let parsedTools: Array<Record<string, unknown>>;
     try {
       const raw = JSON.parse(requestTemplate) as unknown;
       if (!raw || typeof raw !== "object" || Array.isArray(raw)) {
@@ -115,8 +143,19 @@ export function AgentVersionDialog({
         return;
       }
       parsedTemplate = raw as Record<string, unknown>;
+      parsedModelParams = JSON.parse(modelParams) as Record<
+        string,
+        string | number | boolean
+      >;
+      parsedTools = JSON.parse(tools) as Array<Record<string, unknown>>;
+      if (
+        !parsedModelParams ||
+        Array.isArray(parsedModelParams) ||
+        !Array.isArray(parsedTools)
+      )
+        throw new Error();
     } catch {
-      setError("请求模板不是合法 JSON");
+      setError("请求模板、模型参数或工具清单不是合法 JSON");
       return;
     }
 
@@ -136,6 +175,19 @@ export function AgentVersionDialog({
           git_commit: gitCommit.trim() || undefined,
           max_steps: maxSteps ? Number(maxSteps) : undefined,
           cost_limit: costLimit ? Number(costLimit) : undefined,
+          web_url: webUrl.trim() || undefined,
+          model_params: parsedModelParams,
+          tools: parsedTools,
+          credential_binding_ids: credentialIds
+            .split(",")
+            .map((value) => value.trim())
+            .filter(Boolean),
+          system_prompt_version: systemPromptVersion.trim() || undefined,
+          knowledge_version: knowledgeVersion.trim() || undefined,
+          adapter_id: adapterId.trim() || undefined,
+          adapter_version: adapterVersion.trim() || undefined,
+          plugin_id: pluginId.trim() || undefined,
+          plugin_version: pluginVersion.trim() || undefined,
         },
       };
       await onSubmit(payload);
@@ -317,6 +369,14 @@ export function AgentVersionDialog({
           {activeSection === "metadata" ? (
             <>
               <label className="block text-sm font-medium">
+                Web 地址
+                <Input
+                  className="mt-1.5"
+                  onChange={(event) => setWebUrl(event.target.value)}
+                  value={webUrl}
+                />
+              </label>
+              <label className="block text-sm font-medium">
                 模型
                 <Input
                   className="mt-1.5"
@@ -357,6 +417,84 @@ export function AgentVersionDialog({
                     onChange={(event) => setGitCommit(event.target.value)}
                     placeholder="abc1234（仅 Trace）"
                     value={gitCommit}
+                  />
+                </label>
+              </div>
+              <label className="block text-sm font-medium">
+                模型参数（JSON）
+                <textarea
+                  className="mt-1.5 min-h-20 w-full rounded border border-[var(--hairline)] p-3 font-mono text-xs"
+                  onChange={(event) => setModelParams(event.target.value)}
+                  value={modelParams}
+                />
+              </label>
+              <label className="block text-sm font-medium">
+                工具及 Schema（JSON 数组）
+                <textarea
+                  className="mt-1.5 min-h-24 w-full rounded border border-[var(--hairline)] p-3 font-mono text-xs"
+                  onChange={(event) => setTools(event.target.value)}
+                  value={tools}
+                />
+              </label>
+              <label className="block text-sm font-medium">
+                凭证绑定 ID（逗号分隔）
+                <Input
+                  className="mt-1.5"
+                  onChange={(event) => setCredentialIds(event.target.value)}
+                  value={credentialIds}
+                />
+              </label>
+              <div className="grid grid-cols-2 gap-3">
+                <label className="block text-sm font-medium">
+                  Prompt 版本
+                  <Input
+                    className="mt-1.5"
+                    onChange={(event) =>
+                      setSystemPromptVersion(event.target.value)
+                    }
+                    value={systemPromptVersion}
+                  />
+                </label>
+                <label className="block text-sm font-medium">
+                  知识库版本
+                  <Input
+                    className="mt-1.5"
+                    onChange={(event) =>
+                      setKnowledgeVersion(event.target.value)
+                    }
+                    value={knowledgeVersion}
+                  />
+                </label>
+                <label className="block text-sm font-medium">
+                  Adapter ID
+                  <Input
+                    className="mt-1.5"
+                    onChange={(event) => setAdapterId(event.target.value)}
+                    value={adapterId}
+                  />
+                </label>
+                <label className="block text-sm font-medium">
+                  Adapter 版本
+                  <Input
+                    className="mt-1.5"
+                    onChange={(event) => setAdapterVersion(event.target.value)}
+                    value={adapterVersion}
+                  />
+                </label>
+                <label className="block text-sm font-medium">
+                  插件 ID
+                  <Input
+                    className="mt-1.5"
+                    onChange={(event) => setPluginId(event.target.value)}
+                    value={pluginId}
+                  />
+                </label>
+                <label className="block text-sm font-medium">
+                  插件版本
+                  <Input
+                    className="mt-1.5"
+                    onChange={(event) => setPluginVersion(event.target.value)}
+                    value={pluginVersion}
                   />
                 </label>
               </div>

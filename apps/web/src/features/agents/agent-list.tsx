@@ -143,10 +143,10 @@ export function AgentList({
                         variant="ghost"
                       >
                         <Link
-                          aria-label={`查看${agent.name}`}
+                          aria-label={`管理${agent.name}`}
                           href={`/projects/${projectId}/agents/${agent.id}`}
                         >
-                          查看
+                          管理
                         </Link>
                       </Button>
                       {onDelete ? (

@@ -9,6 +9,14 @@ export type ClientOptions = {
  */
 export type AgentConfigRequest = {
   /**
+   * Adapter Id
+   */
+  adapter_id?: string | null;
+  /**
+   * Adapter Version
+   */
+  adapter_version?: string | null;
+  /**
    * Api Url
    */
   api_url: string;
@@ -29,6 +37,10 @@ export type AgentConfigRequest = {
    */
   git_commit?: string | null;
   /**
+   * Knowledge Version
+   */
+  knowledge_version?: string | null;
+  /**
    * Max Steps
    */
   max_steps?: number | null;
@@ -42,6 +54,14 @@ export type AgentConfigRequest = {
   model_params?: {
     [key: string]: string | number | number | boolean;
   };
+  /**
+   * Plugin Id
+   */
+  plugin_id?: string | null;
+  /**
+   * Plugin Version
+   */
+  plugin_version?: string | null;
   protocol?: InvocationProtocol;
   /**
    * Request Template
@@ -58,6 +78,10 @@ export type AgentConfigRequest = {
    */
   system_prompt?: string | null;
   /**
+   * System Prompt Version
+   */
+  system_prompt_version?: string | null;
+  /**
    * Timeout
    */
   timeout?: number;
@@ -65,8 +89,12 @@ export type AgentConfigRequest = {
    * Tools
    */
   tools?: Array<{
-    [key: string]: string;
+    [key: string]: unknown;
   }>;
+  /**
+   * Web Url
+   */
+  web_url?: string | null;
 };
 
 /**
@@ -3029,6 +3057,132 @@ export type UpdateAgentApiV1ProjectsProjectIdAgentsAgentIdPatchResponses = {
 export type UpdateAgentApiV1ProjectsProjectIdAgentsAgentIdPatchResponse =
   UpdateAgentApiV1ProjectsProjectIdAgentsAgentIdPatchResponses[keyof UpdateAgentApiV1ProjectsProjectIdAgentsAgentIdPatchResponses];
 
+export type SetBaselineVersionEndpointApiV1ProjectsProjectIdAgentsAgentIdBaselineVersionPatchData =
+  {
+    body?: never;
+    headers?: {
+      /**
+       * X-Csrf-Token
+       */
+      "x-csrf-token"?: string | null;
+    };
+    path: {
+      /**
+       * Project Id
+       */
+      project_id: string;
+      /**
+       * Agent Id
+       */
+      agent_id: string;
+    };
+    query?: never;
+    url: "/api/v1/projects/{project_id}/agents/{agent_id}/baseline-version";
+  };
+
+export type SetBaselineVersionEndpointApiV1ProjectsProjectIdAgentsAgentIdBaselineVersionPatchErrors =
+  {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+  };
+
+export type SetBaselineVersionEndpointApiV1ProjectsProjectIdAgentsAgentIdBaselineVersionPatchError =
+  SetBaselineVersionEndpointApiV1ProjectsProjectIdAgentsAgentIdBaselineVersionPatchErrors[keyof SetBaselineVersionEndpointApiV1ProjectsProjectIdAgentsAgentIdBaselineVersionPatchErrors];
+
+export type SetBaselineVersionEndpointApiV1ProjectsProjectIdAgentsAgentIdBaselineVersionPatchResponses =
+  {
+    /**
+     * Successful Response
+     */
+    200: AgentResponse;
+  };
+
+export type SetBaselineVersionEndpointApiV1ProjectsProjectIdAgentsAgentIdBaselineVersionPatchResponse =
+  SetBaselineVersionEndpointApiV1ProjectsProjectIdAgentsAgentIdBaselineVersionPatchResponses[keyof SetBaselineVersionEndpointApiV1ProjectsProjectIdAgentsAgentIdBaselineVersionPatchResponses];
+
+export type SetCurrentVersionEndpointApiV1ProjectsProjectIdAgentsAgentIdCurrentVersionPatchData =
+  {
+    body?: never;
+    headers?: {
+      /**
+       * X-Csrf-Token
+       */
+      "x-csrf-token"?: string | null;
+    };
+    path: {
+      /**
+       * Project Id
+       */
+      project_id: string;
+      /**
+       * Agent Id
+       */
+      agent_id: string;
+    };
+    query?: never;
+    url: "/api/v1/projects/{project_id}/agents/{agent_id}/current-version";
+  };
+
+export type SetCurrentVersionEndpointApiV1ProjectsProjectIdAgentsAgentIdCurrentVersionPatchErrors =
+  {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+  };
+
+export type SetCurrentVersionEndpointApiV1ProjectsProjectIdAgentsAgentIdCurrentVersionPatchError =
+  SetCurrentVersionEndpointApiV1ProjectsProjectIdAgentsAgentIdCurrentVersionPatchErrors[keyof SetCurrentVersionEndpointApiV1ProjectsProjectIdAgentsAgentIdCurrentVersionPatchErrors];
+
+export type SetCurrentVersionEndpointApiV1ProjectsProjectIdAgentsAgentIdCurrentVersionPatchResponses =
+  {
+    /**
+     * Successful Response
+     */
+    200: AgentResponse;
+  };
+
+export type SetCurrentVersionEndpointApiV1ProjectsProjectIdAgentsAgentIdCurrentVersionPatchResponse =
+  SetCurrentVersionEndpointApiV1ProjectsProjectIdAgentsAgentIdCurrentVersionPatchResponses[keyof SetCurrentVersionEndpointApiV1ProjectsProjectIdAgentsAgentIdCurrentVersionPatchResponses];
+
+export type GetRelationshipsApiV1ProjectsProjectIdAgentsAgentIdRelationshipsGetData =
+  {
+    body?: never;
+    path: {
+      /**
+       * Project Id
+       */
+      project_id: string;
+      /**
+       * Agent Id
+       */
+      agent_id: string;
+    };
+    query?: never;
+    url: "/api/v1/projects/{project_id}/agents/{agent_id}/relationships";
+  };
+
+export type GetRelationshipsApiV1ProjectsProjectIdAgentsAgentIdRelationshipsGetErrors =
+  {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+  };
+
+export type GetRelationshipsApiV1ProjectsProjectIdAgentsAgentIdRelationshipsGetError =
+  GetRelationshipsApiV1ProjectsProjectIdAgentsAgentIdRelationshipsGetErrors[keyof GetRelationshipsApiV1ProjectsProjectIdAgentsAgentIdRelationshipsGetErrors];
+
+export type GetRelationshipsApiV1ProjectsProjectIdAgentsAgentIdRelationshipsGetResponses =
+  {
+    /**
+     * Successful Response
+     */
+    200: unknown;
+  };
+
 export type ListVersionsApiV1ProjectsProjectIdAgentsAgentIdVersionsGetData = {
   body?: never;
   path: {
@@ -3109,6 +3263,57 @@ export type CreateVersionApiV1ProjectsProjectIdAgentsAgentIdVersionsPostResponse
 
 export type CreateVersionApiV1ProjectsProjectIdAgentsAgentIdVersionsPostResponse =
   CreateVersionApiV1ProjectsProjectIdAgentsAgentIdVersionsPostResponses[keyof CreateVersionApiV1ProjectsProjectIdAgentsAgentIdVersionsPostResponses];
+
+export type DiffVersionsApiV1ProjectsProjectIdAgentsAgentIdVersionsV1IdDiffV2IdGetData =
+  {
+    body?: never;
+    path: {
+      /**
+       * Project Id
+       */
+      project_id: string;
+      /**
+       * Agent Id
+       */
+      agent_id: string;
+      /**
+       * V1 Id
+       */
+      v1_id: string;
+      /**
+       * V2 Id
+       */
+      v2_id: string;
+    };
+    query?: never;
+    url: "/api/v1/projects/{project_id}/agents/{agent_id}/versions/{v1_id}/diff/{v2_id}";
+  };
+
+export type DiffVersionsApiV1ProjectsProjectIdAgentsAgentIdVersionsV1IdDiffV2IdGetErrors =
+  {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+  };
+
+export type DiffVersionsApiV1ProjectsProjectIdAgentsAgentIdVersionsV1IdDiffV2IdGetError =
+  DiffVersionsApiV1ProjectsProjectIdAgentsAgentIdVersionsV1IdDiffV2IdGetErrors[keyof DiffVersionsApiV1ProjectsProjectIdAgentsAgentIdVersionsV1IdDiffV2IdGetErrors];
+
+export type DiffVersionsApiV1ProjectsProjectIdAgentsAgentIdVersionsV1IdDiffV2IdGetResponses =
+  {
+    /**
+     * Response Diff Versions Api V1 Projects  Project Id  Agents  Agent Id  Versions  V1 Id  Diff  V2 Id  Get
+     *
+     * Successful Response
+     */
+    200: {
+      [key: string]: unknown;
+    };
+  };
+
+export type DiffVersionsApiV1ProjectsProjectIdAgentsAgentIdVersionsV1IdDiffV2IdGetResponse =
+  DiffVersionsApiV1ProjectsProjectIdAgentsAgentIdVersionsV1IdDiffV2IdGetResponses[keyof DiffVersionsApiV1ProjectsProjectIdAgentsAgentIdVersionsV1IdDiffV2IdGetResponses];
 
 export type GetVersionApiV1ProjectsProjectIdAgentsAgentIdVersionsVersionIdGetData =
   {
@@ -3301,147 +3506,6 @@ export type ValidateConnectionApiV1ProjectsProjectIdAgentsAgentIdVersionsVersion
      */
     200: unknown;
   };
-
-export type SetBaselineVersionEndpointApiV1ProjectsProjectIdAgentsAgentIdBaselineVersionPatchData =
-  {
-    body?: never;
-    headers?: {
-      /**
-       * X-Csrf-Token
-       */
-      "x-csrf-token"?: string | null;
-    };
-    path: {
-      /**
-       * Project Id
-       */
-      project_id: string;
-      /**
-       * Agent Id
-       */
-      agent_id: string;
-    };
-    query?: never;
-    url: "/api/v1/projects/{project_id}/agents{agent_id}/baseline-version";
-  };
-
-export type SetBaselineVersionEndpointApiV1ProjectsProjectIdAgentsAgentIdBaselineVersionPatchErrors =
-  {
-    /**
-     * Validation Error
-     */
-    422: HttpValidationError;
-  };
-
-export type SetBaselineVersionEndpointApiV1ProjectsProjectIdAgentsAgentIdBaselineVersionPatchError =
-  SetBaselineVersionEndpointApiV1ProjectsProjectIdAgentsAgentIdBaselineVersionPatchErrors[keyof SetBaselineVersionEndpointApiV1ProjectsProjectIdAgentsAgentIdBaselineVersionPatchErrors];
-
-export type SetBaselineVersionEndpointApiV1ProjectsProjectIdAgentsAgentIdBaselineVersionPatchResponses =
-  {
-    /**
-     * Successful Response
-     */
-    200: AgentResponse;
-  };
-
-export type SetBaselineVersionEndpointApiV1ProjectsProjectIdAgentsAgentIdBaselineVersionPatchResponse =
-  SetBaselineVersionEndpointApiV1ProjectsProjectIdAgentsAgentIdBaselineVersionPatchResponses[keyof SetBaselineVersionEndpointApiV1ProjectsProjectIdAgentsAgentIdBaselineVersionPatchResponses];
-
-export type SetCurrentVersionEndpointApiV1ProjectsProjectIdAgentsAgentIdCurrentVersionPatchData =
-  {
-    body?: never;
-    headers?: {
-      /**
-       * X-Csrf-Token
-       */
-      "x-csrf-token"?: string | null;
-    };
-    path: {
-      /**
-       * Project Id
-       */
-      project_id: string;
-      /**
-       * Agent Id
-       */
-      agent_id: string;
-    };
-    query?: never;
-    url: "/api/v1/projects/{project_id}/agents{agent_id}/current-version";
-  };
-
-export type SetCurrentVersionEndpointApiV1ProjectsProjectIdAgentsAgentIdCurrentVersionPatchErrors =
-  {
-    /**
-     * Validation Error
-     */
-    422: HttpValidationError;
-  };
-
-export type SetCurrentVersionEndpointApiV1ProjectsProjectIdAgentsAgentIdCurrentVersionPatchError =
-  SetCurrentVersionEndpointApiV1ProjectsProjectIdAgentsAgentIdCurrentVersionPatchErrors[keyof SetCurrentVersionEndpointApiV1ProjectsProjectIdAgentsAgentIdCurrentVersionPatchErrors];
-
-export type SetCurrentVersionEndpointApiV1ProjectsProjectIdAgentsAgentIdCurrentVersionPatchResponses =
-  {
-    /**
-     * Successful Response
-     */
-    200: AgentResponse;
-  };
-
-export type SetCurrentVersionEndpointApiV1ProjectsProjectIdAgentsAgentIdCurrentVersionPatchResponse =
-  SetCurrentVersionEndpointApiV1ProjectsProjectIdAgentsAgentIdCurrentVersionPatchResponses[keyof SetCurrentVersionEndpointApiV1ProjectsProjectIdAgentsAgentIdCurrentVersionPatchResponses];
-
-export type DiffVersionsApiV1ProjectsProjectIdAgentsAgentIdVersionsV1IdDiffV2IdGetData =
-  {
-    body?: never;
-    path: {
-      /**
-       * Project Id
-       */
-      project_id: string;
-      /**
-       * Agent Id
-       */
-      agent_id: string;
-      /**
-       * V1 Id
-       */
-      v1_id: string;
-      /**
-       * V2 Id
-       */
-      v2_id: string;
-    };
-    query?: never;
-    url: "/api/v1/projects/{project_id}/agents{agent_id}/versions/{v1_id}/diff/{v2_id}";
-  };
-
-export type DiffVersionsApiV1ProjectsProjectIdAgentsAgentIdVersionsV1IdDiffV2IdGetErrors =
-  {
-    /**
-     * Validation Error
-     */
-    422: HttpValidationError;
-  };
-
-export type DiffVersionsApiV1ProjectsProjectIdAgentsAgentIdVersionsV1IdDiffV2IdGetError =
-  DiffVersionsApiV1ProjectsProjectIdAgentsAgentIdVersionsV1IdDiffV2IdGetErrors[keyof DiffVersionsApiV1ProjectsProjectIdAgentsAgentIdVersionsV1IdDiffV2IdGetErrors];
-
-export type DiffVersionsApiV1ProjectsProjectIdAgentsAgentIdVersionsV1IdDiffV2IdGetResponses =
-  {
-    /**
-     * Response Diff Versions Api V1 Projects  Project Id  Agents Agent Id  Versions  V1 Id  Diff  V2 Id  Get
-     *
-     * Successful Response
-     */
-    200: {
-      [key: string]: unknown;
-    };
-  };
-
-export type DiffVersionsApiV1ProjectsProjectIdAgentsAgentIdVersionsV1IdDiffV2IdGetResponse =
-  DiffVersionsApiV1ProjectsProjectIdAgentsAgentIdVersionsV1IdDiffV2IdGetResponses[keyof DiffVersionsApiV1ProjectsProjectIdAgentsAgentIdVersionsV1IdDiffV2IdGetResponses];
 
 export type ArchiveProjectApiV1ProjectsProjectIdArchivePostData = {
   body?: never;

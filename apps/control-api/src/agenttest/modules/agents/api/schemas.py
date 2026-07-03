@@ -37,7 +37,7 @@ class AgentConfigRequest(BaseModel):
     model: str | None = None
     model_params: dict[str, str | int | float | bool] = Field(default_factory=dict)
     system_prompt: str | None = None
-    tools: list[dict[str, str]] = Field(default_factory=list)
+    tools: list[dict[str, Any]] = Field(default_factory=list)
     timeout: int = 30
     protocol: InvocationProtocol = InvocationProtocol.SYNC_JSON
     request_template: dict[str, object] = Field(default_factory=_default_request_template)
@@ -45,6 +45,13 @@ class AgentConfigRequest(BaseModel):
     credential_binding_ids: list[UUID] = Field(default_factory=list)
     max_steps: int | None = None
     cost_limit: float | None = None
+    system_prompt_version: str | None = None
+    knowledge_version: str | None = None
+    adapter_version: str | None = None
+    web_url: str | None = None
+    adapter_id: str | None = None
+    plugin_id: str | None = None
+    plugin_version: str | None = None
 
     def to_domain(self) -> AgentConfig:
         return AgentConfig(**self.model_dump())

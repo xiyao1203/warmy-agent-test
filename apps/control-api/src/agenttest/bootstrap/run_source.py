@@ -182,6 +182,7 @@ class SqlAlchemyRunSource:
                 "agent_config": invocation_from_stored_config(
                     dict(agent_version.config)
                 ).model_dump(mode="json"),
+                "agent_metadata": dict(agent_version.config),
                 "environment_config": environment_config,
                 "scorer_configs": scorer_configs,
             },

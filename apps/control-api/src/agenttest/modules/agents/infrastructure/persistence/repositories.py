@@ -95,6 +95,12 @@ class SqlAlchemyAgentRepository:
                     description=agent.description,
                     updated_at=agent.updated_at,
                     updated_by=agent.updated_by.value,
+                    current_version_id=(
+                        agent.current_version_id.value if agent.current_version_id else None
+                    ),
+                    baseline_version_id=(
+                        agent.baseline_version_id.value if agent.baseline_version_id else None
+                    ),
                 )
             )
 
@@ -185,6 +191,12 @@ def _to_agent(model: AgentModel) -> Agent:
         created_at=model.created_at,
         updated_at=model.updated_at,
         description=model.description,
+        current_version_id=(
+            AgentVersionId(model.current_version_id) if model.current_version_id else None
+        ),
+        baseline_version_id=(
+            AgentVersionId(model.baseline_version_id) if model.baseline_version_id else None
+        ),
     )
 
 

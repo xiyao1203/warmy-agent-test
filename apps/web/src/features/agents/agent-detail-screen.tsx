@@ -4,10 +4,15 @@ import { useQuery } from "@tanstack/react-query";
 
 import {
   createAgentVersion,
+  diffAgentVersions,
   getAgent,
+  getAgentRelationships,
   listAgentVersions,
   publishAgentVersion,
+  setBaselineAgentVersion,
+  setCurrentAgentVersion,
   updateAgentVersion,
+  updateAgent,
 } from "./api";
 import { AgentDetail } from "./agent-detail";
 
@@ -25,6 +30,10 @@ export function AgentDetailScreen({
   const versionsQuery = useQuery({
     queryFn: () => listAgentVersions(projectId, agentId),
     queryKey: ["agent-versions", projectId, agentId],
+  });
+  const relationshipsQuery = useQuery({
+    queryFn: () => getAgentRelationships(projectId, agentId),
+    queryKey: ["agent-relationships", projectId, agentId],
   });
 
   if (agentQuery.isPending || versionsQuery.isPending) {
@@ -60,11 +69,25 @@ export function AgentDetailScreen({
       }}
       onPublish={async (versionId) => {
         await publishAgentVersion(projectId, agentId, versionId);
-        await refreshVersions();
+        await Promise.all([refreshVersions(), agentQuery.refetch()]);
       }}
       onUpdateVersion={async (versionId, payload) => {
         await updateAgentVersion(projectId, agentId, versionId, payload);
         await refreshVersions();
+      }}
+      onSetCurrentVersion={async (versionId) => {
+        await setCurrentAgentVersion(projectId, agentId, versionId);
+        await agentQuery.refetch();
+      }}
+      onSetBaselineVersion={async (versionId) => {
+        await setBaselineAgentVersion(projectId, agentId, versionId);
+        await agentQuery.refetch();
+      }}
+      onFetchDiff={(v1, v2) => diffAgentVersions(projectId, agentId, v1, v2)}
+      relationships={relationshipsQuery.data}
+      onUpdateAgent={async (payload) => {
+        await updateAgent(projectId, agentId, payload);
+        await agentQuery.refetch();
       }}
       versions={versionsQuery.data}
     />

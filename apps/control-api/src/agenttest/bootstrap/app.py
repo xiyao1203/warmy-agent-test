@@ -8,6 +8,7 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
 from starlette.responses import Response
 
+from agenttest.bootstrap.agent_relationships import SqlAlchemyAgentRelationshipsReader
 from agenttest.bootstrap.gate_evidence import SqlAlchemyGateEvidence
 from agenttest.bootstrap.project_access import ProjectAccessAdapter
 from agenttest.bootstrap.review_collector import SqlAlchemyRunReviewCollector
@@ -21,7 +22,10 @@ from agenttest.modules.agents.api.router import (
 from agenttest.modules.agents.application.commands import (
     CreateAgentHandler,
     CreateAgentVersionHandler,
+    DeleteAgentHandler,
     PublishAgentVersionHandler,
+    SetBaselineAgentVersionHandler,
+    SetCurrentAgentVersionHandler,
     UpdateAgentHandler,
     UpdateAgentVersionHandler,
 )
@@ -473,10 +477,6 @@ def _register_archive_endpoints(
     from fastapi.responses import JSONResponse, Response
 
     from agenttest.bootstrap.project_access import ProjectAccessAdapter
-    from agenttest.modules.agents.domain.entities import AgentId
-    from agenttest.modules.agents.infrastructure.persistence.repositories import (
-        SqlAlchemyAgentRepository,
-    )
     from agenttest.modules.datasets.domain.entities import DatasetId
     from agenttest.modules.datasets.infrastructure.persistence.repositories import (
         SqlAlchemyDatasetRepository,
@@ -501,7 +501,6 @@ def _register_archive_endpoints(
     CSRF_NAME = "agenttest_csrf"
     engine = create_database_engine(str(settings.database_url))
     sf = create_session_factory(engine)
-    agent_repo = SqlAlchemyAgentRepository(sf)
     dataset_repo = SqlAlchemyDatasetRepository(sf)
     plan_repo = SqlAlchemyTestPlanRepository(sf)
     project_repo = SqlAlchemyProjectRepository(sf)
@@ -516,26 +515,6 @@ def _register_archive_endpoints(
     def _check_csrf(request: Request, header: str | None) -> None:
         if not header or header != request.cookies.get(CSRF_NAME):
             raise PermissionError("CSRF mismatch")
-
-    @app.delete("/api/v1/projects/{project_id}/agents/{agent_id}", status_code=204)
-    async def delete_agent(
-        request: Request,
-        project_id: UUID,
-        agent_id: UUID,
-        x_csrf_token: str | None = Header(default=None),
-    ) -> Response:
-        try:
-            actor = await _actor(request)
-            _check_csrf(request, x_csrf_token)
-            await access.ensure_editor(actor, ProjectId(project_id))
-            await agent_repo.delete(AgentId(agent_id))
-        except InvalidSessionError:
-            return JSONResponse(status_code=401, content={"detail": "Unauthorized"})
-        except PermissionError:
-            return JSONResponse(status_code=403, content={"detail": "Forbidden"})
-        except ProjectNotFoundError:
-            return JSONResponse(status_code=404, content={"detail": "Not Found"})
-        return Response(status_code=204)
 
     @app.delete("/api/v1/projects/{project_id}/datasets/{dataset_id}", status_code=204)
     async def delete_dataset(
@@ -761,6 +740,16 @@ def build_agent_dependencies(settings: Settings) -> AgentApiDependencies:
             project_access=access,
             audit=audit,
         ),
+        set_current_version=SetCurrentAgentVersionHandler(
+            agents=agents, versions=versions, project_access=access, audit=audit
+        ),
+        set_baseline_version=SetBaselineAgentVersionHandler(
+            agents=agents, versions=versions, project_access=access, audit=audit
+        ),
+        delete_agent=DeleteAgentHandler(
+            agents=agents, versions=versions, project_access=access, audit=audit
+        ),
+        relationships=SqlAlchemyAgentRelationshipsReader(session_factory),
         uow_factory=lambda: SqlAlchemyUnitOfWork(session_factory),
         connection_validator=HttpAgentConnectionValidator(
             allow_private_network=settings.security_scan_allow_private_network

@@ -6,7 +6,10 @@ from agenttest.modules.agents.api.router import AgentApiDependencies, create_age
 from agenttest.modules.agents.application.commands import (
     CreateAgentHandler,
     CreateAgentVersionHandler,
+    DeleteAgentHandler,
     PublishAgentVersionHandler,
+    SetBaselineAgentVersionHandler,
+    SetCurrentAgentVersionHandler,
     UpdateAgentHandler,
     UpdateAgentVersionHandler,
 )
@@ -53,6 +56,9 @@ class InMemoryAgentRepository:
 
     async def save(self, agent: Agent) -> None:
         self.items[agent.agent_id] = agent
+
+    async def delete(self, agent_id: AgentId) -> None:
+        self.items.pop(agent_id, None)
 
 
 class InMemoryAgentVersionRepository:
@@ -157,6 +163,13 @@ def client_for(
             versions=versions,
             project_access=access,
         ),
+        set_current_version=SetCurrentAgentVersionHandler(
+            agents=agents, versions=versions, project_access=access
+        ),
+        set_baseline_version=SetBaselineAgentVersionHandler(
+            agents=agents, versions=versions, project_access=access
+        ),
+        delete_agent=DeleteAgentHandler(agents=agents, versions=versions, project_access=access),
     )
     app = FastAPI()
     app.include_router(
@@ -197,13 +210,40 @@ def test_developer_creates_lists_and_publishes_agent_version() -> None:
         (f"/api/v1/projects/{project_id.value}/agents/{agent_id}/versions/{version_id}/publish"),
         headers={"X-CSRF-Token": "csrf-token"},
     )
+    current = client.get(f"/api/v1/projects/{project_id.value}/agents/{agent_id}")
+    baseline = client.patch(
+        f"/api/v1/projects/{project_id.value}/agents/{agent_id}/baseline-version",
+        headers={"X-CSRF-Token": "csrf-token"},
+        json={"version_id": version_id},
+    )
     listed = client.get(f"/api/v1/projects/{project_id.value}/agents")
 
     assert created.status_code == 201
     assert version.status_code == 201
     assert published.status_code == 200
     assert published.json()["status"] == "published"
+    assert current.json()["current_version_id"] == version_id
+    assert baseline.status_code == 200
+    assert baseline.json()["baseline_version_id"] == version_id
     assert [item["name"] for item in listed.json()["items"]] == ["Support Agent"]
+
+
+def test_agent_delete_requires_no_versions() -> None:
+    client, project_id = client_for(create_user(SystemRole.DEVELOPER))
+    created = client.post(
+        f"/api/v1/projects/{project_id.value}/agents",
+        headers={"X-CSRF-Token": "csrf-token"},
+        json={"name": "Disposable", "agent_type": "generic_http"},
+    )
+    agent_id = created.json()["id"]
+
+    deleted = client.delete(
+        f"/api/v1/projects/{project_id.value}/agents/{agent_id}",
+        headers={"X-CSRF-Token": "csrf-token"},
+    )
+
+    assert deleted.status_code == 204
+    assert client.get(f"/api/v1/projects/{project_id.value}/agents/{agent_id}").status_code == 404
 
 
 def test_viewer_can_read_but_cannot_create_agent() -> None:
@@ -257,6 +297,13 @@ def test_app_factory_registers_agents_router() -> None:
         publish_version=PublishAgentVersionHandler(
             agents=agents, versions=versions, project_access=access
         ),
+        set_current_version=SetCurrentAgentVersionHandler(
+            agents=agents, versions=versions, project_access=access
+        ),
+        set_baseline_version=SetBaselineAgentVersionHandler(
+            agents=agents, versions=versions, project_access=access
+        ),
+        delete_agent=DeleteAgentHandler(agents=agents, versions=versions, project_access=access),
     )
     operation = StubCsrf()
     app = create_app(

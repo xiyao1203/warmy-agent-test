@@ -224,6 +224,9 @@ import type {
   GetProjectApiV1ProjectsProjectIdGetData,
   GetProjectApiV1ProjectsProjectIdGetErrors,
   GetProjectApiV1ProjectsProjectIdGetResponses,
+  GetRelationshipsApiV1ProjectsProjectIdAgentsAgentIdRelationshipsGetData,
+  GetRelationshipsApiV1ProjectsProjectIdAgentsAgentIdRelationshipsGetErrors,
+  GetRelationshipsApiV1ProjectsProjectIdAgentsAgentIdRelationshipsGetResponses,
   GetRunApiV1ProjectsProjectIdRunsRunIdGetData,
   GetRunApiV1ProjectsProjectIdRunsRunIdGetErrors,
   GetRunApiV1ProjectsProjectIdRunsRunIdGetResponses,
@@ -861,6 +864,75 @@ export const updateAgentApiV1ProjectsProjectIdAgentsAgentIdPatch = <
   });
 
 /**
+ * Set Baseline Version Endpoint
+ */
+export const setBaselineVersionEndpointApiV1ProjectsProjectIdAgentsAgentIdBaselineVersionPatch =
+  <ThrowOnError extends boolean = false>(
+    options: Options<
+      SetBaselineVersionEndpointApiV1ProjectsProjectIdAgentsAgentIdBaselineVersionPatchData,
+      ThrowOnError
+    >,
+  ): RequestResult<
+    SetBaselineVersionEndpointApiV1ProjectsProjectIdAgentsAgentIdBaselineVersionPatchResponses,
+    SetBaselineVersionEndpointApiV1ProjectsProjectIdAgentsAgentIdBaselineVersionPatchErrors,
+    ThrowOnError
+  > =>
+    (options.client ?? client).patch<
+      SetBaselineVersionEndpointApiV1ProjectsProjectIdAgentsAgentIdBaselineVersionPatchResponses,
+      SetBaselineVersionEndpointApiV1ProjectsProjectIdAgentsAgentIdBaselineVersionPatchErrors,
+      ThrowOnError
+    >({
+      url: "/api/v1/projects/{project_id}/agents/{agent_id}/baseline-version",
+      ...options,
+    });
+
+/**
+ * Set Current Version Endpoint
+ */
+export const setCurrentVersionEndpointApiV1ProjectsProjectIdAgentsAgentIdCurrentVersionPatch =
+  <ThrowOnError extends boolean = false>(
+    options: Options<
+      SetCurrentVersionEndpointApiV1ProjectsProjectIdAgentsAgentIdCurrentVersionPatchData,
+      ThrowOnError
+    >,
+  ): RequestResult<
+    SetCurrentVersionEndpointApiV1ProjectsProjectIdAgentsAgentIdCurrentVersionPatchResponses,
+    SetCurrentVersionEndpointApiV1ProjectsProjectIdAgentsAgentIdCurrentVersionPatchErrors,
+    ThrowOnError
+  > =>
+    (options.client ?? client).patch<
+      SetCurrentVersionEndpointApiV1ProjectsProjectIdAgentsAgentIdCurrentVersionPatchResponses,
+      SetCurrentVersionEndpointApiV1ProjectsProjectIdAgentsAgentIdCurrentVersionPatchErrors,
+      ThrowOnError
+    >({
+      url: "/api/v1/projects/{project_id}/agents/{agent_id}/current-version",
+      ...options,
+    });
+
+/**
+ * Get Relationships
+ */
+export const getRelationshipsApiV1ProjectsProjectIdAgentsAgentIdRelationshipsGet =
+  <ThrowOnError extends boolean = false>(
+    options: Options<
+      GetRelationshipsApiV1ProjectsProjectIdAgentsAgentIdRelationshipsGetData,
+      ThrowOnError
+    >,
+  ): RequestResult<
+    GetRelationshipsApiV1ProjectsProjectIdAgentsAgentIdRelationshipsGetResponses,
+    GetRelationshipsApiV1ProjectsProjectIdAgentsAgentIdRelationshipsGetErrors,
+    ThrowOnError
+  > =>
+    (options.client ?? client).get<
+      GetRelationshipsApiV1ProjectsProjectIdAgentsAgentIdRelationshipsGetResponses,
+      GetRelationshipsApiV1ProjectsProjectIdAgentsAgentIdRelationshipsGetErrors,
+      ThrowOnError
+    >({
+      url: "/api/v1/projects/{project_id}/agents/{agent_id}/relationships",
+      ...options,
+    });
+
+/**
  * List Versions
  */
 export const listVersionsApiV1ProjectsProjectIdAgentsAgentIdVersionsGet = <
@@ -911,6 +983,29 @@ export const createVersionApiV1ProjectsProjectIdAgentsAgentIdVersionsPost = <
       ...options.headers,
     },
   });
+
+/**
+ * Diff Versions
+ */
+export const diffVersionsApiV1ProjectsProjectIdAgentsAgentIdVersionsV1IdDiffV2IdGet =
+  <ThrowOnError extends boolean = false>(
+    options: Options<
+      DiffVersionsApiV1ProjectsProjectIdAgentsAgentIdVersionsV1IdDiffV2IdGetData,
+      ThrowOnError
+    >,
+  ): RequestResult<
+    DiffVersionsApiV1ProjectsProjectIdAgentsAgentIdVersionsV1IdDiffV2IdGetResponses,
+    DiffVersionsApiV1ProjectsProjectIdAgentsAgentIdVersionsV1IdDiffV2IdGetErrors,
+    ThrowOnError
+  > =>
+    (options.client ?? client).get<
+      DiffVersionsApiV1ProjectsProjectIdAgentsAgentIdVersionsV1IdDiffV2IdGetResponses,
+      DiffVersionsApiV1ProjectsProjectIdAgentsAgentIdVersionsV1IdDiffV2IdGetErrors,
+      ThrowOnError
+    >({
+      url: "/api/v1/projects/{project_id}/agents/{agent_id}/versions/{v1_id}/diff/{v2_id}",
+      ...options,
+    });
 
 /**
  * Get Version
@@ -1010,75 +1105,6 @@ export const validateConnectionApiV1ProjectsProjectIdAgentsAgentIdVersionsVersio
         "Content-Type": "application/json",
         ...options.headers,
       },
-    });
-
-/**
- * Set Baseline Version Endpoint
- */
-export const setBaselineVersionEndpointApiV1ProjectsProjectIdAgentsAgentIdBaselineVersionPatch =
-  <ThrowOnError extends boolean = false>(
-    options: Options<
-      SetBaselineVersionEndpointApiV1ProjectsProjectIdAgentsAgentIdBaselineVersionPatchData,
-      ThrowOnError
-    >,
-  ): RequestResult<
-    SetBaselineVersionEndpointApiV1ProjectsProjectIdAgentsAgentIdBaselineVersionPatchResponses,
-    SetBaselineVersionEndpointApiV1ProjectsProjectIdAgentsAgentIdBaselineVersionPatchErrors,
-    ThrowOnError
-  > =>
-    (options.client ?? client).patch<
-      SetBaselineVersionEndpointApiV1ProjectsProjectIdAgentsAgentIdBaselineVersionPatchResponses,
-      SetBaselineVersionEndpointApiV1ProjectsProjectIdAgentsAgentIdBaselineVersionPatchErrors,
-      ThrowOnError
-    >({
-      url: "/api/v1/projects/{project_id}/agents{agent_id}/baseline-version",
-      ...options,
-    });
-
-/**
- * Set Current Version Endpoint
- */
-export const setCurrentVersionEndpointApiV1ProjectsProjectIdAgentsAgentIdCurrentVersionPatch =
-  <ThrowOnError extends boolean = false>(
-    options: Options<
-      SetCurrentVersionEndpointApiV1ProjectsProjectIdAgentsAgentIdCurrentVersionPatchData,
-      ThrowOnError
-    >,
-  ): RequestResult<
-    SetCurrentVersionEndpointApiV1ProjectsProjectIdAgentsAgentIdCurrentVersionPatchResponses,
-    SetCurrentVersionEndpointApiV1ProjectsProjectIdAgentsAgentIdCurrentVersionPatchErrors,
-    ThrowOnError
-  > =>
-    (options.client ?? client).patch<
-      SetCurrentVersionEndpointApiV1ProjectsProjectIdAgentsAgentIdCurrentVersionPatchResponses,
-      SetCurrentVersionEndpointApiV1ProjectsProjectIdAgentsAgentIdCurrentVersionPatchErrors,
-      ThrowOnError
-    >({
-      url: "/api/v1/projects/{project_id}/agents{agent_id}/current-version",
-      ...options,
-    });
-
-/**
- * Diff Versions
- */
-export const diffVersionsApiV1ProjectsProjectIdAgentsAgentIdVersionsV1IdDiffV2IdGet =
-  <ThrowOnError extends boolean = false>(
-    options: Options<
-      DiffVersionsApiV1ProjectsProjectIdAgentsAgentIdVersionsV1IdDiffV2IdGetData,
-      ThrowOnError
-    >,
-  ): RequestResult<
-    DiffVersionsApiV1ProjectsProjectIdAgentsAgentIdVersionsV1IdDiffV2IdGetResponses,
-    DiffVersionsApiV1ProjectsProjectIdAgentsAgentIdVersionsV1IdDiffV2IdGetErrors,
-    ThrowOnError
-  > =>
-    (options.client ?? client).get<
-      DiffVersionsApiV1ProjectsProjectIdAgentsAgentIdVersionsV1IdDiffV2IdGetResponses,
-      DiffVersionsApiV1ProjectsProjectIdAgentsAgentIdVersionsV1IdDiffV2IdGetErrors,
-      ThrowOnError
-    >({
-      url: "/api/v1/projects/{project_id}/agents{agent_id}/versions/{v1_id}/diff/{v2_id}",
-      ...options,
     });
 
 /**

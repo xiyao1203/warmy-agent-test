@@ -14,12 +14,14 @@ import {
   Layers,
   LockKeyhole,
   GitBranch,
+  Pencil,
 } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   Dialog,
   DialogContent,
@@ -31,6 +33,7 @@ import { Skeleton } from "@/components/uiverse";
 import { AgentVersionDialog } from "./agent-version-dialog";
 import { VersionDetailDrawer } from "./version-detail-drawer";
 import { VersionDiffView } from "./version-diff-view";
+import type { AgentRelationships } from "./api";
 
 type AgentDetailProps = {
   agent: AgentResponse;
@@ -45,9 +48,20 @@ type AgentDetailProps = {
   onSetBaselineVersion?: (versionId: string) => Promise<unknown>;
   onFetchDiff?: (v1Id: string, v2Id: string) => Promise<unknown>;
   versions?: AgentVersionResponse[];
+  relationships?: AgentRelationships;
+  onUpdateAgent?: (payload: {
+    name?: string;
+    description?: string | null;
+  }) => Promise<void>;
 };
 
-type TabKey = "overview" | "config" | "versions" | "runs" | "artifacts";
+type TabKey =
+  | "overview"
+  | "config"
+  | "versions"
+  | "runs"
+  | "artifacts"
+  | "relationships";
 
 const TABS: { key: TabKey; icon: React.ReactNode; label: string }[] = [
   {
@@ -75,6 +89,11 @@ const TABS: { key: TabKey; icon: React.ReactNode; label: string }[] = [
     icon: <Download aria-hidden="true" className="size-4" />,
     label: "产物",
   },
+  {
+    key: "relationships",
+    icon: <GitBranch aria-hidden="true" className="size-4" />,
+    label: "关联资产",
+  },
 ];
 
 export function AgentDetail({
@@ -87,12 +106,19 @@ export function AgentDetail({
   onSetBaselineVersion = async () => undefined,
   onFetchDiff,
   versions = [],
+  relationships,
+  onUpdateAgent,
 }: AgentDetailProps) {
   const [publishVersion, setPublishVersion] = useState<AgentVersionResponse>();
   const [publishing, setPublishing] = useState(false);
   const [selectedVersion, setSelectedVersion] =
     useState<AgentVersionResponse | null>(null);
-  const [activeTab, setActiveTab] = useState<TabKey>("versions");
+  const [activeTab, setActiveTab] = useState<TabKey>("overview");
+  const [editingAgent, setEditingAgent] = useState(false);
+  const [agentName, setAgentName] = useState(agent.name);
+  const [agentDescription, setAgentDescription] = useState(
+    agent.description ?? "",
+  );
 
   if (loading) {
     return (
@@ -132,12 +158,20 @@ export function AgentDetail({
             {agent.description || "暂无描述"}
           </p>
         </div>
-        <AgentVersionDialog
-          agentId={agent.id}
-          onSubmit={onCreateVersion}
-          projectId={agent.project_id}
-          triggerLabel="创建版本"
-        />
+        <div className="flex gap-2">
+          {onUpdateAgent ? (
+            <Button onClick={() => setEditingAgent(true)} variant="secondary">
+              <Pencil className="mr-1 size-4" />
+              编辑信息
+            </Button>
+          ) : null}
+          <AgentVersionDialog
+            agentId={agent.id}
+            onSubmit={onCreateVersion}
+            projectId={agent.project_id}
+            triggerLabel="创建版本"
+          />
+        </div>
       </header>
 
       {/* ── Tabs ───────────────────────────────────────────────────────── */}
@@ -165,6 +199,7 @@ export function AgentDetail({
             agent={agent}
             versions={versions}
             latestPublished={latestPublished}
+            relationships={relationships}
           />
         )}
         {activeTab === "config" && <ConfigTab versions={versions} />}
@@ -184,9 +219,67 @@ export function AgentDetail({
             projectId={agent.project_id}
           />
         )}
-        {activeTab === "runs" && <RunsTab />}
-        {activeTab === "artifacts" && <ArtifactsTab />}
+        {activeTab === "runs" && (
+          <RunsTab
+            items={relationships?.runs ?? []}
+            projectId={agent.project_id}
+          />
+        )}
+        {activeTab === "artifacts" && (
+          <ArtifactsTab
+            items={relationships?.artifacts ?? []}
+            projectId={agent.project_id}
+          />
+        )}
+        {activeTab === "relationships" && (
+          <RelationshipsTab
+            relationships={relationships}
+            projectId={agent.project_id}
+          />
+        )}
       </section>
+
+      <Dialog open={editingAgent} onOpenChange={setEditingAgent}>
+        <DialogContent>
+          <DialogTitle>编辑 Agent 信息</DialogTitle>
+          <DialogDescription>
+            名称和描述属于稳定 Agent 身份，不修改已发布版本。
+          </DialogDescription>
+          <div className="mt-4 space-y-3">
+            <label className="block text-sm font-medium">
+              Agent 名称
+              <Input
+                className="mt-1"
+                value={agentName}
+                onChange={(event) => setAgentName(event.target.value)}
+              />
+            </label>
+            <label className="block text-sm font-medium">
+              描述
+              <Input
+                className="mt-1"
+                value={agentDescription}
+                onChange={(event) => setAgentDescription(event.target.value)}
+              />
+            </label>
+            <div className="flex justify-end gap-2">
+              <Button onClick={() => setEditingAgent(false)}>取消</Button>
+              <Button
+                variant="primary"
+                onClick={async () => {
+                  await onUpdateAgent?.({
+                    name: agentName.trim(),
+                    description: agentDescription.trim() || null,
+                  });
+                  setEditingAgent(false);
+                }}
+              >
+                保存
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* ── 发布确认对话框 ─────────────────────────────────────────────── */}
       <Dialog
@@ -248,11 +341,26 @@ function OverviewTab({
   agent,
   versions,
   latestPublished,
+  relationships,
 }: {
   agent: AgentResponse;
   versions: AgentVersionResponse[];
   latestPublished?: AgentVersionResponse;
+  relationships?: AgentRelationships;
 }) {
+  if (!versions.length) {
+    return (
+      <div className="rounded-[var(--radius-lg)] border border-[var(--hairline)] p-6">
+        <h2 className="font-semibold">完成 Agent 接入</h2>
+        <ol className="mt-4 grid gap-3 text-sm text-[var(--muted)]">
+          <li>1. 创建连接版本并填写调用协议</li>
+          <li>2. 保存草稿后运行连接测试</li>
+          <li>3. 发布通过验证的版本</li>
+          <li>4. 将发布版本设为当前版本</li>
+        </ol>
+      </div>
+    );
+  }
   return (
     <div className="space-y-4">
       <div className="rounded-[var(--radius-lg)] border border-[var(--hairline)] p-4">
@@ -293,6 +401,26 @@ function OverviewTab({
           </p>
         </div>
       )}
+      {relationships ? (
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+          {[
+            ["测试计划", relationships.plans.length],
+            ["运行", relationships.runs.length],
+            ["产物", relationships.artifacts.length],
+            ["实验", relationships.experiments.length],
+            ["安全扫描", relationships.security_scans.length],
+            ["门禁", relationships.gates.length],
+          ].map(([label, count]) => (
+            <div
+              className="rounded-lg border border-[var(--hairline)] p-3"
+              key={String(label)}
+            >
+              <p className="text-xs text-[var(--muted)]">{label}</p>
+              <p className="mt-1 text-xl font-semibold">{count}</p>
+            </div>
+          ))}
+        </div>
+      ) : null}
     </div>
   );
 }
@@ -301,9 +429,7 @@ function ConfigTab({ versions }: { versions: AgentVersionResponse[] }) {
   const current = versions.find((v) => v.status === "published") || versions[0];
   if (!current) {
     return (
-      <p className="text-sm text-[var(--muted)]">
-        暂无配置，请先创建版本。
-      </p>
+      <p className="text-sm text-[var(--muted)]">暂无配置，请先创建版本。</p>
     );
   }
 
@@ -554,18 +680,119 @@ function VersionsTab({
   );
 }
 
-function RunsTab() {
+function RunsTab({
+  items,
+  projectId,
+}: {
+  items: AgentRelationships["runs"];
+  projectId: string;
+}) {
   return (
-    <p className="text-sm text-[var(--muted)]">
-      运行记录需在「测试执行」页面查看。请访问左侧导航的「测试执行」。
-    </p>
+    <RelationshipList
+      empty="暂无关联运行。请先在测试计划中选择已发布版本并执行。"
+      items={items.map((item) => ({
+        id: item.id,
+        label: `运行 ${item.id.slice(0, 8)} · ${item.status} · ${item.passed_cases}/${item.total_cases}`,
+        href: `/projects/${projectId}/runs/${item.id}`,
+      }))}
+    />
   );
 }
 
-function ArtifactsTab() {
+function ArtifactsTab({
+  items,
+  projectId,
+}: {
+  items: AgentRelationships["artifacts"];
+  projectId: string;
+}) {
   return (
-    <p className="text-sm text-[var(--muted)]">
-      产物列表需在运行详情页面查看。请先运行测试后在「测试执行」页面查看产物。
-    </p>
+    <RelationshipList
+      empty="暂无关联产物。"
+      items={items.map((item) => ({
+        id: item.id,
+        label: item.filename,
+        href: `/projects/${projectId}/runs/${item.run_id}`,
+      }))}
+    />
+  );
+}
+
+function RelationshipList({
+  items,
+  empty,
+}: {
+  items: Array<{ id: string; label: string; href: string }>;
+  empty: string;
+}) {
+  if (!items.length)
+    return <p className="text-sm text-[var(--muted)]">{empty}</p>;
+  return (
+    <div className="space-y-2">
+      {items.map((item) => (
+        <Link
+          className="block rounded-lg border border-[var(--hairline)] px-4 py-3 text-sm hover:bg-[var(--canvas-soft)]"
+          href={item.href}
+          key={item.id}
+        >
+          {item.label}
+        </Link>
+      ))}
+    </div>
+  );
+}
+
+function RelationshipsTab({
+  relationships,
+  projectId,
+}: {
+  relationships?: AgentRelationships;
+  projectId: string;
+}) {
+  if (!relationships)
+    return <p className="text-sm text-[var(--muted)]">正在加载关联资产…</p>;
+  const groups = [
+    [
+      "测试计划",
+      relationships.plans.map((item) => ({
+        id: item.id,
+        label: `${item.name} v${item.version_number} · ${item.status}`,
+        href: `/projects/${projectId}/test-plans/${item.plan_id}`,
+      })),
+    ],
+    [
+      "实验",
+      relationships.experiments.map((item) => ({
+        id: item.id,
+        label: `${item.name} · ${item.status}`,
+        href: `/projects/${projectId}/experiments`,
+      })),
+    ],
+    [
+      "安全扫描",
+      relationships.security_scans.map((item) => ({
+        id: item.id,
+        label: `${item.scan_type} · ${item.status}`,
+        href: `/projects/${projectId}/security`,
+      })),
+    ],
+    [
+      "发布门禁",
+      relationships.gates.map((item) => ({
+        id: item.id,
+        label: `${item.name} · ${item.status}`,
+        href: `/projects/${projectId}/gates`,
+      })),
+    ],
+  ] as const;
+  return (
+    <div className="grid gap-5 lg:grid-cols-2">
+      {groups.map(([title, items]) => (
+        <section key={title}>
+          <h2 className="mb-2 text-sm font-semibold">{title}</h2>
+          <RelationshipList empty={`暂无${title}关联。`} items={[...items]} />
+        </section>
+      ))}
+    </div>
   );
 }

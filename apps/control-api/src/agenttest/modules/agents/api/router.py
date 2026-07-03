@@ -25,7 +25,9 @@ from agenttest.modules.agents.application.commands import (
     AgentVersionNotFoundError,
     CreateAgentCommand,
     CreateAgentVersionCommand,
+    DeleteAgentCommand,
     PublishAgentVersionCommand,
+    SetAgentVersionPointerCommand,
     UpdateAgentCommand,
     UpdateAgentVersionCommand,
 )
@@ -106,6 +108,18 @@ class PublishVersionExecutor(Protocol):
     ) -> AgentVersion: ...
 
 
+class SetVersionPointerExecutor(Protocol):
+    async def execute(self, actor: User, command: SetAgentVersionPointerCommand) -> Agent: ...
+
+
+class DeleteAgentExecutor(Protocol):
+    async def execute(self, actor: User, command: DeleteAgentCommand) -> None: ...
+
+
+class AgentRelationshipsReader(Protocol):
+    async def read(self, project_id: UUID, agent_id: UUID) -> dict[str, object]: ...
+
+
 class ConnectionValidator(Protocol):
     async def validate(self, config, probe_input: dict[str, object]): ...
 
@@ -121,6 +135,10 @@ class AgentApiDependencies:
     create_version: CreateVersionExecutor
     update_version: UpdateVersionExecutor
     publish_version: PublishVersionExecutor
+    set_current_version: SetVersionPointerExecutor | None = None
+    set_baseline_version: SetVersionPointerExecutor | None = None
+    delete_agent: DeleteAgentExecutor | None = None
+    relationships: AgentRelationshipsReader | None = None
     uow_factory: UnitOfWorkFactory = null_uow_factory
     connection_validator: ConnectionValidator | None = None
 
@@ -254,6 +272,26 @@ def create_agent_router(
             return asset_not_found()
         return AgentResponse.from_domain(agent)
 
+    @router.get("/{agent_id}/relationships")
+    async def get_relationships(request: Request, project_id: UUID, agent_id: UUID):
+        actor = await actor_for(request)
+        if isinstance(actor, JSONResponse):
+            return actor
+        try:
+            await project_agent(actor, project_id, agent_id)
+        except (AgentNotFoundError, ProjectNotFoundError):
+            return asset_not_found()
+        if dependencies.relationships is None:
+            return {
+                "plans": [],
+                "runs": [],
+                "artifacts": [],
+                "experiments": [],
+                "security_scans": [],
+                "gates": [],
+            }
+        return await dependencies.relationships.read(project_id, agent_id)
+
     @router.patch("/{agent_id}", response_model=AgentResponse)
     async def update_agent(
         request: Request,
@@ -283,6 +321,32 @@ def create_agent_router(
         except ValueError as error:
             return invalid_request(str(error))
         return AgentResponse.from_domain(agent)
+
+    @router.delete("/{agent_id}", status_code=204)
+    async def delete_agent(
+        request: Request,
+        project_id: UUID,
+        agent_id: UUID,
+        x_csrf_token: str | None = Header(default=None),
+    ):
+        actor = await writer(request, x_csrf_token)
+        if isinstance(actor, JSONResponse):
+            return actor
+        if dependencies.delete_agent is None:
+            return problem_response(503, "Runtime unavailable", "Agent 删除能力不可用")
+        try:
+            await project_agent(actor, project_id, agent_id)
+            async with dependencies.uow_factory():
+                await dependencies.delete_agent.execute(
+                    actor, DeleteAgentCommand(AgentId(agent_id))
+                )
+        except (AgentNotFoundError, ProjectNotFoundError):
+            return asset_not_found()
+        except PermissionError:
+            return permission_denied()
+        except ValueError as error:
+            return conflict(str(error))
+        return None
 
     @router.get("/{agent_id}/versions", response_model=AgentVersionListResponse)
     async def list_versions(
@@ -469,7 +533,7 @@ def create_agent_router(
     # ── 版本对比 API ──────────────────────────────────────────────────────
 
     @router.get(
-        "{agent_id}/versions/{v1_id}/diff/{v2_id}",
+        "/{agent_id}/versions/{v1_id}/diff/{v2_id}",
         response_model=dict,
     )
     async def diff_versions(
@@ -520,7 +584,7 @@ def create_agent_router(
     # ── 版本基线标记 ───────────────────────────────────────────────────────
 
     @router.patch(
-        "{agent_id}/current-version",
+        "/{agent_id}/current-version",
         response_model=AgentResponse,
     )
     async def set_current_version_endpoint(
@@ -533,23 +597,32 @@ def create_agent_router(
         if isinstance(actor, JSONResponse):
             return actor
         try:
-            agent = await project_agent(actor, project_id, agent_id)
+            await project_agent(actor, project_id, agent_id)
             body = await request.json()
             version_id = body.get("version_id")
             if not version_id:
                 return invalid_request("version_id is required")
             # 验证版本属于该 agent
             await project_version(actor, project_id, agent_id, UUID(str(version_id)))
+            if dependencies.set_current_version is None:
+                return problem_response(503, "Runtime unavailable", "当前版本设置能力不可用")
             async with dependencies.uow_factory():
-                agent.set_current_version(AgentVersionId(UUID(str(version_id))))
+                agent = await dependencies.set_current_version.execute(
+                    actor,
+                    SetAgentVersionPointerCommand(
+                        AgentId(agent_id), AgentVersionId(UUID(str(version_id)))
+                    ),
+                )
         except (AgentNotFoundError, AgentVersionNotFoundError):
             return asset_not_found()
         except PermissionError:
             return permission_denied()
+        except ValueError as error:
+            return conflict(str(error))
         return AgentResponse.from_domain(agent)
 
     @router.patch(
-        "{agent_id}/baseline-version",
+        "/{agent_id}/baseline-version",
         response_model=AgentResponse,
     )
     async def set_baseline_version_endpoint(
@@ -562,19 +635,28 @@ def create_agent_router(
         if isinstance(actor, JSONResponse):
             return actor
         try:
-            agent = await project_agent(actor, project_id, agent_id)
+            await project_agent(actor, project_id, agent_id)
             body = await request.json()
             version_id = body.get("version_id")
             if not version_id:
                 return invalid_request("version_id is required")
             # 验证版本属于该 agent
             await project_version(actor, project_id, agent_id, UUID(str(version_id)))
+            if dependencies.set_baseline_version is None:
+                return problem_response(503, "Runtime unavailable", "基线版本设置能力不可用")
             async with dependencies.uow_factory():
-                agent.set_baseline_version(AgentVersionId(UUID(str(version_id))))
+                agent = await dependencies.set_baseline_version.execute(
+                    actor,
+                    SetAgentVersionPointerCommand(
+                        AgentId(agent_id), AgentVersionId(UUID(str(version_id)))
+                    ),
+                )
         except (AgentNotFoundError, AgentVersionNotFoundError):
             return asset_not_found()
         except PermissionError:
             return permission_denied()
+        except ValueError as error:
+            return conflict(str(error))
         return AgentResponse.from_domain(agent)
 
     return router

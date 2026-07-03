@@ -68,7 +68,7 @@ class AgentConfig:
     model: str | None = None
     model_params: dict[str, str | int | float | bool] = field(default_factory=dict)
     system_prompt: str | None = None
-    tools: list[dict[str, str]] = field(default_factory=list)
+    tools: list[dict[str, object]] = field(default_factory=list)
     timeout: int = 30
     protocol: InvocationProtocol = InvocationProtocol.SYNC_JSON
     request_template: dict[str, object] = field(default_factory=lambda: {"input": "{{ input }}"})
@@ -79,6 +79,10 @@ class AgentConfig:
     system_prompt_version: str | None = None
     knowledge_version: str | None = None
     adapter_version: str | None = None
+    web_url: str | None = None
+    adapter_id: str | None = None
+    plugin_id: str | None = None
+    plugin_version: str | None = None
 
     def __post_init__(self) -> None:
         """创建后校验：api_url 必填且合法，timeout 为正数，
@@ -117,6 +121,10 @@ class AgentConfig:
             "system_prompt_version": self.system_prompt_version,
             "knowledge_version": self.knowledge_version,
             "adapter_version": self.adapter_version,
+            "web_url": self.web_url,
+            "adapter_id": self.adapter_id,
+            "plugin_id": self.plugin_id,
+            "plugin_version": self.plugin_version,
         }
 
     @classmethod
@@ -161,4 +169,8 @@ class AgentConfig:
             system_prompt_version=str(data.get("system_prompt_version") or "") or None,
             knowledge_version=str(data.get("knowledge_version") or "") or None,
             adapter_version=str(data.get("adapter_version") or "") or None,
+            web_url=str(data.get("web_url") or "") or None,
+            adapter_id=str(data.get("adapter_id") or "") or None,
+            plugin_id=str(data.get("plugin_id") or "") or None,
+            plugin_version=str(data.get("plugin_version") or "") or None,
         )

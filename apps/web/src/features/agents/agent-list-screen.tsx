@@ -1,6 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
+import { useRouter } from "next/navigation";
 
 import { problemKind } from "@/lib/api/problem";
 
@@ -8,6 +9,7 @@ import { createAgent, deleteAgent, listAgents } from "./api";
 import { AgentList } from "./agent-list";
 
 export function AgentListScreen({ projectId }: { projectId: string }) {
+  const router = useRouter();
   const agentsQuery = useQuery({
     queryFn: () => listAgents(projectId),
     queryKey: ["agents", projectId],
@@ -33,8 +35,8 @@ export function AgentListScreen({ projectId }: { projectId: string }) {
     <AgentList
       agents={agentsQuery.data.items}
       onCreate={async (payload) => {
-        await createAgent(projectId, payload);
-        await agentsQuery.refetch();
+        const created = await createAgent(projectId, payload);
+        router.push(`/projects/${projectId}/agents/${created.id}`);
       }}
       onDelete={async (agentId) => {
         await deleteAgent(projectId, agentId);

@@ -3,6 +3,28 @@
     "schemas": {
       "AgentConfigRequest": {
         "properties": {
+          "adapter_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Adapter Id"
+          },
+          "adapter_version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Adapter Version"
+          },
           "api_url": {
             "title": "Api Url",
             "type": "string"
@@ -48,6 +70,17 @@
             ],
             "title": "Git Commit"
           },
+          "knowledge_version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Knowledge Version"
+          },
           "max_steps": {
             "anyOf": [
               {
@@ -90,6 +123,28 @@
             "title": "Model Params",
             "type": "object"
           },
+          "plugin_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Plugin Id"
+          },
+          "plugin_version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Plugin Version"
+          },
           "protocol": {
             "$ref": "#/components/schemas/InvocationProtocol",
             "default": "sync_json"
@@ -116,6 +171,17 @@
             ],
             "title": "System Prompt"
           },
+          "system_prompt_version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "System Prompt Version"
+          },
           "timeout": {
             "default": 30,
             "title": "Timeout",
@@ -123,13 +189,22 @@
           },
           "tools": {
             "items": {
-              "additionalProperties": {
-                "type": "string"
-              },
+              "additionalProperties": true,
               "type": "object"
             },
             "title": "Tools",
             "type": "array"
+          },
+          "web_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Web Url"
           }
         },
         "required": [
@@ -5098,7 +5173,10 @@
             "description": "Validation Error"
           }
         },
-        "summary": "Delete Agent"
+        "summary": "Delete Agent",
+        "tags": [
+          "agents"
+        ]
       },
       "get": {
         "operationId": "get_agent_api_v1_projects__project_id__agents__agent_id__get",
@@ -5229,6 +5307,195 @@
         ]
       }
     },
+    "/api/v1/projects/{project_id}/agents/{agent_id}/baseline-version": {
+      "patch": {
+        "operationId": "set_baseline_version_endpoint_api_v1_projects__project_id__agents__agent_id__baseline_version_patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Project Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "agent_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Agent Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "x-csrf-token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Csrf-Token"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgentResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Set Baseline Version Endpoint",
+        "tags": [
+          "agents"
+        ]
+      }
+    },
+    "/api/v1/projects/{project_id}/agents/{agent_id}/current-version": {
+      "patch": {
+        "operationId": "set_current_version_endpoint_api_v1_projects__project_id__agents__agent_id__current_version_patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Project Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "agent_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Agent Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "x-csrf-token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Csrf-Token"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgentResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Set Current Version Endpoint",
+        "tags": [
+          "agents"
+        ]
+      }
+    },
+    "/api/v1/projects/{project_id}/agents/{agent_id}/relationships": {
+      "get": {
+        "operationId": "get_relationships_api_v1_projects__project_id__agents__agent_id__relationships_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Project Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "agent_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Agent Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Relationships",
+        "tags": [
+          "agents"
+        ]
+      }
+    },
     "/api/v1/projects/{project_id}/agents/{agent_id}/versions": {
       "get": {
         "operationId": "list_versions_api_v1_projects__project_id__agents__agent_id__versions_get",
@@ -5354,6 +5621,81 @@
           }
         },
         "summary": "Create Version",
+        "tags": [
+          "agents"
+        ]
+      }
+    },
+    "/api/v1/projects/{project_id}/agents/{agent_id}/versions/{v1_id}/diff/{v2_id}": {
+      "get": {
+        "operationId": "diff_versions_api_v1_projects__project_id__agents__agent_id__versions__v1_id__diff__v2_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Project Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "agent_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Agent Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "v1_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "V1 Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "v2_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "V2 Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Diff Versions Api V1 Projects  Project Id  Agents  Agent Id  Versions  V1 Id  Diff  V2 Id  Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Diff Versions",
         "tags": [
           "agents"
         ]
@@ -5672,219 +6014,6 @@
           }
         },
         "summary": "Validate Connection",
-        "tags": [
-          "agents"
-        ]
-      }
-    },
-    "/api/v1/projects/{project_id}/agents{agent_id}/baseline-version": {
-      "patch": {
-        "operationId": "set_baseline_version_endpoint_api_v1_projects__project_id__agents_agent_id__baseline_version_patch",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "project_id",
-            "required": true,
-            "schema": {
-              "format": "uuid",
-              "title": "Project Id",
-              "type": "string"
-            }
-          },
-          {
-            "in": "path",
-            "name": "agent_id",
-            "required": true,
-            "schema": {
-              "format": "uuid",
-              "title": "Agent Id",
-              "type": "string"
-            }
-          },
-          {
-            "in": "header",
-            "name": "x-csrf-token",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "X-Csrf-Token"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/AgentResponse"
-                }
-              }
-            },
-            "description": "Successful Response"
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            },
-            "description": "Validation Error"
-          }
-        },
-        "summary": "Set Baseline Version Endpoint",
-        "tags": [
-          "agents"
-        ]
-      }
-    },
-    "/api/v1/projects/{project_id}/agents{agent_id}/current-version": {
-      "patch": {
-        "operationId": "set_current_version_endpoint_api_v1_projects__project_id__agents_agent_id__current_version_patch",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "project_id",
-            "required": true,
-            "schema": {
-              "format": "uuid",
-              "title": "Project Id",
-              "type": "string"
-            }
-          },
-          {
-            "in": "path",
-            "name": "agent_id",
-            "required": true,
-            "schema": {
-              "format": "uuid",
-              "title": "Agent Id",
-              "type": "string"
-            }
-          },
-          {
-            "in": "header",
-            "name": "x-csrf-token",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "X-Csrf-Token"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/AgentResponse"
-                }
-              }
-            },
-            "description": "Successful Response"
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            },
-            "description": "Validation Error"
-          }
-        },
-        "summary": "Set Current Version Endpoint",
-        "tags": [
-          "agents"
-        ]
-      }
-    },
-    "/api/v1/projects/{project_id}/agents{agent_id}/versions/{v1_id}/diff/{v2_id}": {
-      "get": {
-        "operationId": "diff_versions_api_v1_projects__project_id__agents_agent_id__versions__v1_id__diff__v2_id__get",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "project_id",
-            "required": true,
-            "schema": {
-              "format": "uuid",
-              "title": "Project Id",
-              "type": "string"
-            }
-          },
-          {
-            "in": "path",
-            "name": "agent_id",
-            "required": true,
-            "schema": {
-              "format": "uuid",
-              "title": "Agent Id",
-              "type": "string"
-            }
-          },
-          {
-            "in": "path",
-            "name": "v1_id",
-            "required": true,
-            "schema": {
-              "format": "uuid",
-              "title": "V1 Id",
-              "type": "string"
-            }
-          },
-          {
-            "in": "path",
-            "name": "v2_id",
-            "required": true,
-            "schema": {
-              "format": "uuid",
-              "title": "V2 Id",
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Diff Versions Api V1 Projects  Project Id  Agents Agent Id  Versions  V1 Id  Diff  V2 Id  Get",
-                  "type": "object"
-                }
-              }
-            },
-            "description": "Successful Response"
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            },
-            "description": "Validation Error"
-          }
-        },
-        "summary": "Diff Versions",
         "tags": [
           "agents"
         ]
