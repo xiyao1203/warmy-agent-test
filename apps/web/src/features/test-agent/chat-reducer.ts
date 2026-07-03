@@ -428,11 +428,11 @@ export function useChatReducer() {
     (session: ChatResponse) => {
       dispatch({ type: "APPLY_SESSION", session });
       if (typeof window !== "undefined") {
-        window.history.replaceState(
-          {},
-          "",
-          `${window.location.pathname}?session=${session.session_id}`,
-        );
+        const nextUrl = `${window.location.pathname}?session=${session.session_id}`;
+        const currentUrl = `${window.location.pathname}${window.location.search}`;
+        if (currentUrl !== nextUrl) {
+          window.history.replaceState({}, "", nextUrl);
+        }
       }
     },
     [dispatch],

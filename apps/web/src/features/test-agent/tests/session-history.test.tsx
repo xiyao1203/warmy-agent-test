@@ -85,6 +85,7 @@ test("restores a persisted session from project history", async () => {
 });
 
 test("creates a durable session before the first message", async () => {
+  const replaceState = vi.spyOn(window.history, "replaceState");
   sendChatMessage.mockResolvedValue({
     session_id: "session-2",
     title: "你好",
@@ -118,6 +119,7 @@ test("creates a durable session before the first message", async () => {
     expect.anything(),
   );
   expect(await screen.findByText("你想测试哪个 Agent？")).toBeVisible();
+  expect(replaceState).toHaveBeenCalledTimes(1);
 });
 
 test("renders the refined composer and panel controls", async () => {
