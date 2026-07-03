@@ -30,6 +30,9 @@ import type {
   BatchDeleteCasesApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdCasesBatchDeletePostData,
   BatchDeleteCasesApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdCasesBatchDeletePostErrors,
   BatchDeleteCasesApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdCasesBatchDeletePostResponses,
+  CancelGenerationApiV1ProjectsProjectIdTestAgentSessionsSessionIdGenerationsGenerationIdCancelPostData,
+  CancelGenerationApiV1ProjectsProjectIdTestAgentSessionsSessionIdGenerationsGenerationIdCancelPostErrors,
+  CancelGenerationApiV1ProjectsProjectIdTestAgentSessionsSessionIdGenerationsGenerationIdCancelPostResponses,
   CancelRunApiV1ProjectsProjectIdRunsRunIdCancelPostData,
   CancelRunApiV1ProjectsProjectIdRunsRunIdCancelPostErrors,
   CancelRunApiV1ProjectsProjectIdRunsRunIdCancelPostResponses,
@@ -3723,6 +3726,29 @@ export const streamEventsApiV1ProjectsProjectIdTestAgentSessionsSessionIdEventsG
       ThrowOnError
     >({
       url: "/api/v1/projects/{project_id}/test-agent/sessions/{session_id}/events",
+      ...options,
+    });
+
+/**
+ * Cancel Generation
+ */
+export const cancelGenerationApiV1ProjectsProjectIdTestAgentSessionsSessionIdGenerationsGenerationIdCancelPost =
+  <ThrowOnError extends boolean = false>(
+    options: Options<
+      CancelGenerationApiV1ProjectsProjectIdTestAgentSessionsSessionIdGenerationsGenerationIdCancelPostData,
+      ThrowOnError
+    >,
+  ): RequestResult<
+    CancelGenerationApiV1ProjectsProjectIdTestAgentSessionsSessionIdGenerationsGenerationIdCancelPostResponses,
+    CancelGenerationApiV1ProjectsProjectIdTestAgentSessionsSessionIdGenerationsGenerationIdCancelPostErrors,
+    ThrowOnError
+  > =>
+    (options.client ?? client).post<
+      CancelGenerationApiV1ProjectsProjectIdTestAgentSessionsSessionIdGenerationsGenerationIdCancelPostResponses,
+      CancelGenerationApiV1ProjectsProjectIdTestAgentSessionsSessionIdGenerationsGenerationIdCancelPostErrors,
+      ThrowOnError
+    >({
+      url: "/api/v1/projects/{project_id}/test-agent/sessions/{session_id}/generations/{generation_id}/cancel",
       ...options,
     });
 

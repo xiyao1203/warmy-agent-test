@@ -374,6 +374,10 @@ export type ChangePasswordRequest = {
  */
 export type ChatRequest = {
   /**
+   * Generation Id
+   */
+  generation_id?: string;
+  /**
    * Message
    */
   message: string;
@@ -7727,7 +7731,12 @@ export type StreamEventsApiV1ProjectsProjectIdTestAgentSessionsSessionIdEventsGe
        */
       session_id: string;
     };
-    query?: never;
+    query?: {
+      /**
+       * After
+       */
+      after?: number | null;
+    };
     url: "/api/v1/projects/{project_id}/test-agent/sessions/{session_id}/events";
   };
 
@@ -7743,6 +7752,52 @@ export type StreamEventsApiV1ProjectsProjectIdTestAgentSessionsSessionIdEventsGe
   StreamEventsApiV1ProjectsProjectIdTestAgentSessionsSessionIdEventsGetErrors[keyof StreamEventsApiV1ProjectsProjectIdTestAgentSessionsSessionIdEventsGetErrors];
 
 export type StreamEventsApiV1ProjectsProjectIdTestAgentSessionsSessionIdEventsGetResponses =
+  {
+    /**
+     * Successful Response
+     */
+    200: unknown;
+  };
+
+export type CancelGenerationApiV1ProjectsProjectIdTestAgentSessionsSessionIdGenerationsGenerationIdCancelPostData =
+  {
+    body?: never;
+    headers?: {
+      /**
+       * X-Csrf-Token
+       */
+      "x-csrf-token"?: string | null;
+    };
+    path: {
+      /**
+       * Project Id
+       */
+      project_id: string;
+      /**
+       * Session Id
+       */
+      session_id: string;
+      /**
+       * Generation Id
+       */
+      generation_id: string;
+    };
+    query?: never;
+    url: "/api/v1/projects/{project_id}/test-agent/sessions/{session_id}/generations/{generation_id}/cancel";
+  };
+
+export type CancelGenerationApiV1ProjectsProjectIdTestAgentSessionsSessionIdGenerationsGenerationIdCancelPostErrors =
+  {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+  };
+
+export type CancelGenerationApiV1ProjectsProjectIdTestAgentSessionsSessionIdGenerationsGenerationIdCancelPostError =
+  CancelGenerationApiV1ProjectsProjectIdTestAgentSessionsSessionIdGenerationsGenerationIdCancelPostErrors[keyof CancelGenerationApiV1ProjectsProjectIdTestAgentSessionsSessionIdGenerationsGenerationIdCancelPostErrors];
+
+export type CancelGenerationApiV1ProjectsProjectIdTestAgentSessionsSessionIdGenerationsGenerationIdCancelPostResponses =
   {
     /**
      * Successful Response

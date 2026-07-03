@@ -650,6 +650,11 @@
       },
       "ChatRequest": {
         "properties": {
+          "generation_id": {
+            "format": "uuid",
+            "title": "Generation Id",
+            "type": "string"
+          },
           "message": {
             "maxLength": 20000,
             "minLength": 1,
@@ -12873,6 +12878,22 @@
             }
           },
           {
+            "in": "query",
+            "name": "after",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "After"
+            }
+          },
+          {
             "in": "header",
             "name": "Last-Event-ID",
             "required": false,
@@ -12910,6 +12931,83 @@
           }
         },
         "summary": "Stream Events",
+        "tags": [
+          "test-agent"
+        ]
+      }
+    },
+    "/api/v1/projects/{project_id}/test-agent/sessions/{session_id}/generations/{generation_id}/cancel": {
+      "post": {
+        "operationId": "cancel_generation_api_v1_projects__project_id__test_agent_sessions__session_id__generations__generation_id__cancel_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Project Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "session_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Session Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "generation_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Generation Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "x-csrf-token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Csrf-Token"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Cancel Generation",
         "tags": [
           "test-agent"
         ]
