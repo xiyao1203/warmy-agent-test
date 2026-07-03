@@ -86,7 +86,12 @@ function groupTasks(events: AgentEvent[]): TaskSummary[] {
   const order: string[] = [];
   for (const event of events) {
     if (
-      !["agent.delegated", "agent.progress", "agent.completed", "agent.failed"].includes(event.type)
+      ![
+        "agent.delegated",
+        "agent.progress",
+        "agent.completed",
+        "agent.failed",
+      ].includes(event.type)
     )
       continue;
     const tid = String(event.payload.task_id ?? "");
@@ -140,7 +145,11 @@ const statusConfig: Record<
     label: "执行中",
     tone: "text-[var(--primary)] animate-spin",
   },
-  completed: { icon: CheckCircle2, label: "已完成", tone: "text-[var(--success)]" },
+  completed: {
+    icon: CheckCircle2,
+    label: "已完成",
+    tone: "text-[var(--success)]",
+  },
   failed: { icon: XCircle, label: "失败", tone: "text-[var(--danger)]" },
 };
 
@@ -161,11 +170,11 @@ export function ContextPanel({
     <aside className="flex h-full min-h-0 flex-col overflow-y-auto border-l border-[var(--hairline)] bg-[var(--surface)]">
       {/* Artifacts */}
       <div className="p-4">
-        <h3 className="text-xs font-semibold uppercase tracking-[0.66px] text-[var(--muted)]">
+        <h3 className="text-[0.68rem] font-medium uppercase tracking-[0.08em] text-[var(--muted)]">
           关联资产
         </h3>
         {artifacts.length === 0 ? (
-          <p className="mt-2 text-xs text-[var(--muted)]">
+          <p className="mt-2 text-xs leading-5 text-[var(--muted)]">
             对话产生的平台资产会
             <br />
             显示在这里。
@@ -199,7 +208,7 @@ export function ContextPanel({
 
       {/* Sub-agent tasks */}
       <div className="border-t border-[var(--hairline)] p-4">
-        <h3 className="text-xs font-semibold uppercase tracking-[0.66px] text-[var(--muted)]">
+        <h3 className="text-[0.68rem] font-medium uppercase tracking-[0.08em] text-[var(--muted)]">
           子 Agent 任务
         </h3>
         {tasks.length === 0 ? (
@@ -228,7 +237,9 @@ export function ContextPanel({
                       {task.childAgent}
                     </span>
                   </div>
-                  <span className={`flex shrink-0 items-center gap-1 text-xs ${conf.tone}`}>
+                  <span
+                    className={`flex shrink-0 items-center gap-1 text-xs ${conf.tone}`}
+                  >
                     <StatusIcon className="size-3" />
                     {conf.label}
                   </span>
@@ -253,17 +264,19 @@ export function ContextPanel({
 }
 
 function CodexResultCard({ result }: { result: CodexExploreResult }) {
-  const statusTone = {
-    passed: "text-[var(--success)] bg-[var(--success-subtle)]",
-    failed: "text-[var(--danger)] bg-[var(--danger-subtle)]",
-    error: "text-[var(--danger)] bg-[var(--danger-subtle)]",
-  }[result.status] ?? "text-[var(--muted)] bg-[var(--canvas-soft)]";
+  const statusTone =
+    {
+      passed: "text-[var(--success)] bg-[var(--success-subtle)]",
+      failed: "text-[var(--danger)] bg-[var(--danger-subtle)]",
+      error: "text-[var(--danger)] bg-[var(--danger-subtle)]",
+    }[result.status] ?? "text-[var(--muted)] bg-[var(--canvas-soft)]";
 
-  const statusLabel = {
-    passed: "通过",
-    failed: "失败",
-    error: "错误",
-  }[result.status] ?? result.status;
+  const statusLabel =
+    {
+      passed: "通过",
+      failed: "失败",
+      error: "错误",
+    }[result.status] ?? result.status;
 
   const screenshotCount = result.screenshots?.length ?? 0;
 

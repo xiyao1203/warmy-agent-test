@@ -66,10 +66,10 @@ export function initialChatState(): ChatState {
             200,
             Math.min(
               480,
-              Number(localStorage.getItem("chat-sidebar-width")) || 272,
+              Number(localStorage.getItem("chat-sidebar-width")) || 260,
             ),
           )
-        : 272,
+        : 260,
     isPinned: true,
     timeline: [],
     eventCursor: 0,

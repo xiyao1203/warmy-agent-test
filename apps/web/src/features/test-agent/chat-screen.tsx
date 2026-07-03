@@ -4,12 +4,16 @@ import {
   ArrowDown,
   ChevronsRight,
   CornerDownLeft,
+  PanelRight,
   StopCircle,
+  X,
 } from "lucide-react";
 import {
   useCallback,
   useEffect,
   useRef,
+  useState,
+  type CSSProperties,
   type KeyboardEvent,
   type MouseEvent,
 } from "react";
@@ -60,6 +64,7 @@ export function TestAgentChat({ projectId }: { projectId: string }) {
   const streamingContentRef = useRef("");
   const resizingRef = useRef(false);
   const eventCursorRef = useRef(0);
+  const [contextOpen, setContextOpen] = useState(false);
 
   const activeSessionId = state.activeSession?.session_id ?? null;
 
@@ -528,7 +533,7 @@ export function TestAgentChat({ projectId }: { projectId: string }) {
       <div className="relative min-h-0 flex-1 overflow-hidden">
         {/* ── Sidebar ── */}
         <aside
-          className={`absolute bottom-0 left-0 top-0 z-20 transition-transform duration-300 ease-in-out ${
+          className={`absolute bottom-0 left-0 top-0 z-30 max-[760px]:w-[min(86vw,20rem)] transition-transform duration-200 ease-out ${
             state.sidebarOpen ? "translate-x-0" : "-translate-x-full"
           }`}
           style={{ width: state.sidebarWidth }}
@@ -555,22 +560,28 @@ export function TestAgentChat({ projectId }: { projectId: string }) {
         {state.sidebarOpen ? (
           <div
             aria-hidden="true"
-            className="absolute inset-0 z-10 bg-black/20 transition-opacity max-[1100px]:block hidden"
+            className="absolute inset-0 z-20 hidden bg-black/20 backdrop-blur-[1px] max-[760px]:block"
             onClick={handleToggleSidebar}
           />
         ) : null}
 
         {/* ── Main + Context ── */}
         <div
-          className="grid h-full grid-cols-[minmax(0,1fr)_19rem] max-[1100px]:grid-cols-1 overflow-hidden transition-[margin] duration-300 ease-in-out"
-          style={{ marginLeft: state.sidebarOpen ? state.sidebarWidth : 0 }}
+          className="grid h-full grid-cols-[minmax(0,1fr)_18rem] overflow-hidden transition-[margin] duration-200 ease-out max-[1100px]:grid-cols-1 max-[760px]:ml-0 ml-[var(--chat-sidebar-width)]"
+          style={
+            {
+              "--chat-sidebar-width": state.sidebarOpen
+                ? `${state.sidebarWidth}px`
+                : "0px",
+            } as CSSProperties
+          }
         >
           <main className="relative flex min-h-0 min-w-0 flex-col bg-[var(--canvas)]">
             {/* Header */}
-            <header className="flex shrink-0 items-center justify-between border-b border-[var(--hairline)] bg-[var(--canvas)] px-4 py-2.5">
+            <header className="flex h-12 shrink-0 items-center justify-between border-b border-[var(--hairline)] bg-[var(--canvas)] px-3 sm:px-4">
               <button
-                aria-label="切换侧边栏"
-                className="rounded-lg p-1.5 text-[var(--muted)] transition-colors hover:bg-[var(--canvas-soft)] hover:text-[var(--ink)]"
+                aria-label={state.sidebarOpen ? "关闭会话历史" : "打开会话历史"}
+                className="flex size-9 items-center justify-center rounded-lg text-[var(--muted)] transition-colors hover:bg-[var(--canvas-soft)] hover:text-[var(--ink)]"
                 onClick={handleToggleSidebar}
                 type="button"
               >
@@ -583,8 +594,16 @@ export function TestAgentChat({ projectId }: { projectId: string }) {
               </span>
               <div className="flex items-center gap-1">
                 <button
+                  aria-label={contextOpen ? "关闭上下文" : "打开上下文"}
+                  className="flex size-9 items-center justify-center rounded-lg text-[var(--muted)] transition-colors hover:bg-[var(--canvas-soft)] hover:text-[var(--ink)] min-[1101px]:hidden"
+                  onClick={() => setContextOpen((value) => !value)}
+                  type="button"
+                >
+                  <PanelRight className="size-4" />
+                </button>
+                <button
                   aria-label="新建会话 (Ctrl+K)"
-                  className="rounded-lg p-1.5 text-[var(--muted)] transition-colors hover:bg-[var(--canvas-soft)] hover:text-[var(--ink)]"
+                  className="flex size-9 items-center justify-center rounded-lg text-[var(--muted)] transition-colors hover:bg-[var(--canvas-soft)] hover:text-[var(--ink)]"
                   onClick={() => void newSession()}
                   title="新建会话 (Ctrl+K)"
                   type="button"
@@ -598,7 +617,7 @@ export function TestAgentChat({ projectId }: { projectId: string }) {
             <div
               aria-busy={state.sending || state.loadingSession}
               aria-live="polite"
-              className="chat-scroll min-h-0 flex-1 overflow-y-auto px-5 py-4 pb-8"
+              className="chat-scroll min-h-0 flex-1 overflow-y-auto px-4 pb-8 pt-6 sm:px-6"
               onScroll={handleScroll}
               ref={scrollRef}
               role="log"
@@ -724,7 +743,7 @@ export function TestAgentChat({ projectId }: { projectId: string }) {
             ) : null}
 
             {/* Composer (input bar) */}
-            <div className="shrink-0 border-t border-[var(--hairline)] px-4 py-3">
+            <div className="shrink-0 bg-[linear-gradient(to_bottom,transparent,var(--canvas)_24%)] px-3 pb-3 pt-6 sm:px-5">
               {state.connectionState === "reconnecting" ||
               state.connectionState === "offline" ? (
                 <p
@@ -736,11 +755,11 @@ export function TestAgentChat({ projectId }: { projectId: string }) {
                     : "实时连接已断开"}
                 </p>
               ) : null}
-              <div className="mx-auto flex max-w-3xl gap-2">
-                <div className="relative flex-1">
+              <div className="mx-auto max-w-3xl">
+                <div className="relative rounded-[1.4rem] border border-[var(--hairline-strong)] bg-[var(--surface)] shadow-[0_8px_28px_rgba(0,0,0,0.06)] transition-[border-color,box-shadow] focus-within:border-[var(--primary)] focus-within:shadow-[0_10px_34px_rgba(0,0,0,0.1)]">
                   <textarea
                     aria-label="对话输入"
-                    className="w-full resize-none rounded-2xl border border-[var(--hairline)] bg-[var(--canvas-soft)] px-4 py-3 pr-10 text-[0.9375rem] leading-6 text-[var(--ink)] placeholder-[var(--muted)] transition-shadow focus:border-[var(--hairline-strong)] focus:shadow-md focus:outline-none disabled:opacity-50"
+                    className="block max-h-48 min-h-12 w-full resize-none bg-transparent px-4 py-3 pr-12 text-[0.9375rem] leading-6 text-[var(--ink)] placeholder:text-[var(--muted)] focus:outline-none disabled:opacity-50"
                     disabled={state.sending}
                     onChange={(e) => {
                       dispatch({ type: "SET_INPUT", value: e.target.value });
@@ -748,7 +767,7 @@ export function TestAgentChat({ projectId }: { projectId: string }) {
                       e.target.style.height = `${Math.min(e.target.scrollHeight, 200)}px`;
                     }}
                     onKeyDown={handleKeyDown}
-                    placeholder="向超级测试 Agent 描述目标… (Ctrl+K 新会话, Ctrl+Enter 发送)"
+                    placeholder="向超级测试 Agent 描述目标…"
                     ref={inputRef}
                     rows={1}
                     value={state.input}
@@ -760,33 +779,34 @@ export function TestAgentChat({ projectId }: { projectId: string }) {
                           ? "取消中"
                           : "停止生成"
                       }
-                      className="absolute bottom-2 right-2 rounded-lg p-1.5 text-[var(--muted)] transition-colors hover:bg-[var(--danger-subtle)] hover:text-[var(--danger)]"
+                      className="absolute bottom-2 right-2 flex size-8 items-center justify-center rounded-full bg-[var(--ink)] text-[var(--canvas)] transition-colors hover:bg-[var(--danger)] disabled:opacity-50"
                       onClick={() => void stopGenerating()}
                       disabled={state.activeGeneration?.status === "cancelling"}
                       type="button"
                     >
-                      <StopCircle className="size-5" />
+                      <StopCircle className="size-4.5" />
                     </button>
                   ) : (
                     <button
                       aria-label="发送 (Enter)"
-                      className={`absolute bottom-2 right-2 rounded-lg p-1.5 transition-all ${
+                      className={`absolute bottom-2 right-2 flex size-8 items-center justify-center rounded-full transition-colors ${
                         state.input.trim()
-                          ? "bg-[var(--primary)] text-white hover:bg-[var(--primary-hover)]"
-                          : "cursor-default text-[var(--muted)]"
+                          ? "bg-[var(--ink)] text-[var(--canvas)] hover:opacity-85"
+                          : "cursor-default bg-[var(--canvas-soft)] text-[var(--muted)]"
                       }`}
                       disabled={!state.input.trim()}
                       onClick={() => void handleSend()}
                       type="button"
                     >
-                      <CornerDownLeft className="size-5" />
+                      <CornerDownLeft className="size-4.5" />
                     </button>
                   )}
                 </div>
+                <div className="mt-1.5 flex items-center justify-between px-1 text-[0.65rem] text-[var(--muted)]">
+                  <span>Enter 发送 · Shift+Enter 换行</span>
+                  <span className="hidden sm:inline">请验证关键结果</span>
+                </div>
               </div>
-              <p className="mx-auto mt-2 max-w-3xl text-center text-[0.65rem] text-[var(--muted)]">
-                超级测试 Agent 可能产生不准确信息，请验证关键结果。
-              </p>
             </div>
           </main>
 
@@ -799,6 +819,37 @@ export function TestAgentChat({ projectId }: { projectId: string }) {
             />
           </div>
         </div>
+
+        {contextOpen ? (
+          <div className="absolute inset-0 z-40 hidden max-[1100px]:block">
+            <button
+              aria-label="关闭上下文"
+              className="absolute inset-0 bg-black/20 backdrop-blur-[1px]"
+              onClick={() => setContextOpen(false)}
+              type="button"
+            />
+            <aside className="absolute bottom-0 right-0 top-0 w-[min(88vw,18rem)] bg-[var(--surface)] shadow-xl">
+              <div className="flex h-12 items-center justify-between border-b border-[var(--hairline)] px-4">
+                <span className="text-sm font-medium">上下文</span>
+                <button
+                  aria-label="关闭上下文面板"
+                  className="flex size-9 items-center justify-center rounded-lg text-[var(--muted)] hover:bg-[var(--canvas-soft)]"
+                  onClick={() => setContextOpen(false)}
+                  type="button"
+                >
+                  <X className="size-4" />
+                </button>
+              </div>
+              <div className="h-[calc(100%-3rem)]">
+                <ContextPanel
+                  artifacts={state.artifacts}
+                  events={state.events}
+                  projectId={projectId}
+                />
+              </div>
+            </aside>
+          </div>
+        ) : null}
       </div>
     </div>
   );

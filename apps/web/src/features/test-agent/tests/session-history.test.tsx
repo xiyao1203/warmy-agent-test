@@ -118,3 +118,15 @@ test("creates a durable session before the first message", async () => {
   );
   expect(await screen.findByText("你想测试哪个 Agent？")).toBeVisible();
 });
+
+test("renders the refined composer and panel controls", async () => {
+  render(<TestAgentChat projectId="project-1" />);
+
+  expect(
+    screen.getByPlaceholderText("向超级测试 Agent 描述目标…"),
+  ).toBeVisible();
+  expect(screen.getByText("Enter 发送 · Shift+Enter 换行")).toBeVisible();
+  expect(screen.getByRole("button", { name: "关闭会话历史" })).toBeVisible();
+  expect(screen.getByRole("button", { name: "打开上下文" })).toBeVisible();
+  expect(await screen.findByText("登录回归")).toBeVisible();
+});
