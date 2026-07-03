@@ -9,6 +9,7 @@ from agenttest.modules.test_agent.domain.entities import (
     AgentEvent,
     AgentTask,
     ArtifactLink,
+    ChatGeneration,
     ChatSession,
     ChatSessionId,
 )
@@ -28,6 +29,18 @@ class ChatSessionRepository(Protocol):
     async def save(self, session: ChatSession) -> None: ...
 
 
+class ChatGenerationRepository(Protocol):
+    async def add(self, generation: ChatGeneration) -> None: ...
+
+    async def get(self, project_id: ProjectId, generation_id: UUID) -> ChatGeneration | None: ...
+
+    async def get_active(
+        self, project_id: ProjectId, session_id: ChatSessionId
+    ) -> ChatGeneration | None: ...
+
+    async def save(self, generation: ChatGeneration) -> None: ...
+
+
 class OrchestrationRepository(Protocol):
     async def add_task(self, task: AgentTask) -> None: ...
     async def get_task(self, project_id: ProjectId, task_id: UUID) -> AgentTask | None: ...
@@ -43,12 +56,15 @@ class OrchestrationRepository(Protocol):
         session_id: ChatSessionId,
         event_type: str,
         payload: dict[str, object],
+        generation_id: UUID | None = None,
     ) -> AgentEvent: ...
     async def list_events(
         self, project_id: ProjectId, session_id: ChatSessionId, *, after: int = 0
     ) -> list[AgentEvent]: ...
     async def latest_sequence(
-        self, project_id: ProjectId, session_id: ChatSessionId,
+        self,
+        project_id: ProjectId,
+        session_id: ChatSessionId,
     ) -> int: ...
     async def add_artifact_link(self, link: ArtifactLink) -> None: ...
     async def list_artifact_links(

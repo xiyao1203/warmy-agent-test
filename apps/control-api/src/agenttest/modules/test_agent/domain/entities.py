@@ -399,6 +399,7 @@ class AgentEvent:
     event_type: str
     payload: dict[str, object]
     created_at: datetime
+    generation_id: UUID | None = None
 
 
 @dataclass(frozen=True, slots=True)

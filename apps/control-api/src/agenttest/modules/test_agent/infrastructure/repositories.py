@@ -20,10 +20,12 @@ from agenttest.modules.test_agent.domain.entities import (
     AgentEvent,
     AgentTask,
     ArtifactLink,
+    ChatGeneration,
     ChatMessage,
     ChatSession,
     ChatSessionId,
     ConfirmationStatus,
+    GenerationStatus,
     RiskLevel,
     SessionStatus,
     TaskStatus,
@@ -32,6 +34,7 @@ from agenttest.modules.test_agent.infrastructure.models import (
     TargetAgentChatSessionModel,
     TargetAgentChatTurnModel,
     TestAgentArtifactLinkModel,
+    TestAgentChatGenerationModel,
     TestAgentConfirmationModel,
     TestAgentEventModel,
     TestAgentMessageModel,
@@ -195,6 +198,65 @@ class SqlAlchemyChatSessionRepository(ChatSessionRepository):
             )
 
 
+class SqlAlchemyChatGenerationRepository:
+    def __init__(self, session_factory: async_sessionmaker[AsyncSession]) -> None:
+        self._session_factory = session_factory
+
+    async def add(self, generation: ChatGeneration) -> None:
+        async with transaction_scope(self._session_factory) as database:
+            database.add(_generation_to_model(generation))
+
+    async def get(self, project_id: ProjectId, generation_id: UUID) -> ChatGeneration | None:
+        statement = select(TestAgentChatGenerationModel).where(
+            TestAgentChatGenerationModel.project_id == project_id.value,
+            TestAgentChatGenerationModel.id == generation_id,
+        )
+        async with session_scope(self._session_factory) as database:
+            model = await database.scalar(statement)
+        return _generation_to_domain(model) if model is not None else None
+
+    async def get_active(
+        self, project_id: ProjectId, session_id: ChatSessionId
+    ) -> ChatGeneration | None:
+        statement = (
+            select(TestAgentChatGenerationModel)
+            .where(
+                TestAgentChatGenerationModel.project_id == project_id.value,
+                TestAgentChatGenerationModel.session_id == session_id.value,
+                TestAgentChatGenerationModel.status.in_(
+                    [
+                        GenerationStatus.PENDING.value,
+                        GenerationStatus.RUNNING.value,
+                        GenerationStatus.CANCELLING.value,
+                    ]
+                ),
+            )
+            .order_by(TestAgentChatGenerationModel.started_at.desc())
+        )
+        async with session_scope(self._session_factory) as database:
+            model = await database.scalar(statement)
+        return _generation_to_domain(model) if model is not None else None
+
+    async def save(self, generation: ChatGeneration) -> None:
+        async with transaction_scope(self._session_factory) as database:
+            result = await database.execute(
+                update(TestAgentChatGenerationModel)
+                .where(
+                    TestAgentChatGenerationModel.project_id == generation.project_id,
+                    TestAgentChatGenerationModel.id == generation.generation_id,
+                )
+                .values(
+                    workflow_id=generation.workflow_id,
+                    status=generation.status.value,
+                    partial_content=generation.partial_content,
+                    updated_at=generation.updated_at,
+                    completed_at=generation.completed_at,
+                )
+            )
+            if result.rowcount != 1:
+                raise ValueError("Generation does not exist in project")
+
+
 class SqlAlchemyOrchestrationRepository(OrchestrationRepository):
     def __init__(self, session_factory: async_sessionmaker[AsyncSession]) -> None:
         self._session_factory = session_factory
@@ -286,6 +348,7 @@ class SqlAlchemyOrchestrationRepository(OrchestrationRepository):
         session_id: ChatSessionId,
         event_type: str,
         payload: dict[str, object],
+        generation_id: UUID | None = None,
     ) -> AgentEvent:
         async with transaction_scope(self._session_factory) as database:
             locked = await database.scalar(
@@ -312,12 +375,14 @@ class SqlAlchemyOrchestrationRepository(OrchestrationRepository):
                 event_type=event_type,
                 payload=payload,
                 created_at=datetime.now(UTC),
+                generation_id=generation_id,
             )
             database.add(
                 TestAgentEventModel(
                     id=event.event_id,
                     project_id=event.project_id,
                     session_id=event.session_id,
+                    generation_id=event.generation_id,
                     sequence=event.sequence,
                     event_type=event.event_type,
                     payload=event.payload,
@@ -349,12 +414,15 @@ class SqlAlchemyOrchestrationRepository(OrchestrationRepository):
                 event_type=model.event_type,
                 payload=dict(model.payload),
                 created_at=model.created_at,
+                generation_id=model.generation_id,
             )
             for model in models
         ]
 
     async def latest_sequence(
-        self, project_id: ProjectId, session_id: ChatSessionId,
+        self,
+        project_id: ProjectId,
+        session_id: ChatSessionId,
     ) -> int:
         async with session_scope(self._session_factory) as database:
             result = await database.scalar(
@@ -541,6 +609,38 @@ def _task_to_model(task: AgentTask) -> TestAgentTaskModel:
         error=task.error,
         created_at=task.created_at,
         updated_at=task.updated_at,
+    )
+
+
+def _generation_to_model(
+    generation: ChatGeneration,
+) -> TestAgentChatGenerationModel:
+    return TestAgentChatGenerationModel(
+        id=generation.generation_id,
+        project_id=generation.project_id,
+        session_id=generation.session_id,
+        workflow_id=generation.workflow_id,
+        status=generation.status.value,
+        partial_content=generation.partial_content,
+        started_at=generation.started_at,
+        updated_at=generation.updated_at,
+        completed_at=generation.completed_at,
+    )
+
+
+def _generation_to_domain(
+    model: TestAgentChatGenerationModel,
+) -> ChatGeneration:
+    return ChatGeneration(
+        generation_id=model.id,
+        project_id=model.project_id,
+        session_id=model.session_id,
+        workflow_id=model.workflow_id,
+        status=GenerationStatus(model.status),
+        partial_content=model.partial_content,
+        started_at=model.started_at,
+        updated_at=model.updated_at,
+        completed_at=model.completed_at,
     )
 
 
