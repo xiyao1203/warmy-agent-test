@@ -225,9 +225,7 @@ def test_readiness_missing_agent_and_dataset() -> None:
     plan_id = create_plan(c, pid)
     version_id = create_version(c, pid, plan_id)
 
-    r = c.get(
-        f"/api/v1/projects/{pid.value}/test-plans/{plan_id}/versions/{version_id}/readiness"
-    )
+    r = c.get(f"/api/v1/projects/{pid.value}/test-plans/{plan_id}/versions/{version_id}/readiness")
     assert r.status_code == 200
     body = r.json()
     assert body["ready"] is False

@@ -162,7 +162,10 @@ export function GateList({ projectId }: { projectId: string }) {
         projectId={projectId}
       />
 
-      <Dialog onOpenChange={() => setDeleteTarget(null)} open={deleteTarget !== null}>
+      <Dialog
+        onOpenChange={() => setDeleteTarget(null)}
+        open={deleteTarget !== null}
+      >
         <DialogContent>
           <DialogTitle>确认删除</DialogTitle>
           <DialogDescription>

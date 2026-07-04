@@ -71,9 +71,7 @@ async def ensure_persistent_chrome(
     向后兼容旧调用方。
     """
     if not user_data_dir:
-        user_data_dir = str(
-            Path(tempfile.gettempdir()) / "agenttest-chrome-profile"
-        )
+        user_data_dir = str(Path(tempfile.gettempdir()) / "agenttest-chrome-profile")
 
     # 构建临时 Profile（不持久化到 registry）
     profile = BrowserProfile(
@@ -158,7 +156,7 @@ async def capture_storage_state(
         保存后的 storageState 文件路径，失败返回空字符串
     """
     try:
-        from playwright.async_api import async_playwright
+        from playwright.async_api import async_playwright  # type: ignore[import-not-found]
     except ImportError:
         return ""
 
@@ -248,7 +246,8 @@ async def invoke_codex(
         if profile is not None:
             # 启动 Profile Chrome
             resolved_cdp_endpoint = await start_profile(
-                profile, headless=headless,
+                profile,
+                headless=headless,
             )
             # 使用 Profile 的 storageState
             if profile.storage_state_path and not resolved_storage_state_path:
@@ -332,7 +331,7 @@ def _codex_unavailable_result(
                 "status": "unavailable",
                 "detail": (
                     "Codex CLI 未安装。请执行: npm install -g @openai/codex "
-                    "并设置 OPENAI_API_KEY 环境变量。"
+                    "并通过 Worker 运行环境配置模型凭证。"
                 ),
                 "test_intent": test_intent,
                 "target_url": target_url,

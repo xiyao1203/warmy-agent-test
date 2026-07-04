@@ -1721,6 +1721,9 @@ def _register_test_agent_endpoints(
         gate_evidence=SqlAlchemyGateEvidence(session_factory),
         models=model_config_service,
         invoker=temporal_invoker,
+        connection_validator=HttpAgentConnectionValidator(
+            allow_private_network=settings.security_scan_allow_private_network
+        ),
     )
     registry = build_platform_registry(gateway)
 

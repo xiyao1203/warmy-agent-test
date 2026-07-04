@@ -167,6 +167,73 @@ _OPTIONAL_FIELDS = {
     "sort_order",
 }
 
+_FIELD_ALIASES = {
+    "用例名称": "name",
+    "名称": "name",
+    "输入": "input",
+    "输入数据": "input",
+    "执行模式": "execution_mode",
+    "模式": "execution_mode",
+    "初始状态": "initial_state",
+    "初始业务状态": "initial_state",
+    "期望结果": "expected_outcome",
+    "预期结果": "expected_outcome",
+    "断言规则": "assertions",
+    "断言": "assertions",
+    "评分器": "scorers",
+    "评分规则": "scorers",
+    "安全策略": "security_policies",
+    "安全规则": "security_policies",
+    "标签": "tags",
+    "业务场景": "scenario",
+    "场景": "scenario",
+    "优先级": "priority",
+    "风险等级": "risk_level",
+    "风险": "risk_level",
+    "难度": "difficulty",
+    "测试分组": "test_group",
+    "分组": "test_group",
+}
+
+_EXECUTION_MODE_ALIASES = {
+    "API": ExecutionMode.API.value,
+    "API测试": ExecutionMode.API.value,
+    "接口": ExecutionMode.API.value,
+    "接口测试": ExecutionMode.API.value,
+    "浏览器": ExecutionMode.BROWSER.value,
+    "浏览器测试": ExecutionMode.BROWSER.value,
+    "E2E": ExecutionMode.BROWSER.value,
+    "端到端": ExecutionMode.BROWSER.value,
+}
+
+_RISK_LEVEL_ALIASES = {
+    "严重": RiskLevel.CRITICAL.value,
+    "致命": RiskLevel.CRITICAL.value,
+    "高": RiskLevel.HIGH.value,
+    "高风险": RiskLevel.HIGH.value,
+    "中": RiskLevel.MEDIUM.value,
+    "中风险": RiskLevel.MEDIUM.value,
+    "低": RiskLevel.LOW.value,
+    "低风险": RiskLevel.LOW.value,
+}
+
+_PRIORITY_ALIASES = {
+    "最高": Priority.P0.value,
+    "紧急": Priority.P0.value,
+    "高": Priority.P1.value,
+    "中": Priority.P2.value,
+    "低": Priority.P3.value,
+}
+
+_TEST_GROUP_ALIASES = {
+    "训练": TestGroup.TRAIN.value,
+    "训练集": TestGroup.TRAIN.value,
+    "验证": TestGroup.VALIDATION.value,
+    "验证集": TestGroup.VALIDATION.value,
+    "测试": TestGroup.TEST.value,
+    "测试集": TestGroup.TEST.value,
+}
+
 
 def parse_and_validate_import(
     format: str,
@@ -192,11 +259,12 @@ def parse_and_validate_import(
         if not isinstance(item, dict):
             errors.append(_import_error(index, "$", "invalid_type", "test case must be an object"))
             continue
-        item_errors = _validate_import_record(index, item)
+        normalized_item = _normalize_import_record(item)
+        item_errors = _validate_import_record(index, normalized_item)
         if item_errors:
             errors.extend(item_errors)
         else:
-            records.append(item)
+            records.append(normalized_item)
     if errors and not allow_errors:
         raise ImportError(errors)
     return {
@@ -228,7 +296,7 @@ def _validate_import_record(line: int, raw: dict[str, object]) -> list[dict[str,
                     line,
                     "execution_mode",
                     "invalid_enum",
-                    "execution_mode must be api, browser, canvas, or hybrid",
+                    "execution_mode must be api or browser",
                 )
             )
     for field_name in ("assertions", "scorers", "security_policies"):
@@ -302,7 +370,8 @@ def _parse_csv(content: str) -> list[dict[str, object]]:
     for row in reader:
         record: dict[str, object] = {}
         for key, value in row.items():
-            if key in (
+            normalized_key = _normalize_field_name(key)
+            if normalized_key in (
                 "input",
                 "initial_state",
                 "expected_outcome",
@@ -312,13 +381,51 @@ def _parse_csv(content: str) -> list[dict[str, object]]:
                 "tags",
             ):
                 try:
-                    record[key] = json.loads(value) if value else []
+                    record[normalized_key] = (
+                        json.loads(value) if value else _empty_csv_value(normalized_key)
+                    )
                 except json.JSONDecodeError as exc:
                     raise ValueError(f"Invalid JSON in field '{key}': {value}") from exc
             else:
-                record[key] = value
+                record[normalized_key] = value
         records.append(record)
     return records
+
+
+def _normalize_import_record(raw: dict[str, object]) -> dict[str, object]:
+    record: dict[str, object] = {}
+    for field_name, value in raw.items():
+        normalized_name = _normalize_field_name(field_name)
+        record[normalized_name] = _normalize_field_value(normalized_name, value)
+    return record
+
+
+def _normalize_field_name(field_name: object) -> str:
+    name = str(field_name).strip()
+    return _FIELD_ALIASES.get(name, name)
+
+
+def _normalize_field_value(field_name: str, value: object) -> object:
+    if not isinstance(value, str):
+        return value
+    stripped = value.strip()
+    if field_name == "execution_mode":
+        return _EXECUTION_MODE_ALIASES.get(stripped, stripped.lower())
+    if field_name == "risk_level":
+        return _RISK_LEVEL_ALIASES.get(stripped, stripped.lower())
+    if field_name == "priority":
+        return _PRIORITY_ALIASES.get(stripped, stripped.upper())
+    if field_name == "test_group":
+        return _TEST_GROUP_ALIASES.get(stripped, stripped.lower())
+    if field_name == "difficulty":
+        return {"简单": "easy", "中等": "medium", "困难": "hard"}.get(stripped, stripped)
+    return value
+
+
+def _empty_csv_value(field_name: str) -> object:
+    if field_name in {"input", "initial_state", "expected_outcome"}:
+        return {}
+    return []
 
 
 def _build_test_case(

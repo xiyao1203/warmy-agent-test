@@ -7,6 +7,7 @@ from __future__ import annotations
 
 from agenttest.modules.agents.application.commands import (
     CreateAgentCommand,
+    CreateAgentVersionCommand,
     PublishAgentVersionCommand,
 )
 from agenttest.modules.agents.domain.entities import (
@@ -36,6 +37,7 @@ __all__ = [
     "AgentVersionId",
     "AgentVersionRef",
     "CreateAgentCommand",
+    "CreateAgentVersionCommand",
     "PublishAgentVersionCommand",
     "InvocationProtocol",
     "VersionStatus",

@@ -1,6 +1,7 @@
 "use client";
 
 import type { ImportTestCasesRequest } from "@warmy/generated-api-client";
+import { Download } from "lucide-react";
 import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -12,7 +13,27 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 
+import {
+  buildTestCaseTemplate,
+  TEST_CASE_FIELD_HELP,
+  TEST_CASE_REQUIRED_FIELD_LABELS,
+  testCaseTemplateFilename,
+  type TestCaseImportFormat,
+} from "./test-case-format";
+
 type ImportLineError = { line: number; reason: string };
+
+function downloadTemplate(format: TestCaseImportFormat) {
+  const blob = new Blob([buildTestCaseTemplate(format)], {
+    type: "text/plain;charset=utf-8",
+  });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = testCaseTemplateFilename(format);
+  a.click();
+  URL.revokeObjectURL(url);
+}
 
 export function ImportDialog({
   onImport,
@@ -50,9 +71,39 @@ export function ImportDialog({
       <DialogContent>
         <DialogTitle>导入测试用例</DialogTitle>
         <DialogDescription>
-          支持 JSON、JSONL 和 CSV；任一行错误时不会写入部分数据。
+          支持 JSON、JSONL 和
+          CSV；任一行错误时不会写入部分数据。字段与“新增测试用例”保持一致。
         </DialogDescription>
         <div className="mt-5 space-y-4">
+          <div className="rounded-[var(--radius-md)] border border-[var(--hairline)] bg-[var(--canvas-soft)] p-3">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <div>
+                <p className="text-xs font-medium text-[var(--ink)]">
+                  中文导入模板
+                </p>
+                <p className="mt-1 text-xs text-[var(--muted)]">
+                  必填：{TEST_CASE_REQUIRED_FIELD_LABELS.join("、")}
+                </p>
+              </div>
+              <div className="flex gap-2">
+                {(["json", "jsonl", "csv"] as const).map((item) => (
+                  <Button
+                    key={item}
+                    onClick={() => downloadTemplate(item)}
+                    variant="secondary"
+                  >
+                    <Download className="mr-1 size-3.5" />
+                    {item.toUpperCase()}
+                  </Button>
+                ))}
+              </div>
+            </div>
+            <ul className="mt-2 space-y-1 text-xs text-[var(--muted)]">
+              {TEST_CASE_FIELD_HELP.map((item) => (
+                <li key={item}>{item}</li>
+              ))}
+            </ul>
+          </div>
           <label className="block text-sm font-medium">
             导入格式
             <select

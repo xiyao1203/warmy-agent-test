@@ -60,11 +60,7 @@ type ReadinessState = {
 
 // ── 步骤指示器子组件 ──────────────────────────────────────────
 
-function StepIndicator({
-  currentIndex,
-}: {
-  currentIndex: number;
-}) {
+function StepIndicator({ currentIndex }: { currentIndex: number }) {
   return (
     <div className="mb-5 flex items-center justify-center gap-2">
       {STEPS.map((step, idx) => (
@@ -196,7 +192,7 @@ export function TestPlanVersionDialog({
   const [releaseGateId, setReleaseGateId] = useState(
     String(config.release_gate_id ?? ""),
   );
-  const [securityProfileIds, setSecurityProfileIds] = useState<string[]>(
+  const [securityProfileIds] = useState<string[]>(
     Array.isArray(config.security_profile_ids)
       ? config.security_profile_ids.map(String)
       : [],
@@ -217,13 +213,6 @@ export function TestPlanVersionDialog({
   );
 
   // ── 步骤导航 ───────────────────────────────────────────────
-  function canNext(): boolean {
-    if (stepIndex === 0) {
-      return true;
-    }
-    return true;
-  }
-
   function goToNext() {
     if (stepIndex < STEPS.length - 1) {
       setStepIndex((prev) => prev + 1);
@@ -299,7 +288,6 @@ export function TestPlanVersionDialog({
 
   // ── Step 内容 ──────────────────────────────────────────────
 
-  const stepTitle = STEPS[stepIndex].label;
   const stepDesc = STEPS[stepIndex].description;
 
   const currentStepContent = (
@@ -365,9 +353,7 @@ export function TestPlanVersionDialog({
           <div className="col-span-2 rounded border border-[var(--hairline)] p-3">
             <p className="text-sm font-medium">评分器</p>
             {scorers.length === 0 ? (
-              <p className="mt-1 text-xs text-[var(--muted)]">
-                暂无可用评分器
-              </p>
+              <p className="mt-1 text-xs text-[var(--muted)]">暂无可用评分器</p>
             ) : (
               <div className="mt-2 flex flex-wrap gap-3">
                 {scorers.map((scorer) => (
@@ -394,9 +380,7 @@ export function TestPlanVersionDialog({
             <label className="mt-3 flex items-center gap-2 text-sm">
               <input
                 checked={observationOnly}
-                onChange={(event) =>
-                  setObservationOnly(event.target.checked)
-                }
+                onChange={(event) => setObservationOnly(event.target.checked)}
                 type="checkbox"
               />
               仅观察模式（不配置评分器时必须显式开启）
@@ -453,9 +437,7 @@ export function TestPlanVersionDialog({
               <div className="flex items-center gap-2">
                 <p className="text-sm font-medium">资产就绪检查</p>
                 {checkingReadiness ? (
-                  <span className="text-xs text-[var(--muted)]">
-                    检查中...
-                  </span>
+                  <span className="text-xs text-[var(--muted)]">检查中...</span>
                 ) : readiness ? (
                   readiness.ready ? (
                     <span className="rounded bg-emerald-100 px-2 py-0.5 text-xs font-medium text-emerald-700">
@@ -504,9 +486,7 @@ export function TestPlanVersionDialog({
         </Button>
       </DialogTrigger>
       <DialogContent className="max-h-[90vh] overflow-y-auto">
-        <DialogTitle>
-          {version ? "编辑计划版本" : "创建计划版本"}
-        </DialogTitle>
+        <DialogTitle>{version ? "编辑计划版本" : "创建计划版本"}</DialogTitle>
         <DialogDescription>{stepDesc}</DialogDescription>
 
         {/* 步骤指示器 */}

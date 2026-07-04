@@ -19,6 +19,7 @@ from pydantic import BaseModel, Field
 
 # ── 数据模型 ──────────────────────────────────────────────
 
+
 class CreateBrowserProfileRequest(BaseModel):
     name: str = Field(min_length=1, max_length=200)
     target_domain: str = ""
@@ -50,6 +51,7 @@ class ProfileListResponse(BaseModel):
 
 # ── 存储路径（与插件 profile_registry.py 一致）────────────
 
+
 def _registry_root() -> Path:
     return Path.home() / ".agenttest" / "browser-profiles"
 
@@ -69,6 +71,7 @@ def _now_iso() -> str:
 
 
 # ── 文件 I/O ─────────────────────────────────────────────
+
 
 def _load_all(project_id: str) -> list[dict]:
     path = _registry_path(project_id)
@@ -127,6 +130,7 @@ def _to_response(data: dict) -> ProfileResponse:
 
 
 # ── Router 工厂 ───────────────────────────────────────────
+
 
 def create_browser_profile_router(
     *,

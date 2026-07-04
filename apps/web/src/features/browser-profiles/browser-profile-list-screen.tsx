@@ -10,21 +10,17 @@ import {
 } from "./api";
 import { BrowserProfileList } from "./browser-profile-list";
 
-export function BrowserProfileListScreen({
-  projectId,
-}: {
-  projectId: string;
-}) {
+export function BrowserProfileListScreen({ projectId }: { projectId: string }) {
   const query = useQuery({
     queryFn: () => listBrowserProfiles(projectId),
     queryKey: ["browser-profiles", projectId],
   });
 
   if (query.isPending) {
-    return <BrowserProfileList loading projectId={projectId} />;
+    return <BrowserProfileList loading />;
   }
   if (query.isError) {
-    return <BrowserProfileList error="service" projectId={projectId} />;
+    return <BrowserProfileList error="service" />;
   }
 
   async function refresh() {
@@ -40,7 +36,11 @@ export function BrowserProfileListScreen({
         return result;
       }}
       onUpdate={async (profileId, payload) => {
-        const result = await updateBrowserProfile(projectId, profileId, payload);
+        const result = await updateBrowserProfile(
+          projectId,
+          profileId,
+          payload,
+        );
         await refresh();
         return result;
       }}
@@ -48,7 +48,6 @@ export function BrowserProfileListScreen({
         await deleteBrowserProfile(projectId, profileId);
         await refresh();
       }}
-      projectId={projectId}
     />
   );
 }

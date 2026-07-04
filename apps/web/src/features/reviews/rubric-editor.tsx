@@ -84,9 +84,7 @@ export function RubricEditor({
 
                 {/* 分数输入 */}
                 <div className="flex items-center gap-2">
-                  <label className="text-xs text-[var(--muted)]">
-                    分数
-                  </label>
+                  <label className="text-xs text-[var(--muted)]">分数</label>
                   <Input
                     className="w-16 text-center"
                     disabled={disabled}
@@ -156,9 +154,7 @@ export function RubricDisplay({
           <div>
             <p className="text-sm">{dimension.name}</p>
             {dimension.comment ? (
-              <p className="text-xs text-[var(--muted)]">
-                {dimension.comment}
-              </p>
+              <p className="text-xs text-[var(--muted)]">{dimension.comment}</p>
             ) : null}
           </div>
           <span className="text-sm font-semibold">{dimension.score} / 5</span>

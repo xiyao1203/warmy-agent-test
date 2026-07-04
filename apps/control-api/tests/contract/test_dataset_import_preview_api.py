@@ -231,10 +231,15 @@ def test_preview_returns_valid_count_errors_and_preview() -> None:
     r = c.post(
         f"/api/v1/projects/{pid.value}/datasets/{did}/versions/{vid}/imports:preview",
         headers=csrf,
-        json={"format": "json", "content": json.dumps([
-            {"name": "ok", "input": {}, "execution_mode": "api"},
-            {"name": "bad enum", "input": {}, "execution_mode": "unknown"},
-        ])},
+        json={
+            "format": "json",
+            "content": json.dumps(
+                [
+                    {"name": "ok", "input": {}, "execution_mode": "api"},
+                    {"name": "bad enum", "input": {}, "execution_mode": "unknown"},
+                ]
+            ),
+        },
     )
 
     assert r.status_code == 200
@@ -264,9 +269,7 @@ def test_preview_rejects_published_version() -> None:
         headers=csrf,
         json={
             "format": "json",
-            "content": json.dumps(
-                [{"name": "ok", "input": {}, "execution_mode": "api"}]
-            ),
+            "content": json.dumps([{"name": "ok", "input": {}, "execution_mode": "api"}]),
         },
     )
 
@@ -286,9 +289,7 @@ def test_import_to_published_version_is_rejected() -> None:
         headers=csrf,
         json={
             "format": "json",
-            "content": json.dumps(
-                [{"name": "ok", "input": {}, "execution_mode": "api"}]
-            ),
+            "content": json.dumps([{"name": "ok", "input": {}, "execution_mode": "api"}]),
         },
     )
 
@@ -303,10 +304,15 @@ def test_import_is_atomic_no_partial_state_on_error() -> None:
     r = c.post(
         f"/api/v1/projects/{pid.value}/datasets/{did}/versions/{vid}/import",
         headers=csrf,
-        json={"format": "json", "content": json.dumps([
-            {"name": "valid", "input": {}, "execution_mode": "api"},
-            {"name": "", "input": {}, "execution_mode": "api"},
-        ])},
+        json={
+            "format": "json",
+            "content": json.dumps(
+                [
+                    {"name": "valid", "input": {}, "execution_mode": "api"},
+                    {"name": "", "input": {}, "execution_mode": "api"},
+                ]
+            ),
+        },
     )
 
     assert r.status_code == 400
@@ -323,9 +329,19 @@ def test_csv_import_through_api() -> None:
     json_r = c.post(
         f"/api/v1/projects/{pid.value}/datasets/{did}/versions/{vid}/import",
         headers=csrf,
-        json={"format": "json", "content": json.dumps([
-            {"name": "API Flow", "input": {"q": "test"}, "execution_mode": "api", "priority": "P0"}
-        ])},
+        json={
+            "format": "json",
+            "content": json.dumps(
+                [
+                    {
+                        "name": "API Flow",
+                        "input": {"q": "test"},
+                        "execution_mode": "api",
+                        "priority": "P0",
+                    }
+                ]
+            ),
+        },
     )
     assert json_r.status_code == 201
     assert json_r.json()["imported_count"] == 1
@@ -338,14 +354,37 @@ def test_csv_import_through_api() -> None:
         headers=csrf,
         json={
             "format": "csv",
-            "content": (
-                'name,input,execution_mode,priority\n'
-                'API Flow,"{""q"":""test""}",api,P0\n'
-            ),
+            "content": ('name,input,execution_mode,priority\nAPI Flow,"{""q"":""test""}",api,P0\n'),
         },
     )
     assert csv_r.status_code == 201
     assert csv_r.json()["imported_count"] == 1
+
+
+def test_chinese_csv_import_through_api() -> None:
+    c, pid = client(mkuser(SystemRole.DEVELOPER))
+    csrf = {"X-CSRF-Token": "csrf-token"}
+    did, vid = draft(c, pid)
+
+    csv_r = c.post(
+        f"/api/v1/projects/{pid.value}/datasets/{did}/versions/{vid}/import",
+        headers=csrf,
+        json={
+            "format": "csv",
+            "content": (
+                "用例名称,输入,执行模式,风险等级,测试分组\n"
+                '中文导入,"{""q"":""test""}",浏览器,高,验证集\n'
+            ),
+        },
+    )
+
+    assert csv_r.status_code == 201
+    body = csv_r.json()
+    assert body["imported_count"] == 1
+    assert body["items"][0]["name"] == "中文导入"
+    assert body["items"][0]["execution_mode"] == "browser"
+    assert body["items"][0]["risk_level"] == "high"
+    assert body["items"][0]["test_group"] == "validation"
 
 
 def test_preview_then_import_flow() -> None:
@@ -426,9 +465,7 @@ def test_viewer_cannot_import() -> None:
         headers={"X-CSRF-Token": "csrf-token"},
         json={
             "format": "json",
-            "content": json.dumps(
-                [{"name": "ok", "input": {"x": 1}, "execution_mode": "api"}]
-            ),
+            "content": json.dumps([{"name": "ok", "input": {"x": 1}, "execution_mode": "api"}]),
         },
     )
     assert r.status_code == 403
@@ -441,21 +478,23 @@ def test_import_publish_verify_chain() -> None:
     did, vid = draft(c, pid)
 
     # Step 1: 导入 JSONL 用例
-    content = json.dumps([
-        {
-            "name": "Chain Test 1",
-            "input": {"q": "hello"},
-            "execution_mode": "api",
-            "priority": "P0",
-            "tags": ["chain"],
-        },
-        {
-            "name": "Chain Test 2",
-            "input": {"url": "https://a.com"},
-            "execution_mode": "browser",
-            "risk_level": "high",
-        },
-    ])
+    content = json.dumps(
+        [
+            {
+                "name": "Chain Test 1",
+                "input": {"q": "hello"},
+                "execution_mode": "api",
+                "priority": "P0",
+                "tags": ["chain"],
+            },
+            {
+                "name": "Chain Test 2",
+                "input": {"url": "https://a.com"},
+                "execution_mode": "browser",
+                "risk_level": "high",
+            },
+        ]
+    )
     imported = c.post(
         f"/api/v1/projects/{pid.value}/datasets/{did}/versions/{vid}/import",
         headers=csrf,
@@ -486,9 +525,7 @@ def test_import_publish_verify_chain() -> None:
         headers=csrf,
         json={
             "format": "json",
-            "content": json.dumps(
-                [{"name": "bad", "input": {}, "execution_mode": "api"}]
-            ),
+            "content": json.dumps([{"name": "bad", "input": {}, "execution_mode": "api"}]),
         },
     )
     assert r.status_code == 400

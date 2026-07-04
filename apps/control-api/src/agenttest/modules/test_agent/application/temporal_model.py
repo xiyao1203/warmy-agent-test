@@ -18,7 +18,9 @@ import secrets
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from datetime import UTC, datetime
+from typing import Any
 
+from pydantic_ai import RunContext
 from pydantic_ai.messages import (
     ModelMessage,
     ModelRequest,
@@ -27,11 +29,13 @@ from pydantic_ai.messages import (
     ModelResponseStreamEvent,
     PartDeltaEvent,
     RetryPromptPart,
+    SystemPromptPart,
     TextPart,
     TextPartDelta,
     ToolCallPart,
     ToolCallPartDelta,
     ToolReturnPart,
+    UserPromptPart,
 )
 from pydantic_ai.models import Model, ModelRequestParameters, StreamedResponse
 from pydantic_ai.settings import ModelSettings
@@ -64,12 +68,10 @@ async def _handle_callback_stream(
         if header_end < 0:
             return
         headers_section = text[:header_end]
-        body_text = text[header_end + 4:]
+        body_text = text[header_end + 4 :]
 
         if f"X-Internal-Token: {callback_token}" not in headers_section:
-            writer.write(
-                b"HTTP/1.1 401 Unauthorized\r\nContent-Length: 2\r\n\r\n{}"
-            )
+            writer.write(b"HTTP/1.1 401 Unauthorized\r\nContent-Length: 2\r\n\r\n{}")
             await writer.drain()
             return
 
@@ -81,9 +83,7 @@ async def _handle_callback_stream(
         await writer.drain()
     except Exception:
         try:
-            writer.write(
-                b"HTTP/1.1 500 Error\r\nContent-Length: 2\r\n\r\n{}"
-            )
+            writer.write(b"HTTP/1.1 500 Error\r\nContent-Length: 2\r\n\r\n{}")
             await writer.drain()
         except Exception:
             pass
@@ -109,7 +109,7 @@ class TemporalModel(Model):
         self,
         *,
         invoker,  # ModelInvoker
-        config,   # ModelConfiguration
+        config,  # ModelConfiguration
         display_name: str = "temporal-model",
     ) -> None:
         super().__init__()
@@ -130,7 +130,7 @@ class TemporalModel(Model):
         messages: list[ModelMessage],
         model_settings: ModelSettings | None,
         model_request_parameters: ModelRequestParameters,
-    ) -> tuple[ModelResponse, Usage]:
+    ) -> ModelResponse:
         """执行一次模型调用并返回 PydanticAI 兼容响应。"""
         invocation_messages = _to_invocation_messages(messages)
         tools = _build_tools_payload(model_request_parameters)
@@ -145,8 +145,8 @@ class TemporalModel(Model):
             self._config,
             invocation_messages,
             response_format=response_format,
-            timeout_seconds=model_settings.get("timeout", 60) if model_settings else 60,
-            max_tokens=model_settings.get("max_tokens", 2048) if model_settings else 2048,
+            timeout_seconds=_model_setting_int(model_settings, "timeout", 60),
+            max_tokens=_model_setting_int(model_settings, "max_tokens", 2048),
         )
 
         parts = _parse_response_parts(result.content, tools)
@@ -156,13 +156,11 @@ class TemporalModel(Model):
             response_tokens=result.completion_tokens,
             total_tokens=result.total_tokens,
         )
-        return (
-            ModelResponse(
-                parts=parts,
-                model_name=self._display_name,
-                timestamp=datetime.now(UTC),
-            ),
-            usage,
+        return ModelResponse(
+            parts=parts,
+            usage=usage,
+            model_name=self._display_name,
+            timestamp=datetime.now(UTC),
         )
 
     @asynccontextmanager
@@ -171,6 +169,7 @@ class TemporalModel(Model):
         messages: list[ModelMessage],
         model_settings: ModelSettings | None,
         model_request_parameters: ModelRequestParameters,
+        run_context: RunContext[Any] | None = None,
     ) -> AsyncIterator[StreamedResponse]:
         """流式调用：通过 in-process 回调接收 Worker SSE 增量。
 
@@ -186,12 +185,8 @@ class TemporalModel(Model):
         invocation_messages = _to_invocation_messages(messages)
         tools = _build_tools_payload(model_request_parameters)
 
-        timeout = (
-            model_settings.get("timeout", 60) if model_settings else 60
-        )
-        max_tokens = (
-            model_settings.get("max_tokens", 2048) if model_settings else 2048
-        )
+        timeout = _model_setting_int(model_settings, "timeout", 60)
+        max_tokens = _model_setting_int(model_settings, "max_tokens", 2048)
 
         # ── 启动本地回调服务器 ──
         chunk_queue: asyncio.Queue[str] = asyncio.Queue()
@@ -199,7 +194,10 @@ class TemporalModel(Model):
 
         server = await asyncio.start_server(
             lambda r, w: _handle_callback_stream(
-                r, w, chunk_queue=chunk_queue, callback_token=callback_token,
+                r,
+                w,
+                chunk_queue=chunk_queue,
+                callback_token=callback_token,
             ),
             host="127.0.0.1",
             port=0,
@@ -220,10 +218,11 @@ class TemporalModel(Model):
         async def _run_stream() -> None:
             try:
                 result = await self._invoker.stream(
-                    self._config, invocation_messages,
+                    self._config,
+                    invocation_messages,
                     callback=callback,
-                    timeout_seconds=int(timeout),
-                    max_tokens=int(max_tokens),
+                    timeout_seconds=timeout,
+                    max_tokens=max_tokens,
                     stream_ctx=stream_ctx,
                 )
                 stream_result[0] = result
@@ -239,7 +238,7 @@ class TemporalModel(Model):
 
         class _IncrementalStreamedResponse(StreamedResponse):
             def __init__(self) -> None:
-                super().__init__()  # type: ignore[call-arg]
+                super().__init__(model_request_parameters=model_request_parameters)
                 self._model = model_name
                 self._ts = ts
 
@@ -251,7 +250,6 @@ class TemporalModel(Model):
             def timestamp(self):
                 return self._ts
 
-            @property
             def usage(self) -> Usage:
                 final = stream_result[0]
                 if final:
@@ -272,7 +270,8 @@ class TemporalModel(Model):
                 while True:
                     try:
                         chunk = await asyncio.wait_for(
-                            chunk_queue.get(), timeout=timeout + 15,
+                            chunk_queue.get(),
+                            timeout=timeout + 15,
                         )
                     except TimeoutError:
                         break
@@ -324,14 +323,15 @@ class TemporalModel(Model):
                 stream_task.cancel()
 
 
-
 # ── 流式辅助 ───────────────────────────────────────────────────────
+
 
 def _split_sentences(text: str) -> list[str]:
     """按句子边界拆分文本，最小 chunk 不低于 8 个字符。"""
     if not text:
         return [text]
     import re
+
     # 按句号/换行/问号/感叹号切分，保留分隔符
     parts = re.split(r"(?<=[。！？\n])", text)
     chunks: list[str] = []
@@ -350,7 +350,24 @@ def _split_sentences(text: str) -> list[str]:
     return chunks if chunks else [text]
 
 
+def _model_setting_int(
+    settings: ModelSettings | None,
+    key: str,
+    default: int,
+) -> int:
+    """Return integer model setting values while ignoring provider-specific objects."""
+    if settings is None:
+        return default
+    value = settings.get(key, default)
+    if isinstance(value, bool):
+        return default
+    if isinstance(value, int | float):
+        return int(value)
+    return default
+
+
 # ── 消息转换 ───────────────────────────────────────────────────────
+
 
 def _to_invocation_messages(messages: list[ModelMessage]) -> list[InvocationMessage]:
     """将 PydanticAI ModelMessage 列表转为平台 InvocationMessage。"""
@@ -359,46 +376,87 @@ def _to_invocation_messages(messages: list[ModelMessage]) -> list[InvocationMess
         if isinstance(msg, ModelRequest):
             # 处理 instructions（system prompt）
             if msg.instructions:
-                result.append(InvocationMessage(
-                    role="system", content=msg.instructions,
-                ))
-            for part in msg.parts:
-                if isinstance(part, TextPart):
-                    result.append(InvocationMessage(
-                        role="user", content=part.content,
-                    ))
-                elif isinstance(part, ToolReturnPart):
-                    result.append(InvocationMessage(
-                        role="tool",
-                        content=_tool_return_content(part),
-                        tool_call_id=part.tool_call_id,
-                        name=part.tool_name,
-                    ))
-                elif isinstance(part, RetryPromptPart):
-                    result.append(InvocationMessage(
-                        role="user", content=part.content,
-                    ))
+                result.append(
+                    InvocationMessage(
+                        role="system",
+                        content=msg.instructions,
+                    )
+                )
+            for request_part in msg.parts:
+                if isinstance(request_part, SystemPromptPart):
+                    result.append(
+                        InvocationMessage(
+                            role="system",
+                            content=request_part.content,
+                        )
+                    )
+                elif isinstance(request_part, UserPromptPart):
+                    result.append(
+                        InvocationMessage(
+                            role="user",
+                            content=_content_to_string(request_part.content),
+                        )
+                    )
+                elif isinstance(request_part, ToolReturnPart):
+                    result.append(
+                        InvocationMessage(
+                            role="tool",
+                            content=_tool_return_content(request_part),
+                            tool_call_id=request_part.tool_call_id,
+                            name=request_part.tool_name,
+                        )
+                    )
+                elif isinstance(request_part, RetryPromptPart):
+                    result.append(
+                        InvocationMessage(
+                            role="user",
+                            content=_content_to_string(request_part.content),
+                        )
+                    )
         elif isinstance(msg, ModelResponse):
-            for part in msg.parts:
-                if isinstance(part, TextPart):
-                    result.append(InvocationMessage(
-                        role="assistant", content=part.content,
-                    ))
-                elif isinstance(part, ToolCallPart):
-                    result.append(InvocationMessage(
-                        role="assistant",
-                        content=part.args if isinstance(part.args, str) else None,
-                        tool_calls=[{
-                            "id": part.tool_call_id,
-                            "type": "function",
-                            "function": {
-                                "name": part.tool_name,
-                                "arguments": part.args if isinstance(part.args, str)
-                                else json.dumps(part.args or {}, ensure_ascii=False),
-                            },
-                        }] if part.tool_name else None,
-                    ))
+            for response_part in msg.parts:
+                if isinstance(response_part, TextPart):
+                    result.append(
+                        InvocationMessage(
+                            role="assistant",
+                            content=response_part.content,
+                        )
+                    )
+                elif isinstance(response_part, ToolCallPart):
+                    args = response_part.args
+                    arguments = (
+                        args
+                        if isinstance(args, str)
+                        else json.dumps(args or {}, ensure_ascii=False)
+                    )
+                    result.append(
+                        InvocationMessage(
+                            role="assistant",
+                            content=arguments,
+                            tool_calls=[
+                                {
+                                    "id": response_part.tool_call_id,
+                                    "type": "function",
+                                    "function": {
+                                        "name": response_part.tool_name,
+                                        "arguments": arguments,
+                                    },
+                                }
+                            ]
+                            if response_part.tool_name
+                            else None,
+                        )
+                    )
     return result
+
+
+def _content_to_string(content: object) -> str:
+    if isinstance(content, str):
+        return content
+    try:
+        return json.dumps(content, ensure_ascii=False, default=str)
+    except (TypeError, ValueError):
+        return str(content)
 
 
 def _tool_return_content(part: ToolReturnPart) -> str:
@@ -418,14 +476,16 @@ def _build_tools_payload(params: ModelRequestParameters) -> list[dict] | None:
         return None
     tools = []
     for td in params.function_tools:
-        tools.append({
-            "type": "function",
-            "function": {
-                "name": td.name,
-                "description": td.description or "",
-                "parameters": td.parameters_json_schema,
-            },
-        })
+        tools.append(
+            {
+                "type": "function",
+                "function": {
+                    "name": td.name,
+                    "description": td.description or "",
+                    "parameters": td.parameters_json_schema,
+                },
+            }
+        )
     return tools if tools else None
 
 
@@ -442,11 +502,13 @@ def _parse_response_parts(content: str, tools: list[dict] | None) -> list[ModelR
                 parts: list[ModelResponsePart] = []
                 for tc in data["tool_calls"]:
                     func = tc.get("function", {})
-                    parts.append(ToolCallPart(
-                        tool_name=func.get("name", ""),
-                        args=func.get("arguments", "{}"),
-                        tool_call_id=tc.get("id", ""),
-                    ))
+                    parts.append(
+                        ToolCallPart(
+                            tool_name=func.get("name", ""),
+                            args=func.get("arguments", "{}"),
+                            tool_call_id=tc.get("id", ""),
+                        )
+                    )
                 if parts:
                     return parts
             # 如果 LLM 直接返回了 text + tool_calls
@@ -466,18 +528,20 @@ def _parse_response_parts(content: str, tools: list[dict] | None) -> list[ModelR
                 msg = choices[0].get("message", {})
                 text = msg.get("content", "")
                 tcs = msg.get("tool_calls", [])
-                parts: list[ModelResponsePart] = []
+                response_parts: list[ModelResponsePart] = []
                 if text:
-                    parts.append(TextPart(content=text))
+                    response_parts.append(TextPart(content=text))
                 for tc in tcs:
                     func = tc.get("function", {})
-                    parts.append(ToolCallPart(
-                        tool_name=func.get("name", ""),
-                        args=func.get("arguments", "{}"),
-                        tool_call_id=tc.get("id", ""),
-                    ))
-                if parts:
-                    return parts
+                    response_parts.append(
+                        ToolCallPart(
+                            tool_name=func.get("name", ""),
+                            args=func.get("arguments", "{}"),
+                            tool_call_id=tc.get("id", ""),
+                        )
+                    )
+                if response_parts:
+                    return response_parts
         except (json.JSONDecodeError, KeyError):
             pass
 

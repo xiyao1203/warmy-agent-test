@@ -51,7 +51,7 @@ export function DatasetList({
   if (loading)
     return (
       <>
-        <span className="sr-only">正在加载数据集…</span>
+        <span className="sr-only">正在加载用例集…</span>
         <DatasetListSkeleton />
       </>
     );
@@ -59,22 +59,20 @@ export function DatasetList({
     return <StatusPanel title="项目不存在或你无权访问" />;
   }
   if (error === "service") {
-    return <StatusPanel title="数据集列表暂时不可用" />;
+    return <StatusPanel title="用例集列表暂时不可用" />;
   }
 
   return (
     <div className="min-w-0 px-6 py-6">
       <header className="flex items-start justify-between gap-4 border-b border-[var(--hairline)] pb-5">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">
-            数据集与用例
-          </h1>
+          <h1 className="text-2xl font-semibold tracking-tight">测试用例</h1>
           <p className="mt-2 text-sm text-[var(--muted)]">
-            管理 API 与浏览器测试用例、导入导出和不可变版本。
+            一个用例集包含多条用例，发布后可直接用于测试计划。
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <Tooltip content="创建新的数据集">
+          <Tooltip content="创建新的用例集">
             <CreateDatasetDialog onCreate={onCreate} />
           </Tooltip>
         </div>
@@ -82,14 +80,14 @@ export function DatasetList({
       <section className="mt-5 overflow-hidden rounded-[var(--radius-lg)] border border-[var(--hairline)] bg-[var(--surface)]">
         {!datasets.length ? (
           <EmptyState
-            description="创建数据集后，可添加或批量导入测试用例。"
-            title="暂无数据集"
+            description="先创建用例集，再新增或批量导入测试用例。"
+            title="暂无用例集"
           />
         ) : (
           <Table className="w-auto min-w-[680px] table-fixed">
             <TableHeader className="bg-[var(--canvas-soft)]">
               <TableRow>
-                <TableHead className="w-[420px] pl-16">数据集信息</TableHead>
+                <TableHead className="w-[420px] pl-16">用例集信息</TableHead>
                 <TableHead className="w-32 text-center">更新时间</TableHead>
                 <TableHead className={tableActionHeadClass}>操作</TableHead>
               </TableRow>
@@ -161,7 +159,7 @@ function CreateDatasetDialog({
 
   async function submit() {
     if (!name.trim()) {
-      setError("请输入数据集名称");
+      setError("请输入用例集名称");
       return;
     }
     setSubmitting(true);
@@ -175,7 +173,7 @@ function CreateDatasetDialog({
       setDescription("");
       setError("");
     } catch {
-      setError("创建数据集失败，请检查输入后重试。");
+      setError("创建用例集失败，请检查输入后重试。");
     } finally {
       setSubmitting(false);
     }
@@ -186,17 +184,17 @@ function CreateDatasetDialog({
       <DialogTrigger asChild>
         <Button variant="primary">
           <Plus aria-hidden="true" className="mr-1.5 size-4" />
-          创建数据集
+          创建用例集
         </Button>
       </DialogTrigger>
       <DialogContent>
-        <DialogTitle>创建数据集</DialogTitle>
+        <DialogTitle>创建用例集</DialogTitle>
         <DialogDescription>
-          数据集通过版本管理用例，发布后保持只读。
+          用例集负责收纳测试用例，发布后保持只读并供测试计划引用。
         </DialogDescription>
         <div className="mt-5 space-y-4">
           <label className="block text-sm font-medium">
-            数据集名称
+            用例集名称
             <Input
               className="mt-1.5"
               onChange={(event) => setName(event.target.value)}
@@ -224,7 +222,7 @@ function CreateDatasetDialog({
               onClick={submit}
               variant="primary"
             >
-              保存数据集
+              保存用例集
             </Button>
           </div>
         </div>

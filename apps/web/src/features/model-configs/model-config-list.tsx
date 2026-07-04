@@ -58,7 +58,9 @@ export function ModelConfigList(props: Props) {
   >();
   const [busy, setBusy] = useState<string | null>(null);
   const [connection, setConnection] = useState<Record<string, string>>({});
-  const [deleteTarget, setDeleteTarget] = useState<ModelConfigResponse | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<ModelConfigResponse | null>(
+    null,
+  );
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [deleteBusy, setDeleteBusy] = useState(false);
 
@@ -71,7 +73,10 @@ export function ModelConfigList(props: Props) {
         </header>
         <div className="mt-5 space-y-3">
           {[1, 2, 3].map((i) => (
-            <Skeleton className="h-16 w-full rounded-[var(--radius-lg)]" key={i} />
+            <Skeleton
+              className="h-16 w-full rounded-[var(--radius-lg)]"
+              key={i}
+            />
           ))}
         </div>
       </div>
@@ -264,7 +269,13 @@ export function ModelConfigList(props: Props) {
         />
       ) : null}
 
-      <Dialog onOpenChange={(open: boolean) => { setDeleteTarget(open ? deleteTarget : null); if (!open) setDeleteError(null); }} open={deleteTarget !== null}>
+      <Dialog
+        onOpenChange={(open: boolean) => {
+          setDeleteTarget(open ? deleteTarget : null);
+          if (!open) setDeleteError(null);
+        }}
+        open={deleteTarget !== null}
+      >
         <DialogContent>
           <DialogTitle>确认删除</DialogTitle>
           <DialogDescription>
@@ -276,7 +287,13 @@ export function ModelConfigList(props: Props) {
             </p>
           ) : null}
           <div className="mt-5 flex justify-end gap-3">
-            <Button onClick={() => { setDeleteTarget(null); setDeleteError(null); }} variant="secondary">
+            <Button
+              onClick={() => {
+                setDeleteTarget(null);
+                setDeleteError(null);
+              }}
+              variant="secondary"
+            >
               取消
             </Button>
             <Button

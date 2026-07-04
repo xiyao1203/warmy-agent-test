@@ -54,8 +54,8 @@ def execution_activity_options(
     timeout_raw = policy.get("timeout", 300)
     retries_raw = policy.get("max_retries", 0)
     retry_config = policy.get("retry_policy", {})
-    timeout_seconds = max(1, min(int(timeout_raw), 600))
-    max_retries = max(0, min(int(retries_raw), 10))
+    timeout_seconds = max(1, min(_int_value(timeout_raw, 300), 600))
+    max_retries = max(0, min(_int_value(retries_raw, 0), 10))
     retry_values = retry_config if isinstance(retry_config, dict) else {}
     coefficient_raw = retry_values.get("backoff_coefficient", 2.0)
     coefficient = max(1.0, min(float(coefficient_raw), 10.0))
@@ -122,7 +122,7 @@ class RunWorkflow:
                             run_case_id=case.run_case_id,
                             test_intent=codex_intent,
                             target_url=codex_url,
-                            timeout_seconds=int(case.input.get("timeout", 120)),
+                            timeout_seconds=_int_value(case.input.get("timeout"), 120),
                             model=str(case.input.get("model", "gpt-4o")),
                             model_provider=str(case.input.get("model_provider", "")),
                             browser_profile_id=str(
@@ -134,7 +134,7 @@ class RunWorkflow:
                             credentials=_extract_credentials(case.input),
                         ),
                         start_to_close_timeout=timedelta(
-                            seconds=int(case.input.get("timeout", 120))
+                            seconds=_int_value(case.input.get("timeout"), 120)
                         ),
                         heartbeat_timeout=timedelta(seconds=60),
                         retry_policy=RetryPolicy(
@@ -327,6 +327,17 @@ def _extract_credentials(case_input: dict[str, object]) -> dict[str, str]:
     return {}
 
 
+def _int_value(value: object, default: int) -> int:
+    if isinstance(value, bool):
+        return default
+    if isinstance(value, int | float | str):
+        try:
+            return int(value)
+        except (TypeError, ValueError):
+            return default
+    return default
+
+
 def _codex_to_run_case(
     codex_result: CodexBrowserResult,
     case: RunCaseTask,
@@ -364,11 +375,12 @@ def _playwright_to_run_case(
     status = playwright_result.status
     if status == "passed":
         # 运行 API 风格的断言检查（contains/exact）
-        output = {
+        output: dict[str, object] = {
             "page_title": playwright_result.page_title,
             "final_url": playwright_result.final_url,
         }
         from agenttest_api_runner.activities import _evaluate_assertions
+
         assertion_status = _evaluate_assertions(output, case.assertions)
         if assertion_status != "passed":
             status = assertion_status

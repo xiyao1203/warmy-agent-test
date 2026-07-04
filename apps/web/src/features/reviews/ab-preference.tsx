@@ -128,15 +128,11 @@ export function ABReviewPanel({
       {/* 对比区域 */}
       <div className="grid grid-cols-2 gap-4">
         <div className="rounded border border-[var(--hairline)] p-4">
-          <p className="mb-2 text-sm font-medium text-[var(--muted)]">
-            版本 A
-          </p>
+          <p className="mb-2 text-sm font-medium text-[var(--muted)]">版本 A</p>
           <div className="max-h-48 overflow-auto text-sm">{outputA}</div>
         </div>
         <div className="rounded border border-[var(--hairline)] p-4">
-          <p className="mb-2 text-sm font-medium text-[var(--muted)]">
-            版本 B
-          </p>
+          <p className="mb-2 text-sm font-medium text-[var(--muted)]">版本 B</p>
           <div className="max-h-48 overflow-auto text-sm">{outputB}</div>
         </div>
       </div>

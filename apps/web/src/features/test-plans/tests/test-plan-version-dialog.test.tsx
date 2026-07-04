@@ -25,9 +25,7 @@ const datasetVersions: VersionAssetOption[] = [
 const environments: VersionAssetOption[] = [
   { id: "environment-1", label: "浏览器沙箱" },
 ];
-const scorers: VersionAssetOption[] = [
-  { id: "scorer-1", label: "事实准确性" },
-];
+const scorers: VersionAssetOption[] = [{ id: "scorer-1", label: "事实准确性" }];
 
 function renderDialog(
   overrides?: Partial<{
@@ -202,7 +200,9 @@ describe("TestPlanVersionDialog", () => {
     );
 
     fireEvent.click(
-      screen.getByRole("button", { name: `编辑版本 v${existingVersion.version_number}` }),
+      screen.getByRole("button", {
+        name: `编辑版本 v${existingVersion.version_number}`,
+      }),
     );
 
     // Step 1 - pre-filled selects
@@ -212,15 +212,15 @@ describe("TestPlanVersionDialog", () => {
     expect(
       (screen.getByLabelText("数据集版本") as HTMLSelectElement).value,
     ).toBe("dataset-published");
-    expect(
-      (screen.getByLabelText("环境模板") as HTMLSelectElement).value,
-    ).toBe("environment-1");
+    expect((screen.getByLabelText("环境模板") as HTMLSelectElement).value).toBe(
+      "environment-1",
+    );
 
     // Step 2 - pre-filled numbers
     fireEvent.click(screen.getByRole("button", { name: "下一步" }));
-    expect(
-      (screen.getByLabelText("并发数") as HTMLInputElement).value,
-    ).toBe("3");
+    expect((screen.getByLabelText("并发数") as HTMLInputElement).value).toBe(
+      "3",
+    );
     expect(
       (screen.getByLabelText("超时（秒）") as HTMLInputElement).value,
     ).toBe("600");
@@ -264,7 +264,9 @@ describe("TestPlanVersionDialog", () => {
     );
 
     fireEvent.click(
-      screen.getByRole("button", { name: `编辑版本 v${existingVersion.version_number}` }),
+      screen.getByRole("button", {
+        name: `编辑版本 v${existingVersion.version_number}`,
+      }),
     );
 
     // Go to Step 4

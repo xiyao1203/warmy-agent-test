@@ -7,7 +7,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable, Coroutine
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from uuid import UUID
 
@@ -29,5 +29,7 @@ class OrchestrationContext:
     """PlatformGateway 实例，提供对 28 个平台能力的统一调用。"""
     confirmation_handler: object | None = None
     """ConfirmationHandler 实例，驱动 READ/DRAFT_WRITE/HIGH_IMPACT 三级确认。"""
-    stream_callback: Callable[[str, object], Coroutine] | None = None
+    generation_id: UUID | None = None
+    """当前流式生成 ID，用于把工具事件关联到同一轮回复。"""
+    stream_callback: Callable[[str, object], Awaitable[object]] | None = None
     """SSE 流式增量回调，签名为 async def(event_type, payload)。"""

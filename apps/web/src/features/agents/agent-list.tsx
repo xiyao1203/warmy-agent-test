@@ -5,7 +5,7 @@ import type {
   AgentType,
   CreateAgentRequest,
 } from "@warmy/generated-api-client";
-import { Bot, Plus } from "lucide-react";
+import { Bot, CheckCircle2, GitCompare, Plus, Rocket } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 
@@ -83,6 +83,24 @@ export function AgentList({
           <p className="mt-2 text-sm text-[var(--muted)]">
             管理待测 Agent、连接配置和不可变发布版本。
           </p>
+          <div className="mt-3 flex flex-wrap gap-2 text-xs text-[var(--muted)]">
+            <FlowStep icon={<Bot aria-hidden="true" className="size-3.5" />}>
+              登记 Agent
+            </FlowStep>
+            <FlowStep icon={<Rocket aria-hidden="true" className="size-3.5" />}>
+              发布当前版本
+            </FlowStep>
+            <FlowStep
+              icon={<GitCompare aria-hidden="true" className="size-3.5" />}
+            >
+              标记基线
+            </FlowStep>
+            <FlowStep
+              icon={<CheckCircle2 aria-hidden="true" className="size-3.5" />}
+            >
+              用于测试计划
+            </FlowStep>
+          </div>
         </div>
         <Tooltip content="创建新的 Agent 配置">
           <CreateAgentDialog onCreate={onCreate} />
@@ -95,11 +113,12 @@ export function AgentList({
             title="暂无 Agent"
           />
         ) : (
-          <Table className="w-auto min-w-[760px] table-fixed">
+          <Table className="w-auto min-w-[1040px] table-fixed">
             <TableHeader className="bg-[var(--canvas-soft)]">
               <TableRow>
-                <TableHead className="w-[360px] pl-16">智能体信息</TableHead>
-                <TableHead className="w-36 text-center">接入类型</TableHead>
+                <TableHead className="w-[360px]">智能体信息</TableHead>
+                <TableHead className="w-32 text-center">接入类型</TableHead>
+                <TableHead className="w-[320px]">闭环状态</TableHead>
                 <TableHead className="w-32 text-center">更新时间</TableHead>
                 <TableHead className={tableActionHeadClass}>操作</TableHead>
               </TableRow>
@@ -132,6 +151,9 @@ export function AgentList({
                       {typeLabels[agent.agent_type]}
                     </Badge>
                   </TableCell>
+                  <TableCell>
+                    <AgentLifecycleSummary agent={agent} />
+                  </TableCell>
                   <TableCell className="whitespace-nowrap text-center text-sm text-[var(--muted)]">
                     {new Date(agent.updated_at).toLocaleDateString("zh-CN")}
                   </TableCell>
@@ -163,6 +185,56 @@ export function AgentList({
           </Table>
         )}
       </section>
+    </div>
+  );
+}
+
+function FlowStep({
+  children,
+  icon,
+}: {
+  children: React.ReactNode;
+  icon: React.ReactNode;
+}) {
+  return (
+    <span className="inline-flex items-center gap-1 rounded-[var(--radius-sm)] border border-[var(--hairline)] bg-[var(--surface)] px-2 py-1">
+      {icon}
+      {children}
+    </span>
+  );
+}
+
+function AgentLifecycleSummary({ agent }: { agent: AgentResponse }) {
+  const hasCurrent = Boolean(agent.current_version_id);
+  const hasBaseline = Boolean(agent.baseline_version_id);
+  const nextAction = !hasCurrent
+    ? "下一步：创建连接版本"
+    : !hasBaseline
+      ? "下一步：标记基线版本"
+      : "闭环就绪：可创建测试计划";
+
+  return (
+    <div className="space-y-2">
+      <div className="flex flex-wrap gap-1.5">
+        <Badge tone={hasCurrent ? "success" : "warning"}>
+          {hasCurrent ? "已发布当前版本" : "待接入"}
+        </Badge>
+        <Badge tone={hasCurrent ? "success" : "neutral"}>
+          {hasCurrent ? "当前版本已设置" : "未发布当前版本"}
+        </Badge>
+        <Badge tone={hasBaseline ? "accent" : "neutral"}>
+          {hasBaseline ? "基线版本已设置" : "未设置基线"}
+        </Badge>
+      </div>
+      <p
+        className={`text-xs font-medium ${
+          hasCurrent && hasBaseline
+            ? "text-[var(--success)]"
+            : "text-[var(--muted)]"
+        }`}
+      >
+        {nextAction}
+      </p>
     </div>
   );
 }

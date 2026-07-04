@@ -25,6 +25,9 @@ from agenttest.modules.test_agent.application.confirmation import (
     tool_prepare_read_only,
 )
 from agenttest.modules.test_agent.application.context import OrchestrationContext
+from agenttest.modules.test_agent.application.platform_catalog import (
+    capability_specs,
+)
 from agenttest.modules.test_agent.application.sub_agents import (
     SubAgentName,
     get_sub_agent,
@@ -32,21 +35,6 @@ from agenttest.modules.test_agent.application.sub_agents import (
 )
 from agenttest.modules.test_agent.application.temporal_model import TemporalModel
 from agenttest.modules.test_agent.domain.entities import RiskLevel
-
-# ── 能力目录（用于构建领域工具）─────────────────────────────────────
-
-try:
-    from agenttest.modules.test_agent.application.platform_catalog import (
-        CapabilitySpec,
-        capability_specs,
-    )
-except ImportError:
-
-    def capability_specs() -> list:  # type: ignore[no-redef]
-        return []
-
-    CapabilitySpec = None  # type: ignore[assignment]
-
 
 # ── 超级 Agent system prompt ─────────────────────────────────────
 
@@ -68,7 +56,7 @@ SUPER_AGENT_SYSTEM_PROMPT = (
 _ROUTER_SYSTEM_PROMPT = (
     "你是 AgentTest 平台的任务路由器。"
     "根据用户最后一条消息，判断应该委托给哪个（或哪两个）领域专家处理。\n\n"
-    "只输出 JSON：{\"sub_agents\": [\"target_agent\", ...]}\n"
+    '只输出 JSON：{"sub_agents": ["target_agent", ...]}\n'
     "可选值：target_agent, environment, test_data, test_plan, "
     "execution, evaluation, experiment, security, review_gate\n\n"
     "路由规则：\n"
@@ -87,11 +75,13 @@ _ROUTER_SYSTEM_PROMPT = (
 
 # ── PydanticAI 输出模型 ──────────────────────────────────────────
 
+
 class _PlannedAction(BaseModel):
     child_agent: str = Field(min_length=1, max_length=64)
     capability: str = Field(min_length=1, max_length=128)
     arguments: dict[str, object]
     rationale: str = Field(min_length=1, max_length=1000)
+
 
 class _ActionPlan(BaseModel):
     actions: list[_PlannedAction] = Field(default_factory=list, max_length=20)
@@ -100,6 +90,7 @@ class _ActionPlan(BaseModel):
 @dataclass(frozen=True, slots=True)
 class ActionIntent:
     """平台能力操作意图（供 Orchestrator 执行）。"""
+
     capability: str
     arguments: dict[str, object]
     rationale: str
@@ -108,10 +99,11 @@ class ActionIntent:
 
 # ── SubAgent 工厂 ────────────────────────────────────────────────
 
+
 def _create_sub_agent(
     name: SubAgentName,
     temporal_model: TemporalModel,
-) -> Agent[OrchestrationContext]:
+) -> Agent[OrchestrationContext, _ActionPlan]:
     """创建领域 SubAgent 的 PydanticAI Agent 实例。
 
     每个 SubAgent 使用其特化 system_prompt，并通过 READ 领域工具
@@ -126,30 +118,30 @@ def _create_sub_agent(
         deps_type=OrchestrationContext,
         name=name.value,
         output_type=_ActionPlan,
-        tools=tools if tools else None,
+        tools=tools,
     )
 
 
 def _build_domain_read_tools(
     name: SubAgentName,
-) -> list[Tool]:
+) -> list[Tool[OrchestrationContext]]:
     """为指定领域构建 READ 工具列表（Tool 对象，含精确 JSON Schema）。
 
     每个 READ 工具直接调用 ctx.deps.platform_gateway.execute()，
     无需 Orchestrator 确认。工具参数来自 capability 的 input_model。
     """
     specs = capability_specs()
-    domain_specs = [
-        s for s in specs
-        if s.child_agent == name.value and s.risk == RiskLevel.READ
-    ]
-    tools: list[Tool] = []
+    domain_specs = [s for s in specs if s.child_agent == name.value and s.risk == RiskLevel.READ]
+    tools: list[Tool[OrchestrationContext]] = []
     for spec in domain_specs:
         tools.append(_make_read_tool(spec.name, spec.input_model))
     return tools
 
 
-def _make_read_tool(cap_name: str, input_model_cls: type[BaseModel]) -> Tool:
+def _make_read_tool(
+    cap_name: str,
+    input_model_cls: type[BaseModel],
+) -> Tool[OrchestrationContext]:
     """构建单个 READ 工具（Tool 对象，含从 input_model 生成的精确 JSON Schema）。
 
     LLM 看到的是 input_model 的完整字段类型和描述，而非空 Schema {}。
@@ -160,13 +152,16 @@ def _make_read_tool(cap_name: str, input_model_cls: type[BaseModel]) -> Tool:
     async def tool_fn(
         ctx: RunContext[OrchestrationContext],
         **kwargs: object,
-    ) -> dict:
+    ) -> object:
         """Execute a read-only platform capability."""
         payload = input_model_cls.model_validate(kwargs or {})
         gateway = ctx.deps.platform_gateway
         if gateway is None:
             return {"error": "platform_gateway not configured"}
-        return await gateway.execute(cap_name, ctx.deps, payload)
+        execute = getattr(gateway, "execute", None)
+        if execute is None:
+            return {"error": "platform_gateway is not executable"}
+        return await execute(cap_name, ctx.deps, payload)
 
     tool_fn.__name__ = cap_name.replace(".", "_")
     tool_fn.__qualname__ = f"read_{cap_name.replace('.', '_')}"
@@ -205,8 +200,7 @@ def _tool_descriptions() -> dict[str, str]:
         "reviews.list": "浏览人工审核任务列表。可选参数: query（搜索关键词）。",
         "release_gates.list": "浏览发布门禁列表。可选参数: query（搜索关键词）。",
         "agents.analyze_endpoint": (
-            "探测 Agent API 端点，返回连接状态、延迟和响应结构。"
-            "必填: agent_version_id。"
+            "探测 Agent API 端点，返回连接状态、延迟和响应结构。必填: agent_version_id。"
         ),
         "reports.generate": "生成测试运行报告。必填: run_id。",
     }
@@ -214,10 +208,11 @@ def _tool_descriptions() -> dict[str, str]:
 
 # ── SuperAgent 工厂 ──────────────────────────────────────────────
 
+
 def create_super_agent(
-    invoker,      # ModelInvoker
-    config,       # ModelConfiguration
-) -> Agent[OrchestrationContext]:
+    invoker,  # ModelInvoker
+    config,  # ModelConfiguration
+) -> Agent[OrchestrationContext, str]:
     """创建顶层 SuperAgent 的 PydanticAI Agent 实例。
 
     SuperAgent 拥有 9 个领域 delegation tool，每个 tool 将用户请求
@@ -237,92 +232,119 @@ def create_super_agent(
     )
 
     # 预创建 9 个 SubAgent 实例（共享同一 TemporalModel）
-    sub_agents: dict[SubAgentName, Agent[OrchestrationContext]] = {}
+    sub_agents: dict[SubAgentName, Agent[OrchestrationContext, _ActionPlan]] = {}
     for name in SubAgentName:
         sub_agents[name] = _create_sub_agent(name, model)
 
     # ── 9 个领域 delegation tool ──────────────────────────────
 
     async def delegate_target_agent(
-        ctx: RunContext[OrchestrationContext], request: str,
+        ctx: RunContext[OrchestrationContext],
+        request: str,
     ) -> _ActionPlan:
         """委托给 Agent 管理专家：注册、配置、连接待测 Agent。"""
         result = await sub_agents[SubAgentName.TARGET_AGENT].run(
-            request, deps=ctx.deps, usage=ctx.usage,
+            request,
+            deps=ctx.deps,
+            usage=ctx.usage,
         )
-        return result.data
+        return result.output
 
     async def delegate_environment(
-        ctx: RunContext[OrchestrationContext], request: str,
+        ctx: RunContext[OrchestrationContext],
+        request: str,
     ) -> _ActionPlan:
         """委托给环境与凭证专家：管理测试环境模板和认证凭证。"""
         result = await sub_agents[SubAgentName.ENVIRONMENT].run(
-            request, deps=ctx.deps, usage=ctx.usage,
+            request,
+            deps=ctx.deps,
+            usage=ctx.usage,
         )
-        return result.data
+        return result.output
 
     async def delegate_test_data(
-        ctx: RunContext[OrchestrationContext], request: str,
+        ctx: RunContext[OrchestrationContext],
+        request: str,
     ) -> _ActionPlan:
         """委托给测试数据专家：创建和管理测试数据集与用例。"""
         result = await sub_agents[SubAgentName.TEST_DATA].run(
-            request, deps=ctx.deps, usage=ctx.usage,
+            request,
+            deps=ctx.deps,
+            usage=ctx.usage,
         )
-        return result.data
+        return result.output
 
     async def delegate_test_plan(
-        ctx: RunContext[OrchestrationContext], request: str,
+        ctx: RunContext[OrchestrationContext],
+        request: str,
     ) -> _ActionPlan:
         """委托给测试计划专家：编排测试计划（绑定 Agent+数据集）。"""
         result = await sub_agents[SubAgentName.TEST_PLAN].run(
-            request, deps=ctx.deps, usage=ctx.usage,
+            request,
+            deps=ctx.deps,
+            usage=ctx.usage,
         )
-        return result.data
+        return result.output
 
     async def delegate_execution(
-        ctx: RunContext[OrchestrationContext], request: str,
+        ctx: RunContext[OrchestrationContext],
+        request: str,
     ) -> _ActionPlan:
         """委托给执行与报告专家：启动测试运行并查看报告。"""
         result = await sub_agents[SubAgentName.EXECUTION].run(
-            request, deps=ctx.deps, usage=ctx.usage,
+            request,
+            deps=ctx.deps,
+            usage=ctx.usage,
         )
-        return result.data
+        return result.output
 
     async def delegate_evaluation(
-        ctx: RunContext[OrchestrationContext], request: str,
+        ctx: RunContext[OrchestrationContext],
+        request: str,
     ) -> _ActionPlan:
         """委托给评分器专家：管理评分规则和评测配置。"""
         result = await sub_agents[SubAgentName.EVALUATION].run(
-            request, deps=ctx.deps, usage=ctx.usage,
+            request,
+            deps=ctx.deps,
+            usage=ctx.usage,
         )
-        return result.data
+        return result.output
 
     async def delegate_experiment(
-        ctx: RunContext[OrchestrationContext], request: str,
+        ctx: RunContext[OrchestrationContext],
+        request: str,
     ) -> _ActionPlan:
         """委托给实验对比专家：对比不同 Agent 版本的测试差异。"""
         result = await sub_agents[SubAgentName.EXPERIMENT].run(
-            request, deps=ctx.deps, usage=ctx.usage,
+            request,
+            deps=ctx.deps,
+            usage=ctx.usage,
         )
-        return result.data
+        return result.output
 
     async def delegate_security(
-        ctx: RunContext[OrchestrationContext], request: str,
+        ctx: RunContext[OrchestrationContext],
+        request: str,
     ) -> _ActionPlan:
         """委托给安全测试专家：执行安全扫描和红队测试。"""
         result = await sub_agents[SubAgentName.SECURITY].run(
-            request, deps=ctx.deps, usage=ctx.usage,
+            request,
+            deps=ctx.deps,
+            usage=ctx.usage,
         )
-        return result.data
+        return result.output
 
     async def delegate_review_gate(
-        ctx: RunContext[OrchestrationContext], request: str,
+        ctx: RunContext[OrchestrationContext],
+        request: str,
     ) -> _ActionPlan:
         """委托给审核与门禁专家：管理人工审核队列和发布门禁。"""
         result = await sub_agents[SubAgentName.REVIEW_GATE].run(
-            request, deps=ctx.deps, usage=ctx.usage,
+            request,
+            deps=ctx.deps,
+            usage=ctx.usage,
         )
-        return result.data
+        return result.output
 
     return Agent(
         model=model,
@@ -344,6 +366,7 @@ def create_super_agent(
 
 
 # ── 回退路由器（当 PydanticAI Agent 不可用时的静态路由）─────────
+
 
 class SubAgentRouter:
     """基于 LLM 的轻量意图路由器（回退路径）。
@@ -367,7 +390,10 @@ class SubAgentRouter:
             InvocationMessage(role="user", content=user_message[:500]),
         ]
         result = await invoker.invoke(
-            config, messages, timeout_seconds=10, max_tokens=64,
+            config,
+            messages,
+            timeout_seconds=10,
+            max_tokens=64,
         )
         try:
             from pydantic import BaseModel as _BM
@@ -389,6 +415,7 @@ class SubAgentRouter:
 
 
 # ── 兼容函数 ──────────────────────────────────────────────────────
+
 
 async def plan_actions_for_subagent(
     invoker,
@@ -418,7 +445,7 @@ async def plan_actions_for_subagent(
             if isinstance(result, dict):
                 artifacts = result.get("artifacts", [])
                 ids = [
-                    f"{a.get('type','')}_id={a.get('id','')}"
+                    f"{a.get('type', '')}_id={a.get('id', '')}"
                     for a in artifacts
                     if isinstance(a, dict)
                 ]
@@ -429,12 +456,14 @@ async def plan_actions_for_subagent(
         if context_lines:
             context_block = (
                 "先前已执行的操作及其产出（后续操作可直接引用这些 ID）:\n"
-                + "\n".join(context_lines) + "\n"
+                + "\n".join(context_lines)
+                + "\n"
             )
 
     prompt = (
         sub.system_prompt
-        + "\n" + context_block
+        + "\n"
+        + context_block
         + '返回 JSON：{"actions":[{"child_agent":"...",'
         + '"capability":"...","arguments":{},"rationale":"..."}]}.\n'
         + f"capabilities={_json.dumps(capabilities, ensure_ascii=False)}"
@@ -446,14 +475,19 @@ async def plan_actions_for_subagent(
 
     if stream_callback is not None:
         result = await invoker.stream(
-            config, messages, callback=stream_callback,
-            timeout_seconds=60, max_tokens=2048,
+            config,
+            messages,
+            callback=stream_callback,
+            timeout_seconds=60,
+            max_tokens=2048,
         )
     else:
         result = await invoker.invoke(
-            config, messages,
+            config,
+            messages,
             response_format={"type": "json_object"},
-            timeout_seconds=60, max_tokens=2048,
+            timeout_seconds=60,
+            max_tokens=2048,
         )
 
     try:

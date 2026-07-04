@@ -67,9 +67,7 @@ export function UserDropdown({
             <User className="size-4 text-[var(--muted)]" />
             <div>
               <p className="font-medium">个人资料</p>
-              <p className="text-xs text-[var(--muted)]">
-                管理您的个人信息
-              </p>
+              <p className="text-xs text-[var(--muted)]">管理您的个人信息</p>
             </div>
           </Link>
           <Link
@@ -81,9 +79,7 @@ export function UserDropdown({
             <Settings className="size-4 text-[var(--muted)]" />
             <div>
               <p className="font-medium">设置</p>
-              <p className="text-xs text-[var(--muted)]">
-                偏好设置与账号安全
-              </p>
+              <p className="text-xs text-[var(--muted)]">偏好设置与账号安全</p>
             </div>
           </Link>
           <div className="border-t border-[var(--hairline)]" />
@@ -99,9 +95,7 @@ export function UserDropdown({
             <LogOut className="size-4 text-[var(--muted)]" />
             <div>
               <p className="font-medium">退出登录</p>
-              <p className="text-xs text-[var(--muted)]">
-                安全退出当前账号
-              </p>
+              <p className="text-xs text-[var(--muted)]">安全退出当前账号</p>
             </div>
           </button>
         </div>

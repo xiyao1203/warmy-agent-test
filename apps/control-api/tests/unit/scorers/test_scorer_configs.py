@@ -17,6 +17,7 @@ from pydantic import ValidationError
 
 # ── Config parsing ────────────────────────────────────────────────────────
 
+
 def test_parse_rule_config_rejects_missing_expected() -> None:
     with pytest.raises(ValidationError):
         parse_scorer_config("rule", {"operator": "contains"})
@@ -63,6 +64,7 @@ def test_parse_rule_config_forbids_extra_fields() -> None:
 
 # ── Deterministic evaluation ──────────────────────────────────────────────
 
+
 def test_rule_contains_evaluation_passes() -> None:
     config = parse_scorer_config("rule", {"operator": "contains", "expected": "hello"})
     result = evaluate_deterministic(config, output={"message": "hello world"}, reference=None)
@@ -108,6 +110,7 @@ def test_model_scorer_rejected_by_deterministic_evaluator() -> None:
 
 # ── TrialResult ───────────────────────────────────────────────────────────
 
+
 def test_trial_result_construction() -> None:
     r = TrialResult(score=0.75, passed=True, explanation="partial match", confidence=0.8)
     assert r.score == 0.75
@@ -119,4 +122,3 @@ def test_trial_result_construction() -> None:
 def test_trial_result_default_confidence() -> None:
     r = TrialResult(score=1.0, passed=True, explanation="ok")
     assert r.confidence == 1.0
-

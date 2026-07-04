@@ -25,6 +25,7 @@ from agenttest_plugin_codex.profile_registry import (
 
 # ── Chromium 查找 ─────────────────────────────────────
 
+
 def _find_chromium() -> str:
     """查找 Chromium/Chrome 可执行文件路径。"""
     for name in ("chromium", "chromium-browser", "google-chrome", "chrome"):
@@ -39,19 +40,17 @@ def _find_chromium() -> str:
                 continue
             for subdir, app_name, exe_name in (
                 ("chrome-mac", "Chromium.app", "Chromium"),
-                ("chrome-mac-arm64", "Google Chrome for Testing.app",
-                 "Google Chrome for Testing"),
+                ("chrome-mac-arm64", "Google Chrome for Testing.app", "Google Chrome for Testing"),
             ):
-                candidate = (
-                    entry / subdir / app_name / "Contents" / "MacOS" / exe_name
-                )
+                candidate = entry / subdir / app_name / "Contents" / "MacOS" / exe_name
                 if candidate.is_file():
                     return str(candidate)
             for exe in sorted(entry.rglob("Chromium"), reverse=True):
                 if exe.is_file() and "Contents/MacOS/" in str(exe):
                     return str(exe)
             for exe in sorted(
-                entry.rglob("Google Chrome for Testing"), reverse=True,
+                entry.rglob("Google Chrome for Testing"),
+                reverse=True,
             ):
                 if exe.is_file() and "Contents/MacOS/" in str(exe):
                     return str(exe)
@@ -63,12 +62,11 @@ def _find_chromium() -> str:
                 candidate = entry / "chrome-linux" / "chrome"
                 if candidate.is_file():
                     return str(candidate)
-    raise RuntimeError(
-        "未找到 Chromium/Chrome，请安装: npx playwright install chromium"
-    )
+    raise RuntimeError("未找到 Chromium/Chrome，请安装: npx playwright install chromium")
 
 
 # ── CDP 辅助 ──────────────────────────────────────────
+
 
 def _http_get(path: str, host: str = "127.0.0.1", port: int = 9222) -> str | None:
     """同步 HTTP GET，返回响应体或 None。"""
@@ -123,6 +121,7 @@ async def _wait_for_cdp(port: int, wait_seconds: int = 10) -> str:
 
 
 # ── 进程池 ────────────────────────────────────────────
+
 
 @dataclass
 class ChromeInstance:

@@ -56,7 +56,8 @@ class CodexBrowserAdapter:
             profile = get_profile("", request.browser_profile_id)
             if profile is not None:
                 cdp_endpoint = await pool_start_profile(
-                    profile, headless=request.headless,
+                    profile,
+                    headless=request.headless,
                 )
                 if profile.storage_state_path:
                     storage_state_path = profile.storage_state_path
@@ -74,11 +75,14 @@ class CodexBrowserAdapter:
         # ── 解析 storageState（profile 已提供则跳过） ────
         if not storage_state_path:
             if request.storage_state.enabled and request.storage_state_key:
-                storage_state_path = load_storage_state(
-                    key=request.storage_state_key,
-                    storage_dir=request.storage_state.storage_dir,
-                    ttl_hours=request.storage_state.ttl_hours,
-                ) or ""
+                storage_state_path = (
+                    load_storage_state(
+                        key=request.storage_state_key,
+                        storage_dir=request.storage_state.storage_dir,
+                        ttl_hours=request.storage_state.ttl_hours,
+                    )
+                    or ""
+                )
 
         try:
             raw = await invoke_codex(
@@ -135,11 +139,7 @@ class CodexBrowserAdapter:
             execution_log=execution_log,
             generated_script=generated_script,
             allure_data=_build_allure_data(json_result, status, duration_seconds),
-            error_message=(
-                str(json_result.get("detail"))
-                if status == "error"
-                else None
-            ),
+            error_message=(str(json_result.get("detail")) if status == "error" else None),
             storage_state_updated=storage_state_updated,
             storage_state_path=new_storage_state_path,
         )
@@ -225,9 +225,7 @@ def _build_allure_data(
                 {
                     "name": str(s.get("action", "")),
                     "status": (
-                        "passed"
-                        if str(s.get("result", "")).lower() != "failed"
-                        else "failed"
+                        "passed" if str(s.get("result", "")).lower() != "failed" else "failed"
                     ),
                 }
                 for s in steps

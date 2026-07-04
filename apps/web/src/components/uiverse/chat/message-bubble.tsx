@@ -1,6 +1,15 @@
 "use client";
 
-import { Bot, Check, Copy, Pencil, RefreshCw, ThumbsDown, ThumbsUp, User } from "lucide-react";
+import {
+  Bot,
+  Check,
+  Copy,
+  Pencil,
+  RefreshCw,
+  ThumbsDown,
+  ThumbsUp,
+  User,
+} from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { MarkdownContent } from "./markdown-content";
@@ -231,5 +240,10 @@ function formatTime(iso: string): string {
   if (diffHr < 24) return `${diffHr} 小时前`;
   const diffDay = Math.floor(diffHr / 24);
   if (diffDay < 7) return `${diffDay} 天前`;
-  return date.toLocaleDateString("zh-CN", { month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit" });
+  return date.toLocaleDateString("zh-CN", {
+    month: "numeric",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
 }

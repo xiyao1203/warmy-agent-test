@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Protocol
+from typing import Literal, Protocol
 
 from pydantic import BaseModel, Field
 
@@ -28,8 +28,25 @@ class NamedResourceInput(BaseModel):
     config: dict[str, object] = Field(default_factory=dict)
 
 
+class TestCaseDraftInput(BaseModel):
+    name: str = Field(min_length=1, max_length=200)
+    input: dict[str, object]
+    execution_mode: Literal["api", "browser"] = Field(default="api")
+    assertions: list[dict[str, object]] = Field(default_factory=list)
+    scorers: list[dict[str, object]] = Field(default_factory=list)
+    initial_state: dict[str, object] | None = None
+    expected_outcome: dict[str, object] | None = None
+    security_policies: list[dict[str, object]] = Field(default_factory=list)
+    tags: list[str] = Field(default_factory=list)
+    scenario: str | None = None
+    priority: Literal["P0", "P1", "P2", "P3"] | None = None
+    risk_level: Literal["critical", "high", "medium", "low"] | None = None
+    difficulty: str | None = None
+    test_group: Literal["train", "validation", "test"] | None = None
+
+
 class DatasetWithCasesInput(NamedResourceInput):
-    cases: list[dict[str, object]] = Field(min_length=1, max_length=500)
+    cases: list[TestCaseDraftInput] = Field(min_length=1, max_length=500)
 
 
 class TestPlanVersionInput(NamedResourceInput):
@@ -83,7 +100,7 @@ class CreateAgentVersionInput(BaseModel):
     config: dict[str, object] = Field(
         description=(
             "AgentConfig 配置字典。必填: api_url。可选: protocol (默认 sync_json), "
-            "request_template (默认 {\"input\": \"{{ input }}\"}), "
+            'request_template (默认 {"input": "{{ input }}"}), '
             "response_path (默认 output), timeout (默认 30), "
             "credential_binding_ids (凭证绑定 ID 列表), model, system_prompt"
         )

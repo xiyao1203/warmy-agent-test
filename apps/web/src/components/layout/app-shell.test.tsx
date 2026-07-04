@@ -31,7 +31,7 @@ describe("AppShell", () => {
       </AppShell>,
     );
 
-    expect(screen.getByText("Warmy Agent Test")).toBeInTheDocument();
+    expect(screen.getByText("Agent Test")).toBeInTheDocument();
     expect(screen.getByText("项目导航")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "概览" })).toHaveAttribute(
       "href",

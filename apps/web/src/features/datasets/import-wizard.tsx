@@ -16,27 +16,14 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 
-// ── 模板下载 ────────────────────────────────────────────────────────────
-
-const JSON_TEMPLATE = JSON.stringify(
-  [
-    {
-      name: "问候 API 正常响应",
-      input: { message: "你好" },
-      execution_mode: "api",
-      priority: "P1",
-      tags: ["smoke"],
-    },
-  ],
-  null,
-  2,
-);
-
-const JSONL_TEMPLATE =
-  '{"name":"问候 API","input":{"message":"你好"},"execution_mode":"api","priority":"P0"}\n';
-
-const CSV_TEMPLATE =
-  'name,input,execution_mode,priority,tags\n"问候 API","{""message"":""你好""}",api,P1,"[""smoke""]"\n';
+import {
+  buildTestCaseTemplate,
+  TEST_CASE_FIELD_HELP,
+  TEST_CASE_OPTIONAL_FIELD_LABELS,
+  TEST_CASE_REQUIRED_FIELD_LABELS,
+  testCaseTemplateFilename,
+  type TestCaseImportFormat,
+} from "./test-case-format";
 
 function downloadTemplate(filename: string, content: string) {
   const blob = new Blob([content], { type: "text/plain;charset=utf-8" });
@@ -94,11 +81,8 @@ export function ImportWizard({
 
   const fileExt = useMemo(() => {
     if (!file) return null;
-    return (file.name.split(".").pop()?.toLowerCase() ?? null) as
-      | "json"
-      | "jsonl"
-      | "csv"
-      | null;
+    return (file.name.split(".").pop()?.toLowerCase() ??
+      null) as TestCaseImportFormat | null;
   }, [file]);
 
   // ── 选择文件 → 读取内容 → 调用预览 API ───────────────────────────────
@@ -127,10 +111,7 @@ export function ImportWizard({
       try {
         const content = await selected.text();
         if (!onPreview) return;
-        const result = await onPreview(
-          content,
-          ext as "json" | "jsonl" | "csv",
-        );
+        const result = await onPreview(content, ext as TestCaseImportFormat);
         setPreview(result);
       } catch {
         setError("预检失败，请检查文件格式和当前草稿版本。");
@@ -223,44 +204,53 @@ export function ImportWizard({
             >
               <Upload className="size-8 text-[var(--muted)]" />
               <p className="text-sm font-medium">点击选择文件</p>
-              <p className="text-xs text-[var(--muted)]">
-                JSON · JSONL · CSV
-              </p>
+              <p className="text-xs text-[var(--muted)]">JSON · JSONL · CSV</p>
             </div>
 
             {/* ── 模板下载 ─────────────────────────────────────────── */}
             <div className="rounded-[var(--radius-lg)] border border-[var(--hairline)] bg-[var(--canvas-soft)] p-3">
-              <p className="mb-2 text-xs font-medium text-[var(--muted)]">
-                下载模板快速开始
-              </p>
-              <div className="flex gap-2">
-                <Button
-                  onClick={() =>
-                    downloadTemplate("test-cases.json", JSON_TEMPLATE)
-                  }
-                  variant="secondary"
-                >
-                  <Download className="mr-1 size-3.5" />
-                  JSON
-                </Button>
-                <Button
-                  onClick={() =>
-                    downloadTemplate("test-cases.jsonl", JSONL_TEMPLATE)
-                  }
-                  variant="secondary"
-                >
-                  <Download className="mr-1 size-3.5" />
-                  JSONL
-                </Button>
-                <Button
-                  onClick={() =>
-                    downloadTemplate("test-cases.csv", CSV_TEMPLATE)
-                  }
-                  variant="secondary"
-                >
-                  <Download className="mr-1 size-3.5" />
-                  CSV
-                </Button>
+              <div className="flex flex-col gap-3">
+                <div>
+                  <p className="text-xs font-medium text-[var(--muted)]">
+                    下载中文导入模板
+                  </p>
+                  <p className="mt-1 text-xs text-[var(--muted)]">
+                    字段名默认用中文；已有英文模板仍可继续导入。
+                  </p>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {(["json", "jsonl", "csv"] as const).map((format) => (
+                    <Button
+                      key={format}
+                      onClick={() =>
+                        downloadTemplate(
+                          testCaseTemplateFilename(format),
+                          buildTestCaseTemplate(format),
+                        )
+                      }
+                      variant="secondary"
+                    >
+                      <Download className="mr-1 size-3.5" />
+                      {format.toUpperCase()}
+                    </Button>
+                  ))}
+                </div>
+                <div className="rounded-[var(--radius-md)] border border-[var(--hairline)] bg-[var(--surface)] p-3">
+                  <p className="text-xs font-medium text-[var(--ink)]">
+                    字段要求
+                  </p>
+                  <p className="mt-1 text-xs text-[var(--muted)]">
+                    必填：{TEST_CASE_REQUIRED_FIELD_LABELS.join("、")}
+                  </p>
+                  <p className="mt-1 text-xs text-[var(--muted)]">
+                    可选：{TEST_CASE_OPTIONAL_FIELD_LABELS.join("、")}
+                  </p>
+                  <ul className="mt-2 space-y-1 text-xs text-[var(--muted)]">
+                    {TEST_CASE_FIELD_HELP.map((item) => (
+                      <li key={item}>{item}</li>
+                    ))}
+                  </ul>
+                </div>
               </div>
             </div>
           </div>

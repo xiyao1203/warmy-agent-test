@@ -75,9 +75,7 @@ export default function TutorialsPage() {
               <div className="min-w-0 flex-1">
                 <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
                   <h3 className="text-sm font-semibold">{title}</h3>
-                  <span className="text-xs text-[var(--body)]">
-                    {duration}
-                  </span>
+                  <span className="text-xs text-[var(--body)]">{duration}</span>
                 </div>
                 <p className="mt-1 text-sm leading-5 text-[var(--muted)]">
                   {description}

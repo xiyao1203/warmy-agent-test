@@ -191,19 +191,29 @@ def client_for_connection(
         create_agent=CreateAgentHandler(agents=agents, project_access=access),
         update_agent=UpdateAgentHandler(agents=agents, project_access=access),
         list_versions=ListAgentVersionsHandler(
-            agents=agents, versions=versions, project_access=access,
+            agents=agents,
+            versions=versions,
+            project_access=access,
         ),
         get_version=GetAgentVersionHandler(
-            agents=agents, versions=versions, project_access=access,
+            agents=agents,
+            versions=versions,
+            project_access=access,
         ),
         create_version=CreateAgentVersionHandler(
-            agents=agents, versions=versions, project_access=access,
+            agents=agents,
+            versions=versions,
+            project_access=access,
         ),
         update_version=UpdateAgentVersionHandler(
-            agents=agents, versions=versions, project_access=access,
+            agents=agents,
+            versions=versions,
+            project_access=access,
         ),
         publish_version=PublishAgentVersionHandler(
-            agents=agents, versions=versions, project_access=access,
+            agents=agents,
+            versions=versions,
+            project_access=access,
         ),
         connection_validator=validator,
     )

@@ -61,9 +61,7 @@ export function RunDetail({
     <div className="min-w-0 bg-[var(--canvas)] px-6 py-6">
       <header className="flex flex-wrap items-start justify-between gap-4 border-b border-[var(--hairline)] pb-5">
         <div>
-          <p className="text-xs font-medium text-[var(--body)]">
-            运行详情
-          </p>
+          <p className="text-xs font-medium text-[var(--body)]">运行详情</p>
           <h1 className="text-2xl font-semibold tracking-tight">
             Run {run.id.slice(0, 8)}
           </h1>
@@ -270,9 +268,7 @@ export function RunDetail({
                         </div>
                       ))
                     ) : (
-                      <p className="text-sm text-[var(--muted)]">
-                        暂无 Trace
-                      </p>
+                      <p className="text-sm text-[var(--muted)]">暂无 Trace</p>
                     )}
                   </div>
                 </details>

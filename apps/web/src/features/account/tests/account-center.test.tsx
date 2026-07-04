@@ -6,6 +6,9 @@ const { searchParamsState } = vi.hoisted(() => ({
 }));
 
 vi.mock("next/navigation", () => ({
+  useRouter: () => ({
+    push: vi.fn(),
+  }),
   useSearchParams: () => new URLSearchParams(searchParamsState.value),
 }));
 

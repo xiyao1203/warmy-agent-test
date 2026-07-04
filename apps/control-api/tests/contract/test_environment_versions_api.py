@@ -91,16 +91,13 @@ class InMemoryEnvironmentVersionRepository:
             reverse=True,
         )
 
-    async def get_next_version_number(
-        self, tid: EnvironmentTemplateId, pid: ProjectId
-    ) -> int:
+    async def get_next_version_number(self, tid: EnvironmentTemplateId, pid: ProjectId) -> int:
         return (
             max(
                 (
                     i.version_number
                     for i in self.items.values()
-                    if i.environment_template_id == tid.value
-                    and i.project_id == pid.value
+                    if i.environment_template_id == tid.value and i.project_id == pid.value
                 ),
                 default=0,
             )
@@ -174,12 +171,8 @@ def client_with_versions(
     access = StubProjectAccess(project_id, member=member)
 
     deps = EnvironmentApiDependencies(
-        list_templates=ListEnvironmentTemplatesHandler(
-            templates=templates, project_access=access
-        ),
-        get_template=GetEnvironmentTemplateHandler(
-            templates=templates, project_access=access
-        ),
+        list_templates=ListEnvironmentTemplatesHandler(templates=templates, project_access=access),
+        get_template=GetEnvironmentTemplateHandler(templates=templates, project_access=access),
         create_template=CreateEnvironmentTemplateHandler(
             templates=templates, project_access=access
         ),
@@ -448,8 +441,6 @@ def test_nonexistent_template_returns_404() -> None:
     client, project_id, _ = client_with_versions()
     fake_tid = "00000000-0000-0000-0000-000000000000"
 
-    r = client.get(
-        f"/api/v1/projects/{project_id.value}/environment-templates/{fake_tid}/versions"
-    )
+    r = client.get(f"/api/v1/projects/{project_id.value}/environment-templates/{fake_tid}/versions")
 
     assert r.status_code == 404

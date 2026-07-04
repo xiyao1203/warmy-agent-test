@@ -104,8 +104,7 @@ def assert_required_connection(
     from_ids = {str(n["node_id"]) for n in nodes if str(n.get("node_type", "")) == from_type}
     to_ids = {str(n["node_id"]) for n in nodes if str(n.get("node_type", "")) == to_type}
     found = any(
-        str(c.get("source_node_id", "")) in from_ids
-        and str(c.get("target_node_id", "")) in to_ids
+        str(c.get("source_node_id", "")) in from_ids and str(c.get("target_node_id", "")) in to_ids
         for c in connections
     )
     rule = f"连线检查 ({from_type} -> {to_type})"
@@ -198,9 +197,7 @@ def evaluate_canvas_assertions(
         elif kind == "node_types":
             required_raw = a.get("required_types")
             if isinstance(required_raw, list):
-                results.append(
-                    assert_node_types(nodes, required=[str(t) for t in required_raw])
-                )
+                results.append(assert_node_types(nodes, required=[str(t) for t in required_raw]))
 
         elif kind == "required_connection":
             from_t = str(a.get("from_type", ""))

@@ -52,13 +52,13 @@ const testCase = {
 describe("DatasetList", () => {
   it("renders loading, empty, error and populated states", () => {
     const { rerender } = render(<DatasetList loading projectId="project-1" />);
-    expect(screen.getByText("正在加载数据集…")).toBeVisible();
+    expect(screen.getByText("正在加载用例集…")).toBeVisible();
 
     rerender(<DatasetList datasets={[]} projectId="project-1" />);
-    expect(screen.getByText("暂无数据集")).toBeVisible();
+    expect(screen.getByText("暂无用例集")).toBeVisible();
 
     rerender(<DatasetList error="service" projectId="project-1" />);
-    expect(screen.getByText("数据集列表暂时不可用")).toBeVisible();
+    expect(screen.getByText("用例集列表暂时不可用")).toBeVisible();
 
     rerender(
       <DatasetList
@@ -70,7 +70,7 @@ describe("DatasetList", () => {
     expect(screen.getByText("对话回归")).toBeVisible();
     expect(screen.getByText("Agent 对话回归集")).toBeVisible();
     expect(
-      screen.getByRole("columnheader", { name: "数据集信息" }),
+      screen.getByRole("columnheader", { name: "用例集信息" }),
     ).toHaveClass("w-[420px]", "pl-16");
     expect(screen.getByRole("columnheader", { name: "更新时间" })).toHaveClass(
       "w-32",
@@ -93,11 +93,11 @@ describe("DatasetList", () => {
       <DatasetList datasets={[]} onCreate={onCreate} projectId="project-1" />,
     );
 
-    fireEvent.click(screen.getByRole("button", { name: "创建数据集" }));
-    fireEvent.change(screen.getByLabelText("数据集名称"), {
+    fireEvent.click(screen.getByRole("button", { name: "创建用例集" }));
+    fireEvent.change(screen.getByLabelText("用例集名称"), {
       target: { value: "安全回归" },
     });
-    fireEvent.click(screen.getByRole("button", { name: "保存数据集" }));
+    fireEvent.click(screen.getByRole("button", { name: "保存用例集" }));
 
     await waitFor(() => expect(onCreate).toHaveBeenCalledTimes(1));
     expect(onCreate).toHaveBeenCalledWith(
@@ -107,12 +107,35 @@ describe("DatasetList", () => {
 });
 
 describe("DatasetDetail", () => {
-  it("shows cases and version badges", async () => {
+  it("keeps the create case action visible when a case set has no version yet", () => {
+    render(
+      <DatasetDetail
+        cases={[]}
+        dataset={dataset}
+        onCreateCase={vi.fn()}
+        projectId="project-1"
+        versions={[]}
+      />,
+    );
+
+    expect(
+      screen.getAllByRole("button", { name: "新增用例" }).length,
+    ).toBeGreaterThan(0);
+    expect(screen.getByText("暂无测试用例")).toBeVisible();
+  });
+
+  it("shows CRUD actions and a test plan link for draft versions", async () => {
+    const onCreateCase = vi.fn().mockResolvedValue(undefined);
+    const onDeleteCases = vi.fn().mockResolvedValue(undefined);
+    const onUpdateCase = vi.fn().mockResolvedValue(undefined);
     render(
       <DatasetDetail
         cases={[testCase]}
         currentVersionId={draftVersion.id}
         dataset={dataset}
+        onCreateCase={onCreateCase}
+        onDeleteCases={onDeleteCases}
+        onUpdateCase={onUpdateCase}
         projectId="project-1"
         versions={[draftVersion]}
       />,
@@ -121,15 +144,79 @@ describe("DatasetDetail", () => {
     expect(screen.getByText(dataset.name)).toBeVisible();
     expect(screen.getByText("基础问候")).toBeVisible();
     expect(screen.getByText("API")).toBeVisible();
+    expect(screen.getByRole("columnheader", { name: "断言" })).toBeVisible();
+    expect(screen.getByText("1 条")).toBeVisible();
+    expect(screen.getByRole("button", { name: "编辑基础问候" })).toHaveClass(
+      "whitespace-nowrap",
+    );
+    expect(screen.getByRole("button", { name: "删除基础问候" })).toBeVisible();
+    expect(
+      screen.getByRole("link", { name: "用这些用例创建测试计划" }),
+    ).toHaveAttribute("href", "/projects/project-1/test-plans");
+
+    fireEvent.click(screen.getByRole("button", { name: "查看详情" }));
+    expect(screen.getByText("断言规则")).toBeVisible();
+    expect(screen.getByText(/contains/)).toBeVisible();
+    fireEvent.click(screen.getAllByRole("button", { name: "关闭" })[1]);
+
+    fireEvent.click(screen.getByRole("button", { name: "新增用例" }));
+    expect(screen.getByRole("button", { name: "预期与断言" })).toBeVisible();
+    fireEvent.change(screen.getByLabelText("用例名称"), {
+      target: { value: "新增问候" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "保存用例" }));
+
+    await waitFor(() => expect(onCreateCase).toHaveBeenCalledTimes(1));
+    expect(onCreateCase).toHaveBeenCalledWith(
+      expect.objectContaining({ name: "新增问候" }),
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "编辑基础问候" }));
+    fireEvent.change(screen.getByLabelText("用例名称"), {
+      target: { value: "基础问候更新" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "保存用例" }));
+
+    await waitFor(() => expect(onUpdateCase).toHaveBeenCalledTimes(1));
+    expect(onUpdateCase).toHaveBeenCalledWith(
+      "case-1",
+      expect.objectContaining({ name: "基础问候更新" }),
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "删除基础问候" }));
+    await waitFor(() => expect(onDeleteCases).toHaveBeenCalledWith(["case-1"]));
+  });
+
+  it("explains that published versions are read-only", () => {
+    render(
+      <DatasetDetail
+        cases={[testCase]}
+        currentVersionId={draftVersion.id}
+        currentVersionPublished
+        dataset={dataset}
+        onCreateCase={vi.fn()}
+        onUpdateCase={vi.fn()}
+        projectId="project-1"
+        versions={[{ ...draftVersion, status: "published" }]}
+      />,
+    );
+
+    expect(screen.getByText("当前版本已发布，只读")).toBeVisible();
+    expect(
+      screen.queryByRole("button", { name: "新增用例" }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "编辑基础问候" }),
+    ).not.toBeInTheDocument();
   });
 });
 
 describe("TestCaseEditor", () => {
   it("submits enhanced test case fields with API enum values", async () => {
     const onSubmit = vi.fn().mockResolvedValue(undefined);
-    render(<TestCaseEditor onSubmit={onSubmit} triggerLabel="添加测试用例" />);
+    render(<TestCaseEditor onSubmit={onSubmit} triggerLabel="新增用例" />);
 
-    fireEvent.click(screen.getByRole("button", { name: "添加测试用例" }));
+    fireEvent.click(screen.getByRole("button", { name: "新增用例" }));
     fireEvent.change(screen.getByLabelText("用例名称"), {
       target: { value: "权限回归" },
     });
@@ -142,14 +229,46 @@ describe("TestCaseEditor", () => {
     fireEvent.change(screen.getByLabelText("测试分组"), {
       target: { value: "validation" },
     });
+    expect(screen.getByRole("button", { name: "预期与断言" })).toBeVisible();
+    fireEvent.click(screen.getByRole("button", { name: "输入数据" }));
+    expect(screen.queryByLabelText("输入 JSON")).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "添加输入字段" }));
+    fireEvent.change(screen.getByLabelText("输入数据字段名"), {
+      target: { value: "message" },
+    });
+    fireEvent.change(screen.getByLabelText("输入数据字段值"), {
+      target: { value: "你好" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "预期与断言" }));
+    fireEvent.click(screen.getByRole("button", { name: "添加断言" }));
+    fireEvent.change(screen.getByLabelText("断言字段"), {
+      target: { value: "output.text" },
+    });
+    fireEvent.change(screen.getByLabelText("断言期望值"), {
+      target: { value: "你好" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "评分与安全" }));
+    expect(screen.queryByLabelText("评分器配置")).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "添加评分器" }));
+    fireEvent.change(screen.getByLabelText("评分器名称"), {
+      target: { value: "helpfulness" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "添加安全策略" }));
+    fireEvent.change(screen.getByLabelText("安全策略类型"), {
+      target: { value: "pii_redaction" },
+    });
     fireEvent.click(screen.getByRole("button", { name: "保存用例" }));
 
     await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
     expect(onSubmit).toHaveBeenCalledWith(
       expect.objectContaining({
+        assertions: [expect.objectContaining({ path: "output.text" })],
+        input: { message: "你好" },
         name: "权限回归",
         priority: "P1",
         risk_level: "high",
+        scorers: [expect.objectContaining({ name: "helpfulness" })],
+        security_policies: [expect.objectContaining({ type: "pii_redaction" })],
         test_group: "validation",
       }),
     );

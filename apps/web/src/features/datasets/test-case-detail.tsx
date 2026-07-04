@@ -105,12 +105,15 @@ export function TestCaseDetail({
               </Section>
             )}
 
-          {/* 断言规则 */}
-          {caseItem.assertions && caseItem.assertions.length > 0 && (
-            <Section icon={<Shield className="size-4" />} title="断言规则">
+          <Section icon={<Shield className="size-4" />} title="断言规则">
+            {caseItem.assertions && caseItem.assertions.length > 0 ? (
               <JsonBlock data={caseItem.assertions} />
-            </Section>
-          )}
+            ) : (
+              <p className="rounded border border-[var(--hairline)] bg-[var(--canvas-soft)] p-3 text-sm text-[var(--muted)]">
+                未配置断言
+              </p>
+            )}
+          </Section>
 
           {/* 评分器 */}
           {caseItem.scorers && caseItem.scorers.length > 0 && (

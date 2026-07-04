@@ -6,6 +6,7 @@ import subprocess
 import tempfile
 from dataclasses import asdict
 from pathlib import Path
+from typing import Any
 from xml.etree.ElementTree import Element, SubElement, tostring
 
 from agenttest_api_runner.contracts import ReportArtifact, RunResult
@@ -137,9 +138,10 @@ def _html_report(result: RunResult, summary: dict[str, int]) -> str:
 
 def _allure_results_json(result: RunResult) -> str:
     """生成 Allure 兼容的 results.json。"""
-    results = []
+    results: list[dict[str, Any]] = []
     for case in result.cases:
-        test_case = {
+        attachments: list[dict[str, str]] = []
+        test_case: dict[str, Any] = {
             "name": case.run_case_id,
             "status": _allure_status(case.status),
             "statusDetails": {
@@ -148,18 +150,20 @@ def _allure_results_json(result: RunResult) -> str:
             "stage": "finished",
             "start": 0,
             "stop": case.duration_ms or 0,
-            "attachments": [],
+            "attachments": attachments,
         }
         # Attach trace as text attachment
         if case.trace:
             trace_text = json.dumps(case.trace, ensure_ascii=False)
             if len(trace_text) > 200000:
                 trace_text = trace_text[:200000]
-            test_case["attachments"].append({
-                "name": "trace.json",
-                "type": "application/json",
-                "source": trace_text,
-            })
+            attachments.append(
+                {
+                    "name": "trace.json",
+                    "type": "application/json",
+                    "source": trace_text,
+                }
+            )
         results.append(test_case)
     return json.dumps(
         {"name": result.run_id, "children": results, "status": _allure_status(result.status)},

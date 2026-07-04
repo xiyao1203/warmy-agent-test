@@ -28,7 +28,10 @@ export function Button({
       "border-[var(--hairline-strong)] bg-[var(--surface)] text-[var(--ink)] hover:bg-[var(--canvas-soft)]",
   };
 
-  const shape = variant === "primary" ? "rounded-[var(--radius-pill)] px-5" : "rounded-[var(--radius-sm)] px-4";
+  const shape =
+    variant === "primary"
+      ? "rounded-[var(--radius-pill)] px-5"
+      : "rounded-[var(--radius-sm)] px-4";
 
   return (
     <Component

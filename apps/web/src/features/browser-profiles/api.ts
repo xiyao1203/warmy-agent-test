@@ -1,4 +1,3 @@
-import { apiClient } from "@/lib/api/client";
 import { CONTROL_API_URL } from "@/lib/api/base-url";
 import { csrfHeaders } from "@/lib/api/csrf";
 import { responseProblem } from "@/lib/api/problem";

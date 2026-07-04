@@ -7,16 +7,13 @@ from uuid import UUID, uuid4
 
 from pydantic import BaseModel
 
-from agenttest.modules.agents.application.commands import CreateAgentVersionCommand
-from agenttest.modules.agents.infrastructure.connection_validator import (
-    HttpAgentConnectionValidator,
-)
 from agenttest.modules.agents.public import (
     AgentConfig,
     AgentId,
     AgentType,
     AgentVersionId,
     CreateAgentCommand,
+    CreateAgentVersionCommand,
     PublishAgentVersionCommand,
 )
 from agenttest.modules.datasets.public import (
@@ -25,7 +22,10 @@ from agenttest.modules.datasets.public import (
     CreateDatasetVersionCommand,
     DatasetVersionId,
     ExecutionMode,
+    Priority,
     PublishDatasetVersionCommand,
+    RiskLevel,
+    TestGroup,
 )
 from agenttest.modules.environments.public import (
     CreateEnvironmentTemplateCommand,
@@ -46,8 +46,7 @@ from agenttest.modules.security.public import (
     create_scanner,
     validate_agent_endpoint,
 )
-from agenttest.modules.test_accounts.domain.entities import TestAccount
-from agenttest.modules.test_accounts.public import TestAccountId
+from agenttest.modules.test_accounts.public import TestAccount, TestAccountId
 from agenttest.modules.test_agent.application.orchestrator import OrchestrationContext
 from agenttest.modules.test_plans.public import (
     CreateTestPlanCommand,
@@ -79,6 +78,7 @@ class HandlerPlatformGateway:
         gate_evidence,
         models=None,
         invoker: ModelInvoker | None = None,
+        connection_validator=None,
     ) -> None:
         self._agents = agents
         self._datasets = datasets
@@ -96,6 +96,7 @@ class HandlerPlatformGateway:
         self._gate_evidence = gate_evidence
         self._models = models
         self._invoker = invoker
+        self._connection_validator = connection_validator
 
     async def execute(
         self,
@@ -185,19 +186,14 @@ class HandlerPlatformGateway:
                 )
                 cases = []
                 for index, raw in enumerate(values["cases"]):
-                    case_input = dict(raw.get("input") or {})
-                    if not case_input:
-                        raise ValueError(f"Test case {index + 1} input is required")
                     case = await self._datasets.add_case.execute(
                         actor,
-                        AddTestCaseCommand(
+                        _test_case_command_from_raw(
                             dataset_version_id=version.version_id,
-                            name=str(raw.get("name") or f"Case {index + 1}"),
-                            input=case_input,
-                            execution_mode=ExecutionMode(str(raw.get("execution_mode", "api"))),
-                            assertions=list(raw.get("assertions") or []),
-                            scorers=list(raw.get("scorers") or []),
-                            tags=list(raw.get("tags") or []),
+                            raw=dict(raw),
+                            fallback_name=f"Case {index + 1}",
+                            fallback_input=None,
+                            default_execution_mode="api",
                         ),
                     )
                     cases.append(str(case.case_id.value))
@@ -417,11 +413,10 @@ class HandlerPlatformGateway:
             allow_private_network=self._allow_private_security_targets,
         )
 
-        validator = HttpAgentConnectionValidator(
-            allow_private_network=self._allow_private_security_targets,
-        )
+        if self._connection_validator is None:
+            raise ValueError("Agent connection validator is not configured")
         probe = dict(values.get("probe_input") or {"input": "Hello, this is a probe test"})
-        result = await validator.validate(config, probe)
+        result = await self._connection_validator.validate(config, probe)
 
         return {
             "agent_name": agent.name,
@@ -476,15 +471,15 @@ class HandlerPlatformGateway:
                 + (f"\n场景提示:\n{hints_text}\n" if hints else "")
                 + "\n请生成 JSON 数组 cases，每个元素包含:\n"
                 "- name: 用例名称\n"
-                "- execution_mode: \"browser\"\n"
+                '- execution_mode: "browser"\n'
                 "- input: { url: 画布页面地址, steps: [Playwright 操作步骤] }\n"
                 "  steps 每项: action (goto/fill/click/wait), target (CSS选择器), value (输入)\n"
                 "- assertions: canvas 专用断言规则列表\n"
-                "  支持: { type: \"canvas_schema\" }, "
-                "{ type: \"node_count\", min_count: N }, "
-                "{ type: \"node_types\", required_types: [\"text\", \"image\"] }, "
-                "{ type: \"required_connection\", from_type: \"text\", to_type: \"image\" }, "
-                "{ type: \"no_orphan_nodes\" }\n"
+                '  支持: { type: "canvas_schema" }, '
+                '{ type: "node_count", min_count: N }, '
+                '{ type: "node_types", required_types: ["text", "image"] }, '
+                '{ type: "required_connection", from_type: "text", to_type: "image" }, '
+                '{ type: "no_orphan_nodes" }\n'
                 "- tags: 标签列表\n\n"
                 "按以下分类各生成 2-3 条: 基础画布操作、复杂链路、边界异常。\n"
                 '返回 JSON: {"cases": [...]}'
@@ -501,7 +496,7 @@ class HandlerPlatformGateway:
                 + "\n请生成 JSON 数组 cases，每个元素包含:\n"
                 "- name: 用例名称\n"
                 "- input: 输入参数字典\n"
-                "- execution_mode: \"api\"\n"
+                '- execution_mode: "api"\n'
                 "- assertions: 断言规则列表\n"
                 "- tags: 标签列表\n\n"
                 "按以下分类各生成 2-3 条: 正常场景、边界条件、异常输入。\n"
@@ -549,46 +544,33 @@ class HandlerPlatformGateway:
                         case_input = {"url": canvas_url, "steps": []}
                     else:
                         case_input = {"input": f"auto_generated_case_{index + 1}"}
-                exc_mode = ExecutionMode(
-                    str(raw.get("execution_mode", default_execution_mode))
-                )
                 case = await self._datasets.add_case.execute(
                     context.actor,
-                    AddTestCaseCommand(
+                    _test_case_command_from_raw(
                         dataset_version_id=version.version_id,
-                        name=str(raw.get("name") or f"Auto Case {index + 1}"),
-                        input=case_input,
-                        execution_mode=exc_mode,
-                        assertions=list(raw.get("assertions") or []),
-                        scorers=list(raw.get("scorers") or []),
-                        tags=list(raw.get("tags") or []),
+                        raw=dict(raw),
+                        fallback_name=f"Auto Case {index + 1}",
+                        fallback_input=case_input,
+                        default_execution_mode=default_execution_mode,
                     ),
                 )
                 case_ids.append(str(case.case_id.value))
 
-        result_obj = _created(
-            "dataset", dataset.dataset_id.value, {"case_ids": case_ids}
-        )
-        result_obj["artifacts"].append(
-            _artifact("dataset_version", version.version_id.value)
-        )
+        result_obj = _created("dataset", dataset.dataset_id.value, {"case_ids": case_ids})
+        result_obj["artifacts"].append(_artifact("dataset_version", version.version_id.value))
         return result_obj
 
     async def _generate_report(self, context, values):
         """Build a test run report summary."""
         run_id = UUID(str(values["run_id"]))
-        run = await self._runs.get_run.execute(
-            context.actor, context.project_id, RunId(run_id)
-        )
+        run = await self._runs.get_run.execute(context.actor, context.project_id, RunId(run_id))
         cases = await self._runs.list_cases.execute(
             context.actor, context.project_id, RunId(run_id)
         )
 
         duration_ms = None
         if run.started_at is not None and run.completed_at is not None:
-            duration_ms = int(
-                (run.completed_at - run.started_at).total_seconds() * 1000
-            )
+            duration_ms = int((run.completed_at - run.started_at).total_seconds() * 1000)
 
         return {
             "run_id": str(run_id),
@@ -672,6 +654,57 @@ def _optional(value: Any) -> str | None:
     return str(value) if value else None
 
 
+def _test_case_command_from_raw(
+    *,
+    dataset_version_id: DatasetVersionId,
+    raw: dict[str, object],
+    fallback_name: str,
+    fallback_input: dict[str, object] | None,
+    default_execution_mode: str,
+) -> AddTestCaseCommand:
+    case_input = _dict_value(raw.get("input")) or fallback_input
+    if not case_input:
+        raise ValueError(f"Test case {fallback_name} input is required")
+
+    return AddTestCaseCommand(
+        dataset_version_id=dataset_version_id,
+        name=str(raw.get("name") or fallback_name),
+        input=case_input,
+        execution_mode=ExecutionMode(str(raw.get("execution_mode") or default_execution_mode)),
+        assertions=_list_of_dicts(raw.get("assertions")),
+        scorers=_list_of_dicts(raw.get("scorers")),
+        initial_state=_dict_value(raw.get("initial_state")),
+        expected_outcome=_dict_value(raw.get("expected_outcome")),
+        security_policies=_list_of_dicts(raw.get("security_policies")),
+        tags=_list_of_strings(raw.get("tags")),
+        scenario=_optional(raw.get("scenario")),
+        priority=_enum_or_none(Priority, raw.get("priority")),
+        risk_level=_enum_or_none(RiskLevel, raw.get("risk_level")),
+        difficulty=_optional(raw.get("difficulty")),
+        test_group=_enum_or_none(TestGroup, raw.get("test_group")),
+    )
+
+
+def _dict_value(value: object) -> dict[str, object] | None:
+    return dict(value) if isinstance(value, dict) else None
+
+
+def _list_of_dicts(value: object) -> list[dict[str, object]]:
+    if not isinstance(value, list):
+        return []
+    return [dict(item) for item in value if isinstance(item, dict)]
+
+
+def _list_of_strings(value: object) -> list[str]:
+    if not isinstance(value, list):
+        return []
+    return [str(item) for item in value if isinstance(item, str)]
+
+
+def _enum_or_none(enum_cls, value: object):
+    return enum_cls(str(value)) if value else None
+
+
 def _agent_version(value: Any):
     return AgentVersionId(UUID(str(value))) if value else None
 
@@ -750,9 +783,7 @@ def _infer_json_schema(value: object) -> dict[str, object]:
     if isinstance(value, dict):
         return {
             "type": "object",
-            "properties": {
-                str(k): _infer_json_schema(v) for k, v in value.items()
-            },
+            "properties": {str(k): _infer_json_schema(v) for k, v in value.items()},
             "sample_keys": [str(k) for k in value.keys()][:20],
         }
     if isinstance(value, list):

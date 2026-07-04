@@ -57,7 +57,8 @@ def evaluate_scorers_sync(
         scorer_type = str(cfg.get("scorer_type", ""))
         if scorer_type not in {"rule", "reference"}:
             continue
-        config = dict(cfg.get("config", {}))
+        raw_config = cfg.get("config", {})
+        config = dict(raw_config) if isinstance(raw_config, dict) else {}
         task = ScoreTask(
             run_case_id="",
             scorer_version_id=str(cfg.get("scorer_version_id", "")),

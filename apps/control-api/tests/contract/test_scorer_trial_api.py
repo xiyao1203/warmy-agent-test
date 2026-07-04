@@ -118,9 +118,7 @@ def client(
     return c, project_id, scorer_repo
 
 
-def create_rule_scorer(
-    c: TestClient, pid: ProjectId, name: str = "Rule Scorer"
-) -> str:
+def create_rule_scorer(c: TestClient, pid: ProjectId, name: str = "Rule Scorer") -> str:
     csrf = {"X-CSRF-Token": "csrf-token"}
     r = c.post(
         f"/api/v1/projects/{pid.value}/scorers",
@@ -135,9 +133,7 @@ def create_rule_scorer(
     return r.json()["id"]
 
 
-def create_reference_scorer(
-    c: TestClient, pid: ProjectId, name: str = "Ref Scorer"
-) -> str:
+def create_reference_scorer(c: TestClient, pid: ProjectId, name: str = "Ref Scorer") -> str:
     csrf = {"X-CSRF-Token": "csrf-token"}
     r = c.post(
         f"/api/v1/projects/{pid.value}/scorers",
@@ -152,9 +148,7 @@ def create_reference_scorer(
     return r.json()["id"]
 
 
-def create_model_scorer(
-    c: TestClient, pid: ProjectId, name: str = "Model Scorer"
-) -> str:
+def create_model_scorer(c: TestClient, pid: ProjectId, name: str = "Model Scorer") -> str:
     csrf = {"X-CSRF-Token": "csrf-token"}
     r = c.post(
         f"/api/v1/projects/{pid.value}/scorers",

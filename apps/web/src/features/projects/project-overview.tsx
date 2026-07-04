@@ -157,9 +157,7 @@ export function ProjectOverview({
                     <TableCell className="font-mono text-xs">
                       {member.user_id}
                       {member.user_id === user.id ? (
-                        <span className="ml-2 text-[var(--muted)]">
-                          （你）
-                        </span>
+                        <span className="ml-2 text-[var(--muted)]">（你）</span>
                       ) : null}
                     </TableCell>
                     <TableCell>

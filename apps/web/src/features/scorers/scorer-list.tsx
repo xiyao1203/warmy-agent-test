@@ -85,7 +85,10 @@ export function ScorerList({ projectId }: { projectId: string }) {
         </header>
         <div className="mt-5 space-y-3">
           {[1, 2, 3].map((i) => (
-            <Skeleton className="h-16 w-full rounded-[var(--radius-lg)]" key={i} />
+            <Skeleton
+              className="h-16 w-full rounded-[var(--radius-lg)]"
+              key={i}
+            />
           ))}
         </div>
       </div>
@@ -119,9 +122,7 @@ export function ScorerList({ projectId }: { projectId: string }) {
 
       {scorers.length === 0 ? (
         <div className="mt-8 rounded-[var(--radius-lg)] border border-dashed border-[var(--hairline)] p-10 text-center">
-          <p className="text-sm font-medium text-[var(--muted)]">
-            暂无评分器
-          </p>
+          <p className="text-sm font-medium text-[var(--muted)]">暂无评分器</p>
           <p className="mt-1 text-xs text-[var(--muted)]">
             点击「创建评分器」开始配置。
           </p>
@@ -196,7 +197,10 @@ export function ScorerList({ projectId }: { projectId: string }) {
         onOpenChange={setEditorOpen}
       />
 
-      <Dialog onOpenChange={() => setDeleteTarget(null)} open={deleteTarget !== null}>
+      <Dialog
+        onOpenChange={() => setDeleteTarget(null)}
+        open={deleteTarget !== null}
+      >
         <DialogContent>
           <DialogTitle>确认删除</DialogTitle>
           <DialogDescription>

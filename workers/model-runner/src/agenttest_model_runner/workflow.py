@@ -7,6 +7,7 @@ from typing import Any
 
 from temporalio import workflow
 from temporalio.common import RetryPolicy
+from temporalio.exceptions import CancelledError
 
 
 @workflow.defn(name="model-invocation")
@@ -64,6 +65,6 @@ class ModelStreamingWorkflow:
                     ],
                 ),
             )
-        except workflow.CancelledError:
+        except CancelledError:
             # 用户取消：返回已累积内容而非抛异常
             return {"content": "", "cancelled": True}

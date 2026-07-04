@@ -4,7 +4,7 @@ import type { AgentVersionResponse } from "@warmy/generated-api-client";
 import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+
 import { validateAgentConnection } from "./api";
 
 type ConnectionTestPanelProps = {

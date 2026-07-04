@@ -9,8 +9,8 @@ from enum import StrEnum
 class BrowserMode(StrEnum):
     """浏览器生命周期模式。"""
 
-    EPHEMERAL = "ephemeral"       # 每次新建 Chrome，执行完销毁（默认）
-    PERSISTENT = "persistent"     # 连接已有 Chrome 实例，复用进程
+    EPHEMERAL = "ephemeral"  # 每次新建 Chrome，执行完销毁（默认）
+    PERSISTENT = "persistent"  # 连接已有 Chrome 实例，复用进程
 
 
 @dataclass(frozen=True, slots=True)
@@ -32,8 +32,8 @@ class CodexBrowserInput:
     headless: bool = True
     timeout_seconds: int = 120
     model: str = "gpt-4o"
-    model_provider: str = ""         # Codex provider ID，空表示默认 OpenAI
-    browser_profile_id: str = ""     # 浏览器实例 ID（从 registry 中选择）
+    model_provider: str = ""  # Codex provider ID，空表示默认 OpenAI
+    browser_profile_id: str = ""  # 浏览器实例 ID（从 registry 中选择）
     browser_mode: BrowserMode = BrowserMode.EPHEMERAL
     cdp_endpoint: str = ""
     storage_state: StorageStateConfig = field(default_factory=StorageStateConfig)

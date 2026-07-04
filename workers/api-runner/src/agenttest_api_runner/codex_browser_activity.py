@@ -9,13 +9,12 @@ from __future__ import annotations
 import json
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
+from typing import TYPE_CHECKING
 
 from temporalio import activity
 
-try:
+if TYPE_CHECKING:
     from agenttest_plugin_codex.contracts import BrowserMode
-except ImportError:  # pragma: no cover — 插件未安装时回退
-    BrowserMode = None  # type: ignore[assignment]
 
 
 @dataclass(frozen=True, slots=True)
@@ -108,9 +107,7 @@ async def run_codex_browser_case(inp: CodexBrowserTaskInput) -> CodexBrowserResu
         screenshots=list(result.screenshots),
         execution_log=result.execution_log,
         generated_script=result.generated_script,
-        allure_data=(
-            dict(result.allure_data) if result.allure_data else None
-        ),
+        allure_data=(dict(result.allure_data) if result.allure_data else None),
         error_message=result.error_message,
         duration_ms=_elapsed_ms(started),
     )
@@ -122,16 +119,12 @@ def _elapsed_ms(started: datetime) -> int:
 
 def _resolve_browser_mode(raw: str) -> BrowserMode:
     """将字符串解析为 BrowserMode，无效值或插件未安装时回退到 EPHEMERAL。"""
-    if BrowserMode is None:
-        from agenttest_plugin_codex.contracts import BrowserMode as BM
-        try:
-            return BM(raw)
-        except ValueError:
-            return BM.EPHEMERAL
+    from agenttest_plugin_codex.contracts import BrowserMode as BM
+
     try:
-        return BrowserMode(raw)
+        return BM(raw)
     except ValueError:
-        return BrowserMode.EPHEMERAL
+        return BM.EPHEMERAL
 
 
 def build_allure_json_result(

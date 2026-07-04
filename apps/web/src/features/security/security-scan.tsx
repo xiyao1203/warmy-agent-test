@@ -288,15 +288,11 @@ function FindingCard({ finding }: { finding: Finding }) {
           <div className="mt-2 grid grid-cols-2 gap-2">
             <div>
               <p className="font-medium text-[var(--ink)]">攻击向量</p>
-              <p className="mt-0.5 text-[var(--muted)]">
-                {finding.vector}
-              </p>
+              <p className="mt-0.5 text-[var(--muted)]">{finding.vector}</p>
             </div>
             <div>
               <p className="font-medium text-[var(--ink)]">响应</p>
-              <p className="mt-0.5 text-[var(--muted)]">
-                {finding.response}
-              </p>
+              <p className="mt-0.5 text-[var(--muted)]">{finding.response}</p>
             </div>
           </div>
           <p className="mt-2">

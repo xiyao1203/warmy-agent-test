@@ -6,8 +6,10 @@ import { AgentList } from "../agent-list";
 
 const agent = {
   agent_type: "generic_http" as const,
+  baseline_version_id: null,
   created_at: "2026-06-25T10:00:00Z",
   created_by: "user-1",
+  current_version_id: null,
   description: "用于客服回归",
   id: "agent-1",
   name: "客服 Agent",
@@ -57,12 +59,19 @@ describe("AgentList", () => {
 
     expect(screen.getByText("客服 Agent")).toBeVisible();
     expect(screen.getByText("通用 HTTP")).toBeVisible();
+    expect(screen.getByText("待接入")).toBeVisible();
+    expect(screen.getByText("未发布当前版本")).toBeVisible();
+    expect(screen.getByText("未设置基线")).toBeVisible();
+    expect(screen.getByText("下一步：创建连接版本")).toBeVisible();
     expect(
       screen.getByRole("columnheader", { name: "智能体信息" }),
-    ).toHaveClass("w-[360px]", "pl-16");
+    ).toHaveClass("w-[360px]");
     expect(screen.getByRole("columnheader", { name: "接入类型" })).toHaveClass(
-      "w-36",
+      "w-32",
       "text-center",
+    );
+    expect(screen.getByRole("columnheader", { name: "闭环状态" })).toHaveClass(
+      "w-[320px]",
     );
     expect(screen.getByRole("columnheader", { name: "更新时间" })).toHaveClass(
       "w-32",
@@ -91,6 +100,35 @@ describe("AgentList", () => {
     expect(onCreate).toHaveBeenCalledWith(
       expect.objectContaining({ agent_type: "canvas", name: "评测 Agent" }),
     );
+  });
+
+  it("summarizes current, baseline and next action for published agents", () => {
+    render(
+      <AgentList
+        agents={[
+          {
+            ...agent,
+            current_version_id: "version-current",
+            id: "agent-current",
+            name: "搜索 Agent",
+          },
+          {
+            ...agent,
+            baseline_version_id: "version-baseline",
+            current_version_id: "version-current",
+            id: "agent-ready",
+            name: "画布 Agent",
+          },
+        ]}
+        projectId="project-1"
+      />,
+    );
+
+    expect(screen.getAllByText("已发布当前版本")).toHaveLength(2);
+    expect(screen.getAllByText("当前版本已设置")).toHaveLength(2);
+    expect(screen.getByText("下一步：标记基线版本")).toBeVisible();
+    expect(screen.getByText("基线版本已设置")).toBeVisible();
+    expect(screen.getByText("闭环就绪：可创建测试计划")).toBeVisible();
   });
 });
 

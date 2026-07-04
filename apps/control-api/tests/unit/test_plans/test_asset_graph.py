@@ -139,6 +139,7 @@ def test_update_references_all_fields() -> None:
     agent_id = AgentVersionId(uuid4())
     dataset_id = DatasetVersionId(uuid4())
     from agenttest.modules.test_plans.domain.entities import EnvironmentTemplateId
+
     env_id = EnvironmentTemplateId(uuid4())
     version.update_references(
         agent_version_id=agent_id,

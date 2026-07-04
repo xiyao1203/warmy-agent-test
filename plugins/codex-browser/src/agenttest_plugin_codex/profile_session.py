@@ -22,6 +22,7 @@ from agenttest_plugin_codex.profile_registry import (
 
 # ── 登录态采集 ────────────────────────────────────────
 
+
 async def setup_profile_login(
     profile: BrowserProfile,
     login_url: str,
@@ -52,7 +53,7 @@ async def setup_profile_login(
         保存的 storageState 文件路径
     """
     try:
-        from playwright.async_api import async_playwright
+        from playwright.async_api import async_playwright  # type: ignore[import-not-found]
     except ImportError:
         raise RuntimeError("需要安装 playwright: pip install playwright") from None
 
@@ -119,14 +120,12 @@ async def save_profile_storage(
     要求 profile.status == "running"，CDP endpoint 可用。
     """
     try:
-        from playwright.async_api import async_playwright
+        from playwright.async_api import async_playwright  # type: ignore[import-not-found]
     except ImportError:
         raise RuntimeError("需要安装 playwright: pip install playwright") from None
 
     if profile.status != "running" or not profile.cdp_endpoint:
-        raise RuntimeError(
-            f"Profile {profile.profile_id} 未运行，无法采集 storageState"
-        )
+        raise RuntimeError(f"Profile {profile.profile_id} 未运行，无法采集 storageState")
 
     endpoint = profile.cdp_endpoint
     async with async_playwright() as pw:
@@ -155,6 +154,7 @@ async def save_profile_storage(
 
 
 # ── 内部辅助 ──────────────────────────────────────────
+
 
 def _storage_state_dir(profile: BrowserProfile) -> Path:
     """storageState 文件存储目录。"""

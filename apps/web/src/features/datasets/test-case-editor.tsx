@@ -7,7 +7,9 @@ import type {
   TestCaseResponse,
   TestGroup,
 } from "@warmy/generated-api-client";
+import type { ReactNode } from "react";
 import { useState } from "react";
+import { Plus, Trash2 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -23,12 +25,21 @@ import { Input } from "@/components/ui/input";
 type TestCaseEditorProps = {
   caseItem?: TestCaseResponse;
   onSubmit: (payload: CreateTestCaseRequest) => Promise<unknown>;
+  triggerAriaLabel?: string;
+  triggerIcon?: ReactNode;
   triggerLabel: string;
 };
+
+type KeyValueRow = { id: string; key: string; value: string };
+type AssertionRow = { id: string; type: string; path: string; value: string };
+type ScorerRow = { id: string; name: string; type: string; threshold: string };
+type SecurityPolicyRow = { id: string; type: string; severity: string };
 
 export function TestCaseEditor({
   caseItem,
   onSubmit,
+  triggerAriaLabel,
+  triggerIcon,
   triggerLabel,
 }: TestCaseEditorProps) {
   const [open, setOpen] = useState(false);
@@ -58,57 +69,43 @@ export function TestCaseEditor({
     Array.isArray(caseItem?.tags) ? caseItem.tags.join(", ") : "",
   );
 
-  // 输入数据
-  const [input, setInput] = useState(
-    JSON.stringify(caseItem?.input ?? {}, null, 2),
+  const [inputRows, setInputRows] = useState<KeyValueRow[]>(
+    recordToRows(caseItem?.input ?? {}),
   );
-  const [initialState, setInitialState] = useState(
-    JSON.stringify(caseItem?.initial_state ?? {}, null, 2),
+  const [initialStateRows, setInitialStateRows] = useState<KeyValueRow[]>(
+    recordToRows(caseItem?.initial_state ?? {}),
   );
-
-  // 预期输出
-  const [expected, setExpected] = useState(
-    JSON.stringify(caseItem?.expected_outcome ?? {}, null, 2),
+  const [expectedRows, setExpectedRows] = useState<KeyValueRow[]>(
+    recordToRows(caseItem?.expected_outcome ?? {}),
   );
-  const [assertions, setAssertions] = useState(
-    JSON.stringify(caseItem?.assertions ?? [], null, 2),
+  const [assertionRows, setAssertionRows] = useState<AssertionRow[]>(
+    assertionsToRows(caseItem?.assertions ?? []),
   );
-
-  // 评分与安全
-  const [scorers, setScorers] = useState(
-    JSON.stringify(caseItem?.scorers ?? [], null, 2),
+  const [scorerRows, setScorerRows] = useState<ScorerRow[]>(
+    scorersToRows(caseItem?.scorers ?? []),
   );
-  const [securityPolicies, setSecurityPolicies] = useState(
-    JSON.stringify(caseItem?.security_policies ?? [], null, 2),
-  );
+  const [securityPolicyRows, setSecurityPolicyRows] = useState<
+    SecurityPolicyRow[]
+  >(securityPoliciesToRows(caseItem?.security_policies ?? []));
 
   const [error, setError] = useState("");
 
   const sections = [
     { key: "basic", label: "基本信息" },
     { key: "input", label: "输入数据" },
-    { key: "output", label: "预期输出" },
+    { key: "output", label: "预期与断言" },
     { key: "scoring", label: "评分与安全" },
     { key: "advanced", label: "高级选项" },
   ] as const;
 
   async function submit() {
     try {
-      const parsedInput = JSON.parse(input) as Record<string, unknown>;
-      const parsedExpected = JSON.parse(expected) as Record<string, unknown>;
-      const parsedAssertions = JSON.parse(assertions) as Array<
-        Record<string, unknown>
-      >;
-      const parsedScorers = JSON.parse(scorers) as Array<
-        Record<string, unknown>
-      >;
-      const parsedSecurityPolicies = JSON.parse(securityPolicies) as Array<
-        Record<string, unknown>
-      >;
-      const parsedInitialState = JSON.parse(initialState) as Record<
-        string,
-        unknown
-      >;
+      const parsedInput = rowsToRecord(inputRows);
+      const parsedExpected = rowsToRecord(expectedRows);
+      const parsedAssertions = rowsToAssertions(assertionRows);
+      const parsedScorers = rowsToScorers(scorerRows);
+      const parsedSecurityPolicies = rowsToSecurityPolicies(securityPolicyRows);
+      const parsedInitialState = rowsToRecord(initialStateRows);
 
       if (!name.trim()) {
         setError("请输入用例名称");
@@ -139,19 +136,24 @@ export function TestCaseEditor({
       setOpen(false);
       setError("");
     } catch {
-      setError("JSON 格式无效或保存失败，请检查后重试。");
+      setError("保存失败，请检查必填项后重试。");
     }
   }
 
   return (
     <Dialog onOpenChange={setOpen} open={open}>
       <DialogTrigger asChild>
-        <Button variant={caseItem ? "secondary" : "primary"}>
+        <Button
+          aria-label={triggerAriaLabel}
+          className="shrink-0 whitespace-nowrap"
+          variant={caseItem ? "secondary" : "primary"}
+        >
+          {triggerIcon}
           {triggerLabel}
         </Button>
       </DialogTrigger>
       <DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto">
-        <DialogTitle>{caseItem ? "编辑测试用例" : "添加测试用例"}</DialogTitle>
+        <DialogTitle>{caseItem ? "编辑测试用例" : "新增测试用例"}</DialogTitle>
         <DialogDescription>
           定义测试用例的输入、预期输出、断言和评分规则。
         </DialogDescription>
@@ -278,32 +280,40 @@ export function TestCaseEditor({
           {/* 输入数据 */}
           {activeSection === "input" && (
             <>
-              <JsonField
-                label="输入 JSON"
-                onChange={setInput}
-                value={input}
+              <KeyValueEditor
+                addLabel="添加输入字段"
+                keyPlaceholder="字段名，如 message"
+                label="输入数据"
+                onChange={setInputRows}
+                rows={inputRows}
                 required
+                valuePlaceholder="字段值，如 你好"
               />
-              <JsonField
+              <KeyValueEditor
+                addLabel="添加状态字段"
+                keyPlaceholder="字段名，如 user_tier"
                 label="初始业务状态"
-                onChange={setInitialState}
-                value={initialState}
+                onChange={setInitialStateRows}
+                rows={initialStateRows}
+                valuePlaceholder="字段值，如 free"
               />
             </>
           )}
 
-          {/* 预期输出 */}
+          {/* 预期与断言 */}
           {activeSection === "output" && (
             <>
-              <JsonField
-                label="期望结果 JSON"
-                onChange={setExpected}
-                value={expected}
+              <KeyValueEditor
+                addLabel="添加期望字段"
+                keyPlaceholder="字段名，如 contains"
+                label="期望结果"
+                onChange={setExpectedRows}
+                rows={expectedRows}
+                valuePlaceholder="字段值，如 你好"
               />
-              <JsonField
-                label="断言规则"
-                onChange={setAssertions}
-                value={assertions}
+              <AssertionEditor
+                onChange={setAssertionRows}
+                rows={assertionRows}
               />
             </>
           )}
@@ -311,15 +321,10 @@ export function TestCaseEditor({
           {/* 评分与安全 */}
           {activeSection === "scoring" && (
             <>
-              <JsonField
-                label="评分器配置"
-                onChange={setScorers}
-                value={scorers}
-              />
-              <JsonField
-                label="安全策略"
-                onChange={setSecurityPolicies}
-                value={securityPolicies}
+              <ScorerEditor onChange={setScorerRows} rows={scorerRows} />
+              <SecurityPolicyEditor
+                onChange={setSecurityPolicyRows}
+                rows={securityPolicyRows}
               />
             </>
           )}
@@ -331,6 +336,11 @@ export function TestCaseEditor({
                 <h4 className="text-sm font-medium">当前配置摘要</h4>
                 <div className="mt-2 flex flex-wrap gap-2">
                   <Badge>{mode === "api" ? "API 模式" : "浏览器模式"}</Badge>
+                  <Badge>
+                    {assertionRows.length > 0
+                      ? `${assertionRows.length} 条断言`
+                      : "未配置断言"}
+                  </Badge>
                   {priority && <Badge>{priority}</Badge>}
                   {riskLevel && <Badge>{riskLevel}</Badge>}
                   {difficulty && <Badge>{difficulty}</Badge>}
@@ -361,6 +371,113 @@ export function TestCaseEditor({
 
 /* ── 子组件 ────────────────────────────────────────────────────────── */
 
+function newId() {
+  return Math.random().toString(36).slice(2);
+}
+
+function formatCellValue(value: unknown) {
+  if (value === null || value === undefined) return "";
+  if (typeof value === "string") return value;
+  if (typeof value === "number" || typeof value === "boolean") {
+    return String(value);
+  }
+  return JSON.stringify(value);
+}
+
+function parseCellValue(value: string) {
+  const trimmed = value.trim();
+  if (!trimmed) return "";
+  if (trimmed === "true") return true;
+  if (trimmed === "false") return false;
+  if (trimmed === "null") return null;
+  if (!Number.isNaN(Number(trimmed)) && /^-?\d+(\.\d+)?$/.test(trimmed)) {
+    return Number(trimmed);
+  }
+  if (
+    trimmed.startsWith("{") ||
+    trimmed.startsWith("[") ||
+    trimmed.startsWith('"')
+  ) {
+    try {
+      return JSON.parse(trimmed) as unknown;
+    } catch {
+      return value;
+    }
+  }
+  return value;
+}
+
+function recordToRows(record: Record<string, unknown>) {
+  return Object.entries(record).map(([key, value]) => ({
+    id: newId(),
+    key,
+    value: formatCellValue(value),
+  }));
+}
+
+function rowsToRecord(rows: KeyValueRow[]) {
+  return Object.fromEntries(
+    rows
+      .filter((row) => row.key.trim())
+      .map((row) => [row.key.trim(), parseCellValue(row.value)]),
+  );
+}
+
+function assertionsToRows(assertions: Array<Record<string, unknown>>) {
+  return assertions.map((assertion) => ({
+    id: newId(),
+    type: formatCellValue(assertion.type ?? "contains"),
+    path: formatCellValue(assertion.path ?? ""),
+    value: formatCellValue(assertion.value ?? ""),
+  }));
+}
+
+function rowsToAssertions(rows: AssertionRow[]) {
+  return rows
+    .filter((row) => row.path.trim() || row.value.trim())
+    .map((row) => ({
+      type: row.type.trim() || "contains",
+      path: row.path.trim(),
+      value: parseCellValue(row.value),
+    }));
+}
+
+function scorersToRows(scorers: Array<Record<string, unknown>>) {
+  return scorers.map((scorer) => ({
+    id: newId(),
+    name: formatCellValue(scorer.name ?? ""),
+    type: formatCellValue(scorer.type ?? "llm_judge"),
+    threshold: formatCellValue(scorer.threshold ?? ""),
+  }));
+}
+
+function rowsToScorers(rows: ScorerRow[]) {
+  return rows
+    .filter((row) => row.name.trim())
+    .map((row) => ({
+      name: row.name.trim(),
+      type: row.type.trim() || "llm_judge",
+      threshold: row.threshold.trim() ? Number(row.threshold) : undefined,
+    }));
+}
+
+function securityPoliciesToRows(policies: Array<Record<string, unknown>>) {
+  return policies.map((policy) => ({
+    id: newId(),
+    type: formatCellValue(policy.type ?? ""),
+    severity: formatCellValue(policy.severity ?? "medium"),
+  }));
+}
+
+function rowsToSecurityPolicies(rows: SecurityPolicyRow[]) {
+  return rows
+    .filter((row) => row.type.trim())
+    .map((row) => ({
+      type: row.type.trim(),
+      severity: row.severity.trim() || "medium",
+    }));
+}
+
 function Field({
   label,
   required = false,
@@ -379,27 +496,304 @@ function Field({
   );
 }
 
-function JsonField({
+function KeyValueEditor({
+  addLabel,
+  keyPlaceholder,
   label,
   onChange,
-  value,
+  rows,
   required = false,
+  valuePlaceholder,
+}: {
+  addLabel: string;
+  keyPlaceholder: string;
+  label: string;
+  onChange: (rows: KeyValueRow[]) => void;
+  rows: KeyValueRow[];
+  required?: boolean;
+  valuePlaceholder: string;
+}) {
+  const updateRow = (id: string, patch: Partial<KeyValueRow>) => {
+    onChange(rows.map((row) => (row.id === id ? { ...row, ...patch } : row)));
+  };
+
+  return (
+    <div>
+      <div className="text-sm font-medium">
+        {label}
+        {required && <span className="ml-1 text-[var(--danger)]">*</span>}
+      </div>
+      <div className="mt-2 space-y-2">
+        {rows.map((row) => (
+          <div
+            className="grid grid-cols-[minmax(120px,1fr)_minmax(180px,2fr)_36px] gap-2"
+            key={row.id}
+          >
+            <Input
+              aria-label={`${label}字段名`}
+              onChange={(event) =>
+                updateRow(row.id, { key: event.target.value })
+              }
+              placeholder={keyPlaceholder}
+              value={row.key}
+            />
+            <Input
+              aria-label={`${label}字段值`}
+              onChange={(event) =>
+                updateRow(row.id, { value: event.target.value })
+              }
+              placeholder={valuePlaceholder}
+              value={row.value}
+            />
+            <IconButton
+              label={`删除${label}字段`}
+              onClick={() =>
+                onChange(rows.filter((item) => item.id !== row.id))
+              }
+            />
+          </div>
+        ))}
+      </div>
+      <Button
+        className="mt-2"
+        onClick={() => onChange([...rows, { id: newId(), key: "", value: "" }])}
+        variant="secondary"
+      >
+        <Plus aria-hidden="true" className="mr-1 size-4" />
+        {addLabel}
+      </Button>
+    </div>
+  );
+}
+
+function AssertionEditor({
+  onChange,
+  rows,
+}: {
+  onChange: (rows: AssertionRow[]) => void;
+  rows: AssertionRow[];
+}) {
+  const updateRow = (id: string, patch: Partial<AssertionRow>) => {
+    onChange(rows.map((row) => (row.id === id ? { ...row, ...patch } : row)));
+  };
+
+  return (
+    <div>
+      <div className="text-sm font-medium">断言规则</div>
+      <div className="mt-2 space-y-2">
+        {rows.map((row) => (
+          <div
+            className="grid grid-cols-[120px_minmax(140px,1fr)_minmax(160px,1fr)_36px] gap-2"
+            key={row.id}
+          >
+            <select
+              aria-label="断言类型"
+              className="h-9 rounded-[var(--radius-md)] border border-[var(--hairline)] bg-[var(--surface)] px-3"
+              onChange={(event) =>
+                updateRow(row.id, { type: event.target.value })
+              }
+              value={row.type}
+            >
+              <option value="contains">包含</option>
+              <option value="equals">等于</option>
+              <option value="exists">存在</option>
+              <option value="regex">正则匹配</option>
+            </select>
+            <Input
+              aria-label="断言字段"
+              onChange={(event) =>
+                updateRow(row.id, { path: event.target.value })
+              }
+              placeholder="字段，如 output.text"
+              value={row.path}
+            />
+            <Input
+              aria-label="断言期望值"
+              onChange={(event) =>
+                updateRow(row.id, { value: event.target.value })
+              }
+              placeholder="期望值"
+              value={row.value}
+            />
+            <IconButton
+              label="删除断言"
+              onClick={() =>
+                onChange(rows.filter((item) => item.id !== row.id))
+              }
+            />
+          </div>
+        ))}
+      </div>
+      <Button
+        className="mt-2"
+        onClick={() =>
+          onChange([
+            ...rows,
+            { id: newId(), path: "", type: "contains", value: "" },
+          ])
+        }
+        variant="secondary"
+      >
+        <Plus aria-hidden="true" className="mr-1 size-4" />
+        添加断言
+      </Button>
+    </div>
+  );
+}
+
+function ScorerEditor({
+  onChange,
+  rows,
+}: {
+  onChange: (rows: ScorerRow[]) => void;
+  rows: ScorerRow[];
+}) {
+  const updateRow = (id: string, patch: Partial<ScorerRow>) => {
+    onChange(rows.map((row) => (row.id === id ? { ...row, ...patch } : row)));
+  };
+
+  return (
+    <div>
+      <div className="text-sm font-medium">评分器</div>
+      <div className="mt-2 space-y-2">
+        {rows.map((row) => (
+          <div
+            className="grid grid-cols-[minmax(120px,1fr)_140px_100px_36px] gap-2"
+            key={row.id}
+          >
+            <Input
+              aria-label="评分器名称"
+              onChange={(event) =>
+                updateRow(row.id, { name: event.target.value })
+              }
+              placeholder="名称，如 helpfulness"
+              value={row.name}
+            />
+            <select
+              aria-label="评分器类型"
+              className="h-9 rounded-[var(--radius-md)] border border-[var(--hairline)] bg-[var(--surface)] px-3"
+              onChange={(event) =>
+                updateRow(row.id, { type: event.target.value })
+              }
+              value={row.type}
+            >
+              <option value="llm_judge">模型裁判</option>
+              <option value="rule">规则评分</option>
+              <option value="visual">视觉评分</option>
+            </select>
+            <Input
+              aria-label="通过阈值"
+              onChange={(event) =>
+                updateRow(row.id, { threshold: event.target.value })
+              }
+              placeholder="0.8"
+              value={row.threshold}
+            />
+            <IconButton
+              label="删除评分器"
+              onClick={() =>
+                onChange(rows.filter((item) => item.id !== row.id))
+              }
+            />
+          </div>
+        ))}
+      </div>
+      <Button
+        className="mt-2"
+        onClick={() =>
+          onChange([
+            ...rows,
+            { id: newId(), name: "", threshold: "0.8", type: "llm_judge" },
+          ])
+        }
+        variant="secondary"
+      >
+        <Plus aria-hidden="true" className="mr-1 size-4" />
+        添加评分器
+      </Button>
+    </div>
+  );
+}
+
+function SecurityPolicyEditor({
+  onChange,
+  rows,
+}: {
+  onChange: (rows: SecurityPolicyRow[]) => void;
+  rows: SecurityPolicyRow[];
+}) {
+  const updateRow = (id: string, patch: Partial<SecurityPolicyRow>) => {
+    onChange(rows.map((row) => (row.id === id ? { ...row, ...patch } : row)));
+  };
+
+  return (
+    <div>
+      <div className="text-sm font-medium">安全策略</div>
+      <div className="mt-2 space-y-2">
+        {rows.map((row) => (
+          <div
+            className="grid grid-cols-[minmax(160px,1fr)_140px_36px] gap-2"
+            key={row.id}
+          >
+            <Input
+              aria-label="安全策略类型"
+              onChange={(event) =>
+                updateRow(row.id, { type: event.target.value })
+              }
+              placeholder="策略，如 pii_redaction"
+              value={row.type}
+            />
+            <select
+              aria-label="安全等级"
+              className="h-9 rounded-[var(--radius-md)] border border-[var(--hairline)] bg-[var(--surface)] px-3"
+              onChange={(event) =>
+                updateRow(row.id, { severity: event.target.value })
+              }
+              value={row.severity}
+            >
+              <option value="low">低</option>
+              <option value="medium">中</option>
+              <option value="high">高</option>
+              <option value="critical">严重</option>
+            </select>
+            <IconButton
+              label="删除安全策略"
+              onClick={() =>
+                onChange(rows.filter((item) => item.id !== row.id))
+              }
+            />
+          </div>
+        ))}
+      </div>
+      <Button
+        className="mt-2"
+        onClick={() =>
+          onChange([...rows, { id: newId(), severity: "medium", type: "" }])
+        }
+        variant="secondary"
+      >
+        <Plus aria-hidden="true" className="mr-1 size-4" />
+        添加安全策略
+      </Button>
+    </div>
+  );
+}
+
+function IconButton({
+  label,
+  onClick,
 }: {
   label: string;
-  onChange: (value: string) => void;
-  value: string;
-  required?: boolean;
+  onClick: () => void;
 }) {
   return (
-    <label className="block text-sm font-medium">
-      {label}
-      {required && <span className="ml-1 text-[var(--danger)]">*</span>}
-      <textarea
-        aria-label={label}
-        className="mt-1.5 min-h-32 w-full rounded-[var(--radius-md)] border border-[var(--hairline)] bg-[var(--surface)] px-3 py-2 font-mono text-xs focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)]"
-        onChange={(e) => onChange(e.target.value)}
-        value={value}
-      />
-    </label>
+    <button
+      aria-label={label}
+      className="grid size-9 place-items-center rounded-[var(--radius-md)] text-[var(--muted)] hover:bg-[var(--danger-subtle)] hover:text-[var(--danger)]"
+      onClick={onClick}
+      type="button"
+    >
+      <Trash2 aria-hidden="true" className="size-4" />
+    </button>
   );
 }

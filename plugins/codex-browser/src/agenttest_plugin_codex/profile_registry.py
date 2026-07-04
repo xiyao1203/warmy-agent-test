@@ -22,20 +22,21 @@ from pathlib import Path
 class BrowserProfile:
     """浏览器实例配置。"""
 
-    profile_id: str           # UUID
-    project_id: str           # 项目隔离
-    name: str                 # 人类可读名称（如"公司内网-管理员"）
-    target_domain: str        # 目标网站域名
-    user_data_dir: str        # Chrome --user-data-dir 路径
-    storage_state_path: str   # storageState JSON 路径（空=未登录）
-    cdp_port: int             # CDP 调试端口（自动分配）
-    status: str               # "stopped" | "running" | "error"
-    cdp_endpoint: str         # 运行时的 CDP WebSocket URL
+    profile_id: str  # UUID
+    project_id: str  # 项目隔离
+    name: str  # 人类可读名称（如"公司内网-管理员"）
+    target_domain: str  # 目标网站域名
+    user_data_dir: str  # Chrome --user-data-dir 路径
+    storage_state_path: str  # storageState JSON 路径（空=未登录）
+    cdp_port: int  # CDP 调试端口（自动分配）
+    status: str  # "stopped" | "running" | "error"
+    cdp_endpoint: str  # 运行时的 CDP WebSocket URL
     created_at: str = ""
     updated_at: str = ""
 
 
 # ── 存储路径 ──────────────────────────────────────────
+
 
 def _registry_root() -> Path:
     return Path.home() / ".agenttest" / "browser-profiles"
@@ -49,12 +50,14 @@ def _registry_path(project_id: str) -> Path:
 
 # ── 默认存储目录 ──────────────────────────────────────
 
+
 def _default_profile_dir(profile_id: str) -> str:
     root = _registry_root()
     return str(root / "data" / profile_id)
 
 
 # ── 端口分配 ──────────────────────────────────────────
+
 
 def _find_free_port(start: int = 9222) -> int:
     """从 start 起扫描，返回首个空闲 TCP 端口。"""
@@ -79,6 +82,7 @@ def _used_ports(project_id: str) -> set[int]:
 
 
 # ── 辅助 ──────────────────────────────────────────────
+
 
 def _now_iso() -> str:
     return datetime.now(UTC).isoformat()
@@ -117,6 +121,7 @@ def _deserialize(data: dict) -> BrowserProfile:
 
 
 # ── CRUD ──────────────────────────────────────────────
+
 
 def create_profile(
     project_id: str,
@@ -208,8 +213,11 @@ def update_profile(
     for data in profiles_data:
         if data["profile_id"] == profile_id:
             allowed = {
-                "name", "target_domain", "storage_state_path",
-                "status", "cdp_endpoint",
+                "name",
+                "target_domain",
+                "storage_state_path",
+                "status",
+                "cdp_endpoint",
             }
             for k, v in kwargs.items():
                 if k in allowed:
@@ -231,6 +239,7 @@ def delete_profile(project_id: str, profile_id: str) -> bool:
 
 
 # ── 内部存储 I/O ──────────────────────────────────────
+
 
 def _load_all(project_id: str) -> list[dict]:
     path = _registry_path(project_id)

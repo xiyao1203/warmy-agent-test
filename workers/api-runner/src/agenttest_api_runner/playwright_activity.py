@@ -133,13 +133,10 @@ async def run_playwright_case(inp: PlaywrightTaskInput) -> PlaywrightResult:
                     raw_nodes = parsed.get("nodes", [])
                     raw_connections = parsed.get("connections", [])
                     if isinstance(raw_nodes, list):
-                        canvas_nodes = [
-                            dict(n) for n in raw_nodes if isinstance(n, dict)
-                        ]
+                        canvas_nodes = [dict(n) for n in raw_nodes if isinstance(n, dict)]
                     if isinstance(raw_connections, list):
                         canvas_connections = [
-                            dict(c) for c in raw_connections
-                            if isinstance(c, dict)
+                            dict(c) for c in raw_connections if isinstance(c, dict)
                         ]
                 except Exception:
                     pass

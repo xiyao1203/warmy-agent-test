@@ -91,9 +91,7 @@ export function HelpDropdown() {
               key={item.label}
               onClick={() => setOpen(false)}
             >
-              <span className="mt-0.5 text-[var(--muted)]">
-                {item.icon}
-              </span>
+              <span className="mt-0.5 text-[var(--muted)]">{item.icon}</span>
               <div>
                 <p className="font-medium">{item.label}</p>
                 <p className="text-xs text-[var(--muted)]">
@@ -104,9 +102,7 @@ export function HelpDropdown() {
           ))}
           <div className="border-t border-[var(--hairline)]" />
           <div className="px-4 py-2">
-            <p className="text-xs font-medium text-[var(--muted)]">
-              外部资源
-            </p>
+            <p className="text-xs font-medium text-[var(--muted)]">外部资源</p>
           </div>
           <a
             className="flex items-center gap-2 px-4 py-2 text-sm text-[var(--muted)] transition-colors hover:bg-[var(--canvas-soft)] hover:text-[var(--ink)]"

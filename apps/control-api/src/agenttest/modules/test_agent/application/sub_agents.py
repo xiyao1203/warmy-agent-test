@@ -46,10 +46,12 @@ class SubAgent:
     display_name: str
     description: str
     system_prompt: str
-    require_confirmation_for: set[RiskLevel] = field(default_factory=lambda: {
-        RiskLevel.DRAFT_WRITE,
-        RiskLevel.HIGH_IMPACT,
-    })
+    require_confirmation_for: set[RiskLevel] = field(
+        default_factory=lambda: {
+            RiskLevel.DRAFT_WRITE,
+            RiskLevel.HIGH_IMPACT,
+        }
+    )
 
 
 # ── 共享行为规范 ─────────────────────────────────────────────────
@@ -90,13 +92,15 @@ TARGET_AGENT_PROMPT = (
     "6. 端点分析：使用 agents.analyze_endpoint 探测 API 结构\n\n"
     + _COMMON_BEHAVIOR
     + "\n\n"
-    + _capabilities_block([
-        ("agents.list", "浏览已注册的 Agent 列表"),
-        ("agents.create", "注册新的被测 Agent"),
-        ("agents.create_version", "为 Agent 创建版本配置（api_url 等）"),
-        ("agents.publish_version", "发布 Agent 版本（不可逆）"),
-        ("agents.analyze_endpoint", "探测 API 实际响应结构"),
-    ])
+    + _capabilities_block(
+        [
+            ("agents.list", "浏览已注册的 Agent 列表"),
+            ("agents.create", "注册新的被测 Agent"),
+            ("agents.create_version", "为 Agent 创建版本配置（api_url 等）"),
+            ("agents.publish_version", "发布 Agent 版本（不可逆）"),
+            ("agents.analyze_endpoint", "探测 API 实际响应结构"),
+        ]
+    )
 )
 
 ENVIRONMENT_PROMPT = (
@@ -108,13 +112,15 @@ ENVIRONMENT_PROMPT = (
     "3. 验证凭证可用性\n\n"
     + _COMMON_BEHAVIOR
     + "\n\n"
-    + _capabilities_block([
-        ("environments.list", "浏览环境模板列表"),
-        ("environments.create", "创建测试环境模板"),
-        ("credentials.list", "浏览凭证列表"),
-        ("credentials.create", "创建测试凭证（用户名+密码/Token）"),
-        ("credentials.validate", "验证凭证是否有效"),
-    ])
+    + _capabilities_block(
+        [
+            ("environments.list", "浏览环境模板列表"),
+            ("environments.create", "创建测试环境模板"),
+            ("credentials.list", "浏览凭证列表"),
+            ("credentials.create", "创建测试凭证（用户名+密码/Token）"),
+            ("credentials.validate", "验证凭证是否有效"),
+        ]
+    )
 )
 
 TEST_DATA_PROMPT = (
@@ -127,12 +133,14 @@ TEST_DATA_PROMPT = (
     "4. 发布数据集版本\n\n"
     + _COMMON_BEHAVIOR
     + "\n\n"
-    + _capabilities_block([
-        ("datasets.list", "浏览数据集列表"),
-        ("datasets.create_with_cases", "创建数据集并附带测试用例"),
-        ("datasets.auto_generate_cases", "基于 Agent 版本自动生成用例"),
-        ("datasets.publish_version", "发布数据集版本（不可逆）"),
-    ])
+    + _capabilities_block(
+        [
+            ("datasets.list", "浏览数据集列表"),
+            ("datasets.create_with_cases", "创建数据集并附带测试用例"),
+            ("datasets.auto_generate_cases", "基于 Agent 版本自动生成用例"),
+            ("datasets.publish_version", "发布数据集版本（不可逆）"),
+        ]
+    )
 )
 
 TEST_PLAN_PROMPT = (
@@ -144,11 +152,13 @@ TEST_PLAN_PROMPT = (
     "3. 发布测试计划版本\n\n"
     + _COMMON_BEHAVIOR
     + "\n\n"
-    + _capabilities_block([
-        ("test_plans.list", "浏览测试计划列表"),
-        ("test_plans.create_version", "创建测试计划版本"),
-        ("test_plans.publish_version", "发布测试计划版本（不可逆）"),
-    ])
+    + _capabilities_block(
+        [
+            ("test_plans.list", "浏览测试计划列表"),
+            ("test_plans.create_version", "创建测试计划版本"),
+            ("test_plans.publish_version", "发布测试计划版本（不可逆）"),
+        ]
+    )
 )
 
 EXECUTION_PROMPT = (
@@ -160,12 +170,14 @@ EXECUTION_PROMPT = (
     "3. 查看执行进度和报告\n\n"
     + _COMMON_BEHAVIOR
     + "\n\n"
-    + _capabilities_block([
-        ("runs.list", "浏览运行记录列表"),
-        ("runs.start", "启动测试运行（高风险，需确认）"),
-        ("runs.cancel", "取消正在进行的运行"),
-        ("reports.generate", "生成测试报告"),
-    ])
+    + _capabilities_block(
+        [
+            ("runs.list", "浏览运行记录列表"),
+            ("runs.start", "启动测试运行（高风险，需确认）"),
+            ("runs.cancel", "取消正在进行的运行"),
+            ("reports.generate", "生成测试报告"),
+        ]
+    )
 )
 
 EVALUATION_PROMPT = (
@@ -173,10 +185,12 @@ EVALUATION_PROMPT = (
     "负责帮助用户管理和创建评分规则。\n\n"
     + _COMMON_BEHAVIOR
     + "\n\n"
-    + _capabilities_block([
-        ("scorers.list", "浏览评分器列表"),
-        ("scorers.create", "创建新的评分器"),
-    ])
+    + _capabilities_block(
+        [
+            ("scorers.list", "浏览评分器列表"),
+            ("scorers.create", "创建新的评分器"),
+        ]
+    )
 )
 
 EXPERIMENT_PROMPT = (
@@ -184,10 +198,12 @@ EXPERIMENT_PROMPT = (
     "负责帮助用户对比不同 Agent 版本的测试结果。\n\n"
     + _COMMON_BEHAVIOR
     + "\n\n"
-    + _capabilities_block([
-        ("experiments.list", "浏览实验列表"),
-        ("experiments.create", "创建版本对比实验"),
-    ])
+    + _capabilities_block(
+        [
+            ("experiments.list", "浏览实验列表"),
+            ("experiments.create", "创建版本对比实验"),
+        ]
+    )
 )
 
 SECURITY_PROMPT = (
@@ -198,10 +214,12 @@ SECURITY_PROMPT = (
     "- 启动前需告知用户预计范围\n\n"
     + _COMMON_BEHAVIOR
     + "\n\n"
-    + _capabilities_block([
-        ("security_scans.list", "浏览安全扫描记录"),
-        ("security_scans.start", "启动安全扫描（高风险，需确认）"),
-    ])
+    + _capabilities_block(
+        [
+            ("security_scans.list", "浏览安全扫描记录"),
+            ("security_scans.start", "启动安全扫描（高风险，需确认）"),
+        ]
+    )
 )
 
 REVIEW_GATE_PROMPT = (
@@ -209,12 +227,14 @@ REVIEW_GATE_PROMPT = (
     "负责帮助用户管理审核队列和发布门禁。\n\n"
     + _COMMON_BEHAVIOR
     + "\n\n"
-    + _capabilities_block([
-        ("reviews.list", "浏览人工审核任务"),
-        ("reviews.enqueue", "提交低置信度结果进入审核队列"),
-        ("release_gates.list", "浏览发布门禁列表"),
-        ("release_gates.evaluate", "评估发布门禁条件"),
-    ])
+    + _capabilities_block(
+        [
+            ("reviews.list", "浏览人工审核任务"),
+            ("reviews.enqueue", "提交低置信度结果进入审核队列"),
+            ("release_gates.list", "浏览发布门禁列表"),
+            ("release_gates.evaluate", "评估发布门禁条件"),
+        ]
+    )
 )
 
 

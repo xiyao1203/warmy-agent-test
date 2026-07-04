@@ -25,9 +25,7 @@ export function StatCard({
     >
       <div className="flex items-center justify-between">
         <div>
-          <p className="text-sm font-medium text-[var(--muted)]">
-            {label}
-          </p>
+          <p className="text-sm font-medium text-[var(--muted)]">{label}</p>
           <p className="mt-1 text-3xl font-bold text-[var(--ink)]">{value}</p>
         </div>
         {icon && (

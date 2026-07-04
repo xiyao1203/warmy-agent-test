@@ -60,9 +60,7 @@ export function HelpSearch({ topics }: HelpSearchProps) {
       {filteredTopics.length === 0 ? (
         <div className="rounded-lg border border-[var(--hairline)] bg-[var(--card)] p-8 text-center">
           <Search className="mx-auto size-8 text-[var(--muted)]" />
-          <p className="mt-3 text-sm text-[var(--muted)]">
-            没有找到相关内容
-          </p>
+          <p className="mt-3 text-sm text-[var(--muted)]">没有找到相关内容</p>
           <div className="mt-3 flex items-center justify-center gap-3 text-sm">
             <button
               className="text-[var(--primary)] hover:underline"

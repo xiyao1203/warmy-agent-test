@@ -187,7 +187,7 @@ class SuperAgentConversation:
             agent = create_super_agent(self._invoker, config)
             ctx = OrchestrationContext(
                 actor=None,
-                project_id=None,
+                project_id=config.project_id.value,
                 session_id=uuid4(),
                 platform_gateway=self._platform_gateway,
             )

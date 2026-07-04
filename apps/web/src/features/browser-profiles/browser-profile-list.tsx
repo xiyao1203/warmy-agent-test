@@ -45,11 +45,13 @@ type BrowserProfileListProps = {
     payload: { name?: string; target_domain?: string },
   ) => Promise<BrowserProfile>;
   onDelete?: (profileId: string) => Promise<void>;
-  projectId: string;
 };
 
 function statusBadge(status: string) {
-  const map: Record<string, { label: string; tone: "success" | "neutral" | "danger" }> = {
+  const map: Record<
+    string,
+    { label: string; tone: "success" | "neutral" | "danger" }
+  > = {
     running: { label: "运行中", tone: "success" },
     stopped: { label: "已停止", tone: "neutral" },
     error: { label: "异常", tone: "danger" },
@@ -65,7 +67,6 @@ export function BrowserProfileList({
   onCreate,
   onUpdate,
   onDelete,
-  projectId,
 }: BrowserProfileListProps) {
   const [createOpen, setCreateOpen] = useState(false);
   const [createName, setCreateName] = useState("");
@@ -81,8 +82,9 @@ export function BrowserProfileList({
   const [editing, setEditing] = useState(false);
 
   const [deleteOpen, setDeleteOpen] = useState(false);
-  const [deletingProfile, setDeletingProfile] =
-    useState<BrowserProfile | null>(null);
+  const [deletingProfile, setDeletingProfile] = useState<BrowserProfile | null>(
+    null,
+  );
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState("");
 
@@ -204,10 +206,7 @@ export function BrowserProfileList({
               </label>
             </div>
             <div className="mt-5 flex justify-end gap-2">
-              <Button
-                onClick={() => setCreateOpen(false)}
-                variant="ghost"
-              >
+              <Button onClick={() => setCreateOpen(false)} variant="ghost">
                 取消
               </Button>
               <Button
@@ -302,9 +301,7 @@ export function BrowserProfileList({
       <Dialog open={editOpen} onOpenChange={setEditOpen}>
         <DialogContent>
           <DialogTitle>编辑浏览器实例</DialogTitle>
-          <DialogDescription>
-            修改浏览器实例的名称和目标域名
-          </DialogDescription>
+          <DialogDescription>修改浏览器实例的名称和目标域名</DialogDescription>
           <div className="mt-4 space-y-3">
             <label className="block">
               <span className="text-sm font-medium">名称</span>
@@ -340,7 +337,8 @@ export function BrowserProfileList({
         <DialogContent>
           <DialogTitle>删除浏览器实例</DialogTitle>
           <DialogDescription>
-            确定要删除「{deletingProfile?.name}」吗？此操作不会删除已保存的浏览器数据目录。
+            确定要删除「{deletingProfile?.name}
+            」吗？此操作不会删除已保存的浏览器数据目录。
           </DialogDescription>
           {deleteError ? (
             <p className="mt-2 text-sm text-[var(--destructive)]">
@@ -351,11 +349,7 @@ export function BrowserProfileList({
             <Button onClick={() => setDeleteOpen(false)} variant="ghost">
               取消
             </Button>
-            <Button
-              disabled={deleting}
-              onClick={handleDelete}
-              variant="danger"
-            >
+            <Button disabled={deleting} onClick={handleDelete} variant="danger">
               {deleting ? "删除中..." : "删除"}
             </Button>
           </div>

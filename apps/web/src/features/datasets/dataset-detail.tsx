@@ -7,7 +7,7 @@ import type {
   ImportPreviewResponse,
   TestCaseResponse,
 } from "@warmy/generated-api-client";
-import { CheckSquare, Eye, Square, Trash2 } from "lucide-react";
+import { CheckSquare, Eye, Plus, Square, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useCallback, useMemo, useState } from "react";
 
@@ -27,6 +27,7 @@ import { Skeleton } from "@/components/uiverse";
 
 import { ImportWizard } from "./import-wizard";
 import { TestCaseDetail } from "./test-case-detail";
+import { TestCaseEditor } from "./test-case-editor";
 
 type DatasetDetailProps = {
   dataset: DatasetResponse;
@@ -38,6 +39,10 @@ type DatasetDetailProps = {
   loading?: boolean;
   onDeleteCases?: (caseIds: string[]) => Promise<unknown>;
   onCreateCase?: (payload: CreateTestCaseRequest) => Promise<unknown>;
+  onUpdateCase?: (
+    caseId: string,
+    payload: CreateTestCaseRequest,
+  ) => Promise<unknown>;
   onRefresh?: () => void;
   onImport?: (
     content: string,
@@ -56,10 +61,12 @@ export function DatasetDetail({
   currentVersionPublished = false,
   dataset,
   loading = false,
+  onCreateCase,
   onDeleteCases,
   onRefresh,
   onImport,
   onPreviewImport,
+  onUpdateCase,
   projectId,
   versions = [],
 }: DatasetDetailProps) {
@@ -91,7 +98,9 @@ export function DatasetDetail({
   }, [filteredCases]);
 
   const handleBatchDelete = useCallback(async () => {
-    if (!onDeleteCases || selectedIds.size === 0) return;
+    if (!onDeleteCases || currentVersionPublished || selectedIds.size === 0) {
+      return;
+    }
     setDeleting(true);
     try {
       await onDeleteCases(Array.from(selectedIds));
@@ -100,11 +109,46 @@ export function DatasetDetail({
     } finally {
       setDeleting(false);
     }
-  }, [onDeleteCases, selectedIds, onRefresh]);
+  }, [currentVersionPublished, onDeleteCases, selectedIds, onRefresh]);
 
-  const selectedCount = selectedIds.size;
+  const handleDeleteOne = useCallback(
+    async (caseId: string) => {
+      if (!onDeleteCases || currentVersionPublished) return;
+      await onDeleteCases([caseId]);
+      setSelectedIds((prev) => {
+        const next = new Set(prev);
+        next.delete(caseId);
+        return next;
+      });
+      onRefresh?.();
+    },
+    [currentVersionPublished, onDeleteCases, onRefresh],
+  );
+
+  const canCreateCases = !currentVersionPublished && Boolean(onCreateCase);
+  const canEditExistingCases =
+    Boolean(currentVersionId) && !currentVersionPublished;
+  const canSelectCases = canEditExistingCases && Boolean(onDeleteCases);
+  const selectedCount = canSelectCases ? selectedIds.size : 0;
   const allSelected =
     filteredCases.length > 0 && selectedCount === filteredCases.length;
+
+  const renderCreateCaseAction = useCallback(
+    (label = "新增用例") => {
+      if (!canCreateCases || !onCreateCase) return null;
+      return (
+        <TestCaseEditor
+          onSubmit={async (payload) => {
+            await onCreateCase(payload);
+            onRefresh?.();
+          }}
+          triggerLabel={label}
+          triggerIcon={<Plus aria-hidden="true" className="mr-1.5 size-4" />}
+        />
+      );
+    },
+    [canCreateCases, onCreateCase, onRefresh],
+  );
 
   if (loading) {
     return (
@@ -124,11 +168,11 @@ export function DatasetDetail({
         className="inline-flex items-center gap-1.5 text-sm text-[var(--muted)] hover:text-[var(--ink)]"
         href={`/projects/${projectId}/datasets`}
       >
-        ← 返回数据集列表
+        ← 返回用例集列表
       </Link>
 
       {/* ── 顶部 ──────────────────────────────────────────────────────── */}
-      <header className="mt-4 flex items-start justify-between gap-4 border-b border-[var(--hairline)] pb-5">
+      <header className="mt-4 flex flex-col gap-4 border-b border-[var(--hairline)] pb-5 lg:flex-row lg:items-start lg:justify-between">
         <div>
           <div className="flex items-center gap-2">
             <h1 className="text-2xl font-semibold tracking-tight">
@@ -139,15 +183,24 @@ export function DatasetDetail({
             )}
           </div>
           <p className="mt-2 text-sm text-[var(--muted)]">
-            {dataset.description || "暂无描述"}
+            {dataset.description ||
+              "这个用例集可以收纳手工新增、文件导入和测试 Agent 生成的用例。"}
           </p>
         </div>
-        <ImportWizard
-          disabled={currentVersionPublished}
-          onImport={onImport}
-          onPreview={onPreviewImport}
-          onSuccess={onRefresh}
-        />
+        <div className="flex flex-wrap items-center justify-start gap-2 lg:justify-end">
+          {renderCreateCaseAction()}
+          <ImportWizard
+            disabled={currentVersionPublished}
+            onImport={onImport}
+            onPreview={onPreviewImport}
+            onSuccess={onRefresh}
+          />
+          <Button asChild variant="secondary">
+            <Link href={`/projects/${projectId}/test-plans`}>
+              用这些用例创建测试计划
+            </Link>
+          </Button>
+        </div>
       </header>
 
       {/* ── 版本信息 ───────────────────────────────────────────────────── */}
@@ -163,6 +216,26 @@ export function DatasetDetail({
           ))}
         </section>
       )}
+
+      <section className="mt-4 rounded-[var(--radius-md)] border border-[var(--hairline)] bg-[var(--canvas-soft)] px-4 py-3">
+        <div className="flex flex-col gap-2 text-sm lg:flex-row lg:items-center lg:justify-between">
+          <div>
+            <p className="font-medium text-[var(--ink)]">
+              {currentVersionPublished
+                ? "当前版本已发布，只读"
+                : "当前版本为草稿，可维护测试用例"}
+            </p>
+            <p className="mt-1 text-xs text-[var(--muted)]">
+              新增、编辑、删除和导入都写入当前用例集草稿；发布后版本会固化，测试计划选择已发布版本执行。
+            </p>
+          </div>
+          <Badge tone={currentVersionPublished ? "accent" : "neutral"}>
+            {currentVersionPublished
+              ? "可被测试计划引用"
+              : "发布后用于测试计划"}
+          </Badge>
+        </div>
+      </section>
 
       {/* ── 用例列表 ───────────────────────────────────────────────────── */}
       <section className="mt-4">
@@ -180,7 +253,7 @@ export function DatasetDetail({
               </span>
             )}
           </div>
-          {selectedCount > 0 && onDeleteCases && (
+          {selectedCount > 0 && canSelectCases && (
             <Button
               disabled={deleting}
               loading={deleting}
@@ -195,34 +268,38 @@ export function DatasetDetail({
 
         {!filteredCases.length ? (
           <EmptyState
+            action={search ? undefined : renderCreateCaseAction()}
             description={
-              search ? "没有匹配的用例。" : "暂无用例，点击右上角导入或创建。"
+              search ? "没有匹配的用例。" : "暂无用例，可以新增或导入。"
             }
             title={search ? "无匹配结果" : "暂无测试用例"}
           />
         ) : (
-          <div className="mt-3 overflow-hidden rounded-[var(--radius-lg)] border border-[var(--hairline)] bg-[var(--surface)]">
-            <Table>
+          <div className="mt-3 overflow-x-auto rounded-[var(--radius-lg)] border border-[var(--hairline)] bg-[var(--surface)]">
+            <Table className="min-w-[1120px] table-fixed">
               <TableHeader className="bg-[var(--canvas-soft)]">
                 <TableRow>
-                  <TableHead className="w-10">
-                    <button
-                      aria-label={allSelected ? "取消全选" : "全选"}
-                      onClick={toggleAll}
-                      type="button"
-                    >
-                      {allSelected ? (
-                        <CheckSquare className="size-4" />
-                      ) : (
-                        <Square className="size-4" />
-                      )}
-                    </button>
-                  </TableHead>
-                  <TableHead>用例名称</TableHead>
+                  {canSelectCases && (
+                    <TableHead className="w-10">
+                      <button
+                        aria-label={allSelected ? "取消全选" : "全选"}
+                        onClick={toggleAll}
+                        type="button"
+                      >
+                        {allSelected ? (
+                          <CheckSquare className="size-4" />
+                        ) : (
+                          <Square className="size-4" />
+                        )}
+                      </button>
+                    </TableHead>
+                  )}
+                  <TableHead className="w-[420px]">用例名称</TableHead>
                   <TableHead className="w-32 text-center">优先级</TableHead>
                   <TableHead className="w-32 text-center">风险等级</TableHead>
                   <TableHead className="w-40 text-center">执行模式</TableHead>
-                  <TableHead className="w-20 text-center">操作</TableHead>
+                  <TableHead className="w-32 text-center">断言</TableHead>
+                  <TableHead className="w-48 text-right">操作</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -231,20 +308,24 @@ export function DatasetDetail({
                     className="transition-colors hover:bg-[var(--canvas-soft)]"
                     key={c.id}
                   >
-                    <TableCell>
-                      <button
-                        aria-label={selectedIds.has(c.id) ? "取消选中" : "选中"}
-                        onClick={() => toggleSelect(c.id)}
-                        type="button"
-                      >
-                        {selectedIds.has(c.id) ? (
-                          <CheckSquare className="size-4 text-[var(--primary)]" />
-                        ) : (
-                          <Square className="size-4" />
-                        )}
-                      </button>
-                    </TableCell>
-                    <TableCell>
+                    {canSelectCases && (
+                      <TableCell>
+                        <button
+                          aria-label={
+                            selectedIds.has(c.id) ? "取消选中" : "选中"
+                          }
+                          onClick={() => toggleSelect(c.id)}
+                          type="button"
+                        >
+                          {selectedIds.has(c.id) ? (
+                            <CheckSquare className="size-4 text-[var(--primary)]" />
+                          ) : (
+                            <Square className="size-4" />
+                          )}
+                        </button>
+                      </TableCell>
+                    )}
+                    <TableCell className="min-w-0">
                       <p className="truncate font-medium">{c.name}</p>
                       <p className="mt-0.5 truncate text-xs text-[var(--muted)]">
                         {c.input
@@ -252,30 +333,59 @@ export function DatasetDetail({
                           : "无输入"}
                       </p>
                     </TableCell>
-                    <TableCell className="text-center">
+                    <TableCell className="whitespace-nowrap text-center">
                       <Badge tone={c.priority === "P0" ? "danger" : "neutral"}>
                         {c.priority || "P2"}
                       </Badge>
                     </TableCell>
-                    <TableCell className="text-center">
+                    <TableCell className="whitespace-nowrap text-center">
                       <Badge
                         tone={c.risk_level === "high" ? "danger" : "neutral"}
                       >
                         {c.risk_level || "中"}
                       </Badge>
                     </TableCell>
-                    <TableCell className="text-center text-sm text-[var(--muted)]">
+                    <TableCell className="whitespace-nowrap text-center text-sm text-[var(--muted)]">
                       {c.execution_mode === "api" ? "API" : "浏览器"}
                     </TableCell>
-                    <TableCell className="text-center">
-                      <div className="flex justify-center gap-1">
+                    <TableCell className="whitespace-nowrap text-center">
+                      <Badge tone={c.assertions?.length ? "accent" : "neutral"}>
+                        {c.assertions?.length
+                          ? `${c.assertions.length} 条`
+                          : "未配置"}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex justify-end gap-1 whitespace-nowrap">
                         <Button
                           aria-label="查看详情"
+                          className="shrink-0 px-2.5"
                           onClick={() => setViewingCase(c)}
                           variant="ghost"
                         >
                           <Eye className="size-4" />
                         </Button>
+                        {canEditExistingCases && onUpdateCase && (
+                          <TestCaseEditor
+                            caseItem={c}
+                            onSubmit={async (payload) => {
+                              await onUpdateCase(c.id, payload);
+                              onRefresh?.();
+                            }}
+                            triggerAriaLabel={`编辑${c.name}`}
+                            triggerLabel="编辑"
+                          />
+                        )}
+                        {canEditExistingCases && onDeleteCases && (
+                          <Button
+                            aria-label={`删除${c.name}`}
+                            className="shrink-0 px-2.5"
+                            onClick={() => void handleDeleteOne(c.id)}
+                            variant="danger"
+                          >
+                            删除
+                          </Button>
+                        )}
                       </div>
                     </TableCell>
                   </TableRow>

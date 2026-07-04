@@ -309,6 +309,52 @@ def test_csv_import_produces_same_result_as_json() -> None:
     assert json_result["preview"][0]["priority"] == csv_result["preview"][0]["priority"]
 
 
+def test_import_accepts_chinese_json_field_names_and_enum_values() -> None:
+    content = json.dumps(
+        [
+            {
+                "用例名称": "中文字段用例",
+                "输入": {"q": "你好"},
+                "执行模式": "浏览器",
+                "期望结果": {"contains": "你好"},
+                "优先级": "中",
+                "风险等级": "高",
+                "测试分组": "验证集",
+                "标签": ["smoke"],
+            }
+        ],
+        ensure_ascii=False,
+    )
+
+    result = parse_and_validate_import("json", content, allow_errors=True)
+    preview = result["preview"][0]
+
+    assert result["valid_count"] == 1
+    assert preview["name"] == "中文字段用例"
+    assert preview["input"] == {"q": "你好"}
+    assert preview["execution_mode"] == "browser"
+    assert preview["expected_outcome"] == {"contains": "你好"}
+    assert preview["priority"] == "P2"
+    assert preview["risk_level"] == "high"
+    assert preview["test_group"] == "validation"
+
+
+def test_import_accepts_chinese_csv_headers() -> None:
+    csv_content = (
+        '用例名称,输入,执行模式,风险等级,测试分组\n中文 CSV,"{""q"":""hello""}",API,低,测试集\n'
+    )
+
+    result = parse_and_validate_import("csv", csv_content, allow_errors=True)
+    preview = result["preview"][0]
+
+    assert result["valid_count"] == 1
+    assert preview["name"] == "中文 CSV"
+    assert preview["input"] == {"q": "hello"}
+    assert preview["execution_mode"] == "api"
+    assert preview["risk_level"] == "low"
+    assert preview["test_group"] == "test"
+
+
 # ── 非数组 JSON 拒绝 ─────────────────────────────────────────────────
 
 

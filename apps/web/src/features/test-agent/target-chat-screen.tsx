@@ -145,7 +145,8 @@ export function TargetChatScreen({ projectId }: { projectId: string }) {
         cur ? { ...cur, turns: [...cur.turns, turn] } : cur,
       );
     } catch (reason) {
-      if (reason instanceof DOMException && reason.name === "AbortError") return;
+      if (reason instanceof DOMException && reason.name === "AbortError")
+        return;
       setError(
         reason instanceof Error ? reason.message : "被测 Agent 调用失败",
       );
@@ -239,13 +240,21 @@ export function TargetChatScreen({ projectId }: { projectId: string }) {
           </div>
         ) : !hasSession ? (
           <ChatEmptyState
-            description={versionLabel
-              ? `已选择 ${versionLabel}，发送消息开始测试`
-              : "选择一个已发布的 Agent 版本，然后发送消息开始对话测试"}
+            description={
+              versionLabel
+                ? `已选择 ${versionLabel}，发送消息开始测试`
+                : "选择一个已发布的 Agent 版本，然后发送消息开始对话测试"
+            }
             onSuggestionClick={setInput}
-            suggestions={versionLabel
-              ? ["你好，介绍一下你自己", "你能做什么？", "帮我完成一个简单任务"]
-              : []}
+            suggestions={
+              versionLabel
+                ? [
+                    "你好，介绍一下你自己",
+                    "你能做什么？",
+                    "帮我完成一个简单任务",
+                  ]
+                : []
+            }
             title="被测 Agent 对话"
           />
         ) : (
@@ -294,11 +303,7 @@ export function TargetChatScreen({ projectId }: { projectId: string }) {
               </div>
             ) : turns.length > 0 ? (
               <FollowUpChips
-                items={[
-                  "再试一次",
-                  "能详细说明一下吗？",
-                  "换个方式回答",
-                ]}
+                items={["再试一次", "能详细说明一下吗？", "换个方式回答"]}
                 onClick={setInput}
               />
             ) : null}

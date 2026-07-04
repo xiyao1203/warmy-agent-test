@@ -75,7 +75,10 @@ export function TestAccountList({
         </div>
         <section className="mt-4 overflow-hidden rounded-[var(--radius-lg)] border border-[var(--hairline)] bg-[var(--surface)]">
           {[1, 2, 3, 4].map((i) => (
-            <Skeleton className="h-11 w-full border-b border-[var(--hairline)] last:border-b-0" key={i} />
+            <Skeleton
+              className="h-11 w-full border-b border-[var(--hairline)] last:border-b-0"
+              key={i}
+            />
           ))}
         </section>
       </div>

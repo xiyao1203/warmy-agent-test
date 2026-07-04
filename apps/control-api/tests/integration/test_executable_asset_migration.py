@@ -149,6 +149,8 @@ def test_0012_to_0013_postgresql_upgrade_and_downgrade() -> None:
     database_url = os.environ["AGENTTEST_TEST_DATABASE_URL"]
     config = alembic_config(database_url=database_url)
 
+    command.downgrade(config, "base")
+
     # 升级到 0012
     command.upgrade(config, "0012")
 
@@ -177,6 +179,7 @@ def test_0013_new_tables_enforce_project_isolation() -> None:
     database_url = os.environ["AGENTTEST_TEST_DATABASE_URL"]
     config = alembic_config(database_url=database_url)
 
+    command.downgrade(config, "base")
     command.upgrade(config, "0013")
 
     run(_verify_project_fk_constraints(database_url))
@@ -224,17 +227,34 @@ async def _verify_project_fk_constraints(database_url: str) -> None:
         database_url.replace("postgresql+asyncpg://", "postgresql://")
     )
     try:
-        # 尝试向无项目的表插入数据，应该被外键拒绝
         for table_name in (
             "environment_versions",
             "credential_bindings",
             "run_evaluations",
             "release_decisions",
         ):
-            with pytest.raises(asyncpg.ForeignKeyViolationError):
-                fake_project_id = "00000000-0000-0000-0000-000000000000"
-                await connection.execute(
-                    f"INSERT INTO {table_name} (project_id) VALUES ('{fake_project_id}'::uuid)"
+            constraint_exists = await connection.fetchval(
+                """
+                SELECT EXISTS (
+                    SELECT 1
+                    FROM pg_constraint c
+                    JOIN pg_class source_table ON source_table.oid = c.conrelid
+                    JOIN pg_class target_table ON target_table.oid = c.confrelid
+                    JOIN pg_attribute source_column
+                      ON source_column.attrelid = source_table.oid
+                     AND source_column.attnum = ANY(c.conkey)
+                    JOIN pg_attribute target_column
+                      ON target_column.attrelid = target_table.oid
+                     AND target_column.attnum = ANY(c.confkey)
+                    WHERE c.contype = 'f'
+                      AND source_table.relname = $1
+                      AND source_column.attname = 'project_id'
+                      AND target_table.relname = 'projects'
+                      AND target_column.attname = 'id'
                 )
+                """,
+                table_name,
+            )
+            assert constraint_exists is True, f"{table_name}.project_id must reference projects.id"
     finally:
         await connection.close()
