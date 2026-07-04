@@ -5,11 +5,15 @@ import {
   ChevronRight,
   ClipboardCheck,
   Equal,
+  PlayCircle,
+  ShieldAlert,
   SkipForward,
   ThumbsDown,
   ThumbsUp,
   XCircle,
 } from "lucide-react";
+import Link from "next/link";
+import type { ReactNode } from "react";
 import { useCallback, useEffect, useState } from "react";
 
 import { Badge } from "@/components/ui/badge";
@@ -27,6 +31,13 @@ const STATUS_TONES: Record<
   approved: "success",
   rejected: "danger",
   skipped: "neutral",
+};
+
+const STATUS_LABELS: Record<string, string> = {
+  approved: "已通过",
+  pending: "待处理",
+  rejected: "已拒绝",
+  skipped: "暂不处理",
 };
 
 export function ReviewWorkbench({ projectId }: { projectId: string }) {
@@ -127,8 +138,9 @@ export function ReviewWorkbench({ projectId }: { projectId: string }) {
           <h1 className="text-2xl font-semibold tracking-tight">人工审核</h1>
           <p className="mt-1 text-sm text-[var(--muted)]">
             {pendingCount > 0
-              ? `${pendingCount} 个待审核任务`
-              : "暂无待审核任务"}
+              ? `${pendingCount} 个待处理任务`
+              : "暂无待处理任务"}
+            ，低置信、高风险或评分冲突的运行结果会自动进入这里。
           </p>
         </div>
         <div className="flex gap-2">
@@ -142,17 +154,43 @@ export function ReviewWorkbench({ projectId }: { projectId: string }) {
                 {s === ""
                   ? "全部"
                   : s === "pending"
-                    ? "待审核"
+                    ? "待处理"
                     : s === "approved"
-                      ? "通过"
+                      ? "已通过"
                       : s === "rejected"
-                        ? "拒绝"
-                        : "跳过"}
+                        ? "已拒绝"
+                        : "暂不处理"}
               </Button>
             ),
           )}
         </div>
       </header>
+
+      <section className="mt-5 grid gap-3 md:grid-cols-4">
+        <FlowCard
+          description="低置信、高风险自动收集"
+          href={`/projects/${projectId}/runs`}
+          icon={<PlayCircle aria-hidden="true" className="size-4" />}
+          label="1. 运行产生任务"
+        />
+        <FlowCard
+          description="查看证据后给出结论"
+          icon={<ClipboardCheck aria-hidden="true" className="size-4" />}
+          label="2. 人工审核"
+        />
+        <FlowCard
+          description="结合安全发现判断风险"
+          href={`/projects/${projectId}/security`}
+          icon={<ShieldAlert aria-hidden="true" className="size-4" />}
+          label="3. 查看安全测试"
+        />
+        <FlowCard
+          description="未处理任务会影响放行"
+          href={`/projects/${projectId}/gates`}
+          icon={<CheckCircle2 aria-hidden="true" className="size-4" />}
+          label="4. 发布门禁放行"
+        />
+      </section>
 
       <div className="mt-5 grid grid-cols-[minmax(0,1fr)_24rem] gap-5 max-[1100px]:grid-cols-1">
         {/* 任务列表 */}
@@ -160,7 +198,24 @@ export function ReviewWorkbench({ projectId }: { projectId: string }) {
           {tasks.length === 0 ? (
             <li className="rounded border border-dashed border-[var(--hairline)] p-8 text-center text-sm text-[var(--muted)]">
               <ClipboardCheck className="mx-auto size-8" />
-              <p className="mt-2">暂无审核任务</p>
+              <p className="mt-2 font-medium text-[var(--ink)]">暂无审核任务</p>
+              <p className="mx-auto mt-1 max-w-md">
+                运行完成后，需要人工判断的用例会自动出现在这里；处理完后，发布门禁会用待处理数量做放行判断。
+              </p>
+              <div className="mt-4 flex justify-center gap-3">
+                <Link
+                  className="text-sm font-medium text-[var(--primary)] hover:underline"
+                  href={`/projects/${projectId}/runs`}
+                >
+                  去运行中心
+                </Link>
+                <Link
+                  className="text-sm font-medium text-[var(--primary)] hover:underline"
+                  href={`/projects/${projectId}/gates`}
+                >
+                  查看发布门禁
+                </Link>
+              </div>
             </li>
           ) : (
             tasks.map((t) => (
@@ -184,23 +239,19 @@ export function ReviewWorkbench({ projectId }: { projectId: string }) {
                     </p>
                   </div>
                   <Badge tone={STATUS_TONES[t.status] ?? "neutral"}>
-                    {t.status === "pending"
-                      ? "待审核"
-                      : t.status === "approved"
-                        ? "通过"
-                        : t.status === "rejected"
-                          ? "拒绝"
-                          : "跳过"}
+                    {STATUS_LABELS[t.status] ?? t.status}
                   </Badge>
                   {t.status === "pending" ? (
                     <Button
+                      aria-label={`暂不处理 ${t.run_case_id.slice(0, 12)}`}
                       onClick={(e) => {
                         e.stopPropagation();
                         void handleSkip(t.id);
                       }}
                       variant="ghost"
                     >
-                      <SkipForward className="size-4" />
+                      <SkipForward className="mr-1 size-4" />
+                      暂不处理
                     </Button>
                   ) : null}
                   <ChevronRight className="size-4 text-[var(--muted)]" />
@@ -230,7 +281,7 @@ export function ReviewWorkbench({ projectId }: { projectId: string }) {
                 <div>
                   <p className="text-xs text-[var(--muted)]">状态</p>
                   <Badge tone={STATUS_TONES[selected.status] ?? "neutral"}>
-                    {selected.status}
+                    {STATUS_LABELS[selected.status] ?? selected.status}
                   </Badge>
                 </div>
                 {selected.score != null ? (
@@ -245,6 +296,25 @@ export function ReviewWorkbench({ projectId }: { projectId: string }) {
                     <p className="mt-1 text-sm">{selected.opinion}</p>
                   </div>
                 ) : null}
+              </div>
+
+              <div className="rounded border border-[var(--hairline)] bg-[var(--canvas-soft)] p-3 text-xs leading-5 text-[var(--muted)]">
+                这条任务来自测试执行结果。先回到运行中心核对输入、输出、Trace
+                和评分证据，再给出通过或拒绝结论。
+                <div className="mt-2 flex flex-wrap gap-3">
+                  <Link
+                    className="font-medium text-[var(--primary)] hover:underline"
+                    href={`/projects/${projectId}/runs`}
+                  >
+                    查看运行证据
+                  </Link>
+                  <Link
+                    className="font-medium text-[var(--primary)] hover:underline"
+                    href={`/projects/${projectId}/gates`}
+                  >
+                    查看门禁影响
+                  </Link>
+                </div>
               </div>
 
               {selected.status === "pending" ? (
@@ -371,6 +441,49 @@ export function ReviewWorkbench({ projectId }: { projectId: string }) {
           )}
         </aside>
       </div>
+    </div>
+  );
+}
+
+function FlowCard({
+  description,
+  href,
+  icon,
+  label,
+}: {
+  description: string;
+  href?: string;
+  icon: ReactNode;
+  label: string;
+}) {
+  const content = (
+    <>
+      <span className="grid size-8 shrink-0 place-items-center rounded-[var(--radius-md)] bg-[var(--primary-subtle)] text-[var(--primary)]">
+        {icon}
+      </span>
+      <span className="min-w-0">
+        <span className="block font-medium">{label}</span>
+        <span className="block truncate text-xs text-[var(--muted)]">
+          {description}
+        </span>
+      </span>
+    </>
+  );
+
+  if (href) {
+    return (
+      <Link
+        className="flex min-w-0 items-center gap-3 rounded-[var(--radius-lg)] border border-[var(--hairline)] bg-[var(--surface)] px-4 py-3 text-sm transition-colors hover:border-[var(--primary)]"
+        href={href}
+      >
+        {content}
+      </Link>
+    );
+  }
+
+  return (
+    <div className="flex min-w-0 items-center gap-3 rounded-[var(--radius-lg)] border border-[var(--hairline)] bg-[var(--surface)] px-4 py-3 text-sm">
+      {content}
     </div>
   );
 }

@@ -5,11 +5,14 @@ import {
   Bug,
   ChevronDown,
   ChevronRight,
+  ClipboardCheck,
   PlayCircle,
   Shield,
   ShieldAlert,
   ShieldCheck,
 } from "lucide-react";
+import Link from "next/link";
+import type { ReactNode } from "react";
 import { useEffect, useState } from "react";
 
 import { Badge } from "@/components/ui/badge";
@@ -28,6 +31,12 @@ const CATEGORY_ICONS: Record<string, React.ReactNode> = {
   injection: <Bug className="size-4" />,
   leak: <AlertTriangle className="size-4" />,
   jailbreak: <ShieldAlert className="size-4" />,
+};
+
+const CATEGORY_LABELS: Record<string, string> = {
+  injection: "注入",
+  jailbreak: "越狱",
+  leak: "泄露",
 };
 
 export function SecurityScanPage({ projectId }: { projectId: string }) {
@@ -99,7 +108,7 @@ export function SecurityScanPage({ projectId }: { projectId: string }) {
             安全测试
           </h1>
           <p className="mt-1 text-sm text-[var(--muted)]">
-            Promptfoo 安全扫描：注入、泄露、越狱检测。
+            对已发布 Agent 做注入、泄露、越狱检测；结果会进入发布门禁评估。
           </p>
         </div>
         <div className="flex min-w-80 flex-col items-end gap-2">
@@ -125,7 +134,7 @@ export function SecurityScanPage({ projectId }: { projectId: string }) {
               variant="primary"
             >
               <PlayCircle className="mr-1.5 size-4" />
-              触发扫描
+              启动安全测试
             </Button>
           </div>
           {triggerError ? (
@@ -133,6 +142,32 @@ export function SecurityScanPage({ projectId }: { projectId: string }) {
           ) : null}
         </div>
       </header>
+
+      <section className="mt-5 grid gap-3 md:grid-cols-4">
+        <FlowCard
+          description="先发布可测版本"
+          href={`/projects/${projectId}/agents`}
+          icon={<Shield aria-hidden="true" className="size-4" />}
+          label="1. 选择 Agent 版本"
+        />
+        <FlowCard
+          description="自动执行风险探测"
+          icon={<PlayCircle aria-hidden="true" className="size-4" />}
+          label="2. 启动安全测试"
+        />
+        <FlowCard
+          description="确认注入、泄露、越狱"
+          href={`/projects/${projectId}/runs`}
+          icon={<ClipboardCheck aria-hidden="true" className="size-4" />}
+          label="3. 查看运行证据"
+        />
+        <FlowCard
+          description="安全评分参与放行"
+          href={`/projects/${projectId}/gates`}
+          icon={<ShieldCheck aria-hidden="true" className="size-4" />}
+          label="4. 发布门禁判断"
+        />
+      </section>
 
       <div className="mt-5 grid grid-cols-[minmax(0,1fr)_24rem] gap-5 max-[1100px]:grid-cols-1">
         {/* 扫描列表 */}
@@ -144,8 +179,23 @@ export function SecurityScanPage({ projectId }: { projectId: string }) {
                 暂无扫描记录
               </p>
               <p className="mt-1 text-xs text-[var(--muted)]">
-                点击「触发扫描」开始安全检测。
+                先选择已发布 Agent
+                版本并启动安全测试，完成后安全评分会被发布门禁读取。
               </p>
+              <div className="mt-4 flex justify-center gap-3 text-sm">
+                <Link
+                  className="font-medium text-[var(--primary)] hover:underline"
+                  href={`/projects/${projectId}/agents`}
+                >
+                  去发布 Agent
+                </Link>
+                <Link
+                  className="font-medium text-[var(--primary)] hover:underline"
+                  href={`/projects/${projectId}/gates`}
+                >
+                  配置发布门禁
+                </Link>
+              </div>
             </li>
           ) : (
             scans.map((scan) => (
@@ -226,13 +276,37 @@ export function SecurityScanPage({ projectId }: { projectId: string }) {
                   >
                     <div className="flex items-center justify-center gap-1 text-[var(--muted)]">
                       {CATEGORY_ICONS[cat]}
-                      <span className="text-xs capitalize">{cat}</span>
+                      <span className="text-xs">{CATEGORY_LABELS[cat]}</span>
                     </div>
                     <p className="mt-1 text-lg font-semibold">
                       {selectedScan.summary[cat] ?? 0}
                     </p>
                   </div>
                 ))}
+              </div>
+
+              <div className="rounded border border-[var(--hairline)] bg-[var(--canvas-soft)] p-3 text-xs leading-5 text-[var(--muted)]">
+                安全发现会作为同一次运行的门禁证据。高风险项建议先修复或进入人工审核，再重新运行门禁评估。
+                <div className="mt-2 flex flex-wrap gap-3">
+                  <Link
+                    className="font-medium text-[var(--primary)] hover:underline"
+                    href={`/projects/${projectId}/gates`}
+                  >
+                    查看发布门禁
+                  </Link>
+                  <Link
+                    className="font-medium text-[var(--primary)] hover:underline"
+                    href={`/projects/${projectId}/reviews`}
+                  >
+                    去人工审核
+                  </Link>
+                  <Link
+                    className="font-medium text-[var(--primary)] hover:underline"
+                    href={`/projects/${projectId}/test-plans`}
+                  >
+                    调整测试计划
+                  </Link>
+                </div>
               </div>
 
               {/* 发现列表 */}
@@ -311,6 +385,49 @@ function FindingCard({ finding }: { finding: Finding }) {
           </p>
         </div>
       ) : null}
+    </div>
+  );
+}
+
+function FlowCard({
+  description,
+  href,
+  icon,
+  label,
+}: {
+  description: string;
+  href?: string;
+  icon: ReactNode;
+  label: string;
+}) {
+  const content = (
+    <>
+      <span className="grid size-8 shrink-0 place-items-center rounded-[var(--radius-md)] bg-[var(--primary-subtle)] text-[var(--primary)]">
+        {icon}
+      </span>
+      <span className="min-w-0">
+        <span className="block font-medium">{label}</span>
+        <span className="block truncate text-xs text-[var(--muted)]">
+          {description}
+        </span>
+      </span>
+    </>
+  );
+
+  if (href) {
+    return (
+      <Link
+        className="flex min-w-0 items-center gap-3 rounded-[var(--radius-lg)] border border-[var(--hairline)] bg-[var(--surface)] px-4 py-3 text-sm transition-colors hover:border-[var(--primary)]"
+        href={href}
+      >
+        {content}
+      </Link>
+    );
+  }
+
+  return (
+    <div className="flex min-w-0 items-center gap-3 rounded-[var(--radius-lg)] border border-[var(--hairline)] bg-[var(--surface)] px-4 py-3 text-sm">
+      {content}
     </div>
   );
 }

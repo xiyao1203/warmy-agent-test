@@ -1,6 +1,17 @@
 "use client";
 
-import { CheckCircle2, Plus, ShieldCheck, Trash2, XCircle } from "lucide-react";
+import {
+  CheckCircle2,
+  ClipboardCheck,
+  PlayCircle,
+  Plus,
+  ShieldAlert,
+  ShieldCheck,
+  Trash2,
+  XCircle,
+} from "lucide-react";
+import Link from "next/link";
+import type { ReactNode } from "react";
 import { useCallback, useEffect, useState } from "react";
 
 import { Badge } from "@/components/ui/badge";
@@ -119,7 +130,7 @@ export function GateList({ projectId }: { projectId: string }) {
             发布门禁
           </h1>
           <p className="mt-1 text-sm text-[var(--muted)]">
-            配置发布前必须满足的条件：通过率、关键用例、成本、安全评分。
+            用真实运行结果做发布判断，自动检查通过率、关键用例、成本、安全评分和待人工审核。
           </p>
         </div>
         <Button onClick={() => setCreateOpen(true)} variant="primary">
@@ -128,6 +139,32 @@ export function GateList({ projectId }: { projectId: string }) {
         </Button>
       </header>
 
+      <section className="mt-5 grid gap-3 md:grid-cols-4">
+        <FlowCard
+          description="计划版本选择门禁"
+          href={`/projects/${projectId}/test-plans`}
+          icon={<ClipboardCheck aria-hidden="true" className="size-4" />}
+          label="1. 配置测试计划"
+        />
+        <FlowCard
+          description="选择一次真实运行"
+          href={`/projects/${projectId}/runs`}
+          icon={<PlayCircle aria-hidden="true" className="size-4" />}
+          label="2. 查看运行结果"
+        />
+        <FlowCard
+          description="处理安全和人工风险"
+          href={`/projects/${projectId}/security`}
+          icon={<ShieldAlert aria-hidden="true" className="size-4" />}
+          label="3. 补齐风险证据"
+        />
+        <FlowCard
+          description="通过后生成放行结论"
+          icon={<ShieldCheck aria-hidden="true" className="size-4" />}
+          label="4. 评估发布门禁"
+        />
+      </section>
+
       {gates.length === 0 ? (
         <div className="mt-8 rounded-[var(--radius-lg)] border border-dashed border-[var(--hairline)] p-10 text-center">
           <ShieldCheck className="mx-auto size-8 text-[var(--muted)]" />
@@ -135,8 +172,22 @@ export function GateList({ projectId }: { projectId: string }) {
             暂无门禁
           </p>
           <p className="mt-1 text-xs text-[var(--muted)]">
-            点击「创建门禁」配置发布条件。
+            先创建门禁，再在测试计划版本里选择它；运行完成后可用真实结果评估是否放行。
           </p>
+          <div className="mt-4 flex justify-center gap-3 text-sm">
+            <Link
+              className="font-medium text-[var(--primary)] hover:underline"
+              href={`/projects/${projectId}/test-plans`}
+            >
+              去配置测试计划
+            </Link>
+            <Link
+              className="font-medium text-[var(--primary)] hover:underline"
+              href={`/projects/${projectId}/runs`}
+            >
+              去运行中心
+            </Link>
+          </div>
         </div>
       ) : (
         <ul className="mt-5 space-y-3">
@@ -146,6 +197,7 @@ export function GateList({ projectId }: { projectId: string }) {
               key={gate.id}
               onDelete={() => setDeleteTarget(gate)}
               onEvaluate={(runId) => handleEvaluate(gate, runId)}
+              projectId={projectId}
               runs={runs}
               result={
                 evalResult?.gateId === gate.id ? evalResult.result : undefined
@@ -195,12 +247,14 @@ function GateCard({
   gate,
   onDelete,
   onEvaluate,
+  projectId,
   runs,
   result,
 }: {
   gate: GateItem;
   onDelete: () => void;
   onEvaluate: (runId: string) => Promise<void>;
+  projectId: string;
   runs: GateRun[];
   result?: GateResult;
 }) {
@@ -211,11 +265,11 @@ function GateCard({
         <>
           <select
             aria-label="选择执行记录"
-            className="h-9 max-w-48 rounded border border-[var(--hairline)] bg-[var(--surface)] px-2 text-sm"
+            className="h-9 min-w-56 rounded border border-[var(--hairline)] bg-[var(--surface)] px-2 text-sm"
             onChange={(event) => setRunId(event.target.value)}
             value={runId}
           >
-            <option value="">选择真实执行记录</option>
+            <option value="">选择一次真实运行</option>
             {runs.map((run) => (
               <option key={run.id} value={run.id}>
                 {run.status} ·{" "}
@@ -228,7 +282,7 @@ function GateCard({
             onClick={() => onEvaluate(runId)}
             variant="ghost"
           >
-            评估
+            评估运行结果
           </Button>
           <Tooltip content="删除门禁">
             <Button
@@ -258,8 +312,35 @@ function GateCard({
               gate.critical_cases.length > 0
                 ? `关键用例 ${gate.critical_cases.length} 个`
                 : undefined,
+              "待人工审核必须清零",
             ]}
           />
+          <div className="mt-3 flex flex-wrap gap-3 text-xs">
+            <Link
+              className="font-medium text-[var(--primary)] hover:underline"
+              href={`/projects/${projectId}/runs`}
+            >
+              查看运行结果
+            </Link>
+            <Link
+              className="font-medium text-[var(--primary)] hover:underline"
+              href={`/projects/${projectId}/security`}
+            >
+              查看安全发现
+            </Link>
+            <Link
+              className="font-medium text-[var(--primary)] hover:underline"
+              href={`/projects/${projectId}/reviews`}
+            >
+              处理人工审核
+            </Link>
+            <Link
+              className="font-medium text-[var(--primary)] hover:underline"
+              href={`/projects/${projectId}/experiments`}
+            >
+              查看实验对比
+            </Link>
+          </div>
           {result ? (
             <div
               className={`mt-3 rounded border p-3 text-sm ${
@@ -343,7 +424,9 @@ function CreateGateDialog({
     >
       <DialogContent>
         <DialogTitle>创建发布门禁</DialogTitle>
-        <DialogDescription>配置发布前必须满足的条件。</DialogDescription>
+        <DialogDescription>
+          设置发布前必须满足的条件，评估时会读取真实运行、安全测试和人工审核结果。
+        </DialogDescription>
         <div className="mt-5 space-y-4">
           <label className="block text-sm font-medium">
             名称
@@ -407,5 +490,48 @@ function CreateGateDialog({
         </div>
       </DialogContent>
     </Dialog>
+  );
+}
+
+function FlowCard({
+  description,
+  href,
+  icon,
+  label,
+}: {
+  description: string;
+  href?: string;
+  icon: ReactNode;
+  label: string;
+}) {
+  const content = (
+    <>
+      <span className="grid size-8 shrink-0 place-items-center rounded-[var(--radius-md)] bg-[var(--primary-subtle)] text-[var(--primary)]">
+        {icon}
+      </span>
+      <span className="min-w-0">
+        <span className="block font-medium">{label}</span>
+        <span className="block truncate text-xs text-[var(--muted)]">
+          {description}
+        </span>
+      </span>
+    </>
+  );
+
+  if (href) {
+    return (
+      <Link
+        className="flex min-w-0 items-center gap-3 rounded-[var(--radius-lg)] border border-[var(--hairline)] bg-[var(--surface)] px-4 py-3 text-sm transition-colors hover:border-[var(--primary)]"
+        href={href}
+      >
+        {content}
+      </Link>
+    );
+  }
+
+  return (
+    <div className="flex min-w-0 items-center gap-3 rounded-[var(--radius-lg)] border border-[var(--hairline)] bg-[var(--surface)] px-4 py-3 text-sm">
+      {content}
+    </div>
   );
 }

@@ -17,10 +17,10 @@ export function BrowserProfileListScreen({ projectId }: { projectId: string }) {
   });
 
   if (query.isPending) {
-    return <BrowserProfileList loading />;
+    return <BrowserProfileList loading projectId={projectId} />;
   }
   if (query.isError) {
-    return <BrowserProfileList error="service" />;
+    return <BrowserProfileList error="service" projectId={projectId} />;
   }
 
   async function refresh() {
@@ -30,6 +30,7 @@ export function BrowserProfileListScreen({ projectId }: { projectId: string }) {
   return (
     <BrowserProfileList
       profiles={query.data ?? []}
+      projectId={projectId}
       onCreate={async (payload) => {
         const result = await createBrowserProfile(projectId, payload);
         await refresh();

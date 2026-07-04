@@ -81,14 +81,40 @@ describe("TestPlanVersionDialog", () => {
     // Step 1 -> 2
     fireEvent.click(screen.getByRole("button", { name: "下一步" }));
     expect(screen.getByText("执行配置")).toBeVisible();
+    expect(screen.getByText(/浏览器用例运行时会复用选中实例/)).toBeVisible();
+    expect(
+      screen.getByRole("link", { name: "去管理浏览器实例" }),
+    ).toHaveAttribute("href", "/projects/project-1/browser-profiles");
 
     // Step 2 -> 3
     fireEvent.click(screen.getByRole("button", { name: "下一步" }));
     expect(screen.getByText("评估设置")).toBeVisible();
+    expect(screen.getByText(/运行完成后会生成评分结果/)).toBeVisible();
+    expect(screen.getByRole("link", { name: "去管理评分器" })).toHaveAttribute(
+      "href",
+      "/projects/project-1/scorers",
+    );
+    expect(screen.getByRole("link", { name: "去实验对比" })).toHaveAttribute(
+      "href",
+      "/projects/project-1/experiments",
+    );
 
     // Step 3 -> 4
     fireEvent.click(screen.getByRole("button", { name: "下一步" }));
     expect(screen.getByText("门禁配置")).toBeVisible();
+    expect(screen.getByText(/门禁会读取测试执行的通过率/)).toBeVisible();
+    expect(screen.getByRole("link", { name: "去安全测试" })).toHaveAttribute(
+      "href",
+      "/projects/project-1/security",
+    );
+    expect(screen.getByRole("link", { name: "去人工审核" })).toHaveAttribute(
+      "href",
+      "/projects/project-1/reviews",
+    );
+    expect(screen.getByRole("link", { name: "去发布门禁" })).toHaveAttribute(
+      "href",
+      "/projects/project-1/gates",
+    );
 
     // Submit
     fireEvent.click(screen.getByRole("button", { name: "保存版本" }));

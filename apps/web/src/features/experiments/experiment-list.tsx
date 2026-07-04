@@ -8,7 +8,10 @@ import {
   Minus,
   PlayCircle,
   Plus,
+  ShieldCheck,
 } from "lucide-react";
+import Link from "next/link";
+import type { ReactNode } from "react";
 import { useCallback, useEffect, useState } from "react";
 
 import { Badge } from "@/components/ui/badge";
@@ -91,17 +94,43 @@ export function ExperimentList({ projectId }: { projectId: string }) {
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">实验对比</h1>
           <p className="mt-1 text-sm text-[var(--muted)]">
-            A/B 对比分析与退化检测。
+            选择两次已完成运行，比较提升、退化和耗时变化，再用于发布判断。
           </p>
         </div>
         <Button onClick={() => setCreateOpen(true)} variant="primary">
           <Plus aria-hidden="true" className="mr-1.5 size-4" />
-          创建实验
+          创建对比
         </Button>
       </header>
 
+      <section className="mt-5 grid gap-3 md:grid-cols-4">
+        <FlowCard
+          description="先产生可对比的结果"
+          href={`/projects/${projectId}/runs`}
+          icon={<PlayCircle aria-hidden="true" className="size-4" />}
+          label="1. 完成两次运行"
+        />
+        <FlowCard
+          description="选择基线和对比运行"
+          icon={<FlaskConical aria-hidden="true" className="size-4" />}
+          label="2. 创建对比"
+        />
+        <FlowCard
+          description="重点查看失败和退化"
+          href={`/projects/${projectId}/experiments`}
+          icon={<ArrowDownRight aria-hidden="true" className="size-4" />}
+          label="3. 分析退化项"
+        />
+        <FlowCard
+          description="把显著退化拦在发布前"
+          href={`/projects/${projectId}/gates`}
+          icon={<ShieldCheck aria-hidden="true" className="size-4" />}
+          label="4. 配置发布门禁"
+        />
+      </section>
+
       {experiments.length === 0 ? (
-        <div className="mt-8 rounded-[var(--radius-lg)] border border-dashed border-[var(--hairline)] p-10 text-center">
+        <div className="mt-6 rounded-[var(--radius-lg)] border border-dashed border-[var(--hairline)] p-10 text-center">
           <FlaskConical
             aria-hidden="true"
             className="mx-auto size-8 text-[var(--muted)]"
@@ -110,16 +139,26 @@ export function ExperimentList({ projectId }: { projectId: string }) {
             暂无实验
           </p>
           <p className="mt-1 text-xs text-[var(--muted)]">
-            点击「创建实验」选择两个运行进行 A/B 对比。
+            先在运行中心完成两次同一测试计划版本的运行，再创建对比。
           </p>
+          <div className="mt-4 flex justify-center gap-2">
+            <Button asChild variant="secondary">
+              <Link href={`/projects/${projectId}/runs`}>去运行中心</Link>
+            </Button>
+            <Button onClick={() => setCreateOpen(true)} variant="primary">
+              <Plus aria-hidden="true" className="mr-1.5 size-4" />
+              创建对比
+            </Button>
+          </div>
         </div>
       ) : (
-        <ul className="mt-5 space-y-3">
+        <ul className="mt-6 space-y-3">
           {experiments.map((exp) => (
             <ExperimentCard
               exp={exp}
               key={exp.id}
               onRun={() => handleRun(exp.id)}
+              projectId={projectId}
             />
           ))}
         </ul>
@@ -138,9 +177,11 @@ export function ExperimentList({ projectId }: { projectId: string }) {
 function ExperimentCard({
   exp,
   onRun,
+  projectId,
 }: {
   exp: ExperimentItem;
   onRun: () => Promise<void>;
+  projectId: string;
 }) {
   const [running, setRunning] = useState(false);
   const summary = (exp.result_json as Record<string, unknown>).summary as
@@ -150,24 +191,29 @@ function ExperimentCard({
   return (
     <ListCard
       actions={
-        exp.status === "pending" ? (
-          <Button
-            disabled={running}
-            loading={running}
-            onClick={async () => {
-              setRunning(true);
-              try {
-                await onRun();
-              } finally {
-                setRunning(false);
-              }
-            }}
-            variant="primary"
-          >
-            <PlayCircle aria-hidden="true" className="mr-1.5 size-4" />
-            执行对比
+        <div className="flex items-center gap-1.5">
+          {exp.status === "pending" ? (
+            <Button
+              disabled={running}
+              loading={running}
+              onClick={async () => {
+                setRunning(true);
+                try {
+                  await onRun();
+                } finally {
+                  setRunning(false);
+                }
+              }}
+              variant="primary"
+            >
+              <PlayCircle aria-hidden="true" className="mr-1.5 size-4" />
+              生成对比结果
+            </Button>
+          ) : null}
+          <Button asChild className="px-3" variant="secondary">
+            <Link href={`/projects/${projectId}/gates`}>配置门禁</Link>
           </Button>
-        ) : undefined
+        </div>
       }
       badge={
         <Badge tone={STATUS_TONES[exp.status] ?? "neutral"}>{exp.status}</Badge>
@@ -219,7 +265,7 @@ function ExperimentCard({
           {(exp.result_json as Record<string, unknown>).case_diffs ? (
             <details className="mt-4">
               <summary className="cursor-pointer text-xs font-medium text-[var(--muted)]">
-                查看逐用例对比
+                查看逐用例提升和退化
               </summary>
               <div className="mt-2 overflow-auto">
                 <table className="w-full text-xs">
@@ -277,6 +323,20 @@ function ExperimentCard({
               </div>
             </details>
           ) : null}
+          <div className="mt-4 flex flex-wrap gap-2 text-xs">
+            <Link
+              className="font-medium text-[var(--primary)] hover:underline"
+              href={`/projects/${projectId}/runs`}
+            >
+              查看两次运行结果
+            </Link>
+            <Link
+              className="font-medium text-[var(--primary)] hover:underline"
+              href={`/projects/${projectId}/test-plans`}
+            >
+              调整测试计划
+            </Link>
+          </div>
         </>
       }
       title={exp.name}
@@ -290,7 +350,7 @@ function SummaryChip({
   tone,
   value,
 }: {
-  icon: React.ReactNode;
+  icon: ReactNode;
   label: string;
   tone: "success" | "danger" | "neutral";
   value: string;
@@ -307,6 +367,49 @@ function SummaryChip({
       <span className="text-[var(--muted)]">{label}:</span>
       <span className="font-semibold">{value}</span>
     </span>
+  );
+}
+
+function FlowCard({
+  description,
+  href,
+  icon,
+  label,
+}: {
+  description: string;
+  href?: string;
+  icon: ReactNode;
+  label: string;
+}) {
+  const content = (
+    <>
+      <span className="grid size-8 shrink-0 place-items-center rounded-[var(--radius-md)] bg-[var(--primary-subtle)] text-[var(--primary)]">
+        {icon}
+      </span>
+      <span className="min-w-0">
+        <span className="block font-medium">{label}</span>
+        <span className="block truncate text-xs text-[var(--muted)]">
+          {description}
+        </span>
+      </span>
+    </>
+  );
+
+  if (href) {
+    return (
+      <Link
+        className="flex min-w-0 items-center gap-3 rounded-[var(--radius-lg)] border border-[var(--hairline)] bg-[var(--surface)] px-4 py-3 text-sm transition-colors hover:border-[var(--primary)]"
+        href={href}
+      >
+        {content}
+      </Link>
+    );
+  }
+
+  return (
+    <div className="flex min-w-0 items-center gap-3 rounded-[var(--radius-lg)] border border-[var(--hairline)] bg-[var(--surface)] px-4 py-3 text-sm">
+      {content}
+    </div>
   );
 }
 
@@ -366,11 +469,13 @@ function CreateExperimentDialog({
       open={open}
     >
       <DialogContent>
-        <DialogTitle>创建对比实验</DialogTitle>
-        <DialogDescription>选择两个运行进行 A/B 对比分析。</DialogDescription>
+        <DialogTitle>创建对比</DialogTitle>
+        <DialogDescription>
+          选择同一测试计划版本下的两次已完成运行，生成提升和退化分析。
+        </DialogDescription>
         <div className="mt-5 space-y-4">
           <label className="block text-sm font-medium">
-            实验名称
+            对比名称
             <Input
               className="mt-1.5"
               onChange={(e) => setName(e.target.value)}
@@ -397,7 +502,7 @@ function CreateExperimentDialog({
             onClick={handleCreate}
             variant="primary"
           >
-            创建
+            创建对比
           </Button>
         </div>
       </DialogContent>

@@ -1,5 +1,7 @@
 "use client";
 
+import Link from "next/link";
+
 import { AggregationView } from "./aggregation-view";
 import { DegradationHighlight } from "./degradation-highlight";
 
@@ -37,6 +39,7 @@ type RunData = {
 
 type ExperimentCompareProps = {
   experimentId: string;
+  projectId?: string;
   runA: RunData;
   runB: RunData;
   degradations: Degradation[];
@@ -44,6 +47,7 @@ type ExperimentCompareProps = {
 
 export function ExperimentCompare({
   experimentId,
+  projectId,
   runA,
   runB,
   degradations,
@@ -52,8 +56,33 @@ export function ExperimentCompare({
     <div className="space-y-6">
       {/* 标题 */}
       <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold">实验对比</h2>
-        <span className="text-sm text-[var(--muted)]">ID: {experimentId}</span>
+        <div>
+          <h2 className="text-2xl font-bold">实验对比结果</h2>
+          <p className="mt-1 text-sm text-[var(--muted)]">
+            对照两次运行的通过率、评分、耗时和退化项。
+          </p>
+        </div>
+        <div className="flex items-center gap-3">
+          {projectId ? (
+            <>
+              <Link
+                className="text-sm font-medium text-[var(--primary)] hover:underline"
+                href={`/projects/${projectId}/runs`}
+              >
+                查看运行结果
+              </Link>
+              <Link
+                className="text-sm font-medium text-[var(--primary)] hover:underline"
+                href={`/projects/${projectId}/gates`}
+              >
+                配置发布门禁
+              </Link>
+            </>
+          ) : null}
+          <span className="text-sm text-[var(--muted)]">
+            ID: {experimentId}
+          </span>
+        </div>
       </div>
 
       {/* 运行对比 */}

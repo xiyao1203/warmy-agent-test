@@ -130,7 +130,12 @@ async function loadAssetOptions(projectId: string): Promise<{
       id: template.id,
       label: template.name,
     })),
-    scorers: scorers.map((scorer) => ({ id: scorer.id, label: scorer.name })),
+    scorers: scorers
+      .filter((scorer) => scorer.enabled && scorer.latest_published_version_id)
+      .map((scorer) => ({
+        id: String(scorer.latest_published_version_id),
+        label: `${scorer.name} v${scorer.latest_published_version_number ?? 1}`,
+      })),
     gates: gates.map((gate) => ({ id: gate.id, label: gate.name })),
     runs: runs.map((run) => ({
       id: run.id,

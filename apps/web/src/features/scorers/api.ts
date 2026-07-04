@@ -12,6 +12,8 @@ export type ScorerItem = {
   config_json: Record<string, unknown>;
   description: string | null;
   enabled: boolean;
+  latest_published_version_id?: string | null;
+  latest_published_version_number?: number | null;
   created_at: string;
   updated_at: string;
 };

@@ -98,9 +98,9 @@ export function ScorerEditorDialog({
       open={open}
     >
       <DialogContent>
-        <DialogTitle>{isEdit ? "编辑评分器" : "创建评分器"}</DialogTitle>
+        <DialogTitle>{isEdit ? "设置评分器" : "新建评分器"}</DialogTitle>
         <DialogDescription>
-          配置评分器的类型、权重和通过阈值。
+          设置评分方式、权重和通过标准；保存后即可在测试计划中选择。
         </DialogDescription>
         <div className="mt-5 space-y-4">
           <label className="block text-sm font-medium">
@@ -125,10 +125,10 @@ export function ScorerEditorDialog({
             </select>
             <span className="mt-1 block text-xs text-[var(--muted)]">
               {scorerType === "rule"
-                ? "基于固定规则比较输出与期望值"
+                ? "适合明确答案：检查输出是否包含或等于指定内容"
                 : scorerType === "model"
-                  ? "通过模型按评分标准（Rubric）评估输出质量"
-                  : "比较输出与参考答案的一致性"}
+                  ? "适合主观质量：用模型按评分标准判断回答质量"
+                  : "适合回归对比：检查输出是否接近参考答案"}
             </span>
           </label>
           <div className="grid grid-cols-2 gap-4">
@@ -278,7 +278,7 @@ export function ScorerEditorDialog({
             onClick={handleSave}
             variant="primary"
           >
-            {isEdit ? "保存" : "创建"}
+            {isEdit ? "保存设置" : "新建评分器"}
           </Button>
         </div>
       </DialogContent>

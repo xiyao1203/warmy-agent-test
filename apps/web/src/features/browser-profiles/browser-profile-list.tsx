@@ -1,6 +1,14 @@
 "use client";
 
-import { MoreHorizontal, Plus } from "lucide-react";
+import {
+  ClipboardCheck,
+  MoreHorizontal,
+  PlayCircle,
+  Plus,
+  UserCheck,
+} from "lucide-react";
+import Link from "next/link";
+import type { ReactNode } from "react";
 import { useState } from "react";
 
 import { Badge } from "@/components/ui/badge";
@@ -45,6 +53,7 @@ type BrowserProfileListProps = {
     payload: { name?: string; target_domain?: string },
   ) => Promise<BrowserProfile>;
   onDelete?: (profileId: string) => Promise<void>;
+  projectId: string;
 };
 
 function statusBadge(status: string) {
@@ -67,6 +76,7 @@ export function BrowserProfileList({
   onCreate,
   onUpdate,
   onDelete,
+  projectId,
 }: BrowserProfileListProps) {
   const [createOpen, setCreateOpen] = useState(false);
   const [createName, setCreateName] = useState("");
@@ -165,25 +175,25 @@ export function BrowserProfileList({
   }
 
   return (
-    <div className="mx-auto max-w-5xl px-6 py-6">
-      <div className="mb-5 flex items-center justify-between">
+    <div className="min-w-0 px-6 py-6">
+      <div className="mb-5 flex items-start justify-between gap-4 border-b border-[var(--hairline)] pb-5">
         <div>
-          <h2 className="text-lg font-semibold">浏览器实例</h2>
+          <h1 className="text-2xl font-semibold tracking-tight">浏览器实例</h1>
           <p className="mt-1 text-sm text-[var(--muted)]">
-            管理可复用的浏览器实例，登录一次后在多个测试中复用登录态
+            新建实例并保存登录态，测试计划选择后，浏览器用例会在运行时复用。
           </p>
         </div>
         <Dialog open={createOpen} onOpenChange={setCreateOpen}>
           <DialogTrigger asChild>
-            <Button disabled={!onCreate}>
+            <Button disabled={!onCreate} variant="primary">
               <Plus aria-hidden="true" className="mr-1 size-4" />
-              新建实例
+              新建浏览器实例
             </Button>
           </DialogTrigger>
           <DialogContent>
             <DialogTitle>新建浏览器实例</DialogTitle>
             <DialogDescription>
-              创建一个新的浏览器实例配置，用于复用登录态和浏览器状态
+              创建后用于保存登录状态，并在测试计划中选择复用。
             </DialogDescription>
             <div className="mt-4 space-y-3">
               <label className="block">
@@ -212,96 +222,146 @@ export function BrowserProfileList({
               <Button
                 disabled={!createName.trim() || creating}
                 onClick={handleCreate}
+                variant="primary"
               >
-                {creating ? "创建中..." : "创建"}
+                {creating ? "创建中..." : "新建浏览器实例"}
               </Button>
             </div>
           </DialogContent>
         </Dialog>
       </div>
 
+      <section className="mb-5 grid gap-3 md:grid-cols-4">
+        <FlowCard
+          description="创建独立用户目录"
+          icon={<Plus aria-hidden="true" className="size-4" />}
+          label="1. 新建实例"
+        />
+        <FlowCard
+          description="人工登录后保存状态"
+          icon={<UserCheck aria-hidden="true" className="size-4" />}
+          label="2. 保存登录态"
+        />
+        <FlowCard
+          description="执行配置里选择实例"
+          href={`/projects/${projectId}/test-plans`}
+          icon={<ClipboardCheck aria-hidden="true" className="size-4" />}
+          label="3. 配置测试计划"
+        />
+        <FlowCard
+          description="浏览器用例自动复用"
+          href={`/projects/${projectId}/runs`}
+          icon={<PlayCircle aria-hidden="true" className="size-4" />}
+          label="4. 启动测试执行"
+        />
+      </section>
+
       {profiles.length === 0 ? (
         <EmptyState
           action={
             onCreate ? (
-              <Button onClick={() => setCreateOpen(true)}>
+              <Button onClick={() => setCreateOpen(true)} variant="primary">
                 <Plus aria-hidden="true" className="mr-1 size-4" />
-                新建实例
+                新建浏览器实例
               </Button>
             ) : undefined
           }
-          description="还没有浏览器实例，创建一个开始使用"
+          description="先新建一个浏览器实例，再在测试计划的执行配置中选择它。"
           title="暂无浏览器实例"
         />
       ) : (
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>名称</TableHead>
-              <TableHead>目标域名</TableHead>
-              <TableHead>端口</TableHead>
-              <TableHead>状态</TableHead>
-              <TableHead>登录态</TableHead>
-              <TableHead>创建时间</TableHead>
-              <TableHead className="w-10" />
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {profiles.map((profile) => (
-              <TableRow key={profile.profile_id}>
-                <TableCell className="font-medium">{profile.name}</TableCell>
-                <TableCell className="text-[var(--muted)]">
-                  {profile.target_domain || (
-                    <span className="italic">未设置</span>
-                  )}
-                </TableCell>
-                <TableCell className="text-[var(--muted)] font-mono text-xs">
-                  {profile.cdp_port || "-"}
-                </TableCell>
-                <TableCell>{statusBadge(profile.status)}</TableCell>
-                <TableCell>
-                  {profile.storage_state_path ? (
-                    <Badge tone="success">已登录</Badge>
-                  ) : (
-                    <Badge tone="neutral">未登录</Badge>
-                  )}
-                </TableCell>
-                <TableCell className="text-[var(--muted)] text-xs">
-                  {profile.created_at
-                    ? new Date(profile.created_at).toLocaleDateString("zh-CN")
-                    : "-"}
-                </TableCell>
-                <TableCell>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost">
-                        <MoreHorizontal className="size-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem onClick={() => openEdit(profile)}>
-                        编辑
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        className="text-[var(--destructive)]"
-                        onClick={() => openDelete(profile)}
-                      >
-                        删除
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </TableCell>
+        <section className="overflow-x-auto rounded-[var(--radius-lg)] border border-[var(--hairline)] bg-[var(--surface)]">
+          <Table className="w-full min-w-[920px] table-fixed">
+            <TableHeader className="bg-[var(--canvas-soft)]">
+              <TableRow>
+                <TableHead className="w-[280px]">实例信息</TableHead>
+                <TableHead className="w-48">目标域名</TableHead>
+                <TableHead className="w-24 text-center">端口</TableHead>
+                <TableHead className="w-24 text-center">状态</TableHead>
+                <TableHead className="w-28 text-center">登录态</TableHead>
+                <TableHead className="w-32 text-center">创建时间</TableHead>
+                <TableHead className="w-40 text-right">下一步</TableHead>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+            </TableHeader>
+            <TableBody>
+              {profiles.map((profile) => (
+                <TableRow key={profile.profile_id}>
+                  <TableCell>
+                    <div className="min-w-0">
+                      <p className="truncate font-medium">{profile.name}</p>
+                      <p className="mt-0.5 truncate text-xs text-[var(--muted)]">
+                        测试计划选择后，浏览器用例会复用这个实例
+                      </p>
+                    </div>
+                  </TableCell>
+                  <TableCell className="text-[var(--muted)]">
+                    {profile.target_domain || (
+                      <span className="italic">未设置</span>
+                    )}
+                  </TableCell>
+                  <TableCell className="text-center font-mono text-xs text-[var(--muted)]">
+                    {profile.cdp_port || "-"}
+                  </TableCell>
+                  <TableCell className="text-center">
+                    {statusBadge(profile.status)}
+                  </TableCell>
+                  <TableCell className="text-center">
+                    {profile.storage_state_path ? (
+                      <Badge tone="success">已登录</Badge>
+                    ) : (
+                      <Badge tone="neutral">未登录</Badge>
+                    )}
+                  </TableCell>
+                  <TableCell className="text-center text-xs text-[var(--muted)]">
+                    {profile.created_at
+                      ? new Date(profile.created_at).toLocaleDateString("zh-CN")
+                      : "-"}
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <div className="flex items-center justify-end gap-1">
+                      <Button asChild className="px-3" variant="secondary">
+                        <Link href={`/projects/${projectId}/test-plans`}>
+                          去配置
+                        </Link>
+                      </Button>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            aria-label={`管理${profile.name}`}
+                            className="w-9 px-0"
+                            variant="ghost"
+                          >
+                            <MoreHorizontal className="size-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => openEdit(profile)}>
+                            设置实例
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            className="text-[var(--destructive)]"
+                            onClick={() => openDelete(profile)}
+                          >
+                            删除
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </section>
       )}
 
       {/* 编辑对话框 */}
       <Dialog open={editOpen} onOpenChange={setEditOpen}>
         <DialogContent>
           <DialogTitle>编辑浏览器实例</DialogTitle>
-          <DialogDescription>修改浏览器实例的名称和目标域名</DialogDescription>
+          <DialogDescription>
+            修改浏览器实例的名称和适用域名。
+          </DialogDescription>
           <div className="mt-4 space-y-3">
             <label className="block">
               <span className="text-sm font-medium">名称</span>
@@ -326,7 +386,7 @@ export function BrowserProfileList({
               取消
             </Button>
             <Button disabled={!editName.trim() || editing} onClick={handleEdit}>
-              {editing ? "保存中..." : "保存"}
+              {editing ? "保存中..." : "保存设置"}
             </Button>
           </div>
         </DialogContent>
@@ -355,6 +415,49 @@ export function BrowserProfileList({
           </div>
         </DialogContent>
       </Dialog>
+    </div>
+  );
+}
+
+function FlowCard({
+  description,
+  href,
+  icon,
+  label,
+}: {
+  description: string;
+  href?: string;
+  icon: ReactNode;
+  label: string;
+}) {
+  const content = (
+    <>
+      <span className="grid size-8 shrink-0 place-items-center rounded-[var(--radius-md)] bg-[var(--primary-subtle)] text-[var(--primary)]">
+        {icon}
+      </span>
+      <span className="min-w-0">
+        <span className="block font-medium">{label}</span>
+        <span className="block truncate text-xs text-[var(--muted)]">
+          {description}
+        </span>
+      </span>
+    </>
+  );
+
+  if (href) {
+    return (
+      <Link
+        className="flex min-w-0 items-center gap-3 rounded-[var(--radius-lg)] border border-[var(--hairline)] bg-[var(--surface)] px-4 py-3 text-sm transition-colors hover:border-[var(--primary)]"
+        href={href}
+      >
+        {content}
+      </Link>
+    );
+  }
+
+  return (
+    <div className="flex min-w-0 items-center gap-3 rounded-[var(--radius-lg)] border border-[var(--hairline)] bg-[var(--surface)] px-4 py-3 text-sm">
+      {content}
     </div>
   );
 }

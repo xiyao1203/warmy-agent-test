@@ -359,11 +359,41 @@ export function TestPlanVersionDialog({
             options={browserProfileOptions}
             value={browserProfileId}
           />
+          <p className="col-span-2 -mt-2 text-xs text-[var(--muted)]">
+            浏览器实例来自“浏览器实例”页面；浏览器用例运行时会复用选中实例的登录态和用户目录。
+            {projectId ? (
+              <Link
+                className="ml-1 font-medium text-[var(--primary)] hover:underline"
+                href={`/projects/${projectId}/browser-profiles`}
+              >
+                去管理浏览器实例
+              </Link>
+            ) : null}
+          </p>
         </>
       ) : stepIndex === 2 ? (
         <>
           <div className="col-span-2 rounded border border-[var(--hairline)] p-3">
             <p className="text-sm font-medium">评分器</p>
+            <p className="mt-1 text-xs text-[var(--muted)]">
+              评分器来自“评分器”页面；运行完成后会生成评分结果，并可用于实验对比和发布门禁。
+              {projectId ? (
+                <>
+                  <Link
+                    className="ml-1 font-medium text-[var(--primary)] hover:underline"
+                    href={`/projects/${projectId}/scorers`}
+                  >
+                    去管理评分器
+                  </Link>
+                  <Link
+                    className="ml-2 font-medium text-[var(--primary)] hover:underline"
+                    href={`/projects/${projectId}/experiments`}
+                  >
+                    去实验对比
+                  </Link>
+                </>
+              ) : null}
+            </p>
             {scorers.length === 0 ? (
               <p className="mt-1 text-xs text-[var(--muted)]">暂无可用评分器</p>
             ) : (
@@ -410,6 +440,34 @@ export function TestPlanVersionDialog({
         </>
       ) : (
         <>
+          <div className="col-span-2 rounded border border-[var(--hairline)] bg-[var(--canvas-soft)] p-3">
+            <p className="text-sm font-medium">发布前检查</p>
+            <p className="mt-1 text-xs leading-5 text-[var(--muted)]">
+              门禁会读取测试执行的通过率、同一次运行的安全评分和待人工审核数量；实验对比用于发现版本退化，再决定是否放行。
+              {projectId ? (
+                <>
+                  <Link
+                    className="ml-1 font-medium text-[var(--primary)] hover:underline"
+                    href={`/projects/${projectId}/security`}
+                  >
+                    去安全测试
+                  </Link>
+                  <Link
+                    className="ml-2 font-medium text-[var(--primary)] hover:underline"
+                    href={`/projects/${projectId}/reviews`}
+                  >
+                    去人工审核
+                  </Link>
+                  <Link
+                    className="ml-2 font-medium text-[var(--primary)] hover:underline"
+                    href={`/projects/${projectId}/gates`}
+                  >
+                    去发布门禁
+                  </Link>
+                </>
+              ) : null}
+            </p>
+          </div>
           <NumberField
             label="费用预算（可选）"
             min={0}
@@ -425,7 +483,7 @@ export function TestPlanVersionDialog({
           />
           <div className="col-span-2">
             <p className="mb-1 text-xs text-[var(--muted)]">
-              安全扫描配置与审查策略暂由管理员配置
+              审查策略暂由管理员配置；安全测试可在“安全测试”页面直接启动。
             </p>
             <AssetSelectField
               label="基线运行（可选）"

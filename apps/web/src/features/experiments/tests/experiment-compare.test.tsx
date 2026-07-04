@@ -191,7 +191,7 @@ describe("ExperimentCompare", () => {
 
   it("renders experiment title", () => {
     render(<ExperimentCompare {...mockProps} />);
-    expect(screen.getByText("实验对比")).toBeInTheDocument();
+    expect(screen.getByText("实验对比结果")).toBeInTheDocument();
   });
 
   it("shows run IDs", () => {
@@ -203,5 +203,17 @@ describe("ExperimentCompare", () => {
   it("renders degradation section", () => {
     render(<ExperimentCompare {...mockProps} />);
     expect(screen.getByText("退化项")).toBeInTheDocument();
+  });
+
+  it("links comparison result to runs and release gates", () => {
+    render(<ExperimentCompare {...mockProps} projectId="project-1" />);
+    expect(screen.getByRole("link", { name: "查看运行结果" })).toHaveAttribute(
+      "href",
+      "/projects/project-1/runs",
+    );
+    expect(screen.getByRole("link", { name: "配置发布门禁" })).toHaveAttribute(
+      "href",
+      "/projects/project-1/gates",
+    );
   });
 });
