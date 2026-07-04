@@ -7,7 +7,16 @@ import type {
   EnvironmentVersionResponse,
   UpdateEnvironmentVersionRequest,
 } from "@warmy/generated-api-client";
-import { Cog, Plus } from "lucide-react";
+import {
+  ClipboardCheck,
+  Cog,
+  KeyRound,
+  PlayCircle,
+  Plus,
+  ShieldCheck,
+} from "lucide-react";
+import Link from "next/link";
+import type { ReactNode } from "react";
 import { useEffect, useState } from "react";
 
 import { Badge } from "@/components/ui/badge";
@@ -107,7 +116,7 @@ export function EnvironmentList({
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">环境与凭证</h1>
           <p className="mt-2 text-sm text-[var(--muted)]">
-            管理测试环境模板、测试凭证、Mock 服务和沙箱配置。
+            先保存凭证，再绑定环境；测试计划选择环境后，执行时自动注入。
           </p>
         </div>
         {onCreate && (
@@ -115,21 +124,54 @@ export function EnvironmentList({
         )}
       </header>
 
+      <section className="mt-5 grid gap-3 md:grid-cols-4">
+        <FlowCard
+          description="明文只保存一次"
+          icon={<KeyRound aria-hidden="true" className="size-4" />}
+          label="1. 添加凭证"
+        />
+        <FlowCard
+          description="绑定变量和凭证"
+          icon={<ShieldCheck aria-hidden="true" className="size-4" />}
+          label="2. 配置环境"
+        />
+        <FlowCard
+          description="选择已发布环境"
+          href={`/projects/${projectId}/test-plans`}
+          icon={<ClipboardCheck aria-hidden="true" className="size-4" />}
+          label="3. 配置测试计划"
+        />
+        <FlowCard
+          description="执行时自动注入"
+          href={`/projects/${projectId}/runs`}
+          icon={<PlayCircle aria-hidden="true" className="size-4" />}
+          label="4. 查看测试执行"
+        />
+      </section>
+
       <section className="mt-5 overflow-hidden rounded-[var(--radius-lg)] border border-[var(--hairline)] bg-[var(--surface)]">
         {!environments.length ? (
           <EmptyState
-            description="创建环境模板后，可在测试计划中引用并自动配置执行环境。"
+            action={
+              onCreate ? (
+                <CreateTemplateDialog
+                  credentials={credentials}
+                  onCreate={onCreate}
+                />
+              ) : null
+            }
+            description="新建环境后，发布版本即可在测试计划中选择。"
             title="暂无环境模板"
           />
         ) : (
-          <Table className="w-auto min-w-[680px] table-fixed">
+          <Table className="w-auto min-w-[820px] table-fixed">
             <TableHeader className="bg-[var(--canvas-soft)]">
               <TableRow>
-                <TableHead className="w-[380px]">模板信息</TableHead>
+                <TableHead className="w-[380px]">环境信息</TableHead>
                 <TableHead className="w-24 text-center">类型</TableHead>
-                <TableHead className="w-24 text-center">版本</TableHead>
+                <TableHead className="w-32 text-center">版本</TableHead>
                 <TableHead className="w-32 text-center">更新时间</TableHead>
-                <TableHead className="w-24 text-center">操作</TableHead>
+                <TableHead className="w-40 text-center">下一步</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -156,6 +198,49 @@ export function EnvironmentList({
           setCredentials((current) => [created, ...current]);
         }}
       />
+    </div>
+  );
+}
+
+function FlowCard({
+  description,
+  href,
+  icon,
+  label,
+}: {
+  description: string;
+  href?: string;
+  icon: ReactNode;
+  label: string;
+}) {
+  const content = (
+    <>
+      <span className="grid size-8 shrink-0 place-items-center rounded-[var(--radius-md)] bg-[var(--primary-subtle)] text-[var(--primary)]">
+        {icon}
+      </span>
+      <span className="min-w-0">
+        <span className="block font-medium">{label}</span>
+        <span className="block truncate text-xs text-[var(--muted)]">
+          {description}
+        </span>
+      </span>
+    </>
+  );
+
+  if (href) {
+    return (
+      <Link
+        className="flex min-w-0 items-center gap-3 rounded-[var(--radius-lg)] border border-[var(--hairline)] bg-[var(--surface)] px-4 py-3 text-sm transition-colors hover:border-[var(--primary)]"
+        href={href}
+      >
+        {content}
+      </Link>
+    );
+  }
+
+  return (
+    <div className="flex min-w-0 items-center gap-3 rounded-[var(--radius-lg)] border border-[var(--hairline)] bg-[var(--surface)] px-4 py-3 text-sm">
+      {content}
     </div>
   );
 }
@@ -233,7 +318,7 @@ function TemplateRow({
             onClick={handleToggleVersions}
             type="button"
           >
-            {versionsLoaded ? versions.length : "…"}
+            {versionsLoaded ? `${versions.length} 个版本` : "查看版本"}
           </button>
         </TableCell>
         <TableCell className="whitespace-nowrap text-center text-sm text-[var(--muted)]">
@@ -244,7 +329,7 @@ function TemplateRow({
             {onCreateVersion ? (
               <EnvironmentVersionDialog
                 credentials={credentials}
-                triggerLabel="创建版本"
+                triggerLabel="配置环境"
                 onSubmit={async (payload: CreateEnvironmentVersionRequest) => {
                   const result = await onCreateVersion(template.id, payload);
                   setVersions((prev) => [result, ...prev]);
@@ -423,51 +508,70 @@ function CredentialSection({
     <section className="mt-6 rounded border border-[var(--hairline)] bg-[var(--surface)] p-5">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="font-semibold">加密凭证绑定</h2>
+          <h2 className="font-semibold">凭证库</h2>
           <p className="mt-1 text-xs text-[var(--muted)]">
-            密钥仅加密保存；列表和 API 永不返回明文。
+            添加后可绑定到环境，测试执行时按 Header 自动注入；列表和 API
+            永不返回明文。
           </p>
         </div>
         <Button onClick={() => setOpen(true)} variant="secondary">
-          新增凭证
+          添加凭证
         </Button>
       </div>
-      <ul className="mt-4 space-y-2 text-sm">
-        {credentials.map((item) => (
-          <li
-            className="flex justify-between rounded border border-[var(--hairline)] p-3"
-            key={item.id}
-          >
-            <span>
-              {item.alias} · {item.injection_location}:{item.injection_name}
-            </span>
-            <code>{item.masked_hint}</code>
-          </li>
-        ))}
-      </ul>
+      {credentials.length ? (
+        <ul className="mt-4 space-y-2 text-sm">
+          {credentials.map((item) => (
+            <li
+              className="flex justify-between rounded border border-[var(--hairline)] p-3"
+              key={item.id}
+            >
+              <span>
+                {item.alias} · {item.injection_location}:{item.injection_name}
+              </span>
+              <code>{item.masked_hint}</code>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p className="mt-4 rounded border border-dashed border-[var(--hairline)] p-4 text-sm text-[var(--muted)]">
+          暂无凭证。添加一次后，在新建环境或配置环境时勾选即可。
+        </p>
+      )}
       <Dialog onOpenChange={setOpen} open={open}>
         <DialogContent>
-          <DialogTitle>新增加密凭证</DialogTitle>
+          <DialogTitle>添加凭证</DialogTitle>
           <DialogDescription>
-            凭证值保存后不可读取，只能替换。
+            凭证值保存后不可读取，只会在测试执行时注入。
           </DialogDescription>
           <div className="mt-4 space-y-3">
-            <Input
-              onChange={(event) => setAlias(event.target.value)}
-              placeholder="别名，如 staging-token"
-              value={alias}
-            />
-            <Input
-              onChange={(event) => setName(event.target.value)}
-              placeholder="Header 名称"
-              value={name}
-            />
-            <Input
-              onChange={(event) => setValue(event.target.value)}
-              placeholder="凭证值"
-              type="password"
-              value={value}
-            />
+            <label className="block text-sm font-medium">
+              凭证名称
+              <Input
+                className="mt-1.5"
+                onChange={(event) => setAlias(event.target.value)}
+                placeholder="例如 Staging API Token"
+                value={alias}
+              />
+            </label>
+            <label className="block text-sm font-medium">
+              注入到哪个 Header
+              <Input
+                className="mt-1.5"
+                onChange={(event) => setName(event.target.value)}
+                placeholder="例如 Authorization"
+                value={name}
+              />
+            </label>
+            <label className="block text-sm font-medium">
+              凭证值
+              <Input
+                className="mt-1.5"
+                onChange={(event) => setValue(event.target.value)}
+                placeholder="只保存一次，之后不可查看明文"
+                type="password"
+                value={value}
+              />
+            </label>
             {error && <p className="text-sm text-[var(--danger)]">{error}</p>}
             <div className="flex justify-end gap-2">
               <Button onClick={() => setOpen(false)}>取消</Button>
@@ -514,9 +618,9 @@ function CreateTemplateDialog({
   const [description, setDescription] = useState("");
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
-  const [variables, setVariables] = useState("{}");
-  const [headers, setHeaders] = useState("{}");
-  const [initialState, setInitialState] = useState("{}");
+  const [variableRows, setVariableRows] = useState<KeyValueRow[]>([]);
+  const [headerRows, setHeaderRows] = useState<KeyValueRow[]>([]);
+  const [initialStateRows, setInitialStateRows] = useState<KeyValueRow[]>([]);
   const [credentialIds, setCredentialIds] = useState<string[]>([]);
 
   async function submit() {
@@ -526,17 +630,11 @@ function CreateTemplateDialog({
     }
     setSubmitting(true);
     try {
-      const parsedVariables = JSON.parse(variables) as Record<string, unknown>;
-      const parsedHeaders = JSON.parse(headers) as Record<string, unknown>;
-      const parsedInitialState = JSON.parse(initialState) as Record<
-        string,
-        unknown
-      >;
       await onCreate({
         config: {
-          variables: parsedVariables,
-          headers: parsedHeaders,
-          initial_state: parsedInitialState,
+          variables: rowsToRecord(variableRows),
+          headers: rowsToRecord(headerRows),
+          initial_state: rowsToRecord(initialStateRows),
           credential_binding_ids: credentialIds,
           sandbox: {},
         },
@@ -547,11 +645,15 @@ function CreateTemplateDialog({
       setOpen(false);
       setName("");
       setDescription("");
+      setVariableRows([]);
+      setHeaderRows([]);
+      setInitialStateRows([]);
+      setCredentialIds([]);
       setError("");
     } catch (caught) {
       setError(
-        caught instanceof SyntaxError
-          ? "变量、Headers 和初始状态必须是合法 JSON 对象。"
+        caught instanceof Error
+          ? caught.message
           : "创建失败，请检查输入后重试。",
       );
     } finally {
@@ -564,13 +666,13 @@ function CreateTemplateDialog({
       <DialogTrigger asChild>
         <Button variant="primary">
           <Plus aria-hidden="true" className="mr-1.5 size-4" />
-          创建环境模板
+          新建环境
         </Button>
       </DialogTrigger>
       <DialogContent>
-        <DialogTitle>创建环境模板</DialogTitle>
+        <DialogTitle>新建环境</DialogTitle>
         <DialogDescription>
-          环境模板用于定义测试执行时的初始配置，可在测试计划中引用。
+          新建后可绑定凭证并发布版本，测试计划会选择已发布环境执行。
         </DialogDescription>
         <div className="mt-5 space-y-4">
           <label className="block text-sm font-medium">
@@ -589,10 +691,14 @@ function CreateTemplateDialog({
               value={description}
             />
           </label>
-          <JsonField
-            label="环境变量（JSON）"
-            onChange={setVariables}
-            value={variables}
+          <KeyValueEditor
+            addLabel="添加变量"
+            emptyText="没有环境变量时可以留空。"
+            keyPlaceholder="变量名，例如 BASE_URL"
+            label="环境变量"
+            onChange={setVariableRows}
+            rows={variableRows}
+            valuePlaceholder="变量值，例如 https://staging.example.com"
           />
           <div>
             <p className="text-sm font-medium">凭证绑定</p>
@@ -616,17 +722,30 @@ function CreateTemplateDialog({
                   {credential.alias} · {credential.masked_hint}
                 </label>
               ))}
+              {!credentials.length ? (
+                <p className="text-sm text-[var(--muted)]">
+                  还没有凭证。可以先创建环境，稍后再配置环境时绑定凭证。
+                </p>
+              ) : null}
             </div>
           </div>
-          <JsonField
-            label="公开 Headers（JSON）"
-            onChange={setHeaders}
-            value={headers}
+          <KeyValueEditor
+            addLabel="添加 Header"
+            emptyText="公开 Header 不包含密钥；密钥请使用上方凭证绑定。"
+            keyPlaceholder="Header 名称，例如 X-Env"
+            label="公开请求头"
+            onChange={setHeaderRows}
+            rows={headerRows}
+            valuePlaceholder="Header 值"
           />
-          <JsonField
-            label="初始状态（JSON）"
-            onChange={setInitialState}
-            value={initialState}
+          <KeyValueEditor
+            addLabel="添加状态"
+            emptyText="没有初始业务状态时可以留空。"
+            keyPlaceholder="状态名，例如 workspace_id"
+            label="初始业务状态"
+            onChange={setInitialStateRows}
+            rows={initialStateRows}
+            valuePlaceholder="状态值"
           />
           {error ? (
             <p className="text-sm text-[var(--danger)]">{error}</p>
@@ -646,7 +765,7 @@ function CreateTemplateDialog({
               type="button"
               variant="primary"
             >
-              创建模板
+              新建环境
             </Button>
           </div>
         </div>
@@ -655,24 +774,96 @@ function CreateTemplateDialog({
   );
 }
 
-function JsonField({
+type KeyValueRow = { id: string; key: string; value: string };
+
+function newId() {
+  return Math.random().toString(36).slice(2, 10);
+}
+
+function rowsToRecord(rows: KeyValueRow[]) {
+  return rows.reduce<Record<string, string>>((result, row) => {
+    const key = row.key.trim();
+    if (key) result[key] = row.value.trim();
+    return result;
+  }, {});
+}
+
+function KeyValueEditor({
+  addLabel,
+  emptyText,
+  keyPlaceholder,
   label,
   onChange,
-  value,
+  rows,
+  valuePlaceholder,
 }: {
+  addLabel: string;
+  emptyText: string;
+  keyPlaceholder: string;
   label: string;
-  onChange: (value: string) => void;
-  value: string;
+  onChange: (rows: KeyValueRow[]) => void;
+  rows: KeyValueRow[];
+  valuePlaceholder: string;
 }) {
+  function updateRow(id: string, patch: Partial<KeyValueRow>) {
+    onChange(rows.map((row) => (row.id === id ? { ...row, ...patch } : row)));
+  }
+
   return (
-    <label className="block text-sm font-medium">
-      {label}
-      <textarea
-        className="mt-1.5 min-h-20 w-full rounded border border-[var(--hairline)] bg-[var(--surface)] p-3 font-mono text-xs"
-        onChange={(event) => onChange(event.target.value)}
-        value={value}
-      />
-    </label>
+    <div>
+      <div className="mb-2 flex items-center justify-between gap-3">
+        <p className="text-sm font-medium">{label}</p>
+        <Button
+          className="h-8 px-2 text-xs"
+          onClick={() =>
+            onChange([...rows, { id: newId(), key: "", value: "" }])
+          }
+          type="button"
+          variant="secondary"
+        >
+          <Plus aria-hidden="true" className="mr-1 size-3.5" />
+          {addLabel}
+        </Button>
+      </div>
+      {rows.length ? (
+        <div className="space-y-2">
+          {rows.map((row) => (
+            <div className="grid grid-cols-[1fr_1fr_auto] gap-2" key={row.id}>
+              <Input
+                aria-label={`${label}名称`}
+                onChange={(event) =>
+                  updateRow(row.id, { key: event.target.value })
+                }
+                placeholder={keyPlaceholder}
+                value={row.key}
+              />
+              <Input
+                aria-label={`${label}值`}
+                onChange={(event) =>
+                  updateRow(row.id, { value: event.target.value })
+                }
+                placeholder={valuePlaceholder}
+                value={row.value}
+              />
+              <Button
+                aria-label={`删除${label}`}
+                onClick={() =>
+                  onChange(rows.filter((item) => item.id !== row.id))
+                }
+                type="button"
+                variant="danger"
+              >
+                删除
+              </Button>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <p className="rounded border border-dashed border-[var(--hairline)] p-3 text-sm text-[var(--muted)]">
+          {emptyText}
+        </p>
+      )}
+    </div>
   );
 }
 

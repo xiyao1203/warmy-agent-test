@@ -60,6 +60,10 @@ describe("TestPlanList", () => {
 
     rerender(<TestPlanList plans={[]} projectId="project-1" />);
     expect(screen.getByText("暂无测试计划")).toBeVisible();
+    expect(screen.getByRole("link", { name: "去准备用例集" })).toHaveAttribute(
+      "href",
+      "/projects/project-1/datasets",
+    );
 
     rerender(<TestPlanList error="service" projectId="project-1" />);
     expect(screen.getByText("测试计划列表暂时不可用")).toBeVisible();
@@ -76,14 +80,32 @@ describe("TestPlanList", () => {
       "w-32",
       "text-center",
     );
+    expect(screen.getByRole("columnheader", { name: "下一步" })).toHaveClass(
+      "w-48",
+      "whitespace-nowrap",
+    );
     expect(screen.getByRole("table")).toHaveClass("w-auto", "table-fixed");
     expect(screen.getByRole("group", { name: "回归计划 操作" })).toHaveClass(
       "whitespace-nowrap",
     );
-    expect(screen.getByRole("link", { name: "查看回归计划" })).toHaveAttribute(
+    expect(
+      screen.getByRole("link", { name: /选择待测 Agent/ }),
+    ).toHaveAttribute("href", "/projects/project-1/agents");
+    expect(screen.getByRole("link", { name: /准备用例集/ })).toHaveAttribute(
+      "href",
+      "/projects/project-1/datasets",
+    );
+    expect(screen.getByRole("link", { name: /查看测试执行/ })).toHaveAttribute(
+      "href",
+      "/projects/project-1/runs",
+    );
+    expect(screen.getByRole("link", { name: "配置回归计划" })).toHaveAttribute(
       "href",
       "/projects/project-1/test-plans/plan-1",
     );
+    expect(
+      screen.queryByRole("link", { name: "查看回归计划" }),
+    ).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "删除回归计划" })).toBeVisible();
   });
 

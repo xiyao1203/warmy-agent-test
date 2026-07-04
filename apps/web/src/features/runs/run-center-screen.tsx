@@ -1,6 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
+import { useRouter } from "next/navigation";
 
 import { problemKind } from "@/lib/api/problem";
 
@@ -8,6 +9,7 @@ import { createRun, listPublishedPlanVersions, listRuns } from "./api";
 import { RunCenter } from "./run-center";
 
 export function RunCenterScreen({ projectId }: { projectId: string }) {
+  const router = useRouter();
   const runsQuery = useQuery({
     queryFn: () => listRuns(projectId),
     queryKey: ["runs", projectId],
@@ -37,8 +39,12 @@ export function RunCenterScreen({ projectId }: { projectId: string }) {
   return (
     <RunCenter
       onCreate={async (versionId) => {
-        await createRun(projectId, versionId);
+        const run = await createRun(projectId, versionId);
         await runsQuery.refetch();
+        if (run?.id) {
+          router.push(`/projects/${projectId}/runs/${run.id}`);
+        }
+        return run;
       }}
       planVersions={versionsQuery.data}
       projectId={projectId}

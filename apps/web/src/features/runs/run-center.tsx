@@ -5,6 +5,8 @@ import {
   Activity,
   AlertTriangle,
   CheckCircle2,
+  ClipboardCheck,
+  Database,
   Play,
   RotateCcw,
   Search,
@@ -29,6 +31,7 @@ import {
 } from "@/components/ui/table";
 
 type PlanVersionOption = { id: string; label: string };
+type CreatedRun = { id?: string } | void;
 
 export function RunCenter({
   error,
@@ -40,7 +43,7 @@ export function RunCenter({
 }: {
   error?: "not-found" | "service";
   loading?: boolean;
-  onCreate?: (testPlanVersionId: string) => Promise<unknown>;
+  onCreate?: (testPlanVersionId: string) => Promise<CreatedRun>;
   planVersions?: PlanVersionOption[];
   projectId: string;
   runs?: RunResponse[];
@@ -68,7 +71,7 @@ export function RunCenter({
     try {
       await onCreate(versionId);
     } catch (error) {
-      setActionError(problemMessage(error, "启动运行失败，请稍后重试。"));
+      setActionError(runErrorMessage(error));
     } finally {
       setBusy(false);
     }
@@ -80,7 +83,7 @@ export function RunCenter({
           <p className="text-xs font-medium text-[var(--body)]">测试执行</p>
           <h1 className="text-2xl font-semibold tracking-tight">运行中心</h1>
           <p className="mt-2 text-sm text-[var(--muted)]">
-            基于已发布测试计划启动 API Agent 执行，并查看进度、结果与 Trace。
+            选择已发布测试计划版本启动真实执行，并查看进度、结果与 Trace。
           </p>
         </div>
         <div className="flex items-end gap-2">
@@ -105,10 +108,33 @@ export function RunCenter({
             variant="primary"
           >
             <Play aria-hidden="true" className="mr-1.5 size-4" />
-            开始运行
+            启动测试执行
           </Button>
         </div>
       </header>
+      <section className="mt-5 grid gap-3 md:grid-cols-4">
+        <FlowCard
+          description="Agent、用例、环境和评分器"
+          href={`/projects/${projectId}/test-plans`}
+          icon={<ClipboardCheck aria-hidden="true" className="size-4" />}
+          label="1. 发布测试计划"
+        />
+        <FlowCard
+          description="选择版本后启动真实执行"
+          icon={<Play aria-hidden="true" className="size-4" />}
+          label="2. 启动运行"
+        />
+        <FlowCard
+          description="详情页实时刷新"
+          icon={<Timer aria-hidden="true" className="size-4" />}
+          label="3. 查看进度"
+        />
+        <FlowCard
+          description="Trace、产物和失败证据"
+          icon={<Database aria-hidden="true" className="size-4" />}
+          label="4. 分析结果"
+        />
+      </section>
       {actionError ? (
         <p className="mt-3 text-sm text-[var(--danger)]" role="alert">
           {actionError}
@@ -181,6 +207,13 @@ export function RunCenter({
         </div>
         {!filteredRuns.length ? (
           <EmptyState
+            description={
+              runs.length
+                ? "换个关键词或状态筛选再试试。"
+                : planVersions.length
+                  ? "选择上方已发布测试计划版本，点击“启动测试执行”。"
+                  : "先去测试计划里配置并发布一个版本，发布后才能启动运行。"
+            }
             action={
               runs.length ? (
                 <Button
@@ -192,12 +225,13 @@ export function RunCenter({
                 >
                   清除筛选
                 </Button>
-              ) : undefined
-            }
-            description={
-              runs.length
-                ? "换个关键词或状态筛选再试试。"
-                : "选择一个已发布测试计划版本后启动首个运行。"
+              ) : planVersions.length ? undefined : (
+                <Button asChild variant="secondary">
+                  <Link href={`/projects/${projectId}/test-plans`}>
+                    去配置测试计划
+                  </Link>
+                </Button>
+              )
             }
             title={runs.length ? "没有匹配的运行" : "暂无运行记录"}
           />
@@ -209,7 +243,7 @@ export function RunCenter({
                 <TableHead>状态</TableHead>
                 <TableHead>进度</TableHead>
                 <TableHead>创建时间</TableHead>
-                <TableHead className="w-24 text-right">操作</TableHead>
+                <TableHead className="w-32 text-right">操作</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -245,9 +279,13 @@ export function RunCenter({
                     {new Date(run.created_at).toLocaleString("zh-CN")}
                   </TableCell>
                   <TableCell className="text-right">
-                    <Button asChild variant="ghost">
+                    <Button
+                      asChild
+                      className="whitespace-nowrap"
+                      variant="ghost"
+                    >
                       <Link href={`/projects/${projectId}/runs/${run.id}`}>
-                        查看
+                        查看结果
                       </Link>
                     </Button>
                   </TableCell>
@@ -259,6 +297,63 @@ export function RunCenter({
       </section>
     </div>
   );
+}
+
+function FlowCard({
+  description,
+  href,
+  icon,
+  label,
+}: {
+  description: string;
+  href?: string;
+  icon: ReactNode;
+  label: string;
+}) {
+  const content = (
+    <>
+      <span className="grid size-8 shrink-0 place-items-center rounded-[var(--radius-md)] bg-[var(--primary-subtle)] text-[var(--primary)]">
+        {icon}
+      </span>
+      <span className="min-w-0">
+        <span className="block font-medium">{label}</span>
+        <span className="block truncate text-xs text-[var(--muted)]">
+          {description}
+        </span>
+      </span>
+    </>
+  );
+
+  if (href) {
+    return (
+      <Link
+        className="flex min-w-0 items-center gap-3 rounded-[var(--radius-lg)] border border-[var(--hairline)] bg-[var(--surface)] px-4 py-3 text-sm transition-colors hover:border-[var(--primary)]"
+        href={href}
+      >
+        {content}
+      </Link>
+    );
+  }
+
+  return (
+    <div className="flex min-w-0 items-center gap-3 rounded-[var(--radius-lg)] border border-[var(--hairline)] bg-[var(--surface)] px-4 py-3 text-sm">
+      {content}
+    </div>
+  );
+}
+
+function runErrorMessage(error: unknown) {
+  const raw = problemMessage(error, "启动运行失败，请稍后重试。");
+  if (raw.includes("Run execution runtime is unavailable")) {
+    return "运行服务暂不可用：请确认 Temporal 和 API Runner 已启动后重试。";
+  }
+  if (raw.includes("Published test plan has no test cases")) {
+    return "这个测试计划没有可运行用例：请先在测试用例中添加并发布用例集。";
+  }
+  if (raw.includes("Idempotency-Key is required")) {
+    return "启动请求缺少幂等标识，请刷新页面后重试。";
+  }
+  return raw;
 }
 
 export function StatusBadge({ status }: { status: string }) {

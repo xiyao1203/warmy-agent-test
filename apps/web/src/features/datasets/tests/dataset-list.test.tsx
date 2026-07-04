@@ -80,10 +80,12 @@ describe("DatasetList", () => {
     expect(screen.getByRole("group", { name: "对话回归 操作" })).toHaveClass(
       "whitespace-nowrap",
     );
-    expect(screen.getByRole("link", { name: "查看对话回归" })).toHaveAttribute(
-      "href",
-      "/projects/project-1/datasets/dataset-1",
-    );
+    expect(
+      screen.getByRole("link", { name: "管理对话回归用例" }),
+    ).toHaveAttribute("href", "/projects/project-1/datasets/dataset-1");
+    expect(
+      screen.queryByRole("link", { name: "查看对话回归" }),
+    ).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "删除对话回归" })).toBeVisible();
   });
 

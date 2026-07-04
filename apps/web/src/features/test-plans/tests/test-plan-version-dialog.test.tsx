@@ -72,6 +72,11 @@ describe("TestPlanVersionDialog", () => {
     fireEvent.change(screen.getByLabelText("环境模板"), {
       target: { value: "environment-1" },
     });
+    expect(screen.getByText(/发布环境版本后/)).toBeVisible();
+    expect(screen.getByRole("link", { name: "去管理环境" })).toHaveAttribute(
+      "href",
+      "/projects/project-1/environments",
+    );
 
     // Step 1 -> 2
     fireEvent.click(screen.getByRole("button", { name: "下一步" }));

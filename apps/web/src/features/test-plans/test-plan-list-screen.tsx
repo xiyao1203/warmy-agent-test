@@ -1,6 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
+import { useRouter } from "next/navigation";
 
 import { problemKind } from "@/lib/api/problem";
 
@@ -8,6 +9,7 @@ import { createTestPlan, deleteTestPlan, listTestPlans } from "./api";
 import { TestPlanList } from "./test-plan-list";
 
 export function TestPlanListScreen({ projectId }: { projectId: string }) {
+  const router = useRouter();
   const plansQuery = useQuery({
     queryFn: () => listTestPlans(projectId),
     queryKey: ["test-plans", projectId],
@@ -31,8 +33,11 @@ export function TestPlanListScreen({ projectId }: { projectId: string }) {
   return (
     <TestPlanList
       onCreate={async (payload) => {
-        await createTestPlan(projectId, payload);
+        const plan = await createTestPlan(projectId, payload);
         await plansQuery.refetch();
+        if (plan?.id) {
+          router.push(`/projects/${projectId}/test-plans/${plan.id}`);
+        }
       }}
       onDelete={async (planId) => {
         await deleteTestPlan(projectId, planId);

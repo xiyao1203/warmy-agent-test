@@ -122,10 +122,10 @@ export function DatasetList({
                         variant="ghost"
                       >
                         <Link
-                          aria-label={`查看${dataset.name}`}
+                          aria-label={`管理${dataset.name}用例`}
                           href={`/projects/${projectId}/datasets/${dataset.id}`}
                         >
-                          查看
+                          管理用例
                         </Link>
                       </Button>
                       {onDelete ? (

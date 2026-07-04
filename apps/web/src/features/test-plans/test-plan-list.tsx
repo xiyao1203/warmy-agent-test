@@ -4,7 +4,13 @@ import type {
   CreateTestPlanRequest,
   TestPlanResponse,
 } from "@warmy/generated-api-client";
-import { ClipboardCheck, Plus } from "lucide-react";
+import {
+  ClipboardCheck,
+  Database,
+  PlayCircle,
+  Plus,
+  Settings2,
+} from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 
@@ -29,7 +35,6 @@ import {
 import {
   TableActions,
   tableActionCellClass,
-  tableActionHeadClass,
 } from "@/components/ui/table-actions";
 
 export function TestPlanList({
@@ -60,24 +65,90 @@ export function TestPlanList({
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">测试计划</h1>
           <p className="mt-2 text-sm text-[var(--muted)]">
-            组合已发布 Agent、数据集和环境，并配置执行门禁。
+            每个计划都要绑定已发布 Agent、用例集版本、环境、评分器和发布门禁。
           </p>
         </div>
-        <CreatePlanDialog onCreate={onCreate} />
+        <div className="flex shrink-0 items-center gap-2">
+          <Button asChild variant="secondary">
+            <Link href={`/projects/${projectId}/datasets`}>
+              <Database aria-hidden="true" className="mr-1.5 size-4" />
+              管理用例集
+            </Link>
+          </Button>
+          <CreatePlanDialog onCreate={onCreate} />
+        </div>
       </header>
+      <section className="mt-5 grid gap-3 md:grid-cols-3">
+        <Link
+          className="flex min-w-0 items-center gap-3 rounded-[var(--radius-lg)] border border-[var(--hairline)] bg-[var(--surface)] px-4 py-3 text-sm transition-colors hover:border-[var(--primary)]"
+          href={`/projects/${projectId}/agents`}
+        >
+          <Settings2
+            aria-hidden="true"
+            className="size-4 shrink-0 text-[var(--primary)]"
+          />
+          <span className="min-w-0">
+            <span className="block font-medium">选择待测 Agent</span>
+            <span className="block truncate text-xs text-[var(--muted)]">
+              使用已发布版本
+            </span>
+          </span>
+        </Link>
+        <Link
+          className="flex min-w-0 items-center gap-3 rounded-[var(--radius-lg)] border border-[var(--hairline)] bg-[var(--surface)] px-4 py-3 text-sm transition-colors hover:border-[var(--primary)]"
+          href={`/projects/${projectId}/datasets`}
+        >
+          <Database
+            aria-hidden="true"
+            className="size-4 shrink-0 text-[var(--primary)]"
+          />
+          <span className="min-w-0">
+            <span className="block font-medium">准备用例集</span>
+            <span className="block truncate text-xs text-[var(--muted)]">
+              发布后供计划选择
+            </span>
+          </span>
+        </Link>
+        <Link
+          className="flex min-w-0 items-center gap-3 rounded-[var(--radius-lg)] border border-[var(--hairline)] bg-[var(--surface)] px-4 py-3 text-sm transition-colors hover:border-[var(--primary)]"
+          href={`/projects/${projectId}/runs`}
+        >
+          <PlayCircle
+            aria-hidden="true"
+            className="size-4 shrink-0 text-[var(--primary)]"
+          />
+          <span className="min-w-0">
+            <span className="block font-medium">查看测试执行</span>
+            <span className="block truncate text-xs text-[var(--muted)]">
+              发布版本后运行
+            </span>
+          </span>
+        </Link>
+      </section>
       <section className="mt-5 overflow-hidden rounded-[var(--radius-lg)] border border-[var(--hairline)] bg-[var(--surface)]">
         {!plans.length ? (
           <EmptyState
-            description="创建计划后，为它选择测试资产和运行参数。"
+            action={
+              <div className="flex flex-wrap justify-center gap-2">
+                <Button asChild variant="secondary">
+                  <Link href={`/projects/${projectId}/datasets`}>
+                    去准备用例集
+                  </Link>
+                </Button>
+              </div>
+            }
+            description="先创建计划，再进入计划详情选择 Agent、用例集版本、环境、评分器和门禁。"
             title="暂无测试计划"
           />
         ) : (
-          <Table className="w-auto min-w-[680px] table-fixed">
+          <Table className="w-auto min-w-[820px] table-fixed">
             <TableHeader className="bg-[var(--canvas-soft)]">
               <TableRow>
                 <TableHead className="w-[420px] pl-16">计划信息</TableHead>
                 <TableHead className="w-32 text-center">更新时间</TableHead>
-                <TableHead className={tableActionHeadClass}>操作</TableHead>
+                <TableHead className="w-48 min-w-48 whitespace-nowrap text-center">
+                  下一步
+                </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -110,10 +181,10 @@ export function TestPlanList({
                         variant="ghost"
                       >
                         <Link
-                          aria-label={`查看${plan.name}`}
+                          aria-label={`配置${plan.name}`}
                           href={`/projects/${projectId}/test-plans/${plan.id}`}
                         >
-                          查看
+                          配置计划
                         </Link>
                       </Button>
                       {onDelete ? (

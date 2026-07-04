@@ -5,6 +5,7 @@ import type {
   EnvironmentVersionResponse,
   UpdateEnvironmentVersionRequest,
 } from "@warmy/generated-api-client";
+import { Plus } from "lucide-react";
 import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -15,6 +16,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 
 import type { CredentialBinding } from "./api";
 
@@ -30,10 +32,10 @@ type EnvironmentVersionDialogProps = {
 type Section = "config" | "credentials" | "sandbox" | "metadata";
 
 const SECTION_LABELS: Record<Section, string> = {
-  config: "配置",
+  config: "变量与请求头",
   credentials: "凭证",
-  metadata: "元数据",
-  sandbox: "沙箱",
+  metadata: "说明",
+  sandbox: "沙箱参数",
 };
 
 const ALL_SECTIONS: Section[] = [
@@ -54,14 +56,14 @@ export function EnvironmentVersionDialog({
   const [activeSection, setActiveSection] = useState<Section>("config");
 
   // ── 配置 ──
-  const [variables, setVariables] = useState(
-    JSON.stringify(config.variables ?? {}, null, 2),
+  const [variableRows, setVariableRows] = useState(
+    recordToRows((config.variables ?? {}) as Record<string, unknown>),
   );
-  const [headers, setHeaders] = useState(
-    JSON.stringify(config.headers ?? {}, null, 2),
+  const [headerRows, setHeaderRows] = useState(
+    recordToRows((config.headers ?? {}) as Record<string, unknown>),
   );
-  const [initialState, setInitialState] = useState(
-    JSON.stringify(config.initial_state ?? {}, null, 2),
+  const [initialStateRows, setInitialStateRows] = useState(
+    recordToRows((config.initial_state ?? {}) as Record<string, unknown>),
   );
 
   // ── 凭证 ──
@@ -71,8 +73,8 @@ export function EnvironmentVersionDialog({
   ]);
 
   // ── 沙箱 ──
-  const [sandboxConfig, setSandboxConfig] = useState(
-    JSON.stringify(config.sandbox ?? {}, null, 2),
+  const [sandboxRows, setSandboxRows] = useState(
+    recordToRows((config.sandbox ?? {}) as Record<string, unknown>),
   );
 
   // ── 元数据 ──
@@ -85,42 +87,16 @@ export function EnvironmentVersionDialog({
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
-  function parseJson(
-    raw: string,
-    label: string,
-  ): Record<string, unknown> | null {
-    try {
-      const parsed = JSON.parse(raw) as unknown;
-      if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
-        setError(`${label} 必须是 JSON 对象`);
-        return null;
-      }
-      return parsed as Record<string, unknown>;
-    } catch {
-      setError(`${label} 不是合法 JSON`);
-      return null;
-    }
-  }
-
   async function submit() {
-    const parsedVariables = parseJson(variables, "环境变量");
-    if (parsedVariables === null) return;
-    const parsedHeaders = parseJson(headers, "公开 Headers");
-    if (parsedHeaders === null) return;
-    const parsedInitialState = parseJson(initialState, "初始状态");
-    if (parsedInitialState === null) return;
-    const parsedSandbox = parseJson(sandboxConfig, "沙箱配置");
-    if (parsedSandbox === null) return;
-
     setSubmitting(true);
     setError("");
     try {
       const versionConfig: Record<string, unknown> = {
-        variables: parsedVariables,
-        headers: parsedHeaders,
-        initial_state: parsedInitialState,
+        variables: rowsToRecord(variableRows),
+        headers: rowsToRecord(headerRows),
+        initial_state: rowsToRecord(initialStateRows, true),
         credential_binding_ids: credentialIds,
-        sandbox: parsedSandbox,
+        sandbox: rowsToRecord(sandboxRows, true),
         description: description.trim() || undefined,
         tags: tags
           .split(",")
@@ -174,7 +150,7 @@ export function EnvironmentVersionDialog({
             : "创建环境版本"}
         </DialogTitle>
         <DialogDescription>
-          配置测试执行时的环境变量、凭证绑定、沙箱和元数据。
+          配置测试执行时的变量、公开请求头、凭证绑定和沙箱参数。
           {isPublished ? " 已发布版本不可修改。" : ""}
         </DialogDescription>
 
@@ -200,23 +176,35 @@ export function EnvironmentVersionDialog({
           {/* ── 1. 配置 ── */}
           {activeSection === "config" ? (
             <>
-              <JsonField
+              <KeyValueEditor
+                addLabel="添加变量"
                 disabled={isPublished}
-                label="环境变量（JSON）"
-                onChange={setVariables}
-                value={variables}
+                emptyText="没有环境变量时可以留空。"
+                keyPlaceholder="变量名，例如 BASE_URL"
+                label="环境变量"
+                onChange={setVariableRows}
+                rows={variableRows}
+                valuePlaceholder="变量值"
               />
-              <JsonField
+              <KeyValueEditor
+                addLabel="添加 Header"
                 disabled={isPublished}
-                label="公开 Headers（JSON）"
-                onChange={setHeaders}
-                value={headers}
+                emptyText="公开 Header 不包含密钥；密钥请在“凭证”里选择。"
+                keyPlaceholder="Header 名称，例如 X-Env"
+                label="公开请求头"
+                onChange={setHeaderRows}
+                rows={headerRows}
+                valuePlaceholder="Header 值"
               />
-              <JsonField
+              <KeyValueEditor
+                addLabel="添加状态"
                 disabled={isPublished}
-                label="初始状态（JSON）"
-                onChange={setInitialState}
-                value={initialState}
+                emptyText="没有初始业务状态时可以留空。"
+                keyPlaceholder="状态名，例如 workspace_id"
+                label="初始业务状态"
+                onChange={setInitialStateRows}
+                rows={initialStateRows}
+                valuePlaceholder="状态值"
               />
             </>
           ) : null}
@@ -263,11 +251,15 @@ export function EnvironmentVersionDialog({
 
           {/* ── 3. 沙箱 ── */}
           {activeSection === "sandbox" ? (
-            <JsonField
+            <KeyValueEditor
+              addLabel="添加沙箱参数"
               disabled={isPublished}
-              label="沙箱配置（JSON）"
-              onChange={setSandboxConfig}
-              value={sandboxConfig}
+              emptyText="没有沙箱参数时可以留空，平台会使用默认隔离策略。"
+              keyPlaceholder="参数名，例如 seed"
+              label="沙箱参数"
+              onChange={setSandboxRows}
+              rows={sandboxRows}
+              valuePlaceholder="参数值"
             />
           ) : null}
 
@@ -340,26 +332,140 @@ export function EnvironmentVersionDialog({
   );
 }
 
-function JsonField({
+type KeyValueRow = { id: string; key: string; value: string };
+
+function newId() {
+  return Math.random().toString(36).slice(2, 10);
+}
+
+function formatCellValue(value: unknown) {
+  if (value == null) return "";
+  if (typeof value === "string") return value;
+  if (typeof value === "number" || typeof value === "boolean") {
+    return String(value);
+  }
+  return JSON.stringify(value);
+}
+
+function parseCellValue(value: string): unknown {
+  const trimmed = value.trim();
+  if (!trimmed) return "";
+  if (trimmed === "true") return true;
+  if (trimmed === "false") return false;
+  if (/^-?\d+(\.\d+)?$/.test(trimmed)) return Number(trimmed);
+  if (
+    (trimmed.startsWith("{") && trimmed.endsWith("}")) ||
+    (trimmed.startsWith("[") && trimmed.endsWith("]"))
+  ) {
+    try {
+      return JSON.parse(trimmed) as unknown;
+    } catch {
+      return trimmed;
+    }
+  }
+  return trimmed;
+}
+
+function recordToRows(record: Record<string, unknown>): KeyValueRow[] {
+  return Object.entries(record).map(([key, value]) => ({
+    id: newId(),
+    key,
+    value: formatCellValue(value),
+  }));
+}
+
+function rowsToRecord(rows: KeyValueRow[], structured = false) {
+  return rows.reduce<Record<string, unknown>>((result, row) => {
+    const key = row.key.trim();
+    if (key)
+      result[key] = structured ? parseCellValue(row.value) : row.value.trim();
+    return result;
+  }, {});
+}
+
+function KeyValueEditor({
+  addLabel,
   disabled,
+  emptyText,
+  keyPlaceholder,
   label,
   onChange,
-  value,
+  rows,
+  valuePlaceholder,
 }: {
+  addLabel: string;
   disabled?: boolean;
+  emptyText: string;
+  keyPlaceholder: string;
   label: string;
-  onChange: (value: string) => void;
-  value: string;
+  onChange: (rows: KeyValueRow[]) => void;
+  rows: KeyValueRow[];
+  valuePlaceholder: string;
 }) {
+  function updateRow(id: string, patch: Partial<KeyValueRow>) {
+    onChange(rows.map((row) => (row.id === id ? { ...row, ...patch } : row)));
+  }
+
   return (
-    <label className="block text-sm font-medium">
-      {label}
-      <textarea
-        className="mt-1.5 min-h-24 w-full rounded border border-[var(--hairline)] bg-[var(--surface)] p-3 font-mono text-xs"
-        disabled={disabled}
-        onChange={(event) => onChange(event.target.value)}
-        value={value}
-      />
-    </label>
+    <div>
+      <div className="mb-2 flex items-center justify-between gap-3">
+        <p className="text-sm font-medium">{label}</p>
+        {!disabled ? (
+          <Button
+            className="h-8 px-2 text-xs"
+            onClick={() =>
+              onChange([...rows, { id: newId(), key: "", value: "" }])
+            }
+            type="button"
+            variant="secondary"
+          >
+            <Plus aria-hidden="true" className="mr-1 size-3.5" />
+            {addLabel}
+          </Button>
+        ) : null}
+      </div>
+      {rows.length ? (
+        <div className="space-y-2">
+          {rows.map((row) => (
+            <div className="grid grid-cols-[1fr_1fr_auto] gap-2" key={row.id}>
+              <Input
+                aria-label={`${label}名称`}
+                disabled={disabled}
+                onChange={(event) =>
+                  updateRow(row.id, { key: event.target.value })
+                }
+                placeholder={keyPlaceholder}
+                value={row.key}
+              />
+              <Input
+                aria-label={`${label}值`}
+                disabled={disabled}
+                onChange={(event) =>
+                  updateRow(row.id, { value: event.target.value })
+                }
+                placeholder={valuePlaceholder}
+                value={row.value}
+              />
+              {!disabled ? (
+                <Button
+                  aria-label={`删除${label}`}
+                  onClick={() =>
+                    onChange(rows.filter((item) => item.id !== row.id))
+                  }
+                  type="button"
+                  variant="danger"
+                >
+                  删除
+                </Button>
+              ) : null}
+            </div>
+          ))}
+        </div>
+      ) : (
+        <p className="rounded border border-dashed border-[var(--hairline)] p-3 text-sm text-[var(--muted)]">
+          {emptyText}
+        </p>
+      )}
+    </div>
   );
 }

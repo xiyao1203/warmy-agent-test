@@ -10,21 +10,32 @@ import type { ReactNode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { RunDetailScreen } from "../run-detail-screen";
+import { RunCenterScreen } from "../run-center-screen";
 import { RunCenter } from "../run-center";
 import { RunDetail } from "../run-detail";
 
 const api = vi.hoisted(() => ({
   cancelRun: vi.fn(),
+  createRun: vi.fn(),
   getRun: vi.fn(),
+  listPublishedPlanVersions: vi.fn(),
   listArtifacts: vi.fn(),
   listRunCases: vi.fn(),
+  listRuns: vi.fn(),
   runEventsUrl: vi.fn(),
 }));
 
 vi.mock("../api", () => api);
 
+const push = vi.hoisted(() => vi.fn());
+
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ push }),
+}));
+
 beforeEach(() => {
   vi.clearAllMocks();
+  push.mockClear();
 });
 
 afterEach(() => {
@@ -95,7 +106,14 @@ describe("RunCenter", () => {
     fireEvent.change(screen.getByLabelText("测试计划版本"), {
       target: { value: "version-1" },
     });
-    fireEvent.click(screen.getByRole("button", { name: "开始运行" }));
+    expect(
+      screen.getByRole("link", { name: /1. 发布测试计划/ }),
+    ).toHaveAttribute("href", "/projects/project-1/test-plans");
+    expect(screen.getByRole("link", { name: "查看结果" })).toHaveAttribute(
+      "href",
+      "/projects/project-1/runs/run-2",
+    );
+    fireEvent.click(screen.getByRole("button", { name: "启动测试执行" }));
 
     await waitFor(() => expect(onCreate).toHaveBeenCalledWith("version-1"));
   });
@@ -105,6 +123,10 @@ describe("RunCenter", () => {
       <RunCenter planVersions={[]} projectId="project-1" runs={[]} />,
     );
     expect(screen.getByText("暂无运行记录")).toBeVisible();
+    expect(screen.getByText(/先去测试计划里配置并发布一个版本/)).toBeVisible();
+    expect(
+      screen.getByRole("link", { name: "去配置测试计划" }),
+    ).toHaveAttribute("href", "/projects/project-1/test-plans");
 
     rerender(
       <RunCenter error="service" planVersions={[]} projectId="project-1" />,
@@ -125,11 +147,33 @@ describe("RunCenter", () => {
       />,
     );
 
-    fireEvent.click(screen.getByRole("button", { name: "开始运行" }));
+    fireEvent.click(screen.getByRole("button", { name: "启动测试执行" }));
 
     expect(
-      await screen.findByText("Run execution runtime is unavailable"),
+      await screen.findByText(
+        "运行服务暂不可用：请确认 Temporal 和 API Runner 已启动后重试。",
+      ),
     ).toBeVisible();
+  });
+
+  it("navigates to the created run after starting execution", async () => {
+    api.listRuns.mockResolvedValue([]);
+    api.listPublishedPlanVersions.mockResolvedValue([
+      { id: "version-1", label: "客服回归 v2" },
+    ]);
+    api.createRun.mockResolvedValue({ id: "run-created" });
+
+    renderWithQueryClient(<RunCenterScreen projectId="project-1" />);
+
+    await screen.findByRole("button", { name: "启动测试执行" });
+    fireEvent.change(screen.getByLabelText("测试计划版本"), {
+      target: { value: "version-1" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "启动测试执行" }));
+
+    await waitFor(() =>
+      expect(push).toHaveBeenCalledWith("/projects/project-1/runs/run-created"),
+    );
   });
 });
 

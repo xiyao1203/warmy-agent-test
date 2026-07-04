@@ -4,6 +4,7 @@ import type {
   CreateTestPlanVersionRequest,
   TestPlanVersionResponse,
 } from "@warmy/generated-api-client";
+import Link from "next/link";
 import { useEffect, useState } from "react";
 
 import { listBrowserProfiles } from "@/features/browser-profiles/api";
@@ -313,6 +314,17 @@ export function TestPlanVersionDialog({
               options={environments}
               value={environmentId}
             />
+            <p className="mt-1.5 text-xs text-[var(--muted)]">
+              环境来自“环境与凭证”页面；发布环境版本后，计划执行时会自动注入已绑定凭证。
+              {projectId ? (
+                <Link
+                  className="ml-1 font-medium text-[var(--primary)] hover:underline"
+                  href={`/projects/${projectId}/environments`}
+                >
+                  去管理环境
+                </Link>
+              ) : null}
+            </p>
           </div>
         </>
       ) : stepIndex === 1 ? (
