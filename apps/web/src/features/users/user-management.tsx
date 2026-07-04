@@ -11,6 +11,7 @@ import { Search } from "lucide-react";
 import { useMemo, useState } from "react";
 
 import { Badge } from "@/components/ui/badge";
+import { DropdownSelect } from "@/components/ui/dropdown-select";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Input } from "@/components/ui/input";
 import {
@@ -149,7 +150,7 @@ export function UserManagement({
             value={query}
           />
         </label>
-        <select
+        <DropdownSelect
           aria-label="按角色筛选"
           className="h-9 rounded-[var(--radius-md)] border border-[var(--hairline)] bg-[var(--surface)] px-3 text-sm"
           onChange={(event) =>
@@ -163,8 +164,8 @@ export function UserManagement({
               {label}
             </option>
           ))}
-        </select>
-        <select
+        </DropdownSelect>
+        <DropdownSelect
           aria-label="按状态筛选"
           className="h-9 rounded-[var(--radius-md)] border border-[var(--hairline)] bg-[var(--surface)] px-3 text-sm"
           onChange={(event) =>
@@ -175,7 +176,7 @@ export function UserManagement({
           <option value="all">全部状态</option>
           <option value="active">活跃</option>
           <option value="disabled">已禁用</option>
-        </select>
+        </DropdownSelect>
       </div>
 
       <section className="overflow-hidden rounded-[var(--radius-lg)] border border-[var(--hairline)] bg-[var(--surface)]">

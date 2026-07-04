@@ -8,6 +8,7 @@ import type {
 import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
+import { DropdownSelect } from "@/components/ui/dropdown-select";
 import {
   Dialog,
   DialogContent,
@@ -254,7 +255,7 @@ export function AgentVersionDialog({
               </label>
               <label className="block text-sm font-medium">
                 调用协议
-                <select
+                <DropdownSelect
                   className="mt-1.5 h-9 w-full rounded border border-[var(--hairline)] bg-[var(--surface)] px-3"
                   onChange={(event) =>
                     setProtocol(event.target.value as InvocationProtocol)
@@ -271,7 +272,7 @@ export function AgentVersionDialog({
                       {label}
                     </option>
                   ))}
-                </select>
+                </DropdownSelect>
               </label>
 
               {/* 连接测试面板 */}

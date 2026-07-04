@@ -20,6 +20,7 @@ import type { ReactNode } from "react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { DropdownSelect } from "@/components/ui/dropdown-select";
 import {
   Dialog,
   DialogContent,
@@ -144,7 +145,7 @@ export function ModelConfigList(props: Props) {
                     ? "用于图片与多模态质量评分"
                     : "用于结构化生成与文本评测"}
                 </span>
-                <select
+                <DropdownSelect
                   aria-label={`${item.label}默认模型`}
                   className="mt-3 h-9 w-full rounded-[var(--radius-md)] border border-[var(--hairline)] bg-[var(--surface)] px-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--focus-ring-subtle)]"
                   onChange={(event) =>
@@ -164,7 +165,7 @@ export function ModelConfigList(props: Props) {
                         {model.name} · {model.model_name}
                       </option>
                     ))}
-                </select>
+                </DropdownSelect>
               </label>
             );
           })}

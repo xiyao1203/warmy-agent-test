@@ -9,6 +9,7 @@ import { useEffect, useState } from "react";
 
 import { listBrowserProfiles } from "@/features/browser-profiles/api";
 import { Button } from "@/components/ui/button";
+import { DropdownSelect } from "@/components/ui/dropdown-select";
 import {
   Dialog,
   DialogContent,
@@ -619,7 +620,7 @@ function AssetSelectField({
   return (
     <label className="block text-sm font-medium">
       {label}
-      <select
+      <DropdownSelect
         aria-label={label}
         className="mt-1.5 h-9 w-full rounded border border-[var(--hairline)] bg-[var(--surface)] px-3"
         onChange={(event) => onChange(event.target.value)}
@@ -631,7 +632,7 @@ function AssetSelectField({
             {option.label}
           </option>
         ))}
-      </select>
+      </DropdownSelect>
     </label>
   );
 }
@@ -650,7 +651,7 @@ function SelectField({
   return (
     <label className="block text-sm font-medium">
       {label}
-      <select
+      <DropdownSelect
         aria-label={label}
         className="mt-1.5 h-9 w-full rounded-[var(--radius-md)] border border-[var(--hairline)] bg-[var(--surface)] px-3"
         onChange={(event) => onChange(event.target.value)}
@@ -662,7 +663,7 @@ function SelectField({
             {option.label}
           </option>
         ))}
-      </select>
+      </DropdownSelect>
     </label>
   );
 }

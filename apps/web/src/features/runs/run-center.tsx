@@ -18,6 +18,7 @@ import { type ReactNode, useMemo, useState } from "react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { DropdownSelect } from "@/components/ui/dropdown-select";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Input } from "@/components/ui/input";
 import { problemMessage } from "@/lib/api/problem";
@@ -89,7 +90,7 @@ export function RunCenter({
         <div className="flex items-end gap-2">
           <label className="text-sm font-medium">
             测试计划版本
-            <select
+            <DropdownSelect
               className="mt-1.5 h-9 min-w-56 rounded-[var(--radius-md)] border border-[var(--hairline)] bg-[var(--surface)] px-2 text-sm"
               onChange={(event) => setVersionId(event.target.value)}
               value={versionId}
@@ -100,7 +101,7 @@ export function RunCenter({
                   {version.label}
                 </option>
               ))}
-            </select>
+            </DropdownSelect>
           </label>
           <Button
             disabled={!versionId || busy}
@@ -180,7 +181,7 @@ export function RunCenter({
           </label>
           <label className="text-sm">
             <span className="sr-only">运行状态</span>
-            <select
+            <DropdownSelect
               aria-label="运行状态"
               className="h-9 rounded-[var(--radius-md)] border border-[var(--hairline)] bg-[var(--surface)] px-2 text-sm"
               onChange={(event) => setStatusFilter(event.target.value)}
@@ -193,7 +194,7 @@ export function RunCenter({
               <option value="failed">断言失败</option>
               <option value="error">执行错误</option>
               <option value="cancelled">已取消</option>
-            </select>
+            </DropdownSelect>
           </label>
           <Button
             disabled={!query && statusFilter === "all"}

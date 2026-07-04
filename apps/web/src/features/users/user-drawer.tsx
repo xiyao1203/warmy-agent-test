@@ -11,6 +11,7 @@ import { z } from "zod";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { DropdownSelect } from "@/components/ui/dropdown-select";
 import {
   Dialog,
   DialogContent,
@@ -240,7 +241,7 @@ export function UserDrawer({
                   htmlFor="drawer-edit-role"
                   label="系统角色"
                 >
-                  <select
+                  <DropdownSelect
                     className="h-9 w-full rounded-[var(--radius-md)] border border-[var(--hairline)] bg-[var(--surface)] px-3 text-sm"
                     id="drawer-edit-role"
                     {...registerEdit("role")}
@@ -258,7 +259,7 @@ export function UserDrawer({
                         {label}
                       </option>
                     ))}
-                  </select>
+                  </DropdownSelect>
                 </EditField>
                 <div className="flex justify-end gap-2 pt-2">
                   <Button onClick={() => setAction(undefined)} type="button">

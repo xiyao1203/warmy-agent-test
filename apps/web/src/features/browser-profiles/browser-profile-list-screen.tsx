@@ -3,9 +3,12 @@
 import { useQuery } from "@tanstack/react-query";
 
 import {
+  completeBrowserProfileLogin,
   createBrowserProfile,
   deleteBrowserProfile,
   listBrowserProfiles,
+  startBrowserProfile,
+  stopBrowserProfile,
   updateBrowserProfile,
 } from "./api";
 import { BrowserProfileList } from "./browser-profile-list";
@@ -48,6 +51,25 @@ export function BrowserProfileListScreen({ projectId }: { projectId: string }) {
       onDelete={async (profileId) => {
         await deleteBrowserProfile(projectId, profileId);
         await refresh();
+      }}
+      onStart={async (profileId, payload) => {
+        const result = await startBrowserProfile(projectId, profileId, payload);
+        await refresh();
+        return result;
+      }}
+      onCompleteLogin={async (profileId, payload) => {
+        const result = await completeBrowserProfileLogin(
+          projectId,
+          profileId,
+          payload,
+        );
+        await refresh();
+        return result;
+      }}
+      onStop={async (profileId) => {
+        const result = await stopBrowserProfile(projectId, profileId);
+        await refresh();
+        return result;
       }}
     />
   );

@@ -5,6 +5,8 @@ import {
   MoreHorizontal,
   PlayCircle,
   Plus,
+  Square,
+  Trash2,
   UserCheck,
 } from "lucide-react";
 import Link from "next/link";
@@ -53,6 +55,15 @@ type BrowserProfileListProps = {
     payload: { name?: string; target_domain?: string },
   ) => Promise<BrowserProfile>;
   onDelete?: (profileId: string) => Promise<void>;
+  onStart?: (
+    profileId: string,
+    payload: { login_url?: string },
+  ) => Promise<BrowserProfile>;
+  onCompleteLogin?: (
+    profileId: string,
+    payload: { stop_after_save?: boolean },
+  ) => Promise<BrowserProfile>;
+  onStop?: (profileId: string) => Promise<BrowserProfile>;
   projectId: string;
 };
 
@@ -76,12 +87,20 @@ export function BrowserProfileList({
   onCreate,
   onUpdate,
   onDelete,
+  onStart,
+  onCompleteLogin,
+  onStop,
   projectId,
 }: BrowserProfileListProps) {
   const [createOpen, setCreateOpen] = useState(false);
   const [createName, setCreateName] = useState("");
   const [createDomain, setCreateDomain] = useState("");
+  const [createLoginUrl, setCreateLoginUrl] = useState("");
+  const [launchAfterCreate, setLaunchAfterCreate] = useState(true);
   const [creating, setCreating] = useState(false);
+  const [createError, setCreateError] = useState("");
+  const [busyProfileId, setBusyProfileId] = useState("");
+  const [actionError, setActionError] = useState("");
 
   const [editOpen, setEditOpen] = useState(false);
   const [editingProfile, setEditingProfile] = useState<BrowserProfile | null>(
@@ -101,14 +120,26 @@ export function BrowserProfileList({
   async function handleCreate() {
     if (!onCreate || !createName.trim()) return;
     setCreating(true);
+    setCreateError("");
     try {
-      await onCreate({
+      const created = await onCreate({
         name: createName.trim(),
         target_domain: createDomain.trim() || undefined,
       });
+      if (launchAfterCreate && onStart) {
+        await onStart(created.profile_id, {
+          login_url: createLoginUrl.trim() || createDomain.trim() || undefined,
+        });
+      }
       setCreateOpen(false);
       setCreateName("");
       setCreateDomain("");
+      setCreateLoginUrl("");
+      setLaunchAfterCreate(true);
+    } catch (err) {
+      setCreateError(
+        err instanceof Error ? err.message : "创建或启动浏览器失败",
+      );
     } finally {
       setCreating(false);
     }
@@ -156,6 +187,47 @@ export function BrowserProfileList({
     }
   }
 
+  async function handleStart(profile: BrowserProfile) {
+    if (!onStart) return;
+    setBusyProfileId(profile.profile_id);
+    setActionError("");
+    try {
+      await onStart(profile.profile_id, {
+        login_url: profile.target_domain || undefined,
+      });
+    } catch (err) {
+      setActionError(err instanceof Error ? err.message : "启动浏览器失败");
+    } finally {
+      setBusyProfileId("");
+    }
+  }
+
+  async function handleCompleteLogin(profile: BrowserProfile) {
+    if (!onCompleteLogin) return;
+    setBusyProfileId(profile.profile_id);
+    setActionError("");
+    try {
+      await onCompleteLogin(profile.profile_id, { stop_after_save: true });
+    } catch (err) {
+      setActionError(err instanceof Error ? err.message : "保存登录状态失败");
+    } finally {
+      setBusyProfileId("");
+    }
+  }
+
+  async function handleStop(profile: BrowserProfile) {
+    if (!onStop) return;
+    setBusyProfileId(profile.profile_id);
+    setActionError("");
+    try {
+      await onStop(profile.profile_id);
+    } catch (err) {
+      setActionError(err instanceof Error ? err.message : "停止浏览器失败");
+    } finally {
+      setBusyProfileId("");
+    }
+  }
+
   if (loading) {
     return <ProfileListSkeleton />;
   }
@@ -180,7 +252,8 @@ export function BrowserProfileList({
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">浏览器实例</h1>
           <p className="mt-1 text-sm text-[var(--muted)]">
-            新建实例并保存登录态，测试计划选择后，浏览器用例会在运行时复用。
+            新建实例后启动浏览器，人工登录并确认保存；测试计划选择后，Codex
+            浏览器用例会复用这个独立浏览器目录。
           </p>
         </div>
         <Dialog open={createOpen} onOpenChange={setCreateOpen}>
@@ -193,7 +266,7 @@ export function BrowserProfileList({
           <DialogContent>
             <DialogTitle>新建浏览器实例</DialogTitle>
             <DialogDescription>
-              创建后用于保存登录状态，并在测试计划中选择复用。
+              填好名称和登录地址后，可以立即启动浏览器完成登录。
             </DialogDescription>
             <div className="mt-4 space-y-3">
               <label className="block">
@@ -214,7 +287,33 @@ export function BrowserProfileList({
                   value={createDomain}
                 />
               </label>
+              <label className="block">
+                <span className="text-sm font-medium">登录地址</span>
+                <Input
+                  className="mt-1"
+                  onChange={(e) => setCreateLoginUrl(e.target.value)}
+                  placeholder="如：https://app.example.com/login"
+                  value={createLoginUrl}
+                />
+              </label>
+              <label className="flex items-start gap-2 text-sm">
+                <input
+                  checked={launchAfterCreate}
+                  className="mt-1"
+                  onChange={(e) => setLaunchAfterCreate(e.target.checked)}
+                  type="checkbox"
+                />
+                <span>
+                  创建后立即启动浏览器登录
+                  <span className="block text-xs text-[var(--muted)]">
+                    浏览器会用独立用户目录打开，登录完成后回到列表点击“我已完成登录”。
+                  </span>
+                </span>
+              </label>
             </div>
+            {createError ? (
+              <p className="mt-3 text-sm text-[var(--danger)]">{createError}</p>
+            ) : null}
             <div className="mt-5 flex justify-end gap-2">
               <Button onClick={() => setCreateOpen(false)} variant="ghost">
                 取消
@@ -224,7 +323,13 @@ export function BrowserProfileList({
                 onClick={handleCreate}
                 variant="primary"
               >
-                {creating ? "创建中..." : "新建浏览器实例"}
+                {creating
+                  ? launchAfterCreate
+                    ? "创建并启动中..."
+                    : "创建中..."
+                  : launchAfterCreate
+                    ? "创建并启动登录"
+                    : "新建浏览器实例"}
               </Button>
             </div>
           </DialogContent>
@@ -238,9 +343,9 @@ export function BrowserProfileList({
           label="1. 新建实例"
         />
         <FlowCard
-          description="人工登录后保存状态"
+          description="启动浏览器人工登录"
           icon={<UserCheck aria-hidden="true" className="size-4" />}
-          label="2. 保存登录态"
+          label="2. 启动并登录"
         />
         <FlowCard
           description="执行配置里选择实例"
@@ -256,6 +361,30 @@ export function BrowserProfileList({
         />
       </section>
 
+      <section className="mb-5 rounded-[var(--radius-lg)] border border-[var(--hairline)] bg-[var(--surface)] p-4">
+        <h2 className="text-sm font-semibold">这些实例用在哪儿</h2>
+        <div className="mt-2 grid gap-3 text-sm text-[var(--muted)] md:grid-cols-3">
+          <p>
+            <span className="font-medium text-[var(--ink)]">测试计划：</span>
+            在执行配置里选择浏览器实例。
+          </p>
+          <p>
+            <span className="font-medium text-[var(--ink)]">浏览器用例：</span>
+            Codex 浏览器执行会复用实例的用户目录。
+          </p>
+          <p>
+            <span className="font-medium text-[var(--ink)]">测试执行：</span>
+            运行时自动带上已选实例，不需要每次重新登录。
+          </p>
+        </div>
+      </section>
+
+      {actionError ? (
+        <div className="mb-4 rounded border border-[var(--danger)] bg-[var(--danger-subtle)] px-4 py-3 text-sm text-[var(--danger)]">
+          {actionError}
+        </div>
+      ) : null}
+
       {profiles.length === 0 ? (
         <EmptyState
           action={
@@ -266,12 +395,12 @@ export function BrowserProfileList({
               </Button>
             ) : undefined
           }
-          description="先新建一个浏览器实例，再在测试计划的执行配置中选择它。"
+          description="先新建浏览器实例，启动浏览器完成登录，再在测试计划的执行配置中选择它。"
           title="暂无浏览器实例"
         />
       ) : (
         <section className="overflow-x-auto rounded-[var(--radius-lg)] border border-[var(--hairline)] bg-[var(--surface)]">
-          <Table className="w-full min-w-[920px] table-fixed">
+          <Table className="w-full min-w-[1180px] table-fixed">
             <TableHeader className="bg-[var(--canvas-soft)]">
               <TableRow>
                 <TableHead className="w-[280px]">实例信息</TableHead>
@@ -280,7 +409,7 @@ export function BrowserProfileList({
                 <TableHead className="w-24 text-center">状态</TableHead>
                 <TableHead className="w-28 text-center">登录态</TableHead>
                 <TableHead className="w-32 text-center">创建时间</TableHead>
-                <TableHead className="w-40 text-right">下一步</TableHead>
+                <TableHead className="w-[360px] text-right">操作</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -308,8 +437,12 @@ export function BrowserProfileList({
                   <TableCell className="text-center">
                     {profile.storage_state_path ? (
                       <Badge tone="success">已登录</Badge>
+                    ) : profile.last_login_at ? (
+                      <Badge tone="success">已确认登录</Badge>
+                    ) : profile.status === "running" ? (
+                      <Badge tone="warning">登录中</Badge>
                     ) : (
-                      <Badge tone="neutral">未登录</Badge>
+                      <Badge tone="neutral">未确认</Badge>
                     )}
                   </TableCell>
                   <TableCell className="text-center text-xs text-[var(--muted)]">
@@ -318,11 +451,69 @@ export function BrowserProfileList({
                       : "-"}
                   </TableCell>
                   <TableCell className="text-right">
-                    <div className="flex items-center justify-end gap-1">
+                    <div className="flex flex-wrap items-center justify-end gap-1">
+                      {profile.status === "running" ? (
+                        <>
+                          <Button
+                            className="px-3"
+                            disabled={
+                              busyProfileId === profile.profile_id ||
+                              !onCompleteLogin
+                            }
+                            onClick={() => void handleCompleteLogin(profile)}
+                            variant="primary"
+                          >
+                            我已完成登录
+                          </Button>
+                          <Button
+                            aria-label={`停止浏览器 ${profile.name}`}
+                            className="px-3"
+                            disabled={
+                              busyProfileId === profile.profile_id || !onStop
+                            }
+                            onClick={() => void handleStop(profile)}
+                            variant="secondary"
+                          >
+                            <Square
+                              aria-hidden="true"
+                              className="mr-1 size-3"
+                            />
+                            停止
+                          </Button>
+                        </>
+                      ) : (
+                        <Button
+                          className="px-3"
+                          disabled={
+                            busyProfileId === profile.profile_id || !onStart
+                          }
+                          onClick={() => void handleStart(profile)}
+                          variant="primary"
+                        >
+                          <PlayCircle
+                            aria-hidden="true"
+                            className="mr-1 size-4"
+                          />
+                          启动并登录
+                        </Button>
+                      )}
                       <Button asChild className="px-3" variant="secondary">
                         <Link href={`/projects/${projectId}/test-plans`}>
-                          去配置
+                          配置到计划
                         </Link>
+                      </Button>
+                      <Button
+                        aria-label={`删除浏览器实例 ${profile.name}`}
+                        className="px-3"
+                        disabled={!onDelete}
+                        onClick={() => openDelete(profile)}
+                        variant="ghost"
+                      >
+                        <Trash2
+                          aria-hidden="true"
+                          className="mr-1 size-4 text-[var(--danger)]"
+                        />
+                        删除
                       </Button>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
@@ -337,12 +528,6 @@ export function BrowserProfileList({
                         <DropdownMenuContent align="end">
                           <DropdownMenuItem onClick={() => openEdit(profile)}>
                             设置实例
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            className="text-[var(--destructive)]"
-                            onClick={() => openDelete(profile)}
-                          >
-                            删除
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
@@ -398,7 +583,7 @@ export function BrowserProfileList({
           <DialogTitle>删除浏览器实例</DialogTitle>
           <DialogDescription>
             确定要删除「{deletingProfile?.name}
-            」吗？此操作不会删除已保存的浏览器数据目录。
+            」吗？会从平台列表移除，并停止正在运行的浏览器；已保存的数据目录不会被删除。
           </DialogDescription>
           {deleteError ? (
             <p className="mt-2 text-sm text-[var(--destructive)]">

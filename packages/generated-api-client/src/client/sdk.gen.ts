@@ -42,6 +42,9 @@ import type {
   CheckReadinessApiV1ProjectsProjectIdTestPlansPlanIdVersionsVersionIdReadinessGetData,
   CheckReadinessApiV1ProjectsProjectIdTestPlansPlanIdVersionsVersionIdReadinessGetErrors,
   CheckReadinessApiV1ProjectsProjectIdTestPlansPlanIdVersionsVersionIdReadinessGetResponses,
+  CompleteLoginApiV1ProjectsProjectIdBrowserProfilesProfileIdLoginCompletePostData,
+  CompleteLoginApiV1ProjectsProjectIdBrowserProfilesProfileIdLoginCompletePostErrors,
+  CompleteLoginApiV1ProjectsProjectIdBrowserProfilesProfileIdLoginCompletePostResponses,
   ConvertToRegressionApiV1ProjectsProjectIdTestAgentTargetChatsSessionIdTurnsTurnIdRegressionCasesPostData,
   ConvertToRegressionApiV1ProjectsProjectIdTestAgentTargetChatsSessionIdTurnsTurnIdRegressionCasesPostErrors,
   ConvertToRegressionApiV1ProjectsProjectIdTestAgentTargetChatsSessionIdTurnsTurnIdRegressionCasesPostResponses,
@@ -434,6 +437,12 @@ import type {
   SkipReviewApiV1ProjectsProjectIdReviewsTaskIdSkipPostData,
   SkipReviewApiV1ProjectsProjectIdReviewsTaskIdSkipPostErrors,
   SkipReviewApiV1ProjectsProjectIdReviewsTaskIdSkipPostResponses,
+  StartProfileApiV1ProjectsProjectIdBrowserProfilesProfileIdStartPostData,
+  StartProfileApiV1ProjectsProjectIdBrowserProfilesProfileIdStartPostErrors,
+  StartProfileApiV1ProjectsProjectIdBrowserProfilesProfileIdStartPostResponses,
+  StopProfileApiV1ProjectsProjectIdBrowserProfilesProfileIdStopPostData,
+  StopProfileApiV1ProjectsProjectIdBrowserProfilesProfileIdStopPostErrors,
+  StopProfileApiV1ProjectsProjectIdBrowserProfilesProfileIdStopPostResponses,
   StreamEventsApiV1ProjectsProjectIdTestAgentSessionsSessionIdEventsGetData,
   StreamEventsApiV1ProjectsProjectIdTestAgentSessionsSessionIdEventsGetErrors,
   StreamEventsApiV1ProjectsProjectIdTestAgentSessionsSessionIdEventsGetResponses,
@@ -1293,6 +1302,83 @@ export const updateProfileApiV1ProjectsProjectIdBrowserProfilesProfileIdPatch =
         "Content-Type": "application/json",
         ...options.headers,
       },
+    });
+
+/**
+ * Complete Login
+ */
+export const completeLoginApiV1ProjectsProjectIdBrowserProfilesProfileIdLoginCompletePost =
+  <ThrowOnError extends boolean = false>(
+    options: Options<
+      CompleteLoginApiV1ProjectsProjectIdBrowserProfilesProfileIdLoginCompletePostData,
+      ThrowOnError
+    >,
+  ): RequestResult<
+    CompleteLoginApiV1ProjectsProjectIdBrowserProfilesProfileIdLoginCompletePostResponses,
+    CompleteLoginApiV1ProjectsProjectIdBrowserProfilesProfileIdLoginCompletePostErrors,
+    ThrowOnError
+  > =>
+    (options.client ?? client).post<
+      CompleteLoginApiV1ProjectsProjectIdBrowserProfilesProfileIdLoginCompletePostResponses,
+      CompleteLoginApiV1ProjectsProjectIdBrowserProfilesProfileIdLoginCompletePostErrors,
+      ThrowOnError
+    >({
+      url: "/api/v1/projects/{project_id}/browser-profiles/{profile_id}/login-complete",
+      ...options,
+      headers: {
+        "Content-Type": "application/json",
+        ...options.headers,
+      },
+    });
+
+/**
+ * Start Profile
+ */
+export const startProfileApiV1ProjectsProjectIdBrowserProfilesProfileIdStartPost =
+  <ThrowOnError extends boolean = false>(
+    options: Options<
+      StartProfileApiV1ProjectsProjectIdBrowserProfilesProfileIdStartPostData,
+      ThrowOnError
+    >,
+  ): RequestResult<
+    StartProfileApiV1ProjectsProjectIdBrowserProfilesProfileIdStartPostResponses,
+    StartProfileApiV1ProjectsProjectIdBrowserProfilesProfileIdStartPostErrors,
+    ThrowOnError
+  > =>
+    (options.client ?? client).post<
+      StartProfileApiV1ProjectsProjectIdBrowserProfilesProfileIdStartPostResponses,
+      StartProfileApiV1ProjectsProjectIdBrowserProfilesProfileIdStartPostErrors,
+      ThrowOnError
+    >({
+      url: "/api/v1/projects/{project_id}/browser-profiles/{profile_id}/start",
+      ...options,
+      headers: {
+        "Content-Type": "application/json",
+        ...options.headers,
+      },
+    });
+
+/**
+ * Stop Profile
+ */
+export const stopProfileApiV1ProjectsProjectIdBrowserProfilesProfileIdStopPost =
+  <ThrowOnError extends boolean = false>(
+    options: Options<
+      StopProfileApiV1ProjectsProjectIdBrowserProfilesProfileIdStopPostData,
+      ThrowOnError
+    >,
+  ): RequestResult<
+    StopProfileApiV1ProjectsProjectIdBrowserProfilesProfileIdStopPostResponses,
+    StopProfileApiV1ProjectsProjectIdBrowserProfilesProfileIdStopPostErrors,
+    ThrowOnError
+  > =>
+    (options.client ?? client).post<
+      StopProfileApiV1ProjectsProjectIdBrowserProfilesProfileIdStopPostResponses,
+      StopProfileApiV1ProjectsProjectIdBrowserProfilesProfileIdStopPostErrors,
+      ThrowOnError
+    >({
+      url: "/api/v1/projects/{project_id}/browser-profiles/{profile_id}/stop",
+      ...options,
     });
 
 /**

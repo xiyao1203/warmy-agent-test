@@ -5,6 +5,7 @@ import { useState } from "react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { DropdownSelect } from "@/components/ui/dropdown-select";
 import {
   Dialog,
   DialogContent,
@@ -304,7 +305,7 @@ function CreateAccountDialog({
           </label>
           <label className="block text-sm font-medium">
             账号类型
-            <select
+            <DropdownSelect
               className="mt-1.5 h-9 w-full rounded-[var(--radius-md)] border border-[var(--hairline)] bg-[var(--surface)] px-3"
               onChange={(e) => setAccountType(e.target.value)}
               value={accountType}
@@ -313,7 +314,7 @@ function CreateAccountDialog({
               <option value="admin">管理员</option>
               <option value="service">服务账号</option>
               <option value="api">API 账号</option>
-            </select>
+            </DropdownSelect>
           </label>
           <label className="block text-sm font-medium">
             描述

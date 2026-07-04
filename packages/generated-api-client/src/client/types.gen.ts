@@ -412,6 +412,16 @@ export type ChatRequest = {
 };
 
 /**
+ * CompleteBrowserProfileLoginRequest
+ */
+export type CompleteBrowserProfileLoginRequest = {
+  /**
+   * Stop After Save
+   */
+  stop_after_save?: boolean;
+};
+
+/**
  * ConfirmationDecision
  */
 export type ConfirmationDecision = {
@@ -1725,6 +1735,16 @@ export type SetModelDefaultRequest = {
    * Model Config Id
    */
   model_config_id: string;
+};
+
+/**
+ * StartBrowserProfileRequest
+ */
+export type StartBrowserProfileRequest = {
+  /**
+   * Login Url
+   */
+  login_url?: string;
 };
 
 /**
@@ -3797,6 +3817,132 @@ export type UpdateProfileApiV1ProjectsProjectIdBrowserProfilesProfileIdPatchErro
   UpdateProfileApiV1ProjectsProjectIdBrowserProfilesProfileIdPatchErrors[keyof UpdateProfileApiV1ProjectsProjectIdBrowserProfilesProfileIdPatchErrors];
 
 export type UpdateProfileApiV1ProjectsProjectIdBrowserProfilesProfileIdPatchResponses =
+  {
+    /**
+     * Successful Response
+     */
+    200: unknown;
+  };
+
+export type CompleteLoginApiV1ProjectsProjectIdBrowserProfilesProfileIdLoginCompletePostData =
+  {
+    body: CompleteBrowserProfileLoginRequest;
+    headers?: {
+      /**
+       * X-Csrf-Token
+       */
+      "x-csrf-token"?: string | null;
+    };
+    path: {
+      /**
+       * Project Id
+       */
+      project_id: string;
+      /**
+       * Profile Id
+       */
+      profile_id: string;
+    };
+    query?: never;
+    url: "/api/v1/projects/{project_id}/browser-profiles/{profile_id}/login-complete";
+  };
+
+export type CompleteLoginApiV1ProjectsProjectIdBrowserProfilesProfileIdLoginCompletePostErrors =
+  {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+  };
+
+export type CompleteLoginApiV1ProjectsProjectIdBrowserProfilesProfileIdLoginCompletePostError =
+  CompleteLoginApiV1ProjectsProjectIdBrowserProfilesProfileIdLoginCompletePostErrors[keyof CompleteLoginApiV1ProjectsProjectIdBrowserProfilesProfileIdLoginCompletePostErrors];
+
+export type CompleteLoginApiV1ProjectsProjectIdBrowserProfilesProfileIdLoginCompletePostResponses =
+  {
+    /**
+     * Successful Response
+     */
+    200: unknown;
+  };
+
+export type StartProfileApiV1ProjectsProjectIdBrowserProfilesProfileIdStartPostData =
+  {
+    body: StartBrowserProfileRequest;
+    headers?: {
+      /**
+       * X-Csrf-Token
+       */
+      "x-csrf-token"?: string | null;
+    };
+    path: {
+      /**
+       * Project Id
+       */
+      project_id: string;
+      /**
+       * Profile Id
+       */
+      profile_id: string;
+    };
+    query?: never;
+    url: "/api/v1/projects/{project_id}/browser-profiles/{profile_id}/start";
+  };
+
+export type StartProfileApiV1ProjectsProjectIdBrowserProfilesProfileIdStartPostErrors =
+  {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+  };
+
+export type StartProfileApiV1ProjectsProjectIdBrowserProfilesProfileIdStartPostError =
+  StartProfileApiV1ProjectsProjectIdBrowserProfilesProfileIdStartPostErrors[keyof StartProfileApiV1ProjectsProjectIdBrowserProfilesProfileIdStartPostErrors];
+
+export type StartProfileApiV1ProjectsProjectIdBrowserProfilesProfileIdStartPostResponses =
+  {
+    /**
+     * Successful Response
+     */
+    200: unknown;
+  };
+
+export type StopProfileApiV1ProjectsProjectIdBrowserProfilesProfileIdStopPostData =
+  {
+    body?: never;
+    headers?: {
+      /**
+       * X-Csrf-Token
+       */
+      "x-csrf-token"?: string | null;
+    };
+    path: {
+      /**
+       * Project Id
+       */
+      project_id: string;
+      /**
+       * Profile Id
+       */
+      profile_id: string;
+    };
+    query?: never;
+    url: "/api/v1/projects/{project_id}/browser-profiles/{profile_id}/stop";
+  };
+
+export type StopProfileApiV1ProjectsProjectIdBrowserProfilesProfileIdStopPostErrors =
+  {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+  };
+
+export type StopProfileApiV1ProjectsProjectIdBrowserProfilesProfileIdStopPostError =
+  StopProfileApiV1ProjectsProjectIdBrowserProfilesProfileIdStopPostErrors[keyof StopProfileApiV1ProjectsProjectIdBrowserProfilesProfileIdStopPostErrors];
+
+export type StopProfileApiV1ProjectsProjectIdBrowserProfilesProfileIdStopPostResponses =
   {
     /**
      * Successful Response

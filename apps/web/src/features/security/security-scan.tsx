@@ -17,6 +17,7 @@ import { useEffect, useState } from "react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { DropdownSelect } from "@/components/ui/dropdown-select";
 import type { Finding, SecurityScanItem } from "./api";
 import type { SecurityTarget } from "./api";
 import { listScans, listSecurityTargets, triggerScan } from "./api";
@@ -113,7 +114,7 @@ export function SecurityScanPage({ projectId }: { projectId: string }) {
         </div>
         <div className="flex min-w-80 flex-col items-end gap-2">
           <div className="flex w-full gap-2">
-            <select
+            <DropdownSelect
               aria-label="已发布 Agent 版本"
               className="h-9 min-w-64 rounded border border-[var(--hairline)] bg-[var(--surface)] px-3 text-sm"
               disabled={triggering}
@@ -126,7 +127,7 @@ export function SecurityScanPage({ projectId }: { projectId: string }) {
                   {target.label}
                 </option>
               ))}
-            </select>
+            </DropdownSelect>
             <Button
               disabled={triggering || !agentVersionId}
               loading={triggering}

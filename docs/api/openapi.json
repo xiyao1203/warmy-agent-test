@@ -743,6 +743,17 @@
         "title": "ChatRequest",
         "type": "object"
       },
+      "CompleteBrowserProfileLoginRequest": {
+        "properties": {
+          "stop_after_save": {
+            "default": false,
+            "title": "Stop After Save",
+            "type": "boolean"
+          }
+        },
+        "title": "CompleteBrowserProfileLoginRequest",
+        "type": "object"
+      },
       "ConfirmationDecision": {
         "properties": {
           "approved": {
@@ -2886,6 +2897,17 @@
           "model_config_id"
         ],
         "title": "SetModelDefaultRequest",
+        "type": "object"
+      },
+      "StartBrowserProfileRequest": {
+        "properties": {
+          "login_url": {
+            "default": "",
+            "title": "Login Url",
+            "type": "string"
+          }
+        },
+        "title": "StartBrowserProfileRequest",
         "type": "object"
       },
       "SystemRole": {
@@ -6463,6 +6485,221 @@
           }
         },
         "summary": "Update Profile",
+        "tags": [
+          "browser-profiles"
+        ]
+      }
+    },
+    "/api/v1/projects/{project_id}/browser-profiles/{profile_id}/login-complete": {
+      "post": {
+        "operationId": "complete_login_api_v1_projects__project_id__browser_profiles__profile_id__login_complete_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "profile_id",
+            "required": true,
+            "schema": {
+              "title": "Profile Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "x-csrf-token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Csrf-Token"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CompleteBrowserProfileLoginRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Complete Login",
+        "tags": [
+          "browser-profiles"
+        ]
+      }
+    },
+    "/api/v1/projects/{project_id}/browser-profiles/{profile_id}/start": {
+      "post": {
+        "operationId": "start_profile_api_v1_projects__project_id__browser_profiles__profile_id__start_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "profile_id",
+            "required": true,
+            "schema": {
+              "title": "Profile Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "x-csrf-token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Csrf-Token"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StartBrowserProfileRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Start Profile",
+        "tags": [
+          "browser-profiles"
+        ]
+      }
+    },
+    "/api/v1/projects/{project_id}/browser-profiles/{profile_id}/stop": {
+      "post": {
+        "operationId": "stop_profile_api_v1_projects__project_id__browser_profiles__profile_id__stop_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "profile_id",
+            "required": true,
+            "schema": {
+              "title": "Profile Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "x-csrf-token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Csrf-Token"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Stop Profile",
         "tags": [
           "browser-profiles"
         ]

@@ -3,6 +3,7 @@
 import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
+import { DropdownSelect } from "@/components/ui/dropdown-select";
 import {
   Dialog,
   DialogContent,
@@ -113,7 +114,7 @@ export function ScorerEditorDialog({
           </label>
           <label className="block text-sm font-medium">
             类型
-            <select
+            <DropdownSelect
               className="mt-1.5 h-9 w-full rounded-[var(--radius-md)] border border-[var(--hairline)] bg-[var(--surface)] px-3"
               disabled={isEdit}
               onChange={(e) => setScorerType(e.target.value)}
@@ -122,7 +123,7 @@ export function ScorerEditorDialog({
               <option value="rule">规则（Rule）</option>
               <option value="model">模型（Model）</option>
               <option value="reference">参考（Reference）</option>
-            </select>
+            </DropdownSelect>
             <span className="mt-1 block text-xs text-[var(--muted)]">
               {scorerType === "rule"
                 ? "适合明确答案：检查输出是否包含或等于指定内容"
@@ -180,14 +181,14 @@ export function ScorerEditorDialog({
             <div className="grid grid-cols-2 gap-4">
               <label className="block text-sm font-medium">
                 比较方式
-                <select
+                <DropdownSelect
                   className="mt-1.5 h-9 w-full rounded border border-[var(--hairline)] bg-[var(--surface)] px-3"
                   onChange={(event) => setOperator(event.target.value)}
                   value={operator}
                 >
                   <option value="contains">包含</option>
                   <option value="exact">完全相等</option>
-                </select>
+                </DropdownSelect>
                 <span className="mt-1 block text-xs text-[var(--muted)]">
                   {scorerType === "rule"
                     ? "输出是否包含/等于期望值"

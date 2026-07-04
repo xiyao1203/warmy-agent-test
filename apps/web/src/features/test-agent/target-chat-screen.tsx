@@ -9,6 +9,7 @@ import {
   MessageBubble,
   TypingIndicator,
 } from "@/components/uiverse";
+import { DropdownSelect } from "@/components/ui/dropdown-select";
 
 import { listAgents, listAgentVersions } from "@/features/agents/api";
 import { listEnvironmentTemplates } from "@/features/environments/api";
@@ -182,7 +183,7 @@ export function TargetChatScreen({ projectId }: { projectId: string }) {
   return (
     <div className="flex min-h-0 flex-1 flex-col overflow-hidden bg-[var(--canvas)]">
       <header className="flex shrink-0 items-center gap-3 border-b border-[var(--hairline)] px-4 py-2.5">
-        <select
+        <DropdownSelect
           aria-label="被测 Agent 版本"
           className="min-w-0 flex-1 rounded-lg border border-[var(--hairline)] bg-[var(--surface)] px-3 py-1.5 text-[0.8125rem] text-[var(--ink)]"
           disabled={Boolean(session)}
@@ -195,8 +196,8 @@ export function TargetChatScreen({ projectId }: { projectId: string }) {
               {item.label}
             </option>
           ))}
-        </select>
-        <select
+        </DropdownSelect>
+        <DropdownSelect
           aria-label="测试环境"
           className="min-w-0 flex-1 rounded-lg border border-[var(--hairline)] bg-[var(--surface)] px-3 py-1.5 text-[0.8125rem] text-[var(--ink)]"
           disabled={Boolean(session)}
@@ -209,7 +210,7 @@ export function TargetChatScreen({ projectId }: { projectId: string }) {
               {item.label}
             </option>
           ))}
-        </select>
+        </DropdownSelect>
         {hasSession ? (
           <button
             aria-label="新建测试会话"

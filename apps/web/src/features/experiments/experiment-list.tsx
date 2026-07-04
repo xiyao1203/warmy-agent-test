@@ -16,6 +16,7 @@ import { useCallback, useEffect, useState } from "react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { DropdownSelect } from "@/components/ui/dropdown-select";
 import {
   Dialog,
   DialogContent,
@@ -520,7 +521,7 @@ function RunSelect({
   value: string;
 }) {
   return (
-    <select
+    <DropdownSelect
       className="mt-1.5 h-9 w-full rounded border border-[var(--hairline)] bg-[var(--surface)] px-3 text-sm"
       onChange={(event) => onChange(event.target.value)}
       value={value}
@@ -531,6 +532,6 @@ function RunSelect({
           {run.status} · {new Date(run.created_at).toLocaleString("zh-CN")}
         </option>
       ))}
-    </select>
+    </DropdownSelect>
   );
 }

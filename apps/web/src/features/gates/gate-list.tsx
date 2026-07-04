@@ -16,6 +16,7 @@ import { useCallback, useEffect, useState } from "react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { DropdownSelect } from "@/components/ui/dropdown-select";
 import { ListCard, ListCardMeta } from "@/components/ui/list-card";
 import {
   Dialog,
@@ -263,7 +264,7 @@ function GateCard({
     <ListCard
       actions={
         <>
-          <select
+          <DropdownSelect
             aria-label="选择执行记录"
             className="h-9 min-w-56 rounded border border-[var(--hairline)] bg-[var(--surface)] px-2 text-sm"
             onChange={(event) => setRunId(event.target.value)}
@@ -276,7 +277,7 @@ function GateCard({
                 {new Date(run.created_at).toLocaleString("zh-CN")}
               </option>
             ))}
-          </select>
+          </DropdownSelect>
           <Button
             disabled={!runId}
             onClick={() => onEvaluate(runId)}

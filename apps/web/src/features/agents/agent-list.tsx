@@ -11,6 +11,7 @@ import { useState } from "react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { DropdownSelect } from "@/components/ui/dropdown-select";
 import {
   Dialog,
   DialogContent,
@@ -298,7 +299,7 @@ function CreateAgentDialog({
           </label>
           <label className="block text-sm font-medium">
             Agent 类型
-            <select
+            <DropdownSelect
               className="mt-1.5 h-9 w-full rounded-[var(--radius-md)] border border-[var(--hairline)] bg-[var(--surface)] px-3 text-sm text-[var(--ink)] hover:border-[var(--hairline-strong)] focus:border-[var(--primary)] focus:outline-none focus:ring-2 focus:ring-[var(--focus-ring-subtle)]"
               onChange={(event) =>
                 setAgentType(event.target.value as AgentType)
@@ -307,7 +308,7 @@ function CreateAgentDialog({
             >
               <option value="generic_http">通用 HTTP</option>
               <option value="canvas">画布 Agent</option>
-            </select>
+            </DropdownSelect>
           </label>
           <label className="block text-sm font-medium">
             描述

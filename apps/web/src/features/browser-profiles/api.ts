@@ -16,6 +16,7 @@ export type BrowserProfile = {
   cdp_endpoint: string;
   created_at: string;
   updated_at: string;
+  last_login_at: string;
 };
 
 // ── API ──────────────────────────────────────────────────
@@ -88,4 +89,66 @@ export async function deleteBrowserProfile(
     },
   );
   if (!response.ok) throw await responseProblem(response, "删除浏览器实例失败");
+}
+
+export async function startBrowserProfile(
+  projectId: string,
+  profileId: string,
+  payload: { login_url?: string },
+): Promise<BrowserProfile> {
+  const response = await fetch(
+    `${CONTROL_API_URL}/api/v1/projects/${projectId}/browser-profiles/${profileId}/start`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...(csrfHeaders() as Record<string, string>),
+      },
+      credentials: "include",
+      body: JSON.stringify({ login_url: payload.login_url ?? "" }),
+    },
+  );
+  if (!response.ok) throw await responseProblem(response, "启动浏览器失败");
+  return response.json() as Promise<BrowserProfile>;
+}
+
+export async function completeBrowserProfileLogin(
+  projectId: string,
+  profileId: string,
+  payload: { stop_after_save?: boolean } = {},
+): Promise<BrowserProfile> {
+  const response = await fetch(
+    `${CONTROL_API_URL}/api/v1/projects/${projectId}/browser-profiles/${profileId}/login-complete`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...(csrfHeaders() as Record<string, string>),
+      },
+      credentials: "include",
+      body: JSON.stringify({
+        stop_after_save: Boolean(payload.stop_after_save),
+      }),
+    },
+  );
+  if (!response.ok) throw await responseProblem(response, "保存登录状态失败");
+  return response.json() as Promise<BrowserProfile>;
+}
+
+export async function stopBrowserProfile(
+  projectId: string,
+  profileId: string,
+): Promise<BrowserProfile> {
+  const response = await fetch(
+    `${CONTROL_API_URL}/api/v1/projects/${projectId}/browser-profiles/${profileId}/stop`,
+    {
+      method: "POST",
+      headers: {
+        ...(csrfHeaders() as Record<string, string>),
+      },
+      credentials: "include",
+    },
+  );
+  if (!response.ok) throw await responseProblem(response, "停止浏览器失败");
+  return response.json() as Promise<BrowserProfile>;
 }

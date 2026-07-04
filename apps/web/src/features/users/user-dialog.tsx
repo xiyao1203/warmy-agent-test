@@ -11,6 +11,7 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 
 import { Button } from "@/components/ui/button";
+import { DropdownSelect } from "@/components/ui/dropdown-select";
 import {
   Dialog,
   DialogContent,
@@ -135,7 +136,7 @@ export function CreateUserDialog({
             htmlFor="create-role"
             label="系统角色"
           >
-            <select
+            <DropdownSelect
               className="h-9 w-full rounded-[var(--radius-md)] border border-[var(--hairline)] bg-[var(--surface)] px-3 text-sm"
               id="create-role"
               {...register("role")}
@@ -153,7 +154,7 @@ export function CreateUserDialog({
                   {label}
                 </option>
               ))}
-            </select>
+            </DropdownSelect>
           </Field>
           <div className="flex justify-end gap-2 pt-2">
             <Button onClick={() => setOpen(false)} type="button">
@@ -289,7 +290,7 @@ export function EditUserDialog({
             htmlFor="edit-role"
             label="系统角色"
           >
-            <select
+            <DropdownSelect
               className="h-9 w-full rounded-[var(--radius-md)] border border-[var(--hairline)] bg-[var(--surface)] px-3 text-sm"
               id="edit-role"
               {...register("role")}
@@ -307,7 +308,7 @@ export function EditUserDialog({
                   {label}
                 </option>
               ))}
-            </select>
+            </DropdownSelect>
           </Field>
           <div className="flex justify-end gap-2 pt-2">
             <Button onClick={() => setOpen(false)} type="button">

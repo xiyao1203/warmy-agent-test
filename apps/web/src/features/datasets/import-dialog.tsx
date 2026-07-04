@@ -5,6 +5,7 @@ import { Download } from "lucide-react";
 import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
+import { DropdownSelect } from "@/components/ui/dropdown-select";
 import {
   Dialog,
   DialogContent,
@@ -106,7 +107,7 @@ export function ImportDialog({
           </div>
           <label className="block text-sm font-medium">
             导入格式
-            <select
+            <DropdownSelect
               className="mt-1.5 h-9 w-full rounded-[var(--radius-md)] border border-[var(--hairline)] bg-[var(--surface)] px-3"
               onChange={(event) =>
                 setFormat(
@@ -118,7 +119,7 @@ export function ImportDialog({
               <option value="json">JSON</option>
               <option value="jsonl">JSONL</option>
               <option value="csv">CSV</option>
-            </select>
+            </DropdownSelect>
           </label>
           <label className="block text-sm font-medium">
             导入内容

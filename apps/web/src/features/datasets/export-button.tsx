@@ -4,6 +4,7 @@ import type { ExportTestCasesResponse } from "@warmy/generated-api-client";
 import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
+import { DropdownSelect } from "@/components/ui/dropdown-select";
 
 type ExportFormat = ExportTestCasesResponse["format"];
 
@@ -37,7 +38,7 @@ export function ExportButton({
 
   return (
     <div className="flex items-center gap-2">
-      <select
+      <DropdownSelect
         aria-label="导出格式"
         className="h-8 rounded-[var(--radius-md)] border border-[var(--hairline)] bg-[var(--surface)] px-2 text-sm"
         onChange={(event) => setFormat(event.target.value as ExportFormat)}
@@ -46,7 +47,7 @@ export function ExportButton({
         <option value="json">JSON</option>
         <option value="jsonl">JSONL</option>
         <option value="csv">CSV</option>
-      </select>
+      </DropdownSelect>
       <Button onClick={exportCases}>导出用例</Button>
       {prepared ? (
         <span className="text-xs text-[var(--success)]">导出内容已准备</span>

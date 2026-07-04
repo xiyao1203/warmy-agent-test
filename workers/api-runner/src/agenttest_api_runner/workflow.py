@@ -129,7 +129,7 @@ class RunWorkflow:
                                 case.input.get("browser_profile_id", "")
                                 or task.execution_policy.get("browser_profile_id", "")
                             ),
-                            browser_mode=str(case.input.get("browser_mode", "ephemeral")),
+                            browser_mode=_codex_browser_mode(case.input, task.execution_policy),
                             storage_state_key=str(case.input.get("storage_state_key", "")),
                             credentials=_extract_credentials(case.input),
                         ),
@@ -317,6 +317,22 @@ def _browser_steps(case_input: dict[str, object]) -> list[dict[str, str]]:
             if isinstance(step, dict)
         ]
     return []
+
+
+def _codex_browser_mode(
+    case_input: dict[str, object],
+    execution_policy: dict[str, object],
+) -> str:
+    """Resolve Codex browser mode.
+
+    Selecting a browser profile means the run should reuse that profile's
+    persistent user data directory unless the case explicitly overrides mode.
+    """
+    explicit = case_input.get("browser_mode")
+    if isinstance(explicit, str) and explicit:
+        return explicit
+    profile_id = case_input.get("browser_profile_id") or execution_policy.get("browser_profile_id")
+    return "persistent" if profile_id else "ephemeral"
 
 
 def _extract_credentials(case_input: dict[str, object]) -> dict[str, str]:

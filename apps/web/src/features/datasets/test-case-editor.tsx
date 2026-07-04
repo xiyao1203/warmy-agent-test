@@ -13,6 +13,7 @@ import { Plus, Trash2 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { DropdownSelect } from "@/components/ui/dropdown-select";
 import {
   Dialog,
   DialogContent,
@@ -188,14 +189,14 @@ export function TestCaseEditor({
                 />
               </Field>
               <Field label="执行模式">
-                <select
+                <DropdownSelect
                   className="h-9 w-full rounded-[var(--radius-md)] border border-[var(--hairline)] bg-[var(--surface)] px-3"
                   onChange={(e) => setMode(e.target.value as "api" | "browser")}
                   value={mode}
                 >
                   <option value="api">API</option>
                   <option value="browser">浏览器</option>
-                </select>
+                </DropdownSelect>
               </Field>
               <Field label="业务场景">
                 <Input
@@ -206,7 +207,7 @@ export function TestCaseEditor({
               </Field>
               <div className="grid grid-cols-2 gap-4">
                 <Field label="优先级">
-                  <select
+                  <DropdownSelect
                     aria-label="优先级"
                     className="h-9 w-full rounded-[var(--radius-md)] border border-[var(--hairline)] bg-[var(--surface)] px-3"
                     onChange={(e) =>
@@ -219,10 +220,10 @@ export function TestCaseEditor({
                     <option value="P1">P1 - 高</option>
                     <option value="P2">P2 - 中</option>
                     <option value="P3">P3 - 低</option>
-                  </select>
+                  </DropdownSelect>
                 </Field>
                 <Field label="风险等级">
-                  <select
+                  <DropdownSelect
                     aria-label="风险等级"
                     className="h-9 w-full rounded-[var(--radius-md)] border border-[var(--hairline)] bg-[var(--surface)] px-3"
                     onChange={(e) =>
@@ -234,12 +235,12 @@ export function TestCaseEditor({
                     <option value="high">高风险</option>
                     <option value="medium">中风险</option>
                     <option value="low">低风险</option>
-                  </select>
+                  </DropdownSelect>
                 </Field>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <Field label="难度">
-                  <select
+                  <DropdownSelect
                     aria-label="难度"
                     className="h-9 w-full rounded-[var(--radius-md)] border border-[var(--hairline)] bg-[var(--surface)] px-3"
                     onChange={(e) => setDifficulty(e.target.value)}
@@ -249,10 +250,10 @@ export function TestCaseEditor({
                     <option value="easy">简单</option>
                     <option value="medium">中等</option>
                     <option value="hard">困难</option>
-                  </select>
+                  </DropdownSelect>
                 </Field>
                 <Field label="测试分组">
-                  <select
+                  <DropdownSelect
                     aria-label="测试分组"
                     className="h-9 w-full rounded-[var(--radius-md)] border border-[var(--hairline)] bg-[var(--surface)] px-3"
                     onChange={(e) =>
@@ -264,7 +265,7 @@ export function TestCaseEditor({
                     <option value="train">训练集</option>
                     <option value="validation">验证集</option>
                     <option value="test">测试集</option>
-                  </select>
+                  </DropdownSelect>
                 </Field>
               </div>
               <Field label="标签">
@@ -586,7 +587,7 @@ function AssertionEditor({
             className="grid grid-cols-[120px_minmax(140px,1fr)_minmax(160px,1fr)_36px] gap-2"
             key={row.id}
           >
-            <select
+            <DropdownSelect
               aria-label="断言类型"
               className="h-9 rounded-[var(--radius-md)] border border-[var(--hairline)] bg-[var(--surface)] px-3"
               onChange={(event) =>
@@ -598,7 +599,7 @@ function AssertionEditor({
               <option value="equals">等于</option>
               <option value="exists">存在</option>
               <option value="regex">正则匹配</option>
-            </select>
+            </DropdownSelect>
             <Input
               aria-label="断言字段"
               onChange={(event) =>
@@ -669,7 +670,7 @@ function ScorerEditor({
               placeholder="名称，如 helpfulness"
               value={row.name}
             />
-            <select
+            <DropdownSelect
               aria-label="评分器类型"
               className="h-9 rounded-[var(--radius-md)] border border-[var(--hairline)] bg-[var(--surface)] px-3"
               onChange={(event) =>
@@ -680,7 +681,7 @@ function ScorerEditor({
               <option value="llm_judge">模型裁判</option>
               <option value="rule">规则评分</option>
               <option value="visual">视觉评分</option>
-            </select>
+            </DropdownSelect>
             <Input
               aria-label="通过阈值"
               onChange={(event) =>
@@ -743,7 +744,7 @@ function SecurityPolicyEditor({
               placeholder="策略，如 pii_redaction"
               value={row.type}
             />
-            <select
+            <DropdownSelect
               aria-label="安全等级"
               className="h-9 rounded-[var(--radius-md)] border border-[var(--hairline)] bg-[var(--surface)] px-3"
               onChange={(event) =>
@@ -755,7 +756,7 @@ function SecurityPolicyEditor({
               <option value="medium">中</option>
               <option value="high">高</option>
               <option value="critical">严重</option>
-            </select>
+            </DropdownSelect>
             <IconButton
               label="删除安全策略"
               onClick={() =>
