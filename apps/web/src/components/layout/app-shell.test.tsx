@@ -32,7 +32,15 @@ describe("AppShell", () => {
     );
 
     expect(screen.getByText("Agent Test")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Agent Test" })).toHaveAttribute(
+      "href",
+      "/projects/project-1/test-agent",
+    );
     expect(screen.getByText("项目导航")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "测试 Agent" })).toHaveAttribute(
+      "href",
+      "/projects/project-1/test-agent",
+    );
     expect(screen.getByRole("link", { name: "概览" })).toHaveAttribute(
       "href",
       "/projects/project-1/overview",
@@ -48,6 +56,12 @@ describe("AppShell", () => {
     expect(screen.getByRole("link", { name: "测试计划" })).toHaveAttribute(
       "href",
       "/projects/project-1/test-plans",
+    );
+    const navLinks = screen
+      .getAllByRole("link")
+      .map((link) => link.textContent);
+    expect(navLinks.indexOf("测试 Agent")).toBeLessThan(
+      navLinks.indexOf("概览"),
     );
     expect(screen.queryByText("系统管理")).not.toBeInTheDocument();
     expect(screen.queryByText("用户管理")).not.toBeInTheDocument();

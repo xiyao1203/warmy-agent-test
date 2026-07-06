@@ -31,6 +31,7 @@ import { type ReactNode, useCallback, useState } from "react";
 import { logout } from "@/features/auth";
 import { ProjectSwitcher } from "@/features/projects";
 import { canManageUsers } from "@/lib/permissions";
+import { projectOverviewPath, projectWorkspacePath } from "@/lib/routes";
 
 import { HelpDropdown } from "./help-dropdown";
 import { NotificationDropdown } from "./notification-dropdown";
@@ -61,12 +62,14 @@ export function AppShell({
   user,
   workspaceMode = "management",
 }: AppShellProps) {
-  const projectHref = currentProjectId
-    ? `/projects/${currentProjectId}/overview`
-    : "/projects";
-
   const activeProjectId =
     currentProjectId || (projects.length > 0 ? projects[0].id : null);
+  const projectHref = activeProjectId
+    ? projectWorkspacePath(activeProjectId)
+    : "/projects";
+  const overviewHref = activeProjectId
+    ? projectOverviewPath(activeProjectId)
+    : "/projects";
 
   const [collapsed, setCollapsed] = useState(() => {
     if (typeof window === "undefined") return false;
@@ -142,9 +145,17 @@ export function AppShell({
             aria-label="项目导航"
             className="flex-1 space-y-1 overflow-y-auto min-h-0"
           >
-            <OverviewNavLink collapsed={collapsed} href={projectHref} />
             {activeProjectId ? (
               <>
+                <ProjectNavLink
+                  collapsed={collapsed}
+                  href={projectWorkspacePath(activeProjectId)}
+                  icon={
+                    <Sparkles aria-hidden="true" className="size-4 shrink-0" />
+                  }
+                  label="测试 Agent"
+                />
+                <OverviewNavLink collapsed={collapsed} href={overviewHref} />
                 <ProjectNavLink
                   collapsed={collapsed}
                   href={`/projects/${activeProjectId}/agents`}
@@ -251,14 +262,6 @@ export function AppShell({
                     />
                   }
                   label="发布门禁"
-                />
-                <ProjectNavLink
-                  collapsed={collapsed}
-                  href={`/projects/${activeProjectId}/test-agent`}
-                  icon={
-                    <Sparkles aria-hidden="true" className="size-4 shrink-0" />
-                  }
-                  label="测试 Agent"
                 />
               </>
             ) : null}

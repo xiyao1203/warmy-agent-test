@@ -137,8 +137,11 @@ export function UserManagement({
         />
       </section>
 
-      <div className="flex flex-wrap items-center gap-2 py-4">
-        <label className="relative min-w-64 flex-1">
+      <div
+        className="flex items-center gap-3 py-4 max-[760px]:flex-col max-[760px]:items-stretch"
+        data-testid="user-filter-bar"
+      >
+        <label className="relative min-w-0 flex-1 max-[760px]:w-full">
           <Search
             aria-hidden="true"
             className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-[var(--muted)]"
@@ -152,7 +155,7 @@ export function UserManagement({
         </label>
         <DropdownSelect
           aria-label="按角色筛选"
-          className="h-9 rounded-[var(--radius-md)] border border-[var(--hairline)] bg-[var(--surface)] px-3 text-sm"
+          className="h-9 basis-40 shrink-0 rounded-[var(--radius-md)] border border-[var(--hairline)] bg-[var(--surface)] px-3 text-sm max-[760px]:basis-auto"
           onChange={(event) =>
             setRole(event.target.value as SystemRole | "all")
           }
@@ -167,7 +170,7 @@ export function UserManagement({
         </DropdownSelect>
         <DropdownSelect
           aria-label="按状态筛选"
-          className="h-9 rounded-[var(--radius-md)] border border-[var(--hairline)] bg-[var(--surface)] px-3 text-sm"
+          className="h-9 basis-40 shrink-0 rounded-[var(--radius-md)] border border-[var(--hairline)] bg-[var(--surface)] px-3 text-sm max-[760px]:basis-auto"
           onChange={(event) =>
             setStatus(event.target.value as UserStatus | "all")
           }

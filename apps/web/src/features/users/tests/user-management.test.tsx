@@ -66,4 +66,22 @@ describe("UserManagement", () => {
       screen.queryByRole("button", { name: "禁用用户" }),
     ).not.toBeInTheDocument();
   });
+
+  it("keeps search and filters on one desktop row", () => {
+    render(<UserManagement currentUser={currentUser} users={users} />);
+
+    expect(screen.getByTestId("user-filter-bar")).toHaveClass(
+      "flex",
+      "items-center",
+      "gap-3",
+    );
+    expect(screen.getByRole("button", { name: "全部角色" })).toHaveClass(
+      "basis-40",
+      "shrink-0",
+    );
+    expect(screen.getByRole("button", { name: "全部状态" })).toHaveClass(
+      "basis-40",
+      "shrink-0",
+    );
+  });
 });

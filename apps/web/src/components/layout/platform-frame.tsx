@@ -6,6 +6,7 @@ import { type ReactNode, useCallback, useEffect, useState } from "react";
 
 import { getCurrentUser } from "@/features/auth";
 import { listProjects } from "@/features/projects";
+import { projectWorkspacePath } from "@/lib/routes";
 
 import { AppShell } from "./app-shell";
 
@@ -51,7 +52,7 @@ export function PlatformFrame({ children }: { children: ReactNode }) {
     (projectId: string) => {
       localStorage.setItem(PROJECT_STORAGE_KEY, projectId);
       setStoredProjectId(projectId);
-      router.push(`/projects/${projectId}/overview`);
+      router.push(projectWorkspacePath(projectId));
     },
     [router],
   );

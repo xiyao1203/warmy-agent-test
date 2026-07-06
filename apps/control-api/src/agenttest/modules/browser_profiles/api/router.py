@@ -19,6 +19,8 @@ from collections.abc import Callable
 from datetime import UTC, datetime
 from pathlib import Path
 from urllib.error import URLError
+from urllib.parse import quote
+from urllib.request import Request as UrlRequest
 from urllib.request import urlopen
 
 from fastapi import APIRouter, Header, Request
@@ -154,7 +156,14 @@ def _update_profile_fields(project_id: str, profile_id: str, **fields) -> dict |
     profiles = _load_all(project_id)
     for data in profiles:
         if data["profile_id"] == profile_id:
-            allowed = {"name", "target_domain", "status", "cdp_endpoint", "last_login_at"}
+            allowed = {
+                "name",
+                "target_domain",
+                "status",
+                "cdp_endpoint",
+                "cdp_port",
+                "last_login_at",
+            }
             for key, value in fields.items():
                 if key in allowed:
                     data[key] = value
@@ -207,6 +216,22 @@ def _read_cdp_endpoint(port: int) -> str:
     return endpoint
 
 
+def _open_cdp_url(port: int, url: str) -> None:
+    if not url:
+        return
+    target = f"http://127.0.0.1:{port}/json/new?{quote(url, safe='')}"
+    last_error: Exception | None = None
+    for method in ("PUT", "POST", "GET"):
+        try:
+            request = UrlRequest(target, method=method)
+            with urlopen(request, timeout=1) as response:
+                response.read()
+            return
+        except Exception as exc:
+            last_error = exc
+    raise RuntimeError(f"无法通过 CDP 打开登录页: {last_error}")
+
+
 def _wait_for_cdp(port: int, timeout_seconds: float = 10) -> str:
     deadline = time.monotonic() + timeout_seconds
     last_error: Exception | None = None
@@ -219,24 +244,56 @@ def _wait_for_cdp(port: int, timeout_seconds: float = 10) -> str:
     raise RuntimeError(f"Chrome 启动超时，无法连接端口 {port}: {last_error}")
 
 
+def _is_port_free(port: int) -> bool:
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        try:
+            s.bind(("127.0.0.1", port))
+            return True
+        except OSError:
+            return False
+
+
+def _replace_profile_port(data: dict) -> int:
+    project_id = data.get("project_id", "")
+    current = int(data.get("cdp_port") or 0)
+    used = _used_ports(project_id)
+    used.discard(current)
+    candidate = _find_free_port(max(9222, current + 1))
+    while candidate in used:
+        candidate = _find_free_port(candidate + 1)
+    data["cdp_port"] = candidate
+    return candidate
+
+
 def _launch_browser_profile(data: dict, login_url: str) -> str:
     profile_id = data["profile_id"]
     port = int(data.get("cdp_port") or 0)
     if port <= 0:
         raise RuntimeError("浏览器实例缺少调试端口")
+    url = _normalise_login_url(login_url, data.get("target_domain", ""))
 
     process = _running_processes.get(profile_id)
     if process is not None and process.poll() is None:
         try:
-            return _read_cdp_endpoint(port)
+            endpoint = _read_cdp_endpoint(port)
         except Exception:
             process.kill()
             _running_processes.pop(profile_id, None)
+        else:
+            _open_cdp_url(port, url)
+            return endpoint
 
-    try:
-        return _read_cdp_endpoint(port)
-    except Exception:
-        pass
+    if data.get("status") == "running":
+        try:
+            endpoint = _read_cdp_endpoint(port)
+        except Exception:
+            pass
+        else:
+            _open_cdp_url(port, url)
+            return endpoint
+
+    if not _is_port_free(port):
+        port = _replace_profile_port(data)
 
     executable = _find_browser_executable()
     Path(data["user_data_dir"]).mkdir(parents=True, exist_ok=True)
@@ -247,8 +304,8 @@ def _launch_browser_profile(data: dict, login_url: str) -> str:
         "--no-first-run",
         "--no-default-browser-check",
     ]
-    url = _normalise_login_url(login_url, data.get("target_domain", ""))
     if url:
+        args.append("--new-window")
         args.append(url)
 
     process = subprocess.Popen(
@@ -464,6 +521,7 @@ def create_browser_profile_router(
             profile_id,
             status="running",
             cdp_endpoint=endpoint,
+            cdp_port=profile.get("cdp_port", 0),
         )
         return _to_response(updated or profile).model_dump()
 

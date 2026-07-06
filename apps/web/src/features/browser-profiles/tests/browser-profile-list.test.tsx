@@ -27,7 +27,7 @@ const runningProfile: BrowserProfile = {
 };
 
 describe("BrowserProfileList", () => {
-  it("shows the browser profile workflow and clear links", () => {
+  it("shows the browser profile workflow and clear links", async () => {
     render(<BrowserProfileList profiles={[profile]} projectId="project-1" />);
 
     expect(
@@ -49,17 +49,21 @@ describe("BrowserProfileList", () => {
     ).toBeVisible();
     expect(screen.getByText("管理员浏览器")).toBeVisible();
     expect(screen.getByText("已确认登录")).toBeVisible();
-    expect(screen.getByRole("link", { name: "配置计划" })).toHaveAttribute(
-      "href",
-      "/projects/project-1/test-plans",
+    expect(screen.getByRole("button", { name: "启动并登录" })).toHaveClass(
+      "shrink-0",
+      "whitespace-nowrap",
     );
-    expect(screen.getByRole("button", { name: "启动并登录" })).toBeVisible();
-    expect(
-      screen.getByRole("button", { name: "删除浏览器实例 管理员浏览器" }),
-    ).toBeVisible();
     expect(
       screen.getByRole("button", { name: "管理管理员浏览器" }),
-    ).toBeVisible();
+    ).toHaveClass("shrink-0");
+    fireEvent.pointerDown(
+      screen.getByRole("button", { name: "管理管理员浏览器" }),
+    );
+    expect(
+      await screen.findByRole("menuitem", { name: "配置计划" }),
+    ).toHaveAttribute("href", "/projects/project-1/test-plans");
+    expect(screen.getByRole("menuitem", { name: "设置实例" })).toBeVisible();
+    expect(screen.getByRole("menuitem", { name: "删除实例" })).toBeVisible();
     expect(document.querySelector("table")?.className).not.toContain("min-w");
   });
 
@@ -116,6 +120,10 @@ describe("BrowserProfileList", () => {
     );
 
     expect(screen.getByText("登录中")).toBeVisible();
+    expect(screen.getByRole("button", { name: "我已完成登录" })).toHaveClass(
+      "shrink-0",
+      "whitespace-nowrap",
+    );
     fireEvent.click(screen.getByRole("button", { name: "我已完成登录" }));
     await waitFor(() =>
       expect(onCompleteLogin).toHaveBeenCalledWith("profile-1", {
@@ -123,9 +131,10 @@ describe("BrowserProfileList", () => {
       }),
     );
 
-    fireEvent.click(
-      screen.getByRole("button", { name: "删除浏览器实例 管理员浏览器" }),
+    fireEvent.pointerDown(
+      screen.getByRole("button", { name: "管理管理员浏览器" }),
     );
+    fireEvent.click(await screen.findByRole("menuitem", { name: "删除实例" }));
     fireEvent.click(screen.getByRole("button", { name: "删除" }));
     await waitFor(() => expect(onDelete).toHaveBeenCalledWith("profile-1"));
   });

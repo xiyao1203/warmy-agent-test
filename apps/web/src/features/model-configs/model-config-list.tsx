@@ -233,30 +233,38 @@ export function ModelConfigList(props: Props) {
                       ) : null}
                     </td>
                     <td className="px-4 py-3 text-center align-middle">
-                      <div className="flex justify-center gap-1.5">
+                      <div className="flex flex-nowrap justify-center gap-1.5">
                         <Button
                           aria-label={`测试 ${model.name} 连接`}
-                          className="h-8 px-2.5 text-xs"
+                          className="h-8 shrink-0 whitespace-nowrap px-2.5 text-xs"
                           loading={busy === `test:${model.id}`}
                           onClick={() => void testConnection(model.id)}
                         >
-                          <Wifi className="size-3.5" />
+                          <Wifi aria-hidden="true" className="size-3.5" />
                           测试连接
                         </Button>
                         <Button
                           aria-label={`编辑 ${model.name}`}
-                          className="h-8 w-8 px-0"
+                          className="h-8 shrink-0 whitespace-nowrap px-2.5 text-xs"
                           onClick={() => setEditing(model)}
                         >
-                          <Settings2 className="size-3.5" />
+                          <Settings2
+                            aria-hidden="true"
+                            className="size-3.5 text-[var(--ink)]"
+                          />
+                          编辑
                         </Button>
                         <Button
                           aria-label={`删除 ${model.name}`}
-                          className="h-8 w-8 px-0"
+                          className="h-8 shrink-0 whitespace-nowrap px-2.5 text-xs"
                           onClick={() => setDeleteTarget(model)}
                           variant="danger"
                         >
-                          <Trash2 className="size-3.5" />
+                          <Trash2
+                            aria-hidden="true"
+                            className="size-3.5 text-[var(--danger)]"
+                          />
+                          删除
                         </Button>
                       </div>
                     </td>

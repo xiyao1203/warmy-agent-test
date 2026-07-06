@@ -409,7 +409,9 @@ export function BrowserProfileList({
                 <TableHead className="w-[9%]">状态</TableHead>
                 <TableHead className="w-[10%]">登录态</TableHead>
                 <TableHead className="w-[10%]">创建</TableHead>
-                <TableHead className="w-[22%]">操作</TableHead>
+                <TableHead className="w-[22%] whitespace-nowrap">
+                  操作
+                </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -451,11 +453,11 @@ export function BrowserProfileList({
                       : "-"}
                   </TableCell>
                   <TableCell>
-                    <div className="mx-auto flex w-fit max-w-full items-center justify-center gap-1.5">
+                    <div className="mx-auto flex w-fit max-w-full flex-nowrap items-center justify-center gap-2">
                       {profile.status === "running" ? (
                         <>
                           <Button
-                            className="h-8 px-2.5 text-xs"
+                            className="h-8 shrink-0 whitespace-nowrap px-4 text-xs"
                             disabled={
                               busyProfileId === profile.profile_id ||
                               !onCompleteLogin
@@ -467,7 +469,7 @@ export function BrowserProfileList({
                           </Button>
                           <Button
                             aria-label={`停止浏览器 ${profile.name}`}
-                            className="h-8 px-2.5 text-xs"
+                            className="h-8 shrink-0 whitespace-nowrap px-3 text-xs"
                             disabled={
                               busyProfileId === profile.profile_id || !onStop
                             }
@@ -483,7 +485,7 @@ export function BrowserProfileList({
                         </>
                       ) : (
                         <Button
-                          className="h-8 px-2.5 text-xs"
+                          className="h-8 shrink-0 whitespace-nowrap px-4 text-xs"
                           disabled={
                             busyProfileId === profile.profile_id || !onStart
                           }
@@ -497,40 +499,32 @@ export function BrowserProfileList({
                           启动并登录
                         </Button>
                       )}
-                      <Button
-                        asChild
-                        className="h-8 px-2.5 text-xs"
-                        variant="secondary"
-                      >
-                        <Link href={`/projects/${projectId}/test-plans`}>
-                          配置计划
-                        </Link>
-                      </Button>
-                      <Button
-                        aria-label={`删除浏览器实例 ${profile.name}`}
-                        className="h-8 w-8 px-0"
-                        disabled={!onDelete}
-                        onClick={() => openDelete(profile)}
-                        variant="ghost"
-                      >
-                        <Trash2
-                          aria-hidden="true"
-                          className="size-4 text-[var(--danger)]"
-                        />
-                      </Button>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                           <Button
                             aria-label={`管理${profile.name}`}
-                            className="h-8 w-8 px-0"
+                            className="h-8 w-8 shrink-0 px-0"
                             variant="ghost"
                           >
                             <MoreHorizontal className="size-4" />
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
+                          <DropdownMenuItem asChild>
+                            <Link href={`/projects/${projectId}/test-plans`}>
+                              配置计划
+                            </Link>
+                          </DropdownMenuItem>
                           <DropdownMenuItem onClick={() => openEdit(profile)}>
                             设置实例
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            className="gap-2 text-[var(--danger)]"
+                            disabled={!onDelete}
+                            onClick={() => openDelete(profile)}
+                          >
+                            <Trash2 aria-hidden="true" className="size-4" />
+                            删除实例
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>

@@ -46,6 +46,23 @@ describe("ModelConfigList", () => {
     expect(screen.getByText("能力").closest("th")).toHaveClass("w-[20%]");
     expect(screen.getByText("操作").closest("th")).toHaveClass("w-[24%]");
     expect(screen.getByRole("table")).toHaveClass("w-full", "table-fixed");
+    expect(
+      screen.getByRole("button", { name: "测试 主模型 连接" }),
+    ).toHaveTextContent("测试连接");
+    expect(
+      screen.getByRole("button", { name: "编辑 主模型" }),
+    ).toHaveTextContent("编辑");
+    expect(
+      screen.getByRole("button", { name: "删除 主模型" }),
+    ).toHaveTextContent("删除");
+    expect(screen.getByRole("button", { name: "编辑 主模型" })).toHaveClass(
+      "shrink-0",
+      "whitespace-nowrap",
+    );
+    expect(screen.getByRole("button", { name: "删除 主模型" })).toHaveClass(
+      "shrink-0",
+      "whitespace-nowrap",
+    );
   });
 
   it("creates a fully configured model", async () => {

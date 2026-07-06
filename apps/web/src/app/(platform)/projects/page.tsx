@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { createProject, listProjects } from "@/features/projects";
+import { projectWorkspacePath } from "@/lib/routes";
 
 export default function ProjectsPage() {
   const router = useRouter();
@@ -29,7 +30,7 @@ export default function ProjectsPage() {
 
   useEffect(() => {
     if (isSuccess && projects && projects.length > 0) {
-      router.replace(`/projects/${projects[0].id}/overview`);
+      router.replace(projectWorkspacePath(projects[0].id));
     }
   }, [isSuccess, projects, router]);
 
@@ -49,7 +50,7 @@ export default function ProjectsPage() {
           {isSuccess ? "请先创建一个项目以开始使用。" : "正在加载…"}
         </p>
         <CreateProjectDialog
-          onCreated={(id) => router.replace(`/projects/${id}/overview`)}
+          onCreated={(id) => router.replace(projectWorkspacePath(id))}
         />
       </div>
     </main>
