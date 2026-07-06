@@ -2,7 +2,7 @@
 
 import { useState, type FormEvent } from "react";
 import { useMutation } from "@tanstack/react-query";
-import { Lock, Shield, Eye, EyeOff, Save } from "lucide-react";
+import { Lock, Eye, EyeOff, Save } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -174,23 +174,6 @@ export function SecuritySection() {
             {mutation.isPending ? "修改中..." : "修改密码"}
           </Button>
         </form>
-      </section>
-
-      <section className="rounded-[var(--radius-lg)] border border-[var(--hairline)] bg-[var(--surface)] p-4 sm:p-5">
-        <div className="flex items-start justify-between gap-4">
-          <div className="flex items-start gap-3">
-            <Shield className="mt-0.5 size-4 text-[var(--muted)]" />
-            <div>
-              <h3 className="text-sm font-semibold">两步验证</h3>
-              <p className="mt-1 text-xs leading-5 text-[var(--muted)]">
-                当前账户暂不支持手机验证码或身份验证器绑定。
-              </p>
-            </div>
-          </div>
-          <span className="shrink-0 rounded-full bg-[var(--canvas-soft)] px-2.5 py-1 text-xs font-medium text-[var(--muted)]">
-            暂未开放
-          </span>
-        </div>
       </section>
     </div>
   );

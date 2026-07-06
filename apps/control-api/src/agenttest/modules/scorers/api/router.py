@@ -4,12 +4,11 @@ from __future__ import annotations
 
 import json
 from datetime import UTC, datetime
-from uuid import UUID, uuid4
+from uuid import UUID
 
 from fastapi import APIRouter, Header, Request
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field, ValidationError
-from sqlalchemy import func, select
 
 from agenttest.modules.identity.public import InvalidSessionError
 from agenttest.modules.projects.public import ProjectId, ProjectNotFoundError
@@ -18,7 +17,6 @@ from agenttest.modules.scorers.application.model_judge import ModelJudge
 from agenttest.modules.scorers.domain.config import ModelScorerConfig, parse_scorer_config
 from agenttest.modules.scorers.domain.entities import Scorer, ScorerId
 from agenttest.modules.scorers.domain.value_objects import ScorerType
-from agenttest.modules.scorers.infrastructure.persistence.models import ScorerVersionModel
 from agenttest.modules.scorers.infrastructure.persistence.repositories import (
     SqlAlchemyScorerRepository,
 )
@@ -91,8 +89,7 @@ def create_scorer_router(
             offset=offset,
         )
         published_versions = (
-            await _latest_published_versions(
-                session_factory,
+            await repo.latest_published_versions(
                 ProjectId(project_id),
                 [s.scorer_id.value for s in scorers],
             )
@@ -153,11 +150,7 @@ def create_scorer_router(
         await repo.add(scorer)
         published_version = None
         if versioning_enabled:
-            published_version = await _publish_scorer_version(
-                session_factory,
-                scorer,
-                actor.user_id.value,
-            )
+            published_version = await repo.publish_version(scorer, actor.user_id.value)
         return _scorer_to_dict(scorer, published_version=published_version)
 
     @router.get("/{scorer_id}")
@@ -228,11 +221,7 @@ def create_scorer_router(
         await repo.save(scorer)
         published_version = None
         if versioning_enabled:
-            published_version = await _publish_scorer_version(
-                session_factory,
-                scorer,
-                actor.user_id.value,
-            )
+            published_version = await repo.publish_version(scorer, actor.user_id.value)
         return _scorer_to_dict(scorer, published_version=published_version)
 
     @router.delete("/{scorer_id}")
@@ -304,71 +293,6 @@ def create_scorer_router(
             return JSONResponse(status_code=422, content={"detail": str(error)})
 
     return router
-
-
-async def _publish_scorer_version(
-    session_factory,
-    scorer: Scorer,
-    created_by: UUID,
-) -> tuple[UUID, int]:
-    now = datetime.now(UTC)
-    async with session_factory() as session:
-        async with session.begin():
-            latest_version = await session.scalar(
-                select(func.max(ScorerVersionModel.version_number)).where(
-                    ScorerVersionModel.scorer_id == scorer.scorer_id.value,
-                    ScorerVersionModel.project_id == scorer.project_id.value,
-                )
-            )
-            version_number = int(latest_version or 0) + 1
-            version_id = uuid4()
-            session.add(
-                ScorerVersionModel(
-                    id=version_id,
-                    project_id=scorer.project_id.value,
-                    scorer_id=scorer.scorer_id.value,
-                    version_number=version_number,
-                    status="published",
-                    config=dict(scorer.config_json),
-                    published_at=now,
-                    created_by=created_by,
-                    created_at=now,
-                    updated_at=now,
-                )
-            )
-    return version_id, version_number
-
-
-async def _latest_published_versions(
-    session_factory,
-    project_id: ProjectId,
-    scorer_ids: list[UUID],
-) -> dict[UUID, tuple[UUID, int]]:
-    if not scorer_ids:
-        return {}
-    async with session_factory() as session:
-        rows = (
-            await session.execute(
-                select(
-                    ScorerVersionModel.scorer_id,
-                    ScorerVersionModel.id,
-                    ScorerVersionModel.version_number,
-                )
-                .where(
-                    ScorerVersionModel.project_id == project_id.value,
-                    ScorerVersionModel.scorer_id.in_(scorer_ids),
-                    ScorerVersionModel.status == "published",
-                )
-                .order_by(
-                    ScorerVersionModel.scorer_id,
-                    ScorerVersionModel.version_number.desc(),
-                )
-            )
-        ).all()
-    result: dict[UUID, tuple[UUID, int]] = {}
-    for scorer_id, version_id, version_number in rows:
-        result.setdefault(scorer_id, (version_id, int(version_number)))
-    return result
 
 
 def _scorer_to_dict(

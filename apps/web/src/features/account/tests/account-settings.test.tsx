@@ -68,7 +68,8 @@ describe("account settings sections", () => {
   it("does not expose unsupported destructive account actions", () => {
     renderWithQueryClient(<SecuritySection />);
 
-    expect(screen.getByText("暂未开放")).toBeInTheDocument();
+    expect(screen.queryByText("暂未开放")).not.toBeInTheDocument();
+    expect(screen.queryByText("两步验证")).not.toBeInTheDocument();
     expect(
       screen.queryByRole("button", { name: "删除账户" }),
     ).not.toBeInTheDocument();

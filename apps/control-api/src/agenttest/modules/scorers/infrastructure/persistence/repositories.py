@@ -2,13 +2,19 @@
 
 from __future__ import annotations
 
+from datetime import UTC, datetime
+from uuid import UUID, uuid4
+
 from sqlalchemy import delete, func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from agenttest.modules.projects.public import ProjectId
 from agenttest.modules.scorers.domain.entities import Scorer, ScorerId
 from agenttest.modules.scorers.domain.value_objects import ScorerType
-from agenttest.modules.scorers.infrastructure.persistence.models import ScorerModel
+from agenttest.modules.scorers.infrastructure.persistence.models import (
+    ScorerModel,
+    ScorerVersionModel,
+)
 from agenttest.shared.infrastructure.database import session_scope, transaction_scope
 
 
@@ -95,6 +101,64 @@ class SqlAlchemyScorerRepository:
     async def delete(self, scorer_id: ScorerId) -> None:
         async with transaction_scope(self._session_factory) as session:
             await session.execute(delete(ScorerModel).where(ScorerModel.id == scorer_id.value))
+
+    async def publish_version(self, scorer: Scorer, created_by: UUID) -> tuple[UUID, int]:
+        now = datetime.now(UTC)
+        async with transaction_scope(self._session_factory) as session:
+            latest_version = await session.scalar(
+                select(func.max(ScorerVersionModel.version_number)).where(
+                    ScorerVersionModel.scorer_id == scorer.scorer_id.value,
+                    ScorerVersionModel.project_id == scorer.project_id.value,
+                )
+            )
+            version_number = int(latest_version or 0) + 1
+            version_id = uuid4()
+            session.add(
+                ScorerVersionModel(
+                    id=version_id,
+                    project_id=scorer.project_id.value,
+                    scorer_id=scorer.scorer_id.value,
+                    version_number=version_number,
+                    status="published",
+                    config=dict(scorer.config_json),
+                    published_at=now,
+                    created_by=created_by,
+                    created_at=now,
+                    updated_at=now,
+                )
+            )
+        return version_id, version_number
+
+    async def latest_published_versions(
+        self,
+        project_id: ProjectId,
+        scorer_ids: list[UUID],
+    ) -> dict[UUID, tuple[UUID, int]]:
+        if not scorer_ids:
+            return {}
+        async with session_scope(self._session_factory) as session:
+            rows = (
+                await session.execute(
+                    select(
+                        ScorerVersionModel.scorer_id,
+                        ScorerVersionModel.id,
+                        ScorerVersionModel.version_number,
+                    )
+                    .where(
+                        ScorerVersionModel.project_id == project_id.value,
+                        ScorerVersionModel.scorer_id.in_(scorer_ids),
+                        ScorerVersionModel.status == "published",
+                    )
+                    .order_by(
+                        ScorerVersionModel.scorer_id,
+                        ScorerVersionModel.version_number.desc(),
+                    )
+                )
+            ).all()
+        result: dict[UUID, tuple[UUID, int]] = {}
+        for scorer_id, version_id, version_number in rows:
+            result.setdefault(scorer_id, (version_id, int(version_number)))
+        return result
 
 
 def _to_scorer(model: ScorerModel) -> Scorer:

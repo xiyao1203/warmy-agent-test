@@ -1,5 +1,5 @@
-import { fireEvent, render, screen } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { describe, expect, it, vi } from "vitest";
 
 import { UserManagement } from "../user-management";
 
@@ -83,5 +83,21 @@ describe("UserManagement", () => {
       "basis-40",
       "shrink-0",
     );
+  });
+
+  it("loads the next user page from the pagination control", async () => {
+    const onLoadMore = vi.fn().mockResolvedValue(undefined);
+    render(
+      <UserManagement
+        currentUser={currentUser}
+        nextCursor="cursor-2"
+        onLoadMore={onLoadMore}
+        users={users}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "加载更多" }));
+
+    await waitFor(() => expect(onLoadMore).toHaveBeenCalledTimes(1));
   });
 });

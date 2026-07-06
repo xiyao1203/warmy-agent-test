@@ -1,6 +1,8 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
+import { useEffect, useState } from "react";
+import type { UserResponse } from "@warmy/generated-api-client";
 
 import { getCurrentUser } from "@/features/auth";
 import { problemKind } from "@/lib/api/problem";
@@ -16,6 +18,9 @@ import {
 import { UserManagement } from "./user-management";
 
 export function UserManagementScreen() {
+  const [items, setItems] = useState<UserResponse[]>([]);
+  const [nextCursor, setNextCursor] = useState<string | null>(null);
+  const [paging, setPaging] = useState(false);
   const userQuery = useQuery({
     queryFn: getCurrentUser,
     queryKey: ["session"],
@@ -25,6 +30,12 @@ export function UserManagementScreen() {
     queryFn: () => listUsers(),
     queryKey: ["users"],
   });
+  useEffect(() => {
+    if (!usersQuery.data) return;
+    setItems(usersQuery.data.items);
+    setNextCursor(usersQuery.data.next_cursor);
+  }, [usersQuery.data]);
+
   if (userQuery.isPending) {
     return <UserManagement loading />;
   }
@@ -49,7 +60,7 @@ export function UserManagementScreen() {
   return (
     <UserManagement
       currentUser={userQuery.data}
-      nextCursor={usersQuery.data.next_cursor}
+      nextCursor={nextCursor}
       onCreate={async (payload) => {
         await createUser(payload);
         await usersQuery.refetch();
@@ -62,6 +73,17 @@ export function UserManagementScreen() {
         await updateUser(userId, payload);
         await usersQuery.refetch();
       }}
+      onLoadMore={async () => {
+        if (!nextCursor || paging) return;
+        setPaging(true);
+        try {
+          const page = await listUsers(nextCursor);
+          setItems((current) => [...current, ...page.items]);
+          setNextCursor(page.next_cursor);
+        } finally {
+          setPaging(false);
+        }
+      }}
       onResetPassword={async (userId, password) => {
         await resetUserPassword(userId, password);
         await usersQuery.refetch();
@@ -70,7 +92,8 @@ export function UserManagementScreen() {
         await setUserEnabled(userId, enabled);
         await usersQuery.refetch();
       }}
-      users={usersQuery.data.items}
+      paging={paging}
+      users={items}
     />
   );
 }

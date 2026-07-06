@@ -170,7 +170,7 @@ async def _launch_chrome(profile: BrowserProfile, headless: bool) -> str:
     process = await asyncio.create_subprocess_exec(
         *args,
         stdout=asyncio.subprocess.DEVNULL,
-        stderr=asyncio.subprocess.PIPE,
+        stderr=asyncio.subprocess.DEVNULL,
     )
 
     try:

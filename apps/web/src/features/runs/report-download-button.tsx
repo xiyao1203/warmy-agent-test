@@ -3,6 +3,8 @@
 import { Download, FileJson, FileText, FileCode } from "lucide-react";
 import { useState } from "react";
 
+import { CONTROL_API_URL } from "@/lib/api/base-url";
+
 type ReportFormat = "json" | "junit" | "html";
 
 type ReportDownloadButtonProps = {
@@ -47,7 +49,7 @@ export function ReportDownloadButton({
     setDownloading(format);
     try {
       const response = await fetch(
-        `/api/v1/projects/${projectId}/runs/${runId}/reports/${format}`,
+        `${CONTROL_API_URL}/api/v1/projects/${projectId}/runs/${runId}/export?format=${format}`,
         {
           credentials: "include",
         },

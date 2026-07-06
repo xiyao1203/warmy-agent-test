@@ -34,8 +34,10 @@ type UserManagementProps = {
   onCreate?: (payload: CreateUserRequest) => Promise<unknown>;
   onDelete?: (userId: string) => Promise<unknown>;
   onEdit?: (userId: string, payload: UpdateUserRequest) => Promise<unknown>;
+  onLoadMore?: () => Promise<unknown>;
   onResetPassword?: (userId: string, password: string) => Promise<unknown>;
   onToggleStatus?: (userId: string, enabled: boolean) => Promise<unknown>;
+  paging?: boolean;
   users?: UserResponse[];
 };
 
@@ -60,8 +62,10 @@ export function UserManagement({
   onCreate = async () => undefined,
   onDelete = async () => undefined,
   onEdit = async () => undefined,
+  onLoadMore = async () => undefined,
   onResetPassword = async () => undefined,
   onToggleStatus = async () => undefined,
+  paging = false,
   users = [],
 }: UserManagementProps) {
   const [query, setQuery] = useState("");
@@ -253,8 +257,16 @@ export function UserManagement({
           </Table>
         )}
         {nextCursor ? (
-          <div className="border-t border-[var(--hairline)] px-4 py-3 text-right text-xs text-[var(--muted)]">
-            后端还有更多用户，下一阶段接入游标翻页。
+          <div className="flex items-center justify-between gap-3 border-t border-[var(--hairline)] px-4 py-3 text-xs text-[var(--muted)]">
+            <span>还有更多用户未显示。</span>
+            <button
+              className="rounded-[var(--radius-md)] border border-[var(--hairline)] bg-[var(--surface)] px-3 py-1.5 text-sm font-medium text-[var(--ink)] hover:bg-[var(--canvas-soft)] disabled:cursor-not-allowed disabled:opacity-50"
+              disabled={paging}
+              onClick={() => void onLoadMore()}
+              type="button"
+            >
+              {paging ? "加载中..." : "加载更多"}
+            </button>
           </div>
         ) : null}
       </section>

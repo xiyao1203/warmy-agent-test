@@ -18,6 +18,7 @@ import json
 import os
 import re
 import shutil
+import socket
 import tempfile
 import time
 from dataclasses import dataclass
@@ -54,6 +55,12 @@ def _storage_state_dir(storage_dir: str = "") -> Path:
     return Path(storage_dir) if storage_dir else DEFAULT_STORAGE_STATE_DIR
 
 
+def _find_free_port() -> int:
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+        sock.bind(("127.0.0.1", 0))
+        return int(sock.getsockname()[1])
+
+
 # ── 持久 Chrome 进程管理 ──────────────────────────────
 
 # Chrome 生命周期已迁移至 chrome_pool 模块。
@@ -72,6 +79,8 @@ async def ensure_persistent_chrome(
     """
     if not user_data_dir:
         user_data_dir = str(Path(tempfile.gettempdir()) / "agenttest-chrome-profile")
+        if remote_debugging_port == 9222:
+            remote_debugging_port = _find_free_port()
 
     # 构建临时 Profile（不持久化到 registry）
     profile = BrowserProfile(
