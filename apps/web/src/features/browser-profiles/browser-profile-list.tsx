@@ -399,31 +399,31 @@ export function BrowserProfileList({
           title="暂无浏览器实例"
         />
       ) : (
-        <section className="overflow-x-auto rounded-[var(--radius-lg)] border border-[var(--hairline)] bg-[var(--surface)]">
-          <Table className="w-full min-w-[1180px] table-fixed">
+        <section className="overflow-hidden rounded-[var(--radius-lg)] border border-[var(--hairline)] bg-[var(--surface)]">
+          <Table className="w-full table-fixed">
             <TableHeader className="bg-[var(--canvas-soft)]">
               <TableRow>
-                <TableHead className="w-[280px]">实例信息</TableHead>
-                <TableHead className="w-48">目标域名</TableHead>
-                <TableHead className="w-24 text-center">端口</TableHead>
-                <TableHead className="w-24 text-center">状态</TableHead>
-                <TableHead className="w-28 text-center">登录态</TableHead>
-                <TableHead className="w-32 text-center">创建时间</TableHead>
-                <TableHead className="w-[360px] text-right">操作</TableHead>
+                <TableHead className="w-[24%]">实例</TableHead>
+                <TableHead className="w-[17%]">目标域名</TableHead>
+                <TableHead className="w-[8%]">端口</TableHead>
+                <TableHead className="w-[9%]">状态</TableHead>
+                <TableHead className="w-[10%]">登录态</TableHead>
+                <TableHead className="w-[10%]">创建</TableHead>
+                <TableHead className="w-[22%]">操作</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {profiles.map((profile) => (
                 <TableRow key={profile.profile_id}>
-                  <TableCell>
-                    <div className="min-w-0">
+                  <TableCell className="min-w-0">
+                    <div className="mx-auto min-w-0 max-w-full text-center">
                       <p className="truncate font-medium">{profile.name}</p>
                       <p className="mt-0.5 truncate text-xs text-[var(--muted)]">
-                        测试计划选择后，浏览器用例会复用这个实例
+                        计划选择后自动复用
                       </p>
                     </div>
                   </TableCell>
-                  <TableCell className="text-[var(--muted)]">
+                  <TableCell className="truncate text-[var(--muted)]">
                     {profile.target_domain || (
                       <span className="italic">未设置</span>
                     )}
@@ -450,12 +450,12 @@ export function BrowserProfileList({
                       ? new Date(profile.created_at).toLocaleDateString("zh-CN")
                       : "-"}
                   </TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex flex-wrap items-center justify-end gap-1">
+                  <TableCell>
+                    <div className="mx-auto flex w-fit max-w-full items-center justify-center gap-1.5">
                       {profile.status === "running" ? (
                         <>
                           <Button
-                            className="px-3"
+                            className="h-8 px-2.5 text-xs"
                             disabled={
                               busyProfileId === profile.profile_id ||
                               !onCompleteLogin
@@ -467,7 +467,7 @@ export function BrowserProfileList({
                           </Button>
                           <Button
                             aria-label={`停止浏览器 ${profile.name}`}
-                            className="px-3"
+                            className="h-8 px-2.5 text-xs"
                             disabled={
                               busyProfileId === profile.profile_id || !onStop
                             }
@@ -483,7 +483,7 @@ export function BrowserProfileList({
                         </>
                       ) : (
                         <Button
-                          className="px-3"
+                          className="h-8 px-2.5 text-xs"
                           disabled={
                             busyProfileId === profile.profile_id || !onStart
                           }
@@ -497,29 +497,32 @@ export function BrowserProfileList({
                           启动并登录
                         </Button>
                       )}
-                      <Button asChild className="px-3" variant="secondary">
+                      <Button
+                        asChild
+                        className="h-8 px-2.5 text-xs"
+                        variant="secondary"
+                      >
                         <Link href={`/projects/${projectId}/test-plans`}>
-                          配置到计划
+                          配置计划
                         </Link>
                       </Button>
                       <Button
                         aria-label={`删除浏览器实例 ${profile.name}`}
-                        className="px-3"
+                        className="h-8 w-8 px-0"
                         disabled={!onDelete}
                         onClick={() => openDelete(profile)}
                         variant="ghost"
                       >
                         <Trash2
                           aria-hidden="true"
-                          className="mr-1 size-4 text-[var(--danger)]"
+                          className="size-4 text-[var(--danger)]"
                         />
-                        删除
                       </Button>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                           <Button
                             aria-label={`管理${profile.name}`}
-                            className="w-9 px-0"
+                            className="h-8 w-8 px-0"
                             variant="ghost"
                           >
                             <MoreHorizontal className="size-4" />

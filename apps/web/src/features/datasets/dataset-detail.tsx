@@ -7,7 +7,7 @@ import type {
   ImportPreviewResponse,
   TestCaseResponse,
 } from "@warmy/generated-api-client";
-import { CheckSquare, Eye, Plus, Square, Trash2 } from "lucide-react";
+import { CheckSquare, Eye, Pencil, Plus, Square, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useCallback, useMemo, useState } from "react";
 
@@ -275,12 +275,12 @@ export function DatasetDetail({
             title={search ? "无匹配结果" : "暂无测试用例"}
           />
         ) : (
-          <div className="mt-3 overflow-x-auto rounded-[var(--radius-lg)] border border-[var(--hairline)] bg-[var(--surface)]">
-            <Table className="min-w-[1120px] table-fixed">
+          <div className="mt-3 overflow-hidden rounded-[var(--radius-lg)] border border-[var(--hairline)] bg-[var(--surface)]">
+            <Table className="w-full table-fixed">
               <TableHeader className="bg-[var(--canvas-soft)]">
                 <TableRow>
                   {canSelectCases && (
-                    <TableHead className="w-10">
+                    <TableHead className="w-[4%]">
                       <button
                         aria-label={allSelected ? "取消全选" : "全选"}
                         onClick={toggleAll}
@@ -294,12 +294,14 @@ export function DatasetDetail({
                       </button>
                     </TableHead>
                   )}
-                  <TableHead className="w-[420px]">用例名称</TableHead>
-                  <TableHead className="w-32 text-center">优先级</TableHead>
-                  <TableHead className="w-32 text-center">风险等级</TableHead>
-                  <TableHead className="w-40 text-center">执行模式</TableHead>
-                  <TableHead className="w-32 text-center">断言</TableHead>
-                  <TableHead className="w-48 text-right">操作</TableHead>
+                  <TableHead className={canSelectCases ? "w-[34%]" : "w-[38%]"}>
+                    用例名称
+                  </TableHead>
+                  <TableHead className="w-[11%]">优先级</TableHead>
+                  <TableHead className="w-[12%]">风险等级</TableHead>
+                  <TableHead className="w-[13%]">执行模式</TableHead>
+                  <TableHead className="w-[12%]">断言</TableHead>
+                  <TableHead className="w-[18%]">操作</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -326,12 +328,14 @@ export function DatasetDetail({
                       </TableCell>
                     )}
                     <TableCell className="min-w-0">
-                      <p className="truncate font-medium">{c.name}</p>
-                      <p className="mt-0.5 truncate text-xs text-[var(--muted)]">
-                        {c.input
-                          ? JSON.stringify(c.input).slice(0, 80)
-                          : "无输入"}
-                      </p>
+                      <div className="mx-auto min-w-0 max-w-full text-left">
+                        <p className="truncate font-medium">{c.name}</p>
+                        <p className="mt-0.5 truncate text-xs text-[var(--muted)]">
+                          {c.input
+                            ? JSON.stringify(c.input).slice(0, 80)
+                            : "无输入"}
+                        </p>
+                      </div>
                     </TableCell>
                     <TableCell className="whitespace-nowrap text-center">
                       <Badge tone={c.priority === "P0" ? "danger" : "neutral"}>
@@ -355,11 +359,11 @@ export function DatasetDetail({
                           : "未配置"}
                       </Badge>
                     </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex justify-end gap-1 whitespace-nowrap">
+                    <TableCell>
+                      <div className="mx-auto flex w-fit max-w-full justify-center gap-1 whitespace-nowrap">
                         <Button
                           aria-label="查看详情"
-                          className="shrink-0 px-2.5"
+                          className="h-8 w-8 shrink-0 px-0"
                           onClick={() => setViewingCase(c)}
                           variant="ghost"
                         >
@@ -373,17 +377,20 @@ export function DatasetDetail({
                               onRefresh?.();
                             }}
                             triggerAriaLabel={`编辑${c.name}`}
+                            triggerIcon={
+                              <Pencil aria-hidden="true" className="size-4" />
+                            }
                             triggerLabel="编辑"
                           />
                         )}
                         {canEditExistingCases && onDeleteCases && (
                           <Button
                             aria-label={`删除${c.name}`}
-                            className="shrink-0 px-2.5"
+                            className="h-8 w-8 shrink-0 px-0"
                             onClick={() => void handleDeleteOne(c.id)}
                             variant="danger"
                           >
-                            删除
+                            <Trash2 aria-hidden="true" className="size-4" />
                           </Button>
                         )}
                       </div>

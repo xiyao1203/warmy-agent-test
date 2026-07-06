@@ -44,13 +44,35 @@ describe("ProjectOverview", () => {
     expect(screen.getByRole("heading", { name: "项目 A" })).toBeVisible();
     expect(screen.getAllByText("已归档")).toHaveLength(2);
     expect(screen.getAllByText("开发")).toHaveLength(2);
-    expect(screen.getByText("2 位成员")).toBeVisible();
+    expect(screen.getAllByText("2 位成员")).toHaveLength(2);
     expect(screen.getByText("2 Agents")).toBeVisible();
     expect(screen.getByText("3 数据集")).toBeVisible();
     expect(screen.getByText("1 测试计划")).toBeVisible();
     expect(screen.getByText("查看运行中心")).toBeVisible();
     expect(
-      screen.getByText("运行记录、进度与结果可在运行中心查看。"),
+      screen.getByText(
+        "当前概览页只展示项目摘要；完整运行记录、进度与结果在运行中心统一查看。",
+      ),
+    ).toBeVisible();
+    expect(screen.getByRole("link", { name: "去运行中心" })).toHaveAttribute(
+      "href",
+      "/projects/project-1/runs",
+    );
+  });
+
+  it("shows compact empty member guidance", () => {
+    render(
+      <ProjectOverview
+        members={[]}
+        project={{ archived: false, id: "project-1", name: "项目 A" }}
+        user={{ ...user, role: "super_admin" }}
+      />,
+    );
+
+    expect(screen.getByText("暂无普通成员")).toBeVisible();
+    expect(screen.getByText("暂无项目成员")).toBeVisible();
+    expect(
+      screen.getByText(/需要协作时可到系统用户和项目成员配置中分配权限/),
     ).toBeVisible();
   });
 });

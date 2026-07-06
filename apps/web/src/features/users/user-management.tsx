@@ -198,7 +198,7 @@ export function UserManagement({
                 <TableHead>系统角色</TableHead>
                 <TableHead>状态</TableHead>
                 <TableHead>登录策略</TableHead>
-                <TableHead className="w-20 text-right">操作</TableHead>
+                <TableHead className="w-20">操作</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -234,7 +234,7 @@ export function UserManagement({
                       <span className="text-[var(--muted)]">正常</span>
                     )}
                   </TableCell>
-                  <TableCell className="text-right">
+                  <TableCell>
                     <button
                       aria-label={`查看${user.display_name}`}
                       className="rounded-[var(--radius-md)] px-2 py-1 text-sm text-[var(--primary)] hover:bg-[var(--primary-subtle)]"

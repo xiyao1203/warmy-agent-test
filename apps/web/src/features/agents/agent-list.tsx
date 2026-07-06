@@ -114,13 +114,13 @@ export function AgentList({
             title="暂无 Agent"
           />
         ) : (
-          <Table className="w-auto min-w-[1040px] table-fixed">
+          <Table className="w-full table-fixed">
             <TableHeader className="bg-[var(--canvas-soft)]">
               <TableRow>
-                <TableHead className="w-[360px]">智能体信息</TableHead>
-                <TableHead className="w-32 text-center">接入类型</TableHead>
-                <TableHead className="w-[320px]">闭环状态</TableHead>
-                <TableHead className="w-32 text-center">更新时间</TableHead>
+                <TableHead className="w-[28%]">智能体信息</TableHead>
+                <TableHead className="w-[14%]">接入类型</TableHead>
+                <TableHead className="w-[32%]">闭环状态</TableHead>
+                <TableHead className="w-[13%]">更新时间</TableHead>
                 <TableHead className={tableActionHeadClass}>操作</TableHead>
               </TableRow>
             </TableHeader>
@@ -131,7 +131,7 @@ export function AgentList({
                   key={agent.id}
                 >
                   <TableCell>
-                    <div className="flex min-w-0 items-center gap-3">
+                    <div className="mx-auto flex w-fit max-w-full min-w-0 items-center gap-3 text-left">
                       <span className="grid size-8 shrink-0 place-items-center rounded-[var(--radius-md)] bg-[var(--canvas-soft)]">
                         <Bot aria-hidden="true" className="size-4" />
                       </span>
@@ -153,7 +153,9 @@ export function AgentList({
                     </Badge>
                   </TableCell>
                   <TableCell>
-                    <AgentLifecycleSummary agent={agent} />
+                    <div className="mx-auto w-fit max-w-full">
+                      <AgentLifecycleSummary agent={agent} />
+                    </div>
                   </TableCell>
                   <TableCell className="whitespace-nowrap text-center text-sm text-[var(--muted)]">
                     {new Date(agent.updated_at).toLocaleDateString("zh-CN")}

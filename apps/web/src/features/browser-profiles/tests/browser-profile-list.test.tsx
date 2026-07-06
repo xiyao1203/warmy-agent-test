@@ -41,9 +41,7 @@ describe("BrowserProfileList", () => {
     expect(
       screen.getByRole("link", { name: /4. 启动测试执行/ }),
     ).toHaveAttribute("href", "/projects/project-1/runs");
-    expect(
-      screen.getByRole("columnheader", { name: "实例信息" }),
-    ).toBeVisible();
+    expect(screen.getByRole("columnheader", { name: "实例" })).toBeVisible();
     expect(screen.getByRole("columnheader", { name: "操作" })).toBeVisible();
     expect(screen.getByText("这些实例用在哪儿")).toBeVisible();
     expect(
@@ -51,7 +49,7 @@ describe("BrowserProfileList", () => {
     ).toBeVisible();
     expect(screen.getByText("管理员浏览器")).toBeVisible();
     expect(screen.getByText("已确认登录")).toBeVisible();
-    expect(screen.getByRole("link", { name: "配置到计划" })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: "配置计划" })).toHaveAttribute(
       "href",
       "/projects/project-1/test-plans",
     );
@@ -62,6 +60,7 @@ describe("BrowserProfileList", () => {
     expect(
       screen.getByRole("button", { name: "管理管理员浏览器" }),
     ).toBeVisible();
+    expect(document.querySelector("table")?.className).not.toContain("min-w");
   });
 
   it("guides empty state, creates a browser profile and starts login", async () => {

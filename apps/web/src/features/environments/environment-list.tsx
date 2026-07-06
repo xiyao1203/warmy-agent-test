@@ -164,14 +164,14 @@ export function EnvironmentList({
             title="暂无环境模板"
           />
         ) : (
-          <Table className="w-auto min-w-[820px] table-fixed">
+          <Table className="w-full table-fixed">
             <TableHeader className="bg-[var(--canvas-soft)]">
               <TableRow>
-                <TableHead className="w-[380px]">环境信息</TableHead>
-                <TableHead className="w-24 text-center">类型</TableHead>
-                <TableHead className="w-32 text-center">版本</TableHead>
-                <TableHead className="w-32 text-center">更新时间</TableHead>
-                <TableHead className="w-40 text-center">下一步</TableHead>
+                <TableHead className="w-[34%]">环境信息</TableHead>
+                <TableHead className="w-[12%]">类型</TableHead>
+                <TableHead className="w-[16%]">版本</TableHead>
+                <TableHead className="w-[16%]">更新时间</TableHead>
+                <TableHead className="w-[22%]">下一步</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -293,7 +293,7 @@ function TemplateRow({
     <>
       <TableRow className="transition-colors hover:bg-[var(--canvas-soft)]">
         <TableCell>
-          <div className="flex min-w-0 items-center gap-3">
+          <div className="mx-auto flex w-fit min-w-0 items-center gap-3 text-left">
             <span className="grid size-8 shrink-0 place-items-center rounded-[var(--radius-md)] bg-[var(--canvas-soft)]">
               <Cog aria-hidden="true" className="size-4" />
             </span>

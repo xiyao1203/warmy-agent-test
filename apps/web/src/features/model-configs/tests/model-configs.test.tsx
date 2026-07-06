@@ -41,6 +41,11 @@ describe("ModelConfigList", () => {
     expect(screen.getByText("...cret")).toBeVisible();
     expect(screen.getByText("测试 Agent 对话")).toBeVisible();
     expect(screen.queryByText("sk-production-secret")).not.toBeInTheDocument();
+    expect(screen.getByText("模型").closest("th")).toHaveClass("w-[24%]");
+    expect(screen.getByText("服务与凭证").closest("th")).toHaveClass("w-[32%]");
+    expect(screen.getByText("能力").closest("th")).toHaveClass("w-[20%]");
+    expect(screen.getByText("操作").closest("th")).toHaveClass("w-[24%]");
+    expect(screen.getByRole("table")).toHaveClass("w-full", "table-fixed");
   });
 
   it("creates a fully configured model", async () => {

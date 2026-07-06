@@ -141,12 +141,12 @@ export function TestPlanList({
             title="暂无测试计划"
           />
         ) : (
-          <Table className="w-auto min-w-[820px] table-fixed">
+          <Table className="w-full table-fixed">
             <TableHeader className="bg-[var(--canvas-soft)]">
               <TableRow>
-                <TableHead className="w-[420px] pl-16">计划信息</TableHead>
-                <TableHead className="w-32 text-center">更新时间</TableHead>
-                <TableHead className="w-48 min-w-48 whitespace-nowrap text-center">
+                <TableHead className="w-[54%]">计划信息</TableHead>
+                <TableHead className="w-[20%]">更新时间</TableHead>
+                <TableHead className="w-[26%] whitespace-nowrap">
                   下一步
                 </TableHead>
               </TableRow>
@@ -158,7 +158,7 @@ export function TestPlanList({
                   key={plan.id}
                 >
                   <TableCell>
-                    <div className="flex min-w-0 items-center gap-3">
+                    <div className="mx-auto flex w-fit max-w-full min-w-0 items-center gap-3 text-left">
                       <span className="grid size-8 shrink-0 place-items-center rounded-[var(--radius-md)] bg-[var(--canvas-soft)]">
                         <ClipboardCheck aria-hidden="true" className="size-4" />
                       </span>

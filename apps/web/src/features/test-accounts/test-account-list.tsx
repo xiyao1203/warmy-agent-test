@@ -109,10 +109,10 @@ export function TestAccountList({
             <TableHeader className="bg-[var(--canvas-soft)]">
               <TableRow>
                 <TableHead>账号信息</TableHead>
-                <TableHead className="w-32 text-center">类型</TableHead>
-                <TableHead className="w-40 text-center">凭证（掩码）</TableHead>
-                <TableHead className="w-24 text-center">状态</TableHead>
-                <TableHead className="w-32 text-center">操作</TableHead>
+                <TableHead className="w-32">类型</TableHead>
+                <TableHead className="w-40">凭证（掩码）</TableHead>
+                <TableHead className="w-24">状态</TableHead>
+                <TableHead className="w-32">操作</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -122,7 +122,7 @@ export function TestAccountList({
                   key={account.id}
                 >
                   <TableCell>
-                    <div className="flex items-center gap-3">
+                    <div className="mx-auto flex w-fit items-center gap-3 text-left">
                       <span className="grid size-8 shrink-0 place-items-center rounded-[var(--radius-md)] bg-[var(--canvas-soft)]">
                         <User aria-hidden="true" className="size-4" />
                       </span>

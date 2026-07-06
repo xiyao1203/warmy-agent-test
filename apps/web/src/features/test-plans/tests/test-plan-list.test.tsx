@@ -73,18 +73,16 @@ describe("TestPlanList", () => {
     );
     expect(screen.getByText("回归计划")).toBeVisible();
     expect(screen.getByRole("columnheader", { name: "计划信息" })).toHaveClass(
-      "w-[420px]",
-      "pl-16",
+      "w-[54%]",
     );
     expect(screen.getByRole("columnheader", { name: "更新时间" })).toHaveClass(
-      "w-32",
-      "text-center",
+      "w-[20%]",
     );
     expect(screen.getByRole("columnheader", { name: "下一步" })).toHaveClass(
-      "w-48",
+      "w-[26%]",
       "whitespace-nowrap",
     );
-    expect(screen.getByRole("table")).toHaveClass("w-auto", "table-fixed");
+    expect(screen.getByRole("table")).toHaveClass("w-full", "table-fixed");
     expect(screen.getByRole("group", { name: "回归计划 操作" })).toHaveClass(
       "whitespace-nowrap",
     );

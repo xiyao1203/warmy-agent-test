@@ -45,7 +45,7 @@ export function TableHead({
 }: ThHTMLAttributes<HTMLTableCellElement>) {
   return (
     <th
-      className={`h-9 px-3 text-xs font-medium text-[var(--muted)] ${className}`}
+      className={`h-9 px-3 text-center text-xs font-medium text-[var(--muted)] ${className}`}
       {...props}
     />
   );
@@ -55,5 +55,10 @@ export function TableCell({
   className = "",
   ...props
 }: TdHTMLAttributes<HTMLTableCellElement>) {
-  return <td className={`h-11 px-3 ${className}`} {...props} />;
+  return (
+    <td
+      className={`h-11 px-3 text-center align-middle ${className}`}
+      {...props}
+    />
+  );
 }

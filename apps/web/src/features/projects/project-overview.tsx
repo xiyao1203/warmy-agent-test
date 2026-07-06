@@ -3,11 +3,19 @@ import type {
   ProjectResponse,
   UserResponse,
 } from "@warmy/generated-api-client";
-import { Archive, Folder, Users } from "lucide-react";
+import Link from "next/link";
+import {
+  Activity,
+  Archive,
+  ArrowRight,
+  Folder,
+  UserRoundPlus,
+  Users,
+} from "lucide-react";
 import type { ReactNode } from "react";
 
 import { Badge } from "@/components/ui/badge";
-import { EmptyState } from "@/components/ui/empty-state";
+import { Button } from "@/components/ui/button";
 import {
   Table,
   TableBody,
@@ -132,14 +140,18 @@ export function ProjectOverview({
         </Metric>
       </section>
 
-      <div className="grid grid-cols-[minmax(0,1.6fr)_minmax(18rem,0.7fr)] gap-6 py-6 max-[1000px]:grid-cols-1">
-        <section className="overflow-hidden rounded-[var(--radius-lg)] border border-[var(--hairline)] bg-[var(--surface)]">
-          <div className="border-b border-[var(--hairline)] px-4 py-3">
-            <h2 className="text-sm font-semibold">项目成员</h2>
-            <p className="mt-1 text-xs text-[var(--muted)]">
-              当前 API 仅提供成员标识和项目角色。
-            </p>
-          </div>
+      <div className="grid grid-cols-[minmax(0,1.6fr)_minmax(18rem,0.7fr)] items-stretch gap-5 py-6 max-[1000px]:grid-cols-1">
+        <section className="overflow-hidden rounded-[var(--radius-md)] border border-[var(--hairline)] bg-[var(--surface)] shadow-sm shadow-black/[0.02]">
+          <PanelHeader
+            action={
+              <Badge tone={members.length ? "success" : "neutral"}>
+                {members.length ? `${members.length} 位成员` : "暂无普通成员"}
+              </Badge>
+            }
+            description="成员决定谁可以访问本项目里的测试资产和运行结果。"
+            icon={<Users className="size-4" />}
+            title="项目成员"
+          />
           {members.length ? (
             <Table>
               <TableHeader className="bg-[var(--canvas-soft)]">
@@ -170,23 +182,90 @@ export function ProjectOverview({
               </TableBody>
             </Table>
           ) : (
-            <EmptyState
-              description="此项目还没有普通成员，超级管理员仍可访问项目。"
+            <CardEmptyState
+              description="此项目还没有普通成员，超级管理员仍可访问；需要协作时可到系统用户和项目成员配置中分配权限。"
+              icon={<UserRoundPlus className="size-5" />}
               title="暂无项目成员"
             />
           )}
         </section>
 
-        <section className="rounded-[var(--radius-lg)] border border-[var(--hairline)] bg-[var(--surface)]">
-          <div className="border-b border-[var(--hairline)] px-4 py-3">
-            <h2 className="text-sm font-semibold">测试活动</h2>
-          </div>
-          <EmptyState
-            description="运行记录、进度与结果可在运行中心查看。"
+        <section className="overflow-hidden rounded-[var(--radius-md)] border border-[var(--hairline)] bg-[var(--surface)] shadow-sm shadow-black/[0.02]">
+          <PanelHeader
+            action={<Badge tone="neutral">运行记录</Badge>}
+            description="从运行中心查看执行进度、结果和 Trace 证据。"
+            icon={<Activity className="size-4" />}
+            title="测试活动"
+          />
+          <CardEmptyState
+            action={
+              <Button asChild className="h-8 px-3" variant="secondary">
+                <Link href={`/projects/${project.id}/runs`}>
+                  去运行中心
+                  <ArrowRight aria-hidden="true" className="size-4" />
+                </Link>
+              </Button>
+            }
+            description="当前概览页只展示项目摘要；完整运行记录、进度与结果在运行中心统一查看。"
+            icon={<Activity className="size-5" />}
             title="查看运行中心"
           />
         </section>
       </div>
+    </div>
+  );
+}
+
+function PanelHeader({
+  action,
+  description,
+  icon,
+  title,
+}: {
+  action?: ReactNode;
+  description: string;
+  icon: ReactNode;
+  title: string;
+}) {
+  return (
+    <div className="flex items-start justify-between gap-3 border-b border-[var(--hairline)] bg-[var(--canvas-soft)] px-4 py-3">
+      <div className="flex min-w-0 items-start gap-3">
+        <span className="mt-0.5 grid size-7 shrink-0 place-items-center rounded-[var(--radius-sm)] border border-[var(--hairline)] bg-[var(--surface)] text-[var(--muted)]">
+          {icon}
+        </span>
+        <div className="min-w-0">
+          <h2 className="text-sm font-semibold">{title}</h2>
+          <p className="mt-1 text-xs leading-5 text-[var(--muted)]">
+            {description}
+          </p>
+        </div>
+      </div>
+      {action ? <div className="shrink-0">{action}</div> : null}
+    </div>
+  );
+}
+
+function CardEmptyState({
+  action,
+  description,
+  icon,
+  title,
+}: {
+  action?: ReactNode;
+  description: string;
+  icon: ReactNode;
+  title: string;
+}) {
+  return (
+    <div className="flex min-h-48 flex-col items-center justify-center px-6 py-8 text-center">
+      <span className="grid size-10 place-items-center rounded-[var(--radius-md)] border border-[var(--hairline)] bg-[var(--canvas-soft)] text-[var(--muted)]">
+        {icon}
+      </span>
+      <h3 className="mt-4 text-sm font-semibold text-[var(--ink)]">{title}</h3>
+      <p className="mt-1 max-w-sm text-sm leading-6 text-[var(--muted)]">
+        {description}
+      </p>
+      {action ? <div className="mt-4">{action}</div> : null}
     </div>
   );
 }

@@ -71,12 +71,11 @@ describe("DatasetList", () => {
     expect(screen.getByText("Agent 对话回归集")).toBeVisible();
     expect(
       screen.getByRole("columnheader", { name: "用例集信息" }),
-    ).toHaveClass("w-[420px]", "pl-16");
+    ).toHaveClass("w-[54%]");
     expect(screen.getByRole("columnheader", { name: "更新时间" })).toHaveClass(
-      "w-32",
-      "text-center",
+      "w-[20%]",
     );
-    expect(screen.getByRole("table")).toHaveClass("w-auto", "table-fixed");
+    expect(screen.getByRole("table")).toHaveClass("w-full", "table-fixed");
     expect(screen.getByRole("group", { name: "对话回归 操作" })).toHaveClass(
       "whitespace-nowrap",
     );

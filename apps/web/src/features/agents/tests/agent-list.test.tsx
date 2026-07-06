@@ -65,19 +65,17 @@ describe("AgentList", () => {
     expect(screen.getByText("下一步：创建连接版本")).toBeVisible();
     expect(
       screen.getByRole("columnheader", { name: "智能体信息" }),
-    ).toHaveClass("w-[360px]");
+    ).toHaveClass("w-[28%]");
     expect(screen.getByRole("columnheader", { name: "接入类型" })).toHaveClass(
-      "w-32",
-      "text-center",
+      "w-[14%]",
     );
     expect(screen.getByRole("columnheader", { name: "闭环状态" })).toHaveClass(
-      "w-[320px]",
+      "w-[32%]",
     );
     expect(screen.getByRole("columnheader", { name: "更新时间" })).toHaveClass(
-      "w-32",
-      "text-center",
+      "w-[13%]",
     );
-    expect(screen.getByRole("table")).toHaveClass("w-auto", "table-fixed");
+    expect(screen.getByRole("table")).toHaveClass("w-full", "table-fixed");
     const actions = screen.getByRole("group", { name: "客服 Agent 操作" });
     expect(actions).toHaveClass("whitespace-nowrap");
     expect(

@@ -84,11 +84,11 @@ export function DatasetList({
             title="暂无用例集"
           />
         ) : (
-          <Table className="w-auto min-w-[680px] table-fixed">
+          <Table className="w-full table-fixed">
             <TableHeader className="bg-[var(--canvas-soft)]">
               <TableRow>
-                <TableHead className="w-[420px] pl-16">用例集信息</TableHead>
-                <TableHead className="w-32 text-center">更新时间</TableHead>
+                <TableHead className="w-[54%]">用例集信息</TableHead>
+                <TableHead className="w-[20%]">更新时间</TableHead>
                 <TableHead className={tableActionHeadClass}>操作</TableHead>
               </TableRow>
             </TableHeader>
@@ -99,7 +99,7 @@ export function DatasetList({
                   key={dataset.id}
                 >
                   <TableCell>
-                    <div className="flex min-w-0 items-center gap-3">
+                    <div className="mx-auto flex w-fit max-w-full min-w-0 items-center gap-3 text-left">
                       <span className="grid size-8 shrink-0 place-items-center rounded-[var(--radius-md)] bg-[var(--canvas-soft)]">
                         <Database aria-hidden="true" className="size-4" />
                       </span>

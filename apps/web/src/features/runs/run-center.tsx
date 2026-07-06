@@ -244,7 +244,7 @@ export function RunCenter({
                 <TableHead>状态</TableHead>
                 <TableHead>进度</TableHead>
                 <TableHead>创建时间</TableHead>
-                <TableHead className="w-32 text-right">操作</TableHead>
+                <TableHead className="w-32">操作</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -254,7 +254,7 @@ export function RunCenter({
                   key={run.id}
                 >
                   <TableCell>
-                    <div className="flex items-center gap-3">
+                    <div className="mx-auto flex w-fit min-w-0 items-center gap-3 text-left">
                       <span className="grid size-8 place-items-center rounded-[var(--radius-md)] bg-[var(--canvas-soft)]">
                         <Activity aria-hidden="true" className="size-4" />
                       </span>
@@ -279,7 +279,7 @@ export function RunCenter({
                   <TableCell className="text-sm text-[var(--muted)]">
                     {new Date(run.created_at).toLocaleString("zh-CN")}
                   </TableCell>
-                  <TableCell className="text-right">
+                  <TableCell>
                     <Button
                       asChild
                       className="whitespace-nowrap"

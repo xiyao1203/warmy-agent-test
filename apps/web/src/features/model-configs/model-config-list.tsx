@@ -185,35 +185,39 @@ export function ModelConfigList(props: Props) {
             </p>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm">
-              <thead className="border-b border-[var(--hairline)] bg-[var(--canvas-soft)] text-xs text-[var(--muted)]">
+          <div className="overflow-hidden">
+            <table className="w-full table-fixed text-sm">
+              <thead className="border-b border-[var(--hairline)] bg-[var(--canvas-soft)] text-center text-xs text-[var(--muted)]">
                 <tr>
-                  <th className="px-4 py-2.5">模型</th>
-                  <th className="px-4 py-2.5">服务与凭证</th>
-                  <th className="px-4 py-2.5">能力</th>
-                  <th className="px-4 py-2.5 text-right">操作</th>
+                  <th className="w-[24%] px-4 py-2.5">模型</th>
+                  <th className="w-[32%] px-4 py-2.5">服务与凭证</th>
+                  <th className="w-[20%] px-4 py-2.5">能力</th>
+                  <th className="w-[24%] px-4 py-2.5">操作</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[var(--hairline)]">
                 {props.models.map((model) => (
                   <tr key={model.id}>
-                    <td className="px-4 py-3">
-                      <div className="font-medium">{model.name}</div>
-                      <div className="mt-0.5 font-mono text-xs text-[var(--muted)]">
-                        {model.model_name}
+                    <td className="px-4 py-3 text-center align-middle">
+                      <div className="mx-auto w-fit max-w-full text-left">
+                        <div className="truncate font-medium">{model.name}</div>
+                        <div className="mt-0.5 truncate font-mono text-xs text-[var(--muted)]">
+                          {model.model_name}
+                        </div>
                       </div>
                     </td>
-                    <td className="px-4 py-3">
-                      <div className="max-w-64 truncate text-xs">
-                        {model.base_url}
-                      </div>
-                      <div className="mt-1 font-mono text-xs text-[var(--muted)]">
-                        {model.api_key_hint}
+                    <td className="px-4 py-3 text-center align-middle">
+                      <div className="mx-auto w-fit max-w-full text-left">
+                        <div className="max-w-64 truncate text-xs">
+                          {model.base_url}
+                        </div>
+                        <div className="mt-1 truncate font-mono text-xs text-[var(--muted)]">
+                          {model.api_key_hint}
+                        </div>
                       </div>
                     </td>
-                    <td className="px-4 py-3">
-                      <div className="flex flex-wrap gap-1.5">
+                    <td className="px-4 py-3 text-center align-middle">
+                      <div className="flex flex-wrap justify-center gap-1.5">
                         <Badge>文本</Badge>
                         {model.supports_vision ? (
                           <Badge tone="accent">视觉</Badge>
@@ -228,10 +232,11 @@ export function ModelConfigList(props: Props) {
                         </p>
                       ) : null}
                     </td>
-                    <td className="px-4 py-3">
-                      <div className="flex justify-end gap-1.5">
+                    <td className="px-4 py-3 text-center align-middle">
+                      <div className="flex justify-center gap-1.5">
                         <Button
                           aria-label={`测试 ${model.name} 连接`}
+                          className="h-8 px-2.5 text-xs"
                           loading={busy === `test:${model.id}`}
                           onClick={() => void testConnection(model.id)}
                         >
@@ -240,12 +245,14 @@ export function ModelConfigList(props: Props) {
                         </Button>
                         <Button
                           aria-label={`编辑 ${model.name}`}
+                          className="h-8 w-8 px-0"
                           onClick={() => setEditing(model)}
                         >
                           <Settings2 className="size-3.5" />
                         </Button>
                         <Button
                           aria-label={`删除 ${model.name}`}
+                          className="h-8 w-8 px-0"
                           onClick={() => setDeleteTarget(model)}
                           variant="danger"
                         >
