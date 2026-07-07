@@ -31,7 +31,7 @@ function getStoredTheme(): Theme | null {
   return null;
 }
 
-export function ThemeToggle() {
+export function ThemeToggle({ className = "" }: { className?: string }) {
   const [theme, setTheme] = useState<Theme>(() => {
     if (typeof window === "undefined") return "light";
     return getStoredTheme() ?? getSystemTheme();
@@ -53,7 +53,7 @@ export function ThemeToggle() {
   return (
     <button
       aria-label={theme === "dark" ? "切换到亮色模式" : "切换到暗色模式"}
-      className="flex h-9 w-9 items-center justify-center rounded-[var(--radius-md)] text-[var(--muted)] transition-colors hover:bg-[var(--canvas-soft)] hover:text-[var(--ink)]"
+      className={`flex h-9 w-9 items-center justify-center rounded-[var(--radius-md)] text-[var(--muted)] transition-colors hover:bg-[var(--canvas-soft)] hover:text-[var(--ink)] ${className}`}
       onClick={toggle}
       title={theme === "dark" ? "亮色模式" : "暗色模式"}
       type="button"

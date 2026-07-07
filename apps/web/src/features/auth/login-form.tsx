@@ -95,7 +95,7 @@ export function LoginForm({
     <form className="space-y-4" noValidate onSubmit={handleSubmit}>
       {formError ? (
         <div
-          className="flex items-start gap-2 rounded-[var(--radius-md)] border border-[var(--danger)] bg-[var(--danger-subtle)] px-3.5 py-3 text-sm text-[var(--danger)]"
+          className="flex items-start gap-2 rounded-[var(--radius-md)] border border-[var(--danger)] bg-[var(--danger-subtle)] px-4 py-3 text-sm text-[var(--danger)]"
           role="alert"
         >
           <AlertCircle aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
@@ -111,6 +111,7 @@ export function LoginForm({
           aria-describedby={errors.email ? "email-error" : undefined}
           aria-invalid={Boolean(errors.email)}
           autoComplete="email"
+          className="h-11 rounded-[var(--radius-pill)] px-5 text-[17px]"
           id="email"
           onChange={(event) => {
             setEmail(event.target.value);
@@ -137,7 +138,7 @@ export function LoginForm({
             aria-describedby={errors.password ? "password-error" : undefined}
             aria-invalid={Boolean(errors.password)}
             autoComplete="current-password"
-            className="pr-10"
+            className="h-11 rounded-[var(--radius-pill)] px-5 pr-12 text-[17px]"
             id="password"
             onChange={(event) => {
               setPassword(event.target.value);
@@ -148,7 +149,7 @@ export function LoginForm({
           />
           <button
             aria-label={showPassword ? "隐藏密码" : "显示密码"}
-            className="absolute inset-y-0 right-0 flex w-10 items-center justify-center text-[var(--muted)] hover:text-[var(--ink)]"
+            className="absolute inset-y-0 right-1 flex w-11 items-center justify-center rounded-[var(--radius-pill)] text-[var(--muted)] transition-colors hover:bg-[var(--canvas-soft)] hover:text-[var(--ink)]"
             onClick={() => setShowPassword((value) => !value)}
             type="button"
           >
@@ -166,7 +167,12 @@ export function LoginForm({
         ) : null}
       </div>
 
-      <PulseButton className="mt-2 w-full" loading={pending} type="submit">
+      <PulseButton
+        className="mt-2 h-11 w-full rounded-[var(--radius-pill)] text-[17px] font-normal shadow-none"
+        loading={pending}
+        pulse={false}
+        type="submit"
+      >
         {pending ? "正在登录…" : "登录"}
       </PulseButton>
     </form>
