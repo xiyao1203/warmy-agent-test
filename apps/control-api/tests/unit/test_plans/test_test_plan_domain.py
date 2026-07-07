@@ -186,6 +186,8 @@ def test_config_new_defaults() -> None:
     assert cfg.max_retries == 0
     assert cfg.baseline_run_id is None
     assert cfg.release_gate == {}
+    assert cfg.codex_model_provider == ""
+    assert cfg.codex_model == ""
 
 
 def test_config_new_fields_roundtrip() -> None:
@@ -194,16 +196,22 @@ def test_config_new_fields_roundtrip() -> None:
         max_retries=3,
         baseline_run_id="run-abc-123",
         release_gate={"type": "all_pass", "min_score": 0.9},
+        codex_model_provider="openai-compatible",
+        codex_model="gpt-5.5",
     )
     data = cfg.to_dict()
     assert data["max_retries"] == 3
     assert data["baseline_run_id"] == "run-abc-123"
     assert data["release_gate"] == {"type": "all_pass", "min_score": 0.9}
+    assert data["codex_model_provider"] == "openai-compatible"
+    assert data["codex_model"] == "gpt-5.5"
 
     restored = TestPlanConfig.from_dict(data)
     assert restored.max_retries == 3
     assert restored.baseline_run_id == "run-abc-123"
     assert restored.release_gate == {"type": "all_pass", "min_score": 0.9}
+    assert restored.codex_model_provider == "openai-compatible"
+    assert restored.codex_model == "gpt-5.5"
 
 
 def test_config_validates_max_retries() -> None:

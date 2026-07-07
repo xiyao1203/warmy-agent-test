@@ -8,11 +8,11 @@ from typing import Any
 from temporalio import activity, workflow
 from temporalio.common import RetryPolicy
 
-from .adapter import AgentRequest, GenericHttpAgentAdapter
-
 
 @activity.defn(name="execute-target-chat")
 async def execute_target_chat(payload: dict[str, Any]) -> dict[str, Any]:
+    from .adapter import AgentRequest, GenericHttpAgentAdapter
+
     activity.heartbeat({"phase": "invoke"})
     result = await GenericHttpAgentAdapter().execute(
         AgentRequest(

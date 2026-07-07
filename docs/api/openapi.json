@@ -1933,10 +1933,11 @@
         "type": "object"
       },
       "ExecutionMode": {
-        "description": "测试用例执行模式：API 调用或浏览器操作。",
+        "description": "测试用例执行模式：API 调用、浏览器操作或 Codex 浏览器探索。",
         "enum": [
           "api",
-          "browser"
+          "browser",
+          "codex_explore"
         ],
         "title": "ExecutionMode",
         "type": "string"
@@ -3174,6 +3175,18 @@
           "browser_profile_id": {
             "default": "",
             "title": "Browser Profile Id",
+            "type": "string"
+          },
+          "codex_model": {
+            "default": "",
+            "maxLength": 200,
+            "title": "Codex Model",
+            "type": "string"
+          },
+          "codex_model_provider": {
+            "default": "",
+            "maxLength": 200,
+            "title": "Codex Model Provider",
             "type": "string"
           },
           "concurrency": {

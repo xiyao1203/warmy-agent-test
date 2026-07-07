@@ -144,6 +144,8 @@ export function TestPlanDetail({
                   ) > 0
                     ? ` · 重试 ${String((version.config as Record<string, unknown>).max_retries)} 次`
                     : ""}
+                  {" · Codex "}
+                  {codexModelSummary(version.config as Record<string, unknown>)}
                 </p>
               </div>
               {version.status === "draft" ? (
@@ -319,4 +321,12 @@ export function TestPlanDetail({
       </Dialog>
     </div>
   );
+}
+
+function codexModelSummary(config: Record<string, unknown>) {
+  const model = String(config.codex_model || "").trim();
+  const provider = String(config.codex_model_provider || "").trim();
+  if (!model && !provider) return "默认模型";
+  if (model && provider) return `${provider} / ${model}`;
+  return model || provider;
 }

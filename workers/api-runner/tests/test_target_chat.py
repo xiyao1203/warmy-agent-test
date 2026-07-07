@@ -1,5 +1,6 @@
 import httpx
 import pytest
+from agenttest_api_runner import adapter as adapter_module
 from agenttest_api_runner import target_chat
 from agenttest_api_runner.adapter import GenericHttpAgentAdapter
 
@@ -13,7 +14,7 @@ async def test_target_chat_activity_uses_real_adapter_and_redacts_credentials(mo
     adapter = GenericHttpAgentAdapter(
         client=httpx.AsyncClient(transport=httpx.MockTransport(handler))
     )
-    monkeypatch.setattr(target_chat, "GenericHttpAgentAdapter", lambda: adapter)
+    monkeypatch.setattr(adapter_module, "GenericHttpAgentAdapter", lambda: adapter)
     monkeypatch.setattr(target_chat.activity, "heartbeat", lambda details: None)
 
     result = await target_chat.execute_target_chat(

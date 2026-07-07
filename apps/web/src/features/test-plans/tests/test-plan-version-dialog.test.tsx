@@ -82,6 +82,7 @@ describe("TestPlanVersionDialog", () => {
     fireEvent.click(screen.getByRole("button", { name: "下一步" }));
     expect(screen.getByText("执行配置")).toBeVisible();
     expect(screen.getByText(/浏览器用例运行时会复用选中实例/)).toBeVisible();
+    expect(screen.getByText(/默认使用运行机器上的 Codex CLI/)).toBeVisible();
     expect(
       screen.getByRole("link", { name: "去管理浏览器实例" }),
     ).toHaveAttribute("href", "/projects/project-1/browser-profiles");
@@ -178,6 +179,36 @@ describe("TestPlanVersionDialog", () => {
     ).toBeVisible();
   });
 
+  it("submits custom Codex execution model from execution step", async () => {
+    const { onSubmit } = renderDialog();
+    fireEvent.click(screen.getByRole("button", { name: "创建版本" }));
+
+    fireEvent.click(screen.getByRole("button", { name: "下一步" }));
+    fireEvent.change(screen.getByLabelText("Codex 执行模型"), {
+      target: { value: "custom" },
+    });
+    fireEvent.change(screen.getByLabelText("Codex Provider ID"), {
+      target: { value: "ollama" },
+    });
+    fireEvent.change(screen.getByLabelText("Codex 模型 ID"), {
+      target: { value: "gpt-oss-120b" },
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: "下一步" }));
+    fireEvent.click(screen.getByRole("button", { name: "下一步" }));
+    fireEvent.click(screen.getByRole("button", { name: "保存版本" }));
+
+    await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
+    expect(onSubmit).toHaveBeenCalledWith(
+      expect.objectContaining({
+        config: expect.objectContaining({
+          codex_model_provider: "ollama",
+          codex_model: "gpt-oss-120b",
+        }),
+      }),
+    );
+  });
+
   it("shows step indicator with correct active state", () => {
     renderDialog();
     fireEvent.click(screen.getByRole("button", { name: "创建版本" }));
@@ -193,6 +224,8 @@ describe("TestPlanVersionDialog", () => {
     const existingVersion = {
       agent_version_id: "agent-published",
       config: {
+        codex_model: "gpt-5.5",
+        codex_model_provider: "openai-compatible",
         concurrency: 3,
         cost_budget: 500,
         max_retries: 2,
@@ -258,6 +291,15 @@ describe("TestPlanVersionDialog", () => {
     expect(
       (screen.getByLabelText("最大重试次数") as HTMLInputElement).value,
     ).toBe("2");
+    expect(
+      (screen.getByLabelText("Codex 执行模型") as HTMLSelectElement).value,
+    ).toBe("custom");
+    expect(
+      (screen.getByLabelText("Codex Provider ID") as HTMLInputElement).value,
+    ).toBe("openai-compatible");
+    expect(
+      (screen.getByLabelText("Codex 模型 ID") as HTMLInputElement).value,
+    ).toBe("gpt-5.5");
   });
 
   it("disables save button when readiness check returns not-ready", async () => {

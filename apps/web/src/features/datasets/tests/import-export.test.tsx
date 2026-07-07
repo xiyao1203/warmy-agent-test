@@ -76,6 +76,7 @@ describe("ImportWizard", () => {
 
     expect(screen.getByText("下载中文导入模板")).toBeVisible();
     expect(screen.getByText("必填：用例名称、输入、执行模式")).toBeVisible();
+    expect(screen.getByText(/Codex 浏览器探索/)).toBeVisible();
     expect(screen.getByText(/测试分组：训练集、验证集、测试集/)).toBeVisible();
   });
 });

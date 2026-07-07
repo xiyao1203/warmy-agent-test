@@ -1,6 +1,6 @@
 """Codex CLI 调用封装。
 
-使用 subprocess 调用 `codex exec`，传入浏览器工具，
+使用 subprocess 调用 `codex exec`，让 Codex 生成浏览器测试计划，
 解析 JSON 输出为结构化结果。
 
 支持两种浏览器生命周期模式：
@@ -18,6 +18,7 @@ import json
 import os
 import re
 import shutil
+import signal
 import socket
 import tempfile
 import time
@@ -215,7 +216,7 @@ async def invoke_codex(
     *,
     headless: bool = True,
     timeout_seconds: int = 120,
-    model: str = "gpt-4o",
+    model: str = "",
     model_provider: str = "",
     browser_mode: BrowserMode = BrowserMode.EPHEMERAL,
     cdp_endpoint: str = "",
@@ -232,7 +233,7 @@ async def invoke_codex(
         target_url: 目标 URL
         headless: 是否无头模式
         timeout_seconds: 超时秒数
-        model: 使用的模型（如 "gpt-4o"、"deepseek/deepseek-v4-pro"）
+        model: 使用的模型；空表示使用 Codex CLI 当前配置的默认模型
         model_provider: Codex config.toml 中 [model_providers.<id>] 的 ID，空表示默认 OpenAI
         browser_mode: 浏览器生命周期模式
         cdp_endpoint: CDP WebSocket endpoint（持久模式用）
@@ -265,66 +266,94 @@ async def invoke_codex(
     env = os.environ.copy()
     if headless:
         env["PLAYWRIGHT_HEADLESS"] = "true"
-    if model:
-        env["CODEX_MODEL"] = model
+    output_file = tempfile.NamedTemporaryFile(suffix=".txt", delete=False)
+    output_file.close()
 
-    with tempfile.NamedTemporaryFile(mode="w", suffix=".txt", delete=False) as f:
-        f.write(prompt)
-        prompt_file = f.name
-
+    started = time.monotonic()
     try:
         exec_args = [
             codex_path,
             "exec",
-            "--tools",
-            "browser",
-            "--approval-mode",
-            "never",
-            "--output",
-            "json",
-            "--input-file",
-            prompt_file,
+            "--sandbox",
+            "read-only",
+            "--output-last-message",
+            output_file.name,
         ]
         # 模型与 provider
         if model:
             exec_args.extend(["--model", model])
         if model_provider:
-            exec_args.extend(["--config", f"model_provider={model_provider}"])
-        # 持久模式：追加 CDP endpoint 和 storageState
+            exec_args.extend(["--config", f"model_provider={json.dumps(model_provider)}"])
+
+        prompt_payload = prompt
         if browser_mode == BrowserMode.PERSISTENT and resolved_cdp_endpoint:
-            exec_args.extend(["--cdp-endpoint", resolved_cdp_endpoint])
+            prompt_payload += (
+                "\n浏览器复用信息：\n"
+                f"- 已启动持久 Chrome CDP endpoint: {resolved_cdp_endpoint}\n"
+                "- 如当前 Codex 运行环境支持连接外部浏览器，请优先复用该浏览器实例。\n"
+            )
         if resolved_storage_state_path:
-            exec_args.extend(["--storage-state", resolved_storage_state_path])
+            prompt_payload += (
+                "\n登录态文件：\n"
+                f"- storageState 路径: {resolved_storage_state_path}\n"
+                "- 如当前 Codex 运行环境支持加载 storageState，请优先使用该登录态。\n"
+            )
 
         process = await asyncio.create_subprocess_exec(
             *exec_args,
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE,
+            stdin=asyncio.subprocess.PIPE,
             env=env,
+            start_new_session=True,
         )
-        try:
-            stdout_bytes, stderr_bytes = await asyncio.wait_for(
-                process.communicate(),
-                timeout=timeout_seconds,
-            )
-        except TimeoutError:
-            process.kill()
-            await process.wait()
+        communicate_task = asyncio.create_task(process.communicate(prompt_payload.encode()))
+        done, pending = await asyncio.wait({communicate_task}, timeout=timeout_seconds)
+        if pending:
+            _kill_process_group(process.pid)
+            try:
+                await asyncio.wait_for(process.wait(), timeout=5)
+            except TimeoutError:
+                process.kill()
+                await process.wait()
+            communicate_task.cancel()
             return CodexRawOutput(
                 stdout="",
                 stderr="Codex CLI execution timed out",
                 returncode=process.returncode or -1,
-                duration_seconds=timeout_seconds,
+                duration_seconds=time.monotonic() - started,
             )
+        stdout_bytes, stderr_bytes = done.pop().result()
+        final_message = _read_text(output_file.name)
+        stdout = final_message or stdout_bytes.decode(errors="replace")
         return CodexRawOutput(
-            stdout=stdout_bytes.decode(errors="replace"),
+            stdout=stdout,
             stderr=stderr_bytes.decode(errors="replace"),
             returncode=process.returncode or 0,
-            duration_seconds=timeout_seconds,
+            duration_seconds=time.monotonic() - started,
         )
     finally:
         try:
-            os.unlink(prompt_file)
+            os.unlink(output_file.name)
+        except OSError:
+            pass
+
+
+def _read_text(path: str) -> str:
+    try:
+        return Path(path).read_text()
+    except OSError:
+        return ""
+
+
+def _kill_process_group(pid: int) -> None:
+    try:
+        os.killpg(pid, signal.SIGKILL)
+    except ProcessLookupError:
+        return
+    except OSError:
+        try:
+            os.kill(pid, signal.SIGKILL)
         except OSError:
             pass
 
@@ -364,30 +393,32 @@ def _build_prompt(
         parts = [f"  - {k}: {v}" for k, v in credentials.items()]
         creds_lines = "\n测试凭据：\n" + "\n".join(parts) + "\n请使用上述凭据完成登录。"
 
-    return f"""你是浏览器自动化测试 Agent。请按以下步骤执行：
+    return f"""你是浏览器测试规划 Agent。请只生成结构化测试计划和判定口径。
 
-1. 打开浏览器访问 {target_url}
-2. 执行测试意图：{test_intent}{creds_lines}
-3. 每一步截图保存
-4. 输出 JSON 格式结果：
-{{
-  "status": "passed" | "failed" | "error",
-  "steps": [
-    {{
-      "action": "动作描述",
-      "screenshot": "base64截图或空",
-      "result": "步骤结果"
-    }}
-  ],
-  "summary": "测试总结",
-  "generated_script": "如果有，输出完整的 Playwright 脚本"
-}}
-
-测试意图：
-{test_intent}
+重要约束：
+- 不要调用浏览器、Computer Use、Node REPL、shell 或任何外部工具。
+- 后台 Worker 会用 Playwright 执行真实浏览器访问，你只需要输出执行计划。
+- 最终只输出 JSON，不要输出 Markdown。
 
 目标 URL：
 {target_url}
+
+测试意图：
+{test_intent}{creds_lines}
+
+请输出 JSON 格式结果：
+{{
+  "status": "passed",
+  "steps": [
+    {{
+      "action": "浏览器执行动作描述",
+      "expected": "期望结果",
+      "result": "planned"
+    }}
+  ],
+  "summary": "测试计划摘要",
+  "generated_script": "可选：用于执行该测试的 Playwright 脚本"
+}}
 """
 
 

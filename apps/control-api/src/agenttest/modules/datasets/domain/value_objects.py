@@ -16,10 +16,11 @@ class VersionStatus(StrEnum):
 
 
 class ExecutionMode(StrEnum):
-    """测试用例执行模式：API 调用或浏览器操作。"""
+    """测试用例执行模式：API 调用、浏览器操作或 Codex 浏览器探索。"""
 
     API = "api"
     BROWSER = "browser"
+    CODEX_EXPLORE = "codex_explore"
 
 
 class Priority(StrEnum):

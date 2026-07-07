@@ -40,6 +40,8 @@ class TestPlanConfigRequest(BaseModel):
     release_gate_id: UUID | None = None
     observation_only: bool = False
     browser_profile_id: str = ""
+    codex_model_provider: str = Field(default="", max_length=200)
+    codex_model: str = Field(default="", max_length=200)
 
     def to_domain(self) -> TestPlanConfig:
         data = self.model_dump()

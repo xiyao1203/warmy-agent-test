@@ -9,7 +9,7 @@ from __future__ import annotations
 import json
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from temporalio import activity
 
@@ -26,7 +26,7 @@ class CodexBrowserTaskInput:
     target_url: str
     headless: bool = True
     timeout_seconds: int = 120
-    model: str = "gpt-4o"
+    model: str = ""
     model_provider: str = ""
     browser_profile_id: str = ""
     browser_mode: str = "ephemeral"
@@ -43,7 +43,7 @@ class CodexBrowserResult:
     screenshots: list[str] = field(default_factory=list)
     execution_log: str = ""
     generated_script: str | None = None
-    allure_data: dict[str, object] | None = None
+    allure_data: Any = None
     error_message: str | None = None
     duration_ms: int = 0
 
@@ -55,7 +55,7 @@ async def run_codex_browser_case(inp: CodexBrowserTaskInput) -> CodexBrowserResu
     Temporal Activity，支持心跳上报和超时重试。
     当 Codex CLI 不可用时返回明确错误，不伪造成功。
     """
-    activity.heartbeat({"run_case_id": inp.run_case_id, "target_url": inp.target_url})
+    _heartbeat({"run_case_id": inp.run_case_id, "target_url": inp.target_url})
 
     started = datetime.now(UTC)
 
@@ -115,6 +115,13 @@ async def run_codex_browser_case(inp: CodexBrowserTaskInput) -> CodexBrowserResu
 
 def _elapsed_ms(started: datetime) -> int:
     return int((datetime.now(UTC) - started).total_seconds() * 1000)
+
+
+def _heartbeat(details: dict[str, object]) -> None:
+    try:
+        activity.heartbeat(details)
+    except RuntimeError:
+        return
 
 
 def _resolve_browser_mode(raw: str) -> BrowserMode:

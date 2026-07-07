@@ -471,9 +471,10 @@ class HandlerPlatformGateway:
                 + (f"\n场景提示:\n{hints_text}\n" if hints else "")
                 + "\n请生成 JSON 数组 cases，每个元素包含:\n"
                 "- name: 用例名称\n"
-                '- execution_mode: "browser"\n'
-                "- input: { url: 画布页面地址, steps: [Playwright 操作步骤] }\n"
-                "  steps 每项: action (goto/fill/click/wait), target (CSS选择器), value (输入)\n"
+                '- execution_mode: "codex_explore"\n'
+                "- input: { url: 画布页面地址, test_intent: 自然语言测试目标, timeout: 120 }\n"
+                "  如必须固定步骤，也可附加 steps；"
+                "优先使用 test_intent 让 Codex 规划浏览器探索。\n"
                 "- assertions: canvas 专用断言规则列表\n"
                 '  支持: { type: "canvas_schema" }, '
                 '{ type: "node_count", min_count: N }, '
@@ -522,7 +523,7 @@ class HandlerPlatformGateway:
         if not cases or not isinstance(cases, list):
             raise ValueError("No valid test cases generated")
 
-        default_execution_mode = "browser" if is_canvas else "api"
+        default_execution_mode = "codex_explore" if is_canvas else "api"
 
         async with self._datasets.uow_factory():
             dataset = await self._datasets.create_dataset.execute(
@@ -541,7 +542,11 @@ class HandlerPlatformGateway:
                 case_input = dict(raw.get("input") or {})
                 if not case_input:
                     if is_canvas:
-                        case_input = {"url": canvas_url, "steps": []}
+                        case_input = {
+                            "url": canvas_url,
+                            "test_intent": str(raw.get("name") or f"画布用例 {index + 1}"),
+                            "timeout": 120,
+                        }
                     else:
                         case_input = {"input": f"auto_generated_case_{index + 1}"}
                 case = await self._datasets.add_case.execute(

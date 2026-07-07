@@ -56,6 +56,18 @@ def test_import_reports_jsonl_line_and_enum_errors() -> None:
     assert preview["errors"][0]["field"] == "execution_mode"
 
 
+def test_import_accepts_codex_explore_execution_mode() -> None:
+    content = (
+        '{"name":"codex","input":{"url":"about:blank","test_intent":"确认页面可访问"},'
+        '"execution_mode":"codex_explore"}'
+    )
+
+    preview = parse_and_validate_import("jsonl", content)
+
+    assert preview["valid_count"] == 1
+    assert preview["records"][0]["execution_mode"] == "codex_explore"
+
+
 # ── 10MB 上限 ─────────────────────────────────────────────────────────
 
 

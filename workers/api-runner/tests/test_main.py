@@ -64,6 +64,7 @@ async def test_run_registers_run_workflow_and_all_activities(
         main.post_run_result,
         main.capture_page_snapshot,
         main.run_playwright_case,
+        main.run_codex_browser_case,
         main.execute_target_chat,
     ]
     assert worker_options["ran"] is True

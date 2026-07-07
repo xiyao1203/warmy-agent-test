@@ -207,14 +207,14 @@ class TestCase:
     """测试用例实体，属于某个数据集版本。
 
     包含输入、期望输出、断言、评分器和安全策略等完整测试定义。
-    支持 API 和浏览器两种执行模式。
+    支持 API、普通浏览器和 Codex 浏览器探索执行模式。
 
     Attributes:
         case_id: 用例唯一标识。
         dataset_version_id: 所属数据集版本 ID。
         name: 用例名称。
         input: 输入数据（JSON）。
-        execution_mode: 执行模式（api / browser）。
+        execution_mode: 执行模式（api / browser / codex_explore）。
         assertions: 断言规则列表。
         scorers: 评分器配置列表。
         tags / priority / risk_level / test_group: 分类和标签。

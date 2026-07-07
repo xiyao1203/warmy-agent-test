@@ -14,6 +14,8 @@ from agenttest_api_runner.workflow import (
     ACTIVITY_RETRY_POLICY,
     ACTIVITY_TIMEOUT,
     RunWorkflow,
+    _codex_model,
+    _codex_model_provider,
     aggregate_results,
     callback_task_for,
     execution_activity_options,
@@ -133,3 +135,52 @@ def test_workflow_normalizes_json_payload_from_control_plane() -> None:
     assert task.cases[0].input == {"message": "hello"}
     assert task.callback is not None
     assert task.callback.project_id == "project-1"
+
+
+def test_workflow_normalizes_codex_browser_execution_mode() -> None:
+    task = normalize_run_task(
+        {
+            "run_id": "run-codex",
+            "idempotency_key": "codex-1",
+            "agent_config": {"canvas_url": "about:blank"},
+            "cases": [
+                {
+                    "run_case_id": "case-codex",
+                    "input": {
+                        "url": "about:blank",
+                        "test_intent": "确认页面可访问",
+                        "timeout": 90,
+                    },
+                    "assertions": [],
+                    "execution_mode": "codex_explore",
+                }
+            ],
+        }
+    )
+
+    assert task.cases[0].execution_mode == "codex_explore"
+    assert task.cases[0].input["test_intent"] == "确认页面可访问"
+
+
+def test_codex_model_defaults_to_execution_policy() -> None:
+    policy = {
+        "codex_model": "gpt-5.5",
+        "codex_model_provider": "openai-compatible",
+    }
+
+    assert _codex_model({}, policy) == "gpt-5.5"
+    assert _codex_model_provider({}, policy) == "openai-compatible"
+
+
+def test_codex_model_case_input_overrides_execution_policy() -> None:
+    case_input = {
+        "model": "local-browser-model",
+        "model_provider": "ollama",
+    }
+    policy = {
+        "codex_model": "gpt-5.5",
+        "codex_model_provider": "openai-compatible",
+    }
+
+    assert _codex_model(case_input, policy) == "local-browser-model"
+    assert _codex_model_provider(case_input, policy) == "ollama"

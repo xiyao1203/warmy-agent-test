@@ -1126,9 +1126,9 @@ export type EvaluateGateRequest = {
 /**
  * ExecutionMode
  *
- * 测试用例执行模式：API 调用或浏览器操作。
+ * 测试用例执行模式：API 调用、浏览器操作或 Codex 浏览器探索。
  */
-export type ExecutionMode = "api" | "browser";
+export type ExecutionMode = "api" | "browser" | "codex_explore";
 
 /**
  * ExemptRequest
@@ -1883,6 +1883,14 @@ export type TestPlanConfigRequest = {
    * Browser Profile Id
    */
   browser_profile_id?: string;
+  /**
+   * Codex Model
+   */
+  codex_model?: string;
+  /**
+   * Codex Model Provider
+   */
+  codex_model_provider?: string;
   /**
    * Concurrency
    */

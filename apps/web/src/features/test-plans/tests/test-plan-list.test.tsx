@@ -19,6 +19,8 @@ const draftVersion = {
   agent_version_id: null,
   config: {
     concurrency: 2,
+    codex_model: "gpt-5.5",
+    codex_model_provider: "openai-compatible",
     pass_threshold: 0.9,
     runs_per_case: 1,
     timeout: 120,
@@ -136,6 +138,9 @@ describe("TestPlanDetail", () => {
     );
 
     expect(screen.getByText("版本 v1")).toBeVisible();
+    expect(
+      screen.getByText(/Codex openai-compatible \/ gpt-5.5/),
+    ).toBeVisible();
     fireEvent.click(screen.getByRole("button", { name: "创建版本" }));
 
     // Step 1: 选择测试资产

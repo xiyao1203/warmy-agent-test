@@ -37,6 +37,27 @@ def test_dataset_case_input_accepts_platform_standard_fields() -> None:
     assert case.test_group == "test"
 
 
+def test_dataset_case_input_accepts_codex_browser_mode() -> None:
+    payload = DatasetWithCasesInput.model_validate(
+        {
+            "name": "Codex 浏览器探索集",
+            "cases": [
+                {
+                    "name": "画布自动探索",
+                    "input": {
+                        "url": "https://example.test/canvas",
+                        "test_intent": "打开画布并确认主流程可用",
+                        "timeout": 120,
+                    },
+                    "execution_mode": "codex_explore",
+                }
+            ],
+        }
+    )
+
+    assert payload.cases[0].execution_mode == "codex_explore"
+
+
 def test_dataset_case_input_rejects_unknown_enums() -> None:
     with pytest.raises(ValidationError):
         DatasetWithCasesInput.model_validate(

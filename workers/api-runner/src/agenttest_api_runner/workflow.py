@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from datetime import timedelta
+from typing import Any
 
 from temporalio import workflow
 from temporalio.common import RetryPolicy
@@ -88,7 +89,7 @@ class RunWorkflow:
         self._cancel_requested = True
 
     @workflow.run
-    async def run(self, task: RunTask | dict[str, object]) -> RunResult:
+    async def run(self, task: Any) -> RunResult:
         task = normalize_run_task(task)
         activity_timeout, activity_retry_policy = execution_activity_options(task.execution_policy)
         results: list[RunCaseResult] = []
@@ -123,8 +124,11 @@ class RunWorkflow:
                             test_intent=codex_intent,
                             target_url=codex_url,
                             timeout_seconds=_int_value(case.input.get("timeout"), 120),
-                            model=str(case.input.get("model", "gpt-4o")),
-                            model_provider=str(case.input.get("model_provider", "")),
+                            model=_codex_model(case.input, task.execution_policy),
+                            model_provider=_codex_model_provider(
+                                case.input,
+                                task.execution_policy,
+                            ),
                             browser_profile_id=str(
                                 case.input.get("browser_profile_id", "")
                                 or task.execution_policy.get("browser_profile_id", "")
@@ -333,6 +337,23 @@ def _codex_browser_mode(
         return explicit
     profile_id = case_input.get("browser_profile_id") or execution_policy.get("browser_profile_id")
     return "persistent" if profile_id else "ephemeral"
+
+
+def _codex_model(case_input: dict[str, object], execution_policy: dict[str, object]) -> str:
+    """Resolve Codex model, keeping case-level overrides first."""
+
+    return str(case_input.get("model") or execution_policy.get("codex_model") or "")
+
+
+def _codex_model_provider(
+    case_input: dict[str, object],
+    execution_policy: dict[str, object],
+) -> str:
+    """Resolve Codex provider, keeping case-level overrides first."""
+
+    return str(
+        case_input.get("model_provider") or execution_policy.get("codex_model_provider") or ""
+    )
 
 
 def _extract_credentials(case_input: dict[str, object]) -> dict[str, str]:

@@ -37,9 +37,7 @@ export function TestCaseDetail({
           <div>
             <h2 className="text-lg font-semibold">{caseItem.name}</h2>
             <div className="mt-2 flex flex-wrap gap-2">
-              <Badge>
-                {caseItem.execution_mode === "api" ? "API" : "浏览器"}
-              </Badge>
+              <Badge>{executionModeLabel(caseItem.execution_mode)}</Badge>
               {caseItem.priority && <Badge>{caseItem.priority}</Badge>}
               {caseItem.risk_level && <Badge>{caseItem.risk_level}</Badge>}
               {caseItem.difficulty && <Badge>{caseItem.difficulty}</Badge>}
@@ -133,6 +131,12 @@ export function TestCaseDetail({
       </div>
     </div>
   );
+}
+
+function executionModeLabel(mode: string) {
+  if (mode === "api") return "API";
+  if (mode === "codex_explore") return "Codex 浏览器探索";
+  return "浏览器";
 }
 
 /* ── 子组件 ────────────────────────────────────────────────────────── */

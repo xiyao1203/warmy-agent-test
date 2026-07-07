@@ -49,6 +49,8 @@ class TestPlanConfig:
     release_gate_id: str | None = None
     observation_only: bool = False
     browser_profile_id: str = ""
+    codex_model_provider: str = ""
+    codex_model: str = ""
 
     def __post_init__(self) -> None:
         if self.runs_per_case < 1:
@@ -84,6 +86,8 @@ class TestPlanConfig:
             "release_gate_id": self.release_gate_id,
             "observation_only": self.observation_only,
             "browser_profile_id": self.browser_profile_id,
+            "codex_model_provider": self.codex_model_provider,
+            "codex_model": self.codex_model,
         }
 
     @classmethod
@@ -128,6 +132,8 @@ class TestPlanConfig:
             release_gate_id=str(data["release_gate_id"]) if data.get("release_gate_id") else None,
             observation_only=bool(data.get("observation_only", False)),
             browser_profile_id=str(data.get("browser_profile_id", "")),
+            codex_model_provider=str(data.get("codex_model_provider", "")),
+            codex_model=str(data.get("codex_model", "")),
         )
 
     def dry_run_preview(self, *, num_cases: int = 0) -> dict[str, object]:

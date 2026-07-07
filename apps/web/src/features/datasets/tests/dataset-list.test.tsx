@@ -221,6 +221,9 @@ describe("TestCaseEditor", () => {
     fireEvent.change(screen.getByLabelText("用例名称"), {
       target: { value: "权限回归" },
     });
+    fireEvent.change(screen.getByLabelText("执行模式"), {
+      target: { value: "codex_explore" },
+    });
     fireEvent.change(screen.getByLabelText("优先级"), {
       target: { value: "P1" },
     });
@@ -264,6 +267,7 @@ describe("TestCaseEditor", () => {
     expect(onSubmit).toHaveBeenCalledWith(
       expect.objectContaining({
         assertions: [expect.objectContaining({ path: "output.text" })],
+        execution_mode: "codex_explore",
         input: { message: "你好" },
         name: "权限回归",
         priority: "P1",

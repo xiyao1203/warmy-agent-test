@@ -31,7 +31,7 @@ class NamedResourceInput(BaseModel):
 class TestCaseDraftInput(BaseModel):
     name: str = Field(min_length=1, max_length=200)
     input: dict[str, object]
-    execution_mode: Literal["api", "browser"] = Field(default="api")
+    execution_mode: Literal["api", "browser", "codex_explore"] = Field(default="api")
     assertions: list[dict[str, object]] = Field(default_factory=list)
     scorers: list[dict[str, object]] = Field(default_factory=list)
     initial_state: dict[str, object] | None = None

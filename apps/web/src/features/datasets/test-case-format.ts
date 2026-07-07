@@ -60,7 +60,7 @@ export const TEST_CASE_OPTIONAL_FIELD_LABELS =
 export const TEST_CASE_FIELD_HELP = [
   "模板默认使用中文字段名，也兼容 name、input、execution_mode 等英文旧字段。",
   "必填：用例名称、输入、执行模式。",
-  "执行模式：API 或 浏览器，也兼容 api/browser。",
+  "执行模式：API、浏览器或 Codex 浏览器探索，也兼容 api/browser/codex_explore。",
   "优先级：P0、P1、P2、P3；风险等级：严重、高、中、低。",
   "测试分组：训练集、验证集、测试集。",
   "输入、初始状态、期望结果填写 JSON 对象；断言规则、评分器、安全策略填写对象数组；标签填写字符串数组。",

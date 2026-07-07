@@ -1,11 +1,13 @@
 """Codex Browser Agent Adapter。
 
-实现 AgentAdapter 协议，调用 Codex CLI 执行浏览器探索式测试。
+实现 AgentAdapter 协议，调用 Codex CLI 规划浏览器探索式测试，
+再由 Playwright 执行真实页面探测。
 支持临时实例和持久实例两种浏览器生命周期模式。
 """
 
 from __future__ import annotations
 
+import base64
 from time import monotonic
 
 from agenttest_plugin_codex.chrome_pool import start_profile as pool_start_profile
@@ -28,9 +30,8 @@ from agenttest_plugin_codex.profile_registry import get_profile
 class CodexBrowserAdapter:
     """Codex 浏览器探索适配器。
 
-    调用 OpenAI Codex CLI（内置 Playwright MCP），
-    直接在 Google Chrome 中执行自然语言描述的测试意图，
-    返回结构化结果。
+    调用 OpenAI Codex CLI 生成自然语言测试意图的结构化计划，
+    再用 Playwright 打开目标页面采集截图，返回结构化结果。
     """
 
     def __init__(self) -> None:
@@ -107,6 +108,19 @@ class CodexBrowserAdapter:
         json_result = extract_json_result(raw)
 
         status = _normalise_status(str(json_result.get("status", "error")))
+        if status != "error":
+            probe = await _run_browser_probe(
+                target_url=request.target_url,
+                headless=request.headless,
+                timeout_seconds=request.timeout_seconds,
+                cdp_endpoint=cdp_endpoint,
+                storage_state_path=storage_state_path,
+            )
+            _append_probe_step(json_result, probe)
+            if not probe["ok"]:
+                status = "error"
+                json_result["status"] = "error"
+                json_result["detail"] = probe["error"]
         screenshots = _extract_screenshots(json_result)
         execution_log = _build_log(raw, json_result, duration_seconds)
         generated_script = _extract_script(json_result)
@@ -147,6 +161,70 @@ class CodexBrowserAdapter:
 
 def _normalise_status(raw: str) -> str:
     return {"pass": "passed", "fail": "failed"}.get(raw, raw)
+
+
+async def _run_browser_probe(
+    *,
+    target_url: str,
+    headless: bool,
+    timeout_seconds: int,
+    cdp_endpoint: str = "",
+    storage_state_path: str = "",
+) -> dict[str, object]:
+    try:
+        from playwright.async_api import async_playwright  # type: ignore[import-not-found]
+    except ImportError:
+        return {"ok": False, "error": "Playwright 未安装", "screenshot": ""}
+
+    timeout_ms = max(timeout_seconds, 1) * 1000
+    async with async_playwright() as pw:
+        browser = None
+        context = None
+        try:
+            if cdp_endpoint:
+                browser = await pw.chromium.connect_over_cdp(cdp_endpoint)
+                context = browser.contexts[0] if browser.contexts else await browser.new_context()
+            else:
+                browser = await pw.chromium.launch(headless=headless)
+                if storage_state_path:
+                    context = await browser.new_context(storage_state=storage_state_path)
+                else:
+                    context = await browser.new_context()
+            page = await context.new_page()
+            await page.goto(target_url, wait_until="domcontentloaded", timeout=timeout_ms)
+            title = await page.title()
+            screenshot = await page.screenshot(full_page=True)
+            return {
+                "ok": True,
+                "error": "",
+                "title": title,
+                "url": page.url,
+                "screenshot": base64.b64encode(screenshot).decode(),
+            }
+        except Exception as exc:
+            return {"ok": False, "error": str(exc), "screenshot": ""}
+        finally:
+            if context is not None and not cdp_endpoint:
+                await context.close()
+            if browser is not None:
+                await browser.close()
+
+
+def _append_probe_step(result: dict[str, object], probe: dict[str, object]) -> None:
+    steps = result.get("steps")
+    if not isinstance(steps, list):
+        steps = []
+        result["steps"] = steps
+    steps.append(
+        {
+            "action": "Playwright 打开目标页面并采集截图",
+            "result": "passed" if probe["ok"] else "failed",
+            "expected": "目标页面可以被浏览器访问",
+            "url": str(probe.get("url", "")),
+            "title": str(probe.get("title", "")),
+            "screenshot": str(probe.get("screenshot", "")),
+        }
+    )
 
 
 def _detect_login_activity(

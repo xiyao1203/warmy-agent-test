@@ -31,7 +31,7 @@ class CodexBrowserInput:
     target_url: str
     headless: bool = True
     timeout_seconds: int = 120
-    model: str = "gpt-4o"
+    model: str = ""  # 空表示使用 Codex CLI 当前配置的默认模型
     model_provider: str = ""  # Codex provider ID，空表示默认 OpenAI
     browser_profile_id: str = ""  # 浏览器实例 ID（从 registry 中选择）
     browser_mode: BrowserMode = BrowserMode.EPHEMERAL

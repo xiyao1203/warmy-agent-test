@@ -2,6 +2,7 @@
 
 import type {
   CreateTestCaseRequest,
+  ExecutionMode,
   Priority,
   RiskLevel,
   TestCaseResponse,
@@ -50,7 +51,7 @@ export function TestCaseEditor({
 
   // 基本信息
   const [name, setName] = useState(caseItem?.name ?? "");
-  const [mode, setMode] = useState<"api" | "browser">(
+  const [mode, setMode] = useState<ExecutionMode>(
     caseItem?.execution_mode ?? "api",
   );
   const [scenario, setScenario] = useState(caseItem?.scenario ?? "");
@@ -190,12 +191,14 @@ export function TestCaseEditor({
               </Field>
               <Field label="执行模式">
                 <DropdownSelect
+                  aria-label="执行模式"
                   className="h-9 w-full rounded-[var(--radius-md)] border border-[var(--hairline)] bg-[var(--surface)] px-3"
-                  onChange={(e) => setMode(e.target.value as "api" | "browser")}
+                  onChange={(e) => setMode(e.target.value as ExecutionMode)}
                   value={mode}
                 >
                   <option value="api">API</option>
                   <option value="browser">浏览器</option>
+                  <option value="codex_explore">Codex 浏览器探索</option>
                 </DropdownSelect>
               </Field>
               <Field label="业务场景">
@@ -336,7 +339,7 @@ export function TestCaseEditor({
               <div className="rounded-[var(--radius-lg)] border border-[var(--hairline)] p-4">
                 <h4 className="text-sm font-medium">当前配置摘要</h4>
                 <div className="mt-2 flex flex-wrap gap-2">
-                  <Badge>{mode === "api" ? "API 模式" : "浏览器模式"}</Badge>
+                  <Badge>{executionModeLabel(mode)}模式</Badge>
                   <Badge>
                     {assertionRows.length > 0
                       ? `${assertionRows.length} 条断言`
@@ -383,6 +386,12 @@ function formatCellValue(value: unknown) {
     return String(value);
   }
   return JSON.stringify(value);
+}
+
+function executionModeLabel(mode: ExecutionMode) {
+  if (mode === "api") return "API ";
+  if (mode === "codex_explore") return "Codex 浏览器探索";
+  return "浏览器";
 }
 
 function parseCellValue(value: string) {

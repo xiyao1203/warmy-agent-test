@@ -350,7 +350,7 @@ export function DatasetDetail({
                       </Badge>
                     </TableCell>
                     <TableCell className="whitespace-nowrap text-center text-sm text-[var(--muted)]">
-                      {c.execution_mode === "api" ? "API" : "浏览器"}
+                      {executionModeLabel(c.execution_mode)}
                     </TableCell>
                     <TableCell className="whitespace-nowrap text-center">
                       <Badge tone={c.assertions?.length ? "accent" : "neutral"}>
@@ -413,4 +413,10 @@ export function DatasetDetail({
       )}
     </div>
   );
+}
+
+function executionModeLabel(mode: string) {
+  if (mode === "api") return "API";
+  if (mode === "codex_explore") return "Codex 浏览器探索";
+  return "浏览器";
 }

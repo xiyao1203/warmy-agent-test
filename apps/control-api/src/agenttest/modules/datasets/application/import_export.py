@@ -296,7 +296,7 @@ def _validate_import_record(line: int, raw: dict[str, object]) -> list[dict[str,
                     line,
                     "execution_mode",
                     "invalid_enum",
-                    "execution_mode must be api or browser",
+                    "execution_mode must be api, browser or codex_explore",
                 )
             )
     for field_name in ("assertions", "scorers", "security_policies"):

@@ -156,6 +156,15 @@ export function TestPlanVersionDialog({
   const [browserProfileId, setBrowserProfileId] = useState(
     String(config.browser_profile_id ?? ""),
   );
+  const [codexModelMode, setCodexModelMode] = useState<"default" | "custom">(
+    config.codex_model || config.codex_model_provider ? "custom" : "default",
+  );
+  const [codexModelProvider, setCodexModelProvider] = useState(
+    String(config.codex_model_provider ?? ""),
+  );
+  const [codexModel, setCodexModel] = useState(
+    String(config.codex_model ?? ""),
+  );
 
   // 浏览器实例列表
   const [browserProfileOptions, setBrowserProfileOptions] = useState<
@@ -270,6 +279,9 @@ export function TestPlanVersionDialog({
           runs_per_case: runsPerCase,
           timeout,
           browser_profile_id: browserProfileId,
+          codex_model: codexModelMode === "custom" ? codexModel.trim() : "",
+          codex_model_provider:
+            codexModelMode === "custom" ? codexModelProvider.trim() : "",
         },
         dataset_version_id: datasetVersionId || null,
         environment_template_id: environmentId || null,
@@ -360,6 +372,15 @@ export function TestPlanVersionDialog({
             options={browserProfileOptions}
             value={browserProfileId}
           />
+          <SelectField
+            label="Codex 执行模型"
+            onChange={(value) =>
+              setCodexModelMode(value === "custom" ? "custom" : "default")
+            }
+            options={[{ id: "custom", label: "手动指定其他模型" }]}
+            placeholder="使用 Codex CLI 默认配置"
+            value={codexModelMode === "custom" ? "custom" : ""}
+          />
           <p className="col-span-2 -mt-2 text-xs text-[var(--muted)]">
             浏览器实例来自“浏览器实例”页面；浏览器用例运行时会复用选中实例的登录态和用户目录。
             {projectId ? (
@@ -371,6 +392,40 @@ export function TestPlanVersionDialog({
               </Link>
             ) : null}
           </p>
+          {codexModelMode === "custom" ? (
+            <>
+              <label className="block text-sm font-medium">
+                Codex Provider ID
+                <Input
+                  className="mt-1.5"
+                  onChange={(event) =>
+                    setCodexModelProvider(event.target.value)
+                  }
+                  placeholder="例如 openai、ollama 或公司内配置名"
+                  value={codexModelProvider}
+                />
+              </label>
+              <label className="block text-sm font-medium">
+                Codex 模型 ID
+                <Input
+                  className="mt-1.5"
+                  onChange={(event) => setCodexModel(event.target.value)}
+                  placeholder="例如 gpt-5.5、gpt-oss-120b"
+                  value={codexModel}
+                />
+              </label>
+              <p className="col-span-2 -mt-2 text-xs leading-5 text-[var(--muted)]">
+                这里不会读取平台模型 API Key；请填写运行机器 Codex CLI
+                已配置好的供应商和模型。留空时继续使用 Codex CLI
+                默认配置，Chrome 实例只负责登录态和浏览器目录。
+              </p>
+            </>
+          ) : (
+            <p className="col-span-2 -mt-2 text-xs leading-5 text-[var(--muted)]">
+              默认使用运行机器上的 Codex CLI 模型配置；Chrome
+              实例只负责登录态和浏览器目录，不绑定 OpenAI。
+            </p>
+          )}
         </>
       ) : stepIndex === 2 ? (
         <>
@@ -641,11 +696,13 @@ function SelectField({
   label,
   onChange,
   options,
+  placeholder = "未选择",
   value,
 }: {
   label: string;
   onChange: (value: string) => void;
   options: VersionAssetOption[];
+  placeholder?: string;
   value: string;
 }) {
   return (
@@ -657,7 +714,7 @@ function SelectField({
         onChange={(event) => onChange(event.target.value)}
         value={value}
       >
-        <option value="">未选择</option>
+        <option value="">{placeholder}</option>
         {options.map((option) => (
           <option key={option.id} value={option.id}>
             {option.label}
