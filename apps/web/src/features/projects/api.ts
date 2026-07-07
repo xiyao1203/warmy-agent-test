@@ -1,9 +1,12 @@
 import {
+  archiveProjectApiV1ProjectsProjectIdArchivePost,
   createProjectApiV1ProjectsPost,
   getProjectApiV1ProjectsProjectIdGet,
   listMembersApiV1ProjectsProjectIdMembersGet,
   listProjectsApiV1ProjectsGet,
+  renameProjectApiV1ProjectsProjectIdPatch,
   type CreateProjectRequest,
+  type RenameProjectRequest,
 } from "@warmy/generated-api-client";
 
 import { apiClient } from "@/lib/api/client";
@@ -22,6 +25,30 @@ export async function createProject(payload: CreateProjectRequest) {
     body: payload,
     client: apiClient,
     headers: csrfHeaders(),
+    throwOnError: true,
+  });
+  return data;
+}
+
+export async function renameProject(
+  projectId: string,
+  payload: RenameProjectRequest,
+) {
+  const { data } = await renameProjectApiV1ProjectsProjectIdPatch({
+    body: payload,
+    client: apiClient,
+    headers: csrfHeaders(),
+    path: { project_id: projectId },
+    throwOnError: true,
+  });
+  return data;
+}
+
+export async function archiveProject(projectId: string) {
+  const { data } = await archiveProjectApiV1ProjectsProjectIdArchivePost({
+    client: apiClient,
+    headers: csrfHeaders(),
+    path: { project_id: projectId },
     throwOnError: true,
   });
   return data;

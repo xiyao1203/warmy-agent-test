@@ -2,17 +2,27 @@
 
 import { AlertCircle, Eye, EyeOff } from "lucide-react";
 import { useEffect, useRef, useState, type FormEvent } from "react";
-import type { LoginRequest, UserResponse } from "@warmy/generated-api-client";
+import type {
+  LoginRequest,
+  ProjectResponse,
+  UserResponse,
+} from "@warmy/generated-api-client";
 
 import { Input } from "@/components/ui/input";
 import { PulseButton } from "@/components/uiverse";
+import { listProjects } from "@/features/projects";
+import { projectWorkspacePath } from "@/lib/routes";
 
 import { login } from "./api";
 import { safeReturnTo } from "./session";
 
 type FieldErrors = Partial<Record<keyof LoginRequest, string>>;
+type ListProjects = () => Promise<ProjectResponse[]>;
+
+const DEFAULT_LOGIN_RETURN_TO = "/projects";
 
 type LoginFormProps = {
+  onListProjects?: ListProjects;
   onLogin?: (credentials: LoginRequest) => Promise<UserResponse>;
   onSuccess: (returnTo: string) => void;
   returnTo?: string;
@@ -29,7 +39,35 @@ function validate(credentials: LoginRequest): FieldErrors {
   return errors;
 }
 
+function isProjectScopedReturnTo(path: string) {
+  return /^\/projects\/[^/]+(?:\/|$)/.test(path);
+}
+
+async function resolveLoginDestination(
+  returnTo: string | undefined,
+  onListProjects: ListProjects,
+) {
+  const safePath = safeReturnTo(returnTo);
+  if (isProjectScopedReturnTo(safePath)) {
+    return safePath;
+  }
+
+  try {
+    const projects = await onListProjects();
+    const firstProject =
+      projects.find((project) => !project.archived) ?? projects[0];
+    if (firstProject) {
+      return projectWorkspacePath(firstProject.id);
+    }
+  } catch {
+    return DEFAULT_LOGIN_RETURN_TO;
+  }
+
+  return DEFAULT_LOGIN_RETURN_TO;
+}
+
 export function LoginForm({
+  onListProjects = listProjects,
   onLogin = login,
   onSuccess,
   returnTo,
@@ -72,13 +110,8 @@ export function LoginForm({
 
     setPending(true);
     try {
-      const user = await onLogin(credentials);
-      // 如果需要修改密码，跳转到用户管理页（超级管理员视角）
-      if (user.must_change_password) {
-        onSuccess("/system/users");
-        return;
-      }
-      onSuccess(safeReturnTo(returnTo));
+      await onLogin(credentials);
+      onSuccess(await resolveLoginDestination(returnTo, onListProjects));
     } catch (err: unknown) {
       // 区分网络错误和凭证错误
       if (err instanceof TypeError && err.message === "Failed to fetch") {

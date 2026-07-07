@@ -12,6 +12,11 @@ const user = {
   status: "active" as const,
 };
 
+const projects = [
+  { archived: false, id: "project-1", name: "测试项目" },
+  { archived: true, id: "project-2", name: "归档项目" },
+];
+
 describe("LoginForm", () => {
   it("validates email and password before submitting", async () => {
     const onLogin = vi.fn();
@@ -71,6 +76,85 @@ describe("LoginForm", () => {
     resolveLogin(user);
     await waitFor(() =>
       expect(onSuccess).toHaveBeenCalledWith("/projects/project-1/overview"),
+    );
+  });
+
+  it("opens the first project test agent by default after landing page login", async () => {
+    const onLogin = vi.fn().mockResolvedValue(user);
+    const onListProjects = vi.fn().mockResolvedValue(projects);
+    const onSuccess = vi.fn();
+    render(
+      <LoginForm
+        onListProjects={onListProjects}
+        onLogin={onLogin}
+        onSuccess={onSuccess}
+      />,
+    );
+
+    fireEvent.change(screen.getByLabelText("邮箱"), {
+      target: { value: "jason@example.com" },
+    });
+    fireEvent.change(screen.getByLabelText("密码"), {
+      target: { value: "correct-password" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "登录" }));
+
+    await waitFor(() =>
+      expect(onSuccess).toHaveBeenCalledWith("/projects/project-1/test-agent"),
+    );
+    expect(onListProjects).toHaveBeenCalledTimes(1);
+  });
+
+  it("still opens the first project test agent when the account requires a password change", async () => {
+    const onLogin = vi
+      .fn()
+      .mockResolvedValue({ ...user, must_change_password: true });
+    const onListProjects = vi.fn().mockResolvedValue(projects);
+    const onSuccess = vi.fn();
+    render(
+      <LoginForm
+        onListProjects={onListProjects}
+        onLogin={onLogin}
+        onSuccess={onSuccess}
+      />,
+    );
+
+    fireEvent.change(screen.getByLabelText("邮箱"), {
+      target: { value: "jason@example.com" },
+    });
+    fireEvent.change(screen.getByLabelText("密码"), {
+      target: { value: "correct-password" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "登录" }));
+
+    await waitFor(() =>
+      expect(onSuccess).toHaveBeenCalledWith("/projects/project-1/test-agent"),
+    );
+  });
+
+  it("ignores stale account return paths and opens the test agent", async () => {
+    const onLogin = vi.fn().mockResolvedValue(user);
+    const onListProjects = vi.fn().mockResolvedValue(projects);
+    const onSuccess = vi.fn();
+    render(
+      <LoginForm
+        onListProjects={onListProjects}
+        onLogin={onLogin}
+        onSuccess={onSuccess}
+        returnTo="/account?section=security"
+      />,
+    );
+
+    fireEvent.change(screen.getByLabelText("邮箱"), {
+      target: { value: "jason@example.com" },
+    });
+    fireEvent.change(screen.getByLabelText("密码"), {
+      target: { value: "correct-password" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "登录" }));
+
+    await waitFor(() =>
+      expect(onSuccess).toHaveBeenCalledWith("/projects/project-1/test-agent"),
     );
   });
 });

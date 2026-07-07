@@ -1,7 +1,37 @@
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { UserManagement } from "../user-management";
+import { UserManagementScreen } from "../user-management-screen";
+
+const {
+  createUser,
+  deleteUser,
+  getCurrentUser,
+  listUsers,
+  resetUserPassword,
+  setUserEnabled,
+  updateUser,
+} = vi.hoisted(() => ({
+  createUser: vi.fn(),
+  deleteUser: vi.fn(),
+  getCurrentUser: vi.fn(),
+  listUsers: vi.fn(),
+  resetUserPassword: vi.fn(),
+  setUserEnabled: vi.fn(),
+  updateUser: vi.fn(),
+}));
+
+vi.mock("@/features/auth", () => ({ getCurrentUser }));
+vi.mock("../api", () => ({
+  createUser,
+  deleteUser,
+  listUsers,
+  resetUserPassword,
+  setUserEnabled,
+  updateUser,
+}));
 
 const currentUser = {
   display_name: "系统管理员",
@@ -24,7 +54,23 @@ const users = [
   },
 ];
 
+function renderUserManagementScreen() {
+  const client = new QueryClient({
+    defaultOptions: { queries: { retry: false } },
+  });
+
+  return render(
+    <QueryClientProvider client={client}>
+      <UserManagementScreen />
+    </QueryClientProvider>,
+  );
+}
+
 describe("UserManagement", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
   it("renders loading, error and permission states", () => {
     const { rerender } = render(
       <UserManagement currentUser={currentUser} loading />,
@@ -99,5 +145,36 @@ describe("UserManagement", () => {
     fireEvent.click(screen.getByRole("button", { name: "加载更多" }));
 
     await waitFor(() => expect(onLoadMore).toHaveBeenCalledTimes(1));
+  });
+
+  it("appends the next user page in the screen data flow", async () => {
+    const nextPageUser = {
+      display_name: "审核用户",
+      email: "reviewer@example.com",
+      id: "user-3",
+      must_change_password: false,
+      role: "reviewer" as const,
+      status: "active" as const,
+    };
+    getCurrentUser.mockResolvedValue(currentUser);
+    listUsers.mockImplementation(async (cursor?: string | null) => {
+      if (!cursor) {
+        return { items: users, next_cursor: "cursor-2" };
+      }
+      return { items: [nextPageUser], next_cursor: null };
+    });
+
+    renderUserManagementScreen();
+
+    expect(await screen.findByText("dev@example.com")).toBeVisible();
+    expect(screen.queryByText("reviewer@example.com")).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "加载更多" }));
+
+    expect(await screen.findByText("reviewer@example.com")).toBeVisible();
+    await waitFor(() =>
+      expect(screen.queryByRole("button", { name: "加载更多" })).toBeNull(),
+    );
+    expect(listUsers).toHaveBeenCalledWith("cursor-2");
   });
 });

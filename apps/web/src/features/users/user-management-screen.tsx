@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import type { UserResponse } from "@warmy/generated-api-client";
 
 import { getCurrentUser } from "@/features/auth";
@@ -17,9 +17,14 @@ import {
 } from "./api";
 import { UserManagement } from "./user-management";
 
+type LoadedUserPage = {
+  baseUpdatedAt: number;
+  items: UserResponse[];
+  nextCursor: string | null;
+} | null;
+
 export function UserManagementScreen() {
-  const [items, setItems] = useState<UserResponse[]>([]);
-  const [nextCursor, setNextCursor] = useState<string | null>(null);
+  const [loadedPage, setLoadedPage] = useState<LoadedUserPage>(null);
   const [paging, setPaging] = useState(false);
   const userQuery = useQuery({
     queryFn: getCurrentUser,
@@ -30,11 +35,15 @@ export function UserManagementScreen() {
     queryFn: () => listUsers(),
     queryKey: ["users"],
   });
-  useEffect(() => {
-    if (!usersQuery.data) return;
-    setItems(usersQuery.data.items);
-    setNextCursor(usersQuery.data.next_cursor);
-  }, [usersQuery.data]);
+  const baseUsers = usersQuery.data?.items ?? [];
+  const loadedPageMatchesCurrentQuery =
+    loadedPage?.baseUpdatedAt === usersQuery.dataUpdatedAt;
+  const users = loadedPageMatchesCurrentQuery
+    ? [...baseUsers, ...loadedPage.items]
+    : baseUsers;
+  const nextCursor = loadedPageMatchesCurrentQuery
+    ? loadedPage.nextCursor
+    : (usersQuery.data?.next_cursor ?? null);
 
   if (userQuery.isPending) {
     return <UserManagement loading />;
@@ -78,8 +87,17 @@ export function UserManagementScreen() {
         setPaging(true);
         try {
           const page = await listUsers(nextCursor);
-          setItems((current) => [...current, ...page.items]);
-          setNextCursor(page.next_cursor);
+          setLoadedPage((current) => {
+            const currentItems =
+              current?.baseUpdatedAt === usersQuery.dataUpdatedAt
+                ? current.items
+                : [];
+            return {
+              baseUpdatedAt: usersQuery.dataUpdatedAt,
+              items: [...currentItems, ...page.items],
+              nextCursor: page.next_cursor,
+            };
+          });
         } finally {
           setPaging(false);
         }
@@ -93,7 +111,7 @@ export function UserManagementScreen() {
         await usersQuery.refetch();
       }}
       paging={paging}
-      users={items}
+      users={users}
     />
   );
 }
