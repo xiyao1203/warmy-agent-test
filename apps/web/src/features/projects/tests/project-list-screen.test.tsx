@@ -23,6 +23,16 @@ describe("ProjectListScreen", () => {
     render(<ProjectListScreen projects={projects} {...handlers} />);
 
     expect(screen.getByRole("heading", { name: "项目管理" })).toBeVisible();
+    expect(screen.getByTestId("project-filter-bar")).toHaveClass(
+      "flex",
+      "items-center",
+      "gap-3",
+    );
+    expect(screen.getByRole("columnheader", { name: "项目" })).toBeVisible();
+    expect(screen.getByRole("columnheader", { name: "状态" })).toBeVisible();
+    expect(
+      screen.getByRole("columnheader", { name: "默认入口" }),
+    ).toBeVisible();
     expect(screen.getByText("项目 A")).toBeVisible();
     expect(screen.getByText("项目 B")).toBeVisible();
     expect(screen.getAllByText("已归档").length).toBeGreaterThan(0);
@@ -38,14 +48,39 @@ describe("ProjectListScreen", () => {
     const handlers = renderProjectListScreen();
     render(<ProjectListScreen projects={projects} {...handlers} />);
 
-    fireEvent.change(screen.getByLabelText("新建项目名称"), {
+    expect(screen.queryByLabelText("项目名称")).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "新建项目" }));
+    fireEvent.change(screen.getByLabelText("项目名称"), {
       target: { value: "项目 C" },
     });
-    fireEvent.click(screen.getByRole("button", { name: "新建项目" }));
+    fireEvent.click(screen.getByRole("button", { name: "保存项目" }));
 
     await waitFor(() =>
       expect(handlers.onCreate).toHaveBeenCalledWith({ name: "项目 C" }),
     );
+  });
+
+  it("filters projects by keyword and status", () => {
+    const handlers = renderProjectListScreen();
+    render(<ProjectListScreen projects={projects} {...handlers} />);
+
+    fireEvent.change(screen.getByPlaceholderText("搜索项目名称或 ID"), {
+      target: { value: "project-2" },
+    });
+
+    expect(screen.queryByText("项目 A")).not.toBeInTheDocument();
+    expect(screen.getByText("项目 B")).toBeVisible();
+
+    fireEvent.change(screen.getByPlaceholderText("搜索项目名称或 ID"), {
+      target: { value: "" },
+    });
+    fireEvent.change(screen.getByLabelText("按项目状态筛选"), {
+      target: { value: "active" },
+    });
+
+    expect(screen.getByText("项目 A")).toBeVisible();
+    expect(screen.queryByText("项目 B")).not.toBeInTheDocument();
   });
 
   it("renames a project inline", async () => {

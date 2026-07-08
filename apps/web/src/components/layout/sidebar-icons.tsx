@@ -7,6 +7,7 @@ export type SidebarIconName =
   | "experiment"
   | "model"
   | "overview"
+  | "project-list"
   | "release-gate"
   | "review"
   | "scorer"
@@ -289,6 +290,39 @@ const iconArtwork = {
         fill="var(--sidebar-icon-deep)"
       />
       <circle cx="16" cy="16" fill="var(--sidebar-icon-mist)" r="4.2" />
+    </>
+  ),
+  "project-list": () => (
+    <>
+      <rect
+        fill="var(--sidebar-icon-soft)"
+        height="18"
+        rx="4.2"
+        width="22"
+        x="5"
+        y="7"
+      />
+      <rect
+        fill="var(--sidebar-icon-hot)"
+        height="5"
+        rx="2.2"
+        width="9"
+        x="9"
+        y="11"
+      />
+      <rect
+        fill="var(--sidebar-icon-cool)"
+        height="5"
+        rx="2.2"
+        width="13"
+        x="9"
+        y="18"
+      />
+      <path
+        d="M22 10.5h4.5v4.5H22v-4.5Zm0 7h4.5V22H22v-4.5Z"
+        fill="var(--sidebar-icon-deep)"
+      />
+      <circle cx="8.5" cy="8.5" fill="var(--sidebar-icon-mist)" r="3.2" />
     </>
   ),
   "release-gate": () => (
