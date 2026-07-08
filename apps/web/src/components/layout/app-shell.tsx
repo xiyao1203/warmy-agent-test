@@ -167,6 +167,14 @@ export function AppShell({
             aria-label="项目导航"
             className="flex-1 space-y-1 overflow-y-auto min-h-0"
           >
+            <ProjectNavLink
+              activeMode="exact"
+              collapsed={collapsed}
+              href="/projects"
+              icon={<SidebarNavIcon iconName="project-list" tone="indigo" />}
+              label="项目列表"
+              tooltip={collapsedTooltipController}
+            />
             {activeProjectId ? (
               <>
                 <ProjectNavLink
@@ -409,7 +417,9 @@ function ProjectNavLink({
   icon,
   label,
   tooltip,
+  activeMode = "section",
 }: {
+  activeMode?: "exact" | "section";
   collapsed: boolean;
   href: string;
   icon: ReactNode;
@@ -418,7 +428,9 @@ function ProjectNavLink({
 }) {
   const pathname = usePathname();
   const isActive =
-    pathname === href || Boolean(pathname?.startsWith(href + "/"));
+    activeMode === "exact"
+      ? pathname === href
+      : pathname === href || Boolean(pathname?.startsWith(href + "/"));
   function handleTooltipOpen(
     event: FocusEvent<HTMLAnchorElement> | MouseEvent<HTMLAnchorElement>,
   ) {

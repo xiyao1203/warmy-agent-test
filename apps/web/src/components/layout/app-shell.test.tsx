@@ -46,6 +46,10 @@ describe("AppShell", () => {
       "/projects/project-1/test-agent",
     );
     expect(screen.getByText("项目导航")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "项目列表" })).toHaveAttribute(
+      "href",
+      "/projects",
+    );
     expect(screen.getByRole("link", { name: "测试 Agent" })).toHaveAttribute(
       "href",
       "/projects/project-1/test-agent",
@@ -69,6 +73,9 @@ describe("AppShell", () => {
     const navLinks = screen
       .getAllByRole("link")
       .map((link) => link.textContent);
+    expect(navLinks.indexOf("项目列表")).toBeLessThan(
+      navLinks.indexOf("测试 Agent"),
+    );
     expect(navLinks.indexOf("测试 Agent")).toBeLessThan(
       navLinks.indexOf("概览"),
     );
@@ -151,6 +158,7 @@ describe("AppShell", () => {
     );
 
     const expectedIcons = new Map<string, { icon: string; tone: string }>([
+      ["项目列表", { icon: "project-list", tone: "indigo" }],
       ["测试 Agent", { icon: "test-agent", tone: "azure" }],
       ["概览", { icon: "overview", tone: "sky" }],
       ["智能体", { icon: "agent", tone: "violet" }],
