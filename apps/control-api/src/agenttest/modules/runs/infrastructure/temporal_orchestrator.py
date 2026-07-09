@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import Any
 
 from temporalio.client import Client
+from temporalio.service import RPCError, RPCStatusCode
 
 from agenttest.modules.runs.application.ports import RunRuntimeUnavailableError
 from agenttest.modules.runs.domain.entities import Run, RunCase
@@ -57,7 +58,12 @@ class TemporalRunOrchestrator:
             return
         client = await self._get_client()
         handle = client.get_workflow_handle(run.workflow_id)
-        await handle.signal("cancel")
+        try:
+            await handle.signal("cancel")
+        except RPCError as error:
+            if error.status is RPCStatusCode.NOT_FOUND:
+                return
+            raise
 
     async def _get_client(self) -> Any:
         if self._client is not None:

@@ -2,6 +2,7 @@ from datetime import datetime
 from uuid import UUID
 
 from sqlalchemy import (
+    CheckConstraint,
     DateTime,
     ForeignKey,
     Index,
@@ -55,7 +56,13 @@ class DatasetVersionModel(Base):
 
 class TestCaseModel(Base):
     __tablename__ = "test_cases"
-    __table_args__ = (Index("ix_test_cases_version_sort", "dataset_version_id", "sort_order"),)
+    __table_args__ = (
+        CheckConstraint(
+            "execution_mode IN ('api', 'browser', 'codex_explore')",
+            name="ck_test_cases_execution_mode",
+        ),
+        Index("ix_test_cases_version_sort", "dataset_version_id", "sort_order"),
+    )
 
     id: Mapped[UUID] = mapped_column(primary_key=True)
     dataset_version_id: Mapped[UUID] = mapped_column(
