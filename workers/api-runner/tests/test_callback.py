@@ -4,6 +4,7 @@ import httpx
 import pytest
 from agenttest_api_runner.callback import ControlPlaneCallback, ResultCallbackTask
 from agenttest_api_runner.contracts import RunCaseResult, RunResult
+from temporalio.converter import DataConverter
 
 
 @pytest.mark.asyncio
@@ -69,3 +70,32 @@ async def test_callback_raises_for_control_plane_error() -> None:
             )
         )
     await client.aclose()
+
+
+@pytest.mark.asyncio
+async def test_temporal_callback_payload_allows_nested_case_output() -> None:
+    task = ResultCallbackTask(
+        base_url="https://control.example",
+        internal_token="secret-token",
+        project_id="project-1",
+        result=RunResult(
+            run_id="run-1",
+            status="passed",
+            cases=[
+                RunCaseResult(
+                    run_case_id="case-1",
+                    status="passed",
+                    output={
+                        "status": "passed",
+                        "steps": [{"action": "open", "result": "planned"}],
+                        "metadata": {"screenshot_count": 1},
+                    },
+                )
+            ],
+        ),
+    )
+
+    payloads = await DataConverter.default.encode([task])
+    decoded = await DataConverter.default.decode(payloads, [ResultCallbackTask])
+
+    assert decoded[0] == task

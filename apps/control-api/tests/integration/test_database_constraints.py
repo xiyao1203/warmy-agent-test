@@ -13,6 +13,7 @@ from agenttest.modules.identity.infrastructure.persistence.models import (
     UserModel,
     UserSessionModel,
 )
+from agenttest.modules.datasets.infrastructure.persistence.models import TestCaseModel
 from agenttest.modules.projects.infrastructure.persistence.models import ProjectMemberModel
 from alembic import command
 from alembic.config import Config
@@ -50,6 +51,17 @@ def test_project_membership_is_unique_per_project_and_user() -> None:
 def test_audit_log_model_is_append_only() -> None:
     assert AuditLogModel.__mapper_args__["confirm_deleted_rows"] is False
     assert AuditLogModel.__table__.info["append_only"] is True
+
+
+def test_test_case_execution_mode_allows_codex_explore() -> None:
+    checks = {
+        constraint.name: str(constraint.sqltext)
+        for constraint in TestCaseModel.__table__.constraints
+        if isinstance(constraint, CheckConstraint)
+    }
+
+    assert "ck_test_cases_execution_mode" in checks
+    assert "codex_explore" in checks["ck_test_cases_execution_mode"]
 
 
 def postgres_dsn(database_url: str) -> str:

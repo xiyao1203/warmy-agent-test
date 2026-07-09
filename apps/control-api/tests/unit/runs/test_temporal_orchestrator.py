@@ -3,6 +3,8 @@ from __future__ import annotations
 from uuid import uuid4
 
 import pytest
+from temporalio.service import RPCError, RPCStatusCode
+
 from agenttest.modules.identity.public import UserId
 from agenttest.modules.projects.public import ProjectId
 from agenttest.modules.runs.application.ports import RunRuntimeUnavailableError
@@ -35,6 +37,17 @@ class FakeTemporalClient:
     def get_workflow_handle(self, workflow_id: str) -> FakeWorkflowHandle:
         self.requested_workflow_id = workflow_id
         return self.handle
+
+
+class CompletedWorkflowHandle:
+    async def signal(self, _name: str) -> None:
+        raise RPCError("workflow execution already completed", RPCStatusCode.NOT_FOUND, b"")
+
+
+class CompletedWorkflowClient(FakeTemporalClient):
+    def __init__(self) -> None:
+        super().__init__()
+        self.handle = CompletedWorkflowHandle()
 
 
 def make_run() -> tuple[Run, list[RunCase]]:
@@ -139,6 +152,22 @@ async def test_temporal_orchestrator_signals_cancel_when_workflow_exists() -> No
 
     assert client.requested_workflow_id == workflow_id
     assert client.handle.signals == ["cancel"]
+
+
+@pytest.mark.asyncio
+async def test_temporal_orchestrator_ignores_completed_workflow_on_cancel() -> None:
+    run, cases = make_run()
+    client = CompletedWorkflowClient()
+    orchestrator = TemporalRunOrchestrator(
+        client=client,
+        task_queue="agenttest-api-runner",
+    )
+    workflow_id = await orchestrator.start(run, cases)
+    run.start(workflow_id)
+
+    await orchestrator.cancel(run)
+
+    assert client.requested_workflow_id == workflow_id
 
 
 @pytest.mark.asyncio

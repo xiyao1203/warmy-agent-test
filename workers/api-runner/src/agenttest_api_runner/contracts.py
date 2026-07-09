@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from typing import Any
 
 
 @dataclass(frozen=True, slots=True)
@@ -13,8 +14,8 @@ class ResultCallbackConfig:
 @dataclass(frozen=True, slots=True)
 class RunCaseTask:
     run_case_id: str
-    input: dict[str, object]
-    assertions: list[dict[str, object]]
+    input: dict[str, Any]
+    assertions: list[dict[str, Any]]
     execution_mode: str = "api"
 
 
@@ -23,11 +24,11 @@ class RunTask:
     run_id: str
     idempotency_key: str
     cases: list[RunCaseTask]
-    agent_config: dict[str, object]
+    agent_config: dict[str, Any]
     agent_type: str = "generic_http"
-    environment: dict[str, object] = field(default_factory=dict)
-    execution_policy: dict[str, object] = field(default_factory=dict)
-    scorer_configs: list[dict[str, object]] = field(default_factory=list)
+    environment: dict[str, Any] = field(default_factory=dict)
+    execution_policy: dict[str, Any] = field(default_factory=dict)
+    scorer_configs: list[dict[str, Any]] = field(default_factory=list)
     callback: ResultCallbackConfig | None = None
 
 
@@ -52,8 +53,8 @@ class CaseScore:
 class RunCaseResult:
     run_case_id: str
     status: str
-    output: dict[str, object] | None = None
-    trace: list[dict[str, object]] = field(default_factory=list)
+    output: dict[str, Any] | None = None
+    trace: list[dict[str, Any]] = field(default_factory=list)
     error_type: str | None = None
     error_message: str | None = None
     duration_ms: int | None = None

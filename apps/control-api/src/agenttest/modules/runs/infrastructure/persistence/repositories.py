@@ -66,6 +66,7 @@ class SqlAlchemyRunRepository:
     async def add(self, run: Run, cases: list[RunCase]) -> None:
         async with transaction_scope(self._session_factory) as session:
             session.add(_run_model(run))
+            await session.flush()
             session.add_all([_case_model(case) for case in cases])
 
     async def save(self, run: Run) -> None:
