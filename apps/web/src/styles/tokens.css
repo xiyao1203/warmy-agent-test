@@ -59,6 +59,10 @@
   --font-sans:
     system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text",
     "SF Pro Display", Inter, sans-serif;
+  --font-display:
+    "Alibaba PuHuiTi 2.0", "Alibaba PuHuiTi", "Alimama ShuHeiTi",
+    "HarmonyOS Sans SC", "PingFang SC", "Microsoft YaHei UI", "SF Pro Display",
+    system-ui, sans-serif;
   --font-code: "SF Mono", "JetBrains Mono", "Fira Code", monospace;
 
   /* === Product shadow (single purpose: product imagery only) === */

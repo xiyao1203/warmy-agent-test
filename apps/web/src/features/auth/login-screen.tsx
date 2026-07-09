@@ -7,13 +7,14 @@ import {
   Database,
   FlaskConical,
   PlayCircle,
-  Search,
   ShieldCheck,
   Sparkles,
 } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { useState, type ReactNode } from "react";
 
+import { BrandMark } from "@/components/layout/brand-mark";
 import { ThemeToggle } from "@/components/layout/theme-toggle";
 import {
   Dialog,
@@ -21,10 +22,14 @@ import {
   DialogDescription,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { listProjects } from "@/features/projects";
 
+import { getCurrentUser } from "./api";
+import {
+  hasProjectScopedReturnTo,
+  resolveLoginDestinationFromProjects,
+} from "./login-destination";
 import { LoginForm } from "./login-form";
-
-const LANDING_NAV_ITEMS = ["Test Agent", "Cases", "Runs", "Gates"];
 
 const EVIDENCE_STEPS = [
   {
@@ -56,10 +61,49 @@ const EVIDENCE_STEPS = [
 export function LoginScreen({ returnTo }: { returnTo?: string }) {
   const router = useRouter();
   const [loginOpen, setLoginOpen] = useState(false);
+  const [workspaceEntryPath, setWorkspaceEntryPath] = useState<string | null>(
+    null,
+  );
+  const sessionQuery = useQuery({
+    queryFn: getCurrentUser,
+    queryKey: ["session"],
+    retry: false,
+  });
+  const projectsQuery = useQuery({
+    enabled: sessionQuery.isSuccess,
+    queryFn: listProjects,
+    queryKey: ["projects"],
+    retry: false,
+  });
+
+  const canResolveSessionEntry =
+    sessionQuery.isSuccess &&
+    (hasProjectScopedReturnTo(returnTo) ||
+      projectsQuery.isSuccess ||
+      projectsQuery.isError);
+  const sessionEntryPath = canResolveSessionEntry
+    ? resolveLoginDestinationFromProjects(returnTo, projectsQuery.data ?? [])
+    : null;
+  const effectiveEntryPath = workspaceEntryPath ?? sessionEntryPath;
+  const sessionChecking = sessionQuery.isPending;
+  const hasWorkspaceEntry =
+    sessionChecking || Boolean(workspaceEntryPath) || sessionQuery.isSuccess;
+  const entryResolving = hasWorkspaceEntry && !effectiveEntryPath;
 
   function handleSuccess(path: string) {
+    setWorkspaceEntryPath(path);
     setLoginOpen(false);
-    router.replace(path);
+  }
+
+  function openWorkspaceEntry() {
+    if (entryResolving) {
+      return;
+    }
+    if (effectiveEntryPath) {
+      router.push(effectiveEntryPath);
+      return;
+    }
+    setLoginOpen(true);
   }
 
   return (
@@ -67,39 +111,26 @@ export function LoginScreen({ returnTo }: { returnTo?: string }) {
       <header className="sticky top-0 z-40 border-b border-[var(--hairline)] bg-[var(--canvas)] backdrop-blur-xl">
         <div className="mx-auto flex h-14 max-w-7xl items-center justify-between px-5 sm:px-8">
           <div className="flex min-w-0 items-center gap-8">
-            <div className="flex min-w-0 items-center gap-3">
-              <span className="grid size-8 shrink-0 place-items-center rounded-[var(--radius-md)] bg-[var(--ink)] text-[var(--canvas)]">
-                <Bot aria-hidden="true" className="size-4" />
-              </span>
-              <span className="truncate text-sm font-semibold tracking-normal">
+            <div
+              className="flex min-w-0 items-center gap-3"
+              data-testid="landing-brand"
+            >
+              <BrandMark />
+              <span className="font-display truncate text-sm font-semibold">
                 Warmy Agent Test
               </span>
             </div>
-            <nav
-              aria-label="产品导航"
-              className="hidden items-center gap-6 text-xs text-[var(--muted)] lg:flex"
-            >
-              {LANDING_NAV_ITEMS.map((item) => (
-                <span key={item}>{item}</span>
-              ))}
-            </nav>
           </div>
 
           <div className="flex items-center gap-2">
-            <button
-              aria-label="搜索"
-              className="hidden size-9 place-items-center rounded-[var(--radius-md)] text-[var(--muted)] transition-colors hover:bg-[var(--canvas-soft)] hover:text-[var(--ink)] sm:grid"
-              type="button"
-            >
-              <Search aria-hidden="true" className="size-4" />
-            </button>
             <ThemeToggle className="size-9 text-[var(--muted)] hover:bg-[var(--canvas-soft)] hover:text-[var(--ink)]" />
             <button
-              className="inline-flex h-9 items-center justify-center rounded-[var(--radius-pill)] bg-[var(--primary)] px-5 text-sm font-medium text-white transition-all hover:bg-[var(--primary-active)] active:scale-95"
-              onClick={() => setLoginOpen(true)}
+              className="inline-flex h-9 items-center justify-center rounded-[var(--radius-pill)] bg-[var(--primary)] px-5 text-sm font-medium text-white transition-all hover:bg-[var(--primary-active)] active:scale-95 disabled:cursor-not-allowed disabled:opacity-60"
+              disabled={entryResolving}
+              onClick={openWorkspaceEntry}
               type="button"
             >
-              登录
+              {hasWorkspaceEntry ? "工作台" : "登录"}
             </button>
           </div>
         </div>
@@ -124,15 +155,17 @@ export function LoginScreen({ returnTo }: { returnTo?: string }) {
             </p>
             <div className="mt-8 flex flex-wrap items-center gap-3">
               <button
-                className="inline-flex h-11 items-center justify-center rounded-[var(--radius-pill)] bg-[var(--primary)] px-6 text-[15px] font-medium text-white transition-all hover:bg-[var(--primary-active)] active:scale-95"
-                onClick={() => setLoginOpen(true)}
+                className="inline-flex h-11 items-center justify-center rounded-[var(--radius-pill)] bg-[var(--primary)] px-6 text-[15px] font-medium text-white transition-all hover:bg-[var(--primary-active)] active:scale-95 disabled:cursor-not-allowed disabled:opacity-60"
+                disabled={entryResolving}
+                onClick={openWorkspaceEntry}
                 type="button"
               >
                 进入工作台
               </button>
               <button
-                className="inline-flex h-11 items-center gap-2 rounded-[var(--radius-pill)] border border-[var(--hairline-strong)] bg-[var(--surface)] px-5 text-[15px] text-[var(--ink)] transition-colors hover:bg-[var(--canvas-soft)]"
-                onClick={() => setLoginOpen(true)}
+                className="inline-flex h-11 items-center gap-2 rounded-[var(--radius-pill)] border border-[var(--hairline-strong)] bg-[var(--surface)] px-5 text-[15px] text-[var(--ink)] transition-colors hover:bg-[var(--canvas-soft)] disabled:cursor-not-allowed disabled:opacity-60"
+                disabled={entryResolving}
+                onClick={openWorkspaceEntry}
                 type="button"
               >
                 查看闭环路径

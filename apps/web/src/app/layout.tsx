@@ -6,7 +6,7 @@ import { QueryProvider } from "@/lib/query/provider";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Agent Test",
+  title: "Warmy Agent Test",
   description: "Agent automation testing and security evaluation platform",
 };
 

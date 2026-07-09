@@ -22,7 +22,10 @@ describe("ProjectListScreen", () => {
     const handlers = renderProjectListScreen();
     render(<ProjectListScreen projects={projects} {...handlers} />);
 
-    expect(screen.getByRole("heading", { name: "项目管理" })).toBeVisible();
+    expect(screen.getByRole("heading", { name: "项目管理" })).toHaveAttribute(
+      "data-font-role",
+      "display",
+    );
     expect(screen.getByTestId("project-filter-bar")).toHaveClass(
       "flex",
       "items-center",
@@ -36,6 +39,10 @@ describe("ProjectListScreen", () => {
     expect(screen.getByText("项目 A")).toBeVisible();
     expect(screen.getByText("项目 B")).toBeVisible();
     expect(screen.getAllByText("已归档").length).toBeGreaterThan(0);
+    expect(screen.getByTestId("project-summary-total")).toHaveAttribute(
+      "data-font-role",
+      "display-number",
+    );
 
     fireEvent.click(
       screen.getByRole("button", { name: "进入项目 A 测试 Agent" }),
@@ -59,6 +66,37 @@ describe("ProjectListScreen", () => {
     await waitFor(() =>
       expect(handlers.onCreate).toHaveBeenCalledWith({ name: "项目 C" }),
     );
+  });
+
+  it("uses iconfont-inspired 3D illustration and motion for the empty state", () => {
+    const handlers = renderProjectListScreen();
+    render(<ProjectListScreen projects={[]} {...handlers} />);
+
+    const visual = screen.getByTestId("project-empty-visual");
+
+    expect(visual).toHaveAttribute(
+      "data-visual-source",
+      "iconfont-cn-3d-inspired",
+    );
+    expect(visual).toHaveAttribute(
+      "data-motion-source",
+      "iconfont-cn-lottie-inspired",
+    );
+    expect(visual).toHaveAttribute("data-visual-kind", "project-empty-3d");
+    expect(screen.getByText("暂无项目")).toBeVisible();
+  });
+
+  it("uses an iconfont-inspired motion cue while projects are loading", () => {
+    const handlers = renderProjectListScreen();
+    render(<ProjectListScreen loading projects={[]} {...handlers} />);
+
+    const loader = screen.getByTestId("project-loading-motion");
+
+    expect(loader).toHaveAttribute(
+      "data-motion-source",
+      "iconfont-cn-lottie-inspired",
+    );
+    expect(loader).toHaveTextContent("正在加载项目");
   });
 
   it("filters projects by keyword and status", () => {
