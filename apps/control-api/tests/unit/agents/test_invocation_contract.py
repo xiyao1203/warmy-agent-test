@@ -65,6 +65,27 @@ def test_legacy_agent_config_is_normalized_without_inventing_credentials() -> No
     assert config.credential_binding_ids == []
 
 
+def test_invocation_config_carries_secret_free_target_config() -> None:
+    config = invocation_from_stored_config(
+        {
+            "api_url": "https://app.tapnow.ai/canvas/demo",
+            "target_config": {
+                "browser_profile_id": "profile-1",
+                "entry_url": "https://app.tapnow.ai/canvas/demo",
+                "login": {
+                    "credential_binding_id": "credential-1",
+                    "strategy": "credential",
+                },
+                "plugin_id": "tapnow-canvas-agent",
+            },
+        }
+    )
+
+    assert config.target_config["entry_url"] == "https://app.tapnow.ai/canvas/demo"
+    assert config.target_config["browser_profile_id"] == "profile-1"
+    assert "secret-password" not in str(config.model_dump(mode="json"))
+
+
 def test_api_agent_config_persists_full_invocation_contract() -> None:
     credential_id = uuid4()
     request = AgentConfigRequest(

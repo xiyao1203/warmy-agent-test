@@ -83,6 +83,7 @@ class AgentConfig:
     adapter_id: str | None = None
     plugin_id: str | None = None
     plugin_version: str | None = None
+    target_config: dict[str, object] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
         """创建后校验：api_url 必填且合法，timeout 为正数，
@@ -125,6 +126,7 @@ class AgentConfig:
             "adapter_id": self.adapter_id,
             "plugin_id": self.plugin_id,
             "plugin_version": self.plugin_version,
+            "target_config": dict(self.target_config),
         }
 
     @classmethod
@@ -141,6 +143,7 @@ class AgentConfig:
         cost_limit_raw = data.get("cost_limit")
         raw_request_template = data.get("request_template") or {"input": "{{ input }}"}
         raw_credentials = data.get("credential_binding_ids") or []
+        raw_target_config = data.get("target_config") or {}
         return cls(
             api_url=str(data["api_url"]),
             code_version=str(data["code_version"]) if data.get("code_version") else None,
@@ -173,4 +176,7 @@ class AgentConfig:
             adapter_id=str(data.get("adapter_id") or "") or None,
             plugin_id=str(data.get("plugin_id") or "") or None,
             plugin_version=str(data.get("plugin_version") or "") or None,
+            target_config=(
+                dict(raw_target_config) if isinstance(raw_target_config, dict) else {}
+            ),
         )
