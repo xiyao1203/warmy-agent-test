@@ -40,11 +40,10 @@ describe("AppShell", () => {
       </AppShell>,
     );
 
-    expect(screen.getByText("Agent Test")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Agent Test" })).toHaveAttribute(
-      "href",
-      "/projects/project-1/test-agent",
-    );
+    expect(screen.getByText("Warmy Agent Test")).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: "Warmy Agent Test" }),
+    ).toHaveAttribute("href", "/login");
     expect(screen.getByText("项目导航")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "项目列表" })).toHaveAttribute(
       "href",
@@ -81,6 +80,65 @@ describe("AppShell", () => {
     );
     expect(screen.queryByText("系统管理")).not.toBeInTheDocument();
     expect(screen.queryByText("用户管理")).not.toBeInTheDocument();
+  });
+
+  it("uses an iconfont-inspired 3D brand mark in the global header", () => {
+    render(
+      <AppShell
+        currentProjectId={project.id}
+        onProjectSelect={vi.fn()}
+        projects={[project]}
+        user={{
+          display_name: "开发用户",
+          email: "dev@example.com",
+          id: "user-1",
+          must_change_password: false,
+          role: "developer",
+          status: "active",
+        }}
+      >
+        <div>Content</div>
+      </AppShell>,
+    );
+
+    const brandLink = screen.getByRole("link", { name: "Warmy Agent Test" });
+    const brandMark = brandLink.querySelector("[data-brand-mark]");
+
+    expect(brandLink).toHaveAttribute("href", "/login");
+    expect(brandMark).toHaveAttribute("data-brand-mark", "agent-test-3d");
+    expect(brandMark).toHaveAttribute(
+      "data-brand-mark-source",
+      "iconfont-cn-3d-inspired",
+    );
+    expect(brandMark).toHaveAttribute(
+      "data-motion-source",
+      "iconfont-cn-lottie-inspired",
+    );
+  });
+
+  it("does not render the unused global search box in the workbench header", () => {
+    render(
+      <AppShell
+        currentProjectId={project.id}
+        onProjectSelect={vi.fn()}
+        projects={[project]}
+        user={{
+          display_name: "开发用户",
+          email: "dev@example.com",
+          id: "user-1",
+          must_change_password: false,
+          role: "developer",
+          status: "active",
+        }}
+      >
+        <div>Content</div>
+      </AppShell>,
+    );
+
+    expect(
+      screen.queryByRole("searchbox", { name: "全局搜索" }),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByPlaceholderText("搜索（⌘K）")).not.toBeInTheDocument();
   });
 
   it("shows system administration to super administrators", () => {

@@ -4,7 +4,7 @@ import type {
   ProjectResponse,
   UserResponse,
 } from "@warmy/generated-api-client";
-import { PanelLeftClose, PanelLeftOpen, Search } from "lucide-react";
+import { PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -20,6 +20,7 @@ import { ProjectSwitcher } from "@/features/projects";
 import { canManageUsers } from "@/lib/permissions";
 import { projectOverviewPath, projectWorkspacePath } from "@/lib/routes";
 
+import { BrandMark } from "./brand-mark";
 import { HelpDropdown } from "./help-dropdown";
 import { NotificationDropdown } from "./notification-dropdown";
 import {
@@ -66,9 +67,6 @@ export function AppShell({
 }: AppShellProps) {
   const activeProjectId =
     currentProjectId || (projects.length > 0 ? projects[0].id : null);
-  const projectHref = activeProjectId
-    ? projectWorkspacePath(activeProjectId)
-    : "/projects";
   const overviewHref = activeProjectId
     ? projectOverviewPath(activeProjectId)
     : "/projects";
@@ -113,13 +111,15 @@ export function AppShell({
 
   return (
     <div className="h-screen bg-[var(--canvas)] text-[var(--ink)]">
-      <header className="grid h-14 grid-cols-[minmax(16rem,1fr)_minmax(18rem,32rem)_minmax(16rem,1fr)] items-center gap-4 border-b border-[var(--hairline)] bg-[var(--canvas)] px-4 max-[900px]:grid-cols-[1fr_auto]">
+      <header className="flex h-14 items-center justify-between gap-4 border-b border-[var(--hairline)] bg-[var(--canvas)] px-4">
         <div className="flex min-w-0 items-center gap-5">
           <Link
-            className="shrink-0 text-base font-semibold tracking-tight"
-            href={projectHref}
+            aria-label="Warmy Agent Test"
+            className="font-display flex shrink-0 items-center gap-2 text-base font-semibold"
+            href="/login"
           >
-            {collapsed ? "AT" : "Agent Test"}
+            <BrandMark compact={collapsed} />
+            {!collapsed && <span>Warmy Agent Test</span>}
           </Link>
           <ProjectSwitcher
             currentProjectId={currentProjectId}
@@ -127,18 +127,6 @@ export function AppShell({
             projects={projects}
           />
         </div>
-        <label className="relative max-[900px]:hidden">
-          <span className="sr-only">全局搜索</span>
-          <Search
-            aria-hidden="true"
-            className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-[var(--muted)]"
-          />
-          <input
-            className="h-9 w-full rounded-[var(--radius-md)] border border-[var(--hairline)] bg-[var(--surface)] pl-9 pr-3 text-sm outline-none placeholder:text-[var(--body)] focus:border-[var(--primary)] focus:ring-2 focus:ring-[var(--focus-ring-subtle)]"
-            placeholder="搜索（⌘K）"
-            type="search"
-          />
-        </label>
         <div className="flex items-center justify-end gap-1">
           <ThemeToggle />
           <HelpDropdown />

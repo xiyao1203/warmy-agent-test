@@ -42,6 +42,10 @@ import {
   tableActionCellClass,
   tableActionHeadClass,
 } from "@/components/ui/table-actions";
+import {
+  IconfontProjectVisual,
+  ProjectLoadingMotion,
+} from "@/components/visuals/iconfont-inspired-visuals";
 
 type ProjectListScreenProps = {
   error?: "service";
@@ -134,7 +138,12 @@ export function ProjectListScreen({
     <div className="min-w-0 px-6 py-6">
       <header className="flex items-start justify-between gap-4 border-b border-[var(--hairline)] pb-5">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">项目管理</h1>
+          <h1
+            className="font-display text-2xl font-semibold"
+            data-font-role="display"
+          >
+            项目管理
+          </h1>
           <p className="mt-2 text-sm text-[var(--muted)]">
             管理测试资产所在项目，进入项目后默认打开测试 Agent。
           </p>
@@ -143,9 +152,13 @@ export function ProjectListScreen({
       </header>
 
       <section className="grid grid-cols-3 border-b border-[var(--hairline)] py-4 text-sm max-[760px]:grid-cols-1 max-[760px]:gap-4">
-        <Summary label="全部项目" value={projects.length} />
-        <Summary label="运行中" value={activeCount} />
-        <Summary label="已归档" value={projects.length - activeCount} />
+        <Summary id="total" label="全部项目" value={projects.length} />
+        <Summary id="active" label="运行中" value={activeCount} />
+        <Summary
+          id="archived"
+          label="已归档"
+          value={projects.length - activeCount}
+        />
       </section>
 
       <div
@@ -436,10 +449,24 @@ function CreateProjectDialog({
   );
 }
 
-function Summary({ label, value }: { label: string; value: number }) {
+function Summary({
+  id,
+  label,
+  value,
+}: {
+  id: "active" | "archived" | "total";
+  label: string;
+  value: number;
+}) {
   return (
     <div>
-      <div className="text-lg font-semibold">{value}</div>
+      <div
+        className="font-display text-lg font-semibold"
+        data-font-role="display-number"
+        data-testid={`project-summary-${id}`}
+      >
+        {value}
+      </div>
       <div className="mt-0.5 text-xs text-[var(--muted)]">{label}</div>
     </div>
   );
@@ -457,7 +484,7 @@ function ProjectListState({
   projectCount: number;
 }) {
   if (loading) {
-    return <p className="text-sm text-[var(--muted)]">正在加载项目…</p>;
+    return <ProjectLoadingMotion />;
   }
 
   if (error) {
@@ -475,6 +502,7 @@ function ProjectListState({
           action={<CreateProjectDialog onCreate={onCreate} />}
           description="创建第一个项目后即可进入测试 Agent。"
           title="暂无项目"
+          visual={<IconfontProjectVisual />}
         />
       </section>
     );
