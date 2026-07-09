@@ -107,6 +107,45 @@ def test_config_roundtrip() -> None:
     assert restored.cost_limit == original.cost_limit
 
 
+def test_config_roundtrip_preserves_target_plugin_config() -> None:
+    credential_id = uuid4()
+    target_config = {
+        "target_type": "web_agent",
+        "plugin_id": "tapnow-canvas-agent",
+        "plugin_version": "1.0.0",
+        "entry_url": "https://app.tapnow.ai/canvas/demo",
+        "login": {
+            "strategy": "credential",
+            "credential_binding_id": str(credential_id),
+        },
+        "browser_profile_id": "profile-1",
+        "selectors": {
+            "prompt_input": "[data-testid='chat-input']",
+            "send_button": "[data-testid='send']",
+        },
+        "safety_boundaries": {
+            "mode": "readonly",
+            "blocked_actions": ["delete", "payment", "publish", "permission_change"],
+            "requires_confirmation": True,
+        },
+    }
+    original = AgentConfig(
+        api_url="https://app.tapnow.ai/canvas/demo",
+        web_url="https://app.tapnow.ai/canvas/demo",
+        plugin_id="tapnow-canvas-agent",
+        plugin_version="1.0.0",
+        credential_binding_ids=[credential_id],
+        target_config=target_config,
+    )
+
+    data = original.to_dict()
+    restored = AgentConfig.from_dict(data)
+
+    assert data["target_config"] == target_config
+    assert restored.target_config == target_config
+    assert restored.credential_binding_ids == [credential_id]
+
+
 def test_config_defaults() -> None:
     cfg = AgentConfig(api_url="https://api.example.com")
     assert cfg.timeout == 30
@@ -114,6 +153,7 @@ def test_config_defaults() -> None:
     assert cfg.tools == []
     assert cfg.max_steps is None
     assert cfg.cost_limit is None
+    assert cfg.target_config == {}
 
 
 # ── Agent ───────────────────────────────────────────────────────────────────

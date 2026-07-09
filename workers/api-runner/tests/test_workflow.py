@@ -16,6 +16,8 @@ from agenttest_api_runner.workflow import (
     RunWorkflow,
     _codex_model,
     _codex_model_provider,
+    _target_browser_profile_id,
+    _target_url,
     aggregate_results,
     callback_task_for,
     execution_activity_options,
@@ -160,6 +162,31 @@ def test_workflow_normalizes_codex_browser_execution_mode() -> None:
 
     assert task.cases[0].execution_mode == "codex_explore"
     assert task.cases[0].input["test_intent"] == "确认页面可访问"
+
+
+def test_target_config_supplies_default_url_and_browser_profile() -> None:
+    agent_config = {
+        "endpoint_url": "https://fallback.example/run",
+        "target_config": {
+            "browser_profile_id": "profile-from-agent",
+            "entry_url": "https://app.tapnow.ai/canvas/demo",
+        },
+    }
+
+    assert _target_url({}, agent_config) == "https://app.tapnow.ai/canvas/demo"
+    assert (
+        _target_browser_profile_id({}, {}, agent_config)
+        == "profile-from-agent"
+    )
+    assert _target_url({"url": "https://case.example"}, agent_config) == "https://case.example"
+    assert (
+        _target_browser_profile_id(
+            {"browser_profile_id": "profile-from-case"},
+            {"browser_profile_id": "profile-from-plan"},
+            agent_config,
+        )
+        == "profile-from-case"
+    )
 
 
 def test_codex_model_defaults_to_execution_policy() -> None:

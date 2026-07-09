@@ -52,6 +52,7 @@ class AgentConfigRequest(BaseModel):
     adapter_id: str | None = None
     plugin_id: str | None = None
     plugin_version: str | None = None
+    target_config: dict[str, Any] = Field(default_factory=dict)
 
     def to_domain(self) -> AgentConfig:
         return AgentConfig(**self.model_dump())

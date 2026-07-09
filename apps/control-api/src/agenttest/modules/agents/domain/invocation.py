@@ -30,6 +30,7 @@ class AgentInvocationConfig(BaseModel):
     response_path: str = Field(default="output", min_length=1)
     timeout_seconds: int = Field(default=30, ge=1, le=600)
     credential_binding_ids: list[UUID] = Field(default_factory=list)
+    target_config: dict[str, object] = Field(default_factory=dict)
 
 
 def invocation_from_stored_config(config: dict[str, object]) -> AgentInvocationConfig:
@@ -44,5 +45,6 @@ def invocation_from_stored_config(config: dict[str, object]) -> AgentInvocationC
         "response_path": config.get("response_path", "output"),
         "timeout_seconds": config.get("timeout", 30),
         "credential_binding_ids": config.get("credential_binding_ids", []),
+        "target_config": config.get("target_config", {}),
     }
     return AgentInvocationConfig.model_validate(legacy)

@@ -79,6 +79,36 @@ def aggregate_results(statuses: list[str]) -> str:
     return "passed"
 
 
+def _target_config(agent_config: dict[str, object]) -> dict[str, object]:
+    raw = agent_config.get("target_config")
+    return raw if isinstance(raw, dict) else {}
+
+
+def _target_url(case_input: dict[str, object], agent_config: dict[str, object]) -> str:
+    target_config = _target_config(agent_config)
+    return str(
+        case_input.get("url")
+        or target_config.get("entry_url")
+        or agent_config.get("canvas_url")
+        or agent_config.get("endpoint_url")
+        or ""
+    )
+
+
+def _target_browser_profile_id(
+    case_input: dict[str, object],
+    execution_policy: dict[str, object],
+    agent_config: dict[str, object],
+) -> str:
+    target_config = _target_config(agent_config)
+    return str(
+        case_input.get("browser_profile_id")
+        or execution_policy.get("browser_profile_id")
+        or target_config.get("browser_profile_id")
+        or ""
+    )
+
+
 @workflow.defn
 class RunWorkflow:
     def __init__(self) -> None:
@@ -107,14 +137,11 @@ class RunWorkflow:
             try:
                 # ── 执行模式分发 ─────────────────────────────────
                 if case.execution_mode == "codex_explore":
-                    codex_url = str(
-                        case.input.get(
-                            "url",
-                            task.agent_config.get(
-                                "canvas_url",
-                                task.agent_config.get("endpoint_url", ""),
-                            ),
-                        )
+                    codex_url = _target_url(case.input, task.agent_config)
+                    browser_profile_id = _target_browser_profile_id(
+                        case.input,
+                        task.execution_policy,
+                        task.agent_config,
                     )
                     codex_intent = str(case.input.get("test_intent", ""))
                     codex_result = await workflow.execute_activity(
@@ -129,11 +156,14 @@ class RunWorkflow:
                                 case.input,
                                 task.execution_policy,
                             ),
-                            browser_profile_id=str(
-                                case.input.get("browser_profile_id", "")
-                                or task.execution_policy.get("browser_profile_id", "")
+                            browser_profile_id=browser_profile_id,
+                            browser_mode=_codex_browser_mode(
+                                case.input,
+                                {
+                                    **task.execution_policy,
+                                    "browser_profile_id": browser_profile_id,
+                                },
                             ),
-                            browser_mode=_codex_browser_mode(case.input, task.execution_policy),
                             storage_state_key=str(case.input.get("storage_state_key", "")),
                             credentials=_extract_credentials(case.input),
                         ),
@@ -147,15 +177,7 @@ class RunWorkflow:
                     )
                     result = _codex_to_run_case(codex_result, case)
                 elif case.execution_mode == "browser":
-                    browser_url = str(
-                        case.input.get(
-                            "url",
-                            task.agent_config.get(
-                                "canvas_url",
-                                task.agent_config.get("endpoint_url", ""),
-                            ),
-                        )
-                    )
+                    browser_url = _target_url(case.input, task.agent_config)
                     browser_steps = _browser_steps(case.input)
                     playwright_result = await workflow.execute_activity(
                         run_playwright_case,

@@ -82,6 +82,12 @@ export type AgentConfigRequest = {
    */
   system_prompt_version?: string | null;
   /**
+   * Target Config
+   */
+  target_config?: {
+    [key: string]: unknown;
+  };
+  /**
    * Timeout
    */
   timeout?: number;
