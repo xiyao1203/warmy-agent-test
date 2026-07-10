@@ -1552,7 +1552,9 @@ def _register_security_scan_endpoints(
 
 def _register_credential_endpoints(app: FastAPI, settings: Settings, auth_deps) -> None:
     from agenttest.modules.environments.api.credential_router import create_credential_router
+    from agenttest.modules.environments.api.lease_router import create_credential_lease_router
     from agenttest.modules.environments.application.credentials import CredentialBindingService
+    from agenttest.modules.environments.application.leases import CredentialLeaseService
     from agenttest.modules.environments.infrastructure.credential_store import (
         SqlAlchemyCredentialRepository,
     )
@@ -1593,6 +1595,41 @@ def _register_credential_endpoints(app: FastAPI, settings: Settings, auth_deps) 
         ),
         prefix="/api/v1",
     )
+    if cipher is not None:
+        async def scope_check(project_id, run_id, run_case_id):
+            from sqlalchemy import text
+
+            async with session_factory() as session:
+                result = await session.scalar(
+                    text(
+                        """
+                        SELECT 1
+                        FROM run_cases rc
+                        JOIN runs r ON r.id = rc.run_id
+                        WHERE r.project_id = :project_id
+                          AND r.id = :run_id
+                          AND rc.id = :run_case_id
+                          AND r.status = 'running'
+                        """
+                    ),
+                    {
+                        "project_id": project_id,
+                        "run_id": run_id,
+                        "run_case_id": run_case_id,
+                    },
+                )
+            return result is not None
+
+        app.include_router(
+            create_credential_lease_router(
+                internal_token=settings.internal_api_token,
+                service=CredentialLeaseService(
+                    SqlAlchemyCredentialRepository(session_factory), cipher
+                ),
+                scope_check=scope_check,
+            ),
+            prefix="/api/v1",
+        )
 
 
 def _register_gate_endpoints(
