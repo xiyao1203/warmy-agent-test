@@ -38,10 +38,11 @@ async def test_execute_page_returns_secret_free_evidence() -> None:
         agent_id=str(uuid4()),
         target_url="https://tapnow.test/canvas",
         intent="生成商品图",
-        credentials={"username": "tester", "password": "secret"},
     )
 
-    result = await execute_tapnow_page(Page(), task, Uploader())
+    result = await execute_tapnow_page(
+        Page(), task, Uploader(), {"username": "tester", "password": "secret"}
+    )
 
     assert result.status == "passed"
     assert result.evidence["execution_outcome"] == "success"

@@ -33,6 +33,11 @@ with workflow.unsafe.imports_passed_through():
     )
     from agenttest_api_runner.reports import build_reports
     from agenttest_api_runner.scorer_activities import evaluate_scorers_sync
+    from agenttest_api_runner.tapnow_activity import (
+        TapNowResult,
+        TapNowTaskInput,
+        run_tapnow_case,
+    )
 
 ACTIVITY_TIMEOUT = timedelta(minutes=5)
 ACTIVITY_RETRY_POLICY = RetryPolicy(
@@ -176,21 +181,40 @@ class RunWorkflow:
                         ),
                     )
                     result = _codex_to_run_case(codex_result, case)
+                    if result.status == "passed" and _is_canvas_target(task):
+                        tapnow_result = await workflow.execute_activity(
+                            run_tapnow_case,
+                            _tapnow_task(task, case),
+                            start_to_close_timeout=activity_timeout,
+                            heartbeat_timeout=timedelta(seconds=30),
+                            retry_policy=activity_retry_policy,
+                        )
+                        result = _tapnow_to_run_case(tapnow_result, case)
                 elif case.execution_mode == "browser":
-                    browser_url = _target_url(case.input, task.agent_config)
-                    browser_steps = _browser_steps(case.input)
-                    playwright_result = await workflow.execute_activity(
-                        run_playwright_case,
-                        PlaywrightTaskInput(
-                            run_case_id=case.run_case_id,
-                            url=browser_url,
-                            steps=browser_steps,
-                        ),
-                        start_to_close_timeout=activity_timeout,
-                        heartbeat_timeout=timedelta(seconds=30),
-                        retry_policy=activity_retry_policy,
-                    )
-                    result = _playwright_to_run_case(playwright_result, case)
+                    if _is_canvas_target(task):
+                        tapnow_result = await workflow.execute_activity(
+                            run_tapnow_case,
+                            _tapnow_task(task, case),
+                            start_to_close_timeout=activity_timeout,
+                            heartbeat_timeout=timedelta(seconds=30),
+                            retry_policy=activity_retry_policy,
+                        )
+                        result = _tapnow_to_run_case(tapnow_result, case)
+                    else:
+                        browser_url = _target_url(case.input, task.agent_config)
+                        browser_steps = _browser_steps(case.input)
+                        playwright_result = await workflow.execute_activity(
+                            run_playwright_case,
+                            PlaywrightTaskInput(
+                                run_case_id=case.run_case_id,
+                                url=browser_url,
+                                steps=browser_steps,
+                            ),
+                            start_to_close_timeout=activity_timeout,
+                            heartbeat_timeout=timedelta(seconds=30),
+                            retry_policy=activity_retry_policy,
+                        )
+                        result = _playwright_to_run_case(playwright_result, case)
                 else:
                     # ── Browser Harness 前置采集（可选） ──────────────────
                     capture_url = task.agent_config.get("pre_capture_url")
@@ -229,6 +253,7 @@ class RunWorkflow:
                         error_type=result.error_type,
                         error_message=result.error_message,
                         duration_ms=result.duration_ms,
+                        evidence=result.evidence,
                         scores=[
                             CaseScore(
                                 scorer_version_id=r.scorer_version_id,
@@ -326,6 +351,56 @@ def normalize_run_task(task: RunTask | dict[str, object]) -> RunTask:
             else []
         ),
         callback=callback,
+    )
+
+
+def _is_canvas_target(task: RunTask) -> bool:
+    target = _target_config(task.agent_config)
+    plugin_id = str(target.get("plugin_id") or task.agent_config.get("plugin_id") or "")
+    return task.agent_type in {"canvas", "canvas_agent"} or plugin_id in {
+        "canvas-agent",
+        "tapnow-canvas-agent",
+    }
+
+
+def _tapnow_task(task: RunTask, case: RunCaseTask) -> TapNowTaskInput:
+    if task.callback is None:
+        raise ValueError("TapNow execution requires a control plane callback")
+    target = _target_config(task.agent_config)
+    raw_bindings = target.get("credential_binding_ids") or task.agent_config.get(
+        "credential_binding_ids", []
+    )
+    bindings = [str(item) for item in raw_bindings] if isinstance(raw_bindings, list) else []
+    agent_id = str(
+        task.agent_config.get("agent_id")
+        or task.agent_config.get("agent_version_id")
+        or task.run_id
+    )
+    return TapNowTaskInput(
+        project_id=task.callback.project_id,
+        run_id=task.run_id,
+        run_case_id=case.run_case_id,
+        agent_id=agent_id,
+        target_url=_target_url(case.input, task.agent_config),
+        intent=str(case.input.get("test_intent") or case.input.get("prompt") or ""),
+        binding_ids=bindings,
+        control_api_base_url=task.callback.base_url,
+        internal_token=task.callback.internal_token,
+        timeout_ms=_int_value(case.input.get("timeout_ms"), 120_000),
+    )
+
+
+def _tapnow_to_run_case(result: TapNowResult, case: RunCaseTask) -> RunCaseResult:
+    return RunCaseResult(
+        run_case_id=case.run_case_id,
+        status=result.status,
+        output={"canvas": result.evidence.get("canvas", {})},
+        trace=[dict(result.evidence.get("trace", {}))]
+        if isinstance(result.evidence.get("trace"), dict)
+        else [],
+        error_type=result.error_type,
+        error_message=result.error_message,
+        evidence=result.evidence,
     )
 
 

@@ -33,6 +33,11 @@ async def test_callback_posts_run_result_to_control_plane_with_internal_token() 
                         output={"message": "ok"},
                         trace=[{"name": "http.request"}],
                         duration_ms=12,
+                        evidence={
+                            "execution_outcome": "success",
+                            "quality_decision": "pass",
+                            "security_decision": "clear",
+                        },
                     )
                 ],
             ),
@@ -47,7 +52,9 @@ async def test_callback_posts_run_result_to_control_plane_with_internal_token() 
     assert requests[0].read() == (
         b'{"cases":[{"run_case_id":"case-1","status":"passed",'
         b'"output":{"message":"ok"},"trace":[{"name":"http.request"}],'
-        b'"error_type":null,"error_message":null,"duration_ms":12,"scores":[]}]}'
+        b'"error_type":null,"error_message":null,"duration_ms":12,"scores":[],'
+        b'"evidence":{"execution_outcome":"success","quality_decision":"pass",'
+        b'"security_decision":"clear"}}]}'
     )
     await client.aclose()
 

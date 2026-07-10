@@ -9,6 +9,7 @@ from agenttest_plugin_canvas.tapnow import TapNowBrowserContract
 from temporalio import activity
 
 from .artifact_uploader import ArtifactUploader
+from .credentials import CredentialLeaseClient
 
 
 @dataclass(frozen=True, slots=True)
@@ -19,7 +20,7 @@ class TapNowTaskInput:
     agent_id: str
     target_url: str
     intent: str
-    credentials: dict[str, str] = field(default_factory=dict)
+    binding_ids: list[str] = field(default_factory=list)
     control_api_base_url: str = ""
     internal_token: str = ""
     timeout_ms: int = 120_000
@@ -34,13 +35,15 @@ class TapNowResult:
     error_message: str | None = None
 
 
-async def execute_tapnow_page(page, task: TapNowTaskInput, uploader) -> TapNowResult:
+async def execute_tapnow_page(
+    page, task: TapNowTaskInput, uploader, credentials: dict[str, str]
+) -> TapNowResult:
     contract = TapNowBrowserContract(
         run_id=UUID(task.run_id),
         agent_id=UUID(task.agent_id),
         timeout_ms=task.timeout_ms,
     )
-    await contract.login(page, task.credentials)
+    await contract.login(page, credentials)
     await contract.submit(page, task.intent)
     await contract.wait_until_complete(page)
     canvas = await contract.collect(page)
@@ -80,7 +83,16 @@ async def run_tapnow_case(task: TapNowTaskInput) -> TapNowResult:
             "Playwright runtime is not installed",
         )
     activity.heartbeat({"run_case_id": task.run_case_id, "stage": "preparing"})
+    credentials: dict[str, str] = {}
     try:
+        credentials = await CredentialLeaseClient(
+            task.control_api_base_url, task.internal_token
+        ).redeem(
+            project_id=task.project_id,
+            run_id=task.run_id,
+            run_case_id=task.run_case_id,
+            binding_ids=task.binding_ids,
+        )
         async with async_playwright() as playwright:
             browser = await playwright.chromium.launch(headless=True)
             context = await browser.new_context(record_video_dir=".data/videos")
@@ -88,13 +100,13 @@ async def run_tapnow_case(task: TapNowTaskInput) -> TapNowResult:
                 page = await context.new_page()
                 await page.goto(task.target_url, timeout=task.timeout_ms)
                 uploader = ArtifactUploader(task.control_api_base_url, task.internal_token)
-                return await execute_tapnow_page(page, task, uploader)
+                return await execute_tapnow_page(page, task, uploader, credentials)
             finally:
-                task.credentials.clear()
+                credentials.clear()
                 await context.close()
                 await browser.close()
     except Exception as error:
-        task.credentials.clear()
+        credentials.clear()
         return TapNowResult(
             task.run_case_id,
             "error",

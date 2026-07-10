@@ -50,6 +50,7 @@ class ControlPlaneCallback:
                                 }
                                 for s in case.scores
                             ],
+                            "evidence": case.evidence,
                         }
                         for case in task.result.cases
                     ]

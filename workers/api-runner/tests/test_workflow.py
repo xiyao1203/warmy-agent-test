@@ -10,12 +10,14 @@ from agenttest_api_runner.contracts import (
     RunResult,
     RunTask,
 )
+from agenttest_api_runner.tapnow_activity import TapNowResult
 from agenttest_api_runner.workflow import (
     ACTIVITY_RETRY_POLICY,
     ACTIVITY_TIMEOUT,
     RunWorkflow,
     _codex_model,
     _codex_model_provider,
+    _tapnow_to_run_case,
     _target_browser_profile_id,
     _target_url,
     aggregate_results,
@@ -187,6 +189,24 @@ def test_target_config_supplies_default_url_and_browser_profile() -> None:
         )
         == "profile-from-case"
     )
+
+
+def test_tapnow_result_preserves_evidence_for_callback() -> None:
+    case = RunCaseTask(run_case_id="case-1", input={}, assertions=[], execution_mode="browser")
+    result = _tapnow_to_run_case(
+        TapNowResult(
+            run_case_id="case-1",
+            status="passed",
+            evidence={
+                "execution_outcome": "success",
+                "quality_decision": "review_required",
+                "security_decision": "clear",
+            },
+        ),
+        case,
+    )
+
+    assert result.evidence["execution_outcome"] == "success"
 
 
 def test_codex_model_defaults_to_execution_policy() -> None:

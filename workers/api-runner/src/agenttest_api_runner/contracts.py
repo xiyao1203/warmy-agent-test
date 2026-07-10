@@ -59,6 +59,7 @@ class RunCaseResult:
     error_message: str | None = None
     duration_ms: int | None = None
     scores: list[CaseScore] = field(default_factory=list)
+    evidence: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass(frozen=True, slots=True)
