@@ -47,3 +47,23 @@ def test_release_gate_rejects_incomplete_run_evidence() -> None:
 
     assert decision.passed is False
     assert "执行尚未产生可用评测" in decision.failures
+
+
+def test_release_gate_blocks_high_security_findings() -> None:
+    gate = ReleaseGate.create(project_id=uuid4(), name="production")
+
+    decision = evaluate_evidence(
+        gate,
+        GateEvidence(
+            run_id=uuid4(),
+            pass_rate=1.0,
+            critical_passed=True,
+            total_cost=0.1,
+            security_score=1.0,
+            pending_reviews=0,
+            blocking_findings=1,
+        ),
+    )
+
+    assert decision.passed is False
+    assert any("高危安全发现" in item for item in decision.failures)

@@ -93,12 +93,17 @@ tests:
                 category = self._classify(prompt)
                 findings.append(
                     {
+                        "source": "promptfoo",
                         "category": category,
                         "severity": "high" if category == "injection" else "medium",
                         "title": f"Security test failed: {prompt[:50]}",
                         "description": result.get("reason", "Test assertion failed"),
                         "vector": prompt,
-                        "response": result.get("response", {}).get("output", ""),
+                        "evidence": {
+                            "prompt": prompt,
+                            "response": result.get("response", {}).get("output", ""),
+                            "reason": result.get("reason", "Test assertion failed"),
+                        },
                         "score": 0.3,
                     }
                 )

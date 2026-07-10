@@ -55,10 +55,18 @@ class SqlAlchemyGateEvidence:
                 .limit(1)
             )
             security_score = None
+            blocking_findings = 0
             if scan is not None:
                 raw_score = scan.summary.get("score")
                 if isinstance(raw_score, int | float):
                     security_score = float(raw_score)
+                findings = scan.findings if isinstance(scan.findings, list) else []
+                blocking_findings = sum(
+                    1
+                    for item in findings
+                    if isinstance(item, dict)
+                    and str(item.get("severity", "")).lower() in {"high", "critical"}
+                )
             return GateEvidence(
                 run_id=run_id,
                 pass_rate=evaluation.pass_rate if evaluation else None,
@@ -66,6 +74,7 @@ class SqlAlchemyGateEvidence:
                 total_cost=evaluation.total_cost if evaluation else None,
                 security_score=security_score,
                 pending_reviews=int(pending_reviews or 0),
+                blocking_findings=blocking_findings,
             )
 
     async def record(
@@ -96,6 +105,7 @@ class SqlAlchemyGateEvidence:
                         "total_cost": evidence.total_cost,
                         "security_score": evidence.security_score,
                         "pending_reviews": evidence.pending_reviews,
+                        "blocking_findings": evidence.blocking_findings,
                     },
                     failures=failures,
                     evidence={"run_id": str(evidence.run_id)},
