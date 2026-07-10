@@ -26,6 +26,7 @@ with workflow.unsafe.imports_passed_through():
         RunResult,
         RunTask,
     )
+    from agenttest_api_runner.deepeval_adapter import DeepEvalTask, evaluate_deepeval_case
     from agenttest_api_runner.playwright_activity import (
         PlaywrightResult,
         PlaywrightTaskInput,
@@ -266,6 +267,38 @@ class RunWorkflow:
                             for r in scorer_results
                         ],
                     )
+                    for scorer in task.scorer_configs:
+                        if str(scorer.get("scorer_type")) != "deepeval":
+                            continue
+                        raw_config = scorer.get("config", {})
+                        config = raw_config if isinstance(raw_config, dict) else {}
+                        expected = config.get("expected_tools", [])
+                        trace = result.evidence.get("trace", {})
+                        tools = trace.get("tools_called", []) if isinstance(trace, dict) else []
+                        deepeval_scores = await workflow.execute_activity(
+                            evaluate_deepeval_case,
+                            DeepEvalTask(
+                                run_case_id=case.run_case_id,
+                                scorer_version_id=str(scorer.get("scorer_version_id", "")),
+                                intent=str(
+                                    case.input.get("test_intent")
+                                    or case.input.get("prompt")
+                                    or ""
+                                ),
+                                output=str(result.output),
+                                tools_called=[str(item) for item in tools]
+                                if isinstance(tools, list)
+                                else [],
+                                expected_tools=[str(item) for item in expected]
+                                if isinstance(expected, list)
+                                else [],
+                                threshold=float(scorer.get("threshold", 0.8) or 0.8),
+                            ),
+                            start_to_close_timeout=timedelta(minutes=3),
+                            heartbeat_timeout=timedelta(seconds=30),
+                            retry_policy=RetryPolicy(maximum_attempts=1),
+                        )
+                        result.scores.extend(deepeval_scores)
             except Exception as error:
                 result = RunCaseResult(
                     run_case_id=case.run_case_id,

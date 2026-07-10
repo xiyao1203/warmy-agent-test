@@ -1089,7 +1089,7 @@ production
 
 | 框架 | 2026-06-25 核对到的稳定版本 | 使用位置 |
 |---|---:|---|
-| DeepEval | 4.0.5 | Agent 评测和 LLM-as-a-Judge |
+| DeepEval | 4.0.7 | Agent 评测和 LLM-as-a-Judge |
 | Playwright | 1.61.1 | 确定性浏览器回归 |
 | Browser Harness | 0.1.3 | 探索测试和修复候选 |
 | Promptfoo | 0.121.17 | 基础红队和安全扫描 |

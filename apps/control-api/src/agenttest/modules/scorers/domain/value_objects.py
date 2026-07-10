@@ -13,6 +13,7 @@ class ScorerType(StrEnum):
     MODEL = "model"
     REFERENCE = "reference"
     VIDEO = "video"
+    DEEPEVAL = "deepeval"
 
 
 @dataclass(frozen=True, slots=True)

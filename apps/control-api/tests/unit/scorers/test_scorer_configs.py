@@ -8,6 +8,7 @@ from __future__ import annotations
 import pytest
 from agenttest.modules.scorers.application.evaluate import TrialResult, evaluate_deterministic
 from agenttest.modules.scorers.domain.config import (
+    DeepEvalScorerConfig,
     ModelScorerConfig,
     ReferenceScorerConfig,
     RuleScorerConfig,
@@ -50,6 +51,15 @@ def test_parse_model_config_accepts_valid_rubric() -> None:
     config = parse_scorer_config("model", {"rubric": "Score 1 if correct, 0 otherwise"})
     assert isinstance(config, ModelScorerConfig)
     assert config.rubric == "Score 1 if correct, 0 otherwise"
+
+
+def test_parse_deepeval_config_accepts_tool_correctness() -> None:
+    config = parse_scorer_config(
+        "deepeval",
+        {"metric": "tool_correctness", "expected_tools": ["create_image_node"]},
+    )
+    assert isinstance(config, DeepEvalScorerConfig)
+    assert config.expected_tools == ["create_image_node"]
 
 
 def test_parse_scorer_config_rejects_unknown_type() -> None:
