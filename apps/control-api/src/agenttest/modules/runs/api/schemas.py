@@ -3,7 +3,7 @@ from __future__ import annotations
 from datetime import datetime
 from uuid import UUID
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from agenttest.modules.runs.domain.entities import Run, RunCase
 
@@ -60,6 +60,9 @@ class RunCaseResponse(BaseModel):
     error_type: str | None
     error_message: str | None
     duration_ms: int | None
+    evidence: dict[str, object]
+    quality_summary: dict[str, object]
+    security_summary: dict[str, object]
 
     @classmethod
     def from_domain(cls, case: RunCase) -> RunCaseResponse:
@@ -73,6 +76,9 @@ class RunCaseResponse(BaseModel):
             error_type=case.error_type,
             error_message=case.error_message,
             duration_ms=case.duration_ms,
+            evidence=case.evidence,
+            quality_summary=case.quality_summary,
+            security_summary=case.security_summary,
         )
 
 
@@ -93,11 +99,12 @@ class ApplyRunCaseResultRequest(BaseModel):
     run_case_id: UUID
     status: str
     output: dict[str, object] | None = None
-    trace: list[dict[str, object]] = []
+    trace: list[dict[str, object]] = Field(default_factory=list)
     error_type: str | None = None
     error_message: str | None = None
     duration_ms: int | None = None
-    scores: list[ApplyRunCaseScoreRequest] = []
+    scores: list[ApplyRunCaseScoreRequest] = Field(default_factory=list)
+    evidence: dict[str, object] = Field(default_factory=dict)
 
 
 class ApplyRunResultRequest(BaseModel):

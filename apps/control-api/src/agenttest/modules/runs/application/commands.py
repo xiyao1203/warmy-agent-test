@@ -12,6 +12,7 @@ from agenttest.modules.runs.application.ports import (
     RunSourcePort,
 )
 from agenttest.modules.runs.domain.entities import Run, RunCase, RunCaseId, RunId
+from agenttest.modules.runs.domain.evidence import RunCaseEvidence
 from agenttest.modules.runs.domain.value_objects import RunCaseStatus
 from agenttest.modules.test_plans.public import TestPlanVersionId
 
@@ -49,6 +50,7 @@ class ApplyRunCaseResult:
     error_message: str | None = None
     duration_ms: int | None = None
     scores: list[ApplyRunCaseScore] | None = None
+    evidence: dict[str, object] | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -176,6 +178,10 @@ class ApplyRunResultHandler:
                 continue
             if case.status is RunCaseStatus.QUEUED:
                 case.start()
+            evidence = RunCaseEvidence.from_payload(result.evidence or {})
+            case.evidence = evidence.to_dict()
+            case.quality_summary = {"decision": evidence.quality_decision.value}
+            case.security_summary = {"decision": evidence.security_decision.value}
             if result.status is RunCaseStatus.PASSED:
                 case.pass_case(
                     output=result.output or {},

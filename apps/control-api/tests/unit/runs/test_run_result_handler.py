@@ -145,6 +145,40 @@ async def test_apply_run_result_updates_cases_and_aggregates_status() -> None:
 
 
 @pytest.mark.asyncio
+async def test_apply_run_result_persists_unified_evidence() -> None:
+    run, cases = make_run_with_cases()
+    repo = InMemoryRunRepository(run, cases)
+    handler = ApplyRunResultHandler(runs=repo)
+
+    await handler.execute(
+        ApplyRunResultCommand(
+            project_id=run.project_id,
+            run_id=run.run_id,
+            cases=[
+                ApplyRunCaseResult(
+                    run_case_id=case.run_case_id,
+                    status=RunCaseStatus.PASSED,
+                    output={"ok": True},
+                    trace=[],
+                    duration_ms=1,
+                    evidence={
+                        "execution_outcome": "success",
+                        "quality_decision": "pass",
+                        "security_decision": "clear",
+                        "canvas": {"nodes": []},
+                    },
+                )
+                for case in cases
+            ],
+        )
+    )
+
+    assert cases[0].evidence["execution_outcome"] == "success"
+    assert cases[0].quality_summary == {"decision": "pass"}
+    assert cases[0].security_summary == {"decision": "clear"}
+
+
+@pytest.mark.asyncio
 async def test_apply_run_result_is_idempotent_after_terminal_run() -> None:
     run, cases = make_run_with_cases()
     repo = InMemoryRunRepository(run, cases)
