@@ -50,7 +50,7 @@ describe("AgentVersionDialog target integration", () => {
     vi.mocked(createCredentialBinding).mockResolvedValue(credential);
   });
 
-  it("builds a visual target plugin config from target URL and credential binding", async () => {
+  it("keeps target onboarding simple and hides advanced plugin details by default", async () => {
     const onSubmit = vi.fn().mockResolvedValue(undefined);
     render(
       <AgentVersionDialog
@@ -63,38 +63,36 @@ describe("AgentVersionDialog target integration", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "创建版本" }));
 
-    fireEvent.change(await screen.findByLabelText("目标插件"), {
-      target: { value: "tapnow-canvas-agent" },
-    });
-    fireEvent.change(screen.getByLabelText("目标访问地址"), {
+    expect(await screen.findByLabelText("目标地址")).toBeVisible();
+    expect(screen.getByLabelText("登录方式")).toBeVisible();
+    expect(screen.getByLabelText("测试范围")).toBeVisible();
+    expect(screen.queryByLabelText("目标插件")).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("API 地址")).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("输入框选择器")).not.toBeInTheDocument();
+
+    fireEvent.change(screen.getByLabelText("目标地址"), {
       target: { value: "https://app.tapnow.ai/canvas/demo" },
     });
     fireEvent.change(screen.getByLabelText("登录方式"), {
-      target: { value: "credential" },
-    });
-    fireEvent.change(await screen.findByLabelText("项目凭证"), {
-      target: { value: "credential-1" },
+      target: { value: "browser_profile" },
     });
     fireEvent.change(await screen.findByLabelText("浏览器实例"), {
       target: { value: "profile-1" },
     });
-    fireEvent.click(screen.getByRole("button", { name: "保存版本" }));
+    fireEvent.click(screen.getByRole("button", { name: "保存并开始配置测试" }));
 
     await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
     expect(onSubmit).toHaveBeenCalledWith({
       config: expect.objectContaining({
         api_url: "https://app.tapnow.ai/canvas/demo",
-        credential_binding_ids: ["credential-1"],
-        plugin_id: "tapnow-canvas-agent",
+        credential_binding_ids: [],
+        plugin_id: "generic-web-agent",
         plugin_version: "1.0.0",
         target_config: expect.objectContaining({
           browser_profile_id: "profile-1",
           entry_url: "https://app.tapnow.ai/canvas/demo",
-          login: {
-            credential_binding_id: "credential-1",
-            strategy: "credential",
-          },
-          plugin_id: "tapnow-canvas-agent",
+          login: { strategy: "browser_profile" },
+          plugin_id: "generic-web-agent",
           safety_boundaries: expect.objectContaining({
             blocked_actions: expect.arrayContaining([
               "delete",
@@ -108,6 +106,12 @@ describe("AgentVersionDialog target integration", () => {
         web_url: "https://app.tapnow.ai/canvas/demo",
       }),
     });
+
+    fireEvent.click(screen.getByRole("button", { name: "创建版本" }));
+    fireEvent.click(await screen.findByRole("button", { name: "高级设置" }));
+    expect(await screen.findByLabelText("目标插件")).toBeVisible();
+    expect(screen.getByLabelText("API 地址")).toBeVisible();
+    expect(screen.getByLabelText("输入框选择器")).toBeVisible();
   });
 
   it("creates a write-only login credential without putting password in version config", async () => {
@@ -123,7 +127,7 @@ describe("AgentVersionDialog target integration", () => {
     );
 
     fireEvent.click(screen.getByRole("button", { name: "创建版本" }));
-    fireEvent.change(await screen.findByLabelText("目标访问地址"), {
+    fireEvent.change(await screen.findByLabelText("目标地址"), {
       target: { value: "https://app.tapnow.ai/home" },
     });
     fireEvent.change(screen.getByLabelText("登录方式"), {
@@ -154,7 +158,7 @@ describe("AgentVersionDialog target integration", () => {
       }),
     );
 
-    fireEvent.click(screen.getByRole("button", { name: "保存版本" }));
+    fireEvent.click(screen.getByRole("button", { name: "保存并开始配置测试" }));
     await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
     const versionPayload = JSON.stringify(onSubmit.mock.calls[0][0]);
     expect(versionPayload).toContain("credential-1");
