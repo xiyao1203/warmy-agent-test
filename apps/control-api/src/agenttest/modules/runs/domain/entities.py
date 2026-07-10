@@ -155,6 +155,9 @@ class RunCase:
     error_type: str | None = None
     error_message: str | None = None
     duration_ms: int | None = None
+    evidence: dict[str, object] = field(default_factory=dict)
+    quality_summary: dict[str, object] = field(default_factory=dict)
+    security_summary: dict[str, object] = field(default_factory=dict)
 
     @classmethod
     def create(
