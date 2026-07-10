@@ -36,8 +36,12 @@ type AgentVersionDialogProps = {
   onSubmit: (payload: CreateAgentVersionRequest) => Promise<void>;
 };
 
-type LoginStrategy = "none" | "credential" | "username_password";
-type Section = "target" | "mappings" | "limits" | "metadata";
+type LoginStrategy =
+  | "browser_profile"
+  | "credential"
+  | "none"
+  | "username_password";
+type TestScope = "guided" | "readonly";
 
 type TargetPluginTemplate = {
   description: string;
@@ -73,15 +77,6 @@ const PROTOCOL_LABELS: Record<InvocationProtocol, string> = {
   sse: "SSE 流式",
   sync_json: "同步 JSON",
 };
-
-const SECTION_LABELS: Record<Section, string> = {
-  limits: "安全边界",
-  mappings: "请求映射",
-  metadata: "元数据",
-  target: "目标接入",
-};
-
-const ALL_SECTIONS: Section[] = ["target", "mappings", "limits", "metadata"];
 
 const DEFAULT_BLOCKED_ACTIONS = [
   "delete",
@@ -130,7 +125,7 @@ export function AgentVersionDialog({
   const safetyConfig = asRecord(targetConfig.safety_boundaries);
 
   const [open, setOpen] = useState(false);
-  const [activeSection, setActiveSection] = useState<Section>("target");
+  const [advancedOpen, setAdvancedOpen] = useState(false);
 
   const [targetPluginId, setTargetPluginId] = useState(
     stringValue(
@@ -211,6 +206,9 @@ export function AgentVersionDialog({
     stringArray(safetyConfig.blocked_actions).length > 0
       ? stringArray(safetyConfig.blocked_actions)
       : [...DEFAULT_BLOCKED_ACTIONS],
+  );
+  const [testScope, setTestScope] = useState<TestScope>(
+    safetyConfig.mode === "guided" ? "guided" : "readonly",
   );
   const [requiresConfirmation, setRequiresConfirmation] = useState(
     safetyConfig.requires_confirmation !== false,
@@ -303,7 +301,7 @@ export function AgentVersionDialog({
     const effectiveEntryUrl = targetUrl.trim() || apiUrl.trim();
     const effectiveApiUrl = apiUrl.trim() || effectiveEntryUrl;
     if (!effectiveEntryUrl) {
-      setError("请输入目标访问地址或 API 地址");
+      setError("请输入目标地址");
       return;
     }
 
@@ -335,7 +333,11 @@ export function AgentVersionDialog({
 
     if (loginStrategy === "credential" && !credentialId) {
       setError("请选择项目凭证，或先保存账号密码为项目凭证");
-      setActiveSection("target");
+      setAdvancedOpen(false);
+      return;
+    }
+    if (loginStrategy === "username_password") {
+      setError("请先保存账号密码为项目凭证");
       return;
     }
 
@@ -354,17 +356,24 @@ export function AgentVersionDialog({
     const targetLogin =
       loginStrategy === "credential"
         ? { credential_binding_id: credentialId, strategy: "credential" }
-        : { strategy: "none" };
+        : loginStrategy === "browser_profile"
+          ? { strategy: "browser_profile" }
+          : { strategy: "none" };
+    const safetyBlockedActions =
+      testScope === "readonly" ? [...DEFAULT_BLOCKED_ACTIONS] : blockedActions;
 
     const targetConfigPayload = {
-      browser_profile_id: browserProfileId || undefined,
+      browser_profile_id:
+        loginStrategy === "browser_profile"
+          ? browserProfileId || undefined
+          : undefined,
       entry_url: effectiveEntryUrl,
       login: targetLogin,
       plugin_id: targetPlugin.pluginId,
       plugin_version: targetPlugin.version,
       safety_boundaries: {
-        blocked_actions: blockedActions,
-        mode: "readonly",
+        blocked_actions: safetyBlockedActions,
+        mode: testScope,
         requires_confirmation: requiresConfirmation,
       },
       selectors: {
@@ -431,116 +440,133 @@ export function AgentVersionDialog({
           {isEditing ? "编辑 Agent 版本" : "创建 Agent 版本"}
         </DialogTitle>
         <DialogDescription>
-          通过可视化配置接入目标
-          Agent；账号密码会先保存为项目凭证，版本只保存引用。
+          填写目标地址和登录方式即可开始；插件、API
+          和选择器参数可在高级设置中调整。
         </DialogDescription>
 
-        <div className="mt-4 flex gap-1 border-b border-[var(--hairline)]">
-          {ALL_SECTIONS.map((section) => (
-            <button
-              className={`px-3 py-2 text-sm font-medium transition-colors ${
-                activeSection === section
-                  ? "border-b-2 border-[var(--primary)] text-[var(--primary)]"
-                  : "text-[var(--muted)] hover:text-[var(--foreground)]"
-              }`}
-              key={section}
-              onClick={() => setActiveSection(section)}
-              type="button"
-            >
-              {SECTION_LABELS[section]}
-            </button>
-          ))}
-        </div>
+        <div className="mt-4 space-y-5">
+          <TargetSection
+            browserProfileId={browserProfileId}
+            browserProfiles={browserProfileOptions}
+            credentialId={credentialId}
+            credentialMessage={credentialMessage}
+            credentialSaving={credentialSaving}
+            credentials={credentialOptions}
+            loginStrategy={loginStrategy}
+            newCredentialAlias={newCredentialAlias}
+            newCredentialPassword={newCredentialPassword}
+            newCredentialUsername={newCredentialUsername}
+            onBrowserProfileIdChange={setBrowserProfileId}
+            onCredentialAliasChange={setNewCredentialAlias}
+            onCredentialIdChange={setCredentialId}
+            onCredentialPasswordChange={setNewCredentialPassword}
+            onCredentialUsernameChange={setNewCredentialUsername}
+            onLoginStrategyChange={setLoginStrategy}
+            onSaveCredential={saveInlineCredential}
+            onTargetUrlChange={setTargetUrl}
+            onTestScopeChange={setTestScope}
+            targetUrl={targetUrl}
+            testScope={testScope}
+          />
 
-        <div className="mt-4 space-y-4">
-          {activeSection === "target" ? (
-            <TargetSection
-              apiUrl={apiUrl}
-              browserProfileId={browserProfileId}
-              browserProfiles={browserProfileOptions}
-              credentialId={credentialId}
-              credentialMessage={credentialMessage}
-              credentialSaving={credentialSaving}
-              credentials={credentialOptions}
-              loginStrategy={loginStrategy}
-              newCredentialAlias={newCredentialAlias}
-              newCredentialPassword={newCredentialPassword}
-              newCredentialUsername={newCredentialUsername}
-              onApiUrlChange={setApiUrl}
-              onBrowserProfileIdChange={setBrowserProfileId}
-              onCredentialAliasChange={setNewCredentialAlias}
-              onCredentialIdChange={setCredentialId}
-              onCredentialPasswordChange={setNewCredentialPassword}
-              onCredentialUsernameChange={setNewCredentialUsername}
-              onLoginStrategyChange={setLoginStrategy}
-              onSaveCredential={saveInlineCredential}
-              onTargetPluginIdChange={setTargetPluginId}
-              onTargetUrlChange={setTargetUrl}
-              selectedPlugin={targetPlugin}
-              targetPluginId={targetPluginId}
-              targetUrl={targetUrl}
-            />
-          ) : null}
+          <div className="rounded-[var(--radius-lg)] border border-[var(--hairline)] bg-[var(--surface)] p-4">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <p className="text-sm font-medium text-[var(--ink)]">
+                  高级设置
+                </p>
+                <p className="mt-1 text-xs text-[var(--muted)]">
+                  插件、API、选择器、安全边界和版本元数据。
+                </p>
+              </div>
+              <Button
+                aria-expanded={advancedOpen}
+                onClick={() => setAdvancedOpen((value) => !value)}
+                type="button"
+                variant="secondary"
+              >
+                {advancedOpen ? "收起高级设置" : "高级设置"}
+              </Button>
+            </div>
 
-          {activeSection === "mappings" ? (
-            <MappingsSection
-              onPromptInputSelectorChange={setPromptInputSelector}
-              onRequestTemplateChange={setRequestTemplate}
-              onResponsePathChange={setResponsePath}
-              onResponseSelectorChange={setResponseSelector}
-              onSendButtonSelectorChange={setSendButtonSelector}
-              promptInputSelector={promptInputSelector}
-              requestTemplate={requestTemplate}
-              responsePath={responsePath}
-              responseSelector={responseSelector}
-              sendButtonSelector={sendButtonSelector}
-            />
-          ) : null}
-
-          {activeSection === "limits" ? (
-            <LimitsSection
-              blockedActions={blockedActions}
-              costLimit={costLimit}
-              maxSteps={maxSteps}
-              onBlockedActionsChange={setBlockedActions}
-              onCostLimitChange={setCostLimit}
-              onMaxStepsChange={setMaxSteps}
-              onRequiresConfirmationChange={setRequiresConfirmation}
-              onTimeoutChange={setTimeoutVal}
-              requiresConfirmation={requiresConfirmation}
-              timeout={timeout}
-            />
-          ) : null}
-
-          {activeSection === "metadata" ? (
-            <MetadataSection
-              adapterId={adapterId}
-              adapterVersion={adapterVersion}
-              codeVersion={codeVersion}
-              credentialIds={credentialIds}
-              gitCommit={gitCommit}
-              isEditing={isEditing}
-              knowledgeVersion={knowledgeVersion}
-              model={model}
-              modelParams={modelParams}
-              onAdapterIdChange={setAdapterId}
-              onAdapterVersionChange={setAdapterVersion}
-              onCodeVersionChange={setCodeVersion}
-              onCredentialIdsChange={setCredentialIds}
-              onGitCommitChange={setGitCommit}
-              onKnowledgeVersionChange={setKnowledgeVersion}
-              onModelChange={setModel}
-              onModelParamsChange={setModelParams}
-              onProtocolChange={setProtocol}
-              onSystemPromptChange={setSystemPrompt}
-              onSystemPromptVersionChange={setSystemPromptVersion}
-              onToolsChange={setTools}
-              protocol={protocol}
-              systemPrompt={systemPrompt}
-              systemPromptVersion={systemPromptVersion}
-              tools={tools}
-            />
-          ) : null}
+            {advancedOpen ? (
+              <div className="mt-4 space-y-5 border-t border-[var(--hairline)] pt-4">
+                <AdvancedConnectionSection
+                  apiUrl={apiUrl}
+                  onApiUrlChange={setApiUrl}
+                  onTargetPluginIdChange={setTargetPluginId}
+                  selectedPlugin={targetPlugin}
+                  targetPluginId={targetPluginId}
+                />
+                <section className="space-y-4">
+                  <h3 className="text-sm font-medium text-[var(--ink)]">
+                    请求映射
+                  </h3>
+                  <MappingsSection
+                    onPromptInputSelectorChange={setPromptInputSelector}
+                    onRequestTemplateChange={setRequestTemplate}
+                    onResponsePathChange={setResponsePath}
+                    onResponseSelectorChange={setResponseSelector}
+                    onSendButtonSelectorChange={setSendButtonSelector}
+                    promptInputSelector={promptInputSelector}
+                    requestTemplate={requestTemplate}
+                    responsePath={responsePath}
+                    responseSelector={responseSelector}
+                    sendButtonSelector={sendButtonSelector}
+                  />
+                </section>
+                <section className="space-y-4">
+                  <h3 className="text-sm font-medium text-[var(--ink)]">
+                    安全边界
+                  </h3>
+                  <LimitsSection
+                    blockedActions={blockedActions}
+                    costLimit={costLimit}
+                    maxSteps={maxSteps}
+                    onBlockedActionsChange={setBlockedActions}
+                    onCostLimitChange={setCostLimit}
+                    onMaxStepsChange={setMaxSteps}
+                    onRequiresConfirmationChange={setRequiresConfirmation}
+                    onTimeoutChange={setTimeoutVal}
+                    requiresConfirmation={requiresConfirmation}
+                    timeout={timeout}
+                  />
+                </section>
+                <section className="space-y-4">
+                  <h3 className="text-sm font-medium text-[var(--ink)]">
+                    版本元数据
+                  </h3>
+                  <MetadataSection
+                    adapterId={adapterId}
+                    adapterVersion={adapterVersion}
+                    codeVersion={codeVersion}
+                    credentialIds={credentialIds}
+                    gitCommit={gitCommit}
+                    isEditing={isEditing}
+                    knowledgeVersion={knowledgeVersion}
+                    model={model}
+                    modelParams={modelParams}
+                    onAdapterIdChange={setAdapterId}
+                    onAdapterVersionChange={setAdapterVersion}
+                    onCodeVersionChange={setCodeVersion}
+                    onCredentialIdsChange={setCredentialIds}
+                    onGitCommitChange={setGitCommit}
+                    onKnowledgeVersionChange={setKnowledgeVersion}
+                    onModelChange={setModel}
+                    onModelParamsChange={setModelParams}
+                    onProtocolChange={setProtocol}
+                    onSystemPromptChange={setSystemPrompt}
+                    onSystemPromptVersionChange={setSystemPromptVersion}
+                    onToolsChange={setTools}
+                    protocol={protocol}
+                    systemPrompt={systemPrompt}
+                    systemPromptVersion={systemPromptVersion}
+                    tools={tools}
+                  />
+                </section>
+              </div>
+            ) : null}
+          </div>
 
           {isEditing && version.status === "draft" ? (
             <ConnectionTestPanel
@@ -555,22 +581,7 @@ export function AgentVersionDialog({
             <p className="text-sm text-[var(--danger)]">{error}</p>
           ) : null}
 
-          <div className="flex items-center justify-between border-t border-[var(--hairline)] pt-4">
-            <div className="flex gap-1">
-              {ALL_SECTIONS.map((section, index) => (
-                <span
-                  className={`text-xs ${
-                    activeSection === section
-                      ? "text-[var(--foreground)]"
-                      : "text-[var(--muted)]"
-                  }`}
-                  key={section}
-                >
-                  {SECTION_LABELS[section]}
-                  {index < ALL_SECTIONS.length - 1 ? " · " : ""}
-                </span>
-              ))}
-            </div>
+          <div className="flex items-center justify-end border-t border-[var(--hairline)] pt-4">
             <div className="flex gap-2">
               <Button onClick={() => setOpen(false)} type="button">
                 取消
@@ -581,7 +592,7 @@ export function AgentVersionDialog({
                 type="button"
                 variant="primary"
               >
-                {submitting ? "保存中…" : "保存版本"}
+                {submitting ? "保存中…" : "保存并开始配置测试"}
               </Button>
             </div>
           </div>
@@ -592,7 +603,6 @@ export function AgentVersionDialog({
 }
 
 function TargetSection({
-  apiUrl,
   browserProfileId,
   browserProfiles,
   credentialId,
@@ -603,7 +613,6 @@ function TargetSection({
   newCredentialAlias,
   newCredentialPassword,
   newCredentialUsername,
-  onApiUrlChange,
   onBrowserProfileIdChange,
   onCredentialAliasChange,
   onCredentialIdChange,
@@ -611,13 +620,11 @@ function TargetSection({
   onCredentialUsernameChange,
   onLoginStrategyChange,
   onSaveCredential,
-  onTargetPluginIdChange,
   onTargetUrlChange,
-  selectedPlugin,
-  targetPluginId,
+  onTestScopeChange,
   targetUrl,
+  testScope,
 }: {
-  apiUrl: string;
   browserProfileId: string;
   browserProfiles: BrowserProfile[];
   credentialId: string;
@@ -628,7 +635,6 @@ function TargetSection({
   newCredentialAlias: string;
   newCredentialPassword: string;
   newCredentialUsername: string;
-  onApiUrlChange: (value: string) => void;
   onBrowserProfileIdChange: (value: string) => void;
   onCredentialAliasChange: (value: string) => void;
   onCredentialIdChange: (value: string) => void;
@@ -636,71 +642,79 @@ function TargetSection({
   onCredentialUsernameChange: (value: string) => void;
   onLoginStrategyChange: (value: LoginStrategy) => void;
   onSaveCredential: () => Promise<void>;
-  onTargetPluginIdChange: (value: string) => void;
   onTargetUrlChange: (value: string) => void;
-  selectedPlugin: TargetPluginTemplate;
-  targetPluginId: string;
+  onTestScopeChange: (value: TestScope) => void;
   targetUrl: string;
+  testScope: TestScope;
 }) {
   return (
-    <>
-      <div className="grid gap-3 md:grid-cols-2">
-        <label className="block text-sm font-medium">
-          目标插件
-          <DropdownSelect
-            aria-label="目标插件"
-            className="mt-1.5 h-9 w-full rounded-[var(--radius-md)] border border-[var(--hairline)] bg-[var(--surface)] px-3"
-            onChange={(event) => onTargetPluginIdChange(event.target.value)}
-            value={targetPluginId}
+    <section className="space-y-4 rounded-[var(--radius-lg)] border border-[var(--hairline)] bg-[var(--canvas-soft)] p-4">
+      <div className="grid gap-3 md:grid-cols-3">
+        <div>
+          <label
+            className="block text-sm font-medium"
+            htmlFor="agent-version-target-url"
           >
-            {TARGET_PLUGIN_TEMPLATES.map((template) => (
-              <option key={template.pluginId} value={template.pluginId}>
-                {template.pluginId === "tapnow-canvas-agent"
-                  ? "TapNow 画布 Agent"
-                  : template.pluginId === "generic-http-agent"
-                    ? "通用 HTTP Agent"
-                    : "通用 Web Agent"}
-              </option>
-            ))}
-          </DropdownSelect>
-          <span className="mt-1 block text-xs text-[var(--muted)]">
-            {selectedPlugin.description}
-          </span>
-        </label>
-        <label className="block text-sm font-medium">
-          登录方式
+            目标地址
+          </label>
+          <Input
+            aria-label="目标地址"
+            className="mt-1.5"
+            id="agent-version-target-url"
+            onChange={(event) => onTargetUrlChange(event.target.value)}
+            placeholder="https://app.example.com/chat"
+            value={targetUrl}
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium">登录方式</label>
           <DropdownSelect
             aria-label="登录方式"
-            className="mt-1.5 h-9 w-full rounded-[var(--radius-md)] border border-[var(--hairline)] bg-[var(--surface)] px-3"
+            className="mt-1.5 h-10 w-full rounded-[var(--radius-lg)] border border-[var(--hairline)] bg-[var(--surface)] px-3"
             onChange={(event) =>
               onLoginStrategyChange(event.target.value as LoginStrategy)
             }
             value={loginStrategy}
           >
             <option value="none">无需登录</option>
+            <option value="browser_profile">用已登录浏览器</option>
+            <option value="username_password">输入账号密码</option>
             <option value="credential">选择项目凭证</option>
-            <option value="username_password">输入账号密码并保存为凭证</option>
+          </DropdownSelect>
+        </div>
+        <div>
+          <label className="block text-sm font-medium">测试范围</label>
+          <DropdownSelect
+            aria-label="测试范围"
+            className="mt-1.5 h-10 w-full rounded-[var(--radius-lg)] border border-[var(--hairline)] bg-[var(--surface)] px-3"
+            onChange={(event) =>
+              onTestScopeChange(event.target.value as TestScope)
+            }
+            value={testScope}
+          >
+            <option value="readonly">只读安全测试</option>
+            <option value="guided">人工确认交互测试</option>
+          </DropdownSelect>
+        </div>
+      </div>
+      {loginStrategy === "browser_profile" ? (
+        <label className="block text-sm font-medium">
+          浏览器实例
+          <DropdownSelect
+            aria-label="浏览器实例"
+            className="mt-1.5 h-9 w-full rounded-[var(--radius-md)] border border-[var(--hairline)] bg-[var(--surface)] px-3"
+            onChange={(event) => onBrowserProfileIdChange(event.target.value)}
+            value={browserProfileId}
+          >
+            <option value="">运行时新建临时浏览器</option>
+            {browserProfiles.map((profile) => (
+              <option key={profile.profile_id} value={profile.profile_id}>
+                {profile.name}（{profile.target_domain}）
+              </option>
+            ))}
           </DropdownSelect>
         </label>
-      </div>
-      <label className="block text-sm font-medium">
-        目标访问地址
-        <Input
-          className="mt-1.5"
-          onChange={(event) => onTargetUrlChange(event.target.value)}
-          placeholder="https://app.example.com/chat"
-          value={targetUrl}
-        />
-      </label>
-      <label className="block text-sm font-medium">
-        API 地址
-        <Input
-          className="mt-1.5"
-          onChange={(event) => onApiUrlChange(event.target.value)}
-          placeholder="留空时使用目标访问地址；API Agent 可填写接口地址"
-          value={apiUrl}
-        />
-      </label>
+      ) : null}
       {loginStrategy === "credential" ? (
         <label className="block text-sm font-medium">
           项目凭证
@@ -774,26 +788,63 @@ function TargetSection({
           ) : null}
         </div>
       ) : null}
-      <label className="block text-sm font-medium">
-        浏览器实例
-        <DropdownSelect
-          aria-label="浏览器实例"
-          className="mt-1.5 h-9 w-full rounded-[var(--radius-md)] border border-[var(--hairline)] bg-[var(--surface)] px-3"
-          onChange={(event) => onBrowserProfileIdChange(event.target.value)}
-          value={browserProfileId}
-        >
-          <option value="">运行时新建临时浏览器</option>
-          {browserProfiles.map((profile) => (
-            <option key={profile.profile_id} value={profile.profile_id}>
-              {profile.name}（{profile.target_domain}）
-            </option>
-          ))}
-        </DropdownSelect>
-      </label>
-    </>
+    </section>
   );
 }
 
+function AdvancedConnectionSection({
+  apiUrl,
+  onApiUrlChange,
+  onTargetPluginIdChange,
+  selectedPlugin,
+  targetPluginId,
+}: {
+  apiUrl: string;
+  onApiUrlChange: (value: string) => void;
+  onTargetPluginIdChange: (value: string) => void;
+  selectedPlugin: TargetPluginTemplate;
+  targetPluginId: string;
+}) {
+  return (
+    <section className="space-y-4">
+      <h3 className="text-sm font-medium text-[var(--ink)]">目标连接</h3>
+      <div className="grid gap-3 md:grid-cols-2">
+        <label className="block text-sm font-medium">
+          目标插件
+          <DropdownSelect
+            aria-label="目标插件"
+            className="mt-1.5 h-9 w-full rounded-[var(--radius-md)] border border-[var(--hairline)] bg-[var(--surface)] px-3"
+            onChange={(event) => onTargetPluginIdChange(event.target.value)}
+            value={targetPluginId}
+          >
+            {TARGET_PLUGIN_TEMPLATES.map((template) => (
+              <option key={template.pluginId} value={template.pluginId}>
+                {template.pluginId === "tapnow-canvas-agent"
+                  ? "TapNow 画布 Agent"
+                  : template.pluginId === "generic-http-agent"
+                    ? "通用 HTTP Agent"
+                    : "通用 Web Agent"}
+              </option>
+            ))}
+          </DropdownSelect>
+          <span className="mt-1 block text-xs text-[var(--muted)]">
+            {selectedPlugin.description}
+          </span>
+        </label>
+        <label className="block text-sm font-medium">
+          API 地址
+          <Input
+            aria-label="API 地址"
+            className="mt-1.5"
+            onChange={(event) => onApiUrlChange(event.target.value)}
+            placeholder="留空时使用目标地址"
+            value={apiUrl}
+          />
+        </label>
+      </div>
+    </section>
+  );
+}
 function MappingsSection({
   onPromptInputSelectorChange,
   onRequestTemplateChange,

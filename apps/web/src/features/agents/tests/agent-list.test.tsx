@@ -131,7 +131,7 @@ describe("AgentList", () => {
 });
 
 describe("AgentDetail", () => {
-  it("renders versions, creates HTTP config and confirms publish", async () => {
+  it("renders versions, creates target config and confirms publish", async () => {
     const onCreateVersion = vi.fn().mockResolvedValue(undefined);
     const onPublish = vi.fn().mockResolvedValue(undefined);
     render(
@@ -149,11 +149,11 @@ describe("AgentDetail", () => {
     expect(screen.getByText("草稿")).toBeVisible();
 
     fireEvent.click(screen.getByRole("button", { name: "创建版本" }));
-    const apiInput = await screen.findByLabelText(/API 地址/);
-    fireEvent.change(apiInput, {
+    const targetInput = await screen.findByLabelText("目标地址");
+    fireEvent.change(targetInput, {
       target: { value: "https://new-agent.example.com" },
     });
-    fireEvent.click(screen.getByRole("button", { name: "保存版本" }));
+    fireEvent.click(screen.getByRole("button", { name: "保存并开始配置测试" }));
     await waitFor(() => expect(onCreateVersion).toHaveBeenCalledTimes(1));
 
     fireEvent.click(screen.getByRole("button", { name: "发布版本 v1" }));
