@@ -2120,7 +2120,9 @@ name = "warmy-api-runner"
 version = "0.1.0"
 source = { editable = "workers/api-runner" }
 dependencies = [
+    { name = "agenttest-plugin-canvas" },
     { name = "httpx" },
+    { name = "playwright" },
     { name = "temporalio" },
 ]
 
@@ -2133,7 +2135,9 @@ dev = [
 
 [package.metadata]
 requires-dist = [
+    { name = "agenttest-plugin-canvas", editable = "plugins/canvas-agent" },
     { name = "httpx" },
+    { name = "playwright", specifier = "==1.61.0" },
     { name = "temporalio", specifier = "==1.29.0" },
 ]
 

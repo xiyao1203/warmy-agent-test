@@ -10,6 +10,7 @@ dependencies = [
 
 [tool.uv.sources]
 agenttest-plugin-codex-browser = { workspace = true }
+agenttest-plugin-canvas = { workspace = true }
 
 [tool.uv.workspace]
 members = [

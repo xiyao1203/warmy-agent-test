@@ -1108,6 +1108,7 @@ def _register_artifact_endpoints(
         _actor=_actor,
         _check_csrf=_check_csrf,
         _check_project=_check_project,
+        internal_token=settings.internal_api_token,
     )
     app.include_router(router, prefix="/api/v1")
 
