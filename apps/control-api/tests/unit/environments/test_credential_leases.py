@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime
+import importlib
 from uuid import uuid4
 
 import pytest
@@ -22,6 +23,13 @@ class Cipher:
     def decrypt(self, envelope: str) -> str:
         assert envelope == "encrypted"
         return "real-password"
+
+
+def test_credential_store_module_imports_with_list_annotations() -> None:
+    module = importlib.import_module(
+        "agenttest.modules.environments.infrastructure.credential_store"
+    )
+    assert module.SqlAlchemyCredentialRepository
 
 
 @pytest.mark.asyncio

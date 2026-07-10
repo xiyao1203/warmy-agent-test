@@ -395,6 +395,9 @@ import type {
   PublishVersionApiV1ProjectsProjectIdTestPlansPlanIdVersionsVersionIdPublishPostData,
   PublishVersionApiV1ProjectsProjectIdTestPlansPlanIdVersionsVersionIdPublishPostErrors,
   PublishVersionApiV1ProjectsProjectIdTestPlansPlanIdVersionsVersionIdPublishPostResponses,
+  RedeemApiV1InternalProjectsProjectIdCredentialLeasesRedeemPostData,
+  RedeemApiV1InternalProjectsProjectIdCredentialLeasesRedeemPostErrors,
+  RedeemApiV1InternalProjectsProjectIdCredentialLeasesRedeemPostResponses,
   RegenerateMessageApiV1ProjectsProjectIdTestAgentSessionsSessionIdMessagesRegeneratePostData,
   RegenerateMessageApiV1ProjectsProjectIdTestAgentSessionsSessionIdMessagesRegeneratePostErrors,
   RegenerateMessageApiV1ProjectsProjectIdTestAgentSessionsSessionIdMessagesRegeneratePostResponses,
@@ -509,6 +512,9 @@ import type {
   UploadArtifactApiV1ProjectsProjectIdRunsRunIdArtifactsPostData,
   UploadArtifactApiV1ProjectsProjectIdRunsRunIdArtifactsPostErrors,
   UploadArtifactApiV1ProjectsProjectIdRunsRunIdArtifactsPostResponses,
+  UploadInternalArtifactApiV1InternalProjectsProjectIdRunsRunIdArtifactsPostData,
+  UploadInternalArtifactApiV1InternalProjectsProjectIdRunsRunIdArtifactsPostErrors,
+  UploadInternalArtifactApiV1InternalProjectsProjectIdRunsRunIdArtifactsPostResponses,
   ValidateConnectionApiV1ProjectsProjectIdAgentsAgentIdVersionsVersionIdValidateConnectionPostData,
   ValidateConnectionApiV1ProjectsProjectIdAgentsAgentIdVersionsVersionIdValidateConnectionPostErrors,
   ValidateConnectionApiV1ProjectsProjectIdAgentsAgentIdVersionsVersionIdValidateConnectionPostResponses,
@@ -669,6 +675,57 @@ export const healthApiV1HealthGet = <ThrowOnError extends boolean = false>(
     unknown,
     ThrowOnError
   >({ url: "/api/v1/health", ...options });
+
+/**
+ * Redeem
+ */
+export const redeemApiV1InternalProjectsProjectIdCredentialLeasesRedeemPost = <
+  ThrowOnError extends boolean = false,
+>(
+  options: Options<
+    RedeemApiV1InternalProjectsProjectIdCredentialLeasesRedeemPostData,
+    ThrowOnError
+  >,
+): RequestResult<
+  RedeemApiV1InternalProjectsProjectIdCredentialLeasesRedeemPostResponses,
+  RedeemApiV1InternalProjectsProjectIdCredentialLeasesRedeemPostErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).post<
+    RedeemApiV1InternalProjectsProjectIdCredentialLeasesRedeemPostResponses,
+    RedeemApiV1InternalProjectsProjectIdCredentialLeasesRedeemPostErrors,
+    ThrowOnError
+  >({
+    url: "/api/v1/internal/projects/{project_id}/credential-leases:redeem",
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...options.headers,
+    },
+  });
+
+/**
+ * Upload Internal Artifact
+ */
+export const uploadInternalArtifactApiV1InternalProjectsProjectIdRunsRunIdArtifactsPost =
+  <ThrowOnError extends boolean = false>(
+    options: Options<
+      UploadInternalArtifactApiV1InternalProjectsProjectIdRunsRunIdArtifactsPostData,
+      ThrowOnError
+    >,
+  ): RequestResult<
+    UploadInternalArtifactApiV1InternalProjectsProjectIdRunsRunIdArtifactsPostResponses,
+    UploadInternalArtifactApiV1InternalProjectsProjectIdRunsRunIdArtifactsPostErrors,
+    ThrowOnError
+  > =>
+    (options.client ?? client).post<
+      UploadInternalArtifactApiV1InternalProjectsProjectIdRunsRunIdArtifactsPostResponses,
+      UploadInternalArtifactApiV1InternalProjectsProjectIdRunsRunIdArtifactsPostErrors,
+      ThrowOnError
+    >({
+      url: "/api/v1/internal/projects/{project_id}/runs/{run_id}/artifacts",
+      ...options,
+    });
 
 /**
  * List Projects

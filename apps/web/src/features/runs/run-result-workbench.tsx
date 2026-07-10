@@ -36,6 +36,13 @@ type CaseItem = {
   input?: Record<string, unknown> | null;
   output?: Record<string, unknown> | null;
   trace?: TraceSpan[];
+  evidence?: {
+    execution_outcome?: string;
+    quality_decision?: string;
+    security_decision?: string;
+    canvas?: { nodes?: unknown[]; connections?: unknown[] };
+    artifacts?: unknown[];
+  } | null;
 };
 
 type RunResultWorkbenchProps = {
@@ -240,6 +247,10 @@ export function RunResultWorkbench({
                 </div>
               </div>
 
+              {selectedCase.evidence ? (
+                <DecisionSummary evidence={selectedCase.evidence} />
+              ) : null}
+
               {selectedCase.status === "failed" ||
               selectedCase.status === "error" ? (
                 <FailureExplanation status={selectedCase.status} />
@@ -368,6 +379,55 @@ export function RunResultWorkbench({
         </div>
       </div>
     </div>
+  );
+}
+
+function DecisionSummary({
+  evidence,
+}: {
+  evidence: NonNullable<CaseItem["evidence"]>;
+}) {
+  const execution =
+    evidence.execution_outcome === "success" ? "执行成功" : "执行异常";
+  const quality =
+    evidence.quality_decision === "pass"
+      ? "质量通过"
+      : evidence.quality_decision === "fail"
+        ? "质量未通过"
+        : "等待复核";
+  const security =
+    evidence.security_decision === "clear"
+      ? "安全通过"
+      : evidence.security_decision === "blocked"
+        ? "安全阻断"
+        : "存在安全发现";
+  return (
+    <section
+      aria-label="执行质量与安全判定"
+      className="rounded-[var(--radius-md)] border border-[var(--hairline)] p-3"
+    >
+      <div className="flex flex-wrap gap-2">
+        <Badge
+          tone={evidence.execution_outcome === "success" ? "success" : "danger"}
+        >
+          {execution}
+        </Badge>
+        <Badge
+          tone={evidence.quality_decision === "pass" ? "success" : "warning"}
+        >
+          {quality}
+        </Badge>
+        <Badge
+          tone={evidence.security_decision === "clear" ? "success" : "danger"}
+        >
+          {security}
+        </Badge>
+      </div>
+      <div className="mt-2 flex gap-2 text-xs text-[var(--muted)]">
+        <span>{evidence.canvas?.nodes?.length ?? 0} 个节点</span>
+        <span>{evidence.artifacts?.length ?? 0} 个产物</span>
+      </div>
+    </section>
   );
 }
 

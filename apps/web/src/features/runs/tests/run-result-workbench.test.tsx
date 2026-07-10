@@ -21,6 +21,13 @@ describe("RunResultWorkbench", () => {
       error_message: null,
       input: { prompt: "create a banner" },
       output: { result: "ok" },
+      evidence: {
+        execution_outcome: "success",
+        quality_decision: "pass",
+        security_decision: "clear",
+        canvas: { nodes: [{ id: "node-1" }], connections: [] },
+        artifacts: [{ id: "artifact-1" }],
+      },
       trace: [
         {
           cost: 0.12,
@@ -161,6 +168,16 @@ describe("RunResultWorkbench", () => {
 
     // 右栏应该显示评分
     expect(screen.getByText("0.95")).toBeInTheDocument();
+  });
+
+  it("displays execution quality security and canvas evidence", () => {
+    renderWorkbench();
+
+    expect(screen.getByText("执行成功")).toBeInTheDocument();
+    expect(screen.getByText("质量通过")).toBeInTheDocument();
+    expect(screen.getByText("安全通过")).toBeInTheDocument();
+    expect(screen.getByText("1 个节点")).toBeInTheDocument();
+    expect(screen.getByText("1 个产物")).toBeInTheDocument();
   });
 
   it("displays error information for failed cases", () => {

@@ -188,9 +188,16 @@ describe("RunDetail", () => {
             duration_ms: 120,
             error_message: "upstream timed out",
             error_type: "TransientError",
+            evidence: {
+              execution_outcome: "error",
+              quality_decision: "review_required",
+              security_decision: "clear",
+            },
             id: "case-1",
             name: "流式回答",
             output: null,
+            quality_summary: { decision: "review_required" },
+            security_summary: { decision: "clear" },
             status: "error",
             test_case_id: "test-case-1",
             trace: [
@@ -211,6 +218,7 @@ describe("RunDetail", () => {
     expect(screen.getByText("实时刷新")).toBeVisible();
     fireEvent.click(screen.getByRole("button", { name: "用例列表" }));
     expect(screen.getByText("TransientError")).toBeVisible();
+    expect(screen.getByText("执行异常")).toBeVisible();
     expect(screen.getByText("http.request")).toBeVisible();
     fireEvent.click(screen.getByRole("button", { name: "取消运行" }));
     await waitFor(() => expect(onCancel).toHaveBeenCalledTimes(1));
