@@ -285,6 +285,7 @@ class TestSessionCookieSecurity:
                     environment="production",
                     internal_api_token="test-production-internal-token",
                     session_cookie_secure=True,
+                    model_credential_key="a2tra2tra2tra2tra2tra2tra2tra2tra2tra2tra2s=",
                 ),
                 auth_dependencies=deps,
             ),
