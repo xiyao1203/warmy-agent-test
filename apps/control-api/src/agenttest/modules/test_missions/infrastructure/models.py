@@ -109,6 +109,7 @@ class TestMissionRevisionModel(Base):
         UniqueConstraint(
             "project_id", "mission_id", "content_hash", name="uq_mission_revisions_hash"
         ),
+        UniqueConstraint("project_id", "id", name="uq_mission_revisions_project_id"),
         Index("ix_mission_revisions_project_mission", "project_id", "mission_id"),
     )
 
@@ -176,4 +177,28 @@ class TestMissionEventModel(Base):
     sequence: Mapped[int] = mapped_column(Integer, nullable=False)
     event_type: Mapped[str] = mapped_column(String(64), nullable=False)
     payload: Mapped[dict] = mapped_column(JSON, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+
+
+class TestMissionStageReceiptModel(Base):
+    __tablename__ = "test_mission_stage_receipts"
+    __table_args__ = (
+        ForeignKeyConstraint(
+            ["project_id", "revision_id"],
+            ["test_mission_revisions.project_id", "test_mission_revisions.id"],
+            ondelete="CASCADE",
+            name="fk_mission_receipts_project_revision",
+        ),
+        UniqueConstraint(
+            "project_id", "revision_id", "stage", name="uq_mission_receipts_revision_stage"
+        ),
+        Index("ix_mission_receipts_project_revision", "project_id", "revision_id", "stage"),
+    )
+
+    id: Mapped[UUID] = mapped_column(primary_key=True)
+    project_id: Mapped[UUID] = mapped_column(nullable=False)
+    revision_id: Mapped[UUID] = mapped_column(nullable=False)
+    stage: Mapped[str] = mapped_column(String(64), nullable=False)
+    status: Mapped[str] = mapped_column(String(32), nullable=False)
+    output: Mapped[dict] = mapped_column(JSON, nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)

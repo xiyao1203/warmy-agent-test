@@ -23,6 +23,9 @@ from agenttest.modules.test_missions.infrastructure.models import (
 from agenttest.modules.test_missions.infrastructure.models import (
     TestMissionRevisionModel as MissionRevisionModel,
 )
+from agenttest.modules.test_missions.infrastructure.models import (
+    TestMissionStageReceiptModel as MissionStageReceiptModel,
+)
 from agenttest.modules.test_missions.infrastructure.repositories import (
     MissionConcurrentUpdateError,
     SqlAlchemyMissionRepository,
@@ -45,6 +48,7 @@ async def _repository():
                     MissionRevisionModel.__table__,
                     MissionAssetModel.__table__,
                     MissionEventModel.__table__,
+                    MissionStageReceiptModel.__table__,
                 ],
             )
         )
@@ -73,6 +77,42 @@ async def test_repository_round_trip_is_project_and_session_scoped() -> None:
     assert restored.facts["target"].value == {"url": "https://agent.example"}
     assert foreign is None
     assert by_session is not None and by_session.mission_id == mission.mission_id
+    await engine.dispose()
+
+
+@pytest.mark.asyncio
+async def test_repository_stage_receipt_is_unique_per_revision_stage() -> None:
+    from datetime import UTC, datetime
+
+    from agenttest.modules.test_missions.application.stages import StageReceipt
+
+    engine, repository = await _repository()
+    mission = Mission.create(project_id=uuid4(), session_id=uuid4(), created_by=uuid4())
+    for fact in (
+        MissionFact.user("target", {"url": "https://agent.example"}),
+        MissionFact.user("access", {"strategy": "none"}),
+        MissionFact.user("test_goal", "验证问答"),
+        MissionFact.user("safety_scope", "read_only"),
+    ):
+        mission.merge_fact(fact)
+    revision = mission.confirm(confirmed_by=uuid4())
+    await repository.add(mission)
+    receipt = StageReceipt(
+        receipt_id=uuid4(),
+        project_id=mission.project_id,
+        revision_id=revision.revision_id,
+        stage="provision",
+        status="completed",
+        output={"test_plan_version_id": str(uuid4())},
+        created_at=datetime.now(UTC),
+    )
+
+    await repository.save_stage_receipt(receipt)
+    restored = await repository.get_stage_receipt(
+        mission.project_id, revision.revision_id, "provision"
+    )
+
+    assert restored == receipt
     await engine.dispose()
 
 

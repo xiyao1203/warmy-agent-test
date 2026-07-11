@@ -80,6 +80,7 @@ def test_initial_migration_generates_expected_postgresql_schema() -> None:
     assert "test_mission_revisions" in sql
     assert "test_mission_assets" in sql
     assert "test_mission_events" in sql
+    assert "test_mission_stage_receipts" in sql
     assert "uq_mission_facts_project_mission_key" in sql
     assert "ix_mission_events_project_mission_sequence" in sql
 

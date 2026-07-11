@@ -117,6 +117,7 @@ def upgrade() -> None:
         sa.UniqueConstraint(
             "project_id", "mission_id", "content_hash", name="uq_mission_revisions_hash"
         ),
+        sa.UniqueConstraint("project_id", "id", name="uq_mission_revisions_project_id"),
     )
     op.create_index(
         "ix_mission_revisions_project_mission",
@@ -179,9 +180,36 @@ def upgrade() -> None:
         "test_mission_events",
         ["project_id", "mission_id", "sequence"],
     )
+    op.create_table(
+        "test_mission_stage_receipts",
+        sa.Column("id", sa.Uuid(), nullable=False),
+        sa.Column("project_id", sa.Uuid(), nullable=False),
+        sa.Column("revision_id", sa.Uuid(), nullable=False),
+        sa.Column("stage", sa.String(length=64), nullable=False),
+        sa.Column("status", sa.String(length=32), nullable=False),
+        sa.Column("output", sa.JSON(), nullable=False),
+        sa.Column("created_at", sa.DateTime(timezone=True), nullable=False),
+        sa.ForeignKeyConstraint(
+            ["project_id", "revision_id"],
+            ["test_mission_revisions.project_id", "test_mission_revisions.id"],
+            ondelete="CASCADE",
+            name="fk_mission_receipts_project_revision",
+        ),
+        sa.PrimaryKeyConstraint("id"),
+        sa.UniqueConstraint(
+            "project_id", "revision_id", "stage", name="uq_mission_receipts_revision_stage"
+        ),
+    )
+    op.create_index(
+        "ix_mission_receipts_project_revision",
+        "test_mission_stage_receipts",
+        ["project_id", "revision_id", "stage"],
+    )
 
 
 def downgrade() -> None:
+    op.drop_index("ix_mission_receipts_project_revision", table_name="test_mission_stage_receipts")
+    op.drop_table("test_mission_stage_receipts")
     op.drop_index("ix_mission_events_project_mission_sequence", table_name="test_mission_events")
     op.drop_table("test_mission_events")
     op.drop_index("ix_mission_assets_reverse", table_name="test_mission_assets")

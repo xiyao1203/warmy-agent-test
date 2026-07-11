@@ -37,6 +37,7 @@ from agenttest.modules.test_missions.infrastructure.models import (
     TestMissionFactModel,
     TestMissionModel,
     TestMissionRevisionModel,
+    TestMissionStageReceiptModel,
 )
 from agenttest.modules.test_plans.infrastructure.persistence.models import (
     TestPlanModel,
@@ -68,6 +69,7 @@ _MODELS = (
     TestMissionFactModel,
     TestMissionModel,
     TestMissionRevisionModel,
+    TestMissionStageReceiptModel,
     UserCredentialModel,
     UserModel,
     UserSessionModel,

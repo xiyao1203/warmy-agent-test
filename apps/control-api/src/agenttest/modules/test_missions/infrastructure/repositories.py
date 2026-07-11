@@ -8,6 +8,7 @@ from sqlalchemy import delete, func, select, update
 from sqlalchemy.engine import CursorResult
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
+from agenttest.modules.test_missions.application.stages import StageReceipt
 from agenttest.modules.test_missions.domain.entities import TestMission
 from agenttest.modules.test_missions.domain.value_objects import (
     FactSource,
@@ -22,6 +23,7 @@ from agenttest.modules.test_missions.infrastructure.models import (
     TestMissionFactModel,
     TestMissionModel,
     TestMissionRevisionModel,
+    TestMissionStageReceiptModel,
 )
 
 
@@ -196,6 +198,52 @@ class SqlAlchemyMissionRepository:
                 )
             )
             return True
+
+    async def get_stage_receipt(
+        self, project_id: UUID, revision_id: UUID, stage: str
+    ) -> StageReceipt | None:
+        async with self._session_factory() as session:
+            model = await session.scalar(
+                select(TestMissionStageReceiptModel).where(
+                    TestMissionStageReceiptModel.project_id == project_id,
+                    TestMissionStageReceiptModel.revision_id == revision_id,
+                    TestMissionStageReceiptModel.stage == stage,
+                )
+            )
+        if model is None:
+            return None
+        return StageReceipt(
+            receipt_id=model.id,
+            project_id=model.project_id,
+            revision_id=model.revision_id,
+            stage=model.stage,
+            status=model.status,
+            output=model.output,
+            created_at=_utc(model.created_at),
+        )
+
+    async def save_stage_receipt(self, receipt: StageReceipt) -> None:
+        async with self._session_factory() as session, session.begin():
+            existing = await session.scalar(
+                select(TestMissionStageReceiptModel.id).where(
+                    TestMissionStageReceiptModel.project_id == receipt.project_id,
+                    TestMissionStageReceiptModel.revision_id == receipt.revision_id,
+                    TestMissionStageReceiptModel.stage == receipt.stage,
+                )
+            )
+            if existing is not None:
+                return
+            session.add(
+                TestMissionStageReceiptModel(
+                    id=receipt.receipt_id,
+                    project_id=receipt.project_id,
+                    revision_id=receipt.revision_id,
+                    stage=receipt.stage,
+                    status=receipt.status,
+                    output=receipt.output,
+                    created_at=receipt.created_at,
+                )
+            )
 
 
 def _mission_values(mission: TestMission) -> dict[str, object]:
