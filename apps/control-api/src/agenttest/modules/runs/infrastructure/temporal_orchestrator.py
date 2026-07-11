@@ -99,6 +99,7 @@ def _payload(
         "environment": run.plugin_snapshot.get("environment_config", {}),
         "execution_policy": run.config_snapshot,
         "scorer_configs": run.plugin_snapshot.get("scorer_configs", []),
+        "browser_profile_snapshot": run.plugin_snapshot.get("browser_profile_snapshot"),
         "cases": [
             {
                 "run_case_id": str(case.run_case_id.value),

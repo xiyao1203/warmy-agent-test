@@ -124,6 +124,10 @@ class ConnectionValidator(Protocol):
     async def validate(self, config, probe_input: dict[str, object]): ...
 
 
+class PublicationValidator(Protocol):
+    async def validate(self, project_id: UUID, config) -> None: ...
+
+
 @dataclass(frozen=True, slots=True)
 class AgentApiDependencies:
     list_agents: ListAgentsExecutor
@@ -141,6 +145,7 @@ class AgentApiDependencies:
     relationships: AgentRelationshipsReader | None = None
     uow_factory: UnitOfWorkFactory = null_uow_factory
     connection_validator: ConnectionValidator | None = None
+    publication_validator: PublicationValidator | None = None
 
 
 def create_agent_router(
@@ -438,7 +443,9 @@ def create_agent_router(
         if isinstance(actor, JSONResponse):
             return actor
         try:
-            await project_version(actor, project_id, agent_id, version_id)
+            draft = await project_version(actor, project_id, agent_id, version_id)
+            if dependencies.publication_validator is not None:
+                await dependencies.publication_validator.validate(project_id, draft.config)
             async with dependencies.uow_factory():
                 version = await dependencies.update_version.execute(
                     actor,
