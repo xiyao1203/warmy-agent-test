@@ -40,6 +40,11 @@ const typeMeta: Record<
     icon: ClipboardCheck,
     route: "test-plans",
   },
+  test_mission: {
+    label: "全链路测试任务",
+    icon: Sparkles,
+    route: "test-agent",
+  },
   run: { label: "运行记录", icon: PlayCircle, route: "runs" },
   scorer: { label: "评分器", icon: Scale, route: "scorers" },
   experiment: { label: "实验对比", icon: FlaskConical, route: "experiments" },
@@ -63,6 +68,7 @@ const agentIcons: Record<string, typeof Bot> = {
   review_gate: ShieldCheck,
   experiment: FlaskConical,
   environment: Shield,
+  mission: Sparkles,
 };
 
 function artifactHref(projectId: string, artifact: ArtifactLink) {

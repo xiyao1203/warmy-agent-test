@@ -2,6 +2,8 @@ import { CONTROL_API_URL as API_BASE } from "@/lib/api/base-url";
 import { csrfHeaders } from "@/lib/api/csrf";
 import { responseProblem } from "@/lib/api/problem";
 
+import type { TestMissionResponse } from "./mission-types";
+
 export type ChatMessage = {
   message_id?: string;
   sequence?: number;
@@ -156,6 +158,16 @@ export function createSession(projectId: string) {
 
 export function getSession(projectId: string, sessionId: string) {
   return request<ChatResponse>(`${base(projectId)}/sessions/${sessionId}`);
+}
+
+export function previewMission(projectId: string, missionId: string) {
+  return request<TestMissionResponse>(
+    `${API_BASE}/api/v1/projects/${projectId}/test-missions/${missionId}/preview`,
+    {
+      method: "POST",
+      headers: csrfHeaders() as Record<string, string>,
+    },
+  );
 }
 
 export function deleteSession(projectId: string, sessionId: string) {
