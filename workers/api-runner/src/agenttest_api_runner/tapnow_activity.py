@@ -11,7 +11,12 @@ from typing import Any
 from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 from uuid import UUID
 
-from agenttest_plugin_canvas.tapnow import TapNowBrowserContract
+from agenttest_plugin_canvas.tapnow import (
+    AwaitingConfirmationError,
+    TapNowAuthExpiredError,
+    TapNowBrowserContract,
+    TargetProductError,
+)
 from temporalio import activity
 
 from .artifact_uploader import ArtifactUploader
@@ -85,6 +90,30 @@ async def execute_tapnow_page(
 
 class AuthExpiredError(RuntimeError):
     pass
+
+
+def tapnow_error_result(task: TapNowTaskInput, error: Exception) -> TapNowResult:
+    evidence: dict[str, Any] = {
+        "execution_outcome": "error",
+        "quality_decision": "review_required",
+        "security_decision": "clear",
+    }
+    status = "error"
+    if isinstance(error, AwaitingConfirmationError):
+        status = "failed"
+        evidence["execution_outcome"] = "awaiting_confirmation"
+    elif isinstance(error, TargetProductError):
+        status = "failed"
+        evidence["execution_outcome"] = "target_product_error"
+    elif isinstance(error, (AuthExpiredError, TapNowAuthExpiredError)):
+        evidence["execution_outcome"] = "auth_expired"
+    return TapNowResult(
+        task.run_case_id,
+        status,
+        evidence,
+        type(error).__name__,
+        str(error),
+    )
 
 
 def redact_network_url(value: str) -> str:
@@ -285,10 +314,4 @@ async def run_tapnow_case(task: TapNowTaskInput) -> TapNowResult:
                 ),
             )
     except Exception as error:
-        return TapNowResult(
-            task.run_case_id,
-            "error",
-            {"execution_outcome": "error"},
-            type(error).__name__,
-            str(error),
-        )
+        return tapnow_error_result(task, error)

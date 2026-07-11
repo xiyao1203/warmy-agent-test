@@ -439,9 +439,7 @@ def _tapnow_task(task: RunTask, case: RunCaseTask) -> TapNowTaskInput:
     login_strategy = str(login_config.get("strategy") or "none")
     browser_profile_id = str(target.get("browser_profile_id") or "")
     if login_strategy == "browser_profile":
-        snapshot_profile_id = str(
-            task.browser_profile_snapshot.get("browser_profile_id") or ""
-        )
+        snapshot_profile_id = str(task.browser_profile_snapshot.get("browser_profile_id") or "")
         if not browser_profile_id or snapshot_profile_id != browser_profile_id:
             raise ValueError("TapNow browser profile does not match the immutable run snapshot")
     return TapNowTaskInput(

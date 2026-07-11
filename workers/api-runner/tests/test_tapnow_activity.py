@@ -9,7 +9,9 @@ from agenttest_api_runner.tapnow_activity import (
     execute_tapnow_browser,
     execute_tapnow_page,
     redact_network_url,
+    tapnow_error_result,
 )
+from agenttest_plugin_canvas.tapnow import AwaitingConfirmationError, TargetProductError
 
 
 class Page:
@@ -30,7 +32,9 @@ class Page:
     async def wait_for_selector(self, *_args, **_kwargs):
         return None
 
-    async def evaluate(self, _script):
+    async def evaluate(self, script):
+        if "__agenttestTapNowState" in script:
+            return "completed"
         return {"nodes": [], "connections": [], "artifacts": []}
 
     async def screenshot(self):
@@ -74,9 +78,7 @@ async def test_browser_profile_execution_injects_state_skips_form_login_and_uplo
         async def redeem(self, **_kwargs):
             return BrowserSessionLease(
                 {
-                    "cookies": [
-                        {"name": "session", "value": "browser-secret", "domain": ".test"}
-                    ],
+                    "cookies": [{"name": "session", "value": "browser-secret", "domain": ".test"}],
                     "origins": [],
                 },
                 1,
@@ -162,3 +164,23 @@ def test_network_url_redaction_keeps_safe_shape_only() -> None:
         )
         == "https://app.tapnow.ai/api/task?id=42&token=%5BREDACTED%5D&email=%5BREDACTED%5D"
     )
+
+
+def test_confirmation_and_target_errors_have_distinct_non_success_evidence() -> None:
+    task = TapNowTaskInput(
+        project_id=str(uuid4()),
+        run_id=str(uuid4()),
+        run_case_id=str(uuid4()),
+        agent_id=str(uuid4()),
+        target_url="https://tapnow.test/canvas",
+        intent="inspect",
+    )
+
+    confirmation = tapnow_error_result(task, AwaitingConfirmationError("Ask before acting"))
+    target = tapnow_error_result(task, TargetProductError("quota exhausted"))
+
+    assert confirmation.status == "failed"
+    assert confirmation.evidence["execution_outcome"] == "awaiting_confirmation"
+    assert confirmation.evidence["quality_decision"] == "review_required"
+    assert target.status == "failed"
+    assert target.evidence["execution_outcome"] == "target_product_error"

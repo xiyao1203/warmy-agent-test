@@ -4,14 +4,19 @@ from uuid import uuid4
 
 import pytest
 from agenttest_plugin_canvas.tapnow import (
+    READY_SELECTOR,
+    AwaitingConfirmationError,
+    TapNowAuthExpiredError,
     TapNowBrowserContract,
+    TargetProductError,
     UnsafeTargetActionError,
     assert_safe_action,
 )
 
 
 class Page:
-    def __init__(self) -> None:
+    def __init__(self, state: str = "completed") -> None:
+        self.state = state
         self.fills: list[tuple[str, str]] = []
         self.clicks: list[str] = []
         self.waits: list[str] = []
@@ -25,7 +30,9 @@ class Page:
     async def wait_for_selector(self, selector: str, **_kwargs) -> None:
         self.waits.append(selector)
 
-    async def evaluate(self, _script: str):
+    async def evaluate(self, script: str):
+        if "__agenttestTapNowState" in script:
+            return self.state
         return {
             "nodes": [{"id": "n1", "type": "image", "label": "Result", "x": 10, "y": 20}],
             "connections": [],
@@ -53,3 +60,49 @@ async def test_contract_logs_in_submits_waits_and_collects_canvas() -> None:
 def test_contract_blocks_dangerous_actions(action: str) -> None:
     with pytest.raises(UnsafeTargetActionError):
         assert_safe_action(action)
+
+
+def test_ask_before_acting_is_not_a_completion_selector() -> None:
+    assert "Ask before acting" not in READY_SELECTOR
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    ("state", "error_type"),
+    [
+        ("awaiting_confirmation", AwaitingConfirmationError),
+        ("auth_expired", TapNowAuthExpiredError),
+        ("quota_exhausted", TargetProductError),
+        ("failed", TargetProductError),
+    ],
+)
+async def test_terminal_states_are_not_reported_as_success(
+    state: str, error_type: type[Exception]
+) -> None:
+    contract = TapNowBrowserContract(run_id=uuid4(), agent_id=uuid4())
+
+    with pytest.raises(error_type):
+        await contract.wait_until_complete(Page(state))
+
+
+@pytest.mark.asyncio
+async def test_collect_redacts_artifact_query_secrets() -> None:
+    class ArtifactPage(Page):
+        async def evaluate(self, script: str):
+            if "__agenttestTapNowState" in script:
+                return "completed"
+            return {
+                "nodes": [],
+                "connections": [],
+                "artifacts": [
+                    {
+                        "url": "https://cdn.test/result.png?token=secret&expires=123",
+                        "type": "image",
+                    }
+                ],
+            }
+
+    trace = await TapNowBrowserContract(run_id=uuid4(), agent_id=uuid4()).collect(ArtifactPage())
+
+    assert trace.artifacts[0]["url"] == "https://cdn.test/result.png"
+    assert "secret" not in repr(trace.artifacts)

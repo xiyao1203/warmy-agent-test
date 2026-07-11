@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
+from urllib.parse import urlsplit, urlunsplit
 from uuid import UUID
 
 from agenttest_plugin_canvas.adapter import (
@@ -18,8 +19,18 @@ PASSWORD_SELECTOR = "input[name='password'], input[type='password']"
 LOGIN_SELECTOR = "button[type='submit'], button:has-text('登录'), button:has-text('Log in')"
 PROMPT_SELECTOR = "textarea, [contenteditable='true'], input[placeholder*='Ask']"
 SUBMIT_SELECTOR = "button:has-text('发送'), button:has-text('Send'), button[type='submit']"
-READY_SELECTOR = (
-    "[data-agent-status='completed'], [data-testid='agent-complete'], text=Ask before acting"
+READY_SELECTOR = "[data-agent-status='completed'], [data-testid='agent-complete']"
+TERMINAL_SELECTOR = ", ".join(
+    (
+        READY_SELECTOR,
+        "[data-agent-status='failed']",
+        "[data-agent-status='error']",
+        "[data-testid='agent-failed']",
+        "text=Ask before acting",
+        "[data-testid='confirm-action']",
+        "text=/quota|insufficient credits|额度不足/i",
+        USERNAME_SELECTOR,
+    )
 )
 
 DANGEROUS_ACTIONS = frozenset(
@@ -28,6 +39,18 @@ DANGEROUS_ACTIONS = frozenset(
 
 
 class UnsafeTargetActionError(ValueError):
+    pass
+
+
+class TapNowAuthExpiredError(RuntimeError):
+    pass
+
+
+class AwaitingConfirmationError(RuntimeError):
+    pass
+
+
+class TargetProductError(RuntimeError):
     pass
 
 
@@ -58,14 +81,24 @@ class TapNowBrowserContract:
         await page.click(SUBMIT_SELECTOR, timeout=self._timeout_ms)
 
     async def wait_until_complete(self, page) -> None:
-        await page.wait_for_selector(READY_SELECTOR, timeout=self._timeout_ms)
+        await page.wait_for_selector(TERMINAL_SELECTOR, timeout=self._timeout_ms)
+        state = str(await page.evaluate(_TERMINAL_STATE_SCRIPT) or "")
+        if state == "completed":
+            return
+        if state == "awaiting_confirmation":
+            raise AwaitingConfirmationError("TapNow is waiting for human confirmation")
+        if state == "auth_expired":
+            raise TapNowAuthExpiredError("TapNow browser authentication has expired")
+        if state == "quota_exhausted":
+            raise TargetProductError("TapNow quota or credits are exhausted")
+        raise TargetProductError("TapNow target task failed")
 
     async def collect(self, page) -> CanvasTrace:
         raw = await page.evaluate(_COLLECT_SCRIPT)
         payload = raw if isinstance(raw, Mapping) else {}
         nodes = [_node(item) for item in _items(payload.get("nodes"))]
         connections = [_connection(item) for item in _items(payload.get("connections"))]
-        artifacts = [dict(item) for item in _items(payload.get("artifacts"))]
+        artifacts = [_safe_artifact(item) for item in _items(payload.get("artifacts"))]
         return CanvasTrace(
             run_id=self._run_id,
             agent_id=self._agent_id,
@@ -120,6 +153,41 @@ def _connection(item: Mapping[str, object]) -> CanvasConnection:
         target_node_id=str(item.get("target", "")),
         connection_type=connection_type,
     )
+
+
+def _safe_artifact(item: Mapping[str, object]) -> dict[str, object]:
+    result = dict(item)
+    raw_url = str(result.get("url") or "")
+    if raw_url:
+        parts = urlsplit(raw_url)
+        result["url"] = urlunsplit((parts.scheme, parts.netloc, parts.path, "", ""))
+    return result
+
+
+_TERMINAL_STATE_SCRIPT = """
+() => {
+  window.__agenttestTapNowState = true;
+  const text = (document.body?.innerText || '').toLowerCase();
+  if (document.querySelector("input[type='password'], input[autocomplete='username']")) {
+    return 'auth_expired';
+  }
+  if (/quota|insufficient credits|额度不足/.test(text)) return 'quota_exhausted';
+  if (
+    document.querySelector(
+      "[data-agent-status='failed'], [data-agent-status='error'], " +
+      "[data-testid='agent-failed']"
+    )
+  ) return 'failed';
+  if (
+    document.querySelector("[data-testid='confirm-action']") ||
+    text.includes('ask before acting')
+  ) return 'awaiting_confirmation';
+  if (
+    document.querySelector("[data-agent-status='completed'], [data-testid='agent-complete']")
+  ) return 'completed';
+  return 'failed';
+}
+"""
 
 
 _COLLECT_SCRIPT = """

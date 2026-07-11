@@ -25,7 +25,9 @@ class _CanvasPage:
     async def wait_for_selector(self, _selector: str, **_kwargs: object) -> None:
         return None
 
-    async def evaluate(self, _script: str) -> dict[str, object]:
+    async def evaluate(self, _script: str) -> dict[str, object] | str:
+        if "__agenttestTapNowState" in _script:
+            return "completed"
         return {
             "nodes": [
                 {
