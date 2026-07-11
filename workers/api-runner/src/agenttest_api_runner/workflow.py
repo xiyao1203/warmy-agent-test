@@ -366,6 +366,7 @@ def normalize_run_task(task: RunTask | dict[str, object]) -> RunTask:
     environment_raw = task.get("environment", {})
     execution_policy_raw = task.get("execution_policy", {})
     scorer_configs_raw = task.get("scorer_configs", [])
+    browser_profile_snapshot_raw = task.get("browser_profile_snapshot", {})
     return RunTask(
         run_id=str(task["run_id"]),
         idempotency_key=str(task["idempotency_key"]),
@@ -380,6 +381,11 @@ def normalize_run_task(task: RunTask | dict[str, object]) -> RunTask:
             [dict(item) for item in scorer_configs_raw if isinstance(item, dict)]
             if isinstance(scorer_configs_raw, list)
             else []
+        ),
+        browser_profile_snapshot=(
+            dict(browser_profile_snapshot_raw)
+            if isinstance(browser_profile_snapshot_raw, dict)
+            else {}
         ),
         callback=callback,
     )
@@ -428,6 +434,16 @@ def _tapnow_task(task: RunTask, case: RunCaseTask) -> TapNowTaskInput:
         or task.agent_config.get("agent_version_id")
         or task.run_id
     )
+    login_raw = target.get("login")
+    login_config = login_raw if isinstance(login_raw, dict) else {}
+    login_strategy = str(login_config.get("strategy") or "none")
+    browser_profile_id = str(target.get("browser_profile_id") or "")
+    if login_strategy == "browser_profile":
+        snapshot_profile_id = str(
+            task.browser_profile_snapshot.get("browser_profile_id") or ""
+        )
+        if not browser_profile_id or snapshot_profile_id != browser_profile_id:
+            raise ValueError("TapNow browser profile does not match the immutable run snapshot")
     return TapNowTaskInput(
         project_id=task.callback.project_id,
         run_id=task.run_id,
@@ -436,6 +452,8 @@ def _tapnow_task(task: RunTask, case: RunCaseTask) -> TapNowTaskInput:
         target_url=_target_url(case.input, task.agent_config),
         intent=str(case.input.get("test_intent") or case.input.get("prompt") or ""),
         binding_ids=bindings,
+        login_strategy=login_strategy,
+        browser_profile_id=browser_profile_id,
         control_api_base_url=task.callback.base_url,
         internal_token=task.callback.internal_token,
         timeout_ms=_int_value(case.input.get("timeout_ms"), 120_000),

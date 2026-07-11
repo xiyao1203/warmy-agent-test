@@ -20,6 +20,7 @@ from agenttest_api_runner.workflow import (
     _codex_model_provider,
     _codex_to_run_case,
     _is_canvas_target,
+    _tapnow_task,
     _tapnow_to_run_case,
     _target_browser_profile_id,
     _target_url,
@@ -170,6 +171,52 @@ def test_workflow_normalizes_json_payload_from_control_plane() -> None:
     assert task.cases[0].input == {"message": "hello"}
     assert task.callback is not None
     assert task.callback.project_id == "project-1"
+
+
+def test_workflow_keeps_only_browser_snapshot_reference_and_builds_profile_task() -> None:
+    profile_snapshot = {
+        "browser_profile_id": "profile-1",
+        "auth_state_version": 7,
+        "auth_state_sha256": "a" * 64,
+    }
+    task = normalize_run_task(
+        {
+            "run_id": "run-1",
+            "idempotency_key": "browser-profile",
+            "agent_type": "canvas",
+            "agent_config": {
+                "endpoint_url": "https://app.tapnow.ai/canvas",
+                "target_config": {
+                    "entry_url": "https://app.tapnow.ai/canvas",
+                    "login": {"strategy": "browser_profile"},
+                    "browser_profile_id": "profile-1",
+                },
+            },
+            "browser_profile_snapshot": profile_snapshot,
+            "cases": [
+                {
+                    "run_case_id": "case-1",
+                    "input": {"test_intent": "inspect"},
+                    "assertions": [],
+                    "execution_mode": "browser",
+                }
+            ],
+            "callback": {
+                "base_url": "https://control.example",
+                "internal_token": "internal",
+                "project_id": "project-1",
+            },
+        }
+    )
+
+    tapnow = _tapnow_task(task, task.cases[0])
+
+    assert task.browser_profile_snapshot == profile_snapshot
+    assert tapnow.login_strategy == "browser_profile"
+    assert tapnow.browser_profile_id == "profile-1"
+    history_payload = repr(task)
+    assert "cookies" not in history_payload.lower()
+    assert "auth_state_envelope" not in history_payload
 
 
 def test_workflow_normalizes_codex_browser_execution_mode() -> None:

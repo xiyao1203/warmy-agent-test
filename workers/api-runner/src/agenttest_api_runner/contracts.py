@@ -29,6 +29,7 @@ class RunTask:
     environment: dict[str, Any] = field(default_factory=dict)
     execution_policy: dict[str, Any] = field(default_factory=dict)
     scorer_configs: list[dict[str, Any]] = field(default_factory=list)
+    browser_profile_snapshot: dict[str, Any] = field(default_factory=dict)
     callback: ResultCallbackConfig | None = None
 
 
