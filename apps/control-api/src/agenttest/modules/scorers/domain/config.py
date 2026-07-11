@@ -26,7 +26,14 @@ class ModelScorerConfig(BaseModel):
     model_config_id: UUID | None = None
 
 
-ScorerConfig = RuleScorerConfig | ReferenceScorerConfig | ModelScorerConfig
+class DeepEvalScorerConfig(BaseModel):
+    model_config = ConfigDict(extra="forbid", frozen=True)
+    type: Literal["deepeval"] = "deepeval"
+    metric: Literal["tool_correctness"] = "tool_correctness"
+    expected_tools: list[str] = Field(min_length=1, max_length=50)
+
+
+ScorerConfig = RuleScorerConfig | ReferenceScorerConfig | ModelScorerConfig | DeepEvalScorerConfig
 
 
 def parse_scorer_config(scorer_type: str, value: dict[str, object]) -> ScorerConfig:
@@ -37,4 +44,6 @@ def parse_scorer_config(scorer_type: str, value: dict[str, object]) -> ScorerCon
         return ReferenceScorerConfig.model_validate(payload)
     if scorer_type == "model":
         return ModelScorerConfig.model_validate(payload)
+    if scorer_type == "deepeval":
+        return DeepEvalScorerConfig.model_validate(payload)
     raise ValueError(f"Unsupported scorer type: {scorer_type}")

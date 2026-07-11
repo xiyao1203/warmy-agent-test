@@ -40,6 +40,7 @@ class Settings(BaseSettings):
     temporal_task_queue: str = "agenttest-api-runner"
     model_runner_task_queue: str = "agenttest-model-runner"
     model_credential_key: str | None = None
+    browser_profile_root: str = str(Path.home() / ".agenttest" / "browser-profiles" / "data")
     model_allow_private_network: bool = False
     promptfoo_bin: str = "promptfoo"
     security_scan_allow_private_network: bool = False
@@ -51,6 +52,8 @@ class Settings(BaseSettings):
                 raise ValueError("A non-local internal API token is required")
             if not self.session_cookie_secure:
                 raise ValueError("Secure session cookies are required outside local/test")
+            if not self.model_credential_key:
+                raise ValueError("AGENTTEST_MODEL_CREDENTIAL_KEY is required outside local/test")
         return self
 
 

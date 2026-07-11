@@ -22,6 +22,12 @@ def test_local_settings_allow_http_session_cookie() -> None:
     assert settings.session_cookie_secure is False
 
 
+def test_browser_profile_root_defaults_to_private_user_directory() -> None:
+    settings = Settings()
+
+    assert settings.browser_profile_root.endswith("/.agenttest/browser-profiles/data")
+
+
 def test_production_rejects_local_internal_token() -> None:
     with pytest.raises(ValidationError):
         Settings(environment="production", internal_api_token="local-internal-token")
@@ -33,4 +39,13 @@ def test_production_rejects_insecure_session_cookie() -> None:
             environment="production",
             internal_api_token="production-internal-token",
             session_cookie_secure=False,
+        )
+
+
+def test_production_requires_auth_state_master_key() -> None:
+    with pytest.raises(ValidationError, match="MODEL_CREDENTIAL_KEY"):
+        Settings(
+            environment="production",
+            internal_api_token="production-internal-token",
+            session_cookie_secure=True,
         )

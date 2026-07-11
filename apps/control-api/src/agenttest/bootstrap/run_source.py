@@ -10,6 +10,8 @@ from agenttest.modules.agents.infrastructure.persistence.models import (
     AgentModel,
     AgentVersionModel,
 )
+from agenttest.modules.browser_profiles.domain.entities import BrowserProfile
+from agenttest.modules.browser_profiles.infrastructure.models import BrowserProfileModel
 from agenttest.modules.datasets.infrastructure.persistence.models import (
     DatasetModel,
     DatasetVersionModel,
@@ -31,6 +33,27 @@ from agenttest.modules.test_plans.infrastructure.persistence.models import (
 )
 from agenttest.modules.test_plans.public import TestPlanVersionId
 from agenttest.shared.infrastructure.database import session_scope
+
+
+def secret_free_credential_bindings(
+    bindings: list[dict[str, object]],
+) -> list[dict[str, object]]:
+    allowed = ("id", "kind", "injection_location", "injection_name")
+    return [{key: item[key] for key in allowed if key in item} for item in bindings]
+
+
+def browser_profile_snapshot(profile: BrowserProfile) -> dict[str, object]:
+    if (
+        profile.auth_state_status != "ready"
+        or not profile.auth_state_sha256
+        or profile.auth_state_version <= 0
+    ):
+        raise ValueError("Browser profile auth state is not ready")
+    return {
+        "browser_profile_id": str(profile.id),
+        "auth_state_version": profile.auth_state_version,
+        "auth_state_sha256": profile.auth_state_sha256,
+    }
 
 
 class SqlAlchemyRunSource:
@@ -93,6 +116,38 @@ class SqlAlchemyRunSource:
             if row is None:
                 raise ValueError("Published test plan version was not found")
             plan_version, agent_version, agent, dataset_version, environment = row
+            stored_agent_config = dict(agent_version.config)
+            target_config = stored_agent_config.get("target_config")
+            target_config = dict(target_config) if isinstance(target_config, dict) else {}
+            login_config = target_config.get("login")
+            login_config = dict(login_config) if isinstance(login_config, dict) else {}
+            profile_snapshot: dict[str, object] | None = None
+            if str(login_config.get("strategy") or "") == "browser_profile":
+                raw_profile_id = target_config.get("browser_profile_id")
+                if not raw_profile_id:
+                    raise ValueError("Published Agent browser profile is missing")
+                try:
+                    profile_id = UUID(str(raw_profile_id))
+                except ValueError as error:
+                    raise ValueError("Published Agent browser profile id is invalid") from error
+                profile = await session.scalar(
+                    select(BrowserProfileModel).where(
+                        BrowserProfileModel.id == profile_id,
+                        BrowserProfileModel.project_id == project_id.value,
+                        BrowserProfileModel.auth_state_status == "ready",
+                    )
+                )
+                if (
+                    profile is None
+                    or not profile.auth_state_sha256
+                    or profile.auth_state_version <= 0
+                ):
+                    raise ValueError("Published Agent browser profile auth state is not ready")
+                profile_snapshot = {
+                    "browser_profile_id": str(profile.id),
+                    "auth_state_version": profile.auth_state_version,
+                    "auth_state_sha256": profile.auth_state_sha256,
+                }
             environment_config = dict(environment.config) if environment else {}
             credential_ids_raw = environment_config.get("credential_binding_ids", [])
             credential_ids = (
@@ -114,16 +169,17 @@ class SqlAlchemyRunSource:
                 )
                 if len(credential_rows) != len(set(credential_ids)):
                     raise ValueError("Environment references a missing project credential")
-                credentials = [
-                    {
-                        "id": str(item.id),
-                        "kind": item.kind,
-                        "injection_location": item.injection_location,
-                        "injection_name": item.injection_name,
-                        "encrypted_value": item.encrypted_value,
-                    }
-                    for item in credential_rows
-                ]
+                credentials = secret_free_credential_bindings(
+                    [
+                        {
+                            "id": str(item.id),
+                            "kind": item.kind,
+                            "injection_location": item.injection_location,
+                            "injection_name": item.injection_name,
+                        }
+                        for item in credential_rows
+                    ]
+                )
             environment_config["credential_bindings"] = credentials
             # ── 加载已发布评分器版本配置 ────────────────────────────
             scorer_ids_raw = plan_version.config.get("scorer_ids", [])
@@ -169,23 +225,26 @@ class SqlAlchemyRunSource:
                     )
                 ).all()
             )
+        plugin_snapshot: dict[str, object] = {
+            "id": "generic-http",
+            "version": "1.0.0",
+            "agent_type": agent.agent_type,
+            "agent_config": invocation_from_stored_config(stored_agent_config).model_dump(
+                mode="json"
+            ),
+            "agent_metadata": stored_agent_config,
+            "environment_config": environment_config,
+            "scorer_configs": scorer_configs,
+        }
+        if profile_snapshot is not None:
+            plugin_snapshot["browser_profile_snapshot"] = profile_snapshot
         return RunDefinition(
             project_id=project_id,
             test_plan_version_id=version_id,
             agent_version_id=agent_version.id,
             dataset_version_id=dataset_version.id,
             config_snapshot=dict(plan_version.config),
-            plugin_snapshot={
-                "id": "generic-http",
-                "version": "1.0.0",
-                "agent_type": agent.agent_type,
-                "agent_config": invocation_from_stored_config(
-                    dict(agent_version.config)
-                ).model_dump(mode="json"),
-                "agent_metadata": dict(agent_version.config),
-                "environment_config": environment_config,
-                "scorer_configs": scorer_configs,
-            },
+            plugin_snapshot=plugin_snapshot,
             cases=[
                 RunDefinitionCase(
                     test_case_id=case.id,

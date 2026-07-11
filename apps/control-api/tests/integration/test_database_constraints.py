@@ -9,11 +9,11 @@ from uuid import uuid4
 import asyncpg
 import pytest
 from agenttest.modules.audit.infrastructure.persistence.models import AuditLogModel
+from agenttest.modules.datasets.infrastructure.persistence.models import TestCaseModel
 from agenttest.modules.identity.infrastructure.persistence.models import (
     UserModel,
     UserSessionModel,
 )
-from agenttest.modules.datasets.infrastructure.persistence.models import TestCaseModel
 from agenttest.modules.projects.infrastructure.persistence.models import ProjectMemberModel
 from alembic import command
 from alembic.config import Config

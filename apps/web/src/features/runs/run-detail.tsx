@@ -230,6 +230,7 @@ export function RunDetail({
                   </div>
                   <StatusBadge status={item.status} />
                 </div>
+                <CaseDecisionSummary evidence={item.evidence} />
                 {item.error_type ? (
                   <div className="mt-4 rounded-[var(--radius-md)] bg-[var(--danger-subtle)] p-3 text-sm text-[var(--danger)]">
                     <div className="flex items-center gap-2 font-medium">
@@ -371,6 +372,82 @@ export function RunDetail({
       ) : null}
     </div>
   );
+}
+
+export function executionOutcomePresentation(outcome: string): {
+  label: string;
+  tone: "success" | "warning" | "danger";
+} {
+  if (outcome === "success") return { label: "执行成功", tone: "success" };
+  if (outcome === "awaiting_confirmation") {
+    return { label: "等待人工确认", tone: "warning" };
+  }
+  if (outcome === "auth_expired") {
+    return { label: "登录态已过期", tone: "danger" };
+  }
+  if (outcome === "target_product_error") {
+    return { label: "目标产品失败", tone: "danger" };
+  }
+  if (outcome === "platform_error") {
+    return { label: "平台执行错误", tone: "danger" };
+  }
+  return { label: "执行异常", tone: "danger" };
+}
+
+function CaseDecisionSummary({
+  evidence,
+}: {
+  evidence: Record<string, unknown>;
+}) {
+  const execution = String(evidence.execution_outcome ?? "unknown");
+  const quality = String(evidence.quality_decision ?? "unknown");
+  const security = String(evidence.security_decision ?? "unknown");
+  const canvas = isRecord(evidence.canvas) ? evidence.canvas : {};
+  const nodes = Array.isArray(canvas.nodes) ? canvas.nodes.length : 0;
+  const artifacts = Array.isArray(evidence.artifacts)
+    ? evidence.artifacts.length
+    : 0;
+  if (
+    execution === "unknown" &&
+    quality === "unknown" &&
+    security === "unknown"
+  ) {
+    return null;
+  }
+  const executionPresentation = executionOutcomePresentation(execution);
+  return (
+    <section
+      aria-label="执行质量与安全判定"
+      className="mt-4 rounded-[var(--radius-md)] border border-[var(--hairline)] p-3"
+    >
+      <div className="flex flex-wrap gap-2">
+        <Badge tone={executionPresentation.tone}>
+          {executionPresentation.label}
+        </Badge>
+        <Badge tone={quality === "pass" ? "success" : "warning"}>
+          {quality === "pass"
+            ? "质量通过"
+            : quality === "fail"
+              ? "质量未通过"
+              : "等待复核"}
+        </Badge>
+        <Badge tone={security === "clear" ? "success" : "danger"}>
+          {security === "clear"
+            ? "安全通过"
+            : security === "blocked"
+              ? "安全阻断"
+              : "存在安全发现"}
+        </Badge>
+      </div>
+      <p className="mt-2 text-xs text-[var(--muted)]">
+        {nodes} 个画布节点 · {artifacts} 个证据产物
+      </p>
+    </section>
+  );
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
 function SummaryItem({ label, value }: { label: string; value: string }) {

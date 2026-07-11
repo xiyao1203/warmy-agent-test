@@ -10,6 +10,7 @@ import {
   startBrowserProfile,
   stopBrowserProfile,
   updateBrowserProfile,
+  verifyBrowserProfile,
 } from "./api";
 import { BrowserProfileList } from "./browser-profile-list";
 
@@ -68,6 +69,11 @@ export function BrowserProfileListScreen({ projectId }: { projectId: string }) {
       }}
       onStop={async (profileId) => {
         const result = await stopBrowserProfile(projectId, profileId);
+        await refresh();
+        return result;
+      }}
+      onVerify={async (profileId) => {
+        const result = await verifyBrowserProfile(projectId, profileId);
         await refresh();
         return result;
       }}

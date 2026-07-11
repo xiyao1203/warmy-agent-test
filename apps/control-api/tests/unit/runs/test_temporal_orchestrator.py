@@ -3,8 +3,6 @@ from __future__ import annotations
 from uuid import uuid4
 
 import pytest
-from temporalio.service import RPCError, RPCStatusCode
-
 from agenttest.modules.identity.public import UserId
 from agenttest.modules.projects.public import ProjectId
 from agenttest.modules.runs.application.ports import RunRuntimeUnavailableError
@@ -14,6 +12,7 @@ from agenttest.modules.runs.infrastructure.temporal_orchestrator import (
     TemporalRunOrchestrator,
 )
 from agenttest.modules.test_plans.public import TestPlanVersionId
+from temporalio.service import RPCError, RPCStatusCode
 
 
 class FakeWorkflowHandle:

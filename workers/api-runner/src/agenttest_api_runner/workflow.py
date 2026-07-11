@@ -26,6 +26,7 @@ with workflow.unsafe.imports_passed_through():
         RunResult,
         RunTask,
     )
+    from agenttest_api_runner.deepeval_adapter import DeepEvalTask, evaluate_deepeval_case
     from agenttest_api_runner.playwright_activity import (
         PlaywrightResult,
         PlaywrightTaskInput,
@@ -33,6 +34,11 @@ with workflow.unsafe.imports_passed_through():
     )
     from agenttest_api_runner.reports import build_reports
     from agenttest_api_runner.scorer_activities import evaluate_scorers_sync
+    from agenttest_api_runner.tapnow_activity import (
+        TapNowResult,
+        TapNowTaskInput,
+        run_tapnow_case,
+    )
 
 ACTIVITY_TIMEOUT = timedelta(minutes=5)
 ACTIVITY_RETRY_POLICY = RetryPolicy(
@@ -176,21 +182,40 @@ class RunWorkflow:
                         ),
                     )
                     result = _codex_to_run_case(codex_result, case)
+                    if result.status == "passed" and _is_canvas_target(task):
+                        tapnow_result = await workflow.execute_activity(
+                            run_tapnow_case,
+                            _tapnow_task(task, case),
+                            start_to_close_timeout=activity_timeout,
+                            heartbeat_timeout=timedelta(seconds=30),
+                            retry_policy=activity_retry_policy,
+                        )
+                        result = _tapnow_to_run_case(tapnow_result, case)
                 elif case.execution_mode == "browser":
-                    browser_url = _target_url(case.input, task.agent_config)
-                    browser_steps = _browser_steps(case.input)
-                    playwright_result = await workflow.execute_activity(
-                        run_playwright_case,
-                        PlaywrightTaskInput(
-                            run_case_id=case.run_case_id,
-                            url=browser_url,
-                            steps=browser_steps,
-                        ),
-                        start_to_close_timeout=activity_timeout,
-                        heartbeat_timeout=timedelta(seconds=30),
-                        retry_policy=activity_retry_policy,
-                    )
-                    result = _playwright_to_run_case(playwright_result, case)
+                    if _is_canvas_target(task):
+                        tapnow_result = await workflow.execute_activity(
+                            run_tapnow_case,
+                            _tapnow_task(task, case),
+                            start_to_close_timeout=activity_timeout,
+                            heartbeat_timeout=timedelta(seconds=30),
+                            retry_policy=activity_retry_policy,
+                        )
+                        result = _tapnow_to_run_case(tapnow_result, case)
+                    else:
+                        browser_url = _target_url(case.input, task.agent_config)
+                        browser_steps = _browser_steps(case.input)
+                        playwright_result = await workflow.execute_activity(
+                            run_playwright_case,
+                            PlaywrightTaskInput(
+                                run_case_id=case.run_case_id,
+                                url=browser_url,
+                                steps=browser_steps,
+                            ),
+                            start_to_close_timeout=activity_timeout,
+                            heartbeat_timeout=timedelta(seconds=30),
+                            retry_policy=activity_retry_policy,
+                        )
+                        result = _playwright_to_run_case(playwright_result, case)
                 else:
                     # ── Browser Harness 前置采集（可选） ──────────────────
                     capture_url = task.agent_config.get("pre_capture_url")
@@ -209,7 +234,7 @@ class RunWorkflow:
 
                     result = await workflow.execute_activity(
                         execute_agent_case,
-                        args=[case, task.agent_config, task.environment],
+                        args=[case, task.agent_config, _environment_with_lease(task)],
                         start_to_close_timeout=activity_timeout,
                         heartbeat_timeout=timedelta(seconds=30),
                         retry_policy=activity_retry_policy,
@@ -229,6 +254,7 @@ class RunWorkflow:
                         error_type=result.error_type,
                         error_message=result.error_message,
                         duration_ms=result.duration_ms,
+                        evidence=result.evidence,
                         scores=[
                             CaseScore(
                                 scorer_version_id=r.scorer_version_id,
@@ -241,6 +267,36 @@ class RunWorkflow:
                             for r in scorer_results
                         ],
                     )
+                    for scorer in task.scorer_configs:
+                        if str(scorer.get("scorer_type")) != "deepeval":
+                            continue
+                        raw_config = scorer.get("config", {})
+                        config = raw_config if isinstance(raw_config, dict) else {}
+                        expected = config.get("expected_tools", [])
+                        trace = result.evidence.get("trace", {})
+                        tools = trace.get("tools_called", []) if isinstance(trace, dict) else []
+                        deepeval_scores = await workflow.execute_activity(
+                            evaluate_deepeval_case,
+                            DeepEvalTask(
+                                run_case_id=case.run_case_id,
+                                scorer_version_id=str(scorer.get("scorer_version_id", "")),
+                                intent=str(
+                                    case.input.get("test_intent") or case.input.get("prompt") or ""
+                                ),
+                                output=str(result.output),
+                                tools_called=[str(item) for item in tools]
+                                if isinstance(tools, list)
+                                else [],
+                                expected_tools=[str(item) for item in expected]
+                                if isinstance(expected, list)
+                                else [],
+                                threshold=float(scorer.get("threshold", 0.8) or 0.8),
+                            ),
+                            start_to_close_timeout=timedelta(minutes=3),
+                            heartbeat_timeout=timedelta(seconds=30),
+                            retry_policy=RetryPolicy(maximum_attempts=1),
+                        )
+                        result.scores.extend(deepeval_scores)
             except Exception as error:
                 result = RunCaseResult(
                     run_case_id=case.run_case_id,
@@ -310,6 +366,7 @@ def normalize_run_task(task: RunTask | dict[str, object]) -> RunTask:
     environment_raw = task.get("environment", {})
     execution_policy_raw = task.get("execution_policy", {})
     scorer_configs_raw = task.get("scorer_configs", [])
+    browser_profile_snapshot_raw = task.get("browser_profile_snapshot", {})
     return RunTask(
         run_id=str(task["run_id"]),
         idempotency_key=str(task["idempotency_key"]),
@@ -325,7 +382,92 @@ def normalize_run_task(task: RunTask | dict[str, object]) -> RunTask:
             if isinstance(scorer_configs_raw, list)
             else []
         ),
+        browser_profile_snapshot=(
+            dict(browser_profile_snapshot_raw)
+            if isinstance(browser_profile_snapshot_raw, dict)
+            else {}
+        ),
         callback=callback,
+    )
+
+
+def _is_canvas_target(task: RunTask) -> bool:
+    target = _target_config(task.agent_config)
+    plugin_id = str(target.get("plugin_id") or task.agent_config.get("plugin_id") or "")
+    adapter_id = str(target.get("adapter_id") or task.agent_config.get("adapter_id") or "")
+    return (
+        task.agent_type in {"canvas", "canvas_agent"}
+        or plugin_id in {"canvas-agent", "tapnow-canvas-agent"}
+        or adapter_id.startswith("tapnow-canvas")
+    )
+
+
+def _environment_with_lease(task: RunTask) -> dict[str, object]:
+    environment = dict(task.environment)
+    if task.callback is None:
+        return environment
+    bindings = environment.get("credential_binding_ids", [])
+    if not isinstance(bindings, list) or not bindings:
+        return environment
+    environment["_credential_lease"] = {
+        "base_url": task.callback.base_url,
+        "internal_token": task.callback.internal_token,
+        "project_id": task.callback.project_id,
+        "run_id": task.run_id,
+        "binding_ids": [str(item) for item in bindings],
+    }
+    return environment
+
+
+def _tapnow_task(task: RunTask, case: RunCaseTask) -> TapNowTaskInput:
+    if task.callback is None:
+        raise ValueError("TapNow execution requires a control plane callback")
+    target = _target_config(task.agent_config)
+    raw_bindings = (
+        target.get("credential_binding_ids")
+        or task.agent_config.get("credential_binding_ids")
+        or task.environment.get("credential_binding_ids", [])
+    )
+    bindings = [str(item) for item in raw_bindings] if isinstance(raw_bindings, list) else []
+    agent_id = str(
+        task.agent_config.get("agent_id")
+        or task.agent_config.get("agent_version_id")
+        or task.run_id
+    )
+    login_raw = target.get("login")
+    login_config = login_raw if isinstance(login_raw, dict) else {}
+    login_strategy = str(login_config.get("strategy") or "none")
+    browser_profile_id = str(target.get("browser_profile_id") or "")
+    if login_strategy == "browser_profile":
+        snapshot_profile_id = str(task.browser_profile_snapshot.get("browser_profile_id") or "")
+        if not browser_profile_id or snapshot_profile_id != browser_profile_id:
+            raise ValueError("TapNow browser profile does not match the immutable run snapshot")
+    return TapNowTaskInput(
+        project_id=task.callback.project_id,
+        run_id=task.run_id,
+        run_case_id=case.run_case_id,
+        agent_id=agent_id,
+        target_url=_target_url(case.input, task.agent_config),
+        intent=str(case.input.get("test_intent") or case.input.get("prompt") or ""),
+        binding_ids=bindings,
+        login_strategy=login_strategy,
+        browser_profile_id=browser_profile_id,
+        control_api_base_url=task.callback.base_url,
+        internal_token=task.callback.internal_token,
+        timeout_ms=_int_value(case.input.get("timeout_ms"), 120_000),
+    )
+
+
+def _tapnow_to_run_case(result: TapNowResult, case: RunCaseTask) -> RunCaseResult:
+    raw_trace = result.evidence.get("trace")
+    return RunCaseResult(
+        run_case_id=case.run_case_id,
+        status=result.status,
+        output={"canvas": result.evidence.get("canvas", {})},
+        trace=[dict(raw_trace)] if isinstance(raw_trace, dict) else [],
+        error_type=result.error_type,
+        error_message=result.error_message,
+        evidence=result.evidence,
     )
 
 
@@ -402,7 +544,7 @@ def _codex_to_run_case(
     case: RunCaseTask,
 ) -> RunCaseResult:
     """将 Codex 浏览器探索结果转换为 RunCaseResult。"""
-    status = codex_result.status
+    status = "passed" if codex_result.status == "planned" else codex_result.status
     output: dict[str, object] = {
         "status": codex_result.status,
         "execution_log": codex_result.execution_log[:2000] if codex_result.execution_log else "",

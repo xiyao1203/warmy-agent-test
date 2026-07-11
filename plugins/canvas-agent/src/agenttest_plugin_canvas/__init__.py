@@ -14,6 +14,7 @@ from agenttest_plugin_canvas.scoring.multimodal import (
     MultiModalScorer,
     ScoreResult,
 )
+from agenttest_plugin_canvas.tapnow import TapNowBrowserContract
 
 __all__ = [
     "CanvasAgentAdapter",
@@ -23,6 +24,7 @@ __all__ = [
     "CanvasNode",
     "CanvasNodeType",
     "CanvasTrace",
+    "TapNowBrowserContract",
     "HeuristicMultiModalScorer",
     "MultiModalScorer",
     "ScoreResult",

@@ -12,7 +12,9 @@ from temporalio.worker import Worker
 from .activities import execute_agent_case, post_run_result
 from .browser_harness_activity import capture_page_snapshot
 from .codex_browser_activity import run_codex_browser_case
+from .deepeval_adapter import evaluate_deepeval_case
 from .playwright_activity import run_playwright_case
+from .tapnow_activity import run_tapnow_case
 from .target_chat import TargetAgentChatWorkflow, execute_target_chat
 from .workflow import RunWorkflow
 
@@ -56,6 +58,8 @@ async def run() -> None:
             run_playwright_case,
             run_codex_browser_case,
             execute_target_chat,
+            run_tapnow_case,
+            evaluate_deepeval_case,
         ],
     )
     await worker.run()

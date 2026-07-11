@@ -5,7 +5,6 @@ from unittest.mock import AsyncMock, Mock
 from uuid import uuid4
 
 import pytest
-
 from agenttest.modules.identity.public import UserId
 from agenttest.modules.projects.public import ProjectId
 from agenttest.modules.runs.domain.entities import Run, RunCase, RunCaseId, RunId

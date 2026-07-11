@@ -12,6 +12,7 @@ dependencies = [
   "httpx",
   "opentelemetry-api",
   "opentelemetry-sdk",
+  "playwright==1.61.0",
   "pydantic-settings",
   "sqlalchemy[asyncio]",
   "structlog",

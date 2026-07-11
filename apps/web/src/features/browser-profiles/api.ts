@@ -9,14 +9,14 @@ export type BrowserProfile = {
   project_id: string;
   name: string;
   target_domain: string;
-  user_data_dir: string;
-  storage_state_path: string;
-  cdp_port: number;
   status: string;
-  cdp_endpoint: string;
+  auth_state_status: "missing" | "ready" | "expired" | "error";
+  auth_state_version: number;
+  auth_state_updated_at: string | null;
   created_at: string;
   updated_at: string;
-  last_login_at: string;
+  last_login_at: string | null;
+  last_verified_at: string | null;
 };
 
 // ── API ──────────────────────────────────────────────────
@@ -35,7 +35,7 @@ export async function listBrowserProfiles(
 
 export async function createBrowserProfile(
   projectId: string,
-  payload: { name: string; target_domain?: string; user_data_dir?: string },
+  payload: { name: string; target_domain?: string },
 ): Promise<BrowserProfile> {
   const response = await fetch(
     `${CONTROL_API_URL}/api/v1/projects/${projectId}/browser-profiles`,
@@ -150,5 +150,21 @@ export async function stopBrowserProfile(
     },
   );
   if (!response.ok) throw await responseProblem(response, "停止浏览器失败");
+  return response.json() as Promise<BrowserProfile>;
+}
+
+export async function verifyBrowserProfile(
+  projectId: string,
+  profileId: string,
+): Promise<BrowserProfile> {
+  const response = await fetch(
+    `${CONTROL_API_URL}/api/v1/projects/${projectId}/browser-profiles/${profileId}/verify`,
+    {
+      method: "POST",
+      headers: { ...(csrfHeaders() as Record<string, string>) },
+      credentials: "include",
+    },
+  );
+  if (!response.ok) throw await responseProblem(response, "验证登录状态失败");
   return response.json() as Promise<BrowserProfile>;
 }

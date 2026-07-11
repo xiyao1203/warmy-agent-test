@@ -8,6 +8,7 @@ from agenttest.modules.agents.infrastructure.persistence.models import (
     AgentVersionModel,
 )
 from agenttest.modules.audit.infrastructure.persistence.models import AuditLogModel
+from agenttest.modules.browser_profiles.infrastructure.models import BrowserProfileModel
 from agenttest.modules.datasets.infrastructure.persistence.models import (
     DatasetModel,
     DatasetVersionModel,
@@ -43,6 +44,7 @@ _MODELS = (
     AgentModel,
     AgentVersionModel,
     AuditLogModel,
+    BrowserProfileModel,
     DatasetModel,
     DatasetVersionModel,
     EnvironmentTemplateModel,

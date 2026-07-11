@@ -1,7 +1,3 @@
-from base64 import urlsafe_b64encode
-from os import urandom
-
-from agenttest.modules.model_configs.infrastructure.credentials import AesGcmCredentialCipher
 from agenttest_api_runner.activities import build_agent_request
 
 
@@ -32,11 +28,7 @@ def test_worker_keeps_legacy_payload_compatibility() -> None:
     assert request.mode == "poll"
 
 
-def test_worker_decrypts_and_injects_credentials_only_in_activity(monkeypatch) -> None:
-    key = urlsafe_b64encode(urandom(32)).decode()
-    encrypted = AesGcmCredentialCipher(key).encrypt("secret-token")
-    monkeypatch.setenv("AGENTTEST_MODEL_CREDENTIAL_KEY", key)
-
+def test_worker_injects_redeemed_credentials_only_in_activity() -> None:
     request = build_agent_request(
         {"endpoint_url": "https://agent.example/run"},
         {"message": "hello"},
@@ -46,10 +38,10 @@ def test_worker_decrypts_and_injects_credentials_only_in_activity(monkeypatch) -
                     "kind": "bearer",
                     "injection_location": "header",
                     "injection_name": "Authorization",
-                    "encrypted_value": encrypted,
                 }
             ]
         },
+        credential_values={"Authorization": "secret-token"},
     )
 
     assert request.headers["Authorization"] == "Bearer secret-token"

@@ -308,6 +308,7 @@ def create_run_router(
                                 ]
                                 if item.scores
                                 else None,
+                                evidence=item.evidence,
                             )
                             for item in payload.cases
                         ],

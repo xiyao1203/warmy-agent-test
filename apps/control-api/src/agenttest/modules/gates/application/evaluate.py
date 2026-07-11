@@ -14,6 +14,7 @@ class GateEvidence:
     total_cost: float | None
     security_score: float | None
     pending_reviews: int
+    blocking_findings: int = 0
 
 
 def evaluate_evidence(gate: ReleaseGate, evidence: GateEvidence) -> GateResult:
@@ -36,6 +37,8 @@ def evaluate_evidence(gate: ReleaseGate, evidence: GateEvidence) -> GateResult:
         result.failures.append("尚未产生安全测试证据")
     if evidence.pending_reviews > 0:
         result.failures.append(f"仍有 {evidence.pending_reviews} 项人工审核待完成")
+    if evidence.blocking_findings > 0:
+        result.failures.append(f"存在 {evidence.blocking_findings} 项高危安全发现")
     if result.failures and result.passed:
         return GateResult(
             passed=False,

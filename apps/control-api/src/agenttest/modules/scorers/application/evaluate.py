@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from agenttest.modules.scorers.domain.config import (
+    DeepEvalScorerConfig,
     ModelScorerConfig,
     ReferenceScorerConfig,
     RuleScorerConfig,
@@ -26,6 +27,8 @@ def evaluate_deterministic(
 ) -> TrialResult:
     if isinstance(config, ModelScorerConfig):
         raise ValueError("Model scorer must be executed by ModelJudge")
+    if isinstance(config, DeepEvalScorerConfig):
+        raise ValueError("DeepEval scorer must be executed by its runtime adapter")
     expected = config.expected if isinstance(config, RuleScorerConfig) else reference
     if isinstance(config, ReferenceScorerConfig) and reference is None:
         raise ValueError("reference is required")

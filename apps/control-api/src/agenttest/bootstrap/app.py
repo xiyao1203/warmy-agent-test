@@ -692,6 +692,13 @@ def build_audit_dependencies(settings: Settings) -> AuditApiDependencies:
 
 
 def build_agent_dependencies(settings: Settings) -> AgentApiDependencies:
+    from agenttest.modules.browser_profiles.application.publication import (
+        BrowserProfilePublicationValidator,
+    )
+    from agenttest.modules.browser_profiles.infrastructure.repository import (
+        SqlAlchemyBrowserProfileRepository,
+    )
+
     engine = create_database_engine(str(settings.database_url))
     session_factory = create_session_factory(engine)
     agents = SqlAlchemyAgentRepository(session_factory)
@@ -753,6 +760,9 @@ def build_agent_dependencies(settings: Settings) -> AgentApiDependencies:
         uow_factory=lambda: SqlAlchemyUnitOfWork(session_factory),
         connection_validator=HttpAgentConnectionValidator(
             allow_private_network=settings.security_scan_allow_private_network
+        ),
+        publication_validator=BrowserProfilePublicationValidator(
+            SqlAlchemyBrowserProfileRepository(session_factory)
         ),
     )
 
@@ -1001,6 +1011,26 @@ def build_model_config_service(settings: Settings) -> ModelConfigService:
     return ModelConfigService(repository, ProjectAccessAdapter(projects), cipher)
 
 
+def build_browser_auth_state_service(settings: Settings):
+    """Build the profile-bound auth-state cipher from the deployment master key."""
+    from base64 import urlsafe_b64decode
+    from hashlib import sha256
+
+    from agenttest.modules.browser_profiles.application.auth_state import (
+        BrowserAuthStateService,
+    )
+    from agenttest.modules.browser_profiles.infrastructure.auth_state_cipher import (
+        BrowserAuthStateCipher,
+    )
+
+    if settings.model_credential_key:
+        encoded = settings.model_credential_key
+        key = urlsafe_b64decode(encoded + "=" * (-len(encoded) % 4))
+    else:
+        key = sha256(f"local-browser-auth:{settings.internal_api_token}".encode()).digest()
+    return BrowserAuthStateService(BrowserAuthStateCipher(key))
+
+
 def build_run_dependencies(settings: Settings) -> RunApiDependencies:
     engine = create_database_engine(str(settings.database_url))
     session_factory = create_session_factory(engine)
@@ -1108,6 +1138,7 @@ def _register_artifact_endpoints(
         _actor=_actor,
         _check_csrf=_check_csrf,
         _check_project=_check_project,
+        internal_token=settings.internal_api_token,
     )
     app.include_router(router, prefix="/api/v1")
 
@@ -1551,8 +1582,22 @@ def _register_security_scan_endpoints(
 
 
 def _register_credential_endpoints(app: FastAPI, settings: Settings, auth_deps) -> None:
+    from agenttest.modules.browser_profiles.api.lease_router import (
+        create_browser_session_lease_router,
+    )
+    from agenttest.modules.browser_profiles.application.leases import (
+        BrowserSessionLeaseService,
+    )
+    from agenttest.modules.browser_profiles.infrastructure.repository import (
+        SqlAlchemyBrowserProfileRepository,
+    )
+    from agenttest.modules.browser_profiles.infrastructure.scope_reader import (
+        SqlAlchemyBrowserSessionScopeReader,
+    )
     from agenttest.modules.environments.api.credential_router import create_credential_router
+    from agenttest.modules.environments.api.lease_router import create_credential_lease_router
     from agenttest.modules.environments.application.credentials import CredentialBindingService
+    from agenttest.modules.environments.application.leases import CredentialLeaseService
     from agenttest.modules.environments.infrastructure.credential_store import (
         SqlAlchemyCredentialRepository,
     )
@@ -1589,6 +1634,53 @@ def _register_credential_endpoints(app: FastAPI, settings: Settings, auth_deps) 
             settings=settings,
             service=CredentialBindingService(
                 SqlAlchemyCredentialRepository(session_factory), cipher
+            ),
+        ),
+        prefix="/api/v1",
+    )
+    if cipher is not None:
+
+        async def scope_check(project_id, run_id, run_case_id):
+            from sqlalchemy import text
+
+            async with session_factory() as session:
+                result = await session.scalar(
+                    text(
+                        """
+                        SELECT 1
+                        FROM run_cases rc
+                        JOIN runs r ON r.id = rc.run_id
+                        WHERE r.project_id = :project_id
+                          AND r.id = :run_id
+                          AND rc.id = :run_case_id
+                          AND r.status = 'running'
+                        """
+                    ),
+                    {
+                        "project_id": project_id,
+                        "run_id": run_id,
+                        "run_case_id": run_case_id,
+                    },
+                )
+            return result is not None
+
+        app.include_router(
+            create_credential_lease_router(
+                internal_token=settings.internal_api_token,
+                service=CredentialLeaseService(
+                    SqlAlchemyCredentialRepository(session_factory), cipher
+                ),
+                scope_check=scope_check,
+            ),
+            prefix="/api/v1",
+        )
+    app.include_router(
+        create_browser_session_lease_router(
+            internal_token=settings.internal_api_token,
+            service=BrowserSessionLeaseService(
+                repository=SqlAlchemyBrowserProfileRepository(session_factory),
+                auth_state=build_browser_auth_state_service(settings),
+                scope_reader=SqlAlchemyBrowserSessionScopeReader(session_factory),
             ),
         ),
         prefix="/api/v1",
@@ -1899,10 +1991,20 @@ def _register_browser_profile_endpoints(
     auth_deps,  # AuthApiDependencies
 ) -> None:
     """注册浏览器实例 Profile CRUD API。"""
+    from pathlib import Path
+
     from fastapi import Request
+    from sqlalchemy import text
 
     from agenttest.modules.browser_profiles.api.router import (
+        BrowserProfileApiDependencies,
         create_browser_profile_router,
+    )
+    from agenttest.modules.browser_profiles.infrastructure.repository import (
+        SqlAlchemyBrowserProfileRepository,
+    )
+    from agenttest.modules.browser_profiles.infrastructure.runtime import (
+        ManagedBrowserProfileRuntime,
     )
     from agenttest.shared.infrastructure.database import (
         create_database_engine,
@@ -1912,15 +2014,20 @@ def _register_browser_profile_endpoints(
     engine = create_database_engine(str(settings.database_url))
     session_factory = create_session_factory(engine)
 
-    async def check_project(project_id):
-        from sqlalchemy import text
-
+    async def check_project(actor, project_id, write):
+        role = str(getattr(actor, "role", ""))
+        if role == "super_admin":
+            return
+        user_id = getattr(getattr(actor, "user_id", None), "value", None)
         async with session_factory() as session:
             result = await session.execute(
-                text("SELECT 1 FROM projects WHERE id = :pid"),
-                {"pid": project_id},
+                text("SELECT role FROM project_members WHERE project_id = :pid AND user_id = :uid"),
+                {"pid": project_id, "uid": user_id},
             )
-            if result.scalar() is None:
+            membership_role = result.scalar()
+            if membership_role is None or (
+                write and str(membership_role) not in {"developer", "tester"}
+            ):
                 from fastapi import HTTPException
 
                 raise HTTPException(status_code=404, detail="Project not found")
@@ -1935,5 +2042,10 @@ def _register_browser_profile_endpoints(
         settings=settings,
         actor_for=actor_for,
         check_project=check_project,
+        dependencies=BrowserProfileApiDependencies(
+            repository=SqlAlchemyBrowserProfileRepository(session_factory),
+            runtime=ManagedBrowserProfileRuntime(Path(settings.browser_profile_root)),
+            auth_state=build_browser_auth_state_service(settings),
+        ),
     )
     app.include_router(router)

@@ -336,6 +336,11 @@ export function AgentVersionDialog({
       setAdvancedOpen(false);
       return;
     }
+    if (loginStrategy === "browser_profile" && !browserProfileId) {
+      setError("请选择登录态可用的浏览器实例");
+      setAdvancedOpen(false);
+      return;
+    }
     if (loginStrategy === "username_password") {
       setError("请先保存账号密码为项目凭证");
       return;
@@ -706,10 +711,20 @@ function TargetSection({
             onChange={(event) => onBrowserProfileIdChange(event.target.value)}
             value={browserProfileId}
           >
-            <option value="">运行时新建临时浏览器</option>
+            <option value="">请选择登录态可用的浏览器实例</option>
             {browserProfiles.map((profile) => (
-              <option key={profile.profile_id} value={profile.profile_id}>
-                {profile.name}（{profile.target_domain}）
+              <option
+                disabled={profile.auth_state_status !== "ready"}
+                key={profile.profile_id}
+                value={profile.profile_id}
+              >
+                {profile.name}（
+                {profile.auth_state_status === "ready"
+                  ? "登录态可用"
+                  : profile.auth_state_status === "expired"
+                    ? "已过期"
+                    : "未就绪"}
+                ）
               </option>
             ))}
           </DropdownSelect>

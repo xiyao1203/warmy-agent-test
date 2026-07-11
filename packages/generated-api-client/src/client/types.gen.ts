@@ -242,6 +242,12 @@ export type ApplyRunCaseResultRequest = {
    */
   error_type?: string | null;
   /**
+   * Evidence
+   */
+  evidence?: {
+    [key: string]: unknown;
+  };
+  /**
    * Output
    */
   output?: {
@@ -1515,6 +1521,24 @@ export type ProjectResponse = {
 };
 
 /**
+ * RedeemCredentialLeaseRequest
+ */
+export type RedeemCredentialLeaseRequest = {
+  /**
+   * Binding Ids
+   */
+  binding_ids: Array<string>;
+  /**
+   * Run Case Id
+   */
+  run_case_id: string;
+  /**
+   * Run Id
+   */
+  run_id: string;
+};
+
+/**
  * RegenerateRequest
  */
 export type RegenerateRequest = {
@@ -1578,6 +1602,12 @@ export type RunCaseResponse = {
    */
   error_type: string | null;
   /**
+   * Evidence
+   */
+  evidence: {
+    [key: string]: unknown;
+  };
+  /**
    * Id
    */
   id: string;
@@ -1591,6 +1621,18 @@ export type RunCaseResponse = {
   output: {
     [key: string]: unknown;
   } | null;
+  /**
+   * Quality Summary
+   */
+  quality_summary: {
+    [key: string]: unknown;
+  };
+  /**
+   * Security Summary
+   */
+  security_summary: {
+    [key: string]: unknown;
+  };
   /**
    * Status
    */
@@ -2771,6 +2813,86 @@ export type HealthApiV1HealthGetResponses = {
 
 export type HealthApiV1HealthGetResponse =
   HealthApiV1HealthGetResponses[keyof HealthApiV1HealthGetResponses];
+
+export type RedeemApiV1InternalProjectsProjectIdCredentialLeasesRedeemPostData =
+  {
+    body: RedeemCredentialLeaseRequest;
+    headers?: {
+      /**
+       * X-Internal-Token
+       */
+      "x-internal-token"?: string | null;
+    };
+    path: {
+      /**
+       * Project Id
+       */
+      project_id: string;
+    };
+    query?: never;
+    url: "/api/v1/internal/projects/{project_id}/credential-leases:redeem";
+  };
+
+export type RedeemApiV1InternalProjectsProjectIdCredentialLeasesRedeemPostErrors =
+  {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+  };
+
+export type RedeemApiV1InternalProjectsProjectIdCredentialLeasesRedeemPostError =
+  RedeemApiV1InternalProjectsProjectIdCredentialLeasesRedeemPostErrors[keyof RedeemApiV1InternalProjectsProjectIdCredentialLeasesRedeemPostErrors];
+
+export type RedeemApiV1InternalProjectsProjectIdCredentialLeasesRedeemPostResponses =
+  {
+    /**
+     * Successful Response
+     */
+    200: unknown;
+  };
+
+export type UploadInternalArtifactApiV1InternalProjectsProjectIdRunsRunIdArtifactsPostData =
+  {
+    body?: never;
+    headers?: {
+      /**
+       * X-Internal-Token
+       */
+      "x-internal-token"?: string | null;
+    };
+    path: {
+      /**
+       * Project Id
+       */
+      project_id: string;
+      /**
+       * Run Id
+       */
+      run_id: string;
+    };
+    query?: never;
+    url: "/api/v1/internal/projects/{project_id}/runs/{run_id}/artifacts";
+  };
+
+export type UploadInternalArtifactApiV1InternalProjectsProjectIdRunsRunIdArtifactsPostErrors =
+  {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+  };
+
+export type UploadInternalArtifactApiV1InternalProjectsProjectIdRunsRunIdArtifactsPostError =
+  UploadInternalArtifactApiV1InternalProjectsProjectIdRunsRunIdArtifactsPostErrors[keyof UploadInternalArtifactApiV1InternalProjectsProjectIdRunsRunIdArtifactsPostErrors];
+
+export type UploadInternalArtifactApiV1InternalProjectsProjectIdRunsRunIdArtifactsPostResponses =
+  {
+    /**
+     * Successful Response
+     */
+    201: unknown;
+  };
 
 export type ListProjectsApiV1ProjectsGetData = {
   body?: never;

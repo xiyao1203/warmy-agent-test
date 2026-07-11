@@ -93,10 +93,35 @@ class RunCaseModel(Base):
     error_type: Mapped[str | None] = mapped_column(String(64))
     error_message: Mapped[str | None] = mapped_column(Text)
     duration_ms: Mapped[int | None] = mapped_column(Integer)
+    evidence: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    quality_summary: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    security_summary: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+
+class RunCaseStageEventModel(Base):
+    __tablename__ = "run_case_stage_events"
+    __table_args__ = (
+        Index("ix_run_case_stage_events_project_case", "project_id", "run_case_id"),
+        Index("ix_run_case_stage_events_run_created", "run_id", "created_at"),
+    )
+
+    id: Mapped[UUID] = mapped_column(primary_key=True)
+    project_id: Mapped[UUID] = mapped_column(
+        ForeignKey("projects.id", ondelete="CASCADE"), nullable=False
+    )
+    run_id: Mapped[UUID] = mapped_column(ForeignKey("runs.id", ondelete="CASCADE"), nullable=False)
+    run_case_id: Mapped[UUID] = mapped_column(
+        ForeignKey("run_cases.id", ondelete="CASCADE"), nullable=False
+    )
+    attempt: Mapped[int] = mapped_column(Integer, nullable=False)
+    stage: Mapped[str] = mapped_column(String(32), nullable=False)
+    status: Mapped[str] = mapped_column(String(32), nullable=False)
+    payload: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
 
 
 class RunEventModel(Base):

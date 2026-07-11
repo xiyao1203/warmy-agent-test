@@ -9,13 +9,19 @@
 
 from __future__ import annotations
 
+from datetime import UTC, datetime
 from uuid import uuid4
 
+from agenttest.bootstrap.run_source import (
+    browser_profile_snapshot,
+    secret_free_credential_bindings,
+)
 from agenttest.modules.agents.domain.invocation import (
     AgentInvocationConfig,
     InvocationProtocol,
     invocation_from_stored_config,
 )
+from agenttest.modules.browser_profiles.domain.entities import BrowserProfile
 from agenttest.modules.identity.public import UserId
 from agenttest.modules.projects.public import ProjectId
 from agenttest.modules.runs.application.ports import RunDefinition, RunDefinitionCase
@@ -127,15 +133,17 @@ def test_run_definition_includes_environment_config_without_credentials() -> Non
             "variables": {"API_ENV": "staging"},
             "headers": {"X-Custom": "value"},
             "credential_binding_ids": [str(uuid4())],
-            "credential_bindings": [
-                {
-                    "id": str(uuid4()),
-                    "kind": "api_key",
-                    "injection_location": "header",
-                    "injection_name": "Authorization",
-                    "encrypted_value": "aes-gcm:ciphertext",
-                }
-            ],
+            "credential_bindings": secret_free_credential_bindings(
+                [
+                    {
+                        "id": str(uuid4()),
+                        "kind": "api_key",
+                        "injection_location": "header",
+                        "injection_name": "Authorization",
+                        "encrypted_value": "aes-gcm:ciphertext",
+                    }
+                ]
+            ),
         },
     )
 
@@ -143,10 +151,51 @@ def test_run_definition_includes_environment_config_without_credentials() -> Non
     assert isinstance(env, dict)
     assert env["variables"] == {"API_ENV": "staging"}
     assert env["headers"] == {"X-Custom": "value"}
-    # 凭证值必须是密文，不能是明文
+    # Workflow 快照只保留注入元数据，不能包含密文或明文
     for binding in env.get("credential_bindings", []):
-        assert "encrypted_value" in binding
-        assert "api_key_plain" not in binding.get("kind", "")
+        assert "encrypted_value" not in binding
+        assert set(binding) == {"id", "kind", "injection_location", "injection_name"}
+
+
+def test_run_source_strips_encrypted_credential_values() -> None:
+    result = secret_free_credential_bindings(
+        [
+            {
+                "id": str(uuid4()),
+                "kind": "bearer",
+                "injection_location": "header",
+                "injection_name": "Authorization",
+                "encrypted_value": "ciphertext",
+            }
+        ]
+    )
+
+    assert "encrypted_value" not in result[0]
+
+
+def test_run_source_browser_profile_snapshot_contains_only_immutable_reference() -> None:
+    now = datetime.now(UTC)
+    profile = BrowserProfile.create(
+        project_id=uuid4(),
+        name="TapNow",
+        target_domain="app.tapnow.ai",
+        created_by=uuid4(),
+        now=now,
+    )
+    profile.store_auth_state(
+        envelope="v1.encrypted-secret",
+        sha256="a" * 64,
+        saved_at=now,
+    )
+
+    snapshot = browser_profile_snapshot(profile)
+
+    assert snapshot == {
+        "browser_profile_id": str(profile.id),
+        "auth_state_version": 1,
+        "auth_state_sha256": "a" * 64,
+    }
+    assert "encrypted" not in repr(snapshot)
 
 
 def test_run_definition_includes_scorer_configs_for_all_scorer_types() -> None:
@@ -305,6 +354,30 @@ def test_payload_includes_environment_config_from_plugin_snapshot() -> None:
         "variables": {"STAGE": "test"},
         "headers": {"Accept": "application/json"},
     }
+
+
+def test_payload_includes_browser_profile_reference_without_auth_material() -> None:
+    definition = make_run_definition()
+    definition.plugin_snapshot["browser_profile_snapshot"] = {
+        "browser_profile_id": str(uuid4()),
+        "auth_state_version": 3,
+        "auth_state_sha256": "b" * 64,
+    }
+    run = make_run(definition)
+
+    payload = _payload(
+        run,
+        make_cases(run, definition),
+        control_api_base_url="https://control.example",
+        internal_api_token="secret-token",
+    )
+
+    assert (
+        payload["browser_profile_snapshot"]
+        == definition.plugin_snapshot["browser_profile_snapshot"]
+    )
+    assert "cookie" not in repr(payload).lower()
+    assert "auth_state_envelope" not in repr(payload)
 
 
 # ── 协议兼容性测试 ─────────────────────────────────────────────────────

@@ -281,6 +281,12 @@ def test_internal_result_callback_updates_run_and_cases() -> None:
                     "output": {"answer": "hello world"},
                     "trace": [{"name": "http.request", "status": "ok"}],
                     "duration_ms": 42,
+                    "evidence": {
+                        "execution_outcome": "success",
+                        "quality_decision": "pass",
+                        "security_decision": "clear",
+                        "canvas": {"nodes": [], "connections": []},
+                    },
                 }
             ]
         },
@@ -295,6 +301,8 @@ def test_internal_result_callback_updates_run_and_cases() -> None:
     assert updated_cases[0]["status"] == "passed"
     assert updated_cases[0]["output"] == {"answer": "hello world"}
     assert updated_cases[0]["trace"][0]["name"] == "http.request"
+    assert updated_cases[0]["evidence"]["execution_outcome"] == "success"
+    assert updated_cases[0]["quality_summary"] == {"decision": "pass"}
 
 
 def test_internal_result_callback_requires_token() -> None:

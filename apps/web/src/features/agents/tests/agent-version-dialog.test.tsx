@@ -1,7 +1,10 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { listBrowserProfiles } from "@/features/browser-profiles/api";
+import {
+  type BrowserProfile,
+  listBrowserProfiles,
+} from "@/features/browser-profiles/api";
 import {
   createCredentialBinding,
   listCredentialBindings,
@@ -18,19 +21,19 @@ vi.mock("@/features/environments/api", () => ({
   listCredentialBindings: vi.fn(),
 }));
 
-const browserProfile = {
-  cdp_endpoint: "http://127.0.0.1:9222",
-  cdp_port: 9222,
+const browserProfile: BrowserProfile = {
+  auth_state_status: "ready",
+  auth_state_updated_at: "2026-07-09T10:00:00Z",
+  auth_state_version: 2,
   created_at: "2026-07-09T10:00:00Z",
   last_login_at: "2026-07-09T10:00:00Z",
   name: "TapNow 已登录态",
   profile_id: "profile-1",
   project_id: "project-1",
   status: "ready",
-  storage_state_path: "s3://profiles/profile-1.json",
   target_domain: "app.tapnow.ai",
   updated_at: "2026-07-09T10:00:00Z",
-  user_data_dir: "/tmp/profile-1",
+  last_verified_at: "2026-07-09T10:05:00Z",
 };
 
 const credential = {
@@ -164,5 +167,33 @@ describe("AgentVersionDialog target integration", () => {
     expect(versionPayload).toContain("credential-1");
     expect(versionPayload).not.toContain("secret-password-123");
     expect(versionPayload).not.toContain("tapnow-user@example.com");
+  });
+
+  it("disables expired browser profiles", async () => {
+    vi.mocked(listBrowserProfiles).mockResolvedValue([
+      browserProfile,
+      {
+        ...browserProfile,
+        auth_state_status: "expired" as const,
+        name: "已过期实例",
+        profile_id: "profile-expired",
+      },
+    ]);
+    render(
+      <AgentVersionDialog
+        agentId="agent-1"
+        onSubmit={vi.fn()}
+        projectId="project-1"
+        triggerLabel="创建版本"
+      />,
+    );
+    fireEvent.click(screen.getByRole("button", { name: "创建版本" }));
+    fireEvent.change(await screen.findByLabelText("登录方式"), {
+      target: { value: "browser_profile" },
+    });
+
+    const expired = screen.getByRole("option", { name: /已过期实例/ });
+    expect(expired).toBeDisabled();
+    expect(expired).toHaveTextContent("已过期");
   });
 });

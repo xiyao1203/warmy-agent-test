@@ -176,7 +176,5 @@ class AgentConfig:
             adapter_id=str(data.get("adapter_id") or "") or None,
             plugin_id=str(data.get("plugin_id") or "") or None,
             plugin_version=str(data.get("plugin_version") or "") or None,
-            target_config=(
-                dict(raw_target_config) if isinstance(raw_target_config, dict) else {}
-            ),
+            target_config=(dict(raw_target_config) if isinstance(raw_target_config, dict) else {}),
         )

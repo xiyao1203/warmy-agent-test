@@ -5,6 +5,7 @@ import {
   MoreHorizontal,
   PlayCircle,
   Plus,
+  ShieldCheck,
   Square,
   Trash2,
   UserCheck,
@@ -64,6 +65,7 @@ type BrowserProfileListProps = {
     payload: { stop_after_save?: boolean },
   ) => Promise<BrowserProfile>;
   onStop?: (profileId: string) => Promise<BrowserProfile>;
+  onVerify?: (profileId: string) => Promise<BrowserProfile>;
   projectId: string;
 };
 
@@ -80,6 +82,13 @@ function statusBadge(status: string) {
   return <Badge tone={info.tone}>{info.label}</Badge>;
 }
 
+function authStateBadge(status: BrowserProfile["auth_state_status"]) {
+  if (status === "ready") return <Badge tone="success">登录态可用</Badge>;
+  if (status === "expired") return <Badge tone="danger">登录态已过期</Badge>;
+  if (status === "error") return <Badge tone="danger">登录态异常</Badge>;
+  return <Badge tone="neutral">未保存登录态</Badge>;
+}
+
 export function BrowserProfileList({
   profiles = [],
   error,
@@ -90,6 +99,7 @@ export function BrowserProfileList({
   onStart,
   onCompleteLogin,
   onStop,
+  onVerify,
   projectId,
 }: BrowserProfileListProps) {
   const [createOpen, setCreateOpen] = useState(false);
@@ -228,6 +238,19 @@ export function BrowserProfileList({
     }
   }
 
+  async function handleVerify(profile: BrowserProfile) {
+    if (!onVerify) return;
+    setBusyProfileId(profile.profile_id);
+    setActionError("");
+    try {
+      await onVerify(profile.profile_id);
+    } catch (err) {
+      setActionError(err instanceof Error ? err.message : "验证登录状态失败");
+    } finally {
+      setBusyProfileId("");
+    }
+  }
+
   if (loading) {
     return <ProfileListSkeleton />;
   }
@@ -253,7 +276,7 @@ export function BrowserProfileList({
           <h1 className="text-2xl font-semibold tracking-tight">浏览器实例</h1>
           <p className="mt-1 text-sm text-[var(--muted)]">
             新建实例后启动浏览器，人工登录并确认保存；测试计划选择后，Codex
-            浏览器用例会复用这个独立浏览器目录。
+            测试用例会在隔离上下文中安全复用加密登录态。
           </p>
         </div>
         <Dialog open={createOpen} onOpenChange={setCreateOpen}>
@@ -370,7 +393,7 @@ export function BrowserProfileList({
           </p>
           <p>
             <span className="font-medium text-[var(--ink)]">浏览器用例：</span>
-            Codex 浏览器执行会复用实例的用户目录。
+            Worker 通过短期租约恢复登录态，不读取浏览器目录。
           </p>
           <p>
             <span className="font-medium text-[var(--ink)]">测试执行：</span>
@@ -404,12 +427,11 @@ export function BrowserProfileList({
             <TableHeader className="bg-[var(--canvas-soft)]">
               <TableRow>
                 <TableHead className="w-[24%]">实例</TableHead>
-                <TableHead className="w-[17%]">目标域名</TableHead>
-                <TableHead className="w-[8%]">端口</TableHead>
-                <TableHead className="w-[9%]">状态</TableHead>
-                <TableHead className="w-[10%]">登录态</TableHead>
-                <TableHead className="w-[10%]">创建</TableHead>
-                <TableHead className="w-[22%] whitespace-nowrap">
+                <TableHead className="w-[18%]">目标域名</TableHead>
+                <TableHead className="w-[10%]">状态</TableHead>
+                <TableHead className="w-[13%]">登录态</TableHead>
+                <TableHead className="w-[11%]">最近验证</TableHead>
+                <TableHead className="w-[24%] whitespace-nowrap">
                   操作
                 </TableHead>
               </TableRow>
@@ -430,26 +452,22 @@ export function BrowserProfileList({
                       <span className="italic">未设置</span>
                     )}
                   </TableCell>
-                  <TableCell className="text-center font-mono text-xs text-[var(--muted)]">
-                    {profile.cdp_port || "-"}
-                  </TableCell>
                   <TableCell className="text-center">
                     {statusBadge(profile.status)}
                   </TableCell>
                   <TableCell className="text-center">
-                    {profile.storage_state_path ? (
-                      <Badge tone="success">已登录</Badge>
-                    ) : profile.last_login_at ? (
-                      <Badge tone="success">已确认登录</Badge>
-                    ) : profile.status === "running" ? (
+                    {profile.status === "running" &&
+                    profile.auth_state_status === "missing" ? (
                       <Badge tone="warning">登录中</Badge>
                     ) : (
-                      <Badge tone="neutral">未确认</Badge>
+                      authStateBadge(profile.auth_state_status)
                     )}
                   </TableCell>
                   <TableCell className="text-center text-xs text-[var(--muted)]">
-                    {profile.created_at
-                      ? new Date(profile.created_at).toLocaleDateString("zh-CN")
+                    {profile.last_verified_at
+                      ? new Date(profile.last_verified_at).toLocaleString(
+                          "zh-CN",
+                        )
                       : "-"}
                   </TableCell>
                   <TableCell>
@@ -484,20 +502,39 @@ export function BrowserProfileList({
                           </Button>
                         </>
                       ) : (
-                        <Button
-                          className="h-8 shrink-0 whitespace-nowrap px-4 text-xs"
-                          disabled={
-                            busyProfileId === profile.profile_id || !onStart
-                          }
-                          onClick={() => void handleStart(profile)}
-                          variant="primary"
-                        >
-                          <PlayCircle
-                            aria-hidden="true"
-                            className="mr-1 size-4"
-                          />
-                          启动并登录
-                        </Button>
+                        <>
+                          <Button
+                            className="h-8 shrink-0 whitespace-nowrap px-4 text-xs"
+                            disabled={
+                              busyProfileId === profile.profile_id || !onStart
+                            }
+                            onClick={() => void handleStart(profile)}
+                            variant="primary"
+                          >
+                            <PlayCircle
+                              aria-hidden="true"
+                              className="mr-1 size-4"
+                            />
+                            启动并登录
+                          </Button>
+                          {profile.auth_state_status === "ready" ? (
+                            <Button
+                              className="h-8 shrink-0 whitespace-nowrap px-3 text-xs"
+                              disabled={
+                                busyProfileId === profile.profile_id ||
+                                !onVerify
+                              }
+                              onClick={() => void handleVerify(profile)}
+                              variant="secondary"
+                            >
+                              <ShieldCheck
+                                aria-hidden="true"
+                                className="mr-1 size-3"
+                              />
+                              验证登录态
+                            </Button>
+                          ) : null}
+                        </>
                       )}
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
@@ -580,7 +617,7 @@ export function BrowserProfileList({
           <DialogTitle>删除浏览器实例</DialogTitle>
           <DialogDescription>
             确定要删除「{deletingProfile?.name}
-            」吗？会从平台列表移除，并停止正在运行的浏览器；已保存的数据目录不会被删除。
+            」吗？会停止正在运行的浏览器，并删除平台保存的加密登录态。
           </DialogDescription>
           {deleteError ? (
             <p className="mt-2 text-sm text-[var(--destructive)]">
