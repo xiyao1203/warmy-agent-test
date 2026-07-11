@@ -1591,9 +1591,6 @@ def _register_credential_endpoints(app: FastAPI, settings: Settings, auth_deps) 
     from agenttest.modules.browser_profiles.infrastructure.repository import (
         SqlAlchemyBrowserProfileRepository,
     )
-    from agenttest.modules.browser_profiles.infrastructure.scope_reader import (
-        SqlAlchemyBrowserSessionScopeReader,
-    )
     from agenttest.modules.environments.api.credential_router import create_credential_router
     from agenttest.modules.environments.api.lease_router import create_credential_lease_router
     from agenttest.modules.environments.application.credentials import CredentialBindingService
@@ -1602,6 +1599,9 @@ def _register_credential_endpoints(app: FastAPI, settings: Settings, auth_deps) 
         SqlAlchemyCredentialRepository,
     )
     from agenttest.modules.projects.public import ProjectNotFoundError
+    from agenttest.modules.runs.infrastructure.browser_session_scope_reader import (
+        SqlAlchemyBrowserSessionScopeReader,
+    )
 
     engine = create_database_engine(str(settings.database_url))
     session_factory = create_session_factory(engine)

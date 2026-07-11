@@ -5,31 +5,17 @@ from uuid import UUID
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
-from agenttest.modules.browser_profiles.application.leases import (
+from agenttest.modules.browser_profiles.public import (
     BrowserSessionSnapshotRef,
+    snapshot_ref_from_plugin_snapshot,
 )
 from agenttest.modules.runs.infrastructure.persistence.models import RunCaseModel, RunModel
 from agenttest.shared.infrastructure.database import session_scope
 
 
-def snapshot_ref_from_plugin_snapshot(
-    plugin_snapshot: dict,
-) -> BrowserSessionSnapshotRef | None:
-    value = plugin_snapshot.get("browser_profile_snapshot")
-    if not isinstance(value, dict):
-        return None
-    try:
-        profile_id = UUID(str(value.get("browser_profile_id") or ""))
-        version = int(value.get("auth_state_version") or 0)
-        sha256 = str(value.get("auth_state_sha256") or "")
-    except (TypeError, ValueError):
-        return None
-    if version <= 0 or len(sha256) != 64:
-        return None
-    return BrowserSessionSnapshotRef(profile_id, version, sha256)
-
-
 class SqlAlchemyBrowserSessionScopeReader:
+    """Resolve a browser snapshot using Runs-owned persistence models."""
+
     def __init__(self, session_factory: async_sessionmaker[AsyncSession]) -> None:
         self._session_factory = session_factory
 

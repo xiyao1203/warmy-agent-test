@@ -1,6 +1,6 @@
 from uuid import uuid4
 
-from agenttest.modules.browser_profiles.infrastructure.scope_reader import (
+from agenttest.modules.browser_profiles.public import (
     snapshot_ref_from_plugin_snapshot,
 )
 
