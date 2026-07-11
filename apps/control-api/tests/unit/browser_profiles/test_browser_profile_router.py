@@ -23,7 +23,9 @@ def test_normalise_login_url_adds_https_to_domain() -> None:
 
 def test_launch_existing_running_profile_opens_login_url(monkeypatch, tmp_path: Path) -> None:
     opened: list[tuple[int, str]] = []
-    monkeypatch.setattr(router, "_read_cdp_endpoint", lambda _port: "ws://127.0.0.1:9222/devtools/browser/abc")
+    monkeypatch.setattr(
+        router, "_read_cdp_endpoint", lambda _port: "ws://127.0.0.1:9222/devtools/browser/abc"
+    )
     monkeypatch.setattr(router, "_open_cdp_url", lambda port, url: opened.append((port, url)))
 
     profile = {
@@ -47,7 +49,9 @@ def test_launch_stopped_profile_replaces_busy_port(monkeypatch, tmp_path: Path) 
     monkeypatch.setattr(router, "_is_port_free", lambda port: port == 9223)
     monkeypatch.setattr(router, "_find_browser_executable", lambda: "/bin/echo")
     monkeypatch.setattr(router, "_find_free_port", lambda _start=9222: 9223)
-    monkeypatch.setattr(router, "_wait_for_cdp", lambda port: f"ws://127.0.0.1:{port}/devtools/browser/abc")
+    monkeypatch.setattr(
+        router, "_wait_for_cdp", lambda port: f"ws://127.0.0.1:{port}/devtools/browser/abc"
+    )
     monkeypatch.setattr(router, "_used_ports", lambda _project_id: {9222})
 
     class FakeProcess:
