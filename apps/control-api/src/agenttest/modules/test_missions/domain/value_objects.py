@@ -96,6 +96,17 @@ class MissionRevision:
     confirmed_at: datetime
 
 
+@dataclass(frozen=True, slots=True)
+class MissionEvent:
+    event_id: UUID
+    project_id: UUID
+    mission_id: UUID
+    sequence: int
+    event_type: str
+    payload: dict[str, Any]
+    created_at: datetime
+
+
 def canonical_snapshot_hash(snapshot: dict[str, Any]) -> str:
     encoded = json.dumps(
         snapshot,
