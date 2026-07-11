@@ -64,6 +64,8 @@ class TestMission:
         self.facts[candidate.key] = candidate
         self.updated_at = datetime.now(UTC)
         self.lock_version += 1
+        if self.status is MissionStatus.DISCOVERING:
+            return True
         completeness = evaluate_completeness(self.facts)
         self.status = (
             MissionStatus.READY_FOR_CONFIRMATION
@@ -107,6 +109,29 @@ class TestMission:
         self.updated_at = now
         self.lock_version += 1
         return revision
+
+    def begin_discovery(self) -> None:
+        if self.status not in {
+            MissionStatus.COLLECTING,
+            MissionStatus.NEEDS_INPUT,
+            MissionStatus.READY_FOR_CONFIRMATION,
+        }:
+            raise ValueError("Mission cannot start discovery from current status")
+        self.status = MissionStatus.DISCOVERING
+        self.updated_at = datetime.now(UTC)
+        self.lock_version += 1
+
+    def finish_discovery(self) -> None:
+        if self.status is not MissionStatus.DISCOVERING:
+            raise ValueError("Mission discovery is not running")
+        completeness = evaluate_completeness(self.facts)
+        self.status = (
+            MissionStatus.READY_FOR_CONFIRMATION
+            if completeness.complete
+            else MissionStatus.NEEDS_INPUT
+        )
+        self.updated_at = datetime.now(UTC)
+        self.lock_version += 1
 
     def reopen_for_revision(self) -> None:
         if self.status not in {
