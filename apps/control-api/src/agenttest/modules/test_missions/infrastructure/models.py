@@ -50,6 +50,7 @@ class TestMissionModel(Base):
     created_by: Mapped[UUID] = mapped_column(ForeignKey("users.id"), nullable=False)
     status: Mapped[str] = mapped_column(String(32), nullable=False)
     active_revision_id: Mapped[UUID | None] = mapped_column(nullable=True)
+    workflow_id: Mapped[str | None] = mapped_column(String(255), nullable=True)
     lock_version: Mapped[int] = mapped_column(Integer, nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)

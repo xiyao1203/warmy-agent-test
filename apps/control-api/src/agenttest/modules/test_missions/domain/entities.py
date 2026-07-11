@@ -28,6 +28,7 @@ class TestMission:
     facts: dict[str, MissionFact]
     revisions: list[MissionRevision]
     active_revision_id: UUID | None
+    workflow_id: str | None
     lock_version: int
     created_at: datetime
     updated_at: datetime
@@ -45,6 +46,7 @@ class TestMission:
             facts={},
             revisions=[],
             active_revision_id=None,
+            workflow_id=None,
             lock_version=0,
             created_at=now,
             updated_at=now,
@@ -86,12 +88,11 @@ class TestMission:
         if not completeness.complete:
             missing = ", ".join(completeness.missing)
             raise ValueError(f"Mission is missing required facts: {missing}")
-        snapshot: dict[str, Any] = {
-            "facts": {key: fact.public_snapshot() for key, fact in sorted(self.facts.items())},
-            "execution": dict(execution or {}),
-            "budget": dict(budget or {}),
-            "action_allowlist": list(action_allowlist or ["read"]),
-        }
+        snapshot = self.preview_snapshot(
+            execution=execution,
+            budget=budget,
+            action_allowlist=action_allowlist,
+        )
         now = datetime.now(UTC)
         revision = MissionRevision(
             revision_id=uuid4(),
@@ -105,10 +106,39 @@ class TestMission:
         )
         self.revisions.append(revision)
         self.active_revision_id = revision.revision_id
+        self.workflow_id = None
         self.status = MissionStatus.CONFIRMED
         self.updated_at = now
         self.lock_version += 1
         return revision
+
+    def preview_snapshot(
+        self,
+        *,
+        execution: dict[str, Any] | None = None,
+        budget: dict[str, Any] | None = None,
+        action_allowlist: list[str] | None = None,
+    ) -> dict[str, Any]:
+        completeness = evaluate_completeness(self.facts)
+        if not completeness.complete:
+            missing = ", ".join(completeness.missing)
+            raise ValueError(f"Mission is missing required facts: {missing}")
+        return {
+            "facts": {key: fact.public_snapshot() for key, fact in sorted(self.facts.items())},
+            "execution": dict(execution or {}),
+            "budget": dict(budget or {}),
+            "action_allowlist": list(action_allowlist or ["read"]),
+        }
+
+    def mark_provisioning(self, workflow_id: str) -> None:
+        if self.status is not MissionStatus.CONFIRMED:
+            raise ValueError("Mission must be confirmed before provisioning")
+        if not workflow_id.strip():
+            raise ValueError("Mission workflow id is required")
+        self.workflow_id = workflow_id
+        self.status = MissionStatus.PROVISIONING
+        self.updated_at = datetime.now(UTC)
+        self.lock_version += 1
 
     def begin_discovery(self) -> None:
         if self.status not in {
@@ -143,6 +173,7 @@ class TestMission:
             raise ValueError("Mission is already editable")
         self.status = MissionStatus.COLLECTING
         self.active_revision_id = None
+        self.workflow_id = None
         self.updated_at = datetime.now(UTC)
         self.lock_version += 1
 

@@ -206,6 +206,7 @@ def _mission_values(mission: TestMission) -> dict[str, object]:
         "created_by": mission.created_by,
         "status": mission.status.value,
         "active_revision_id": mission.active_revision_id,
+        "workflow_id": mission.workflow_id,
         "lock_version": mission.lock_version,
         "created_at": mission.created_at,
         "updated_at": mission.updated_at,
@@ -303,6 +304,7 @@ async def _load_mission(session: AsyncSession, model: TestMissionModel) -> TestM
             for revision in revisions
         ],
         active_revision_id=model.active_revision_id,
+        workflow_id=model.workflow_id,
         lock_version=model.lock_version,
         created_at=_utc(model.created_at),
         updated_at=_utc(model.updated_at),

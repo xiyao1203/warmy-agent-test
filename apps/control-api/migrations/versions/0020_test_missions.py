@@ -31,6 +31,7 @@ def upgrade() -> None:
         sa.Column("created_by", sa.Uuid(), nullable=False),
         sa.Column("status", sa.String(length=32), nullable=False),
         sa.Column("active_revision_id", sa.Uuid(), nullable=True),
+        sa.Column("workflow_id", sa.String(length=255), nullable=True),
         sa.Column("lock_version", sa.Integer(), nullable=False),
         sa.Column("created_at", sa.DateTime(timezone=True), nullable=False),
         sa.Column("updated_at", sa.DateTime(timezone=True), nullable=False),
