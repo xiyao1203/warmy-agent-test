@@ -647,6 +647,17 @@ class HandlerPlatformGateway:
         )
 
 
+class CompositePlatformGateway:
+    def __init__(self, platform: HandlerPlatformGateway, missions) -> None:
+        self._platform = platform
+        self._missions = missions
+
+    async def execute(self, capability: str, context: OrchestrationContext, payload: BaseModel):
+        if capability.startswith("test_missions."):
+            return await self._missions.execute(capability, context, payload)
+        return await self._platform.execute(capability, context, payload)
+
+
 def _artifact(kind: str, value: UUID, relation: str = "created") -> dict[str, str]:
     return {"type": kind, "id": str(value), "relation": relation}
 

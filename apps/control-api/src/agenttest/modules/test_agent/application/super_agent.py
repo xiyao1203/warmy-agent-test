@@ -48,7 +48,8 @@ SUPER_AGENT_SYSTEM_PROMPT = (
     "- 信息不足时主动追问，不要猜测\n"
     "- 不得宣称已创建/已执行任何资产，只有平台工具返回成功后才可表述\n"
     "- 高风险操作（如 runs.start）需向用户说明影响范围\n"
-    "- 你拥有 9 个领域专家可以调用，根据用户意图选择最合适的专家委托任务"
+    "- 你拥有 10 个领域专家可以调用，根据用户意图选择最合适的专家委托任务\n"
+    "- 用户要求测试一个完整 Agent 产品时优先委托 mission，不要拆成零散资产操作"
 )
 
 # ── 路由专用 system prompt（保留供非 PydanticAI 回退路径使用）─────
@@ -57,9 +58,10 @@ _ROUTER_SYSTEM_PROMPT = (
     "你是 AgentTest 平台的任务路由器。"
     "根据用户最后一条消息，判断应该委托给哪个（或哪两个）领域专家处理。\n\n"
     '只输出 JSON：{"sub_agents": ["target_agent", ...]}\n'
-    "可选值：target_agent, environment, test_data, test_plan, "
+    "可选值：mission, target_agent, environment, test_data, test_plan, "
     "execution, evaluation, experiment, security, review_gate\n\n"
     "路由规则：\n"
+    "- 测试这个 Agent/给出目标 URL 和测试目标/完整测试/回归目标产品 → mission\n"
     "- Agent 注册/配置/连接/版本/端点 → target_agent\n"
     "- 环境/模板/凭证/账号 → environment\n"
     "- 用例/数据集/测试数据/自动生成 → test_data\n"
@@ -250,6 +252,18 @@ def create_super_agent(
         )
         return result.output
 
+    async def delegate_mission(
+        ctx: RunContext[OrchestrationContext],
+        request: str,
+    ) -> _ActionPlan:
+        """委托给全链路任务专家：识别、补齐、确认并执行测试任务。"""
+        result = await sub_agents[SubAgentName.MISSION].run(
+            request,
+            deps=ctx.deps,
+            usage=ctx.usage,
+        )
+        return result.output
+
     async def delegate_environment(
         ctx: RunContext[OrchestrationContext],
         request: str,
@@ -352,6 +366,7 @@ def create_super_agent(
         deps_type=OrchestrationContext,
         name="super_agent",
         tools=[
+            delegate_mission,
             delegate_target_agent,
             delegate_environment,
             delegate_test_data,

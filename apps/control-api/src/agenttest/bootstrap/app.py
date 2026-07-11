@@ -1765,7 +1765,10 @@ def _register_test_agent_endpoints(
     from agenttest.modules.test_accounts.infrastructure.persistence.repositories import (
         SqlAlchemyTestAccountRepository,
     )
-    from agenttest.modules.test_agent.adapters.platform import HandlerPlatformGateway
+    from agenttest.modules.test_agent.adapters.platform import (
+        CompositePlatformGateway,
+        HandlerPlatformGateway,
+    )
     from agenttest.modules.test_agent.api.router import create_test_agent_router
     from agenttest.modules.test_agent.api.target_chat import create_target_chat_router
     from agenttest.modules.test_agent.application.conversation import SuperAgentConversation
@@ -1793,6 +1796,9 @@ def _register_test_agent_endpoints(
     from agenttest.modules.test_missions.api.router import (
         MissionApiDependencies,
         create_test_mission_router,
+    )
+    from agenttest.modules.test_missions.application.capability_gateway import (
+        MissionCapabilityGateway,
     )
     from agenttest.modules.test_missions.application.commands import (
         ConfirmMissionHandler,
@@ -1828,6 +1834,18 @@ def _register_test_agent_endpoints(
         task_queue=settings.model_runner_task_queue,
         allow_private_network=settings.model_allow_private_network,
     )
+    mission_repository = SqlAlchemyMissionRepository(session_factory)
+    mission_preflight = MissionPreflight()
+    mission_runtime = TemporalMissionOrchestrator(
+        address=settings.temporal_address,
+        namespace=settings.temporal_namespace,
+        task_queue=settings.temporal_task_queue,
+        callback_base_url=str(settings.control_api_base_url),
+    )
+    mission_upsert = UpsertMissionHandler(mission_repository, MissionIntake())
+    mission_preview = PreviewMissionHandler(mission_repository, mission_preflight)
+    mission_confirm = ConfirmMissionHandler(mission_repository, mission_preflight, mission_runtime)
+    mission_get = GetMissionHandler(mission_repository, mission_preflight)
     gateway = HandlerPlatformGateway(
         agents=build_agent_dependencies(settings),
         datasets=build_dataset_dependencies(settings),
@@ -1849,15 +1867,16 @@ def _register_test_agent_endpoints(
             allow_private_network=settings.security_scan_allow_private_network
         ),
     )
-    registry = build_platform_registry(gateway)
-    mission_repository = SqlAlchemyMissionRepository(session_factory)
-    mission_preflight = MissionPreflight()
-    mission_runtime = TemporalMissionOrchestrator(
-        address=settings.temporal_address,
-        namespace=settings.temporal_namespace,
-        task_queue=settings.temporal_task_queue,
-        callback_base_url=str(settings.control_api_base_url),
+    composite_gateway = CompositePlatformGateway(
+        gateway,
+        MissionCapabilityGateway(
+            upsert=mission_upsert,
+            preview=mission_preview,
+            confirm=mission_confirm,
+            get=mission_get,
+        ),
     )
+    registry = build_platform_registry(composite_gateway)
 
     async def check_project(project_id):
         from sqlalchemy import text
@@ -1899,7 +1918,7 @@ def _register_test_agent_endpoints(
             model_config_service,
             temporal_invoker,
             capabilities=registry.describe_all(),
-            platform_gateway=gateway,
+            platform_gateway=composite_gateway,
         ),
         agent_orchestrator=SuperAgentOrchestrator(registry, orchestration),
         generation_coordinator=GenerationCoordinator(
@@ -1912,12 +1931,10 @@ def _register_test_agent_endpoints(
     app.include_router(
         create_test_mission_router(
             dependencies=MissionApiDependencies(
-                upsert=UpsertMissionHandler(mission_repository, MissionIntake()),
-                preview=PreviewMissionHandler(mission_repository, mission_preflight),
-                confirm=ConfirmMissionHandler(
-                    mission_repository, mission_preflight, mission_runtime
-                ),
-                get=GetMissionHandler(mission_repository, mission_preflight),
+                upsert=mission_upsert,
+                preview=mission_preview,
+                confirm=mission_confirm,
+                get=mission_get,
             ),
             actor_for=actor_for,
             check_project=check_project,
