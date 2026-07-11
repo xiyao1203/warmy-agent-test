@@ -140,6 +140,31 @@ class TestMission:
         self.updated_at = datetime.now(UTC)
         self.lock_version += 1
 
+    def mark_running(self) -> None:
+        if self.status not in {MissionStatus.PROVISIONING, MissionStatus.RUNNING}:
+            raise ValueError("Mission cannot enter running state")
+        self.status = MissionStatus.RUNNING
+        self.updated_at = datetime.now(UTC)
+        self.lock_version += 1
+
+    def complete(self) -> None:
+        if self.status not in {MissionStatus.RUNNING, MissionStatus.PROVISIONING}:
+            raise ValueError("Mission cannot complete from current status")
+        now = datetime.now(UTC)
+        self.status = MissionStatus.COMPLETED
+        self.updated_at = now
+        self.completed_at = now
+        self.lock_version += 1
+
+    def cancel(self) -> None:
+        if self.status in {MissionStatus.COMPLETED, MissionStatus.CANCELLED}:
+            return
+        now = datetime.now(UTC)
+        self.status = MissionStatus.CANCELLED
+        self.updated_at = now
+        self.completed_at = now
+        self.lock_version += 1
+
     def begin_discovery(self) -> None:
         if self.status not in {
             MissionStatus.COLLECTING,

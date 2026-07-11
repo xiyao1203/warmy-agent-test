@@ -3,14 +3,11 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from typing import Protocol
-from uuid import UUID
+from uuid import NAMESPACE_URL, UUID, uuid5
 
 from agenttest.modules.identity.public import User
 from agenttest.modules.projects.public import ProjectId
-from agenttest.modules.test_missions.application.compiler import (
-    MissionCompiler,
-    ProvisioningPlan,
-)
+from agenttest.modules.test_missions.application.compiler import MissionCompiler, ProvisioningPlan
 from agenttest.modules.test_missions.domain.value_objects import MissionRevision
 
 
@@ -59,31 +56,135 @@ class MissionStageService:
         self._receipts = receipts
 
     async def provision(
-        self,
-        *,
-        actor: User,
-        project_id: ProjectId,
-        session_id: UUID,
-        revision: MissionRevision,
+        self, *, actor: User, project_id: ProjectId, session_id: UUID, revision: MissionRevision
     ) -> StageReceipt:
-        existing = await self._receipts.get_stage_receipt(
-            project_id.value, revision.revision_id, "provision"
-        )
-        if existing is not None:
+        existing = await self._existing(project_id.value, revision.revision_id, "provision")
+        if existing:
             return existing
-        plan = self._compiler.compile(revision)
-        output = await self._execute_plan(actor, project_id, session_id, revision, plan)
-        receipt = StageReceipt(
-            receipt_id=UUID(bytes=revision.revision_id.bytes),
-            project_id=project_id.value,
-            revision_id=revision.revision_id,
-            stage="provision",
-            status="completed",
-            output=output,
-            created_at=datetime.now(UTC),
+        output = await self._execute_plan(
+            actor, project_id, session_id, revision, self._compiler.compile(revision)
         )
-        await self._receipts.save_stage_receipt(receipt)
-        return receipt
+        return await self._save(project_id.value, revision.revision_id, "provision", output)
+
+    async def start_run(
+        self, *, actor: User, project_id: ProjectId, session_id: UUID, revision: MissionRevision
+    ) -> StageReceipt:
+        existing = await self._existing(project_id.value, revision.revision_id, "start_run")
+        if existing:
+            return existing
+        provision = await self._required(project_id.value, revision.revision_id, "provision")
+        plan_version_id = str(provision.output["test_plan_version_id"])
+        result = await self._call(
+            "runs.start",
+            "execution",
+            actor,
+            project_id,
+            session_id,
+            {"test_plan_version_id": plan_version_id},
+            f"mission:{revision.revision_id}:start-run",
+        )
+        return await self._save(
+            project_id.value,
+            revision.revision_id,
+            "start_run",
+            {"run_id": _artifact_id(result, "run"), "test_plan_version_id": plan_version_id},
+        )
+
+    async def await_run(
+        self, *, actor: User, project_id: ProjectId, session_id: UUID, revision: MissionRevision
+    ) -> StageReceipt | None:
+        existing = await self._existing(project_id.value, revision.revision_id, "await_run")
+        if existing:
+            return existing
+        started = await self._required(project_id.value, revision.revision_id, "start_run")
+        run_id = str(started.output["run_id"])
+        result = await self._call(
+            "runs.list",
+            "execution",
+            actor,
+            project_id,
+            session_id,
+            {},
+            f"mission:{revision.revision_id}:read-run",
+        )
+        items = result.get("items")
+        run = (
+            next(
+                (
+                    item
+                    for item in items
+                    if isinstance(item, dict) and str(item.get("id")) == run_id
+                ),
+                None,
+            )
+            if isinstance(items, list)
+            else None
+        )
+        if run is None:
+            raise ValueError("Mission Run does not exist in project")
+        status = str(run.get("status") or "")
+        if status in {"queued", "running"}:
+            return None
+        return await self._save(
+            project_id.value,
+            revision.revision_id,
+            "await_run",
+            {"run_id": run_id, "run_status": status, "quality_passed": status == "passed"},
+        )
+
+    async def close_loop(
+        self, *, actor: User, project_id: ProjectId, session_id: UUID, revision: MissionRevision
+    ) -> StageReceipt:
+        existing = await self._existing(project_id.value, revision.revision_id, "close_loop")
+        if existing:
+            return existing
+        completed = await self._required(project_id.value, revision.revision_id, "await_run")
+        run_id = str(completed.output["run_id"])
+        report = await self._call(
+            "reports.generate",
+            "execution",
+            actor,
+            project_id,
+            session_id,
+            {"run_id": run_id},
+            f"mission:{revision.revision_id}:report",
+        )
+        reviews = await self._call(
+            "reviews.enqueue",
+            "review_gate",
+            actor,
+            project_id,
+            session_id,
+            {"run_id": run_id, "confidence_threshold": 0.5},
+            f"mission:{revision.revision_id}:reviews",
+        )
+        return await self._save(
+            project_id.value,
+            revision.revision_id,
+            "close_loop",
+            {
+                "run_id": run_id,
+                "run_status": completed.output.get("run_status"),
+                "report": report,
+                "reviews": reviews,
+            },
+        )
+
+    async def cancel_run(
+        self, *, actor: User, project_id: ProjectId, session_id: UUID, revision: MissionRevision
+    ) -> dict[str, object]:
+        started = await self._existing(project_id.value, revision.revision_id, "start_run")
+        if started is None:
+            return {"cancelled": True}
+        return await self._call(
+            "runs.cancel",
+            "execution",
+            actor,
+            project_id,
+            session_id,
+            {"id": str(started.output["run_id"])},
+            f"mission:{revision.revision_id}:cancel",
+        )
 
     async def _execute_plan(
         self,
@@ -105,7 +206,6 @@ class MissionStageService:
                 {"name": plan.name, "description": plan.description, "config": {}},
                 f"{prefix}:agent",
             )
-            agent_id = _artifact_id(agent, "agent")
             version = await self._call(
                 "agents.create_version",
                 "target_agent",
@@ -113,7 +213,7 @@ class MissionStageService:
                 project_id,
                 session_id,
                 {
-                    "agent_id": agent_id,
+                    "agent_id": _artifact_id(agent, "agent"),
                     "config": {
                         "api_url": plan.target_url,
                         "web_url": plan.target_url,
@@ -138,7 +238,6 @@ class MissionStageService:
             )
         if not agent_version_id:
             raise ValueError("Provisioning requires an Agent version")
-
         dataset = await self._call(
             "datasets.create_with_cases",
             "test_data",
@@ -245,12 +344,35 @@ class MissionStageService:
             idempotency_key=idempotency_key,
         )
 
+    async def _existing(self, project_id: UUID, revision_id: UUID, stage: str):
+        return await self._receipts.get_stage_receipt(project_id, revision_id, stage)
+
+    async def _required(self, project_id: UUID, revision_id: UUID, stage: str) -> StageReceipt:
+        receipt = await self._existing(project_id, revision_id, stage)
+        if receipt is None:
+            raise ValueError(f"Mission stage {stage} has not completed")
+        return receipt
+
+    async def _save(
+        self, project_id: UUID, revision_id: UUID, stage: str, output: dict[str, object]
+    ) -> StageReceipt:
+        receipt = StageReceipt(
+            receipt_id=uuid5(NAMESPACE_URL, f"agenttest:{revision_id}:{stage}"),
+            project_id=project_id,
+            revision_id=revision_id,
+            stage=stage,
+            status="completed",
+            output=output,
+            created_at=datetime.now(UTC),
+        )
+        await self._receipts.save_stage_receipt(receipt)
+        return receipt
+
 
 def _artifact_id(result: dict[str, object], kind: str) -> str:
     artifacts = result.get("artifacts")
-    if not isinstance(artifacts, list):
-        raise ValueError(f"Capability did not produce {kind}")
-    for item in artifacts:
-        if isinstance(item, dict) and item.get("type") == kind and item.get("id"):
-            return str(item["id"])
+    if isinstance(artifacts, list):
+        for item in artifacts:
+            if isinstance(item, dict) and item.get("type") == kind and item.get("id"):
+                return str(item["id"])
     raise ValueError(f"Capability did not produce {kind}")

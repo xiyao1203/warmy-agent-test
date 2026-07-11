@@ -13,6 +13,8 @@ from .activities import execute_agent_case, post_run_result
 from .browser_harness_activity import capture_page_snapshot
 from .codex_browser_activity import run_codex_browser_case
 from .deepeval_adapter import evaluate_deepeval_case
+from .mission_activities import execute_mission_stage
+from .mission_workflow import TestMissionWorkflow
 from .playwright_activity import run_playwright_case
 from .tapnow_activity import run_tapnow_case
 from .target_chat import TargetAgentChatWorkflow, execute_target_chat
@@ -50,7 +52,7 @@ async def run() -> None:
     worker = Worker(
         client,
         task_queue=settings.task_queue,
-        workflows=[RunWorkflow, TargetAgentChatWorkflow],
+        workflows=[RunWorkflow, TargetAgentChatWorkflow, TestMissionWorkflow],
         activities=[
             execute_agent_case,
             post_run_result,
@@ -60,6 +62,7 @@ async def run() -> None:
             execute_target_chat,
             run_tapnow_case,
             evaluate_deepeval_case,
+            execute_mission_stage,
         ],
     )
     await worker.run()

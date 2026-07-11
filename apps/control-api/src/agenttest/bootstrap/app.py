@@ -1747,6 +1747,9 @@ def _register_test_agent_endpoints(
     from agenttest.modules.gates.infrastructure.persistence.repositories import (
         SqlAlchemyReleaseGateRepository,
     )
+    from agenttest.modules.identity.infrastructure.persistence.repositories import (
+        SqlAlchemyUserRepository,
+    )
     from agenttest.modules.model_configs.infrastructure.temporal_invoker import (
         TemporalModelInvoker,
     )
@@ -1767,6 +1770,9 @@ def _register_test_agent_endpoints(
     from agenttest.modules.test_agent.api.target_chat import create_target_chat_router
     from agenttest.modules.test_agent.application.conversation import SuperAgentConversation
     from agenttest.modules.test_agent.application.generations import GenerationCoordinator
+    from agenttest.modules.test_agent.application.mission_executor import (
+        ConfirmedMissionAssetExecutor,
+    )
     from agenttest.modules.test_agent.application.orchestrator import SuperAgentOrchestrator
     from agenttest.modules.test_agent.application.platform_catalog import (
         build_platform_registry,
@@ -1780,6 +1786,32 @@ def _register_test_agent_endpoints(
     )
     from agenttest.modules.test_agent.infrastructure.target_runtime import (
         TemporalTargetAgentRuntime,
+    )
+    from agenttest.modules.test_missions.api.internal_router import (
+        create_internal_mission_stage_router,
+    )
+    from agenttest.modules.test_missions.api.router import (
+        MissionApiDependencies,
+        create_test_mission_router,
+    )
+    from agenttest.modules.test_missions.application.commands import (
+        ConfirmMissionHandler,
+        PreviewMissionHandler,
+        UpsertMissionHandler,
+    )
+    from agenttest.modules.test_missions.application.compiler import MissionCompiler
+    from agenttest.modules.test_missions.application.intake import MissionIntake
+    from agenttest.modules.test_missions.application.preflight import MissionPreflight
+    from agenttest.modules.test_missions.application.queries import GetMissionHandler
+    from agenttest.modules.test_missions.application.stage_controller import (
+        MissionStageController,
+    )
+    from agenttest.modules.test_missions.application.stages import MissionStageService
+    from agenttest.modules.test_missions.infrastructure.repositories import (
+        SqlAlchemyMissionRepository,
+    )
+    from agenttest.modules.test_missions.infrastructure.temporal_orchestrator import (
+        TemporalMissionOrchestrator,
     )
     from agenttest.shared.infrastructure.database import (
         create_database_engine,
@@ -1818,6 +1850,14 @@ def _register_test_agent_endpoints(
         ),
     )
     registry = build_platform_registry(gateway)
+    mission_repository = SqlAlchemyMissionRepository(session_factory)
+    mission_preflight = MissionPreflight()
+    mission_runtime = TemporalMissionOrchestrator(
+        address=settings.temporal_address,
+        namespace=settings.temporal_namespace,
+        task_queue=settings.temporal_task_queue,
+        callback_base_url=str(settings.control_api_base_url),
+    )
 
     async def check_project(project_id):
         from sqlalchemy import text
@@ -1869,6 +1909,36 @@ def _register_test_agent_endpoints(
         ),
     )
     app.include_router(router, prefix="/api/v1")
+    app.include_router(
+        create_test_mission_router(
+            dependencies=MissionApiDependencies(
+                upsert=UpsertMissionHandler(mission_repository, MissionIntake()),
+                preview=PreviewMissionHandler(mission_repository, mission_preflight),
+                confirm=ConfirmMissionHandler(
+                    mission_repository, mission_preflight, mission_runtime
+                ),
+                get=GetMissionHandler(mission_repository, mission_preflight),
+            ),
+            actor_for=actor_for,
+            check_project=check_project,
+            settings=settings,
+        ),
+        prefix="/api/v1",
+    )
+    mission_stages = MissionStageService(
+        MissionCompiler(), ConfirmedMissionAssetExecutor(registry), mission_repository
+    )
+    app.include_router(
+        create_internal_mission_stage_router(
+            internal_token=settings.internal_api_token,
+            controller=MissionStageController(
+                mission_repository,
+                mission_stages,
+                SqlAlchemyUserRepository(session_factory),
+            ),
+        ),
+        prefix="/api/v1",
+    )
     target_repository = SqlAlchemyTargetChatRepository(session_factory)
     app.include_router(
         create_target_chat_router(
