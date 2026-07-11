@@ -234,7 +234,7 @@ class RunWorkflow:
 
                     result = await workflow.execute_activity(
                         execute_agent_case,
-                        args=[case, task.agent_config, task.environment],
+                        args=[case, task.agent_config, _environment_with_lease(task)],
                         start_to_close_timeout=activity_timeout,
                         heartbeat_timeout=timedelta(seconds=30),
                         retry_policy=activity_retry_policy,
@@ -281,9 +281,7 @@ class RunWorkflow:
                                 run_case_id=case.run_case_id,
                                 scorer_version_id=str(scorer.get("scorer_version_id", "")),
                                 intent=str(
-                                    case.input.get("test_intent")
-                                    or case.input.get("prompt")
-                                    or ""
+                                    case.input.get("test_intent") or case.input.get("prompt") or ""
                                 ),
                                 output=str(result.output),
                                 tools_called=[str(item) for item in tools]
@@ -390,18 +388,39 @@ def normalize_run_task(task: RunTask | dict[str, object]) -> RunTask:
 def _is_canvas_target(task: RunTask) -> bool:
     target = _target_config(task.agent_config)
     plugin_id = str(target.get("plugin_id") or task.agent_config.get("plugin_id") or "")
-    return task.agent_type in {"canvas", "canvas_agent"} or plugin_id in {
-        "canvas-agent",
-        "tapnow-canvas-agent",
+    adapter_id = str(target.get("adapter_id") or task.agent_config.get("adapter_id") or "")
+    return (
+        task.agent_type in {"canvas", "canvas_agent"}
+        or plugin_id in {"canvas-agent", "tapnow-canvas-agent"}
+        or adapter_id.startswith("tapnow-canvas")
+    )
+
+
+def _environment_with_lease(task: RunTask) -> dict[str, object]:
+    environment = dict(task.environment)
+    if task.callback is None:
+        return environment
+    bindings = environment.get("credential_binding_ids", [])
+    if not isinstance(bindings, list) or not bindings:
+        return environment
+    environment["_credential_lease"] = {
+        "base_url": task.callback.base_url,
+        "internal_token": task.callback.internal_token,
+        "project_id": task.callback.project_id,
+        "run_id": task.run_id,
+        "binding_ids": [str(item) for item in bindings],
     }
+    return environment
 
 
 def _tapnow_task(task: RunTask, case: RunCaseTask) -> TapNowTaskInput:
     if task.callback is None:
         raise ValueError("TapNow execution requires a control plane callback")
     target = _target_config(task.agent_config)
-    raw_bindings = target.get("credential_binding_ids") or task.agent_config.get(
-        "credential_binding_ids", []
+    raw_bindings = (
+        target.get("credential_binding_ids")
+        or task.agent_config.get("credential_binding_ids")
+        or task.environment.get("credential_binding_ids", [])
     )
     bindings = [str(item) for item in raw_bindings] if isinstance(raw_bindings, list) else []
     agent_id = str(
@@ -424,13 +443,12 @@ def _tapnow_task(task: RunTask, case: RunCaseTask) -> TapNowTaskInput:
 
 
 def _tapnow_to_run_case(result: TapNowResult, case: RunCaseTask) -> RunCaseResult:
+    raw_trace = result.evidence.get("trace")
     return RunCaseResult(
         run_case_id=case.run_case_id,
         status=result.status,
         output={"canvas": result.evidence.get("canvas", {})},
-        trace=[dict(result.evidence.get("trace", {}))]
-        if isinstance(result.evidence.get("trace"), dict)
-        else [],
+        trace=[dict(raw_trace)] if isinstance(raw_trace, dict) else [],
         error_type=result.error_type,
         error_message=result.error_message,
         evidence=result.evidence,
@@ -510,7 +528,7 @@ def _codex_to_run_case(
     case: RunCaseTask,
 ) -> RunCaseResult:
     """将 Codex 浏览器探索结果转换为 RunCaseResult。"""
-    status = codex_result.status
+    status = "passed" if codex_result.status == "planned" else codex_result.status
     output: dict[str, object] = {
         "status": codex_result.status,
         "execution_log": codex_result.execution_log[:2000] if codex_result.execution_log else "",

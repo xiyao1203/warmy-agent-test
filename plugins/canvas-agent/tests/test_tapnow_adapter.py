@@ -27,9 +27,7 @@ class Page:
 
     async def evaluate(self, _script: str):
         return {
-            "nodes": [
-                {"id": "n1", "type": "image", "label": "Result", "x": 10, "y": 20}
-            ],
+            "nodes": [{"id": "n1", "type": "image", "label": "Result", "x": 10, "y": 20}],
             "connections": [],
             "artifacts": [{"url": "https://cdn.test/result.png", "type": "image"}],
         }

@@ -21,14 +21,10 @@ def upgrade() -> None:
             sa.Column("evidence", sa.JSON(), nullable=False, server_default=sa.text("'{}'"))
         )
         batch_op.add_column(
-            sa.Column(
-                "quality_summary", sa.JSON(), nullable=False, server_default=sa.text("'{}'")
-            )
+            sa.Column("quality_summary", sa.JSON(), nullable=False, server_default=sa.text("'{}'"))
         )
         batch_op.add_column(
-            sa.Column(
-                "security_summary", sa.JSON(), nullable=False, server_default=sa.text("'{}'")
-            )
+            sa.Column("security_summary", sa.JSON(), nullable=False, server_default=sa.text("'{}'"))
         )
     op.create_table(
         "run_case_stage_events",

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import builtins
 from dataclasses import asdict
 from uuid import UUID
 
@@ -14,7 +15,7 @@ class SqlAlchemyCredentialRepository:
     def __init__(self, session_factory: async_sessionmaker[AsyncSession]) -> None:
         self._session_factory = session_factory
 
-    async def list(self, project_id: UUID) -> list[CredentialBindingRecord]:
+    async def list(self, project_id: UUID) -> builtins.list[CredentialBindingRecord]:
         async with self._session_factory() as session:
             rows = list(
                 (
@@ -33,8 +34,8 @@ class SqlAlchemyCredentialRepository:
             await session.commit()
 
     async def get_many(
-        self, project_id: UUID, credential_ids: list[UUID]
-    ) -> list[CredentialBindingRecord]:
+        self, project_id: UUID, credential_ids: builtins.list[UUID]
+    ) -> builtins.list[CredentialBindingRecord]:
         if not credential_ids:
             return []
         async with self._session_factory() as session:

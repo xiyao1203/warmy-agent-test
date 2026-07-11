@@ -29,7 +29,7 @@ class CredentialLeaseClient:
         run_case_id: str,
         binding_ids: list[str],
     ) -> dict[str, str]:
-        client = self._client or httpx.AsyncClient(timeout=15)
+        client = self._client or httpx.AsyncClient(timeout=15, trust_env=False)
         close = self._client is None
         try:
             response = await client.post(

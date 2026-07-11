@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import os
 from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
 from temporalio import activity
@@ -8,7 +7,7 @@ from temporalio import activity
 from agenttest_api_runner.adapter import AgentRequest, GenericHttpAgentAdapter
 from agenttest_api_runner.callback import ControlPlaneCallback, ResultCallbackTask
 from agenttest_api_runner.contracts import RunCaseResult, RunCaseTask
-from agenttest_api_runner.credentials import decrypt_credential
+from agenttest_api_runner.credentials import CredentialLeaseClient
 
 
 def build_agent_request(
@@ -16,6 +15,7 @@ def build_agent_request(
     case_input: dict[str, object],
     *,
     environment: dict[str, object] | None = None,
+    credential_values: dict[str, str] | None = None,
 ) -> AgentRequest:
     environment = environment or {}
     headers_raw = environment.get("headers", agent_config.get("headers", {}))
@@ -42,6 +42,7 @@ def build_agent_request(
         endpoint,
         {str(key): str(value) for key, value in headers.items()},
         environment,
+        credential_values or {},
     )
     return AgentRequest(
         url=resolved_url,
@@ -59,25 +60,22 @@ def _apply_credentials(
     endpoint: str,
     headers: dict[str, str],
     environment: dict[str, object],
+    credential_values: dict[str, str],
 ) -> tuple[str, dict[str, str]]:
     raw_bindings = environment.get("credential_bindings", [])
     if not isinstance(raw_bindings, list) or not raw_bindings:
         return endpoint, headers
-    master_key = os.environ.get("AGENTTEST_MODEL_CREDENTIAL_KEY")
-    if not master_key:
-        raise ValueError("API Runner credential encryption key is not configured")
     parts = urlsplit(endpoint)
     query = dict(parse_qsl(parts.query, keep_blank_values=True))
     for item in raw_bindings:
         if not isinstance(item, dict):
             raise ValueError("Invalid credential binding snapshot")
-        encrypted = item.get("encrypted_value")
-        if not isinstance(encrypted, str):
-            raise ValueError("Credential binding has no encrypted value")
-        value = decrypt_credential(encrypted, master_key)
+        name = str(item.get("injection_name", ""))
+        value = credential_values.get(name)
+        if value is None:
+            raise ValueError("Credential lease is missing an injection value")
         if item.get("kind") == "bearer" and not value.lower().startswith("bearer "):
             value = f"Bearer {value}"
-        name = str(item.get("injection_name", ""))
         location = item.get("injection_location")
         if location == "header":
             headers[name] = value
@@ -99,17 +97,37 @@ async def execute_agent_case(
     environment: dict[str, object] | None = None,
 ) -> RunCaseResult:
     activity.heartbeat({"run_case_id": task.run_case_id, "phase": "execute"})
+    resolved_environment = environment or {}
+    lease = resolved_environment.get("_credential_lease", {})
+    credential_values: dict[str, str] = {}
+    if isinstance(lease, dict) and lease.get("binding_ids"):
+        credential_values = await CredentialLeaseClient(
+            str(lease.get("base_url", "")), str(lease.get("internal_token", ""))
+        ).redeem(
+            project_id=str(lease.get("project_id", "")),
+            run_id=str(lease.get("run_id", "")),
+            run_case_id=task.run_case_id,
+            binding_ids=[str(item) for item in lease.get("binding_ids", [])],
+        )
     adapter = GenericHttpAgentAdapter()
-    result = await adapter.execute(
-        build_agent_request(agent_config, task.input, environment=environment)
-    )
-    return RunCaseResult(
-        run_case_id=task.run_case_id,
-        status=_evaluate_assertions(result.output, task.assertions),
-        output=result.output,
-        trace=result.trace,
-        duration_ms=result.duration_ms,
-    )
+    try:
+        result = await adapter.execute(
+            build_agent_request(
+                agent_config,
+                task.input,
+                environment=resolved_environment,
+                credential_values=credential_values,
+            )
+        )
+        return RunCaseResult(
+            run_case_id=task.run_case_id,
+            status=_evaluate_assertions(result.output, task.assertions),
+            output=result.output,
+            trace=result.trace,
+            duration_ms=result.duration_ms,
+        )
+    finally:
+        credential_values.clear()
 
 
 def _evaluate_assertions(

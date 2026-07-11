@@ -60,13 +60,15 @@ class SqlAlchemyGateEvidence:
                 raw_score = scan.summary.get("score")
                 if isinstance(raw_score, int | float):
                     security_score = float(raw_score)
-                findings = scan.findings if isinstance(scan.findings, list) else []
-                blocking_findings = sum(
-                    1
-                    for item in findings
-                    if isinstance(item, dict)
-                    and str(item.get("severity", "")).lower() in {"high", "critical"}
+                findings: list[object] = (
+                    list(scan.findings) if isinstance(scan.findings, list) else []
                 )
+                for item in findings:
+                    if isinstance(item, dict) and str(item.get("severity", "")).lower() in {
+                        "high",
+                        "critical",
+                    }:
+                        blocking_findings += 1
             return GateEvidence(
                 run_id=run_id,
                 pass_rate=evaluation.pass_rate if evaluation else None,

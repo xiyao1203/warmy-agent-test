@@ -33,9 +33,7 @@ class DeepEvalScorerConfig(BaseModel):
     expected_tools: list[str] = Field(min_length=1, max_length=50)
 
 
-ScorerConfig = (
-    RuleScorerConfig | ReferenceScorerConfig | ModelScorerConfig | DeepEvalScorerConfig
-)
+ScorerConfig = RuleScorerConfig | ReferenceScorerConfig | ModelScorerConfig | DeepEvalScorerConfig
 
 
 def parse_scorer_config(scorer_type: str, value: dict[str, object]) -> ScorerConfig:

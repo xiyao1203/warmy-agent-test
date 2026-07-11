@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from datetime import timedelta
 
+from agenttest_api_runner.codex_browser_activity import CodexBrowserResult
 from agenttest_api_runner.contracts import (
     ReportArtifact,
     ResultCallbackConfig,
@@ -17,6 +18,8 @@ from agenttest_api_runner.workflow import (
     RunWorkflow,
     _codex_model,
     _codex_model_provider,
+    _codex_to_run_case,
+    _is_canvas_target,
     _tapnow_to_run_case,
     _target_browser_profile_id,
     _target_url,
@@ -25,6 +28,34 @@ from agenttest_api_runner.workflow import (
     execution_activity_options,
     normalize_run_task,
 )
+
+
+def test_tapnow_adapter_id_routes_to_canvas_execution() -> None:
+    task = RunTask(
+        run_id="run-1",
+        idempotency_key="tapnow-adapter",
+        cases=[],
+        agent_config={"adapter_id": "tapnow-canvas"},
+    )
+
+    assert _is_canvas_target(task) is True
+
+
+def test_codex_planning_result_is_a_successful_discovery_stage() -> None:
+    case = RunCaseTask(
+        run_case_id="case-1",
+        input={"test_intent": "inspect canvas"},
+        assertions=[],
+        execution_mode="codex_explore",
+    )
+
+    result = _codex_to_run_case(
+        CodexBrowserResult(run_case_id="case-1", status="planned"),
+        case,
+    )
+
+    assert result.status == "passed"
+    assert result.output == {"status": "planned", "execution_log": ""}
 
 
 def test_workflow_activity_policy_is_bounded() -> None:
@@ -176,10 +207,7 @@ def test_target_config_supplies_default_url_and_browser_profile() -> None:
     }
 
     assert _target_url({}, agent_config) == "https://app.tapnow.ai/canvas/demo"
-    assert (
-        _target_browser_profile_id({}, {}, agent_config)
-        == "profile-from-agent"
-    )
+    assert _target_browser_profile_id({}, {}, agent_config) == "profile-from-agent"
     assert _target_url({"url": "https://case.example"}, agent_config) == "https://case.example"
     assert (
         _target_browser_profile_id(

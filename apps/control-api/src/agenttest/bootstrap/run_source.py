@@ -33,6 +33,13 @@ from agenttest.modules.test_plans.public import TestPlanVersionId
 from agenttest.shared.infrastructure.database import session_scope
 
 
+def secret_free_credential_bindings(
+    bindings: list[dict[str, object]],
+) -> list[dict[str, object]]:
+    allowed = ("id", "kind", "injection_location", "injection_name")
+    return [{key: item[key] for key in allowed if key in item} for item in bindings]
+
+
 class SqlAlchemyRunSource:
     """在组合根读取已发布资产并构造不可变运行快照。
 
@@ -114,16 +121,17 @@ class SqlAlchemyRunSource:
                 )
                 if len(credential_rows) != len(set(credential_ids)):
                     raise ValueError("Environment references a missing project credential")
-                credentials = [
-                    {
-                        "id": str(item.id),
-                        "kind": item.kind,
-                        "injection_location": item.injection_location,
-                        "injection_name": item.injection_name,
-                        "encrypted_value": item.encrypted_value,
-                    }
-                    for item in credential_rows
-                ]
+                credentials = secret_free_credential_bindings(
+                    [
+                        {
+                            "id": str(item.id),
+                            "kind": item.kind,
+                            "injection_location": item.injection_location,
+                            "injection_name": item.injection_name,
+                        }
+                        for item in credential_rows
+                    ]
+                )
             environment_config["credential_bindings"] = credentials
             # ── 加载已发布评分器版本配置 ────────────────────────────
             scorer_ids_raw = plan_version.config.get("scorer_ids", [])

@@ -28,7 +28,7 @@ class ArtifactUploader:
         content_type: str,
         content: bytes,
     ) -> dict[str, object]:
-        client = self._client or httpx.AsyncClient(timeout=30)
+        client = self._client or httpx.AsyncClient(timeout=30, trust_env=False)
         close = self._client is None
         digest = hashlib.sha256(content).hexdigest()
         try:

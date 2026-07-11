@@ -30,7 +30,9 @@ target-version = "py312"
 select = ["E", "F", "I", "B", "UP", "ASYNC"]
 
 [tool.pytest.ini_options]
-addopts = "-ra --import-mode=importlib"
+# DeepEval is used as an evaluation library. Its auto-loaded pytest plugin imports
+# project .env files during test startup and breaks the isolated test settings.
+addopts = "-ra --import-mode=importlib -p no:deepeval"
 markers = [
   "integration: marks integration tests that exercise external processes or adapters",
 ]

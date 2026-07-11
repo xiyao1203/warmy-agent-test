@@ -20,7 +20,7 @@ class ControlPlaneCallback:
         self._client = client
 
     async def post_result(self, task: ResultCallbackTask) -> None:
-        client = self._client or httpx.AsyncClient(timeout=30)
+        client = self._client or httpx.AsyncClient(timeout=30, trust_env=False)
         should_close = self._client is None
         try:
             response = await client.post(

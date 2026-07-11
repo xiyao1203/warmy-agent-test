@@ -11,6 +11,7 @@ from __future__ import annotations
 
 from uuid import uuid4
 
+from agenttest.bootstrap.run_source import secret_free_credential_bindings
 from agenttest.modules.agents.domain.invocation import (
     AgentInvocationConfig,
     InvocationProtocol,
@@ -127,15 +128,17 @@ def test_run_definition_includes_environment_config_without_credentials() -> Non
             "variables": {"API_ENV": "staging"},
             "headers": {"X-Custom": "value"},
             "credential_binding_ids": [str(uuid4())],
-            "credential_bindings": [
-                {
-                    "id": str(uuid4()),
-                    "kind": "api_key",
-                    "injection_location": "header",
-                    "injection_name": "Authorization",
-                    "encrypted_value": "aes-gcm:ciphertext",
-                }
-            ],
+            "credential_bindings": secret_free_credential_bindings(
+                [
+                    {
+                        "id": str(uuid4()),
+                        "kind": "api_key",
+                        "injection_location": "header",
+                        "injection_name": "Authorization",
+                        "encrypted_value": "aes-gcm:ciphertext",
+                    }
+                ]
+            ),
         },
     )
 
@@ -143,10 +146,26 @@ def test_run_definition_includes_environment_config_without_credentials() -> Non
     assert isinstance(env, dict)
     assert env["variables"] == {"API_ENV": "staging"}
     assert env["headers"] == {"X-Custom": "value"}
-    # 凭证值必须是密文，不能是明文
+    # Workflow 快照只保留注入元数据，不能包含密文或明文
     for binding in env.get("credential_bindings", []):
-        assert "encrypted_value" in binding
-        assert "api_key_plain" not in binding.get("kind", "")
+        assert "encrypted_value" not in binding
+        assert set(binding) == {"id", "kind", "injection_location", "injection_name"}
+
+
+def test_run_source_strips_encrypted_credential_values() -> None:
+    result = secret_free_credential_bindings(
+        [
+            {
+                "id": str(uuid4()),
+                "kind": "bearer",
+                "injection_location": "header",
+                "injection_name": "Authorization",
+                "encrypted_value": "ciphertext",
+            }
+        ]
+    )
+
+    assert "encrypted_value" not in result[0]
 
 
 def test_run_definition_includes_scorer_configs_for_all_scorer_types() -> None:

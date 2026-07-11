@@ -113,9 +113,7 @@ class RunCaseStageEventModel(Base):
     project_id: Mapped[UUID] = mapped_column(
         ForeignKey("projects.id", ondelete="CASCADE"), nullable=False
     )
-    run_id: Mapped[UUID] = mapped_column(
-        ForeignKey("runs.id", ondelete="CASCADE"), nullable=False
-    )
+    run_id: Mapped[UUID] = mapped_column(ForeignKey("runs.id", ondelete="CASCADE"), nullable=False)
     run_case_id: Mapped[UUID] = mapped_column(
         ForeignKey("run_cases.id", ondelete="CASCADE"), nullable=False
     )

@@ -12,9 +12,7 @@ from pydantic import BaseModel, Field
 
 
 class LeaseService(Protocol):
-    async def redeem(
-        self, project_id: UUID, credential_ids: list[UUID]
-    ) -> dict[str, str]: ...
+    async def redeem(self, project_id: UUID, credential_ids: list[UUID]) -> dict[str, str]: ...
 
 
 class RedeemCredentialLeaseRequest(BaseModel):

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import builtins
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Protocol
@@ -24,10 +25,10 @@ class CredentialBindingRecord:
 
 
 class CredentialRepository(Protocol):
-    async def list(self, project_id: UUID) -> list[CredentialBindingRecord]: ...
+    async def list(self, project_id: UUID) -> builtins.list[CredentialBindingRecord]: ...
     async def get_many(
-        self, project_id: UUID, credential_ids: list[UUID]
-    ) -> list[CredentialBindingRecord]: ...
+        self, project_id: UUID, credential_ids: builtins.list[UUID]
+    ) -> builtins.list[CredentialBindingRecord]: ...
     async def add(self, item: CredentialBindingRecord) -> None: ...
     async def delete(self, project_id: UUID, credential_id: UUID) -> bool: ...
 
@@ -46,7 +47,7 @@ class CredentialBindingService:
         self._repository = repository
         self._cipher = cipher
 
-    async def list(self, project_id: UUID) -> list[CredentialBindingRecord]:
+    async def list(self, project_id: UUID) -> builtins.list[CredentialBindingRecord]:
         return await self._repository.list(project_id)
 
     async def create(

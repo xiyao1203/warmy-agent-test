@@ -120,9 +120,7 @@ class RunCaseEvidence:
                 str(payload.get("security_decision", SecurityDecision.CLEAR.value))
             ),
             canvas=dict(_mapping(payload.get("canvas"))),
-            artifacts=tuple(
-                dict(item) for item in artifacts if isinstance(item, Mapping)
-            )
+            artifacts=tuple(dict(item) for item in artifacts if isinstance(item, Mapping))
             if isinstance(artifacts, list | tuple)
             else (),
             trace=dict(_mapping(payload.get("trace"))),

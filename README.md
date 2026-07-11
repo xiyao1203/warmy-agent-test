@@ -20,6 +20,7 @@
 - [API 文档：身份与项目](./docs/api/identity-and-projects.md)
 - [API 文档：测试资产](./docs/api/test-assets.md)
 - [Codex 开发指南](./docs/Codex开发指南.md)
+- [TapNow 类 Agent 生产测试运行手册](./docs/runbooks/tapnow-production-testing.md)
 - [AI 开发协作规范](./AGENTS.md)
 
 ## 快速开始

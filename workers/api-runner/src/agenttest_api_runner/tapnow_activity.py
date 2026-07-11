@@ -3,13 +3,13 @@
 from __future__ import annotations
 
 from dataclasses import asdict, dataclass, field
+from typing import Any
 from uuid import UUID
 
 from agenttest_plugin_canvas.tapnow import TapNowBrowserContract
 from temporalio import activity
 
 from .artifact_uploader import ArtifactUploader
-from .credentials import CredentialLeaseClient
 
 
 @dataclass(frozen=True, slots=True)
@@ -30,7 +30,7 @@ class TapNowTaskInput:
 class TapNowResult:
     run_case_id: str
     status: str
-    evidence: dict[str, object]
+    evidence: dict[str, Any]
     error_type: str | None = None
     error_message: str | None = None
 
@@ -74,6 +74,8 @@ async def execute_tapnow_page(
 async def run_tapnow_case(task: TapNowTaskInput) -> TapNowResult:
     try:
         from playwright.async_api import async_playwright
+
+        from .credentials import CredentialLeaseClient
     except ImportError:
         return TapNowResult(
             task.run_case_id,

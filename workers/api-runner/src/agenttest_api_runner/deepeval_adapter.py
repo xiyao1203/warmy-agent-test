@@ -31,8 +31,10 @@ class DeepEvalAdapter:
         test_case = LLMTestCase(
             input=item.intent,
             actual_output=item.output,
-            tools_called=[ToolCall(name=name) for name in item.tools_called],
-            expected_tools=[ToolCall(name=name) for name in item.expected_tools],
+            tools_called=[ToolCall(name=name, input_parameters={}) for name in item.tools_called],
+            expected_tools=[
+                ToolCall(name=name, input_parameters={}) for name in item.expected_tools
+            ],
         )
         results: list[CaseScore] = []
         for name, metric, threshold in self._metrics:
@@ -56,8 +58,33 @@ class DeepEvalAdapter:
 
 def build_tool_correctness_metric(*, threshold: float):
     from deepeval.metrics import ToolCorrectnessMetric
+    from deepeval.models import DeepEvalBaseLLM
 
-    return ToolCorrectnessMetric(threshold=threshold, include_reason=True)
+    class _DeterministicMetricModel(DeepEvalBaseLLM):
+        """Satisfy DeepEval's constructor without creating a provider client.
+
+        Tool correctness is calculated from the expected and observed tool calls;
+        reasons are disabled, so this model must never be invoked.
+        """
+
+        def load_model(self) -> _DeterministicMetricModel:
+            return self
+
+        def generate(self, *_args: object, **_kwargs: object) -> str:
+            raise RuntimeError("deterministic tool correctness must not invoke an LLM")
+
+        async def a_generate(self, *_args: object, **_kwargs: object) -> str:
+            raise RuntimeError("deterministic tool correctness must not invoke an LLM")
+
+        def get_model_name(self) -> str:
+            return "agenttest-deterministic-tool-correctness"
+
+    return ToolCorrectnessMetric(
+        threshold=threshold,
+        include_reason=False,
+        async_mode=False,
+        model=_DeterministicMetricModel("agenttest-deterministic-tool-correctness"),
+    )
 
 
 @dataclass(frozen=True, slots=True)

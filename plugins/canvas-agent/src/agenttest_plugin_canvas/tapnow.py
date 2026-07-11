@@ -87,17 +87,25 @@ def _node(item: Mapping[str, object]) -> CanvasNode:
         node_type = CanvasNodeType(raw_type)
     except ValueError:
         node_type = CanvasNodeType.OUTPUT
+    raw_properties = item.get("properties")
     return CanvasNode(
         node_id=str(item.get("id", "")),
         node_type=node_type,
         label=str(item.get("label", "")),
-        x=float(item.get("x", 0)),
-        y=float(item.get("y", 0)),
-        properties=dict(item.get("properties", {}))
-        if isinstance(item.get("properties"), Mapping)
-        else {},
+        x=_float_value(item.get("x")),
+        y=_float_value(item.get("y")),
+        properties=dict(raw_properties) if isinstance(raw_properties, Mapping) else {},
         status=str(item.get("status", "idle")),
     )
+
+
+def _float_value(value: object) -> float:
+    if isinstance(value, int | float | str):
+        try:
+            return float(value)
+        except ValueError:
+            pass
+    return 0.0
 
 
 def _connection(item: Mapping[str, object]) -> CanvasConnection:

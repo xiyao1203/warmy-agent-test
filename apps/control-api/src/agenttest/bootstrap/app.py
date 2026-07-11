@@ -1597,6 +1597,7 @@ def _register_credential_endpoints(app: FastAPI, settings: Settings, auth_deps) 
         prefix="/api/v1",
     )
     if cipher is not None:
+
         async def scope_check(project_id, run_id, run_case_id):
             from sqlalchemy import text
 
