@@ -5,24 +5,27 @@ import { BrowserProfileList } from "../browser-profile-list";
 import type { BrowserProfile } from "../api";
 
 const profile: BrowserProfile = {
-  cdp_endpoint: "",
-  cdp_port: 9222,
+  auth_state_status: "ready",
+  auth_state_updated_at: "2026-07-04T10:00:00Z",
+  auth_state_version: 1,
   created_at: "2026-06-25T10:00:00Z",
   name: "管理员浏览器",
   profile_id: "profile-1",
   project_id: "project-1",
   status: "stopped",
-  storage_state_path: "",
   target_domain: "app.example.com",
   updated_at: "2026-06-25T10:00:00Z",
-  user_data_dir: "/tmp/profile-1",
   last_login_at: "2026-07-04T10:00:00Z",
+  last_verified_at: "2026-07-04T10:05:00Z",
 };
 
 const runningProfile: BrowserProfile = {
   ...profile,
-  cdp_endpoint: "ws://127.0.0.1:9222/devtools/browser/abc",
+  auth_state_status: "missing",
+  auth_state_updated_at: null,
+  auth_state_version: 0,
   last_login_at: "",
+  last_verified_at: null,
   status: "running",
 };
 
@@ -44,11 +47,9 @@ describe("BrowserProfileList", () => {
     expect(screen.getByRole("columnheader", { name: "实例" })).toBeVisible();
     expect(screen.getByRole("columnheader", { name: "操作" })).toBeVisible();
     expect(screen.getByText("这些实例用在哪儿")).toBeVisible();
-    expect(
-      screen.getByText(/Codex 浏览器执行会复用实例的用户目录/),
-    ).toBeVisible();
+    expect(screen.getByText(/Worker 通过短期租约恢复登录态/)).toBeVisible();
     expect(screen.getByText("管理员浏览器")).toBeVisible();
-    expect(screen.getByText("已确认登录")).toBeVisible();
+    expect(screen.getByText("登录态可用")).toBeVisible();
     expect(screen.getByRole("button", { name: "启动并登录" })).toHaveClass(
       "shrink-0",
       "whitespace-nowrap",
@@ -137,5 +138,30 @@ describe("BrowserProfileList", () => {
     fireEvent.click(await screen.findByRole("menuitem", { name: "删除实例" }));
     fireEvent.click(screen.getByRole("button", { name: "删除" }));
     await waitFor(() => expect(onDelete).toHaveBeenCalledWith("profile-1"));
+  });
+
+  it("verifies a saved auth state and shows expired state without exposing paths", async () => {
+    const onVerify = vi.fn().mockResolvedValue(profile);
+    const { rerender } = render(
+      <BrowserProfileList
+        profiles={[profile]}
+        projectId="project-1"
+        onVerify={onVerify}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "验证登录态" }));
+    await waitFor(() => expect(onVerify).toHaveBeenCalledWith("profile-1"));
+    expect(
+      screen.queryByText(/\/tmp|storage_state|9222/),
+    ).not.toBeInTheDocument();
+
+    rerender(
+      <BrowserProfileList
+        profiles={[{ ...profile, auth_state_status: "expired" }]}
+        projectId="project-1"
+      />,
+    );
+    expect(screen.getByText("登录态已过期")).toBeVisible();
   });
 });
