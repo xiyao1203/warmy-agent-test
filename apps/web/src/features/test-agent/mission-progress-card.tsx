@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 
 import { cancelMission, getMission, resumeMission } from "./api";
 import type { MissionProgressOutput } from "./mission-types";
+import { TrustLoopResult } from "./trust-loop-result";
 
 export function MissionProgressCard({
   output,
@@ -115,6 +116,9 @@ export function MissionProgressCard({
           </button>
         ) : null}
       </div>
+      {live.trust_loop ? (
+        <TrustLoopResult projectId={projectId} result={live.trust_loop} />
+      ) : null}
     </div>
   );
 }
