@@ -243,28 +243,28 @@ Commit: `feat: expose internal trust loop stages`
 - Produces Activity: `execute_postprocess_stage(PostprocessStageTask) -> PostprocessStageResponse`
 - Scheduler: `TemporalPostprocessScheduler.schedule(job) -> workflow_id`
 
-- [ ] **Step 1: Write failing workflow state-machine and serialization tests**
+- [x] **Step 1: Write failing workflow state-machine and serialization tests**
 
 Cover ordered stages, optional-stage warning continuation, required-stage terminal failure, cancellation, nested JSON serialization and secret-free task representations.
 
-- [ ] **Step 2: Run RED**
+- [x] **Step 2: Run RED**
 
 Run: `uv run pytest workers/api-runner/tests/test_postprocess_workflow.py apps/control-api/tests/unit/run_postprocessing/test_temporal_scheduler.py -q`
 Expected: import failures for missing Workflow and scheduler.
 
-- [ ] **Step 3: Implement contracts, activity and deterministic Workflow**
+- [x] **Step 3: Implement contracts, activity and deterministic Workflow**
 
 Use bounded retries. Activity calls Control API with `trust_env=False`; Workflow contains no network/database/model access and no non-deterministic calls.
 
-- [ ] **Step 4: Register Worker and implement scheduler**
+- [x] **Step 4: Register Worker and implement scheduler**
 
 Add Workflow and Activity to the same task queue with worker tests proving registration. Use stable Workflow IDs and `REJECT_DUPLICATE` behavior.
 
-- [ ] **Step 5: Add recovery tests**
+- [x] **Step 5: Add recovery tests**
 
 Test duplicate start, activity retry, worker restart replay and resumption from a previously completed stage result.
 
-- [ ] **Step 6: Run GREEN and commit**
+- [x] **Step 6: Run GREEN and commit**
 
 Run: `uv run pytest workers/api-runner/tests/test_postprocess_workflow.py apps/control-api/tests/unit/run_postprocessing/test_temporal_scheduler.py -q`
 Expected: all pass.

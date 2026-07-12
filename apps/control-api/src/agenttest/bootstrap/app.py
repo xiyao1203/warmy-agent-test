@@ -1063,13 +1063,28 @@ def build_run_dependencies(settings: Settings) -> RunApiDependencies:
     from agenttest.modules.run_postprocessing.infrastructure.repository import (
         SqlAlchemyPostprocessRepository,
     )
+    from agenttest.modules.run_postprocessing.infrastructure.temporal import (
+        TemporalPostprocessScheduler,
+    )
 
     engine = create_database_engine(str(settings.database_url))
     session_factory = create_session_factory(engine)
     runs = SqlAlchemyRunRepository(session_factory)
     projects = SqlAlchemyProjectRepository(session_factory)
     access = ProjectAccessAdapter(projects)
-    postprocess = PostprocessJobService(SqlAlchemyPostprocessRepository(session_factory))
+    postprocess_scheduler = (
+        TemporalPostprocessScheduler(
+            address=settings.temporal_address,
+            namespace=settings.temporal_namespace,
+            task_queue=settings.temporal_task_queue,
+            callback_base_url=settings.control_api_base_url,
+        )
+        if settings.temporal_address
+        else None
+    )
+    postprocess = PostprocessJobService(
+        SqlAlchemyPostprocessRepository(session_factory), postprocess_scheduler
+    )
     source = SqlAlchemyRunSource(session_factory)
     orchestrator = (
         TemporalRunOrchestrator(

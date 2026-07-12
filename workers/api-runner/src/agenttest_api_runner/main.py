@@ -16,6 +16,8 @@ from .deepeval_adapter import evaluate_deepeval_case
 from .mission_activities import execute_mission_stage
 from .mission_workflow import TestMissionWorkflow
 from .playwright_activity import run_playwright_case
+from .postprocess_activities import execute_postprocess_stage
+from .postprocess_workflow import RunPostprocessWorkflow
 from .tapnow_activity import run_tapnow_case
 from .target_chat import TargetAgentChatWorkflow, execute_target_chat
 from .workflow import RunWorkflow
@@ -52,7 +54,12 @@ async def run() -> None:
     worker = Worker(
         client,
         task_queue=settings.task_queue,
-        workflows=[RunWorkflow, TargetAgentChatWorkflow, TestMissionWorkflow],
+        workflows=[
+            RunWorkflow,
+            TargetAgentChatWorkflow,
+            TestMissionWorkflow,
+            RunPostprocessWorkflow,
+        ],
         activities=[
             execute_agent_case,
             post_run_result,
@@ -63,6 +70,7 @@ async def run() -> None:
             run_tapnow_case,
             evaluate_deepeval_case,
             execute_mission_stage,
+            execute_postprocess_stage,
         ],
     )
     await worker.run()

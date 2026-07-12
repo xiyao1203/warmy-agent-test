@@ -62,6 +62,7 @@ async def test_run_registers_run_workflow_and_all_activities(
         main.RunWorkflow,
         main.TargetAgentChatWorkflow,
         main.TestMissionWorkflow,
+        main.RunPostprocessWorkflow,
     ]
     assert main.execute_mission_stage in worker_options["activities"]
     assert worker_options["activities"] == [
@@ -74,5 +75,6 @@ async def test_run_registers_run_workflow_and_all_activities(
         main.run_tapnow_case,
         main.evaluate_deepeval_case,
         main.execute_mission_stage,
+        main.execute_postprocess_stage,
     ]
     assert worker_options["ran"] is True
