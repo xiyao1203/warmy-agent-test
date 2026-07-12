@@ -18,7 +18,7 @@ export function Tooltip({ children, content, side = "bottom" }: TooltipProps) {
     <div className="group relative inline-flex">
       {children}
       <div
-        className={`pointer-events-none absolute z-50 whitespace-nowrap rounded-[var(--radius-md)] border border-[var(--hairline)] bg-[var(--surface)] px-2 py-1 text-xs text-[var(--ink)] opacity-0 shadow-md transition-opacity group-hover:opacity-100 ${positionClasses[side]}`}
+        className={`pointer-events-none absolute z-50 max-w-[min(18rem,calc(100vw-1rem))] whitespace-normal rounded-[var(--radius-md)] border border-[var(--hairline)] bg-[var(--surface)] px-2 py-1 text-xs text-[var(--ink)] opacity-0 shadow-md transition-opacity group-hover:opacity-100 max-sm:hidden ${positionClasses[side]}`}
       >
         {content}
       </div>

@@ -1,22 +1,23 @@
-import { DiagnosticPanel } from "./diagnostic-panel";
-import { GateDecisionCard } from "./gate-decision-card";
-import type { TrustLoopResultData } from "./mission-types";
-import { OutcomeGrid } from "./outcome-grid";
-import { RegressionPanel } from "./regression-panel";
+import { TrustLoopPanel, type RunTrustLoopData } from "@/features/runs";
 
 export function TrustLoopResult({
-  result,
+  data,
+  loading = false,
   projectId,
+  runId,
 }: {
-  result: TrustLoopResultData;
+  data?: RunTrustLoopData;
+  loading?: boolean;
   projectId: string;
+  runId: string;
 }) {
   return (
-    <section className="mt-3 border-t border-[var(--hairline)] pt-3">
-      <OutcomeGrid outcomes={result.outcomes} projectId={projectId} />
-      <DiagnosticPanel diagnostics={result.diagnostics} />
-      <RegressionPanel regressions={result.regressions} />
-      <GateDecisionCard gate={result.gate} />
-    </section>
+    <TrustLoopPanel
+      compact
+      data={data}
+      loading={loading}
+      projectId={projectId}
+      runId={runId}
+    />
   );
 }

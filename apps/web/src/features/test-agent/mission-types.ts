@@ -40,38 +40,4 @@ export type MissionProgressOutput = {
   workflow_id?: string;
   run_id?: string;
   missing_fields?: string[];
-  trust_loop?: TrustLoopResultData;
-};
-
-export type TrustOutcome = {
-  status: "not_evaluated" | "passed" | "failed" | "error" | "needs_review";
-  code: string;
-  reason?: string;
-  evidence_ids: string[];
-};
-
-export type TrustLoopResultData = {
-  outcomes: {
-    execution: TrustOutcome;
-    assertion: TrustOutcome;
-    quality: TrustOutcome;
-    security: TrustOutcome;
-  };
-  diagnostics: Array<{
-    summary: string;
-    confidence: number;
-    evidence_ids: string[];
-  }>;
-  regressions: Array<{ id: string; state: string; fingerprint: string }>;
-  gate: {
-    status: "allow" | "block" | "needs_review";
-    rules: Array<{
-      code: string;
-      status: string;
-      threshold: string;
-      actual: string;
-      reason: string;
-      evidence_refs: string[];
-    }>;
-  };
 };

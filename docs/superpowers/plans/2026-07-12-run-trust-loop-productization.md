@@ -336,24 +336,24 @@ Commit: `feat: expose run trust loop api`
 - Consumes generated `TrustLoopResponse`
 - Produces one shared typed view for Run detail and Test Agent result rendering
 
-- [ ] **Step 1: Write failing component tests**
+- [x] **Step 1: Write failing component tests**
 
 Cover pending progress, completed data, warnings, `inconclusive`, Quarantine, blocking gate explanations, Evidence citations and empty optional lists.
 
-- [ ] **Step 2: Run RED**
+- [x] **Step 2: Run RED**
 
 Run: `pnpm --filter @warmy/web test -- trust-loop-panel.test.tsx trust-loop.test.tsx`
 Expected: component/import/assertion failures.
 
-- [ ] **Step 3: Implement API loading and the shared panel**
+- [x] **Step 3: Implement API loading and the shared panel**
 
 Use existing UI primitives, stable dimensions, accessible status labels and links to cited Run Cases/Evidence. Do not introduce nested cards or explanatory marketing copy.
 
-- [ ] **Step 4: Extend E2E coverage**
+- [x] **Step 4: Extend E2E coverage**
 
 Verify navigation from Mission to Run, automatic refresh while pending, final warning/failure states and no overlapping controls at desktop/mobile widths.
 
-- [ ] **Step 5: Run GREEN and commit**
+- [x] **Step 5: Run GREEN and commit**
 
 Run: `pnpm --filter @warmy/web format && pnpm --filter @warmy/web lint && pnpm --filter @warmy/web typecheck && pnpm --filter @warmy/web test && pnpm --filter @warmy/web build`
 Expected: all pass.
