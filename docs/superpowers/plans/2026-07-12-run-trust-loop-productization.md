@@ -205,25 +205,25 @@ Commit: `feat: execute run trust loop stages`
 - Produces: `POST /internal/projects/{project_id}/runs/{run_id}/trust-loop/{pipeline_version}/finalize`
 - Consumes headers: `X-Internal-Token`; body: `idempotency_key`, `workflow_id`, `attempt`
 
-- [ ] **Step 1: Write failing contract tests**
+- [x] **Step 1: Write failing contract tests**
 
 Cover 403 without the internal token, 404 for foreign project/Run, 409 for out-of-order stage, idempotent replay and sanitized error payloads.
 
-- [ ] **Step 2: Run RED**
+- [x] **Step 2: Run RED**
 
 Run: `uv run pytest apps/control-api/tests/contract/test_run_postprocessing_internal_api.py -q`
 Expected: 404 because routes are missing.
 
-- [ ] **Step 3: Implement schemas and router**
+- [x] **Step 3: Implement schemas and router**
 
 Use strict enums and bounded strings. Never return raw exception representations, model prompts, Evidence payloads or secrets.
 
-- [ ] **Step 4: Wire the router and run GREEN**
+- [x] **Step 4: Wire the router and run GREEN**
 
 Run: `uv run pytest apps/control-api/tests/contract/test_run_postprocessing_internal_api.py -q`
 Expected: all pass.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 Commit: `feat: expose internal trust loop stages`
 

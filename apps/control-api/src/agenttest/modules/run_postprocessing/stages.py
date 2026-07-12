@@ -118,6 +118,9 @@ class PostprocessStageService:
                         {
                             "run_case_id": str(case.run_case_id),
                             "status": "inconclusive",
+                            "failure_class": self._classifier.classify_code(
+                                case.error_code
+                            ).failure_class.value,
                             "reason": "Diagnostic model unavailable",
                             "hypotheses": [],
                         }
@@ -136,6 +139,11 @@ class PostprocessStageService:
                 {
                     "run_case_id": str(case.run_case_id),
                     "status": result.status,
+                    "failure_class": (
+                        result.hypotheses[0].failure_class.value
+                        if result.hypotheses
+                        else self._classifier.classify_code(case.error_code).failure_class.value
+                    ),
                     "reason": result.reason,
                     "hypotheses": [
                         {

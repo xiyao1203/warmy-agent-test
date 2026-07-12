@@ -380,6 +380,33 @@ def create_app(
         ),
         prefix="/api/v1",
     )
+    from agenttest.modules.run_postprocessing.api.internal_router import (
+        create_internal_postprocess_router,
+    )
+    from agenttest.modules.run_postprocessing.application import PostprocessStageController
+    from agenttest.modules.run_postprocessing.infrastructure.repository import (
+        SqlAlchemyPostprocessRepository,
+    )
+    from agenttest.modules.run_postprocessing.snapshot_reader import (
+        RunPostprocessSnapshotReader,
+    )
+    from agenttest.modules.run_postprocessing.stages import PostprocessStageService
+
+    postprocess_engine = create_database_engine(str(resolved_settings.database_url))
+    postprocess_session_factory = create_session_factory(postprocess_engine)
+    postprocess_repository = SqlAlchemyPostprocessRepository(postprocess_session_factory)
+    postprocess_runs = SqlAlchemyRunRepository(postprocess_session_factory)
+    app.include_router(
+        create_internal_postprocess_router(
+            internal_token=resolved_settings.internal_api_token,
+            controller=PostprocessStageController(
+                postprocess_repository,
+                PostprocessStageService(RunPostprocessSnapshotReader(postprocess_runs)),
+            ),
+            uow_factory=lambda: SqlAlchemyUnitOfWork(postprocess_session_factory),
+        ),
+        prefix="/api/v1",
+    )
     report_engine = create_database_engine(str(resolved_settings.database_url))
     report_session_factory = create_session_factory(report_engine)
     report_runs = SqlAlchemyRunRepository(report_session_factory)
