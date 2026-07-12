@@ -1,0 +1,237 @@
+from __future__ import annotations
+
+from dataclasses import dataclass
+from datetime import UTC, datetime
+from typing import Any
+from uuid import UUID, uuid4
+
+from agenttest.modules.test_missions.domain.completeness import evaluate_completeness
+from agenttest.modules.test_missions.domain.value_objects import (
+    MissionFact,
+    MissionRevision,
+    MissionStatus,
+    canonical_snapshot_hash,
+)
+
+
+class ConfirmedMissionMutationError(ValueError):
+    pass
+
+
+@dataclass(slots=True)
+class TestMission:
+    mission_id: UUID
+    project_id: UUID
+    session_id: UUID
+    created_by: UUID
+    status: MissionStatus
+    facts: dict[str, MissionFact]
+    revisions: list[MissionRevision]
+    active_revision_id: UUID | None
+    workflow_id: str | None
+    lock_version: int
+    created_at: datetime
+    updated_at: datetime
+    completed_at: datetime | None = None
+
+    @classmethod
+    def create(cls, *, project_id: UUID, session_id: UUID, created_by: UUID) -> TestMission:
+        now = datetime.now(UTC)
+        return cls(
+            mission_id=uuid4(),
+            project_id=project_id,
+            session_id=session_id,
+            created_by=created_by,
+            status=MissionStatus.COLLECTING,
+            facts={},
+            revisions=[],
+            active_revision_id=None,
+            workflow_id=None,
+            lock_version=0,
+            created_at=now,
+            updated_at=now,
+        )
+
+    def merge_fact(self, candidate: MissionFact) -> bool:
+        if self.status not in {
+            MissionStatus.COLLECTING,
+            MissionStatus.NEEDS_INPUT,
+            MissionStatus.DISCOVERING,
+            MissionStatus.READY_FOR_CONFIRMATION,
+        }:
+            raise ConfirmedMissionMutationError("Confirmed mission facts require a new revision")
+        current = self.facts.get(candidate.key)
+        if current is not None and not _supersedes(candidate, current):
+            return False
+        self.facts[candidate.key] = candidate
+        self.updated_at = datetime.now(UTC)
+        self.lock_version += 1
+        if self.status is MissionStatus.DISCOVERING:
+            return True
+        completeness = evaluate_completeness(self.facts)
+        self.status = (
+            MissionStatus.READY_FOR_CONFIRMATION
+            if completeness.complete
+            else MissionStatus.NEEDS_INPUT
+        )
+        return True
+
+    def confirm(
+        self,
+        *,
+        confirmed_by: UUID,
+        execution: dict[str, Any] | None = None,
+        budget: dict[str, Any] | None = None,
+        action_allowlist: list[str] | None = None,
+    ) -> MissionRevision:
+        completeness = evaluate_completeness(self.facts)
+        if not completeness.complete:
+            missing = ", ".join(completeness.missing)
+            raise ValueError(f"Mission is missing required facts: {missing}")
+        snapshot = self.preview_snapshot(
+            execution=execution,
+            budget=budget,
+            action_allowlist=action_allowlist,
+        )
+        now = datetime.now(UTC)
+        revision = MissionRevision(
+            revision_id=uuid4(),
+            project_id=self.project_id,
+            mission_id=self.mission_id,
+            revision_number=len(self.revisions) + 1,
+            snapshot=snapshot,
+            content_hash=canonical_snapshot_hash(snapshot),
+            confirmed_by=confirmed_by,
+            confirmed_at=now,
+        )
+        self.revisions.append(revision)
+        self.active_revision_id = revision.revision_id
+        self.workflow_id = None
+        self.status = MissionStatus.CONFIRMED
+        self.updated_at = now
+        self.lock_version += 1
+        return revision
+
+    def preview_snapshot(
+        self,
+        *,
+        execution: dict[str, Any] | None = None,
+        budget: dict[str, Any] | None = None,
+        action_allowlist: list[str] | None = None,
+    ) -> dict[str, Any]:
+        completeness = evaluate_completeness(self.facts)
+        if not completeness.complete:
+            missing = ", ".join(completeness.missing)
+            raise ValueError(f"Mission is missing required facts: {missing}")
+        return {
+            "facts": {key: fact.public_snapshot() for key, fact in sorted(self.facts.items())},
+            "execution": dict(execution or {}),
+            "budget": dict(budget or {}),
+            "action_allowlist": list(action_allowlist or ["read"]),
+        }
+
+    def mark_provisioning(self, workflow_id: str) -> None:
+        if self.status is not MissionStatus.CONFIRMED:
+            raise ValueError("Mission must be confirmed before provisioning")
+        if not workflow_id.strip():
+            raise ValueError("Mission workflow id is required")
+        self.workflow_id = workflow_id
+        self.status = MissionStatus.PROVISIONING
+        self.updated_at = datetime.now(UTC)
+        self.lock_version += 1
+
+    def mark_running(self) -> None:
+        if self.status not in {MissionStatus.PROVISIONING, MissionStatus.RUNNING}:
+            raise ValueError("Mission cannot enter running state")
+        self.status = MissionStatus.RUNNING
+        self.updated_at = datetime.now(UTC)
+        self.lock_version += 1
+
+    def mark_needs_attention(self, reason: str) -> None:
+        if self.status not in {MissionStatus.RUNNING, MissionStatus.PROVISIONING}:
+            raise ValueError("Mission cannot pause from current status")
+        if not reason.strip():
+            raise ValueError("Mission attention reason is required")
+        self.status = MissionStatus.NEEDS_ATTENTION
+        self.updated_at = datetime.now(UTC)
+        self.lock_version += 1
+
+    def resume(self) -> None:
+        if self.status is not MissionStatus.NEEDS_ATTENTION:
+            raise ValueError("Only a Mission needing attention can resume")
+        self.status = MissionStatus.RUNNING
+        self.updated_at = datetime.now(UTC)
+        self.lock_version += 1
+
+    def fail(self) -> None:
+        if self.status in {MissionStatus.COMPLETED, MissionStatus.CANCELLED}:
+            return
+        now = datetime.now(UTC)
+        self.status = MissionStatus.FAILED
+        self.updated_at = now
+        self.completed_at = now
+        self.lock_version += 1
+
+    def complete(self) -> None:
+        if self.status not in {MissionStatus.RUNNING, MissionStatus.PROVISIONING}:
+            raise ValueError("Mission cannot complete from current status")
+        now = datetime.now(UTC)
+        self.status = MissionStatus.COMPLETED
+        self.updated_at = now
+        self.completed_at = now
+        self.lock_version += 1
+
+    def cancel(self) -> None:
+        if self.status in {MissionStatus.COMPLETED, MissionStatus.CANCELLED}:
+            return
+        now = datetime.now(UTC)
+        self.status = MissionStatus.CANCELLED
+        self.updated_at = now
+        self.completed_at = now
+        self.lock_version += 1
+
+    def begin_discovery(self) -> None:
+        if self.status not in {
+            MissionStatus.COLLECTING,
+            MissionStatus.NEEDS_INPUT,
+            MissionStatus.READY_FOR_CONFIRMATION,
+        }:
+            raise ValueError("Mission cannot start discovery from current status")
+        self.status = MissionStatus.DISCOVERING
+        self.updated_at = datetime.now(UTC)
+        self.lock_version += 1
+
+    def finish_discovery(self) -> None:
+        if self.status is not MissionStatus.DISCOVERING:
+            raise ValueError("Mission discovery is not running")
+        completeness = evaluate_completeness(self.facts)
+        self.status = (
+            MissionStatus.READY_FOR_CONFIRMATION
+            if completeness.complete
+            else MissionStatus.NEEDS_INPUT
+        )
+        self.updated_at = datetime.now(UTC)
+        self.lock_version += 1
+
+    def reopen_for_revision(self) -> None:
+        if self.status not in {
+            MissionStatus.CONFIRMED,
+            MissionStatus.COMPLETED,
+            MissionStatus.FAILED,
+            MissionStatus.CANCELLED,
+            MissionStatus.NEEDS_ATTENTION,
+        }:
+            raise ValueError("Mission is already editable")
+        self.status = MissionStatus.COLLECTING
+        self.active_revision_id = None
+        self.workflow_id = None
+        self.updated_at = datetime.now(UTC)
+        self.lock_version += 1
+
+
+def _supersedes(candidate: MissionFact, current: MissionFact) -> bool:
+    if candidate.source_priority != current.source_priority:
+        return candidate.source_priority > current.source_priority
+    if candidate.verified != current.verified:
+        return candidate.verified
+    return candidate.confidence >= current.confidence

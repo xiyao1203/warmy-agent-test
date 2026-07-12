@@ -115,6 +115,26 @@ class CreateCredentialInput(BaseModel):
     description: str | None = Field(default=None, max_length=2000)
 
 
+class MissionUpsertInput(BaseModel):
+    target_url: str | None = Field(default=None, max_length=2000)
+    agent_version_id: str | None = None
+    browser_profile_id: str | None = None
+    access_strategy: Literal["none", "browser_profile", "credential"] | None = None
+    credential_binding_id: str | None = None
+    test_goal: str | None = Field(default=None, max_length=4000)
+    safety_scope: Literal["read_only", "draft_write"] | None = None
+    scenario_hints: list[str] = Field(default_factory=list, max_length=20)
+
+
+class MissionResourceInput(BaseModel):
+    mission_id: str
+
+
+class MissionConfirmInput(MissionResourceInput):
+    revision_hash: str = Field(min_length=64, max_length=64)
+    idempotency_key: str = Field(min_length=1, max_length=200)
+
+
 class PlatformCapabilityGateway(Protocol):
     async def execute(
         self, capability: str, context: object, payload: BaseModel
@@ -131,6 +151,18 @@ class CapabilitySpec:
 
 def capability_specs() -> list[CapabilitySpec]:
     return [
+        CapabilitySpec(
+            "test_missions.create_or_update", "mission", RiskLevel.READ, MissionUpsertInput
+        ),
+        CapabilitySpec("test_missions.discover", "mission", RiskLevel.READ, MissionResourceInput),
+        CapabilitySpec("test_missions.preview", "mission", RiskLevel.READ, MissionResourceInput),
+        CapabilitySpec("test_missions.get_status", "mission", RiskLevel.READ, MissionResourceInput),
+        CapabilitySpec(
+            "test_missions.confirm_and_start",
+            "mission",
+            RiskLevel.HIGH_IMPACT,
+            MissionConfirmInput,
+        ),
         CapabilitySpec("agents.list", "target_agent", RiskLevel.READ, QueryInput),
         CapabilitySpec("agents.create", "target_agent", RiskLevel.DRAFT_WRITE, NamedResourceInput),
         CapabilitySpec(
@@ -163,6 +195,7 @@ def capability_specs() -> list[CapabilitySpec]:
             "test_plans.publish_version", "test_plan", RiskLevel.HIGH_IMPACT, ResourceInput
         ),
         CapabilitySpec("runs.list", "execution", RiskLevel.READ, QueryInput),
+        CapabilitySpec("runs.get_status", "execution", RiskLevel.READ, ResourceInput),
         CapabilitySpec("runs.start", "execution", RiskLevel.HIGH_IMPACT, RunInput),
         CapabilitySpec("runs.cancel", "execution", RiskLevel.HIGH_IMPACT, ResourceInput),
         CapabilitySpec("scorers.list", "evaluation", RiskLevel.READ, QueryInput),

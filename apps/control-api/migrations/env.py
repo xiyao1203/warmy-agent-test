@@ -31,6 +31,14 @@ from agenttest.modules.runs.infrastructure.persistence.models import (
     RunEventModel,
     RunModel,
 )
+from agenttest.modules.test_missions.infrastructure.models import (
+    TestMissionAssetModel,
+    TestMissionEventModel,
+    TestMissionFactModel,
+    TestMissionModel,
+    TestMissionRevisionModel,
+    TestMissionStageReceiptModel,
+)
 from agenttest.modules.test_plans.infrastructure.persistence.models import (
     TestPlanModel,
     TestPlanVersionModel,
@@ -56,6 +64,12 @@ _MODELS = (
     TestCaseModel,
     TestPlanModel,
     TestPlanVersionModel,
+    TestMissionAssetModel,
+    TestMissionEventModel,
+    TestMissionFactModel,
+    TestMissionModel,
+    TestMissionRevisionModel,
+    TestMissionStageReceiptModel,
     UserCredentialModel,
     UserModel,
     UserSessionModel,

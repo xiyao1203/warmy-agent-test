@@ -434,6 +434,20 @@ export type CompleteBrowserProfileLoginRequest = {
 };
 
 /**
+ * ConfirmMissionRequest
+ */
+export type ConfirmMissionRequest = {
+  /**
+   * Idempotency Key
+   */
+  idempotency_key: string;
+  /**
+   * Revision Hash
+   */
+  revision_hash: string;
+};
+
+/**
  * ConfirmationDecision
  */
 export type ConfirmationDecision = {
@@ -517,10 +531,6 @@ export type CreateBrowserProfileRequest = {
    * Target Domain
    */
   target_domain?: string;
-  /**
-   * User Data Dir
-   */
-  user_data_dir?: string;
 };
 
 /**
@@ -1136,6 +1146,24 @@ export type EvaluateGateRequest = {
 };
 
 /**
+ * ExecuteStageRequest
+ */
+export type ExecuteStageRequest = {
+  /**
+   * Idempotency Key
+   */
+  idempotency_key: string;
+  /**
+   * Resume Attempt
+   */
+  resume_attempt?: number;
+  /**
+   * Revision Hash
+   */
+  revision_hash: string;
+};
+
+/**
  * ExecutionMode
  *
  * 测试用例执行模式：API 调用、浏览器操作或 Codex 浏览器探索。
@@ -1518,6 +1546,24 @@ export type ProjectResponse = {
    * Name
    */
   name: string;
+};
+
+/**
+ * RedeemBrowserSessionRequest
+ */
+export type RedeemBrowserSessionRequest = {
+  /**
+   * Browser Profile Id
+   */
+  browser_profile_id: string;
+  /**
+   * Run Case Id
+   */
+  run_case_id: string;
+  /**
+   * Run Id
+   */
+  run_id: string;
 };
 
 /**
@@ -2487,6 +2533,22 @@ export type UpdateUserRequest = {
 };
 
 /**
+ * UpsertMissionRequest
+ */
+export type UpsertMissionRequest = {
+  /**
+   * Facts
+   */
+  facts?: {
+    [key: string]: unknown;
+  };
+  /**
+   * Session Id
+   */
+  session_id: string;
+};
+
+/**
  * UserPageResponse
  */
 export type UserPageResponse = {
@@ -2814,6 +2876,44 @@ export type HealthApiV1HealthGetResponses = {
 export type HealthApiV1HealthGetResponse =
   HealthApiV1HealthGetResponses[keyof HealthApiV1HealthGetResponses];
 
+export type RedeemApiV1InternalProjectsProjectIdBrowserSessionLeasesRedeemPostData =
+  {
+    body: RedeemBrowserSessionRequest;
+    headers?: {
+      /**
+       * X-Internal-Token
+       */
+      "x-internal-token"?: string | null;
+    };
+    path: {
+      /**
+       * Project Id
+       */
+      project_id: string;
+    };
+    query?: never;
+    url: "/api/v1/internal/projects/{project_id}/browser-session-leases:redeem";
+  };
+
+export type RedeemApiV1InternalProjectsProjectIdBrowserSessionLeasesRedeemPostErrors =
+  {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+  };
+
+export type RedeemApiV1InternalProjectsProjectIdBrowserSessionLeasesRedeemPostError =
+  RedeemApiV1InternalProjectsProjectIdBrowserSessionLeasesRedeemPostErrors[keyof RedeemApiV1InternalProjectsProjectIdBrowserSessionLeasesRedeemPostErrors];
+
+export type RedeemApiV1InternalProjectsProjectIdBrowserSessionLeasesRedeemPostResponses =
+  {
+    /**
+     * Successful Response
+     */
+    200: unknown;
+  };
+
 export type RedeemApiV1InternalProjectsProjectIdCredentialLeasesRedeemPostData =
   {
     body: RedeemCredentialLeaseRequest;
@@ -2892,6 +2992,56 @@ export type UploadInternalArtifactApiV1InternalProjectsProjectIdRunsRunIdArtifac
      * Successful Response
      */
     201: unknown;
+  };
+
+export type ExecuteStageApiV1InternalProjectsProjectIdTestMissionsMissionIdRevisionsRevisionIdStagesStagePostData =
+  {
+    body: ExecuteStageRequest;
+    headers?: {
+      /**
+       * X-Internal-Token
+       */
+      "x-internal-token"?: string | null;
+    };
+    path: {
+      /**
+       * Project Id
+       */
+      project_id: string;
+      /**
+       * Mission Id
+       */
+      mission_id: string;
+      /**
+       * Revision Id
+       */
+      revision_id: string;
+      /**
+       * Stage
+       */
+      stage: string;
+    };
+    query?: never;
+    url: "/api/v1/internal/projects/{project_id}/test-missions/{mission_id}/revisions/{revision_id}/stages/{stage}";
+  };
+
+export type ExecuteStageApiV1InternalProjectsProjectIdTestMissionsMissionIdRevisionsRevisionIdStagesStagePostErrors =
+  {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+  };
+
+export type ExecuteStageApiV1InternalProjectsProjectIdTestMissionsMissionIdRevisionsRevisionIdStagesStagePostError =
+  ExecuteStageApiV1InternalProjectsProjectIdTestMissionsMissionIdRevisionsRevisionIdStagesStagePostErrors[keyof ExecuteStageApiV1InternalProjectsProjectIdTestMissionsMissionIdRevisionsRevisionIdStagesStagePostErrors];
+
+export type ExecuteStageApiV1InternalProjectsProjectIdTestMissionsMissionIdRevisionsRevisionIdStagesStagePostResponses =
+  {
+    /**
+     * Successful Response
+     */
+    200: unknown;
   };
 
 export type ListProjectsApiV1ProjectsGetData = {
@@ -4079,6 +4229,48 @@ export type StopProfileApiV1ProjectsProjectIdBrowserProfilesProfileIdStopPostErr
   StopProfileApiV1ProjectsProjectIdBrowserProfilesProfileIdStopPostErrors[keyof StopProfileApiV1ProjectsProjectIdBrowserProfilesProfileIdStopPostErrors];
 
 export type StopProfileApiV1ProjectsProjectIdBrowserProfilesProfileIdStopPostResponses =
+  {
+    /**
+     * Successful Response
+     */
+    200: unknown;
+  };
+
+export type VerifyProfileApiV1ProjectsProjectIdBrowserProfilesProfileIdVerifyPostData =
+  {
+    body?: never;
+    headers?: {
+      /**
+       * X-Csrf-Token
+       */
+      "x-csrf-token"?: string | null;
+    };
+    path: {
+      /**
+       * Project Id
+       */
+      project_id: string;
+      /**
+       * Profile Id
+       */
+      profile_id: string;
+    };
+    query?: never;
+    url: "/api/v1/projects/{project_id}/browser-profiles/{profile_id}/verify";
+  };
+
+export type VerifyProfileApiV1ProjectsProjectIdBrowserProfilesProfileIdVerifyPostErrors =
+  {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+  };
+
+export type VerifyProfileApiV1ProjectsProjectIdBrowserProfilesProfileIdVerifyPostError =
+  VerifyProfileApiV1ProjectsProjectIdBrowserProfilesProfileIdVerifyPostErrors[keyof VerifyProfileApiV1ProjectsProjectIdBrowserProfilesProfileIdVerifyPostErrors];
+
+export type VerifyProfileApiV1ProjectsProjectIdBrowserProfilesProfileIdVerifyPostResponses =
   {
     /**
      * Successful Response
@@ -8427,6 +8619,285 @@ export type ConvertToRegressionApiV1ProjectsProjectIdTestAgentTargetChatsSession
      * Successful Response
      */
     201: unknown;
+  };
+
+export type UpsertMissionApiV1ProjectsProjectIdTestMissionsPostData = {
+  body: UpsertMissionRequest;
+  headers?: {
+    /**
+     * X-Csrf-Token
+     */
+    "x-csrf-token"?: string | null;
+  };
+  path: {
+    /**
+     * Project Id
+     */
+    project_id: string;
+  };
+  query?: never;
+  url: "/api/v1/projects/{project_id}/test-missions";
+};
+
+export type UpsertMissionApiV1ProjectsProjectIdTestMissionsPostErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type UpsertMissionApiV1ProjectsProjectIdTestMissionsPostError =
+  UpsertMissionApiV1ProjectsProjectIdTestMissionsPostErrors[keyof UpsertMissionApiV1ProjectsProjectIdTestMissionsPostErrors];
+
+export type UpsertMissionApiV1ProjectsProjectIdTestMissionsPostResponses = {
+  /**
+   * Successful Response
+   */
+  201: unknown;
+};
+
+export type GetMissionApiV1ProjectsProjectIdTestMissionsMissionIdGetData = {
+  body?: never;
+  path: {
+    /**
+     * Project Id
+     */
+    project_id: string;
+    /**
+     * Mission Id
+     */
+    mission_id: string;
+  };
+  query?: never;
+  url: "/api/v1/projects/{project_id}/test-missions/{mission_id}";
+};
+
+export type GetMissionApiV1ProjectsProjectIdTestMissionsMissionIdGetErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type GetMissionApiV1ProjectsProjectIdTestMissionsMissionIdGetError =
+  GetMissionApiV1ProjectsProjectIdTestMissionsMissionIdGetErrors[keyof GetMissionApiV1ProjectsProjectIdTestMissionsMissionIdGetErrors];
+
+export type GetMissionApiV1ProjectsProjectIdTestMissionsMissionIdGetResponses =
+  {
+    /**
+     * Successful Response
+     */
+    200: unknown;
+  };
+
+export type CancelMissionApiV1ProjectsProjectIdTestMissionsMissionIdCancelPostData =
+  {
+    body?: never;
+    headers?: {
+      /**
+       * X-Csrf-Token
+       */
+      "x-csrf-token"?: string | null;
+    };
+    path: {
+      /**
+       * Project Id
+       */
+      project_id: string;
+      /**
+       * Mission Id
+       */
+      mission_id: string;
+    };
+    query?: never;
+    url: "/api/v1/projects/{project_id}/test-missions/{mission_id}/cancel";
+  };
+
+export type CancelMissionApiV1ProjectsProjectIdTestMissionsMissionIdCancelPostErrors =
+  {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+  };
+
+export type CancelMissionApiV1ProjectsProjectIdTestMissionsMissionIdCancelPostError =
+  CancelMissionApiV1ProjectsProjectIdTestMissionsMissionIdCancelPostErrors[keyof CancelMissionApiV1ProjectsProjectIdTestMissionsMissionIdCancelPostErrors];
+
+export type CancelMissionApiV1ProjectsProjectIdTestMissionsMissionIdCancelPostResponses =
+  {
+    /**
+     * Successful Response
+     */
+    200: unknown;
+  };
+
+export type ConfirmMissionApiV1ProjectsProjectIdTestMissionsMissionIdConfirmStartPostData =
+  {
+    body: ConfirmMissionRequest;
+    headers?: {
+      /**
+       * X-Csrf-Token
+       */
+      "x-csrf-token"?: string | null;
+    };
+    path: {
+      /**
+       * Project Id
+       */
+      project_id: string;
+      /**
+       * Mission Id
+       */
+      mission_id: string;
+    };
+    query?: never;
+    url: "/api/v1/projects/{project_id}/test-missions/{mission_id}/confirm-start";
+  };
+
+export type ConfirmMissionApiV1ProjectsProjectIdTestMissionsMissionIdConfirmStartPostErrors =
+  {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+  };
+
+export type ConfirmMissionApiV1ProjectsProjectIdTestMissionsMissionIdConfirmStartPostError =
+  ConfirmMissionApiV1ProjectsProjectIdTestMissionsMissionIdConfirmStartPostErrors[keyof ConfirmMissionApiV1ProjectsProjectIdTestMissionsMissionIdConfirmStartPostErrors];
+
+export type ConfirmMissionApiV1ProjectsProjectIdTestMissionsMissionIdConfirmStartPostResponses =
+  {
+    /**
+     * Successful Response
+     */
+    200: unknown;
+  };
+
+export type DiscoverMissionApiV1ProjectsProjectIdTestMissionsMissionIdDiscoverPostData =
+  {
+    body?: never;
+    headers?: {
+      /**
+       * X-Csrf-Token
+       */
+      "x-csrf-token"?: string | null;
+    };
+    path: {
+      /**
+       * Project Id
+       */
+      project_id: string;
+      /**
+       * Mission Id
+       */
+      mission_id: string;
+    };
+    query?: never;
+    url: "/api/v1/projects/{project_id}/test-missions/{mission_id}/discover";
+  };
+
+export type DiscoverMissionApiV1ProjectsProjectIdTestMissionsMissionIdDiscoverPostErrors =
+  {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+  };
+
+export type DiscoverMissionApiV1ProjectsProjectIdTestMissionsMissionIdDiscoverPostError =
+  DiscoverMissionApiV1ProjectsProjectIdTestMissionsMissionIdDiscoverPostErrors[keyof DiscoverMissionApiV1ProjectsProjectIdTestMissionsMissionIdDiscoverPostErrors];
+
+export type DiscoverMissionApiV1ProjectsProjectIdTestMissionsMissionIdDiscoverPostResponses =
+  {
+    /**
+     * Successful Response
+     */
+    200: unknown;
+  };
+
+export type PreviewMissionApiV1ProjectsProjectIdTestMissionsMissionIdPreviewPostData =
+  {
+    body?: never;
+    headers?: {
+      /**
+       * X-Csrf-Token
+       */
+      "x-csrf-token"?: string | null;
+    };
+    path: {
+      /**
+       * Project Id
+       */
+      project_id: string;
+      /**
+       * Mission Id
+       */
+      mission_id: string;
+    };
+    query?: never;
+    url: "/api/v1/projects/{project_id}/test-missions/{mission_id}/preview";
+  };
+
+export type PreviewMissionApiV1ProjectsProjectIdTestMissionsMissionIdPreviewPostErrors =
+  {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+  };
+
+export type PreviewMissionApiV1ProjectsProjectIdTestMissionsMissionIdPreviewPostError =
+  PreviewMissionApiV1ProjectsProjectIdTestMissionsMissionIdPreviewPostErrors[keyof PreviewMissionApiV1ProjectsProjectIdTestMissionsMissionIdPreviewPostErrors];
+
+export type PreviewMissionApiV1ProjectsProjectIdTestMissionsMissionIdPreviewPostResponses =
+  {
+    /**
+     * Successful Response
+     */
+    200: unknown;
+  };
+
+export type ResumeMissionApiV1ProjectsProjectIdTestMissionsMissionIdResumePostData =
+  {
+    body?: never;
+    headers?: {
+      /**
+       * X-Csrf-Token
+       */
+      "x-csrf-token"?: string | null;
+    };
+    path: {
+      /**
+       * Project Id
+       */
+      project_id: string;
+      /**
+       * Mission Id
+       */
+      mission_id: string;
+    };
+    query?: never;
+    url: "/api/v1/projects/{project_id}/test-missions/{mission_id}/resume";
+  };
+
+export type ResumeMissionApiV1ProjectsProjectIdTestMissionsMissionIdResumePostErrors =
+  {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+  };
+
+export type ResumeMissionApiV1ProjectsProjectIdTestMissionsMissionIdResumePostError =
+  ResumeMissionApiV1ProjectsProjectIdTestMissionsMissionIdResumePostErrors[keyof ResumeMissionApiV1ProjectsProjectIdTestMissionsMissionIdResumePostErrors];
+
+export type ResumeMissionApiV1ProjectsProjectIdTestMissionsMissionIdResumePostResponses =
+  {
+    /**
+     * Successful Response
+     */
+    200: unknown;
   };
 
 export type ListPlansApiV1ProjectsProjectIdTestPlansGetData = {

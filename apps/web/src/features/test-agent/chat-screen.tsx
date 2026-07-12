@@ -896,7 +896,9 @@ function MessageTimeline({
   return (
     <div className="mx-auto max-w-3xl">
       {/* ── Persisted, server-ordered conversation timeline ── */}
-      {timeline.length > 0 ? <ConversationTimeline items={timeline} /> : null}
+      {timeline.length > 0 ? (
+        <ConversationTimeline items={timeline} projectId={projectId} />
+      ) : null}
 
       {/* ── Legacy message fallback ── */}
       {timeline.length === 0

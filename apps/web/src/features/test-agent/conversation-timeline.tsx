@@ -15,14 +15,24 @@ import { useState } from "react";
 import { MarkdownContent, ReasoningBlock } from "@/components/uiverse";
 
 import type { TimelineItem } from "./api";
+import { MissionProgressCard } from "./mission-progress-card";
+import type { MissionProgressOutput } from "./mission-types";
 import { projectTimeline, type ToolTimelineItem } from "./timeline-projection";
 
-export function ConversationTimeline({ items }: { items: TimelineItem[] }) {
+export function ConversationTimeline({
+  items,
+  projectId = "",
+}: {
+  items: TimelineItem[];
+  projectId?: string;
+}) {
   return (
     <div className="space-y-6">
       {projectTimeline(items).map((item) => {
         if (item.kind === "tool") {
-          return <ToolProcessRow item={item} key={item.id} />;
+          return (
+            <ToolProcessRow item={item} key={item.id} projectId={projectId} />
+          );
         }
         if (item.kind === "message") {
           return (
@@ -85,7 +95,13 @@ export function ConversationTimeline({ items }: { items: TimelineItem[] }) {
   );
 }
 
-function ToolProcessRow({ item }: { item: ToolTimelineItem }) {
+function ToolProcessRow({
+  item,
+  projectId,
+}: {
+  item: ToolTimelineItem;
+  projectId: string;
+}) {
   const [expanded, setExpanded] = useState(false);
   const config = {
     queued: { icon: CircleDashed, tone: "text-[var(--muted)]" },
@@ -105,6 +121,13 @@ function ToolProcessRow({ item }: { item: ToolTimelineItem }) {
       ].includes(key),
   );
   const expandable = Boolean(item.summary || details.length > 0);
+  const output = item.details.output as MissionProgressOutput | undefined;
+  if (
+    item.details.capability?.toString().startsWith("test_missions.") &&
+    output?.mission_id
+  ) {
+    return <MissionProgressCard output={output} projectId={projectId} />;
+  }
 
   return (
     <div

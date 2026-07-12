@@ -248,6 +248,29 @@ class HandlerPlatformGateway:
         if capability == "runs.list":
             items = await self._runs.list_runs.execute(actor, project_id)
             return {"items": [_run(item) for item in items]}
+        if capability == "runs.get_status":
+            run_id = RunId(UUID(str(values["id"])))
+            item = await self._runs.get_run.execute(actor, project_id, run_id)
+            cases = await self._runs.list_cases.execute(actor, project_id, run_id)
+            errors = [case for case in cases if case.error_type]
+            return {
+                **_run(item),
+                "error_type": errors[0].error_type if errors else None,
+                "error_message": errors[0].error_message if errors else None,
+                "cases": [
+                    {
+                        "id": str(case.run_case_id.value),
+                        "name": case.name,
+                        "status": case.status.value,
+                        "execution_mode": case.execution_mode,
+                        "input": case.input_snapshot,
+                        "assertions": case.assertion_snapshot,
+                        "error_type": case.error_type,
+                        "error_message": case.error_message,
+                    }
+                    for case in cases
+                ],
+            }
         if capability == "runs.start":
             result = await self._runs.create_run.execute(
                 actor,
@@ -256,7 +279,10 @@ class HandlerPlatformGateway:
                     test_plan_version_id=TestPlanVersionId(
                         UUID(str(values["test_plan_version_id"]))
                     ),
-                    idempotency_key=f"super-agent:{context.session_id}:{uuid4()}",
+                    idempotency_key=(
+                        context.idempotency_key
+                        or f"super-agent:{context.session_id}:{uuid4()}"
+                    ),
                 ),
             )
             return _created("run", result.run.run_id.value, _run(result.run))
@@ -645,6 +671,21 @@ class HandlerPlatformGateway:
                 "account_type": account.account_type,
             },
         )
+
+
+class CompositePlatformGateway:
+    def __init__(self, platform: HandlerPlatformGateway, missions) -> None:
+        self._platform = platform
+        self._missions = missions
+
+    async def execute(
+        self, capability: str, context: object, payload: BaseModel
+    ) -> dict[str, object]:
+        if not isinstance(context, OrchestrationContext):
+            raise TypeError("Orchestration context is required")
+        if capability.startswith("test_missions."):
+            return await self._missions.execute(capability, context, payload)
+        return await self._platform.execute(capability, context, payload)
 
 
 def _artifact(kind: str, value: UUID, relation: str = "created") -> dict[str, str]:

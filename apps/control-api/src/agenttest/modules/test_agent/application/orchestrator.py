@@ -26,6 +26,7 @@ class OrchestrationContext:
     project_id: ProjectId
     session_id: UUID
     generation_id: UUID | None = None
+    idempotency_key: str | None = None
 
 
 class SuperAgentOrchestrator:

@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import Protocol
 from uuid import UUID
 
-from agenttest.modules.agents.domain.value_objects import AgentConfig
+from agenttest.modules.agents.public import AgentConfig
 from agenttest.modules.browser_profiles.domain.entities import BrowserProfile
 
 

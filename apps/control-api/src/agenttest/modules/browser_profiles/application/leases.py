@@ -31,6 +31,23 @@ class BrowserSessionScopeReader(Protocol):
     ) -> BrowserSessionSnapshotRef | None: ...
 
 
+def snapshot_ref_from_plugin_snapshot(
+    plugin_snapshot: dict,
+) -> BrowserSessionSnapshotRef | None:
+    value = plugin_snapshot.get("browser_profile_snapshot")
+    if not isinstance(value, dict):
+        return None
+    try:
+        profile_id = UUID(str(value.get("browser_profile_id") or ""))
+        version = int(value.get("auth_state_version") or 0)
+        sha256 = str(value.get("auth_state_sha256") or "")
+    except (TypeError, ValueError):
+        return None
+    if version <= 0 or len(sha256) != 64:
+        return None
+    return BrowserSessionSnapshotRef(profile_id, version, sha256)
+
+
 class BrowserSessionLeaseService:
     def __init__(
         self,

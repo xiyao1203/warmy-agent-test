@@ -1,10 +1,12 @@
 import { AlertTriangle, Bot, CheckCircle2, ChevronDown, X } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 
-import { decideConfirmation } from "./api";
+import { decideConfirmation, previewMission } from "./api";
 import type { AgentEvent } from "./api";
+import { MissionPreviewDetails } from "./mission-confirmation-details";
+import type { TestMissionResponse } from "./mission-types";
 
 export function ConfirmationCard({
   event,
@@ -22,6 +24,30 @@ export function ConfirmationCard({
   const [expanded, setExpanded] = useState(false);
   const confirmationId = String(event.payload.confirmation_id);
   const preview = event.payload.preview as Record<string, unknown> | undefined;
+  const capability = String(preview?.capability ?? "");
+  const args = preview?.arguments as Record<string, unknown> | undefined;
+  const missionConfirmation = capability === "test_missions.confirm_and_start";
+  const missionId = String(args?.mission_id ?? "");
+  const [mission, setMission] = useState<TestMissionResponse | null>(null);
+  const [missionError, setMissionError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!missionConfirmation || !missionId) return;
+    let active = true;
+    previewMission(projectId, missionId)
+      .then((result) => {
+        if (active) setMission(result);
+      })
+      .catch((error: unknown) => {
+        if (active)
+          setMissionError(
+            error instanceof Error ? error.message : "执行预览加载失败",
+          );
+      });
+    return () => {
+      active = false;
+    };
+  }, [missionConfirmation, missionId, projectId]);
 
   async function decide(approved: boolean) {
     setDecision(approved ? "approve" : "reject");
@@ -58,7 +84,6 @@ export function ConfirmationCard({
   };
   const risk = String(preview?.risk ?? "DRAFT_WRITE");
   const riskMeta = riskLabels[risk] ?? riskLabels.DRAFT_WRITE;
-  const args = preview?.arguments as Record<string, unknown> | undefined;
   const hasArgs = Boolean(args && Object.keys(args).length > 0);
   const busy = decision !== null;
 
@@ -70,20 +95,35 @@ export function ConfirmationCard({
         </span>
         <div className="min-w-0 flex-1">
           <p className="text-sm font-medium text-[var(--ink)]">
-            确认执行 {String(preview?.capability ?? "平台操作")}
+            {missionConfirmation
+              ? "确认并开始全链路测试"
+              : `确认执行 ${String(preview?.capability ?? "平台操作")}`}
           </p>
           <p className="mt-0.5 text-xs leading-5 text-[var(--muted)]">
-            {String(preview?.child_agent ?? "子 Agent")} 将修改平台数据
+            {missionConfirmation
+              ? "确认后自动创建或复用测试资产并启动真实运行"
+              : `${String(preview?.child_agent ?? "子 Agent")} 将修改平台数据`}
           </p>
         </div>
         <span
           className={`shrink-0 rounded-full px-2 py-0.5 text-[0.65rem] font-semibold ${riskMeta.color}`}
         >
-          {riskMeta.label}
+          {missionConfirmation ? "一次确认" : riskMeta.label}
         </span>
       </div>
 
       <div className="ml-10 space-y-2 pb-2">
+        {missionConfirmation ? (
+          mission ? (
+            <MissionPreviewDetails mission={mission} />
+          ) : missionError ? (
+            <p className="text-xs text-[var(--danger)]">{missionError}</p>
+          ) : (
+            <p className="text-xs text-[var(--muted)]">
+              正在加载不可变执行预览…
+            </p>
+          )
+        ) : null}
         <div className="flex flex-wrap items-center gap-2 text-xs text-[var(--muted)]">
           <Bot className="size-3.5 text-[var(--muted)]" />
           <span>子 Agent</span>
@@ -92,7 +132,7 @@ export function ConfirmationCard({
           </span>
         </div>
 
-        {hasArgs ? (
+        {hasArgs && !missionConfirmation ? (
           <div>
             <button
               aria-expanded={expanded}
@@ -136,7 +176,7 @@ export function ConfirmationCard({
       <div className="ml-10 flex flex-wrap gap-2 pb-2">
         <Button
           className="h-8 text-xs"
-          disabled={busy}
+          disabled={busy || (missionConfirmation && !mission)}
           onClick={() => void decide(false)}
           variant="secondary"
         >
@@ -151,7 +191,11 @@ export function ConfirmationCard({
           variant="primary"
         >
           <CheckCircle2 className="size-3.5" />
-          {decision === "approve" ? "正在执行" : "确认执行"}
+          {decision === "approve"
+            ? "正在执行"
+            : missionConfirmation
+              ? "确认并开始测试"
+              : "确认执行"}
         </Button>
       </div>
     </section>

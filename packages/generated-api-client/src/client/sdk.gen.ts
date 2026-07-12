@@ -33,6 +33,9 @@ import type {
   CancelGenerationApiV1ProjectsProjectIdTestAgentSessionsSessionIdGenerationsGenerationIdCancelPostData,
   CancelGenerationApiV1ProjectsProjectIdTestAgentSessionsSessionIdGenerationsGenerationIdCancelPostErrors,
   CancelGenerationApiV1ProjectsProjectIdTestAgentSessionsSessionIdGenerationsGenerationIdCancelPostResponses,
+  CancelMissionApiV1ProjectsProjectIdTestMissionsMissionIdCancelPostData,
+  CancelMissionApiV1ProjectsProjectIdTestMissionsMissionIdCancelPostErrors,
+  CancelMissionApiV1ProjectsProjectIdTestMissionsMissionIdCancelPostResponses,
   CancelRunApiV1ProjectsProjectIdRunsRunIdCancelPostData,
   CancelRunApiV1ProjectsProjectIdRunsRunIdCancelPostErrors,
   CancelRunApiV1ProjectsProjectIdRunsRunIdCancelPostResponses,
@@ -45,6 +48,9 @@ import type {
   CompleteLoginApiV1ProjectsProjectIdBrowserProfilesProfileIdLoginCompletePostData,
   CompleteLoginApiV1ProjectsProjectIdBrowserProfilesProfileIdLoginCompletePostErrors,
   CompleteLoginApiV1ProjectsProjectIdBrowserProfilesProfileIdLoginCompletePostResponses,
+  ConfirmMissionApiV1ProjectsProjectIdTestMissionsMissionIdConfirmStartPostData,
+  ConfirmMissionApiV1ProjectsProjectIdTestMissionsMissionIdConfirmStartPostErrors,
+  ConfirmMissionApiV1ProjectsProjectIdTestMissionsMissionIdConfirmStartPostResponses,
   ConvertToRegressionApiV1ProjectsProjectIdTestAgentTargetChatsSessionIdTurnsTurnIdRegressionCasesPostData,
   ConvertToRegressionApiV1ProjectsProjectIdTestAgentTargetChatsSessionIdTurnsTurnIdRegressionCasesPostErrors,
   ConvertToRegressionApiV1ProjectsProjectIdTestAgentTargetChatsSessionIdTurnsTurnIdRegressionCasesPostResponses,
@@ -176,6 +182,9 @@ import type {
   DisableUserApiV1SystemUsersUserIdDisablePostData,
   DisableUserApiV1SystemUsersUserIdDisablePostErrors,
   DisableUserApiV1SystemUsersUserIdDisablePostResponses,
+  DiscoverMissionApiV1ProjectsProjectIdTestMissionsMissionIdDiscoverPostData,
+  DiscoverMissionApiV1ProjectsProjectIdTestMissionsMissionIdDiscoverPostErrors,
+  DiscoverMissionApiV1ProjectsProjectIdTestMissionsMissionIdDiscoverPostResponses,
   DownloadArtifactApiV1ProjectsProjectIdArtifactsArtifactIdDownloadGetData,
   DownloadArtifactApiV1ProjectsProjectIdArtifactsArtifactIdDownloadGetErrors,
   DownloadArtifactApiV1ProjectsProjectIdArtifactsArtifactIdDownloadGetResponses,
@@ -191,6 +200,9 @@ import type {
   EventsApiV1ProjectsProjectIdRunsRunIdEventsGetData,
   EventsApiV1ProjectsProjectIdRunsRunIdEventsGetErrors,
   EventsApiV1ProjectsProjectIdRunsRunIdEventsGetResponses,
+  ExecuteStageApiV1InternalProjectsProjectIdTestMissionsMissionIdRevisionsRevisionIdStagesStagePostData,
+  ExecuteStageApiV1InternalProjectsProjectIdTestMissionsMissionIdRevisionsRevisionIdStagesStagePostErrors,
+  ExecuteStageApiV1InternalProjectsProjectIdTestMissionsMissionIdRevisionsRevisionIdStagesStagePostResponses,
   ExemptGateApiV1ProjectsProjectIdGatesGateIdExemptPostData,
   ExemptGateApiV1ProjectsProjectIdGatesGateIdExemptPostErrors,
   ExemptGateApiV1ProjectsProjectIdGatesGateIdExemptPostResponses,
@@ -218,6 +230,9 @@ import type {
   GetGateApiV1ProjectsProjectIdGatesGateIdGetData,
   GetGateApiV1ProjectsProjectIdGatesGateIdGetErrors,
   GetGateApiV1ProjectsProjectIdGatesGateIdGetResponses,
+  GetMissionApiV1ProjectsProjectIdTestMissionsMissionIdGetData,
+  GetMissionApiV1ProjectsProjectIdTestMissionsMissionIdGetErrors,
+  GetMissionApiV1ProjectsProjectIdTestMissionsMissionIdGetResponses,
   GetPlanApiV1ProjectsProjectIdTestPlansPlanIdGetData,
   GetPlanApiV1ProjectsProjectIdTestPlansPlanIdGetErrors,
   GetPlanApiV1ProjectsProjectIdTestPlansPlanIdGetResponses,
@@ -380,6 +395,9 @@ import type {
   PreviewImportApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdImportsPreviewPostData,
   PreviewImportApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdImportsPreviewPostErrors,
   PreviewImportApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdImportsPreviewPostResponses,
+  PreviewMissionApiV1ProjectsProjectIdTestMissionsMissionIdPreviewPostData,
+  PreviewMissionApiV1ProjectsProjectIdTestMissionsMissionIdPreviewPostErrors,
+  PreviewMissionApiV1ProjectsProjectIdTestMissionsMissionIdPreviewPostResponses,
   ProjectAuditApiV1ProjectsProjectIdAuditGetData,
   ProjectAuditApiV1ProjectsProjectIdAuditGetErrors,
   ProjectAuditApiV1ProjectsProjectIdAuditGetResponses,
@@ -395,6 +413,9 @@ import type {
   PublishVersionApiV1ProjectsProjectIdTestPlansPlanIdVersionsVersionIdPublishPostData,
   PublishVersionApiV1ProjectsProjectIdTestPlansPlanIdVersionsVersionIdPublishPostErrors,
   PublishVersionApiV1ProjectsProjectIdTestPlansPlanIdVersionsVersionIdPublishPostResponses,
+  RedeemApiV1InternalProjectsProjectIdBrowserSessionLeasesRedeemPostData,
+  RedeemApiV1InternalProjectsProjectIdBrowserSessionLeasesRedeemPostErrors,
+  RedeemApiV1InternalProjectsProjectIdBrowserSessionLeasesRedeemPostResponses,
   RedeemApiV1InternalProjectsProjectIdCredentialLeasesRedeemPostData,
   RedeemApiV1InternalProjectsProjectIdCredentialLeasesRedeemPostErrors,
   RedeemApiV1InternalProjectsProjectIdCredentialLeasesRedeemPostResponses,
@@ -416,6 +437,9 @@ import type {
   RestoreSnapshotApiV1ProjectsProjectIdEnvironmentsTemplateIdSnapshotsSnapshotIdRestorePostData,
   RestoreSnapshotApiV1ProjectsProjectIdEnvironmentsTemplateIdSnapshotsSnapshotIdRestorePostErrors,
   RestoreSnapshotApiV1ProjectsProjectIdEnvironmentsTemplateIdSnapshotsSnapshotIdRestorePostResponses,
+  ResumeMissionApiV1ProjectsProjectIdTestMissionsMissionIdResumePostData,
+  ResumeMissionApiV1ProjectsProjectIdTestMissionsMissionIdResumePostErrors,
+  ResumeMissionApiV1ProjectsProjectIdTestMissionsMissionIdResumePostResponses,
   ReviewStatsApiV1ProjectsProjectIdReviewsStatsGetData,
   ReviewStatsApiV1ProjectsProjectIdReviewsStatsGetErrors,
   ReviewStatsApiV1ProjectsProjectIdReviewsStatsGetResponses,
@@ -515,9 +539,15 @@ import type {
   UploadInternalArtifactApiV1InternalProjectsProjectIdRunsRunIdArtifactsPostData,
   UploadInternalArtifactApiV1InternalProjectsProjectIdRunsRunIdArtifactsPostErrors,
   UploadInternalArtifactApiV1InternalProjectsProjectIdRunsRunIdArtifactsPostResponses,
+  UpsertMissionApiV1ProjectsProjectIdTestMissionsPostData,
+  UpsertMissionApiV1ProjectsProjectIdTestMissionsPostErrors,
+  UpsertMissionApiV1ProjectsProjectIdTestMissionsPostResponses,
   ValidateConnectionApiV1ProjectsProjectIdAgentsAgentIdVersionsVersionIdValidateConnectionPostData,
   ValidateConnectionApiV1ProjectsProjectIdAgentsAgentIdVersionsVersionIdValidateConnectionPostErrors,
   ValidateConnectionApiV1ProjectsProjectIdAgentsAgentIdVersionsVersionIdValidateConnectionPostResponses,
+  VerifyProfileApiV1ProjectsProjectIdBrowserProfilesProfileIdVerifyPostData,
+  VerifyProfileApiV1ProjectsProjectIdBrowserProfilesProfileIdVerifyPostErrors,
+  VerifyProfileApiV1ProjectsProjectIdBrowserProfilesProfileIdVerifyPostResponses,
 } from "./types.gen";
 
 export type Options<
@@ -679,6 +709,33 @@ export const healthApiV1HealthGet = <ThrowOnError extends boolean = false>(
 /**
  * Redeem
  */
+export const redeemApiV1InternalProjectsProjectIdBrowserSessionLeasesRedeemPost =
+  <ThrowOnError extends boolean = false>(
+    options: Options<
+      RedeemApiV1InternalProjectsProjectIdBrowserSessionLeasesRedeemPostData,
+      ThrowOnError
+    >,
+  ): RequestResult<
+    RedeemApiV1InternalProjectsProjectIdBrowserSessionLeasesRedeemPostResponses,
+    RedeemApiV1InternalProjectsProjectIdBrowserSessionLeasesRedeemPostErrors,
+    ThrowOnError
+  > =>
+    (options.client ?? client).post<
+      RedeemApiV1InternalProjectsProjectIdBrowserSessionLeasesRedeemPostResponses,
+      RedeemApiV1InternalProjectsProjectIdBrowserSessionLeasesRedeemPostErrors,
+      ThrowOnError
+    >({
+      url: "/api/v1/internal/projects/{project_id}/browser-session-leases:redeem",
+      ...options,
+      headers: {
+        "Content-Type": "application/json",
+        ...options.headers,
+      },
+    });
+
+/**
+ * Redeem
+ */
 export const redeemApiV1InternalProjectsProjectIdCredentialLeasesRedeemPost = <
   ThrowOnError extends boolean = false,
 >(
@@ -725,6 +782,33 @@ export const uploadInternalArtifactApiV1InternalProjectsProjectIdRunsRunIdArtifa
     >({
       url: "/api/v1/internal/projects/{project_id}/runs/{run_id}/artifacts",
       ...options,
+    });
+
+/**
+ * Execute Stage
+ */
+export const executeStageApiV1InternalProjectsProjectIdTestMissionsMissionIdRevisionsRevisionIdStagesStagePost =
+  <ThrowOnError extends boolean = false>(
+    options: Options<
+      ExecuteStageApiV1InternalProjectsProjectIdTestMissionsMissionIdRevisionsRevisionIdStagesStagePostData,
+      ThrowOnError
+    >,
+  ): RequestResult<
+    ExecuteStageApiV1InternalProjectsProjectIdTestMissionsMissionIdRevisionsRevisionIdStagesStagePostResponses,
+    ExecuteStageApiV1InternalProjectsProjectIdTestMissionsMissionIdRevisionsRevisionIdStagesStagePostErrors,
+    ThrowOnError
+  > =>
+    (options.client ?? client).post<
+      ExecuteStageApiV1InternalProjectsProjectIdTestMissionsMissionIdRevisionsRevisionIdStagesStagePostResponses,
+      ExecuteStageApiV1InternalProjectsProjectIdTestMissionsMissionIdRevisionsRevisionIdStagesStagePostErrors,
+      ThrowOnError
+    >({
+      url: "/api/v1/internal/projects/{project_id}/test-missions/{mission_id}/revisions/{revision_id}/stages/{stage}",
+      ...options,
+      headers: {
+        "Content-Type": "application/json",
+        ...options.headers,
+      },
     });
 
 /**
@@ -1435,6 +1519,29 @@ export const stopProfileApiV1ProjectsProjectIdBrowserProfilesProfileIdStopPost =
       ThrowOnError
     >({
       url: "/api/v1/projects/{project_id}/browser-profiles/{profile_id}/stop",
+      ...options,
+    });
+
+/**
+ * Verify Profile
+ */
+export const verifyProfileApiV1ProjectsProjectIdBrowserProfilesProfileIdVerifyPost =
+  <ThrowOnError extends boolean = false>(
+    options: Options<
+      VerifyProfileApiV1ProjectsProjectIdBrowserProfilesProfileIdVerifyPostData,
+      ThrowOnError
+    >,
+  ): RequestResult<
+    VerifyProfileApiV1ProjectsProjectIdBrowserProfilesProfileIdVerifyPostResponses,
+    VerifyProfileApiV1ProjectsProjectIdBrowserProfilesProfileIdVerifyPostErrors,
+    ThrowOnError
+  > =>
+    (options.client ?? client).post<
+      VerifyProfileApiV1ProjectsProjectIdBrowserProfilesProfileIdVerifyPostResponses,
+      VerifyProfileApiV1ProjectsProjectIdBrowserProfilesProfileIdVerifyPostErrors,
+      ThrowOnError
+    >({
+      url: "/api/v1/projects/{project_id}/browser-profiles/{profile_id}/verify",
       ...options,
     });
 
@@ -4102,6 +4209,177 @@ export const convertToRegressionApiV1ProjectsProjectIdTestAgentTargetChatsSessio
         "Content-Type": "application/json",
         ...options.headers,
       },
+    });
+
+/**
+ * Upsert Mission
+ */
+export const upsertMissionApiV1ProjectsProjectIdTestMissionsPost = <
+  ThrowOnError extends boolean = false,
+>(
+  options: Options<
+    UpsertMissionApiV1ProjectsProjectIdTestMissionsPostData,
+    ThrowOnError
+  >,
+): RequestResult<
+  UpsertMissionApiV1ProjectsProjectIdTestMissionsPostResponses,
+  UpsertMissionApiV1ProjectsProjectIdTestMissionsPostErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).post<
+    UpsertMissionApiV1ProjectsProjectIdTestMissionsPostResponses,
+    UpsertMissionApiV1ProjectsProjectIdTestMissionsPostErrors,
+    ThrowOnError
+  >({
+    url: "/api/v1/projects/{project_id}/test-missions",
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...options.headers,
+    },
+  });
+
+/**
+ * Get Mission
+ */
+export const getMissionApiV1ProjectsProjectIdTestMissionsMissionIdGet = <
+  ThrowOnError extends boolean = false,
+>(
+  options: Options<
+    GetMissionApiV1ProjectsProjectIdTestMissionsMissionIdGetData,
+    ThrowOnError
+  >,
+): RequestResult<
+  GetMissionApiV1ProjectsProjectIdTestMissionsMissionIdGetResponses,
+  GetMissionApiV1ProjectsProjectIdTestMissionsMissionIdGetErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).get<
+    GetMissionApiV1ProjectsProjectIdTestMissionsMissionIdGetResponses,
+    GetMissionApiV1ProjectsProjectIdTestMissionsMissionIdGetErrors,
+    ThrowOnError
+  >({
+    url: "/api/v1/projects/{project_id}/test-missions/{mission_id}",
+    ...options,
+  });
+
+/**
+ * Cancel Mission
+ */
+export const cancelMissionApiV1ProjectsProjectIdTestMissionsMissionIdCancelPost =
+  <ThrowOnError extends boolean = false>(
+    options: Options<
+      CancelMissionApiV1ProjectsProjectIdTestMissionsMissionIdCancelPostData,
+      ThrowOnError
+    >,
+  ): RequestResult<
+    CancelMissionApiV1ProjectsProjectIdTestMissionsMissionIdCancelPostResponses,
+    CancelMissionApiV1ProjectsProjectIdTestMissionsMissionIdCancelPostErrors,
+    ThrowOnError
+  > =>
+    (options.client ?? client).post<
+      CancelMissionApiV1ProjectsProjectIdTestMissionsMissionIdCancelPostResponses,
+      CancelMissionApiV1ProjectsProjectIdTestMissionsMissionIdCancelPostErrors,
+      ThrowOnError
+    >({
+      url: "/api/v1/projects/{project_id}/test-missions/{mission_id}/cancel",
+      ...options,
+    });
+
+/**
+ * Confirm Mission
+ */
+export const confirmMissionApiV1ProjectsProjectIdTestMissionsMissionIdConfirmStartPost =
+  <ThrowOnError extends boolean = false>(
+    options: Options<
+      ConfirmMissionApiV1ProjectsProjectIdTestMissionsMissionIdConfirmStartPostData,
+      ThrowOnError
+    >,
+  ): RequestResult<
+    ConfirmMissionApiV1ProjectsProjectIdTestMissionsMissionIdConfirmStartPostResponses,
+    ConfirmMissionApiV1ProjectsProjectIdTestMissionsMissionIdConfirmStartPostErrors,
+    ThrowOnError
+  > =>
+    (options.client ?? client).post<
+      ConfirmMissionApiV1ProjectsProjectIdTestMissionsMissionIdConfirmStartPostResponses,
+      ConfirmMissionApiV1ProjectsProjectIdTestMissionsMissionIdConfirmStartPostErrors,
+      ThrowOnError
+    >({
+      url: "/api/v1/projects/{project_id}/test-missions/{mission_id}/confirm-start",
+      ...options,
+      headers: {
+        "Content-Type": "application/json",
+        ...options.headers,
+      },
+    });
+
+/**
+ * Discover Mission
+ */
+export const discoverMissionApiV1ProjectsProjectIdTestMissionsMissionIdDiscoverPost =
+  <ThrowOnError extends boolean = false>(
+    options: Options<
+      DiscoverMissionApiV1ProjectsProjectIdTestMissionsMissionIdDiscoverPostData,
+      ThrowOnError
+    >,
+  ): RequestResult<
+    DiscoverMissionApiV1ProjectsProjectIdTestMissionsMissionIdDiscoverPostResponses,
+    DiscoverMissionApiV1ProjectsProjectIdTestMissionsMissionIdDiscoverPostErrors,
+    ThrowOnError
+  > =>
+    (options.client ?? client).post<
+      DiscoverMissionApiV1ProjectsProjectIdTestMissionsMissionIdDiscoverPostResponses,
+      DiscoverMissionApiV1ProjectsProjectIdTestMissionsMissionIdDiscoverPostErrors,
+      ThrowOnError
+    >({
+      url: "/api/v1/projects/{project_id}/test-missions/{mission_id}/discover",
+      ...options,
+    });
+
+/**
+ * Preview Mission
+ */
+export const previewMissionApiV1ProjectsProjectIdTestMissionsMissionIdPreviewPost =
+  <ThrowOnError extends boolean = false>(
+    options: Options<
+      PreviewMissionApiV1ProjectsProjectIdTestMissionsMissionIdPreviewPostData,
+      ThrowOnError
+    >,
+  ): RequestResult<
+    PreviewMissionApiV1ProjectsProjectIdTestMissionsMissionIdPreviewPostResponses,
+    PreviewMissionApiV1ProjectsProjectIdTestMissionsMissionIdPreviewPostErrors,
+    ThrowOnError
+  > =>
+    (options.client ?? client).post<
+      PreviewMissionApiV1ProjectsProjectIdTestMissionsMissionIdPreviewPostResponses,
+      PreviewMissionApiV1ProjectsProjectIdTestMissionsMissionIdPreviewPostErrors,
+      ThrowOnError
+    >({
+      url: "/api/v1/projects/{project_id}/test-missions/{mission_id}/preview",
+      ...options,
+    });
+
+/**
+ * Resume Mission
+ */
+export const resumeMissionApiV1ProjectsProjectIdTestMissionsMissionIdResumePost =
+  <ThrowOnError extends boolean = false>(
+    options: Options<
+      ResumeMissionApiV1ProjectsProjectIdTestMissionsMissionIdResumePostData,
+      ThrowOnError
+    >,
+  ): RequestResult<
+    ResumeMissionApiV1ProjectsProjectIdTestMissionsMissionIdResumePostResponses,
+    ResumeMissionApiV1ProjectsProjectIdTestMissionsMissionIdResumePostErrors,
+    ThrowOnError
+  > =>
+    (options.client ?? client).post<
+      ResumeMissionApiV1ProjectsProjectIdTestMissionsMissionIdResumePostResponses,
+      ResumeMissionApiV1ProjectsProjectIdTestMissionsMissionIdResumePostErrors,
+      ThrowOnError
+    >({
+      url: "/api/v1/projects/{project_id}/test-missions/{mission_id}/resume",
+      ...options,
     });
 
 /**
