@@ -30,15 +30,15 @@
 - Consumes: approved design `docs/superpowers/specs/2026-07-12-run-trust-loop-productization-design.md`
 - Produces: unique active task `TASK-20260712-003` with exact scope and acceptance commands
 
-- [ ] **Step 1: Replace the waiting task entry with the new active task**
+- [x] **Step 1: Replace the waiting task entry with the new active task**
 
 Record status `进行中`, the new specification and this plan, allowed modules, migration/API/Workflow/frontend scope, and the external real-target limitation inherited from `TASK-20260712-002`.
 
-- [ ] **Step 2: Add the same task to the progress ledger**
+- [x] **Step 2: Add the same task to the progress ledger**
 
 Keep `TASK-20260712-002` as `待验证`; do not claim the real-target gate passed.
 
-- [ ] **Step 3: Verify and commit**
+- [x] **Step 3: Verify and commit**
 
 Run: `git diff --check docs/当前任务.md docs/开发进度与变更记录.md`
 Expected: exit 0.
