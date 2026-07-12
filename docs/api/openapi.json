@@ -708,6 +708,99 @@
         "title": "BatchConfirmationDecision",
         "type": "object"
       },
+      "CalibrationResponse": {
+        "properties": {
+          "arbitration": {
+            "additionalProperties": true,
+            "title": "Arbitration",
+            "type": "object"
+          },
+          "created_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created At"
+          },
+          "evaluator_version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Evaluator Version"
+          },
+          "id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Id"
+          },
+          "metrics": {
+            "additionalProperties": true,
+            "title": "Metrics",
+            "type": "object"
+          },
+          "pipeline_version": {
+            "title": "Pipeline Version",
+            "type": "string"
+          },
+          "sample_set_version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sample Set Version"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "updated_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Updated At"
+          }
+        },
+        "required": [
+          "id",
+          "pipeline_version",
+          "status",
+          "sample_set_version",
+          "metrics",
+          "arbitration",
+          "evaluator_version",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "CalibrationResponse",
+        "type": "object"
+      },
       "ChangePasswordRequest": {
         "additionalProperties": false,
         "properties": {
@@ -1740,6 +1833,125 @@
         "title": "DatasetVersionResponse",
         "type": "object"
       },
+      "DiagnosticListResponse": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/DiagnosticResponse"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "limit": {
+            "title": "Limit",
+            "type": "integer"
+          },
+          "offset": {
+            "title": "Offset",
+            "type": "integer"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "total",
+          "limit",
+          "offset"
+        ],
+        "title": "DiagnosticListResponse",
+        "type": "object"
+      },
+      "DiagnosticResponse": {
+        "properties": {
+          "confidence": {
+            "title": "Confidence",
+            "type": "number"
+          },
+          "counterevidence": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Counterevidence",
+            "type": "array"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "evidence_ids": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Evidence Ids",
+            "type": "array"
+          },
+          "failure_class": {
+            "title": "Failure Class",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "pipeline_version": {
+            "title": "Pipeline Version",
+            "type": "string"
+          },
+          "run_case_id": {
+            "format": "uuid",
+            "title": "Run Case Id",
+            "type": "string"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "summary": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Summary"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          },
+          "verification_steps": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Verification Steps",
+            "type": "array"
+          }
+        },
+        "required": [
+          "id",
+          "run_case_id",
+          "pipeline_version",
+          "status",
+          "failure_class",
+          "confidence",
+          "evidence_ids",
+          "summary",
+          "counterevidence",
+          "verification_steps",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "DiagnosticResponse",
+        "type": "object"
+      },
       "EnvironmentTemplateListResponse": {
         "properties": {
           "items": {
@@ -1957,6 +2169,35 @@
           "run_id"
         ],
         "title": "EvaluateGateRequest",
+        "type": "object"
+      },
+      "ExecutePostprocessStageRequest": {
+        "properties": {
+          "attempt": {
+            "default": 1,
+            "maximum": 100.0,
+            "minimum": 1.0,
+            "title": "Attempt",
+            "type": "integer"
+          },
+          "idempotency_key": {
+            "maxLength": 300,
+            "minLength": 1,
+            "title": "Idempotency Key",
+            "type": "string"
+          },
+          "workflow_id": {
+            "maxLength": 255,
+            "minLength": 1,
+            "title": "Workflow Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "idempotency_key",
+          "workflow_id"
+        ],
+        "title": "ExecutePostprocessStageRequest",
         "type": "object"
       },
       "ExecuteStageRequest": {
@@ -2253,6 +2494,102 @@
         "title": "InvocationProtocol",
         "type": "string"
       },
+      "JointGateDecisionResponse": {
+        "properties": {
+          "baseline_run_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Baseline Run Id"
+          },
+          "created_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created At"
+          },
+          "decision": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Decision"
+          },
+          "explanation": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Explanation"
+          },
+          "id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Id"
+          },
+          "input_facts": {
+            "additionalProperties": true,
+            "title": "Input Facts",
+            "type": "object"
+          },
+          "pipeline_version": {
+            "title": "Pipeline Version",
+            "type": "string"
+          },
+          "rules": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Rules",
+            "type": "array"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "pipeline_version",
+          "status",
+          "baseline_run_id",
+          "decision",
+          "rules",
+          "input_facts",
+          "explanation",
+          "created_at"
+        ],
+        "title": "JointGateDecisionResponse",
+        "type": "object"
+      },
       "Language": {
         "description": "语言枚举。",
         "enum": [
@@ -2421,6 +2758,48 @@
         ],
         "title": "ModelPurpose",
         "type": "string"
+      },
+      "PostprocessStage": {
+        "enum": [
+          "classify",
+          "diagnose",
+          "reproduce",
+          "calibrate",
+          "evaluate_gate",
+          "finalize"
+        ],
+        "title": "PostprocessStage",
+        "type": "string"
+      },
+      "PostprocessStageResponse": {
+        "properties": {
+          "output": {
+            "additionalProperties": true,
+            "title": "Output",
+            "type": "object"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "warning_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Warning Code"
+          }
+        },
+        "required": [
+          "status",
+          "output"
+        ],
+        "title": "PostprocessStageResponse",
+        "type": "object"
       },
       "Priority": {
         "description": "用例优先级：P0（最高）→ P3（最低）。",
@@ -2623,6 +3002,129 @@
           }
         },
         "title": "RegenerateRequest",
+        "type": "object"
+      },
+      "RegressionCandidateListResponse": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/RegressionCandidateResponse"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "limit": {
+            "title": "Limit",
+            "type": "integer"
+          },
+          "offset": {
+            "title": "Offset",
+            "type": "integer"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "total",
+          "limit",
+          "offset"
+        ],
+        "title": "RegressionCandidateListResponse",
+        "type": "object"
+      },
+      "RegressionCandidateResponse": {
+        "properties": {
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "fingerprint": {
+            "title": "Fingerprint",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "input_reference": {
+            "additionalProperties": true,
+            "title": "Input Reference",
+            "type": "object"
+          },
+          "minimized_input": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Minimized Input"
+          },
+          "pipeline_version": {
+            "title": "Pipeline Version",
+            "type": "string"
+          },
+          "reproduction_count": {
+            "title": "Reproduction Count",
+            "type": "integer"
+          },
+          "reproduction_run_case_ids": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Reproduction Run Case Ids",
+            "type": "array"
+          },
+          "run_case_id": {
+            "format": "uuid",
+            "title": "Run Case Id",
+            "type": "string"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "target_dataset_version_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Target Dataset Version Id"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "run_case_id",
+          "pipeline_version",
+          "fingerprint",
+          "status",
+          "input_reference",
+          "minimized_input",
+          "reproduction_run_case_ids",
+          "reproduction_count",
+          "target_dataset_version_id",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "RegressionCandidateResponse",
         "type": "object"
       },
       "RenameProjectRequest": {
@@ -3714,6 +4216,163 @@
           "output"
         ],
         "title": "TrialScorerRequest",
+        "type": "object"
+      },
+      "TrustLoopResponse": {
+        "properties": {
+          "calibration": {
+            "additionalProperties": true,
+            "title": "Calibration",
+            "type": "object"
+          },
+          "classifications": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Classifications",
+            "type": "array"
+          },
+          "completed_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Completed At"
+          },
+          "created_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created At"
+          },
+          "current_stage": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Current Stage"
+          },
+          "diagnostics": {
+            "additionalProperties": true,
+            "title": "Diagnostics",
+            "type": "object"
+          },
+          "error_type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error Type"
+          },
+          "job_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Job Id"
+          },
+          "joint_gate": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Joint Gate"
+          },
+          "pipeline_version": {
+            "title": "Pipeline Version",
+            "type": "string"
+          },
+          "project_id": {
+            "format": "uuid",
+            "title": "Project Id",
+            "type": "string"
+          },
+          "regressions": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Regressions",
+            "type": "array"
+          },
+          "run_id": {
+            "format": "uuid",
+            "title": "Run Id",
+            "type": "string"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "updated_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Updated At"
+          },
+          "warning_codes": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Warning Codes",
+            "type": "array"
+          }
+        },
+        "required": [
+          "job_id",
+          "project_id",
+          "run_id",
+          "pipeline_version",
+          "status",
+          "current_stage",
+          "classifications",
+          "diagnostics",
+          "regressions",
+          "calibration",
+          "joint_gate",
+          "warning_codes",
+          "error_type",
+          "created_at",
+          "updated_at",
+          "completed_at"
+        ],
+        "title": "TrustLoopResponse",
         "type": "object"
       },
       "UpdateAccountRequest": {
@@ -5183,6 +5842,190 @@
         "summary": "Upload Internal Artifact",
         "tags": [
           "artifacts"
+        ]
+      }
+    },
+    "/api/v1/internal/projects/{project_id}/runs/{run_id}/trust-loop/{pipeline_version}/finalize": {
+      "post": {
+        "operationId": "finalize_api_v1_internal_projects__project_id__runs__run_id__trust_loop__pipeline_version__finalize_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Project Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "run_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Run Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "pipeline_version",
+            "required": true,
+            "schema": {
+              "title": "Pipeline Version",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "x-internal-token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Internal-Token"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExecutePostprocessStageRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PostprocessStageResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Finalize",
+        "tags": [
+          "internal-run-trust-loop"
+        ]
+      }
+    },
+    "/api/v1/internal/projects/{project_id}/runs/{run_id}/trust-loop/{pipeline_version}/stages/{stage}": {
+      "post": {
+        "operationId": "execute_stage_api_v1_internal_projects__project_id__runs__run_id__trust_loop__pipeline_version__stages__stage__post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Project Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "run_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Run Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "pipeline_version",
+            "required": true,
+            "schema": {
+              "title": "Pipeline Version",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "stage",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/PostprocessStage"
+            }
+          },
+          {
+            "in": "header",
+            "name": "x-internal-token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Internal-Token"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExecutePostprocessStageRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PostprocessStageResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Execute Stage",
+        "tags": [
+          "internal-run-trust-loop"
         ]
       }
     },
@@ -12142,6 +12985,59 @@
         ]
       }
     },
+    "/api/v1/projects/{project_id}/runs/{run_id}/calibration": {
+      "get": {
+        "operationId": "get_calibration_api_v1_projects__project_id__runs__run_id__calibration_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Project Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "run_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Run Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CalibrationResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Calibration",
+        "tags": [
+          "run-trust-loop"
+        ]
+      }
+    },
     "/api/v1/projects/{project_id}/runs/{run_id}/cancel": {
       "post": {
         "operationId": "cancel_run_api_v1_projects__project_id__runs__run_id__cancel_post",
@@ -12264,6 +13160,82 @@
         ]
       }
     },
+    "/api/v1/projects/{project_id}/runs/{run_id}/diagnostics": {
+      "get": {
+        "operationId": "list_diagnostics_api_v1_projects__project_id__runs__run_id__diagnostics_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Project Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "run_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Run Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "minimum": 0,
+              "title": "Offset",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DiagnosticListResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Diagnostics",
+        "tags": [
+          "run-trust-loop"
+        ]
+      }
+    },
     "/api/v1/projects/{project_id}/runs/{run_id}/events": {
       "get": {
         "operationId": "events_api_v1_projects__project_id__runs__run_id__events_get",
@@ -12374,6 +13346,135 @@
         "summary": "Export Run Report",
         "tags": [
           "reports"
+        ]
+      }
+    },
+    "/api/v1/projects/{project_id}/runs/{run_id}/joint-gate": {
+      "get": {
+        "operationId": "get_joint_gate_api_v1_projects__project_id__runs__run_id__joint_gate_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Project Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "run_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Run Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JointGateDecisionResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Joint Gate",
+        "tags": [
+          "run-trust-loop"
+        ]
+      }
+    },
+    "/api/v1/projects/{project_id}/runs/{run_id}/regressions": {
+      "get": {
+        "operationId": "list_regressions_api_v1_projects__project_id__runs__run_id__regressions_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Project Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "run_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Run Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "minimum": 0,
+              "title": "Offset",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RegressionCandidateListResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Regressions",
+        "tags": [
+          "run-trust-loop"
         ]
       }
     },
@@ -12505,6 +13606,59 @@
         "summary": "Stream Run Progress",
         "tags": [
           "run-stream"
+        ]
+      }
+    },
+    "/api/v1/projects/{project_id}/runs/{run_id}/trust-loop": {
+      "get": {
+        "operationId": "get_trust_loop_api_v1_projects__project_id__runs__run_id__trust_loop_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Project Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "run_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Run Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TrustLoopResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Trust Loop",
+        "tags": [
+          "run-trust-loop"
         ]
       }
     },

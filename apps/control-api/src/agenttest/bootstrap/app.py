@@ -383,10 +383,12 @@ def create_app(
     from agenttest.modules.run_postprocessing.api.internal_router import (
         create_internal_postprocess_router,
     )
+    from agenttest.modules.run_postprocessing.api.router import create_run_trust_loop_router
     from agenttest.modules.run_postprocessing.application import PostprocessStageController
     from agenttest.modules.run_postprocessing.infrastructure.repository import (
         SqlAlchemyPostprocessRepository,
     )
+    from agenttest.modules.run_postprocessing.queries import RunTrustLoopQueryService
     from agenttest.modules.run_postprocessing.snapshot_reader import (
         RunPostprocessSnapshotReader,
     )
@@ -404,6 +406,14 @@ def create_app(
                 PostprocessStageService(RunPostprocessSnapshotReader(postprocess_runs)),
             ),
             uow_factory=lambda: SqlAlchemyUnitOfWork(postprocess_session_factory),
+        ),
+        prefix="/api/v1",
+    )
+    app.include_router(
+        create_run_trust_loop_router(
+            service=RunTrustLoopQueryService(postprocess_repository, runs.get_run),
+            current_user=dependencies.current_user,
+            settings=resolved_settings,
         ),
         prefix="/api/v1",
     )
@@ -1812,6 +1822,10 @@ def _register_test_agent_endpoints(
     from agenttest.modules.reviews.infrastructure.persistence.repositories import (
         SqlAlchemyReviewTaskRepository,
     )
+    from agenttest.modules.run_postprocessing.infrastructure.repository import (
+        SqlAlchemyPostprocessRepository,
+    )
+    from agenttest.modules.run_postprocessing.queries import RunTrustLoopQueryService
     from agenttest.modules.scorers.infrastructure.persistence.repositories import (
         SqlAlchemyScorerRepository,
     )
@@ -1935,12 +1949,13 @@ def _register_test_agent_endpoints(
         mission_repository, mission_preflight, mission_runtime, mission_audit
     )
     mission_get = GetMissionHandler(mission_repository, mission_preflight)
+    mission_runs = build_run_dependencies(settings)
     gateway = HandlerPlatformGateway(
         agents=build_agent_dependencies(settings),
         datasets=build_dataset_dependencies(settings),
         environments=build_environment_dependencies(settings),
         plans=build_test_plan_dependencies(settings),
-        runs=build_run_dependencies(settings),
+        runs=mission_runs,
         scorers=SqlAlchemyScorerRepository(session_factory),
         experiments=SqlAlchemyExperimentRepository(session_factory),
         reviews=SqlAlchemyReviewTaskRepository(session_factory),
@@ -2036,7 +2051,12 @@ def _register_test_agent_endpoints(
         prefix="/api/v1",
     )
     mission_stages = MissionStageService(
-        MissionCompiler(), ConfirmedMissionAssetExecutor(registry), mission_repository
+        MissionCompiler(),
+        ConfirmedMissionAssetExecutor(registry),
+        mission_repository,
+        RunTrustLoopQueryService(
+            SqlAlchemyPostprocessRepository(session_factory), mission_runs.get_run
+        ),
     )
     app.include_router(
         create_internal_mission_stage_router(

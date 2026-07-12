@@ -144,13 +144,17 @@ class MissionStageController:
                 else StageExecutionResult("completed", await_receipt.output)
             )
         if stage == "close_loop":
-            receipt = await self._stages.close_loop(
+            close_receipt = await self._stages.close_loop(
                 actor=actor,
                 project_id=project_id,
                 session_id=session_id,
                 revision=revision,
             )
-            return StageExecutionResult("completed", receipt.output)
+            return (
+                StageExecutionResult("running", {})
+                if close_receipt is None
+                else StageExecutionResult("completed", close_receipt.output)
+            )
         if stage == "cancel":
             output = await self._stages.cancel_run(
                 actor=actor,

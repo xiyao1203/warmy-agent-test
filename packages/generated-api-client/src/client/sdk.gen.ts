@@ -200,6 +200,9 @@ import type {
   EventsApiV1ProjectsProjectIdRunsRunIdEventsGetData,
   EventsApiV1ProjectsProjectIdRunsRunIdEventsGetErrors,
   EventsApiV1ProjectsProjectIdRunsRunIdEventsGetResponses,
+  ExecuteStageApiV1InternalProjectsProjectIdRunsRunIdTrustLoopPipelineVersionStagesStagePostData,
+  ExecuteStageApiV1InternalProjectsProjectIdRunsRunIdTrustLoopPipelineVersionStagesStagePostErrors,
+  ExecuteStageApiV1InternalProjectsProjectIdRunsRunIdTrustLoopPipelineVersionStagesStagePostResponses,
   ExecuteStageApiV1InternalProjectsProjectIdTestMissionsMissionIdRevisionsRevisionIdStagesStagePostData,
   ExecuteStageApiV1InternalProjectsProjectIdTestMissionsMissionIdRevisionsRevisionIdStagesStagePostErrors,
   ExecuteStageApiV1InternalProjectsProjectIdTestMissionsMissionIdRevisionsRevisionIdStagesStagePostResponses,
@@ -212,12 +215,18 @@ import type {
   ExportRunReportApiV1ProjectsProjectIdRunsRunIdExportGetData,
   ExportRunReportApiV1ProjectsProjectIdRunsRunIdExportGetErrors,
   ExportRunReportApiV1ProjectsProjectIdRunsRunIdExportGetResponses,
+  FinalizeApiV1InternalProjectsProjectIdRunsRunIdTrustLoopPipelineVersionFinalizePostData,
+  FinalizeApiV1InternalProjectsProjectIdRunsRunIdTrustLoopPipelineVersionFinalizePostErrors,
+  FinalizeApiV1InternalProjectsProjectIdRunsRunIdTrustLoopPipelineVersionFinalizePostResponses,
   GenerateFromRunEndpointApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdGenerateFromRunPostData,
   GenerateFromRunEndpointApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdGenerateFromRunPostErrors,
   GenerateFromRunEndpointApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdGenerateFromRunPostResponses,
   GetAgentApiV1ProjectsProjectIdAgentsAgentIdGetData,
   GetAgentApiV1ProjectsProjectIdAgentsAgentIdGetErrors,
   GetAgentApiV1ProjectsProjectIdAgentsAgentIdGetResponses,
+  GetCalibrationApiV1ProjectsProjectIdRunsRunIdCalibrationGetData,
+  GetCalibrationApiV1ProjectsProjectIdRunsRunIdCalibrationGetErrors,
+  GetCalibrationApiV1ProjectsProjectIdRunsRunIdCalibrationGetResponses,
   GetConfigApiV1ProjectsProjectIdModelConfigsModelConfigIdGetData,
   GetConfigApiV1ProjectsProjectIdModelConfigsModelConfigIdGetErrors,
   GetConfigApiV1ProjectsProjectIdModelConfigsModelConfigIdGetResponses,
@@ -230,6 +239,9 @@ import type {
   GetGateApiV1ProjectsProjectIdGatesGateIdGetData,
   GetGateApiV1ProjectsProjectIdGatesGateIdGetErrors,
   GetGateApiV1ProjectsProjectIdGatesGateIdGetResponses,
+  GetJointGateApiV1ProjectsProjectIdRunsRunIdJointGateGetData,
+  GetJointGateApiV1ProjectsProjectIdRunsRunIdJointGateGetErrors,
+  GetJointGateApiV1ProjectsProjectIdRunsRunIdJointGateGetResponses,
   GetMissionApiV1ProjectsProjectIdTestMissionsMissionIdGetData,
   GetMissionApiV1ProjectsProjectIdTestMissionsMissionIdGetErrors,
   GetMissionApiV1ProjectsProjectIdTestMissionsMissionIdGetResponses,
@@ -268,6 +280,9 @@ import type {
   GetTemplateApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdGetData,
   GetTemplateApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdGetErrors,
   GetTemplateApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdGetResponses,
+  GetTrustLoopApiV1ProjectsProjectIdRunsRunIdTrustLoopGetData,
+  GetTrustLoopApiV1ProjectsProjectIdRunsRunIdTrustLoopGetErrors,
+  GetTrustLoopApiV1ProjectsProjectIdRunsRunIdTrustLoopGetResponses,
   GetUserApiV1SystemUsersUserIdGetData,
   GetUserApiV1SystemUsersUserIdGetErrors,
   GetUserApiV1SystemUsersUserIdGetResponses,
@@ -324,6 +339,9 @@ import type {
   ListDefaultsApiV1ProjectsProjectIdModelDefaultsGetData,
   ListDefaultsApiV1ProjectsProjectIdModelDefaultsGetErrors,
   ListDefaultsApiV1ProjectsProjectIdModelDefaultsGetResponses,
+  ListDiagnosticsApiV1ProjectsProjectIdRunsRunIdDiagnosticsGetData,
+  ListDiagnosticsApiV1ProjectsProjectIdRunsRunIdDiagnosticsGetErrors,
+  ListDiagnosticsApiV1ProjectsProjectIdRunsRunIdDiagnosticsGetResponses,
   ListExperimentsApiV1ProjectsProjectIdExperimentsGetData,
   ListExperimentsApiV1ProjectsProjectIdExperimentsGetErrors,
   ListExperimentsApiV1ProjectsProjectIdExperimentsGetResponses,
@@ -344,6 +362,9 @@ import type {
   ListProfilesApiV1ProjectsProjectIdBrowserProfilesGetResponses,
   ListProjectsApiV1ProjectsGetData,
   ListProjectsApiV1ProjectsGetResponses,
+  ListRegressionsApiV1ProjectsProjectIdRunsRunIdRegressionsGetData,
+  ListRegressionsApiV1ProjectsProjectIdRunsRunIdRegressionsGetErrors,
+  ListRegressionsApiV1ProjectsProjectIdRunsRunIdRegressionsGetResponses,
   ListReviewsApiV1ProjectsProjectIdReviewsGetData,
   ListReviewsApiV1ProjectsProjectIdReviewsGetErrors,
   ListReviewsApiV1ProjectsProjectIdReviewsGetResponses,
@@ -782,6 +803,60 @@ export const uploadInternalArtifactApiV1InternalProjectsProjectIdRunsRunIdArtifa
     >({
       url: "/api/v1/internal/projects/{project_id}/runs/{run_id}/artifacts",
       ...options,
+    });
+
+/**
+ * Finalize
+ */
+export const finalizeApiV1InternalProjectsProjectIdRunsRunIdTrustLoopPipelineVersionFinalizePost =
+  <ThrowOnError extends boolean = false>(
+    options: Options<
+      FinalizeApiV1InternalProjectsProjectIdRunsRunIdTrustLoopPipelineVersionFinalizePostData,
+      ThrowOnError
+    >,
+  ): RequestResult<
+    FinalizeApiV1InternalProjectsProjectIdRunsRunIdTrustLoopPipelineVersionFinalizePostResponses,
+    FinalizeApiV1InternalProjectsProjectIdRunsRunIdTrustLoopPipelineVersionFinalizePostErrors,
+    ThrowOnError
+  > =>
+    (options.client ?? client).post<
+      FinalizeApiV1InternalProjectsProjectIdRunsRunIdTrustLoopPipelineVersionFinalizePostResponses,
+      FinalizeApiV1InternalProjectsProjectIdRunsRunIdTrustLoopPipelineVersionFinalizePostErrors,
+      ThrowOnError
+    >({
+      url: "/api/v1/internal/projects/{project_id}/runs/{run_id}/trust-loop/{pipeline_version}/finalize",
+      ...options,
+      headers: {
+        "Content-Type": "application/json",
+        ...options.headers,
+      },
+    });
+
+/**
+ * Execute Stage
+ */
+export const executeStageApiV1InternalProjectsProjectIdRunsRunIdTrustLoopPipelineVersionStagesStagePost =
+  <ThrowOnError extends boolean = false>(
+    options: Options<
+      ExecuteStageApiV1InternalProjectsProjectIdRunsRunIdTrustLoopPipelineVersionStagesStagePostData,
+      ThrowOnError
+    >,
+  ): RequestResult<
+    ExecuteStageApiV1InternalProjectsProjectIdRunsRunIdTrustLoopPipelineVersionStagesStagePostResponses,
+    ExecuteStageApiV1InternalProjectsProjectIdRunsRunIdTrustLoopPipelineVersionStagesStagePostErrors,
+    ThrowOnError
+  > =>
+    (options.client ?? client).post<
+      ExecuteStageApiV1InternalProjectsProjectIdRunsRunIdTrustLoopPipelineVersionStagesStagePostResponses,
+      ExecuteStageApiV1InternalProjectsProjectIdRunsRunIdTrustLoopPipelineVersionStagesStagePostErrors,
+      ThrowOnError
+    >({
+      url: "/api/v1/internal/projects/{project_id}/runs/{run_id}/trust-loop/{pipeline_version}/stages/{stage}",
+      ...options,
+      headers: {
+        "Content-Type": "application/json",
+        ...options.headers,
+      },
     });
 
 /**
@@ -3333,6 +3408,30 @@ export const uploadArtifactApiV1ProjectsProjectIdRunsRunIdArtifactsPost = <
   });
 
 /**
+ * Get Calibration
+ */
+export const getCalibrationApiV1ProjectsProjectIdRunsRunIdCalibrationGet = <
+  ThrowOnError extends boolean = false,
+>(
+  options: Options<
+    GetCalibrationApiV1ProjectsProjectIdRunsRunIdCalibrationGetData,
+    ThrowOnError
+  >,
+): RequestResult<
+  GetCalibrationApiV1ProjectsProjectIdRunsRunIdCalibrationGetResponses,
+  GetCalibrationApiV1ProjectsProjectIdRunsRunIdCalibrationGetErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).get<
+    GetCalibrationApiV1ProjectsProjectIdRunsRunIdCalibrationGetResponses,
+    GetCalibrationApiV1ProjectsProjectIdRunsRunIdCalibrationGetErrors,
+    ThrowOnError
+  >({
+    url: "/api/v1/projects/{project_id}/runs/{run_id}/calibration",
+    ...options,
+  });
+
+/**
  * Cancel Run
  */
 export const cancelRunApiV1ProjectsProjectIdRunsRunIdCancelPost = <
@@ -3375,6 +3474,30 @@ export const listCasesApiV1ProjectsProjectIdRunsRunIdCasesGet = <
   >({ url: "/api/v1/projects/{project_id}/runs/{run_id}/cases", ...options });
 
 /**
+ * List Diagnostics
+ */
+export const listDiagnosticsApiV1ProjectsProjectIdRunsRunIdDiagnosticsGet = <
+  ThrowOnError extends boolean = false,
+>(
+  options: Options<
+    ListDiagnosticsApiV1ProjectsProjectIdRunsRunIdDiagnosticsGetData,
+    ThrowOnError
+  >,
+): RequestResult<
+  ListDiagnosticsApiV1ProjectsProjectIdRunsRunIdDiagnosticsGetResponses,
+  ListDiagnosticsApiV1ProjectsProjectIdRunsRunIdDiagnosticsGetErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).get<
+    ListDiagnosticsApiV1ProjectsProjectIdRunsRunIdDiagnosticsGetResponses,
+    ListDiagnosticsApiV1ProjectsProjectIdRunsRunIdDiagnosticsGetErrors,
+    ThrowOnError
+  >({
+    url: "/api/v1/projects/{project_id}/runs/{run_id}/diagnostics",
+    ...options,
+  });
+
+/**
  * Events
  */
 export const eventsApiV1ProjectsProjectIdRunsRunIdEventsGet = <
@@ -3415,6 +3538,54 @@ export const exportRunReportApiV1ProjectsProjectIdRunsRunIdExportGet = <
     ExportRunReportApiV1ProjectsProjectIdRunsRunIdExportGetErrors,
     ThrowOnError
   >({ url: "/api/v1/projects/{project_id}/runs/{run_id}/export", ...options });
+
+/**
+ * Get Joint Gate
+ */
+export const getJointGateApiV1ProjectsProjectIdRunsRunIdJointGateGet = <
+  ThrowOnError extends boolean = false,
+>(
+  options: Options<
+    GetJointGateApiV1ProjectsProjectIdRunsRunIdJointGateGetData,
+    ThrowOnError
+  >,
+): RequestResult<
+  GetJointGateApiV1ProjectsProjectIdRunsRunIdJointGateGetResponses,
+  GetJointGateApiV1ProjectsProjectIdRunsRunIdJointGateGetErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).get<
+    GetJointGateApiV1ProjectsProjectIdRunsRunIdJointGateGetResponses,
+    GetJointGateApiV1ProjectsProjectIdRunsRunIdJointGateGetErrors,
+    ThrowOnError
+  >({
+    url: "/api/v1/projects/{project_id}/runs/{run_id}/joint-gate",
+    ...options,
+  });
+
+/**
+ * List Regressions
+ */
+export const listRegressionsApiV1ProjectsProjectIdRunsRunIdRegressionsGet = <
+  ThrowOnError extends boolean = false,
+>(
+  options: Options<
+    ListRegressionsApiV1ProjectsProjectIdRunsRunIdRegressionsGetData,
+    ThrowOnError
+  >,
+): RequestResult<
+  ListRegressionsApiV1ProjectsProjectIdRunsRunIdRegressionsGetResponses,
+  ListRegressionsApiV1ProjectsProjectIdRunsRunIdRegressionsGetErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).get<
+    ListRegressionsApiV1ProjectsProjectIdRunsRunIdRegressionsGetResponses,
+    ListRegressionsApiV1ProjectsProjectIdRunsRunIdRegressionsGetErrors,
+    ThrowOnError
+  >({
+    url: "/api/v1/projects/{project_id}/runs/{run_id}/regressions",
+    ...options,
+  });
 
 /**
  * Apply Result
@@ -3466,6 +3637,30 @@ export const streamRunProgressApiV1ProjectsProjectIdRunsRunIdStreamGet = <
     StreamRunProgressApiV1ProjectsProjectIdRunsRunIdStreamGetErrors,
     ThrowOnError
   >({ url: "/api/v1/projects/{project_id}/runs/{run_id}/stream", ...options });
+
+/**
+ * Get Trust Loop
+ */
+export const getTrustLoopApiV1ProjectsProjectIdRunsRunIdTrustLoopGet = <
+  ThrowOnError extends boolean = false,
+>(
+  options: Options<
+    GetTrustLoopApiV1ProjectsProjectIdRunsRunIdTrustLoopGetData,
+    ThrowOnError
+  >,
+): RequestResult<
+  GetTrustLoopApiV1ProjectsProjectIdRunsRunIdTrustLoopGetResponses,
+  GetTrustLoopApiV1ProjectsProjectIdRunsRunIdTrustLoopGetErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).get<
+    GetTrustLoopApiV1ProjectsProjectIdRunsRunIdTrustLoopGetResponses,
+    GetTrustLoopApiV1ProjectsProjectIdRunsRunIdTrustLoopGetErrors,
+    ThrowOnError
+  >({
+    url: "/api/v1/projects/{project_id}/runs/{run_id}/trust-loop",
+    ...options,
+  });
 
 /**
  * List Scorers

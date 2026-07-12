@@ -137,29 +137,10 @@ class CloseLoopExecutor(Executor):
     async def execute(
         self, *, capability, child_agent, actor, project_id, session_id, arguments, idempotency_key
     ):
-        if capability == "runs.get_status":
-            return {
-                "id": str(arguments["id"]),
-                "status": "failed",
-                "cases": [
-                    {
-                        "name": "退款边界",
-                        "status": "failed",
-                        "execution_mode": "browser",
-                        "input": {"url": "https://agent.example"},
-                        "assertions": [{"type": "status"}],
-                        "error_type": "assertion_failed",
-                    }
-                ],
-            }
         if capability == "reports.generate":
             return {"artifacts": [{"type": "report", "id": str(uuid4())}]}
         if capability == "reviews.enqueue":
             return {"artifacts": [{"type": "review_task", "id": str(uuid4())}]}
-        if capability == "release_gates.list":
-            return {"items": [{"id": str(uuid4())}]}
-        if capability == "release_gates.evaluate":
-            return {"artifacts": [{"type": "release_decision", "id": str(uuid4())}]}
         return await super().execute(
             capability=capability,
             child_agent=child_agent,
@@ -169,6 +150,21 @@ class CloseLoopExecutor(Executor):
             arguments=arguments,
             idempotency_key=idempotency_key,
         )
+
+
+class TrustLoopReader:
+    def __init__(self, status: str = "completed_with_warnings") -> None:
+        self.status = status
+        self.calls = []
+
+    async def get_summary(self, actor, project_id, run_id):
+        self.calls.append((actor, project_id, run_id))
+        return {
+            "status": self.status,
+            "warning_codes": ["diagnostic_model_unavailable"],
+            "regressions": [{"candidate_id": str(uuid4()), "state": "published"}],
+            "joint_gate": {"decision": "quarantine", "rules": []},
+        }
 
 
 def actor() -> User:
@@ -251,10 +247,11 @@ async def test_auth_expiry_pauses_and_resume_attempt_starts_new_idempotent_run()
 
 
 @pytest.mark.asyncio
-async def test_close_loop_links_report_review_regression_and_gate_decision() -> None:
+async def test_close_loop_consumes_shared_trust_loop_without_duplicate_writes() -> None:
     receipts = Receipts()
     executor = CloseLoopExecutor()
-    service = MissionStageService(MissionCompiler(), executor, receipts)
+    trust_loop = TrustLoopReader()
+    service = MissionStageService(MissionCompiler(), executor, receipts, trust_loop)
     item = revision(agent_version_id=str(uuid4()))
     run_id = uuid4()
     await receipts.save_stage_receipt(
@@ -276,10 +273,47 @@ async def test_close_loop_links_report_review_regression_and_gate_decision() -> 
         revision=item,
     )
 
-    assert receipt.output["regression_dataset"] is not None
+    assert receipt is not None
+    assert receipt.output["trust_loop"]["status"] == "completed_with_warnings"
+    assert receipt.output["trust_loop"]["joint_gate"]["decision"] == "quarantine"
+    assert not {
+        "datasets.create_with_cases",
+        "datasets.publish_version",
+        "release_gates.list",
+        "release_gates.evaluate",
+    }.intersection(capability for capability, _, _ in executor.calls)
     assert {asset[2] for asset in receipts.assets} >= {
         "report",
         "review_task",
-        "dataset_version",
-        "release_decision",
     }
+
+
+@pytest.mark.asyncio
+async def test_close_loop_waits_while_shared_trust_loop_is_processing() -> None:
+    receipts = Receipts()
+    executor = CloseLoopExecutor()
+    service = MissionStageService(
+        MissionCompiler(), executor, receipts, TrustLoopReader(status="running")
+    )
+    item = revision(agent_version_id=str(uuid4()))
+    await receipts.save_stage_receipt(
+        StageReceipt(
+            receipt_id=uuid4(),
+            project_id=item.project_id,
+            revision_id=item.revision_id,
+            stage="await_run",
+            status="completed",
+            output={"run_id": str(uuid4()), "run_status": "failed"},
+            created_at=datetime.now(UTC),
+        )
+    )
+
+    receipt = await service.close_loop(
+        actor=actor(),
+        project_id=ProjectId(item.project_id),
+        session_id=uuid4(),
+        revision=item,
+    )
+
+    assert receipt is None
+    assert executor.calls == []

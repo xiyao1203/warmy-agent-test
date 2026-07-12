@@ -3,7 +3,7 @@ from __future__ import annotations
 from datetime import UTC, datetime
 from uuid import NAMESPACE_URL, UUID, uuid5
 
-from sqlalchemy import select, update
+from sqlalchemy import func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from agenttest.modules.run_postprocessing.domain import (
@@ -223,6 +223,103 @@ class SqlAlchemyPostprocessRepository:
             )
         return [_to_stage_result(model) for model in models]
 
+    async def list_diagnostics(
+        self,
+        project_id: UUID,
+        run_id: UUID,
+        pipeline_version: str,
+        *,
+        limit: int,
+        offset: int,
+    ) -> tuple[list[dict[str, object]], int]:
+        filters = (
+            RunDiagnosticModel.project_id == project_id,
+            RunDiagnosticModel.run_id == run_id,
+            RunDiagnosticModel.pipeline_version == pipeline_version,
+        )
+        async with session_scope(self._session_factory) as session:
+            total = int(
+                await session.scalar(
+                    select(func.count()).select_from(RunDiagnosticModel).where(*filters)
+                )
+                or 0
+            )
+            models = list(
+                (
+                    await session.scalars(
+                        select(RunDiagnosticModel)
+                        .where(*filters)
+                        .order_by(RunDiagnosticModel.created_at, RunDiagnosticModel.id)
+                        .limit(limit)
+                        .offset(offset)
+                    )
+                ).all()
+            )
+        return [_diagnostic_view(model) for model in models], total
+
+    async def list_regressions(
+        self,
+        project_id: UUID,
+        run_id: UUID,
+        pipeline_version: str,
+        *,
+        limit: int,
+        offset: int,
+    ) -> tuple[list[dict[str, object]], int]:
+        filters = (
+            RunRegressionCandidateModel.project_id == project_id,
+            RunRegressionCandidateModel.run_id == run_id,
+            RunRegressionCandidateModel.pipeline_version == pipeline_version,
+        )
+        async with session_scope(self._session_factory) as session:
+            total = int(
+                await session.scalar(
+                    select(func.count()).select_from(RunRegressionCandidateModel).where(*filters)
+                )
+                or 0
+            )
+            models = list(
+                (
+                    await session.scalars(
+                        select(RunRegressionCandidateModel)
+                        .where(*filters)
+                        .order_by(
+                            RunRegressionCandidateModel.created_at,
+                            RunRegressionCandidateModel.id,
+                        )
+                        .limit(limit)
+                        .offset(offset)
+                    )
+                ).all()
+            )
+        return [_regression_view(model) for model in models], total
+
+    async def get_calibration(
+        self, project_id: UUID, run_id: UUID, pipeline_version: str
+    ) -> dict[str, object] | None:
+        async with session_scope(self._session_factory) as session:
+            model = await session.scalar(
+                select(RunCalibrationModel).where(
+                    RunCalibrationModel.project_id == project_id,
+                    RunCalibrationModel.run_id == run_id,
+                    RunCalibrationModel.pipeline_version == pipeline_version,
+                )
+            )
+        return _calibration_view(model) if model is not None else None
+
+    async def get_joint_gate(
+        self, project_id: UUID, run_id: UUID, pipeline_version: str
+    ) -> dict[str, object] | None:
+        async with session_scope(self._session_factory) as session:
+            model = await session.scalar(
+                select(RunJointGateDecisionModel).where(
+                    RunJointGateDecisionModel.project_id == project_id,
+                    RunJointGateDecisionModel.run_id == run_id,
+                    RunJointGateDecisionModel.pipeline_version == pipeline_version,
+                )
+            )
+        return _joint_gate_view(model) if model is not None else None
+
     @staticmethod
     def _job_query(project_id: UUID, run_id: UUID, pipeline_version: str):
         return select(RunPostprocessJobModel).where(
@@ -306,3 +403,65 @@ def _dict(value: object) -> dict[str, object]:
 
 def _int(value: object) -> int:
     return value if isinstance(value, int) else 0
+
+
+def _diagnostic_view(model: RunDiagnosticModel) -> dict[str, object]:
+    return {
+        "id": model.id,
+        "run_case_id": model.run_case_id,
+        "pipeline_version": model.pipeline_version,
+        "status": model.status,
+        "failure_class": model.failure_class,
+        "confidence": model.confidence,
+        "evidence_ids": list(model.evidence_ids or []),
+        "summary": model.summary,
+        "counterevidence": list(model.counterevidence or []),
+        "verification_steps": list(model.verification_steps or []),
+        "created_at": _utc(model.created_at),
+        "updated_at": _utc(model.updated_at),
+    }
+
+
+def _regression_view(model: RunRegressionCandidateModel) -> dict[str, object]:
+    return {
+        "id": model.id,
+        "run_case_id": model.run_case_id,
+        "pipeline_version": model.pipeline_version,
+        "fingerprint": model.fingerprint,
+        "status": model.status,
+        "input_reference": dict(model.input_reference or {}),
+        "minimized_input": dict(model.minimized_input) if model.minimized_input else None,
+        "reproduction_run_case_ids": list(model.reproduction_run_case_ids or []),
+        "reproduction_count": model.reproduction_count,
+        "target_dataset_version_id": model.target_dataset_version_id,
+        "created_at": _utc(model.created_at),
+        "updated_at": _utc(model.updated_at),
+    }
+
+
+def _calibration_view(model: RunCalibrationModel) -> dict[str, object]:
+    return {
+        "id": model.id,
+        "pipeline_version": model.pipeline_version,
+        "status": model.status,
+        "sample_set_version": model.sample_set_version,
+        "metrics": dict(model.metrics or {}),
+        "arbitration": dict(model.arbitration or {}),
+        "evaluator_version": model.evaluator_version,
+        "created_at": _utc(model.created_at),
+        "updated_at": _utc(model.updated_at),
+    }
+
+
+def _joint_gate_view(model: RunJointGateDecisionModel) -> dict[str, object]:
+    return {
+        "id": model.id,
+        "pipeline_version": model.pipeline_version,
+        "status": "completed",
+        "baseline_run_id": model.baseline_run_id,
+        "decision": model.decision,
+        "rules": list(model.rules or []),
+        "input_facts": dict(model.input_facts or {}),
+        "explanation": model.explanation,
+        "created_at": _utc(model.created_at),
+    }

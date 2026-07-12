@@ -396,6 +396,52 @@ export type BatchConfirmationDecision = {
 };
 
 /**
+ * CalibrationResponse
+ */
+export type CalibrationResponse = {
+  /**
+   * Arbitration
+   */
+  arbitration: {
+    [key: string]: unknown;
+  };
+  /**
+   * Created At
+   */
+  created_at: string | null;
+  /**
+   * Evaluator Version
+   */
+  evaluator_version: string | null;
+  /**
+   * Id
+   */
+  id: string | null;
+  /**
+   * Metrics
+   */
+  metrics: {
+    [key: string]: unknown;
+  };
+  /**
+   * Pipeline Version
+   */
+  pipeline_version: string;
+  /**
+   * Sample Set Version
+   */
+  sample_set_version: string | null;
+  /**
+   * Status
+   */
+  status: string;
+  /**
+   * Updated At
+   */
+  updated_at: string | null;
+};
+
+/**
  * ChangePasswordRequest
  */
 export type ChangePasswordRequest = {
@@ -1013,6 +1059,82 @@ export type DatasetVersionResponse = {
 };
 
 /**
+ * DiagnosticListResponse
+ */
+export type DiagnosticListResponse = {
+  /**
+   * Items
+   */
+  items: Array<DiagnosticResponse>;
+  /**
+   * Limit
+   */
+  limit: number;
+  /**
+   * Offset
+   */
+  offset: number;
+  /**
+   * Total
+   */
+  total: number;
+};
+
+/**
+ * DiagnosticResponse
+ */
+export type DiagnosticResponse = {
+  /**
+   * Confidence
+   */
+  confidence: number;
+  /**
+   * Counterevidence
+   */
+  counterevidence: Array<string>;
+  /**
+   * Created At
+   */
+  created_at: string;
+  /**
+   * Evidence Ids
+   */
+  evidence_ids: Array<string>;
+  /**
+   * Failure Class
+   */
+  failure_class: string;
+  /**
+   * Id
+   */
+  id: string;
+  /**
+   * Pipeline Version
+   */
+  pipeline_version: string;
+  /**
+   * Run Case Id
+   */
+  run_case_id: string;
+  /**
+   * Status
+   */
+  status: string;
+  /**
+   * Summary
+   */
+  summary: string | null;
+  /**
+   * Updated At
+   */
+  updated_at: string;
+  /**
+   * Verification Steps
+   */
+  verification_steps: Array<string>;
+};
+
+/**
  * EnvironmentTemplateListResponse
  */
 export type EnvironmentTemplateListResponse = {
@@ -1143,6 +1265,24 @@ export type EvaluateGateRequest = {
    * Run Id
    */
   run_id: string;
+};
+
+/**
+ * ExecutePostprocessStageRequest
+ */
+export type ExecutePostprocessStageRequest = {
+  /**
+   * Attempt
+   */
+  attempt?: number;
+  /**
+   * Idempotency Key
+   */
+  idempotency_key: string;
+  /**
+   * Workflow Id
+   */
+  workflow_id: string;
 };
 
 /**
@@ -1342,6 +1482,52 @@ export type InvocationProtocol =
   | "async_poll";
 
 /**
+ * JointGateDecisionResponse
+ */
+export type JointGateDecisionResponse = {
+  /**
+   * Baseline Run Id
+   */
+  baseline_run_id: string | null;
+  /**
+   * Created At
+   */
+  created_at: string | null;
+  /**
+   * Decision
+   */
+  decision: string | null;
+  /**
+   * Explanation
+   */
+  explanation: string | null;
+  /**
+   * Id
+   */
+  id: string | null;
+  /**
+   * Input Facts
+   */
+  input_facts: {
+    [key: string]: unknown;
+  };
+  /**
+   * Pipeline Version
+   */
+  pipeline_version: string;
+  /**
+   * Rules
+   */
+  rules: Array<{
+    [key: string]: unknown;
+  }>;
+  /**
+   * Status
+   */
+  status: string;
+};
+
+/**
  * Language
  *
  * 语言枚举。
@@ -1470,6 +1656,37 @@ export type ModelDefaultResponse = {
 export type ModelPurpose = "test_agent_chat" | "text_judge" | "vision_judge";
 
 /**
+ * PostprocessStage
+ */
+export type PostprocessStage =
+  | "classify"
+  | "diagnose"
+  | "reproduce"
+  | "calibrate"
+  | "evaluate_gate"
+  | "finalize";
+
+/**
+ * PostprocessStageResponse
+ */
+export type PostprocessStageResponse = {
+  /**
+   * Output
+   */
+  output: {
+    [key: string]: unknown;
+  };
+  /**
+   * Status
+   */
+  status: string;
+  /**
+   * Warning Code
+   */
+  warning_code?: string | null;
+};
+
+/**
  * Priority
  *
  * 用例优先级：P0（最高）→ P3（最低）。
@@ -1592,6 +1809,86 @@ export type RegenerateRequest = {
    * Message
    */
   message?: string | null;
+};
+
+/**
+ * RegressionCandidateListResponse
+ */
+export type RegressionCandidateListResponse = {
+  /**
+   * Items
+   */
+  items: Array<RegressionCandidateResponse>;
+  /**
+   * Limit
+   */
+  limit: number;
+  /**
+   * Offset
+   */
+  offset: number;
+  /**
+   * Total
+   */
+  total: number;
+};
+
+/**
+ * RegressionCandidateResponse
+ */
+export type RegressionCandidateResponse = {
+  /**
+   * Created At
+   */
+  created_at: string;
+  /**
+   * Fingerprint
+   */
+  fingerprint: string;
+  /**
+   * Id
+   */
+  id: string;
+  /**
+   * Input Reference
+   */
+  input_reference: {
+    [key: string]: unknown;
+  };
+  /**
+   * Minimized Input
+   */
+  minimized_input: {
+    [key: string]: unknown;
+  } | null;
+  /**
+   * Pipeline Version
+   */
+  pipeline_version: string;
+  /**
+   * Reproduction Count
+   */
+  reproduction_count: number;
+  /**
+   * Reproduction Run Case Ids
+   */
+  reproduction_run_case_ids: Array<string>;
+  /**
+   * Run Case Id
+   */
+  run_case_id: string;
+  /**
+   * Status
+   */
+  status: string;
+  /**
+   * Target Dataset Version Id
+   */
+  target_dataset_version_id: string | null;
+  /**
+   * Updated At
+   */
+  updated_at: string;
 };
 
 /**
@@ -2213,6 +2510,86 @@ export type TrialScorerRequest = {
    * Reference
    */
   reference?: unknown | null;
+};
+
+/**
+ * TrustLoopResponse
+ */
+export type TrustLoopResponse = {
+  /**
+   * Calibration
+   */
+  calibration: {
+    [key: string]: unknown;
+  };
+  /**
+   * Classifications
+   */
+  classifications: Array<{
+    [key: string]: unknown;
+  }>;
+  /**
+   * Completed At
+   */
+  completed_at: string | null;
+  /**
+   * Created At
+   */
+  created_at: string | null;
+  /**
+   * Current Stage
+   */
+  current_stage: string | null;
+  /**
+   * Diagnostics
+   */
+  diagnostics: {
+    [key: string]: unknown;
+  };
+  /**
+   * Error Type
+   */
+  error_type: string | null;
+  /**
+   * Job Id
+   */
+  job_id: string | null;
+  /**
+   * Joint Gate
+   */
+  joint_gate: {
+    [key: string]: unknown;
+  } | null;
+  /**
+   * Pipeline Version
+   */
+  pipeline_version: string;
+  /**
+   * Project Id
+   */
+  project_id: string;
+  /**
+   * Regressions
+   */
+  regressions: Array<{
+    [key: string]: unknown;
+  }>;
+  /**
+   * Run Id
+   */
+  run_id: string;
+  /**
+   * Status
+   */
+  status: string;
+  /**
+   * Updated At
+   */
+  updated_at: string | null;
+  /**
+   * Warning Codes
+   */
+  warning_codes: Array<string>;
 };
 
 /**
@@ -2999,6 +3376,105 @@ export type UploadInternalArtifactApiV1InternalProjectsProjectIdRunsRunIdArtifac
      */
     201: unknown;
   };
+
+export type FinalizeApiV1InternalProjectsProjectIdRunsRunIdTrustLoopPipelineVersionFinalizePostData =
+  {
+    body: ExecutePostprocessStageRequest;
+    headers?: {
+      /**
+       * X-Internal-Token
+       */
+      "x-internal-token"?: string | null;
+    };
+    path: {
+      /**
+       * Project Id
+       */
+      project_id: string;
+      /**
+       * Run Id
+       */
+      run_id: string;
+      /**
+       * Pipeline Version
+       */
+      pipeline_version: string;
+    };
+    query?: never;
+    url: "/api/v1/internal/projects/{project_id}/runs/{run_id}/trust-loop/{pipeline_version}/finalize";
+  };
+
+export type FinalizeApiV1InternalProjectsProjectIdRunsRunIdTrustLoopPipelineVersionFinalizePostErrors =
+  {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+  };
+
+export type FinalizeApiV1InternalProjectsProjectIdRunsRunIdTrustLoopPipelineVersionFinalizePostError =
+  FinalizeApiV1InternalProjectsProjectIdRunsRunIdTrustLoopPipelineVersionFinalizePostErrors[keyof FinalizeApiV1InternalProjectsProjectIdRunsRunIdTrustLoopPipelineVersionFinalizePostErrors];
+
+export type FinalizeApiV1InternalProjectsProjectIdRunsRunIdTrustLoopPipelineVersionFinalizePostResponses =
+  {
+    /**
+     * Successful Response
+     */
+    200: PostprocessStageResponse;
+  };
+
+export type FinalizeApiV1InternalProjectsProjectIdRunsRunIdTrustLoopPipelineVersionFinalizePostResponse =
+  FinalizeApiV1InternalProjectsProjectIdRunsRunIdTrustLoopPipelineVersionFinalizePostResponses[keyof FinalizeApiV1InternalProjectsProjectIdRunsRunIdTrustLoopPipelineVersionFinalizePostResponses];
+
+export type ExecuteStageApiV1InternalProjectsProjectIdRunsRunIdTrustLoopPipelineVersionStagesStagePostData =
+  {
+    body: ExecutePostprocessStageRequest;
+    headers?: {
+      /**
+       * X-Internal-Token
+       */
+      "x-internal-token"?: string | null;
+    };
+    path: {
+      /**
+       * Project Id
+       */
+      project_id: string;
+      /**
+       * Run Id
+       */
+      run_id: string;
+      /**
+       * Pipeline Version
+       */
+      pipeline_version: string;
+      stage: PostprocessStage;
+    };
+    query?: never;
+    url: "/api/v1/internal/projects/{project_id}/runs/{run_id}/trust-loop/{pipeline_version}/stages/{stage}";
+  };
+
+export type ExecuteStageApiV1InternalProjectsProjectIdRunsRunIdTrustLoopPipelineVersionStagesStagePostErrors =
+  {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+  };
+
+export type ExecuteStageApiV1InternalProjectsProjectIdRunsRunIdTrustLoopPipelineVersionStagesStagePostError =
+  ExecuteStageApiV1InternalProjectsProjectIdRunsRunIdTrustLoopPipelineVersionStagesStagePostErrors[keyof ExecuteStageApiV1InternalProjectsProjectIdRunsRunIdTrustLoopPipelineVersionStagesStagePostErrors];
+
+export type ExecuteStageApiV1InternalProjectsProjectIdRunsRunIdTrustLoopPipelineVersionStagesStagePostResponses =
+  {
+    /**
+     * Successful Response
+     */
+    200: PostprocessStageResponse;
+  };
+
+export type ExecuteStageApiV1InternalProjectsProjectIdRunsRunIdTrustLoopPipelineVersionStagesStagePostResponse =
+  ExecuteStageApiV1InternalProjectsProjectIdRunsRunIdTrustLoopPipelineVersionStagesStagePostResponses[keyof ExecuteStageApiV1InternalProjectsProjectIdRunsRunIdTrustLoopPipelineVersionStagesStagePostResponses];
 
 export type ExecuteStageApiV1InternalProjectsProjectIdTestMissionsMissionIdRevisionsRevisionIdStagesStagePostData =
   {
@@ -7267,6 +7743,44 @@ export type UploadArtifactApiV1ProjectsProjectIdRunsRunIdArtifactsPostResponses 
     200: unknown;
   };
 
+export type GetCalibrationApiV1ProjectsProjectIdRunsRunIdCalibrationGetData = {
+  body?: never;
+  path: {
+    /**
+     * Project Id
+     */
+    project_id: string;
+    /**
+     * Run Id
+     */
+    run_id: string;
+  };
+  query?: never;
+  url: "/api/v1/projects/{project_id}/runs/{run_id}/calibration";
+};
+
+export type GetCalibrationApiV1ProjectsProjectIdRunsRunIdCalibrationGetErrors =
+  {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+  };
+
+export type GetCalibrationApiV1ProjectsProjectIdRunsRunIdCalibrationGetError =
+  GetCalibrationApiV1ProjectsProjectIdRunsRunIdCalibrationGetErrors[keyof GetCalibrationApiV1ProjectsProjectIdRunsRunIdCalibrationGetErrors];
+
+export type GetCalibrationApiV1ProjectsProjectIdRunsRunIdCalibrationGetResponses =
+  {
+    /**
+     * Successful Response
+     */
+    200: CalibrationResponse;
+  };
+
+export type GetCalibrationApiV1ProjectsProjectIdRunsRunIdCalibrationGetResponse =
+  GetCalibrationApiV1ProjectsProjectIdRunsRunIdCalibrationGetResponses[keyof GetCalibrationApiV1ProjectsProjectIdRunsRunIdCalibrationGetResponses];
+
 export type CancelRunApiV1ProjectsProjectIdRunsRunIdCancelPostData = {
   body?: never;
   headers?: {
@@ -7345,6 +7859,53 @@ export type ListCasesApiV1ProjectsProjectIdRunsRunIdCasesGetResponses = {
 export type ListCasesApiV1ProjectsProjectIdRunsRunIdCasesGetResponse =
   ListCasesApiV1ProjectsProjectIdRunsRunIdCasesGetResponses[keyof ListCasesApiV1ProjectsProjectIdRunsRunIdCasesGetResponses];
 
+export type ListDiagnosticsApiV1ProjectsProjectIdRunsRunIdDiagnosticsGetData = {
+  body?: never;
+  path: {
+    /**
+     * Project Id
+     */
+    project_id: string;
+    /**
+     * Run Id
+     */
+    run_id: string;
+  };
+  query?: {
+    /**
+     * Limit
+     */
+    limit?: number;
+    /**
+     * Offset
+     */
+    offset?: number;
+  };
+  url: "/api/v1/projects/{project_id}/runs/{run_id}/diagnostics";
+};
+
+export type ListDiagnosticsApiV1ProjectsProjectIdRunsRunIdDiagnosticsGetErrors =
+  {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+  };
+
+export type ListDiagnosticsApiV1ProjectsProjectIdRunsRunIdDiagnosticsGetError =
+  ListDiagnosticsApiV1ProjectsProjectIdRunsRunIdDiagnosticsGetErrors[keyof ListDiagnosticsApiV1ProjectsProjectIdRunsRunIdDiagnosticsGetErrors];
+
+export type ListDiagnosticsApiV1ProjectsProjectIdRunsRunIdDiagnosticsGetResponses =
+  {
+    /**
+     * Successful Response
+     */
+    200: DiagnosticListResponse;
+  };
+
+export type ListDiagnosticsApiV1ProjectsProjectIdRunsRunIdDiagnosticsGetResponse =
+  ListDiagnosticsApiV1ProjectsProjectIdRunsRunIdDiagnosticsGetResponses[keyof ListDiagnosticsApiV1ProjectsProjectIdRunsRunIdDiagnosticsGetResponses];
+
 export type EventsApiV1ProjectsProjectIdRunsRunIdEventsGetData = {
   body?: never;
   path: {
@@ -7415,6 +7976,89 @@ export type ExportRunReportApiV1ProjectsProjectIdRunsRunIdExportGetResponses = {
    */
   200: unknown;
 };
+
+export type GetJointGateApiV1ProjectsProjectIdRunsRunIdJointGateGetData = {
+  body?: never;
+  path: {
+    /**
+     * Project Id
+     */
+    project_id: string;
+    /**
+     * Run Id
+     */
+    run_id: string;
+  };
+  query?: never;
+  url: "/api/v1/projects/{project_id}/runs/{run_id}/joint-gate";
+};
+
+export type GetJointGateApiV1ProjectsProjectIdRunsRunIdJointGateGetErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type GetJointGateApiV1ProjectsProjectIdRunsRunIdJointGateGetError =
+  GetJointGateApiV1ProjectsProjectIdRunsRunIdJointGateGetErrors[keyof GetJointGateApiV1ProjectsProjectIdRunsRunIdJointGateGetErrors];
+
+export type GetJointGateApiV1ProjectsProjectIdRunsRunIdJointGateGetResponses = {
+  /**
+   * Successful Response
+   */
+  200: JointGateDecisionResponse;
+};
+
+export type GetJointGateApiV1ProjectsProjectIdRunsRunIdJointGateGetResponse =
+  GetJointGateApiV1ProjectsProjectIdRunsRunIdJointGateGetResponses[keyof GetJointGateApiV1ProjectsProjectIdRunsRunIdJointGateGetResponses];
+
+export type ListRegressionsApiV1ProjectsProjectIdRunsRunIdRegressionsGetData = {
+  body?: never;
+  path: {
+    /**
+     * Project Id
+     */
+    project_id: string;
+    /**
+     * Run Id
+     */
+    run_id: string;
+  };
+  query?: {
+    /**
+     * Limit
+     */
+    limit?: number;
+    /**
+     * Offset
+     */
+    offset?: number;
+  };
+  url: "/api/v1/projects/{project_id}/runs/{run_id}/regressions";
+};
+
+export type ListRegressionsApiV1ProjectsProjectIdRunsRunIdRegressionsGetErrors =
+  {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+  };
+
+export type ListRegressionsApiV1ProjectsProjectIdRunsRunIdRegressionsGetError =
+  ListRegressionsApiV1ProjectsProjectIdRunsRunIdRegressionsGetErrors[keyof ListRegressionsApiV1ProjectsProjectIdRunsRunIdRegressionsGetErrors];
+
+export type ListRegressionsApiV1ProjectsProjectIdRunsRunIdRegressionsGetResponses =
+  {
+    /**
+     * Successful Response
+     */
+    200: RegressionCandidateListResponse;
+  };
+
+export type ListRegressionsApiV1ProjectsProjectIdRunsRunIdRegressionsGetResponse =
+  ListRegressionsApiV1ProjectsProjectIdRunsRunIdRegressionsGetResponses[keyof ListRegressionsApiV1ProjectsProjectIdRunsRunIdRegressionsGetResponses];
 
 export type ApplyResultApiV1ProjectsProjectIdRunsRunIdResultPostData = {
   body: ApplyRunResultRequest;
@@ -7491,6 +8135,42 @@ export type StreamRunProgressApiV1ProjectsProjectIdRunsRunIdStreamGetResponses =
      */
     200: unknown;
   };
+
+export type GetTrustLoopApiV1ProjectsProjectIdRunsRunIdTrustLoopGetData = {
+  body?: never;
+  path: {
+    /**
+     * Project Id
+     */
+    project_id: string;
+    /**
+     * Run Id
+     */
+    run_id: string;
+  };
+  query?: never;
+  url: "/api/v1/projects/{project_id}/runs/{run_id}/trust-loop";
+};
+
+export type GetTrustLoopApiV1ProjectsProjectIdRunsRunIdTrustLoopGetErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type GetTrustLoopApiV1ProjectsProjectIdRunsRunIdTrustLoopGetError =
+  GetTrustLoopApiV1ProjectsProjectIdRunsRunIdTrustLoopGetErrors[keyof GetTrustLoopApiV1ProjectsProjectIdRunsRunIdTrustLoopGetErrors];
+
+export type GetTrustLoopApiV1ProjectsProjectIdRunsRunIdTrustLoopGetResponses = {
+  /**
+   * Successful Response
+   */
+  200: TrustLoopResponse;
+};
+
+export type GetTrustLoopApiV1ProjectsProjectIdRunsRunIdTrustLoopGetResponse =
+  GetTrustLoopApiV1ProjectsProjectIdRunsRunIdTrustLoopGetResponses[keyof GetTrustLoopApiV1ProjectsProjectIdRunsRunIdTrustLoopGetResponses];
 
 export type ListScorersApiV1ProjectsProjectIdScorersGetData = {
   body?: never;

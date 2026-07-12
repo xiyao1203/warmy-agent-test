@@ -288,29 +288,29 @@ Commit: `feat: orchestrate run trust loop workflow`
 - Produces the five GET endpoints from the approved design
 - Produces generated types `TrustLoopResponse`, `DiagnosticResponse`, `RegressionCandidateResponse`, `CalibrationResponse`, `JointGateDecisionResponse`
 
-- [ ] **Step 1: Write failing public contract tests**
+- [x] **Step 1: Write failing public contract tests**
 
 Cover member authorization, project isolation, 404 for unknown Run, pending projection, completed-with-warnings projection and pagination for diagnostics/regressions.
 
-- [ ] **Step 2: Run RED**
+- [x] **Step 2: Run RED**
 
 Run: `uv run pytest apps/control-api/tests/contract/test_run_trust_loop_api.py -q`
 Expected: route failures.
 
-- [ ] **Step 3: Implement project-scoped query handlers and routes**
+- [x] **Step 3: Implement project-scoped query handlers and routes**
 
 Routes call application query ports only, never ORM. Sort records deterministically and expose no internal error message containing model/provider details.
 
-- [ ] **Step 4: Make Mission consume the shared projection**
+- [x] **Step 4: Make Mission consume the shared projection**
 
 Replace duplicate regression and release-gate evaluation inside Mission `close_loop` with the persisted trust-loop summary for its Run. Keep report generation and review collection, and return `completed_with_warnings` details without changing the Run terminal state.
 
-- [ ] **Step 5: Regenerate OpenAPI client**
+- [x] **Step 5: Regenerate OpenAPI client**
 
 Run: `make api-generate`
 Expected: OpenAPI and typed client include all trust-loop responses.
 
-- [ ] **Step 6: Run GREEN and commit**
+- [x] **Step 6: Run GREEN and commit**
 
 Run: `uv run pytest apps/control-api/tests/contract/test_run_trust_loop_api.py -q && pnpm --filter @warmy/generated-api-client typecheck`
 Expected: all pass.
