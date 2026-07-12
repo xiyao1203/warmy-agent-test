@@ -147,6 +147,31 @@ class TestMission:
         self.updated_at = datetime.now(UTC)
         self.lock_version += 1
 
+    def mark_needs_attention(self, reason: str) -> None:
+        if self.status not in {MissionStatus.RUNNING, MissionStatus.PROVISIONING}:
+            raise ValueError("Mission cannot pause from current status")
+        if not reason.strip():
+            raise ValueError("Mission attention reason is required")
+        self.status = MissionStatus.NEEDS_ATTENTION
+        self.updated_at = datetime.now(UTC)
+        self.lock_version += 1
+
+    def resume(self) -> None:
+        if self.status is not MissionStatus.NEEDS_ATTENTION:
+            raise ValueError("Only a Mission needing attention can resume")
+        self.status = MissionStatus.RUNNING
+        self.updated_at = datetime.now(UTC)
+        self.lock_version += 1
+
+    def fail(self) -> None:
+        if self.status in {MissionStatus.COMPLETED, MissionStatus.CANCELLED}:
+            return
+        now = datetime.now(UTC)
+        self.status = MissionStatus.FAILED
+        self.updated_at = now
+        self.completed_at = now
+        self.lock_version += 1
+
     def complete(self) -> None:
         if self.status not in {MissionStatus.RUNNING, MissionStatus.PROVISIONING}:
             raise ValueError("Mission cannot complete from current status")
@@ -194,6 +219,7 @@ class TestMission:
             MissionStatus.COMPLETED,
             MissionStatus.FAILED,
             MissionStatus.CANCELLED,
+            MissionStatus.NEEDS_ATTENTION,
         }:
             raise ValueError("Mission is already editable")
         self.status = MissionStatus.COLLECTING

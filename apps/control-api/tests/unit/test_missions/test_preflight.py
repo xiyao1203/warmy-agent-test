@@ -58,3 +58,24 @@ async def test_discovery_is_read_only_and_untrusted_content_cannot_expand_action
     assert preview.execution_channels == ("api", "browser", "security")
     assert preview.action_allowlist == ("read",)
     assert "delete" not in preview.action_allowlist
+
+
+def test_preflight_blocks_confirmation_when_discovery_detects_expired_login() -> None:
+    mission = _mission_without_access()
+    mission.merge_fact(
+        MissionFact.user(
+            "access", {"strategy": "browser_profile", "browser_profile_id": str(uuid4())}
+        )
+    )
+    mission.merge_fact(
+        MissionFact.discovered(
+            "discovery",
+            {"api_available": False, "browser_available": True, "login_valid": False},
+            confidence=0.95,
+        )
+    )
+
+    preview = MissionPreflight().evaluate(mission)
+
+    assert preview.ready is False
+    assert [item.key for item in preview.missing_inputs] == ["access"]

@@ -199,6 +199,32 @@ class SqlAlchemyMissionRepository:
             )
             return True
 
+    async def list_assets(
+        self, project_id: UUID, mission_id: UUID
+    ) -> list[dict[str, object]]:
+        async with self._session_factory() as session:
+            models = list(
+                (
+                    await session.scalars(
+                        select(TestMissionAssetModel)
+                        .where(
+                            TestMissionAssetModel.project_id == project_id,
+                            TestMissionAssetModel.mission_id == mission_id,
+                        )
+                        .order_by(TestMissionAssetModel.created_at)
+                    )
+                ).all()
+            )
+        return [
+            {
+                "type": model.asset_type,
+                "id": str(model.asset_id),
+                "relation": model.relation,
+                "stage": model.stage,
+            }
+            for model in models
+        ]
+
     async def get_stage_receipt(
         self, project_id: UUID, revision_id: UUID, stage: str
     ) -> StageReceipt | None:
@@ -244,6 +270,32 @@ class SqlAlchemyMissionRepository:
                     created_at=receipt.created_at,
                 )
             )
+
+    async def replace_stage_receipt(self, receipt: StageReceipt) -> None:
+        async with self._session_factory() as session, session.begin():
+            model = await session.scalar(
+                select(TestMissionStageReceiptModel).where(
+                    TestMissionStageReceiptModel.project_id == receipt.project_id,
+                    TestMissionStageReceiptModel.revision_id == receipt.revision_id,
+                    TestMissionStageReceiptModel.stage == receipt.stage,
+                )
+            )
+            if model is None:
+                session.add(
+                    TestMissionStageReceiptModel(
+                        id=receipt.receipt_id,
+                        project_id=receipt.project_id,
+                        revision_id=receipt.revision_id,
+                        stage=receipt.stage,
+                        status=receipt.status,
+                        output=receipt.output,
+                        created_at=receipt.created_at,
+                    )
+                )
+                return
+            model.status = receipt.status
+            model.output = receipt.output
+            model.created_at = receipt.created_at
 
 
 def _mission_values(mission: TestMission) -> dict[str, object]:

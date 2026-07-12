@@ -195,6 +195,7 @@ def capability_specs() -> list[CapabilitySpec]:
             "test_plans.publish_version", "test_plan", RiskLevel.HIGH_IMPACT, ResourceInput
         ),
         CapabilitySpec("runs.list", "execution", RiskLevel.READ, QueryInput),
+        CapabilitySpec("runs.get_status", "execution", RiskLevel.READ, ResourceInput),
         CapabilitySpec("runs.start", "execution", RiskLevel.HIGH_IMPACT, RunInput),
         CapabilitySpec("runs.cancel", "execution", RiskLevel.HIGH_IMPACT, ResourceInput),
         CapabilitySpec("scorers.list", "evaluation", RiskLevel.READ, QueryInput),

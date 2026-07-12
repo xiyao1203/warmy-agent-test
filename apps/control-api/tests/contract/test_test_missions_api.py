@@ -8,10 +8,14 @@ from agenttest.modules.test_missions.api.router import (
     create_test_mission_router,
 )
 from agenttest.modules.test_missions.application.commands import (
+    CancelMissionHandler,
     ConfirmMissionHandler,
+    DiscoverMissionHandler,
     PreviewMissionHandler,
+    ResumeMissionHandler,
     UpsertMissionHandler,
 )
+from agenttest.modules.test_missions.application.discovery import DiscoveryResult, MissionDiscovery
 from agenttest.modules.test_missions.application.intake import MissionIntake
 from agenttest.modules.test_missions.application.preflight import MissionPreflight
 from agenttest.modules.test_missions.application.queries import GetMissionHandler
@@ -59,11 +63,28 @@ class Repository:
         self.events.append(event)
         return event
 
+    async def list_assets(self, project_id, mission_id):
+        del project_id, mission_id
+        return []
+
 
 class Runtime:
     async def start(self, mission, revision, idempotency_key):
         del idempotency_key
         return f"test-mission-{mission.mission_id}-{revision.revision_number}"
+
+    async def cancel(self, workflow_id):
+        del workflow_id
+
+    async def resume(self, workflow_id):
+        del workflow_id
+
+
+class Probe:
+    async def probe(self, *, project_id, target, access, read_only):
+        del project_id, target, access
+        assert read_only is True
+        return DiscoveryResult(("chat",), False, True, True, ("多轮对话",))
 
 
 def build_client():
@@ -86,9 +107,12 @@ def build_client():
 
     dependencies = MissionApiDependencies(
         upsert=UpsertMissionHandler(repository, MissionIntake()),
+        discover=DiscoverMissionHandler(repository, MissionDiscovery(Probe())),
         preview=PreviewMissionHandler(repository, MissionPreflight()),
         confirm=ConfirmMissionHandler(repository, MissionPreflight(), runtime),
         get=GetMissionHandler(repository, MissionPreflight()),
+        cancel=CancelMissionHandler(repository, runtime),
+        resume=ResumeMissionHandler(repository, runtime),
     )
     app = FastAPI()
     app.include_router(
@@ -122,6 +146,10 @@ def test_api_creates_previews_and_confirms_one_revision() -> None:
         },
     )
     mission_id = created.json()["mission_id"]
+    discovered = client.post(
+        f"/api/v1/projects/{project_id}/test-missions/{mission_id}/discover",
+        headers={"X-CSRF-Token": "csrf"},
+    )
     preview = client.post(
         f"/api/v1/projects/{project_id}/test-missions/{mission_id}/preview",
         headers={"X-CSRF-Token": "csrf"},
@@ -133,6 +161,8 @@ def test_api_creates_previews_and_confirms_one_revision() -> None:
     )
 
     assert created.status_code == 201
+    assert discovered.status_code == 200
+    assert discovered.json()["login_valid"] is True
     assert preview.status_code == 200
     assert preview.json()["ready"] is True
     assert confirmed.status_code == 200

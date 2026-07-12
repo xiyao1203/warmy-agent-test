@@ -1741,6 +1741,12 @@ def _register_test_agent_endpoints(
     auth_deps,
 ) -> None:
     """注册测试 Agent 对话 API。"""
+    from agenttest.modules.agents.infrastructure.persistence.repositories import (
+        SqlAlchemyAgentVersionRepository,
+    )
+    from agenttest.modules.browser_profiles.infrastructure.repository import (
+        SqlAlchemyBrowserProfileRepository,
+    )
     from agenttest.modules.experiments.infrastructure.persistence.repositories import (
         SqlAlchemyExperimentRepository,
     )
@@ -1801,18 +1807,30 @@ def _register_test_agent_endpoints(
         MissionCapabilityGateway,
     )
     from agenttest.modules.test_missions.application.commands import (
+        CancelMissionHandler,
         ConfirmMissionHandler,
+        DiscoverMissionHandler,
         PreviewMissionHandler,
+        ResumeMissionHandler,
         UpsertMissionHandler,
     )
     from agenttest.modules.test_missions.application.compiler import MissionCompiler
+    from agenttest.modules.test_missions.application.discovery import MissionDiscovery
     from agenttest.modules.test_missions.application.intake import MissionIntake
     from agenttest.modules.test_missions.application.preflight import MissionPreflight
     from agenttest.modules.test_missions.application.queries import GetMissionHandler
+    from agenttest.modules.test_missions.application.resolution import PlatformAssetResolver
     from agenttest.modules.test_missions.application.stage_controller import (
         MissionStageController,
     )
     from agenttest.modules.test_missions.application.stages import MissionStageService
+    from agenttest.modules.test_missions.infrastructure.http_discovery import (
+        HttpTargetDiscoveryProbe,
+        ProjectMissionAccessCatalog,
+    )
+    from agenttest.modules.test_missions.infrastructure.platform_resolver import (
+        PublishedAgentMissionCatalog,
+    )
     from agenttest.modules.test_missions.infrastructure.repositories import (
         SqlAlchemyMissionRepository,
     )
@@ -1842,9 +1860,25 @@ def _register_test_agent_endpoints(
         task_queue=settings.temporal_task_queue,
         callback_base_url=str(settings.control_api_base_url),
     )
+    mission_audit = AuditRecorder(SqlAlchemyAuditRepository(session_factory))
     mission_upsert = UpsertMissionHandler(mission_repository, MissionIntake())
+    browser_profiles = SqlAlchemyBrowserProfileRepository(session_factory)
+    test_accounts = SqlAlchemyTestAccountRepository(session_factory)
+    mission_discover = DiscoverMissionHandler(
+        mission_repository,
+        MissionDiscovery(
+            HttpTargetDiscoveryProbe(
+                access_catalog=ProjectMissionAccessCatalog(browser_profiles, test_accounts)
+            )
+        ),
+        PlatformAssetResolver(
+            PublishedAgentMissionCatalog(SqlAlchemyAgentVersionRepository(session_factory))
+        ),
+    )
     mission_preview = PreviewMissionHandler(mission_repository, mission_preflight)
-    mission_confirm = ConfirmMissionHandler(mission_repository, mission_preflight, mission_runtime)
+    mission_confirm = ConfirmMissionHandler(
+        mission_repository, mission_preflight, mission_runtime, mission_audit
+    )
     mission_get = GetMissionHandler(mission_repository, mission_preflight)
     gateway = HandlerPlatformGateway(
         agents=build_agent_dependencies(settings),
@@ -1857,7 +1891,7 @@ def _register_test_agent_endpoints(
         reviews=SqlAlchemyReviewTaskRepository(session_factory),
         gates=SqlAlchemyReleaseGateRepository(session_factory),
         security=SqlAlchemySecurityScanRepository(session_factory),
-        accounts=SqlAlchemyTestAccountRepository(session_factory),
+        accounts=test_accounts,
         promptfoo_bin=settings.promptfoo_bin,
         allow_private_security_targets=settings.security_scan_allow_private_network,
         gate_evidence=SqlAlchemyGateEvidence(session_factory),
@@ -1871,6 +1905,7 @@ def _register_test_agent_endpoints(
         gateway,
         MissionCapabilityGateway(
             upsert=mission_upsert,
+            discover=mission_discover,
             preview=mission_preview,
             confirm=mission_confirm,
             get=mission_get,
@@ -1932,9 +1967,16 @@ def _register_test_agent_endpoints(
         create_test_mission_router(
             dependencies=MissionApiDependencies(
                 upsert=mission_upsert,
+                discover=mission_discover,
                 preview=mission_preview,
                 confirm=mission_confirm,
                 get=mission_get,
+                cancel=CancelMissionHandler(
+                    mission_repository, mission_runtime, mission_audit
+                ),
+                resume=ResumeMissionHandler(
+                    mission_repository, mission_runtime, mission_audit
+                ),
             ),
             actor_for=actor_for,
             check_project=check_project,

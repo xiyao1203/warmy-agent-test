@@ -25,6 +25,13 @@ class ConfirmedMissionAssetExecutor:
         arguments: dict[str, object],
         idempotency_key: str,
     ) -> dict[str, object]:
-        del idempotency_key
         resolved, payload = self._registry.resolve(child_agent, capability, arguments)
-        return await resolved.execute(OrchestrationContext(actor, project_id, session_id), payload)
+        return await resolved.execute(
+            OrchestrationContext(
+                actor,
+                project_id,
+                session_id,
+                idempotency_key=idempotency_key,
+            ),
+            payload,
+        )

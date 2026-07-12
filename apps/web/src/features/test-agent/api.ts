@@ -170,6 +170,26 @@ export function previewMission(projectId: string, missionId: string) {
   );
 }
 
+export function getMission(projectId: string, missionId: string) {
+  return request<TestMissionResponse>(
+    `${API_BASE}/api/v1/projects/${projectId}/test-missions/${missionId}`,
+  );
+}
+
+export function cancelMission(projectId: string, missionId: string) {
+  return request<TestMissionResponse>(
+    `${API_BASE}/api/v1/projects/${projectId}/test-missions/${missionId}/cancel`,
+    { method: "POST", headers: csrfHeaders() as Record<string, string> },
+  );
+}
+
+export function resumeMission(projectId: string, missionId: string) {
+  return request<TestMissionResponse>(
+    `${API_BASE}/api/v1/projects/${projectId}/test-missions/${missionId}/resume`,
+    { method: "POST", headers: csrfHeaders() as Record<string, string> },
+  );
+}
+
 export function deleteSession(projectId: string, sessionId: string) {
   return fetch(`${base(projectId)}/sessions/${sessionId}`, {
     method: "DELETE",

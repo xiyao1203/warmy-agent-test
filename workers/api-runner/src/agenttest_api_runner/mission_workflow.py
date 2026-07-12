@@ -74,6 +74,7 @@ class TestMissionWorkflow:
         self._machine = MissionStateMachine()
         self._cancel_requested = False
         self._resume_requested = False
+        self._resume_attempt = 0
 
     @workflow.signal
     async def cancel(self) -> None:
@@ -81,8 +82,13 @@ class TestMissionWorkflow:
 
     @workflow.signal
     async def resume(self) -> None:
+        self._resume_attempt += 1
         self._resume_requested = True
         self._machine.resume()
+
+    @property
+    def resume_attempt(self) -> int:
+        return self._resume_attempt
 
     @workflow.query
     def state(self) -> dict[str, object]:
@@ -132,7 +138,7 @@ class TestMissionWorkflow:
     async def _execute(self, task: MissionWorkflowTask, stage: str) -> MissionStageResponse:
         return await workflow.execute_activity(
             execute_mission_stage,
-            MissionStageTask(task, stage),
+            MissionStageTask(task, stage, self._resume_attempt),
             start_to_close_timeout=MISSION_ACTIVITY_TIMEOUT,
             retry_policy=MISSION_ACTIVITY_RETRY,
         )

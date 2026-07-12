@@ -16,10 +16,11 @@ class GetMissionHandler:
 
     async def execute(
         self, actor: User, project_id: UUID, mission_id: UUID
-    ) -> tuple[TestMission, MissionPreviewResult]:
+    ) -> tuple[TestMission, MissionPreviewResult, list[dict[str, object]]]:
         del actor
         mission = await self._repository.get(project_id, mission_id)
         if mission is None:
             raise LookupError("Mission does not exist in project")
         preview = self._preflight.evaluate(mission)
-        return mission, MissionPreviewResult(mission_id, preview, None, None)
+        assets = await self._repository.list_assets(project_id, mission_id)
+        return mission, MissionPreviewResult(mission_id, preview, None, None), assets

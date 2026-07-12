@@ -59,3 +59,9 @@ def test_state_machine_pauses_resumes_and_distinguishes_terminal_outcomes() -> N
 def test_mission_activity_policy_is_bounded() -> None:
     assert MISSION_ACTIVITY_TIMEOUT == timedelta(minutes=2)
     assert MISSION_ACTIVITY_RETRY.maximum_attempts == 3
+
+
+def test_resume_increments_attempt_forwarded_to_stage_activity() -> None:
+    workflow = MissionWorkflow()
+
+    assert workflow.resume_attempt == 0

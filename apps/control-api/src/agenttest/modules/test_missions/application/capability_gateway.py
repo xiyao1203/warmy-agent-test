@@ -9,6 +9,7 @@ from agenttest.modules.identity.public import User
 from agenttest.modules.projects.public import ProjectId
 from agenttest.modules.test_missions.application.commands import (
     ConfirmMissionHandler,
+    DiscoverMissionHandler,
     PreviewMissionHandler,
     UpsertMissionHandler,
 )
@@ -26,11 +27,13 @@ class MissionCapabilityGateway:
         self,
         *,
         upsert: UpsertMissionHandler,
+        discover: DiscoverMissionHandler,
         preview: PreviewMissionHandler,
         confirm: ConfirmMissionHandler,
         get: GetMissionHandler,
     ) -> None:
         self._upsert = upsert
+        self._discover = discover
         self._preview = preview
         self._confirm = confirm
         self._get = get
@@ -48,6 +51,9 @@ class MissionCapabilityGateway:
             )
             return _mission_result(mission)
         mission_id = _uuid(values["mission_id"])
+        discovery = None
+        if capability == "test_missions.discover":
+            discovery = await self._discover.execute(actor, project_id.value, mission_id)
         if capability in {"test_missions.discover", "test_missions.preview"}:
             preview = await self._preview.execute(actor, project_id.value, mission_id)
             return {
@@ -60,11 +66,21 @@ class MissionCapabilityGateway:
                 "execution_channels": list(preview.preview.execution_channels),
                 "action_allowlist": list(preview.preview.action_allowlist),
                 "revision_hash": preview.revision_hash,
+                "discovery": (
+                    {
+                        "capabilities": list(discovery.capabilities),
+                        "api_available": discovery.api_available,
+                        "browser_available": discovery.browser_available,
+                        "login_valid": discovery.login_valid,
+                    }
+                    if discovery is not None
+                    else None
+                ),
                 "artifacts": [_artifact("test_mission", mission_id, "updated")],
             }
         if capability == "test_missions.get_status":
-            mission, _ = await self._get.execute(actor, project_id.value, mission_id)
-            return _mission_result(mission)
+            mission, _, assets = await self._get.execute(actor, project_id.value, mission_id)
+            return {**_mission_result(mission), "linked_assets": assets}
         if capability == "test_missions.confirm_and_start":
             result = await self._confirm.execute(
                 actor,

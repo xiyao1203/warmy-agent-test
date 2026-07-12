@@ -38,3 +38,7 @@ class MissionRepository(Protocol):
         *,
         stage: str | None = None,
     ) -> bool: ...
+
+    async def list_assets(
+        self, project_id: UUID, mission_id: UUID
+    ) -> list[dict[str, object]]: ...

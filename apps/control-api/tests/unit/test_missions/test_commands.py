@@ -5,10 +5,14 @@ import pytest
 from agenttest.modules.identity.public import Email, SystemRole, User, UserId
 from agenttest.modules.projects.public import ProjectId
 from agenttest.modules.test_missions.application.commands import (
+    CancelMissionHandler,
     ConfirmMissionHandler,
+    DiscoverMissionHandler,
     PreviewMissionHandler,
+    ResumeMissionHandler,
     UpsertMissionHandler,
 )
+from agenttest.modules.test_missions.application.discovery import DiscoveryResult, MissionDiscovery
 from agenttest.modules.test_missions.application.intake import MissionIntake
 from agenttest.modules.test_missions.application.preflight import MissionPreflight
 from agenttest.modules.test_missions.domain.value_objects import MissionEvent
@@ -55,14 +59,38 @@ class Repository:
         self.events.append(event)
         return event
 
+    async def list_assets(self, project_id, mission_id):
+        del project_id, mission_id
+        return []
+
 
 class Runtime:
     def __init__(self) -> None:
         self.started = []
+        self.cancelled = []
+        self.resumed = []
 
     async def start(self, mission, revision, idempotency_key):
         self.started.append((mission.mission_id, revision.revision_id, idempotency_key))
         return f"test-mission-{mission.mission_id}-{revision.revision_number}"
+
+    async def cancel(self, workflow_id):
+        self.cancelled.append(workflow_id)
+
+    async def resume(self, workflow_id):
+        self.resumed.append(workflow_id)
+
+
+class Probe:
+    async def probe(self, *, project_id, target, access, read_only):
+        assert read_only is True
+        return DiscoveryResult(
+            capabilities=("chat",),
+            api_available=False,
+            browser_available=True,
+            login_valid=True,
+            inferred_scenarios=("真实聊天",),
+        )
 
 
 def actor() -> User:
@@ -147,3 +175,48 @@ async def test_confirm_rejects_stale_hash_and_starts_runtime_once() -> None:
         "mission.confirmed",
         "mission.started",
     ]
+
+
+@pytest.mark.asyncio
+async def test_discover_handler_persists_safe_target_observations() -> None:
+    repository = Repository()
+    mission = await ready_mission(repository)
+
+    result = await DiscoverMissionHandler(
+        repository, MissionDiscovery(Probe())
+    ).execute(actor(), mission.project_id, mission.mission_id)
+
+    assert result.login_valid is True
+    assert mission.facts["discovery"].value["capabilities"] == ("chat",)
+    assert repository.events[-1].event_type == "mission.discovered"
+
+
+@pytest.mark.asyncio
+async def test_cancel_and_resume_control_existing_temporal_workflow() -> None:
+    repository = Repository()
+    mission = await ready_mission(repository)
+    runtime = Runtime()
+    preview = await PreviewMissionHandler(repository, MissionPreflight()).execute(
+        actor(), mission.project_id, mission.mission_id
+    )
+    await ConfirmMissionHandler(repository, MissionPreflight(), runtime).execute(
+        actor(),
+        mission.project_id,
+        mission.mission_id,
+        revision_hash=preview.revision_hash,
+        idempotency_key="control-1",
+    )
+    mission.mark_running()
+    mission.mark_needs_attention("auth_expired")
+
+    resumed = await ResumeMissionHandler(repository, runtime).execute(
+        actor(), mission.project_id, mission.mission_id
+    )
+    assert resumed.status.value == "running"
+    cancelled = await CancelMissionHandler(repository, runtime).execute(
+        actor(), mission.project_id, mission.mission_id
+    )
+
+    assert cancelled.status.value == "cancelled"
+    assert runtime.resumed == [mission.workflow_id]
+    assert runtime.cancelled == [mission.workflow_id]

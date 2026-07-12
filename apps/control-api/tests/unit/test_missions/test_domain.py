@@ -72,3 +72,15 @@ def test_new_revision_requires_reopening_instead_of_mutating_confirmed_snapshot(
     assert second.revision_number == 2
     assert first.content_hash != second.content_hash
     assert first.snapshot["facts"]["test_goal"]["value"] == "验证客服问答"
+
+
+def test_running_mission_can_pause_for_login_and_resume() -> None:
+    mission = _complete_mission()
+    mission.confirm(confirmed_by=uuid4())
+    mission.mark_provisioning("workflow-1")
+    mission.mark_running()
+
+    mission.mark_needs_attention("auth_expired")
+    assert mission.status is MissionStatus.NEEDS_ATTENTION
+    mission.resume()
+    assert mission.status is MissionStatus.RUNNING

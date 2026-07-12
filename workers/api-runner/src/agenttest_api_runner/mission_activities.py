@@ -26,6 +26,7 @@ async def execute_mission_stage(task: MissionStageTask) -> MissionStageResponse:
             json={
                 "revision_hash": mission.revision_hash,
                 "idempotency_key": f"{mission.idempotency_key}:{task.stage}",
+                "resume_attempt": task.resume_attempt,
             },
         )
     if response.status_code >= 500:

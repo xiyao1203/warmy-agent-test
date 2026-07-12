@@ -4,8 +4,12 @@ from dataclasses import dataclass
 from typing import Any, Protocol
 from uuid import UUID
 
-from agenttest.modules.identity.public import User
+from agenttest.modules.identity.public import User, UserId
 from agenttest.modules.projects.public import ProjectId
+from agenttest.modules.test_missions.application.discovery import (
+    DiscoveryResult,
+    MissionDiscovery,
+)
 from agenttest.modules.test_missions.application.intake import MissionIntake
 from agenttest.modules.test_missions.application.ports import MissionRepository
 from agenttest.modules.test_missions.application.preflight import (
@@ -28,6 +32,24 @@ class MissionRuntime(Protocol):
     async def start(
         self, mission: TestMission, revision: MissionRevision, idempotency_key: str
     ) -> str: ...
+
+    async def cancel(self, workflow_id: str) -> None: ...
+
+    async def resume(self, workflow_id: str) -> None: ...
+
+
+class MissionAuditWriter(Protocol):
+    async def record(
+        self,
+        *,
+        actor_user_id: UserId | None,
+        action: str,
+        object_type: str,
+        object_id: UUID | None,
+        project_id: ProjectId | None,
+        changes: dict[str, Any],
+        source_ip: str | None,
+    ) -> None: ...
 
 
 @dataclass(frozen=True, slots=True)
@@ -111,16 +133,65 @@ class PreviewMissionHandler:
         )
 
 
+class DiscoverMissionHandler:
+    def __init__(
+        self,
+        repository: MissionRepository,
+        discovery: MissionDiscovery,
+        resolver=None,
+    ) -> None:
+        self._repository = repository
+        self._discovery = discovery
+        self._resolver = resolver
+
+    async def execute(
+        self, actor: User, project_id: UUID, mission_id: UUID
+    ) -> DiscoveryResult:
+        del actor
+        mission = await _required_mission(self._repository, project_id, mission_id)
+        expected_lock = mission.lock_version
+        try:
+            if self._resolver is not None:
+                await self._resolver.resolve(mission)
+            result = await self._discovery.discover(mission)
+        except Exception as error:
+            if mission.lock_version != expected_lock:
+                await self._repository.save(mission, expected_lock_version=expected_lock)
+            await self._repository.append_event(
+                project_id,
+                mission_id,
+                "mission.discovery_failed",
+                {"error_type": type(error).__name__, "message": str(error)},
+            )
+            raise
+        if mission.lock_version != expected_lock:
+            await self._repository.save(mission, expected_lock_version=expected_lock)
+        await self._repository.append_event(
+            project_id,
+            mission_id,
+            "mission.discovered",
+            {
+                "capabilities": list(result.capabilities),
+                "api_available": result.api_available,
+                "browser_available": result.browser_available,
+                "login_valid": result.login_valid,
+            },
+        )
+        return result
+
+
 class ConfirmMissionHandler:
     def __init__(
         self,
         repository: MissionRepository,
         preflight: MissionPreflight,
         runtime: MissionRuntime,
+        audit: MissionAuditWriter | None = None,
     ) -> None:
         self._repository = repository
         self._preflight = preflight
         self._runtime = runtime
+        self._audit = audit
 
     async def execute(
         self,
@@ -138,7 +209,7 @@ class ConfirmMissionHandler:
                 raise MissionPreviewChangedError("Mission preview has changed")
             if mission.workflow_id:
                 return ConfirmMissionResult(mission, current, mission.workflow_id)
-            return await self._start_existing(mission, current, idempotency_key)
+            return await self._start_existing(mission, current, idempotency_key, actor)
 
         preview = self._preflight.evaluate(mission)
         if not preview.ready:
@@ -164,13 +235,14 @@ class ConfirmMissionHandler:
                 "confirmed_by": str(actor.user_id.value),
             },
         )
-        return await self._start_existing(mission, revision, idempotency_key)
+        return await self._start_existing(mission, revision, idempotency_key, actor)
 
     async def _start_existing(
         self,
         mission: TestMission,
         revision: MissionRevision,
         idempotency_key: str,
+        actor: User,
     ) -> ConfirmMissionResult:
         workflow_id = await self._runtime.start(mission, revision, idempotency_key)
         expected_lock = mission.lock_version
@@ -182,7 +254,101 @@ class ConfirmMissionHandler:
             "mission.started",
             {"revision_id": str(revision.revision_id), "workflow_id": workflow_id},
         )
+        await _audit(
+            self._audit,
+            actor=actor,
+            action="test_mission.confirm_start",
+            mission=mission,
+            changes={"revision_hash": revision.content_hash, "workflow_id": workflow_id},
+        )
         return ConfirmMissionResult(mission, revision, workflow_id)
+
+
+class CancelMissionHandler:
+    def __init__(
+        self,
+        repository: MissionRepository,
+        runtime: MissionRuntime,
+        audit: MissionAuditWriter | None = None,
+    ) -> None:
+        self._repository = repository
+        self._runtime = runtime
+        self._audit = audit
+
+    async def execute(self, actor: User, project_id: UUID, mission_id: UUID) -> TestMission:
+        mission = await _required_mission(self._repository, project_id, mission_id)
+        if not mission.workflow_id:
+            raise ValueError("Mission has no active workflow")
+        await self._runtime.cancel(mission.workflow_id)
+        expected_lock = mission.lock_version
+        mission.cancel()
+        await self._repository.save(mission, expected_lock_version=expected_lock)
+        await self._repository.append_event(
+            project_id, mission_id, "mission.cancelled", {"workflow_id": mission.workflow_id}
+        )
+        await _audit(
+            self._audit,
+            actor=actor,
+            action="test_mission.cancel",
+            mission=mission,
+            changes={"workflow_id": mission.workflow_id},
+        )
+        return mission
+
+
+class ResumeMissionHandler:
+    def __init__(
+        self,
+        repository: MissionRepository,
+        runtime: MissionRuntime,
+        audit: MissionAuditWriter | None = None,
+    ) -> None:
+        self._repository = repository
+        self._runtime = runtime
+        self._audit = audit
+
+    async def execute(self, actor: User, project_id: UUID, mission_id: UUID) -> TestMission:
+        mission = await _required_mission(self._repository, project_id, mission_id)
+        if not mission.workflow_id:
+            raise ValueError("Mission has no active workflow")
+        if mission.status is not MissionStatus.NEEDS_ATTENTION:
+            raise ValueError("Mission does not need attention")
+        await self._runtime.resume(mission.workflow_id)
+        expected_lock = mission.lock_version
+        mission.resume()
+        await self._repository.save(mission, expected_lock_version=expected_lock)
+        await self._repository.append_event(
+            project_id, mission_id, "mission.resumed", {"workflow_id": mission.workflow_id}
+        )
+        await _audit(
+            self._audit,
+            actor=actor,
+            action="test_mission.resume",
+            mission=mission,
+            changes={"workflow_id": mission.workflow_id},
+        )
+        return mission
+
+
+async def _audit(
+    audit: MissionAuditWriter | None,
+    *,
+    actor: User,
+    action: str,
+    mission: TestMission,
+    changes: dict[str, object],
+) -> None:
+    if audit is None:
+        return
+    await audit.record(
+        actor_user_id=actor.user_id,
+        action=action,
+        object_type="test_mission",
+        object_id=mission.mission_id,
+        project_id=ProjectId(mission.project_id),
+        changes=changes,
+        source_ip=None,
+    )
 
 
 async def _required_mission(

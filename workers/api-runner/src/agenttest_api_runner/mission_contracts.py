@@ -34,3 +34,4 @@ class MissionWorkflowResult:
 class MissionStageTask:
     mission: MissionWorkflowTask
     stage: str
+    resume_attempt: int = 0

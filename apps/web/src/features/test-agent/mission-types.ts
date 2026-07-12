@@ -26,6 +26,12 @@ export type TestMissionResponse = {
   revision_hash: string | null;
   snapshot: Record<string, unknown> | null;
   updated_at: string;
+  assets?: Array<{
+    type: string;
+    id: string;
+    relation: string;
+    stage?: string | null;
+  }>;
 };
 
 export type MissionProgressOutput = {

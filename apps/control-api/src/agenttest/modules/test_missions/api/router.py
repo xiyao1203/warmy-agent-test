@@ -12,9 +12,12 @@ from agenttest.modules.test_missions.api.schemas import (
     UpsertMissionRequest,
 )
 from agenttest.modules.test_missions.application.commands import (
+    CancelMissionHandler,
     ConfirmMissionHandler,
+    DiscoverMissionHandler,
     MissionPreviewChangedError,
     PreviewMissionHandler,
+    ResumeMissionHandler,
     UpsertMissionHandler,
 )
 from agenttest.modules.test_missions.application.queries import GetMissionHandler
@@ -26,9 +29,12 @@ from agenttest.shared.api.auth_guard import require_actor, require_writer
 @dataclass(frozen=True, slots=True)
 class MissionApiDependencies:
     upsert: UpsertMissionHandler
+    discover: DiscoverMissionHandler
     preview: PreviewMissionHandler
     confirm: ConfirmMissionHandler
     get: GetMissionHandler
+    cancel: CancelMissionHandler
+    resume: ResumeMissionHandler
 
 
 def create_test_mission_router(
@@ -74,10 +80,16 @@ def create_test_mission_router(
         if isinstance(actor, JSONResponse):
             return actor
         try:
-            mission, preview = await dependencies.get.execute(actor, project_id, mission_id)
+            mission, preview, assets = await dependencies.get.execute(
+                actor, project_id, mission_id
+            )
         except LookupError:
             return _error(404, "Mission not found")
-        return {**_mission_response(mission), **_preview_response(preview.preview, None, None)}
+        return {
+            **_mission_response(mission),
+            **_preview_response(preview.preview, None, None),
+            "assets": assets,
+        }
 
     @router.post("/{mission_id}/preview")
     async def preview_mission(
@@ -94,6 +106,30 @@ def create_test_mission_router(
         except LookupError:
             return _error(404, "Mission not found")
         return _preview_response(result.preview, result.revision_hash, result.snapshot)
+
+    @router.post("/{mission_id}/discover")
+    async def discover_mission(
+        request: Request,
+        project_id: UUID,
+        mission_id: UUID,
+        x_csrf_token: str | None = Header(default=None),
+    ):
+        actor = await authorize(request, project_id, write=True, csrf=x_csrf_token)
+        if isinstance(actor, JSONResponse):
+            return actor
+        try:
+            result = await dependencies.discover.execute(actor, project_id, mission_id)
+        except LookupError:
+            return _error(404, "Mission not found")
+        except ValueError as error:
+            return _error(422, str(error))
+        return {
+            "capabilities": list(result.capabilities),
+            "api_available": result.api_available,
+            "browser_available": result.browser_available,
+            "login_valid": result.login_valid,
+            "inferred_scenarios": list(result.inferred_scenarios),
+        }
 
     @router.post("/{mission_id}/confirm-start")
     async def confirm_mission(
@@ -126,6 +162,42 @@ def create_test_mission_router(
             "revision_hash": result.revision.content_hash,
             "workflow_id": result.workflow_id,
         }
+
+    @router.post("/{mission_id}/cancel")
+    async def cancel_mission(
+        request: Request,
+        project_id: UUID,
+        mission_id: UUID,
+        x_csrf_token: str | None = Header(default=None),
+    ):
+        actor = await authorize(request, project_id, write=True, csrf=x_csrf_token)
+        if isinstance(actor, JSONResponse):
+            return actor
+        try:
+            mission = await dependencies.cancel.execute(actor, project_id, mission_id)
+        except LookupError:
+            return _error(404, "Mission not found")
+        except ValueError as error:
+            return _error(409, str(error))
+        return _mission_response(mission)
+
+    @router.post("/{mission_id}/resume")
+    async def resume_mission(
+        request: Request,
+        project_id: UUID,
+        mission_id: UUID,
+        x_csrf_token: str | None = Header(default=None),
+    ):
+        actor = await authorize(request, project_id, write=True, csrf=x_csrf_token)
+        if isinstance(actor, JSONResponse):
+            return actor
+        try:
+            mission = await dependencies.resume.execute(actor, project_id, mission_id)
+        except LookupError:
+            return _error(404, "Mission not found")
+        except ValueError as error:
+            return _error(409, str(error))
+        return _mission_response(mission)
 
     return router
 

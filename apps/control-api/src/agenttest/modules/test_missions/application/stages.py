@@ -29,6 +29,19 @@ class StageReceiptRepository(Protocol):
 
     async def save_stage_receipt(self, receipt: StageReceipt) -> None: ...
 
+    async def replace_stage_receipt(self, receipt: StageReceipt) -> None: ...
+
+    async def link_asset(
+        self,
+        project_id: UUID,
+        mission_id: UUID,
+        asset_type: str,
+        asset_id: UUID,
+        relation: str,
+        *,
+        stage: str | None = None,
+    ) -> bool: ...
+
 
 class MissionAssetExecutor(Protocol):
     async def execute(
@@ -42,6 +55,12 @@ class MissionAssetExecutor(Protocol):
         arguments: dict[str, object],
         idempotency_key: str,
     ) -> dict[str, object]: ...
+
+
+class MissionNeedsAttention(RuntimeError):
+    def __init__(self, message: str, *, error_type: str = "auth_expired") -> None:
+        super().__init__(message)
+        self.error_type = error_type
 
 
 class MissionStageService:
@@ -64,6 +83,7 @@ class MissionStageService:
         output = await self._execute_plan(
             actor, project_id, session_id, revision, self._compiler.compile(revision)
         )
+        await self._link_output(revision, "provision", output)
         return await self._save(project_id.value, revision.revision_id, "provision", output)
 
     async def start_run(
@@ -83,15 +103,23 @@ class MissionStageService:
             {"test_plan_version_id": plan_version_id},
             f"mission:{revision.revision_id}:start-run",
         )
+        run_id = _artifact_id(result, "run")
+        await self._link_asset(revision, "start_run", "run", run_id)
         return await self._save(
             project_id.value,
             revision.revision_id,
             "start_run",
-            {"run_id": _artifact_id(result, "run"), "test_plan_version_id": plan_version_id},
+            {"run_id": run_id, "test_plan_version_id": plan_version_id, "attempt": 0},
         )
 
     async def await_run(
-        self, *, actor: User, project_id: ProjectId, session_id: UUID, revision: MissionRevision
+        self,
+        *,
+        actor: User,
+        project_id: ProjectId,
+        session_id: UUID,
+        revision: MissionRevision,
+        resume_attempt: int = 0,
     ) -> StageReceipt | None:
         existing = await self._existing(project_id.value, revision.revision_id, "await_run")
         if existing:
@@ -99,31 +127,45 @@ class MissionStageService:
         started = await self._required(project_id.value, revision.revision_id, "start_run")
         run_id = str(started.output["run_id"])
         result = await self._call(
-            "runs.list",
+            "runs.get_status",
             "execution",
             actor,
             project_id,
             session_id,
-            {},
+            {"id": run_id},
             f"mission:{revision.revision_id}:read-run",
         )
-        items = result.get("items")
-        run = (
-            next(
-                (
-                    item
-                    for item in items
-                    if isinstance(item, dict) and str(item.get("id")) == run_id
-                ),
-                None,
-            )
-            if isinstance(items, list)
-            else None
-        )
-        if run is None:
-            raise ValueError("Mission Run does not exist in project")
-        status = str(run.get("status") or "")
+        status = str(result.get("status") or "")
         if status in {"queued", "running"}:
+            return None
+        if str(result.get("error_type") or "") == "auth_expired":
+            raw_attempt = started.output.get("attempt")
+            current_attempt = raw_attempt if isinstance(raw_attempt, int) else 0
+            message = str(result.get("error_message") or "Browser login expired")
+            if resume_attempt <= current_attempt:
+                raise MissionNeedsAttention(message)
+            plan_version_id = str(started.output["test_plan_version_id"])
+            restarted = await self._call(
+                "runs.start",
+                "execution",
+                actor,
+                project_id,
+                session_id,
+                {"test_plan_version_id": plan_version_id},
+                f"mission:{revision.revision_id}:start-run:resume:{resume_attempt}",
+            )
+            new_run_id = _artifact_id(restarted, "run")
+            await self._link_asset(revision, "start_run", "run", new_run_id)
+            await self._replace(
+                project_id.value,
+                revision.revision_id,
+                "start_run",
+                {
+                    "run_id": new_run_id,
+                    "test_plan_version_id": plan_version_id,
+                    "attempt": resume_attempt,
+                },
+            )
             return None
         return await self._save(
             project_id.value,
@@ -158,6 +200,27 @@ class MissionStageService:
             {"run_id": run_id, "confidence_threshold": 0.5},
             f"mission:{revision.revision_id}:reviews",
         )
+        run_detail = await self._call(
+            "runs.get_status",
+            "execution",
+            actor,
+            project_id,
+            session_id,
+            {"id": run_id},
+            f"mission:{revision.revision_id}:run-detail",
+        )
+        regression = await self._create_regression_dataset(
+            actor, project_id, session_id, revision, run_detail
+        )
+        gates_result = await self._evaluate_release_gates(
+            actor, project_id, session_id, revision, run_id
+        )
+        await self._link_output(revision, "close_loop", report)
+        await self._link_output(revision, "close_loop", reviews)
+        if regression:
+            await self._link_output(revision, "close_loop", regression)
+        for gate_result in gates_result:
+            await self._link_output(revision, "close_loop", gate_result)
         return await self._save(
             project_id.value,
             revision.revision_id,
@@ -167,8 +230,102 @@ class MissionStageService:
                 "run_status": completed.output.get("run_status"),
                 "report": report,
                 "reviews": reviews,
+                "regression_dataset": regression,
+                "release_gate_decisions": gates_result,
             },
         )
+
+    async def _create_regression_dataset(
+        self,
+        actor: User,
+        project_id: ProjectId,
+        session_id: UUID,
+        revision: MissionRevision,
+        run_detail: dict[str, object],
+    ) -> dict[str, object] | None:
+        raw_cases = run_detail.get("cases")
+        if not isinstance(raw_cases, list):
+            return None
+        failed = [
+            case
+            for case in raw_cases
+            if isinstance(case, dict) and str(case.get("status")) in {"failed", "error"}
+        ]
+        if not failed:
+            return None
+        cases = [
+            {
+                "name": f"回归：{case.get('name') or '失败用例'}",
+                "input": dict(case.get("input") or {}),
+                "execution_mode": str(case.get("execution_mode") or "api"),
+                "assertions": list(case.get("assertions") or []),
+                "tags": ["mission-regression", "auto-from-failure"],
+                "scenario": str(case.get("error_type") or "failure-regression"),
+            }
+            for case in failed
+        ]
+        result = await self._call(
+            "datasets.create_with_cases",
+            "test_data",
+            actor,
+            project_id,
+            session_id,
+            {
+                "name": f"任务 {revision.mission_id} 失败回归集",
+                "description": "由全链路测试失败自动沉淀，可用于后续回归",
+                "config": {},
+                "cases": cases,
+            },
+            f"mission:{revision.revision_id}:failure-regression",
+        )
+        version_id = _artifact_id(result, "dataset_version")
+        await self._call(
+            "datasets.publish_version",
+            "test_data",
+            actor,
+            project_id,
+            session_id,
+            {"id": version_id},
+            f"mission:{revision.revision_id}:publish-failure-regression",
+        )
+        return result
+
+    async def _evaluate_release_gates(
+        self,
+        actor: User,
+        project_id: ProjectId,
+        session_id: UUID,
+        revision: MissionRevision,
+        run_id: str,
+    ) -> list[dict[str, object]]:
+        gates = await self._call(
+            "release_gates.list",
+            "review_gate",
+            actor,
+            project_id,
+            session_id,
+            {},
+            f"mission:{revision.revision_id}:list-gates",
+        )
+        items = gates.get("items")
+        results: list[dict[str, object]] = []
+        if not isinstance(items, list):
+            return results
+        for item in items:
+            if not isinstance(item, dict) or not item.get("id"):
+                continue
+            results.append(
+                await self._call(
+                    "release_gates.evaluate",
+                    "review_gate",
+                    actor,
+                    project_id,
+                    session_id,
+                    {"gate_id": str(item["id"]), "run_id": run_id},
+                    f"mission:{revision.revision_id}:gate:{item['id']}",
+                )
+            )
+        return results
 
     async def cancel_run(
         self, *, actor: User, project_id: ProjectId, session_id: UUID, revision: MissionRevision
@@ -367,6 +524,65 @@ class MissionStageService:
         )
         await self._receipts.save_stage_receipt(receipt)
         return receipt
+
+    async def _replace(
+        self, project_id: UUID, revision_id: UUID, stage: str, output: dict[str, object]
+    ) -> StageReceipt:
+        receipt = StageReceipt(
+            receipt_id=uuid5(NAMESPACE_URL, f"agenttest:{revision_id}:{stage}"),
+            project_id=project_id,
+            revision_id=revision_id,
+            stage=stage,
+            status="completed",
+            output=output,
+            created_at=datetime.now(UTC),
+        )
+        await self._receipts.replace_stage_receipt(receipt)
+        return receipt
+
+    async def _link_output(
+        self, revision: MissionRevision, stage: str, output: dict[str, object]
+    ) -> None:
+        for key, asset_type in {
+            "agent_version_id": "agent_version",
+            "dataset_version_id": "dataset_version",
+            "scorer_id": "scorer",
+            "test_plan_version_id": "test_plan_version",
+            "run_id": "run",
+        }.items():
+            value = output.get(key)
+            if value:
+                await self._link_asset(revision, stage, asset_type, str(value))
+        artifacts = output.get("artifacts")
+        if isinstance(artifacts, list):
+            for item in artifacts:
+                if not isinstance(item, dict) or not item.get("type") or not item.get("id"):
+                    continue
+                await self._link_asset(
+                    revision,
+                    stage,
+                    str(item["type"]),
+                    str(item["id"]),
+                    relation=str(item.get("relation") or "created"),
+                )
+
+    async def _link_asset(
+        self,
+        revision: MissionRevision,
+        stage: str,
+        asset_type: str,
+        asset_id: str,
+        *,
+        relation: str = "created",
+    ) -> None:
+        await self._receipts.link_asset(
+            revision.project_id,
+            revision.mission_id,
+            asset_type,
+            UUID(asset_id),
+            relation,
+            stage=stage,
+        )
 
 
 def _artifact_id(result: dict[str, object], kind: str) -> str:

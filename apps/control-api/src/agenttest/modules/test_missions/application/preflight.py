@@ -38,6 +38,12 @@ class MissionPreflight:
             if discovery_fact and isinstance(discovery_fact.value, dict)
             else {}
         )
+        if (
+            discovery
+            and discovery.get("login_valid") is False
+            and "access" not in completeness.missing
+        ):
+            missing = (*missing, MissingInput("access", _MISSING_REASONS["access"]))
         channels: list[str] = []
         if discovery.get("api_available") or mission.facts.get("api_available"):
             channels.append("api")
@@ -56,7 +62,7 @@ class MissionPreflight:
             else ()
         )
         return MissionPreview(
-            ready=completeness.complete,
+            ready=completeness.complete and not missing,
             missing_inputs=missing,
             execution_channels=tuple(dict.fromkeys(channels)),
             action_allowlist=tuple(actions),

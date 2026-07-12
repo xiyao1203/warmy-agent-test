@@ -855,6 +855,12 @@ class ScorerPlugin(Protocol):
 
 ## 12. 工作流设计
 
+### 12.0 对话式 Test Mission 编排
+
+`test_missions` 是超级测试 Agent 与既有平台资产之间的应用编排模块。模型只提出结构化事实和候选用例；完整性、项目隔离、预算、动作 Allowlist、确认哈希与是否启动 Run 均由确定性应用服务判断。用户确认后生成不可变 Revision，Temporal `TestMissionWorkflow` 仅读取该快照，按阶段回执幂等地创建或复用 Agent 版本、数据集版本、评分器、测试计划版本和 Run，并将证据、报告、审核与门禁以资产链接关联回 Mission。
+
+Worker 不读取业务数据库，只通过带内部令牌且包含项目、Mission、Revision 和哈希作用域的 Control API 执行阶段。登录态失效进入 `needs_attention` 并在原 Browser Profile 验证后恢复；取消停止新阶段但保留已有事实和证据。密码、Token、Cookie 与明文 Auth State 禁止进入 Mission 快照和 Temporal History。
+
 ### 12.1 运行工作流
 
 ```text

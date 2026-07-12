@@ -130,6 +130,20 @@ class SqlAlchemyAgentVersionRepository:
             models = list((await session.scalars(statement)).all())
         return [_to_version(m) for m in models]
 
+    async def list_published(self, project_id) -> list[AgentVersion]:
+        statement = (
+            select(AgentVersionModel)
+            .join(AgentModel, AgentModel.id == AgentVersionModel.agent_id)
+            .where(
+                AgentModel.project_id == project_id,
+                AgentVersionModel.status == VersionStatus.PUBLISHED.value,
+            )
+            .order_by(AgentVersionModel.published_at.desc())
+        )
+        async with session_scope(self._session_factory) as session:
+            models = list((await session.scalars(statement)).all())
+        return [_to_version(model) for model in models]
+
     async def get_next_version_number(self, agent_id: AgentId) -> int:
         statement = select(func.max(AgentVersionModel.version_number)).where(
             AgentVersionModel.agent_id == agent_id.value

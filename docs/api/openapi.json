@@ -762,6 +762,29 @@
         "title": "CompleteBrowserProfileLoginRequest",
         "type": "object"
       },
+      "ConfirmMissionRequest": {
+        "properties": {
+          "idempotency_key": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Idempotency Key",
+            "type": "string"
+          },
+          "revision_hash": {
+            "maxLength": 64,
+            "minLength": 64,
+            "pattern": "^[0-9a-f]{64}$",
+            "title": "Revision Hash",
+            "type": "string"
+          }
+        },
+        "required": [
+          "revision_hash",
+          "idempotency_key"
+        ],
+        "title": "ConfirmMissionRequest",
+        "type": "object"
+      },
       "ConfirmationDecision": {
         "properties": {
           "approved": {
@@ -887,12 +910,8 @@
           },
           "target_domain": {
             "default": "",
+            "maxLength": 500,
             "title": "Target Domain",
-            "type": "string"
-          },
-          "user_data_dir": {
-            "default": "",
-            "title": "User Data Dir",
             "type": "string"
           }
         },
@@ -1940,6 +1959,36 @@
         "title": "EvaluateGateRequest",
         "type": "object"
       },
+      "ExecuteStageRequest": {
+        "properties": {
+          "idempotency_key": {
+            "maxLength": 300,
+            "minLength": 1,
+            "title": "Idempotency Key",
+            "type": "string"
+          },
+          "resume_attempt": {
+            "default": 0,
+            "maximum": 20.0,
+            "minimum": 0.0,
+            "title": "Resume Attempt",
+            "type": "integer"
+          },
+          "revision_hash": {
+            "maxLength": 64,
+            "minLength": 64,
+            "pattern": "^[0-9a-f]{64}$",
+            "title": "Revision Hash",
+            "type": "string"
+          }
+        },
+        "required": [
+          "revision_hash",
+          "idempotency_key"
+        ],
+        "title": "ExecuteStageRequest",
+        "type": "object"
+      },
       "ExecutionMode": {
         "description": "测试用例执行模式：API 调用、浏览器操作或 Codex 浏览器探索。",
         "enum": [
@@ -2500,6 +2549,32 @@
         "title": "ProjectResponse",
         "type": "object"
       },
+      "RedeemBrowserSessionRequest": {
+        "properties": {
+          "browser_profile_id": {
+            "format": "uuid",
+            "title": "Browser Profile Id",
+            "type": "string"
+          },
+          "run_case_id": {
+            "format": "uuid",
+            "title": "Run Case Id",
+            "type": "string"
+          },
+          "run_id": {
+            "format": "uuid",
+            "title": "Run Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "run_id",
+          "run_case_id",
+          "browser_profile_id"
+        ],
+        "title": "RedeemBrowserSessionRequest",
+        "type": "object"
+      },
       "RedeemCredentialLeaseRequest": {
         "properties": {
           "binding_ids": {
@@ -2961,6 +3036,7 @@
         "properties": {
           "login_url": {
             "default": "",
+            "maxLength": 2000,
             "title": "Login Url",
             "type": "string"
           }
@@ -3755,6 +3831,7 @@
           "target_domain": {
             "anyOf": [
               {
+                "maxLength": 500,
                 "type": "string"
               },
               {
@@ -4399,6 +4476,25 @@
         "title": "UpdateUserRequest",
         "type": "object"
       },
+      "UpsertMissionRequest": {
+        "properties": {
+          "facts": {
+            "additionalProperties": true,
+            "title": "Facts",
+            "type": "object"
+          },
+          "session_id": {
+            "format": "uuid",
+            "title": "Session Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "session_id"
+        ],
+        "title": "UpsertMissionRequest",
+        "type": "object"
+      },
       "UserPageResponse": {
         "properties": {
           "items": {
@@ -4883,6 +4979,73 @@
         ]
       }
     },
+    "/api/v1/internal/projects/{project_id}/browser-session-leases:redeem": {
+      "post": {
+        "operationId": "redeem_api_v1_internal_projects__project_id__browser_session_leases_redeem_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Project Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "x-internal-token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Internal-Token"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RedeemBrowserSessionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Redeem",
+        "tags": [
+          "internal"
+        ]
+      }
+    },
     "/api/v1/internal/projects/{project_id}/credential-leases:redeem": {
       "post": {
         "operationId": "redeem_api_v1_internal_projects__project_id__credential_leases_redeem_post",
@@ -5014,6 +5177,102 @@
         "summary": "Upload Internal Artifact",
         "tags": [
           "artifacts"
+        ]
+      }
+    },
+    "/api/v1/internal/projects/{project_id}/test-missions/{mission_id}/revisions/{revision_id}/stages/{stage}": {
+      "post": {
+        "operationId": "execute_stage_api_v1_internal_projects__project_id__test_missions__mission_id__revisions__revision_id__stages__stage__post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Project Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "mission_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Mission Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "revision_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Revision Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "stage",
+            "required": true,
+            "schema": {
+              "title": "Stage",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "x-internal-token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Internal-Token"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExecuteStageRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Execute Stage",
+        "tags": [
+          "internal-test-missions"
         ]
       }
     },
@@ -6419,6 +6678,7 @@
             "name": "project_id",
             "required": true,
             "schema": {
+              "format": "uuid",
               "title": "Project Id",
               "type": "string"
             }
@@ -6457,6 +6717,7 @@
             "name": "project_id",
             "required": true,
             "schema": {
+              "format": "uuid",
               "title": "Project Id",
               "type": "string"
             }
@@ -6523,6 +6784,7 @@
             "name": "project_id",
             "required": true,
             "schema": {
+              "format": "uuid",
               "title": "Project Id",
               "type": "string"
             }
@@ -6532,6 +6794,7 @@
             "name": "profile_id",
             "required": true,
             "schema": {
+              "format": "uuid",
               "title": "Profile Id",
               "type": "string"
             }
@@ -6581,6 +6844,7 @@
             "name": "project_id",
             "required": true,
             "schema": {
+              "format": "uuid",
               "title": "Project Id",
               "type": "string"
             }
@@ -6590,6 +6854,7 @@
             "name": "profile_id",
             "required": true,
             "schema": {
+              "format": "uuid",
               "title": "Profile Id",
               "type": "string"
             }
@@ -6628,6 +6893,7 @@
             "name": "project_id",
             "required": true,
             "schema": {
+              "format": "uuid",
               "title": "Project Id",
               "type": "string"
             }
@@ -6637,6 +6903,7 @@
             "name": "profile_id",
             "required": true,
             "schema": {
+              "format": "uuid",
               "title": "Profile Id",
               "type": "string"
             }
@@ -6703,6 +6970,7 @@
             "name": "project_id",
             "required": true,
             "schema": {
+              "format": "uuid",
               "title": "Project Id",
               "type": "string"
             }
@@ -6712,6 +6980,7 @@
             "name": "profile_id",
             "required": true,
             "schema": {
+              "format": "uuid",
               "title": "Profile Id",
               "type": "string"
             }
@@ -6778,6 +7047,7 @@
             "name": "project_id",
             "required": true,
             "schema": {
+              "format": "uuid",
               "title": "Project Id",
               "type": "string"
             }
@@ -6787,6 +7057,7 @@
             "name": "profile_id",
             "required": true,
             "schema": {
+              "format": "uuid",
               "title": "Profile Id",
               "type": "string"
             }
@@ -6853,6 +7124,7 @@
             "name": "project_id",
             "required": true,
             "schema": {
+              "format": "uuid",
               "title": "Project Id",
               "type": "string"
             }
@@ -6862,6 +7134,7 @@
             "name": "profile_id",
             "required": true,
             "schema": {
+              "format": "uuid",
               "title": "Profile Id",
               "type": "string"
             }
@@ -6904,6 +7177,73 @@
           }
         },
         "summary": "Stop Profile",
+        "tags": [
+          "browser-profiles"
+        ]
+      }
+    },
+    "/api/v1/projects/{project_id}/browser-profiles/{profile_id}/verify": {
+      "post": {
+        "operationId": "verify_profile_api_v1_projects__project_id__browser_profiles__profile_id__verify_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Project Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "profile_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Profile Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "x-csrf-token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Csrf-Token"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Verify Profile",
         "tags": [
           "browser-profiles"
         ]
@@ -14062,6 +14402,469 @@
         "summary": "Convert To Regression",
         "tags": [
           "target-agent-chat"
+        ]
+      }
+    },
+    "/api/v1/projects/{project_id}/test-missions": {
+      "post": {
+        "operationId": "upsert_mission_api_v1_projects__project_id__test_missions_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Project Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "x-csrf-token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Csrf-Token"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertMissionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Upsert Mission",
+        "tags": [
+          "test-missions"
+        ]
+      }
+    },
+    "/api/v1/projects/{project_id}/test-missions/{mission_id}": {
+      "get": {
+        "operationId": "get_mission_api_v1_projects__project_id__test_missions__mission_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Project Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "mission_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Mission Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Mission",
+        "tags": [
+          "test-missions"
+        ]
+      }
+    },
+    "/api/v1/projects/{project_id}/test-missions/{mission_id}/cancel": {
+      "post": {
+        "operationId": "cancel_mission_api_v1_projects__project_id__test_missions__mission_id__cancel_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Project Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "mission_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Mission Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "x-csrf-token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Csrf-Token"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Cancel Mission",
+        "tags": [
+          "test-missions"
+        ]
+      }
+    },
+    "/api/v1/projects/{project_id}/test-missions/{mission_id}/confirm-start": {
+      "post": {
+        "operationId": "confirm_mission_api_v1_projects__project_id__test_missions__mission_id__confirm_start_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Project Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "mission_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Mission Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "x-csrf-token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Csrf-Token"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConfirmMissionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Confirm Mission",
+        "tags": [
+          "test-missions"
+        ]
+      }
+    },
+    "/api/v1/projects/{project_id}/test-missions/{mission_id}/discover": {
+      "post": {
+        "operationId": "discover_mission_api_v1_projects__project_id__test_missions__mission_id__discover_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Project Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "mission_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Mission Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "x-csrf-token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Csrf-Token"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Discover Mission",
+        "tags": [
+          "test-missions"
+        ]
+      }
+    },
+    "/api/v1/projects/{project_id}/test-missions/{mission_id}/preview": {
+      "post": {
+        "operationId": "preview_mission_api_v1_projects__project_id__test_missions__mission_id__preview_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Project Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "mission_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Mission Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "x-csrf-token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Csrf-Token"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Preview Mission",
+        "tags": [
+          "test-missions"
+        ]
+      }
+    },
+    "/api/v1/projects/{project_id}/test-missions/{mission_id}/resume": {
+      "post": {
+        "operationId": "resume_mission_api_v1_projects__project_id__test_missions__mission_id__resume_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Project Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "mission_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Mission Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "x-csrf-token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Csrf-Token"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Resume Mission",
+        "tags": [
+          "test-missions"
         ]
       }
     },

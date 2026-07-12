@@ -14,6 +14,7 @@ from agenttest.modules.test_missions.application.stage_controller import (
 class ExecuteStageRequest(BaseModel):
     revision_hash: str = Field(min_length=64, max_length=64, pattern=r"^[0-9a-f]{64}$")
     idempotency_key: str = Field(min_length=1, max_length=300)
+    resume_attempt: int = Field(default=0, ge=0, le=20)
 
 
 def create_internal_mission_stage_router(
@@ -43,6 +44,7 @@ def create_internal_mission_stage_router(
                 revision_id=revision_id,
                 revision_hash=body.revision_hash,
                 stage=stage,
+                resume_attempt=body.resume_attempt,
             )
         except LookupError as error:
             return JSONResponse(status_code=404, content={"detail": str(error)})
