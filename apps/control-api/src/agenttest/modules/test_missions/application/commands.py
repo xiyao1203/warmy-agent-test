@@ -144,9 +144,7 @@ class DiscoverMissionHandler:
         self._discovery = discovery
         self._resolver = resolver
 
-    async def execute(
-        self, actor: User, project_id: UUID, mission_id: UUID
-    ) -> DiscoveryResult:
+    async def execute(self, actor: User, project_id: UUID, mission_id: UUID) -> DiscoveryResult:
         del actor
         mission = await _required_mission(self._repository, project_id, mission_id)
         expected_lock = mission.lock_version

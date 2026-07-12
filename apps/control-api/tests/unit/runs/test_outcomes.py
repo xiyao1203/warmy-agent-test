@@ -11,10 +11,10 @@ from agenttest.modules.runs.domain.outcomes import (
 
 def test_technical_success_does_not_override_security_failure() -> None:
     evidence_id = uuid4()
-    outcomes = RunCaseOutcomes.started().with_execution(
-        Outcome.passed()
-    ).with_security(
-        Outcome.failed("critical_finding", evidence_ids=(evidence_id,))
+    outcomes = (
+        RunCaseOutcomes.started()
+        .with_execution(Outcome.passed())
+        .with_security(Outcome.failed("critical_finding", evidence_ids=(evidence_id,)))
     )
 
     assert outcomes.execution.status is OutcomeStatus.PASSED
@@ -36,10 +36,12 @@ def test_evaluated_outcome_requires_evidence_for_failure() -> None:
 
 def test_outcomes_round_trip_without_losing_independent_statuses() -> None:
     evidence_id = uuid4()
-    original = RunCaseOutcomes.started().with_execution(
-        Outcome.passed(evidence_ids=(evidence_id,))
-    ).with_assertion(
-        Outcome.needs_review("insufficient_assertion_evidence", evidence_ids=(evidence_id,))
+    original = (
+        RunCaseOutcomes.started()
+        .with_execution(Outcome.passed(evidence_ids=(evidence_id,)))
+        .with_assertion(
+            Outcome.needs_review("insufficient_assertion_evidence", evidence_ids=(evidence_id,))
+        )
     )
 
     restored = RunCaseOutcomes.from_dict(original.to_dict())

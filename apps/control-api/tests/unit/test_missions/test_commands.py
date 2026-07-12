@@ -182,9 +182,9 @@ async def test_discover_handler_persists_safe_target_observations() -> None:
     repository = Repository()
     mission = await ready_mission(repository)
 
-    result = await DiscoverMissionHandler(
-        repository, MissionDiscovery(Probe())
-    ).execute(actor(), mission.project_id, mission.mission_id)
+    result = await DiscoverMissionHandler(repository, MissionDiscovery(Probe())).execute(
+        actor(), mission.project_id, mission.mission_id
+    )
 
     assert result.login_valid is True
     assert mission.facts["discovery"].value["capabilities"] == ("chat",)

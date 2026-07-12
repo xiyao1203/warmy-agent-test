@@ -280,8 +280,7 @@ class HandlerPlatformGateway:
                         UUID(str(values["test_plan_version_id"]))
                     ),
                     idempotency_key=(
-                        context.idempotency_key
-                        or f"super-agent:{context.session_id}:{uuid4()}"
+                        context.idempotency_key or f"super-agent:{context.session_id}:{uuid4()}"
                     ),
                 ),
             )

@@ -9,22 +9,18 @@ from agenttest.modules.diagnostics.domain import (
     DiagnosticProposal,
     DiagnosticResult,
 )
-from agenttest.modules.runs.domain.failure_classification import FailureClass
+from agenttest.modules.runs.public import FailureClass
 
 
 class DiagnosticModel(Protocol):
-    async def propose(
-        self, evidence_view: tuple[dict[str, object], ...]
-    ) -> DiagnosticProposal: ...
+    async def propose(self, evidence_view: tuple[dict[str, object], ...]) -> DiagnosticProposal: ...
 
 
 class DiagnosticService:
     def __init__(self, model: DiagnosticModel) -> None:
         self._model = model
 
-    async def diagnose(
-        self, evidence_view: tuple[dict[str, object], ...]
-    ) -> DiagnosticResult:
+    async def diagnose(self, evidence_view: tuple[dict[str, object], ...]) -> DiagnosticResult:
         allowed_ids = {
             UUID(str(item["id"]))
             for item in evidence_view

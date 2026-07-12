@@ -51,6 +51,7 @@ class TestChromeLifecycle:
     def test_parse_cdp_endpoint(self) -> None:
         """解析 CDP WebSocket URL 到 host:port。"""
         import re as _re
+
         m = _re.match(r"ws://([^:/]+):(\d+)", "ws://127.0.0.1:9222/devtools/browser/abc")
         result = (m.group(1), int(m.group(2)))
         assert result == ("127.0.0.1", 9222)

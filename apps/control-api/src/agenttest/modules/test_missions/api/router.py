@@ -80,9 +80,7 @@ def create_test_mission_router(
         if isinstance(actor, JSONResponse):
             return actor
         try:
-            mission, preview, assets = await dependencies.get.execute(
-                actor, project_id, mission_id
-            )
+            mission, preview, assets = await dependencies.get.execute(actor, project_id, mission_id)
         except LookupError:
             return _error(404, "Mission not found")
         return {

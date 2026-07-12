@@ -1662,6 +1662,12 @@ export type RunCaseResponse = {
    */
   name: string;
   /**
+   * Outcomes
+   */
+  outcomes: {
+    [key: string]: unknown;
+  };
+  /**
    * Output
    */
   output: {

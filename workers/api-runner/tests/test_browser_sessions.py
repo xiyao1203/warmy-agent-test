@@ -57,4 +57,3 @@ async def test_browser_session_client_errors_never_echo_auth_state() -> None:
             )
 
     assert "cookie" not in str(captured.value).lower()
-

@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from uuid import UUID
 
-from agenttest.modules.runs.domain.failure_classification import FailureClass
+from agenttest.modules.runs.public import FailureClass
 
 
 @dataclass(frozen=True, slots=True)

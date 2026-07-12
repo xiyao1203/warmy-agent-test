@@ -22,6 +22,12 @@ from agenttest.shared.infrastructure.database import (
 )
 
 
+def unique_run_ids(assets: list[dict[str, object]]) -> list[str]:
+    return sorted(
+        {str(item["id"]) for item in assets if item.get("type") == "run" and item.get("id")}
+    )
+
+
 @dataclass(frozen=True, slots=True)
 class AcceptanceIdentity:
     email: str
@@ -51,14 +57,10 @@ async def create_acceptance_identity(settings: Settings) -> AcceptanceIdentity:
     return identity
 
 
-async def run_acceptance(
-    *, control_api: str, target_url: str, timeout_seconds: float
-) -> None:
+async def run_acceptance(*, control_api: str, target_url: str, timeout_seconds: float) -> None:
     settings = get_settings()
     identity = await create_acceptance_identity(settings)
-    async with httpx.AsyncClient(
-        base_url=control_api, timeout=20, trust_env=False
-    ) as client:
+    async with httpx.AsyncClient(base_url=control_api, timeout=20, trust_env=False) as client:
         health = await client.get("/api/v1/health")
         health.raise_for_status()
         login = await client.post(
@@ -135,19 +137,15 @@ async def run_acceptance(
             status.raise_for_status()
             body = status.json()
             if body["status"] in {"completed", "failed", "cancelled", "needs_attention"}:
-                run_assets = [item for item in body.get("assets", []) if item["type"] == "run"]
-                if len(run_assets) != 1:
-                    raise RuntimeError(f"Expected one Run asset, found {len(run_assets)}")
-                print(
-                    f"Mission {mission_id} reached {body['status']} with Run {run_assets[0]['id']}"
-                )
+                run_ids = unique_run_ids(body.get("assets", []))
+                if len(run_ids) != 1:
+                    raise RuntimeError(f"Expected one Run, found {len(run_ids)}")
+                print(f"Mission {mission_id} reached {body['status']} with Run {run_ids[0]}")
                 if body["status"] != "completed":
                     raise RuntimeError(f"Acceptance mission ended as {body['status']}")
                 return
             await asyncio.sleep(0.5)
-        raise TimeoutError(
-            f"Mission {mission_id} did not finish within {timeout_seconds:g}s"
-        )
+        raise TimeoutError(f"Mission {mission_id} did not finish within {timeout_seconds:g}s")
 
 
 def main() -> int:
