@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from typing import Any
 
 
 @dataclass(frozen=True, slots=True)
@@ -16,7 +17,7 @@ class MissionWorkflowTask:
 @dataclass(frozen=True, slots=True)
 class MissionStageResponse:
     status: str
-    output: dict[str, object] = field(default_factory=dict)
+    output: dict[str, Any] = field(default_factory=dict)
     error_type: str | None = None
     error_message: str | None = None
 

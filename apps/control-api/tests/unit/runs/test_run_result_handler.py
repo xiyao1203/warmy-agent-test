@@ -12,6 +12,7 @@ from agenttest.modules.runs.application.commands import (
     RunNotFoundError,
 )
 from agenttest.modules.runs.domain.entities import Run, RunCase, RunCaseId, RunId
+from agenttest.modules.runs.domain.outcomes import OutcomeStatus
 from agenttest.modules.runs.domain.value_objects import RunCaseStatus, RunStatus
 from agenttest.modules.test_plans.public import TestPlanVersionId
 
@@ -176,6 +177,11 @@ async def test_apply_run_result_persists_unified_evidence() -> None:
     assert cases[0].evidence["execution_outcome"] == "success"
     assert cases[0].quality_summary == {"decision": "pass"}
     assert cases[0].security_summary == {"decision": "clear"}
+    assert cases[0].outcomes.execution.status is OutcomeStatus.PASSED
+    assert cases[0].outcomes.assertion.status is OutcomeStatus.PASSED
+    assert cases[0].outcomes.quality.status is OutcomeStatus.PASSED
+    assert cases[0].outcomes.security.status is OutcomeStatus.PASSED
+    assert cases[0].outcomes.execution.evidence_ids
 
 
 @pytest.mark.asyncio

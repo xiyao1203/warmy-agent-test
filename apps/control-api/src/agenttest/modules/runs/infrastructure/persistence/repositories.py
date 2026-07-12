@@ -10,6 +10,7 @@ from agenttest.modules.evaluations.public import CaseScoreInput, build_evaluatio
 from agenttest.modules.identity.public import UserId
 from agenttest.modules.projects.public import ProjectId
 from agenttest.modules.runs.domain.entities import Run, RunCase, RunCaseId, RunId
+from agenttest.modules.runs.domain.outcomes import RunCaseOutcomes
 from agenttest.modules.runs.domain.value_objects import RunCaseStatus, RunStatus
 from agenttest.modules.runs.infrastructure.persistence.models import (
     RunCaseModel,
@@ -132,6 +133,7 @@ class SqlAlchemyRunRepository:
                         evidence=case.evidence,
                         quality_summary=case.quality_summary,
                         security_summary=case.security_summary,
+                        outcomes=case.outcomes.to_dict(),
                         updated_at=case.updated_at,
                         started_at=case.started_at,
                         completed_at=case.completed_at,
@@ -318,6 +320,7 @@ def _case_model(case: RunCase) -> RunCaseModel:
         evidence=case.evidence,
         quality_summary=case.quality_summary,
         security_summary=case.security_summary,
+        outcomes=case.outcomes.to_dict(),
         created_at=case.created_at,
         updated_at=case.updated_at,
         started_at=case.started_at,
@@ -372,4 +375,5 @@ def _to_case(model: RunCaseModel) -> RunCase:
         evidence=dict(model.evidence or {}),
         quality_summary=dict(model.quality_summary or {}),
         security_summary=dict(model.security_summary or {}),
+        outcomes=RunCaseOutcomes.from_dict(dict(model.outcomes or {})),
     )

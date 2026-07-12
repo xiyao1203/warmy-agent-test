@@ -67,9 +67,7 @@ async def test_http_discovery_requires_ready_same_project_browser_profile() -> N
         access_catalog=AccessCatalog(browser_ready=False),
         address_resolver=Resolver(),
         transport=httpx.MockTransport(
-            lambda request: httpx.Response(
-                200, headers={"content-type": "text/html"}, text="login"
-            )
+            lambda request: httpx.Response(200, headers={"content-type": "text/html"}, text="login")
         ),
     )
 

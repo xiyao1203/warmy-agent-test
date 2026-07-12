@@ -1,5 +1,6 @@
 from agenttest.modules.runs.application.commands import CreateRunCommand
 from agenttest.modules.runs.domain.entities import Run, RunCase, RunCaseId, RunId
+from agenttest.modules.runs.domain.failure_classification import FailureClass
 from agenttest.modules.runs.domain.value_objects import (
     RunCaseStatus,
     RunErrorType,
@@ -9,6 +10,7 @@ from agenttest.modules.runs.domain.value_objects import (
 __all__ = [
     "Run",
     "CreateRunCommand",
+    "FailureClass",
     "RunCase",
     "RunCaseId",
     "RunCaseStatus",

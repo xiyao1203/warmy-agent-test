@@ -195,6 +195,12 @@ describe("RunDetail", () => {
             },
             id: "case-1",
             name: "流式回答",
+            outcomes: {
+              assertion: "not_evaluated",
+              execution: "error",
+              quality: "review_required",
+              security: "clear",
+            },
             output: null,
             quality_summary: { decision: "review_required" },
             security_summary: { decision: "clear" },

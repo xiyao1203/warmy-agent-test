@@ -117,6 +117,45 @@ async def test_repository_stage_receipt_is_unique_per_revision_stage() -> None:
 
 
 @pytest.mark.asyncio
+async def test_repository_keeps_stage_receipts_when_mission_status_changes() -> None:
+    from datetime import UTC, datetime
+
+    from agenttest.modules.test_missions.application.stages import StageReceipt
+
+    engine, repository = await _repository()
+    mission = Mission.create(project_id=uuid4(), session_id=uuid4(), created_by=uuid4())
+    for fact in (
+        MissionFact.user("target", {"url": "https://agent.example"}),
+        MissionFact.user("access", {"strategy": "none"}),
+        MissionFact.user("test_goal", "验证问答"),
+        MissionFact.user("safety_scope", "read_only"),
+    ):
+        mission.merge_fact(fact)
+    revision = mission.confirm(confirmed_by=uuid4())
+    await repository.add(mission)
+    receipt = StageReceipt(
+        receipt_id=uuid4(),
+        project_id=mission.project_id,
+        revision_id=revision.revision_id,
+        stage="start_run",
+        status="completed",
+        output={"run_id": str(uuid4())},
+        created_at=datetime.now(UTC),
+    )
+    await repository.save_stage_receipt(receipt)
+    expected_lock = mission.lock_version
+    mission.mark_provisioning("workflow-1")
+
+    await repository.save(mission, expected_lock_version=expected_lock)
+
+    restored = await repository.get_stage_receipt(
+        mission.project_id, revision.revision_id, "start_run"
+    )
+    assert restored == receipt
+    await engine.dispose()
+
+
+@pytest.mark.asyncio
 async def test_repository_saves_revision_and_rejects_stale_lock_version() -> None:
     engine, repository = await _repository()
     mission = Mission.create(

@@ -49,3 +49,17 @@ def test_production_requires_auth_state_master_key() -> None:
             internal_api_token="production-internal-token",
             session_cookie_secure=True,
         )
+
+
+def test_local_mission_target_allowlist_is_test_only() -> None:
+    settings = Settings(environment="test", mission_allowed_local_hosts="127.0.0.1")
+    assert settings.mission_local_host_allowlist == frozenset({"127.0.0.1"})
+
+    with pytest.raises(ValidationError, match="local mission target"):
+        Settings(
+            environment="production",
+            internal_api_token="production-internal-token",
+            session_cookie_secure=True,
+            model_credential_key="synthetic-key",
+            mission_allowed_local_hosts="127.0.0.1",
+        )

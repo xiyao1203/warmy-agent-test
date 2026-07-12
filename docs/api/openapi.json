@@ -2733,6 +2733,11 @@
             "title": "Name",
             "type": "string"
           },
+          "outcomes": {
+            "additionalProperties": true,
+            "title": "Outcomes",
+            "type": "object"
+          },
           "output": {
             "anyOf": [
               {
@@ -2785,7 +2790,8 @@
           "duration_ms",
           "evidence",
           "quality_summary",
-          "security_summary"
+          "security_summary",
+          "outcomes"
         ],
         "title": "RunCaseResponse",
         "type": "object"

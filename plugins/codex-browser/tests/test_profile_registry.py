@@ -50,7 +50,9 @@ class TestProfileCRUD:
         """自定义 user_data_dir 生效。"""
         with tempfile.TemporaryDirectory() as tmp:
             profile = create_profile(
-                TEST_PROJECT, "custom", user_data_dir=tmp,
+                TEST_PROJECT,
+                "custom",
+                user_data_dir=tmp,
             )
             assert profile.user_data_dir == tmp
 
@@ -85,7 +87,8 @@ class TestProfileCRUD:
         """更新 Profile 字段。"""
         p = create_profile(TEST_PROJECT, "old-name")
         updated = update_profile(
-            TEST_PROJECT, p.profile_id,
+            TEST_PROJECT,
+            p.profile_id,
             name="new-name",
             status="running",
             cdp_endpoint="ws://127.0.0.1:9222/devtools/abc",

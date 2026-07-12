@@ -1,5 +1,8 @@
 from datetime import timedelta
+from typing import Any
 
+import pytest
+from agenttest_api_runner.contracts import RunCaseTask
 from agenttest_api_runner.mission_contracts import (
     MissionStageResponse,
     MissionWorkflowTask,
@@ -13,6 +16,7 @@ from agenttest_api_runner.mission_workflow import (
 from agenttest_api_runner.mission_workflow import (
     TestMissionWorkflow as MissionWorkflow,
 )
+from temporalio.converter import DataConverter
 
 
 def test_mission_payload_is_secret_free_and_workflow_is_registered() -> None:
@@ -65,3 +69,36 @@ def test_resume_increments_attempt_forwarded_to_stage_activity() -> None:
     workflow = MissionWorkflow()
 
     assert workflow.resume_attempt == 0
+
+
+@pytest.mark.asyncio
+async def test_temporal_stage_response_allows_nested_platform_output() -> None:
+    response = MissionStageResponse(
+        "completed",
+        output={
+            "agent_version_id": "version-1",
+            "artifacts": [
+                {"type": "agent_version", "id": "version-1", "metadata": {"reused": False}}
+            ],
+        },
+    )
+
+    payloads = await DataConverter.default.encode([response])
+    decoded = await DataConverter.default.decode(payloads, [MissionStageResponse])
+
+    assert decoded[0] == response
+
+
+@pytest.mark.asyncio
+async def test_temporal_agent_activity_allows_nested_run_configuration() -> None:
+    values = [
+        RunCaseTask("case-1", {"prompt": "hello"}, []),
+        {"endpoint_url": "http://target.test", "credential_binding_ids": []},
+        {"variables": {"nested": {"enabled": True}}},
+    ]
+    payloads = await DataConverter.default.encode(values)
+    decoded = await DataConverter.default.decode(
+        payloads,
+        [RunCaseTask, dict[str, Any], dict[str, Any]],
+    )
+    assert decoded == values

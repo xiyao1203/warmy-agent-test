@@ -38,6 +38,7 @@ class SqlAlchemyMissionRepository:
     async def add(self, mission: TestMission) -> None:
         async with self._session_factory() as session, session.begin():
             session.add(TestMissionModel(**_mission_values(mission)))
+            await session.flush()
             session.add_all(_fact_models(mission))
             session.add_all(_revision_models(mission))
 
@@ -88,14 +89,20 @@ class SqlAlchemyMissionRepository:
                     TestMissionFactModel.mission_id == mission.mission_id,
                 )
             )
-            await session.execute(
-                delete(TestMissionRevisionModel).where(
-                    TestMissionRevisionModel.project_id == mission.project_id,
-                    TestMissionRevisionModel.mission_id == mission.mission_id,
+            session.add_all(_fact_models(mission))
+            existing_revision_ids = set(
+                await session.scalars(
+                    select(TestMissionRevisionModel.id).where(
+                        TestMissionRevisionModel.project_id == mission.project_id,
+                        TestMissionRevisionModel.mission_id == mission.mission_id,
+                    )
                 )
             )
-            session.add_all(_fact_models(mission))
-            session.add_all(_revision_models(mission))
+            session.add_all(
+                model
+                for model in _revision_models(mission)
+                if model.id not in existing_revision_ids
+            )
 
     async def append_event(
         self,
@@ -199,9 +206,7 @@ class SqlAlchemyMissionRepository:
             )
             return True
 
-    async def list_assets(
-        self, project_id: UUID, mission_id: UUID
-    ) -> list[dict[str, object]]:
+    async def list_assets(self, project_id: UUID, mission_id: UUID) -> list[dict[str, object]]:
         async with self._session_factory() as session:
             models = list(
                 (

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from uuid import NAMESPACE_URL, uuid5
 
 from agenttest.modules.identity.public import User
 from agenttest.modules.projects.public import ProjectId
@@ -12,7 +13,13 @@ from agenttest.modules.runs.application.ports import (
     RunSourcePort,
 )
 from agenttest.modules.runs.domain.entities import Run, RunCase, RunCaseId, RunId
-from agenttest.modules.runs.domain.evidence import RunCaseEvidence
+from agenttest.modules.runs.domain.evidence import (
+    ExecutionOutcome,
+    QualityDecision,
+    RunCaseEvidence,
+    SecurityDecision,
+)
+from agenttest.modules.runs.domain.outcomes import Outcome, RunCaseOutcomes
 from agenttest.modules.runs.domain.value_objects import RunCaseStatus
 from agenttest.modules.test_plans.public import TestPlanVersionId
 
@@ -182,6 +189,7 @@ class ApplyRunResultHandler:
             case.evidence = evidence.to_dict()
             case.quality_summary = {"decision": evidence.quality_decision.value}
             case.security_summary = {"decision": evidence.security_decision.value}
+            case.outcomes = _project_outcomes(case, result.status, evidence)
             if result.status is RunCaseStatus.PASSED:
                 case.pass_case(
                     output=result.output or {},
@@ -227,6 +235,45 @@ class ApplyRunResultHandler:
 
 def _count(cases: list[RunCase], status: RunCaseStatus) -> int:
     return sum(1 for case in cases if case.status is status)
+
+
+def _project_outcomes(
+    case: RunCase, status: RunCaseStatus, evidence: RunCaseEvidence
+) -> RunCaseOutcomes:
+    evidence_ids = (uuid5(NAMESPACE_URL, f"agenttest:run-case-evidence:{case.run_case_id.value}"),)
+    execution = (
+        Outcome.passed(evidence_ids=evidence_ids)
+        if evidence.execution_outcome is ExecutionOutcome.SUCCESS
+        else Outcome.error(
+            "execution_cancelled"
+            if evidence.execution_outcome is ExecutionOutcome.CANCELLED
+            else "execution_error",
+            evidence_ids=evidence_ids,
+        )
+    )
+    assertion = (
+        Outcome.passed(evidence_ids=evidence_ids)
+        if status is RunCaseStatus.PASSED
+        else Outcome.failed("assertion_mismatch", evidence_ids=evidence_ids)
+    )
+    quality = {
+        QualityDecision.PASS: lambda: Outcome.passed(evidence_ids=evidence_ids),
+        QualityDecision.FAIL: lambda: Outcome.failed("quality_failed", evidence_ids=evidence_ids),
+        QualityDecision.REVIEW_REQUIRED: lambda: Outcome.needs_review(
+            "quality_review_required", evidence_ids=evidence_ids
+        ),
+    }[evidence.quality_decision]()
+    security = (
+        Outcome.passed(evidence_ids=evidence_ids)
+        if evidence.security_decision is SecurityDecision.CLEAR
+        else Outcome.failed(
+            "security_blocked"
+            if evidence.security_decision is SecurityDecision.BLOCKED
+            else "security_finding",
+            evidence_ids=evidence_ids,
+        )
+    )
+    return RunCaseOutcomes(execution, assertion, quality, security)
 
 
 def _default_error_type(status: RunCaseStatus) -> str:

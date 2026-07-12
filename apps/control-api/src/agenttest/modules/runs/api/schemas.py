@@ -63,6 +63,7 @@ class RunCaseResponse(BaseModel):
     evidence: dict[str, object]
     quality_summary: dict[str, object]
     security_summary: dict[str, object]
+    outcomes: dict[str, object]
 
     @classmethod
     def from_domain(cls, case: RunCase) -> RunCaseResponse:
@@ -79,6 +80,7 @@ class RunCaseResponse(BaseModel):
             evidence=case.evidence,
             quality_summary=case.quality_summary,
             security_summary=case.security_summary,
+            outcomes=case.outcomes.to_dict(),
         )
 
 

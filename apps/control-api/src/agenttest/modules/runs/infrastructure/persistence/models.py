@@ -96,6 +96,7 @@ class RunCaseModel(Base):
     evidence: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
     quality_summary: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
     security_summary: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    outcomes: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))

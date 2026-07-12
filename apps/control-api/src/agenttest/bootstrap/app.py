@@ -1824,6 +1824,7 @@ def _register_test_agent_endpoints(
         MissionStageController,
     )
     from agenttest.modules.test_missions.application.stages import MissionStageService
+    from agenttest.modules.test_missions.application.url_policy import TargetUrlPolicy
     from agenttest.modules.test_missions.infrastructure.http_discovery import (
         HttpTargetDiscoveryProbe,
         ProjectMissionAccessCatalog,
@@ -1868,11 +1869,15 @@ def _register_test_agent_endpoints(
         mission_repository,
         MissionDiscovery(
             HttpTargetDiscoveryProbe(
-                access_catalog=ProjectMissionAccessCatalog(browser_profiles, test_accounts)
+                access_catalog=ProjectMissionAccessCatalog(browser_profiles, test_accounts),
+                url_policy=TargetUrlPolicy(
+                    allowed_local_hosts=settings.mission_local_host_allowlist
+                ),
             )
         ),
         PlatformAssetResolver(
-            PublishedAgentMissionCatalog(SqlAlchemyAgentVersionRepository(session_factory))
+            PublishedAgentMissionCatalog(SqlAlchemyAgentVersionRepository(session_factory)),
+            url_policy=TargetUrlPolicy(allowed_local_hosts=settings.mission_local_host_allowlist),
         ),
     )
     mission_preview = PreviewMissionHandler(mission_repository, mission_preflight)
@@ -1971,12 +1976,8 @@ def _register_test_agent_endpoints(
                 preview=mission_preview,
                 confirm=mission_confirm,
                 get=mission_get,
-                cancel=CancelMissionHandler(
-                    mission_repository, mission_runtime, mission_audit
-                ),
-                resume=ResumeMissionHandler(
-                    mission_repository, mission_runtime, mission_audit
-                ),
+                cancel=CancelMissionHandler(mission_repository, mission_runtime, mission_audit),
+                resume=ResumeMissionHandler(mission_repository, mission_runtime, mission_audit),
             ),
             actor_for=actor_for,
             check_project=check_project,
