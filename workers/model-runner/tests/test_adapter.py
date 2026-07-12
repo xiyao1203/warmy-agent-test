@@ -162,3 +162,108 @@ async def test_stream_activity_marks_cancelled_and_preserves_partial(monkeypatch
     )
 
     assert result == {"content": "partial", "cancelled": True}
+
+
+@pytest.mark.asyncio
+async def test_stream_activity_falls_back_to_non_stream_when_provider_returns_only_reasoning(
+    monkeypatch,
+) -> None:
+    activities = ModelActivities("unused")
+
+    async def stream(_request):
+        yield "reasoning", "内部推理不应作为最终回复"
+
+    async def invoke(_request):
+        return SimpleNamespace(content="你好，我可以帮你测试 Agent。")
+
+    monkeypatch.setattr(activities._adapter, "stream", stream)
+    monkeypatch.setattr(activities._adapter, "invoke", invoke)
+    monkeypatch.setattr(
+        "agenttest_model_runner.activities.decrypt_credential", lambda *_args: "key"
+    )
+    monkeypatch.setattr("agenttest_model_runner.activities.activity.heartbeat", lambda *_args: None)
+
+    result = await activities.stream_model(
+        {
+            "encrypted_api_key": "encrypted",
+            "base_url": "https://model.example/v1",
+            "model_name": "reasoning-model",
+            "messages": [{"role": "user", "content": "你好"}],
+            "timeout_seconds": 60,
+        }
+    )
+
+    assert result == {
+        "content": "你好，我可以帮你测试 Agent。",
+        "cancelled": False,
+    }
+
+
+@pytest.mark.asyncio
+async def test_stream_activity_bounds_stream_wait_and_falls_back_on_timeout(
+    monkeypatch,
+) -> None:
+    activities = ModelActivities("unused")
+    seen: dict[str, float] = {}
+
+    async def stream(stream_request):
+        seen["stream_timeout"] = stream_request.timeout_seconds
+        if False:
+            yield "content", "unreachable"
+        raise ModelTransientError("stream timed out")
+
+    async def invoke(invoke_request):
+        seen["invoke_timeout"] = invoke_request.timeout_seconds
+        return SimpleNamespace(content="你好，有什么需要测试的？")
+
+    monkeypatch.setattr(activities._adapter, "stream", stream)
+    monkeypatch.setattr(activities._adapter, "invoke", invoke)
+    monkeypatch.setattr(
+        "agenttest_model_runner.activities.decrypt_credential", lambda *_args: "key"
+    )
+    monkeypatch.setattr("agenttest_model_runner.activities.activity.heartbeat", lambda *_args: None)
+
+    result = await activities.stream_model(
+        {
+            "encrypted_api_key": "encrypted",
+            "base_url": "https://model.example/v1",
+            "model_name": "slow-streaming-model",
+            "messages": [{"role": "user", "content": "你好"}],
+            "timeout_seconds": 60,
+        }
+    )
+
+    assert seen == {"stream_timeout": 15, "invoke_timeout": 10}
+    assert result == {"content": "你好，有什么需要测试的？", "cancelled": False}
+
+
+@pytest.mark.asyncio
+async def test_stream_activity_limits_total_stream_window(monkeypatch) -> None:
+    activities = ModelActivities("unused")
+
+    async def stream(_request):
+        yield "content", "迟到"
+        await asyncio.sleep(0.05)
+        yield "content", "的正文"
+
+    async def invoke(_request):
+        return SimpleNamespace(content="及时的非流式回复")
+
+    monkeypatch.setattr(activities._adapter, "stream", stream)
+    monkeypatch.setattr(activities._adapter, "invoke", invoke)
+    monkeypatch.setattr(
+        "agenttest_model_runner.activities.decrypt_credential", lambda *_args: "key"
+    )
+    monkeypatch.setattr("agenttest_model_runner.activities.activity.heartbeat", lambda *_args: None)
+
+    result = await activities.stream_model(
+        {
+            "encrypted_api_key": "encrypted",
+            "base_url": "https://model.example/v1",
+            "model_name": "slow-streaming-model",
+            "messages": [{"role": "user", "content": "你好"}],
+            "timeout_seconds": 0.01,
+        }
+    )
+
+    assert result == {"content": "及时的非流式回复", "cancelled": False}

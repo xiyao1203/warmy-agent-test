@@ -84,6 +84,7 @@ class TemporalModelInvoker:
                 payload,
                 id=f"model-invocation-{uuid4()}",
                 task_queue=self._task_queue,
+                execution_timeout=timedelta(seconds=timeout_seconds + 30),
             )
         except Exception as error:
             # 只暴露稳定平台错误，避免 Temporal 或上游异常夹带凭证。
