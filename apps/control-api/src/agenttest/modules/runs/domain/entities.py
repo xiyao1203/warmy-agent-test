@@ -6,6 +6,7 @@ from uuid import UUID, uuid4
 
 from agenttest.modules.identity.public import UserId
 from agenttest.modules.projects.public import ProjectId
+from agenttest.modules.runs.domain.outcomes import RunCaseOutcomes
 from agenttest.modules.runs.domain.value_objects import RunCaseStatus, RunStatus
 from agenttest.modules.test_plans.public import TestPlanVersionId
 
@@ -158,6 +159,7 @@ class RunCase:
     evidence: dict[str, object] = field(default_factory=dict)
     quality_summary: dict[str, object] = field(default_factory=dict)
     security_summary: dict[str, object] = field(default_factory=dict)
+    outcomes: RunCaseOutcomes = field(default_factory=RunCaseOutcomes.started)
 
     @classmethod
     def create(
