@@ -44,9 +44,20 @@ class Settings(BaseSettings):
     model_allow_private_network: bool = False
     promptfoo_bin: str = "promptfoo"
     security_scan_allow_private_network: bool = False
+    mission_allowed_local_hosts: str = ""
+
+    @property
+    def mission_local_host_allowlist(self) -> frozenset[str]:
+        return frozenset(
+            host.strip().rstrip(".").lower()
+            for host in self.mission_allowed_local_hosts.split(",")
+            if host.strip()
+        )
 
     @model_validator(mode="after")
     def reject_unsafe_non_local_defaults(self) -> "Settings":
+        if self.environment not in {"local", "test"} and self.mission_local_host_allowlist:
+            raise ValueError("local mission target allowlist is restricted to local/test")
         if self.environment not in {"local", "test"}:
             if self.internal_api_token == "local-internal-token":
                 raise ValueError("A non-local internal API token is required")
