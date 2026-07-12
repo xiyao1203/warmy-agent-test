@@ -117,24 +117,24 @@ Commit: `feat: persist run trust loop jobs`
 - Produces: `PostprocessScheduler.schedule(job) -> str`
 - Consumes from Run handler: `RunPostprocessPort.ensure_scheduled(project_id, run_id)` after `save_result` succeeds
 
-- [ ] **Step 1: Write failing duplicate-callback and scheduling tests**
+- [x] **Step 1: Write failing duplicate-callback and scheduling tests**
 
 Assert a terminal result creates exactly one job in the same API Unit of Work as the Run result, a duplicate callback reuses it, transaction commit happens before scheduling, and a scheduling exception leaves the Run terminal and the job pending.
 
-- [ ] **Step 2: Run RED**
+- [x] **Step 2: Run RED**
 
 Run: `uv run pytest apps/control-api/tests/unit/runs/test_run_result_handler.py apps/control-api/tests/unit/run_postprocessing/test_application.py -q`
 Expected: failures because the postprocess port is absent.
 
-- [ ] **Step 3: Implement the public port and application service**
+- [x] **Step 3: Implement the public port and application service**
 
 Keep the Run module dependent only on `run_postprocessing.public`. Use pipeline version `trust-loop-v1` as a constant and stable Workflow ID `run-trust-loop-{run_id}-trust-loop-v1`.
 
-- [ ] **Step 4: Wire bootstrap dependencies**
+- [x] **Step 4: Wire bootstrap dependencies**
 
 Inject the SQLAlchemy repository and Temporal scheduler into `ApplyRunResultHandler`. Do not schedule cancelled Runs.
 
-- [ ] **Step 5: Run GREEN and commit**
+- [x] **Step 5: Run GREEN and commit**
 
 Run: `uv run pytest apps/control-api/tests/unit/runs/test_run_result_handler.py apps/control-api/tests/unit/run_postprocessing/test_application.py -q`
 Expected: all pass.

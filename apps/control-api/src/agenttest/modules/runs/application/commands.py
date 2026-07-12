@@ -5,6 +5,7 @@ from uuid import NAMESPACE_URL, uuid5
 
 from agenttest.modules.identity.public import User
 from agenttest.modules.projects.public import ProjectId
+from agenttest.modules.run_postprocessing.public import RunPostprocessCreator
 from agenttest.modules.runs.application.ports import (
     ProjectAccessPort,
     ReviewCollectorPort,
@@ -20,7 +21,7 @@ from agenttest.modules.runs.domain.evidence import (
     SecurityDecision,
 )
 from agenttest.modules.runs.domain.outcomes import Outcome, RunCaseOutcomes
-from agenttest.modules.runs.domain.value_objects import RunCaseStatus
+from agenttest.modules.runs.domain.value_objects import RunCaseStatus, RunStatus
 from agenttest.modules.test_plans.public import TestPlanVersionId
 
 
@@ -160,15 +161,18 @@ class ApplyRunResultHandler:
         *,
         runs: RunRepository,
         review_collector: ReviewCollectorPort | None = None,
+        postprocess: RunPostprocessCreator | None = None,
     ) -> None:
         self._runs = runs
         self._review_collector = review_collector
+        self._postprocess = postprocess
 
     async def execute(self, command: ApplyRunResultCommand) -> Run:
         run = await self._runs.get_by_id(command.project_id, command.run_id)
         if run is None:
             raise RunNotFoundError
         if run.status.is_terminal:
+            await self._ensure_postprocess(run)
             return run
 
         cases = await self._runs.list_cases(command.project_id, run.run_id)
@@ -228,9 +232,14 @@ class ApplyRunResultHandler:
             cancelled_cases=cancelled_cases,
         )
         await self._runs.save_result(run, cases, score_map if score_map else None)
+        await self._ensure_postprocess(run)
         if self._review_collector is not None:
             await self._review_collector.collect(run.project_id, run.run_id)
         return run
+
+    async def _ensure_postprocess(self, run: Run) -> None:
+        if self._postprocess is not None and run.status is not RunStatus.CANCELLED:
+            await self._postprocess.ensure_created(run.project_id.value, run.run_id.value)
 
 
 def _count(cases: list[RunCase], status: RunCaseStatus) -> int:

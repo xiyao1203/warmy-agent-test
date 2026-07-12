@@ -80,6 +80,10 @@ class ApplyResultExecutor(Protocol):
     async def execute(self, command: ApplyRunResultCommand) -> Run: ...
 
 
+class PostprocessScheduleExecutor(Protocol):
+    async def schedule(self, project_id: UUID, run_id: UUID) -> str: ...
+
+
 @dataclass(frozen=True, slots=True)
 class RunApiDependencies:
     create_run: CreateRunExecutor
@@ -88,6 +92,7 @@ class RunApiDependencies:
     list_cases: ListCasesExecutor
     cancel_run: CancelRunExecutor
     apply_result: ApplyResultExecutor
+    postprocess: PostprocessScheduleExecutor | None = None
     uow_factory: UnitOfWorkFactory = null_uow_factory
 
 
@@ -318,6 +323,11 @@ def create_run_router(
             return not_found()
         except ValueError as error:
             return invalid(str(error))
+        if dependencies.postprocess is not None:
+            try:
+                await dependencies.postprocess.schedule(project_id, run_id)
+            except (LookupError, RuntimeError):
+                pass
         return RunResponse.from_domain(run)
 
     return router

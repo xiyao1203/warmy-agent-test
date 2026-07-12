@@ -1032,11 +1032,17 @@ def build_browser_auth_state_service(settings: Settings):
 
 
 def build_run_dependencies(settings: Settings) -> RunApiDependencies:
+    from agenttest.modules.run_postprocessing.application import PostprocessJobService
+    from agenttest.modules.run_postprocessing.infrastructure.repository import (
+        SqlAlchemyPostprocessRepository,
+    )
+
     engine = create_database_engine(str(settings.database_url))
     session_factory = create_session_factory(engine)
     runs = SqlAlchemyRunRepository(session_factory)
     projects = SqlAlchemyProjectRepository(session_factory)
     access = ProjectAccessAdapter(projects)
+    postprocess = PostprocessJobService(SqlAlchemyPostprocessRepository(session_factory))
     source = SqlAlchemyRunSource(session_factory)
     orchestrator = (
         TemporalRunOrchestrator(
@@ -1069,7 +1075,9 @@ def build_run_dependencies(settings: Settings) -> RunApiDependencies:
             review_collector=SqlAlchemyRunReviewCollector(
                 SqlAlchemyReviewTaskRepository(session_factory)
             ),
+            postprocess=postprocess,
         ),
+        postprocess=postprocess,
         uow_factory=lambda: SqlAlchemyUnitOfWork(session_factory),
     )
 
