@@ -42,6 +42,7 @@ def create_fake_target_app(state: FakeTargetState | None = None) -> FastAPI:
     async def observations() -> dict[str, object]:
         return await target_state.snapshot()
 
+    @app.post("/")
     @app.post("/api/agent/invoke")
     async def invoke(request: InvokeRequest):
         request_id = str(uuid4())

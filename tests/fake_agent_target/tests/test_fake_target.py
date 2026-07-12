@@ -85,3 +85,12 @@ async def test_browser_chat_preserves_multiturn_state(client: httpx.AsyncClient)
     assert first.json()["turn"] == 1
     assert second.json()["turn"] == 2
     assert second.json()["history"] == ["first", "second"]
+
+
+@pytest.mark.asyncio
+async def test_root_endpoint_supports_discovered_generic_agent_url(
+    client: httpx.AsyncClient,
+) -> None:
+    response = await client.post("/", json={"input": "hello"})
+    assert response.status_code == 200
+    assert response.json()["output"] == "Echo: hello"
