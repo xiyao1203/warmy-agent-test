@@ -38,6 +38,7 @@ class SqlAlchemyMissionRepository:
     async def add(self, mission: TestMission) -> None:
         async with self._session_factory() as session, session.begin():
             session.add(TestMissionModel(**_mission_values(mission)))
+            await session.flush()
             session.add_all(_fact_models(mission))
             session.add_all(_revision_models(mission))
 

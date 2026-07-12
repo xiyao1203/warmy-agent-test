@@ -1,4 +1,4 @@
-.PHONY: bootstrap format lint typecheck test build verify architecture api-generate api-check
+.PHONY: bootstrap format lint typecheck test build verify architecture api-generate api-check mission-acceptance
 
 bootstrap:
 	pnpm install --frozen-lockfile
@@ -36,3 +36,6 @@ api-generate:
 api-check:
 	$(MAKE) api-generate
 	git diff --exit-code -- docs/api/openapi.json packages/generated-api-client/src/client
+
+mission-acceptance:
+	uv run python scripts/run_mission_acceptance.py
