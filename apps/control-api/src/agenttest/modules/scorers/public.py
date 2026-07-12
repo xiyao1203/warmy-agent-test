@@ -5,11 +5,13 @@ from .application.model_judge import (
     ModelJudge,
     ModelJudgeResult,
 )
+from .domain.calibration import CalibrationMetrics
 from .domain.entities import Scorer, ScorerId
 from .domain.value_objects import ScorerResult, ScorerType
 
 __all__ = [
     "InvalidJudgeResultError",
+    "CalibrationMetrics",
     "ModelJudge",
     "ModelJudgeResult",
     "Scorer",

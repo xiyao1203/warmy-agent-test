@@ -27,6 +27,7 @@ class RegressionCandidate:
     fingerprint: str
     state: RegressionState = RegressionState.DRAFT
     reproduction_evidence_ids: tuple[UUID, ...] = ()
+    reproduction_attempts: tuple[tuple[UUID, ...], ...] = ()
     quarantine_reason: str = ""
 
     @classmethod
@@ -55,8 +56,13 @@ class RegressionCandidate:
         if self.state is not RegressionState.REPRODUCING:
             raise ValueError("candidate is not reproducing")
         if reproduced and observed_fingerprint == self.fingerprint and evidence_ids:
-            self.state = RegressionState.VERIFIED
-            self.reproduction_evidence_ids = evidence_ids
+            known = set(self.reproduction_evidence_ids)
+            if known.intersection(evidence_ids):
+                return
+            self.reproduction_attempts += (evidence_ids,)
+            self.reproduction_evidence_ids += evidence_ids
+            if len(self.reproduction_attempts) >= 2:
+                self.state = RegressionState.VERIFIED
             return
         self.state = RegressionState.QUARANTINED
         self.quarantine_reason = "failure could not be reproduced with the same fingerprint"

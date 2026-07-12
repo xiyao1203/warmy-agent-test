@@ -159,32 +159,32 @@ Commit: `feat: schedule terminal run postprocessing`
 - Produces: `TrustLoopProjection.build(job, stage_results) -> dict[str, object]`
 - Consumes: existing `FailureClassifier`, `DiagnosticService`, `RegressionCandidate`, `CalibrationMetrics`, `EvaluationArbiter`, `JointGateEvaluator`
 
-- [ ] **Step 1: Write the failing classification and degradation matrix**
+- [x] **Step 1: Write the failing classification and degradation matrix**
 
 Assert target/test/environment/platform/evaluation mapping, no-evidence diagnosis `inconclusive`, model exception `inconclusive`, and deterministic stage completion despite optional warnings.
 
-- [ ] **Step 2: Run RED**
+- [x] **Step 2: Run RED**
 
 Run: `uv run pytest apps/control-api/tests/unit/run_postprocessing/test_stages.py -q`
 Expected: failure because `PostprocessStageService` is missing.
 
-- [ ] **Step 3: Implement classify and diagnose stages**
+- [x] **Step 3: Implement classify and diagnose stages**
 
 Read Run Cases through a project-scoped port, verify Evidence hashes/scopes, store deterministic classifications, and pass only allowlisted redacted Evidence projections to the diagnostic model.
 
-- [ ] **Step 4: Add failing regression, calibration and gate tests**
+- [x] **Step 4: Add failing regression, calibration and gate tests**
 
 Assert two same-fingerprint reproductions publish, one reproduction remains reproducing, mixed results quarantine, insufficient calibration is explicit, and safety/execution/evidence failures block without compensation.
 
-- [ ] **Step 5: Implement reproduce, calibrate and gate stages**
+- [x] **Step 5: Implement reproduce, calibrate and gate stages**
 
 Apply a bounded minimization budget, permit auto-publication only for target/test failures, preserve baseline IDs, and save ordered gate rules with input facts and explanations.
 
-- [ ] **Step 6: Implement and test the aggregate projection**
+- [x] **Step 6: Implement and test the aggregate projection**
 
 The projection contains job status/current stage, per-case outcomes/classifications/diagnostics, regressions, calibration, gate decision, warning codes and timestamps. Missing optional results remain explicit `inconclusive`/empty values.
 
-- [ ] **Step 7: Run GREEN and commit**
+- [x] **Step 7: Run GREEN and commit**
 
 Run: `uv run pytest apps/control-api/tests/unit/run_postprocessing apps/control-api/tests/unit/diagnostics apps/control-api/tests/unit/regressions apps/control-api/tests/unit/scorers/test_calibration.py apps/control-api/tests/unit/gates/test_joint_gate.py -q`
 Expected: all pass.
