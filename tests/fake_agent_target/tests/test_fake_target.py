@@ -94,3 +94,12 @@ async def test_root_endpoint_supports_discovered_generic_agent_url(
     response = await client.post("/", json={"input": "hello"})
     assert response.status_code == 200
     assert response.json()["output"] == "Echo: hello"
+
+
+@pytest.mark.asyncio
+async def test_root_endpoint_accepts_structured_platform_case_input(
+    client: httpx.AsyncClient,
+) -> None:
+    response = await client.post("/", json={"input": {"prompt": "hello", "turn": 1}})
+    assert response.status_code == 200
+    assert "hello" in response.json()["output"]

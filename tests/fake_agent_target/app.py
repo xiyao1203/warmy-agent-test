@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import asyncio
+import json
+from typing import Any
 from uuid import uuid4
 
 from fastapi import FastAPI
@@ -18,7 +20,7 @@ class ScenarioRequest(BaseModel):
 
 
 class InvokeRequest(BaseModel):
-    input: str = Field(min_length=1, max_length=10_000)
+    input: Any
 
 
 class ChatRequest(BaseModel):
@@ -45,22 +47,29 @@ def create_fake_target_app(state: FakeTargetState | None = None) -> FastAPI:
     @app.post("/")
     @app.post("/api/agent/invoke")
     async def invoke(request: InvokeRequest):
+        input_text = (
+            request.input
+            if isinstance(request.input, str)
+            else json.dumps(request.input, sort_keys=True, ensure_ascii=False)
+        )
+        if not input_text or len(input_text) > 10_000:
+            return JSONResponse(status_code=422, content={"error": {"code": "invalid_input"}})
         request_id = str(uuid4())
-        attempt, scenario, transient_failure = await target_state.observe(request_id, request.input)
+        attempt, scenario, transient_failure = await target_state.observe(request_id, input_text)
         if scenario == "timeout":
             await asyncio.sleep(target_state.delay_seconds)
         result = scenario_response(
             scenario=scenario,
             request_id=request_id,
             attempt=attempt,
-            input_text=request.input,
+            input_text=input_text,
             transient_failure=transient_failure,
         )
         if scenario == "stream_success":
 
             async def stream():
                 yield '{"delta":"Echo: "}\n'
-                yield f'{{"delta":"{request.input}","done":true}}\n'
+                yield f'{{"delta":"{input_text}","done":true}}\n'
 
             return StreamingResponse(stream(), media_type="application/x-ndjson")
         return JSONResponse(status_code=result.status_code, content=result.payload)
