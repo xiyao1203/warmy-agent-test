@@ -1,6 +1,8 @@
 from datetime import timedelta
+from typing import Any
 
 import pytest
+from agenttest_api_runner.contracts import RunCaseTask
 from agenttest_api_runner.mission_contracts import (
     MissionStageResponse,
     MissionWorkflowTask,
@@ -85,3 +87,18 @@ async def test_temporal_stage_response_allows_nested_platform_output() -> None:
     decoded = await DataConverter.default.decode(payloads, [MissionStageResponse])
 
     assert decoded[0] == response
+
+
+@pytest.mark.asyncio
+async def test_temporal_agent_activity_allows_nested_run_configuration() -> None:
+    values = [
+        RunCaseTask("case-1", {"prompt": "hello"}, []),
+        {"endpoint_url": "http://target.test", "credential_binding_ids": []},
+        {"variables": {"nested": {"enabled": True}}},
+    ]
+    payloads = await DataConverter.default.encode(values)
+    decoded = await DataConverter.default.decode(
+        payloads,
+        [RunCaseTask, dict[str, Any], dict[str, Any]],
+    )
+    assert decoded == values

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from typing import Any
 from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
 from temporalio import activity
@@ -93,8 +94,8 @@ def _apply_credentials(
 @activity.defn
 async def execute_agent_case(
     task: RunCaseTask,
-    agent_config: dict[str, object],
-    environment: dict[str, object] | None = None,
+    agent_config: dict[str, Any],
+    environment: dict[str, Any] | None = None,
 ) -> RunCaseResult:
     activity.heartbeat({"run_case_id": task.run_case_id, "phase": "execute"})
     resolved_environment = environment or {}
