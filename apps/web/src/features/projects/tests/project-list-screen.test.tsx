@@ -121,21 +121,47 @@ describe("ProjectListScreen", () => {
     expect(screen.queryByText("项目 B")).not.toBeInTheDocument();
   });
 
-  it("renames a project inline", async () => {
+  it("renames a project from a dialog without expanding the table row", async () => {
     const handlers = renderProjectListScreen();
     render(<ProjectListScreen projects={projects} {...handlers} />);
 
     fireEvent.click(screen.getByRole("button", { name: "编辑项目 A" }));
+
+    expect(screen.getByRole("heading", { name: "编辑项目" })).toBeVisible();
     fireEvent.change(screen.getByDisplayValue("项目 A"), {
       target: { value: "项目 A 改名" },
     });
-    fireEvent.click(screen.getByRole("button", { name: "保存项目 A" }));
+    fireEvent.click(screen.getByRole("button", { name: "保存修改" }));
 
     await waitFor(() =>
       expect(handlers.onRename).toHaveBeenCalledWith("project-1", {
         name: "项目 A 改名",
       }),
     );
+  });
+
+  it("uses truncated full-text fields and compact icon-only row actions", () => {
+    const handlers = renderProjectListScreen();
+    const longName = "这是一个非常长的项目名称用于验证省略和完整文本提示";
+    render(
+      <ProjectListScreen
+        projects={[{ archived: false, id: "project-long-id", name: longName }]}
+        {...handlers}
+      />,
+    );
+
+    expect(screen.getByLabelText(longName)).toHaveClass("truncate");
+    expect(screen.getByLabelText("project-long-id")).toHaveClass("truncate");
+
+    for (const label of [
+      `进入${longName} 测试 Agent`,
+      `编辑${longName}`,
+      `归档${longName}`,
+    ]) {
+      const button = screen.getByRole("button", { name: label });
+      expect(button).toHaveClass("size-8", "p-0");
+      expect(button).not.toHaveTextContent(/进入|编辑|归档/);
+    }
   });
 
   it("archives an active project", async () => {

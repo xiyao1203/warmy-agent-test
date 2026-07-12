@@ -30,6 +30,8 @@ import {
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/uiverse";
 import { problemMessage } from "@/lib/api/problem";
+import { TableActionButton, TableActions } from "@/components/ui/table-actions";
+import { TruncatedText } from "@/components/ui/truncated-text";
 
 type Props = {
   defaults: ModelDefaultResponse[];
@@ -189,10 +191,10 @@ export function ModelConfigList(props: Props) {
             <table className="w-full table-fixed text-sm">
               <thead className="border-b border-[var(--hairline)] bg-[var(--canvas-soft)] text-center text-xs text-[var(--muted)]">
                 <tr>
-                  <th className="w-[24%] px-4 py-2.5">模型</th>
-                  <th className="w-[32%] px-4 py-2.5">服务与凭证</th>
-                  <th className="w-[20%] px-4 py-2.5">能力</th>
-                  <th className="w-[24%] px-4 py-2.5">操作</th>
+                  <th className="w-[27%] px-4 py-2.5">模型</th>
+                  <th className="w-[35%] px-4 py-2.5">服务与凭证</th>
+                  <th className="w-[23%] px-4 py-2.5">能力</th>
+                  <th className="w-[15%] px-4 py-2.5">操作</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[var(--hairline)]">
@@ -200,20 +202,22 @@ export function ModelConfigList(props: Props) {
                   <tr key={model.id}>
                     <td className="px-4 py-3 text-center align-middle">
                       <div className="mx-auto w-fit max-w-full text-left">
-                        <div className="truncate font-medium">{model.name}</div>
-                        <div className="mt-0.5 truncate font-mono text-xs text-[var(--muted)]">
+                        <TruncatedText className="font-medium">
+                          {model.name}
+                        </TruncatedText>
+                        <TruncatedText className="mt-0.5 font-mono text-xs text-[var(--muted)]">
                           {model.model_name}
-                        </div>
+                        </TruncatedText>
                       </div>
                     </td>
                     <td className="px-4 py-3 text-center align-middle">
                       <div className="mx-auto w-fit max-w-full text-left">
-                        <div className="max-w-64 truncate text-xs">
+                        <TruncatedText className="text-xs">
                           {model.base_url}
-                        </div>
-                        <div className="mt-1 truncate font-mono text-xs text-[var(--muted)]">
+                        </TruncatedText>
+                        <TruncatedText className="mt-1 font-mono text-xs text-[var(--muted)]">
                           {model.api_key_hint}
-                        </div>
+                        </TruncatedText>
                       </div>
                     </td>
                     <td className="px-4 py-3 text-center align-middle">
@@ -233,40 +237,28 @@ export function ModelConfigList(props: Props) {
                       ) : null}
                     </td>
                     <td className="px-4 py-3 text-center align-middle">
-                      <div className="flex flex-nowrap justify-center gap-1.5">
-                        <Button
-                          aria-label={`测试 ${model.name} 连接`}
-                          className="h-8 shrink-0 whitespace-nowrap px-2.5 text-xs"
-                          loading={busy === `test:${model.id}`}
+                      <TableActions label={model.name}>
+                        <TableActionButton
+                          disabled={busy === `test:${model.id}`}
+                          label={`测试 ${model.name} 连接`}
                           onClick={() => void testConnection(model.id)}
                         >
-                          <Wifi aria-hidden="true" className="size-3.5" />
-                          测试连接
-                        </Button>
-                        <Button
-                          aria-label={`编辑 ${model.name}`}
-                          className="h-8 shrink-0 whitespace-nowrap px-2.5 text-xs"
+                          <Wifi aria-hidden="true" />
+                        </TableActionButton>
+                        <TableActionButton
+                          label={`编辑 ${model.name}`}
                           onClick={() => setEditing(model)}
                         >
-                          <Settings2
-                            aria-hidden="true"
-                            className="size-3.5 text-[var(--ink)]"
-                          />
-                          编辑
-                        </Button>
-                        <Button
-                          aria-label={`删除 ${model.name}`}
-                          className="h-8 shrink-0 whitespace-nowrap px-2.5 text-xs"
+                          <Settings2 aria-hidden="true" />
+                        </TableActionButton>
+                        <TableActionButton
+                          label={`删除 ${model.name}`}
                           onClick={() => setDeleteTarget(model)}
-                          variant="danger"
+                          tone="danger"
                         >
-                          <Trash2
-                            aria-hidden="true"
-                            className="size-3.5 text-[var(--danger)]"
-                          />
-                          删除
-                        </Button>
-                      </div>
+                          <Trash2 aria-hidden="true" />
+                        </TableActionButton>
+                      </TableActions>
                     </td>
                   </tr>
                 ))}

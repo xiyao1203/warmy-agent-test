@@ -10,9 +10,9 @@ export function Table({
   ...props
 }: TableHTMLAttributes<HTMLTableElement>) {
   return (
-    <div className="overflow-x-auto">
+    <div className="min-w-0 overflow-hidden">
       <table
-        className={`w-full border-collapse text-left text-sm ${className}`}
+        className={`w-full table-fixed border-collapse text-left text-sm ${className}`}
         {...props}
       />
     </div>
@@ -57,7 +57,7 @@ export function TableCell({
 }: TdHTMLAttributes<HTMLTableCellElement>) {
   return (
     <td
-      className={`h-11 px-3 text-center align-middle ${className}`}
+      className={`h-11 min-w-0 px-3 text-center align-middle ${className}`}
       {...props}
     />
   );

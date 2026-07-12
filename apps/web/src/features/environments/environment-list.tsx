@@ -14,6 +14,7 @@ import {
   PlayCircle,
   Plus,
   ShieldCheck,
+  Trash2,
 } from "lucide-react";
 import Link from "next/link";
 import type { ReactNode } from "react";
@@ -39,6 +40,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Skeleton } from "@/components/uiverse";
+import { TableActionButton } from "@/components/ui/table-actions";
+import { TruncatedText } from "@/components/ui/truncated-text";
 
 import type { CredentialBinding } from "./api";
 import {
@@ -298,10 +301,12 @@ function TemplateRow({
               <Cog aria-hidden="true" className="size-4" />
             </span>
             <div className="min-w-0">
-              <p className="truncate font-medium">{template.name}</p>
-              <p className="mt-0.5 truncate text-xs text-[var(--muted)]">
+              <TruncatedText className="font-medium">
+                {template.name}
+              </TruncatedText>
+              <TruncatedText className="mt-0.5 text-xs text-[var(--muted)]">
                 {template.description || "暂无描述"}
-              </p>
+              </TruncatedText>
             </div>
           </div>
         </TableCell>
@@ -338,13 +343,13 @@ function TemplateRow({
               />
             ) : null}
             {onDelete ? (
-              <Button
-                aria-label={`删除${template.name}`}
+              <TableActionButton
+                label={`删除${template.name}`}
                 onClick={() => onDelete(template.id)}
-                variant="danger"
+                tone="danger"
               >
-                删除
-              </Button>
+                <Trash2 aria-hidden="true" />
+              </TableActionButton>
             ) : null}
           </div>
         </TableCell>
@@ -845,16 +850,15 @@ function KeyValueEditor({
                 placeholder={valuePlaceholder}
                 value={row.value}
               />
-              <Button
-                aria-label={`删除${label}`}
+              <TableActionButton
+                label={`删除${label}`}
                 onClick={() =>
                   onChange(rows.filter((item) => item.id !== row.id))
                 }
-                type="button"
-                variant="danger"
+                tone="danger"
               >
-                删除
-              </Button>
+                <Trash2 aria-hidden="true" />
+              </TableActionButton>
             </div>
           ))}
         </div>

@@ -26,6 +26,7 @@ import {
 } from "@/components/ui/table";
 import { Skeleton, SkeletonText } from "@/components/uiverse";
 import { Tooltip } from "@/components/uiverse";
+import { TruncatedText } from "@/components/ui/truncated-text";
 
 type ProjectOverviewProps = {
   assetSummary?: {
@@ -167,7 +168,7 @@ export function ProjectOverview({
                     key={member.user_id}
                   >
                     <TableCell className="font-mono text-xs">
-                      {member.user_id}
+                      <TruncatedText>{member.user_id}</TruncatedText>
                       {member.user_id === user.id ? (
                         <span className="ml-2 text-[var(--muted)]">（你）</span>
                       ) : null}

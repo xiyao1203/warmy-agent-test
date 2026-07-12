@@ -4,7 +4,7 @@ import type {
   CreateDatasetRequest,
   DatasetResponse,
 } from "@warmy/generated-api-client";
-import { Database, Plus } from "lucide-react";
+import { Database, ListChecks, Plus, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 
@@ -28,9 +28,11 @@ import {
 } from "@/components/ui/table";
 import {
   TableActions,
+  TableActionButton,
   tableActionCellClass,
   tableActionHeadClass,
 } from "@/components/ui/table-actions";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { Skeleton, Tooltip } from "@/components/uiverse";
 
 export function DatasetList({
@@ -104,10 +106,12 @@ export function DatasetList({
                         <Database aria-hidden="true" className="size-4" />
                       </span>
                       <div className="min-w-0">
-                        <p className="truncate font-medium">{dataset.name}</p>
-                        <p className="mt-0.5 truncate text-xs text-[var(--muted)]">
+                        <TruncatedText className="font-medium">
+                          {dataset.name}
+                        </TruncatedText>
+                        <TruncatedText className="mt-0.5 text-xs text-[var(--muted)]">
                           {dataset.description || "暂无描述"}
-                        </p>
+                        </TruncatedText>
                       </div>
                     </div>
                   </TableCell>
@@ -116,18 +120,16 @@ export function DatasetList({
                   </TableCell>
                   <TableCell className={tableActionCellClass}>
                     <TableActions label={dataset.name}>
-                      <Button
+                      <TableActionButton
                         asChild
-                        className="shrink-0 px-2.5"
-                        variant="ghost"
+                        label={`管理${dataset.name}用例`}
                       >
                         <Link
-                          aria-label={`管理${dataset.name}用例`}
                           href={`/projects/${projectId}/datasets/${dataset.id}`}
                         >
-                          管理用例
+                          <ListChecks aria-hidden="true" />
                         </Link>
-                      </Button>
+                      </TableActionButton>
                       {onDelete ? (
                         <ConfirmDeleteButton
                           label={dataset.name}
@@ -246,10 +248,10 @@ function ConfirmDeleteButton({
       <DialogTrigger asChild>
         <Button
           aria-label={`删除${label}`}
-          className="shrink-0 border-transparent bg-transparent px-2.5 hover:bg-[var(--danger-subtle)]"
+          className="size-8 shrink-0 border-transparent bg-transparent p-0 hover:bg-[var(--danger-subtle)]"
           variant="danger"
         >
-          删除
+          <Trash2 aria-hidden="true" className="size-4" />
         </Button>
       </DialogTrigger>
       <DialogContent>

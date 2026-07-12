@@ -6,9 +6,7 @@ import {
   FolderKanban,
   PlayCircle,
   Plus,
-  Save,
   Search,
-  X,
 } from "lucide-react";
 import { useMemo, useState } from "react";
 import type {
@@ -39,9 +37,11 @@ import {
 } from "@/components/ui/table";
 import {
   TableActions,
+  TableActionButton,
   tableActionCellClass,
   tableActionHeadClass,
 } from "@/components/ui/table-actions";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import {
   IconfontProjectVisual,
   ProjectLoadingMotion,
@@ -73,7 +73,9 @@ export function ProjectListScreen({
 }: ProjectListScreenProps) {
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState<ProjectStatusFilter>("all");
-  const [editingProjectId, setEditingProjectId] = useState<string | null>(null);
+  const [editingProject, setEditingProject] = useState<ProjectResponse | null>(
+    null,
+  );
   const [editingName, setEditingName] = useState("");
   const [pendingAction, setPendingAction] = useState<string | null>(null);
   const [formError, setFormError] = useState("");
@@ -98,7 +100,7 @@ export function ProjectListScreen({
   }, [projects, query, status]);
 
   function startRename(project: ProjectResponse) {
-    setEditingProjectId(project.id);
+    setEditingProject(project);
     setEditingName(project.name);
     setFormError("");
   }
@@ -111,7 +113,7 @@ export function ProjectListScreen({
     setFormError("");
     try {
       await onRename(project.id, { name });
-      setEditingProjectId(null);
+      setEditingProject(null);
       setEditingName("");
     } catch {
       setFormError("保存项目名称失败，请重试。");
@@ -213,8 +215,8 @@ export function ProjectListScreen({
               title="没有匹配的项目"
             />
           ) : (
-            <Table className="w-full table-fixed">
-              <TableHeader className="bg-[var(--canvas-soft)]">
+            <Table className="w-full table-fixed max-[640px]:block">
+              <TableHeader className="bg-[var(--canvas-soft)] max-[640px]:hidden">
                 <TableRow>
                   <TableHead className="w-[42%]">项目</TableHead>
                   <TableHead className="w-[16%]">状态</TableHead>
@@ -222,21 +224,18 @@ export function ProjectListScreen({
                   <TableHead className={tableActionHeadClass}>操作</TableHead>
                 </TableRow>
               </TableHeader>
-              <TableBody>
+              <TableBody className="max-[640px]:block">
                 {filteredProjects.map((project) => {
-                  const isEditing = editingProjectId === project.id;
-                  const renamePending =
-                    pendingAction === `rename:${project.id}`;
                   const archivePending =
                     pendingAction === `archive:${project.id}`;
 
                   return (
                     <TableRow
-                      className="transition-colors hover:bg-[var(--canvas-soft)]"
+                      className="transition-colors hover:bg-[var(--canvas-soft)] max-[640px]:grid max-[640px]:grid-cols-[5rem_minmax(0,1fr)] max-[640px]:gap-x-3 max-[640px]:gap-y-2 max-[640px]:p-4"
                       key={project.id}
                     >
-                      <TableCell>
-                        <div className="mx-auto flex w-fit max-w-full min-w-0 items-center gap-3 text-left">
+                      <TableCell className="max-[640px]:col-span-2 max-[640px]:block max-[640px]:h-auto max-[640px]:p-0 max-[640px]:pb-1">
+                        <div className="mx-auto flex w-fit max-w-full min-w-0 items-center gap-3 text-left max-[640px]:mx-0 max-[640px]:w-full">
                           <span className="grid size-8 shrink-0 place-items-center rounded-[var(--radius-md)] bg-[var(--canvas-soft)] text-[var(--primary)]">
                             <FolderKanban
                               aria-hidden="true"
@@ -244,114 +243,64 @@ export function ProjectListScreen({
                             />
                           </span>
                           <div className="min-w-0">
-                            {isEditing ? (
-                              <Input
-                                aria-label={`项目 ${project.name} 新名称`}
-                                autoFocus
-                                className="h-9"
-                                onChange={(event) =>
-                                  setEditingName(event.target.value)
-                                }
-                                value={editingName}
-                              />
-                            ) : (
-                              <>
-                                <p className="truncate font-medium">
-                                  {project.name}
-                                </p>
-                                <p className="mt-0.5 truncate text-xs text-[var(--muted)]">
-                                  {project.id}
-                                </p>
-                              </>
-                            )}
+                            <TruncatedText className="font-medium">
+                              {project.name}
+                            </TruncatedText>
+                            <TruncatedText className="mt-0.5 text-xs text-[var(--muted)]">
+                              {project.id}
+                            </TruncatedText>
                           </div>
                         </div>
                       </TableCell>
-                      <TableCell>
-                        <Badge tone={project.archived ? "neutral" : "success"}>
-                          {project.archived ? "已归档" : "运行中"}
-                        </Badge>
+                      <TableCell className="max-[640px]:contents">
+                        <span className="hidden self-center text-left text-sm text-[var(--muted)] max-[640px]:block">
+                          状态
+                        </span>
+                        <span className="text-center max-[640px]:text-left">
+                          <Badge
+                            tone={project.archived ? "neutral" : "success"}
+                          >
+                            {project.archived ? "已归档" : "运行中"}
+                          </Badge>
+                        </span>
                       </TableCell>
-                      <TableCell className="text-sm text-[var(--muted)]">
-                        {project.archived ? "已归档不可进入" : "测试 Agent"}
+                      <TableCell className="text-sm text-[var(--muted)] max-[640px]:contents">
+                        <span className="hidden self-center text-left max-[640px]:block">
+                          默认入口
+                        </span>
+                        <span className="text-center max-[640px]:text-left">
+                          {project.archived ? "已归档不可进入" : "测试 Agent"}
+                        </span>
                       </TableCell>
-                      <TableCell className={tableActionCellClass}>
+                      <TableCell
+                        className={`${tableActionCellClass} max-[640px]:contents`}
+                      >
+                        <span className="hidden self-center text-left text-sm text-[var(--muted)] max-[640px]:block">
+                          操作
+                        </span>
                         <TableActions label={project.name}>
-                          {isEditing ? (
-                            <>
-                              <Button
-                                aria-label={`保存${project.name}`}
-                                className="h-8 px-2.5"
-                                disabled={!editingName.trim() || renamePending}
-                                loading={renamePending}
-                                onClick={() => submitRename(project)}
-                                type="button"
-                                variant="primary"
-                              >
-                                <Save aria-hidden="true" className="size-3.5" />
-                                保存
-                              </Button>
-                              <Button
-                                aria-label={`取消编辑${project.name}`}
-                                className="h-8 px-2.5"
-                                onClick={() => {
-                                  setEditingProjectId(null);
-                                  setEditingName("");
-                                }}
-                                type="button"
-                                variant="ghost"
-                              >
-                                <X aria-hidden="true" className="size-3.5" />
-                                取消
-                              </Button>
-                            </>
-                          ) : (
-                            <>
-                              <Button
-                                aria-label={`进入${project.name} 测试 Agent`}
-                                className="h-8 px-2.5"
-                                disabled={project.archived}
-                                onClick={() => onOpen(project.id)}
-                                type="button"
-                                variant="ghost"
-                              >
-                                <PlayCircle
-                                  aria-hidden="true"
-                                  className="size-3.5"
-                                />
-                                进入
-                              </Button>
-                              <Button
-                                aria-label={`编辑${project.name}`}
-                                className="h-8 px-2.5"
-                                disabled={project.archived}
-                                onClick={() => startRename(project)}
-                                type="button"
-                                variant="ghost"
-                              >
-                                <Edit3
-                                  aria-hidden="true"
-                                  className="size-3.5"
-                                />
-                                编辑
-                              </Button>
-                              <Button
-                                aria-label={`归档${project.name}`}
-                                className="h-8 px-2.5"
-                                disabled={project.archived || archivePending}
-                                loading={archivePending}
-                                onClick={() => submitArchive(project)}
-                                type="button"
-                                variant="danger"
-                              >
-                                <Archive
-                                  aria-hidden="true"
-                                  className="size-3.5"
-                                />
-                                归档
-                              </Button>
-                            </>
-                          )}
+                          <TableActionButton
+                            disabled={project.archived}
+                            label={`进入${project.name} 测试 Agent`}
+                            onClick={() => onOpen(project.id)}
+                          >
+                            <PlayCircle aria-hidden="true" />
+                          </TableActionButton>
+                          <TableActionButton
+                            disabled={project.archived}
+                            label={`编辑${project.name}`}
+                            onClick={() => startRename(project)}
+                          >
+                            <Edit3 aria-hidden="true" />
+                          </TableActionButton>
+                          <TableActionButton
+                            disabled={project.archived || archivePending}
+                            label={`归档${project.name}`}
+                            onClick={() => submitArchive(project)}
+                            tone="danger"
+                          >
+                            <Archive aria-hidden="true" />
+                          </TableActionButton>
                         </TableActions>
                       </TableCell>
                     </TableRow>
@@ -362,6 +311,63 @@ export function ProjectListScreen({
           )}
         </section>
       ) : null}
+      <Dialog
+        onOpenChange={(open) => {
+          if (!open && !pendingAction) {
+            setEditingProject(null);
+            setEditingName("");
+            setFormError("");
+          }
+        }}
+        open={Boolean(editingProject)}
+      >
+        <DialogContent>
+          <DialogTitle>编辑项目</DialogTitle>
+          <DialogDescription>
+            修改项目名称，不会影响项目 ID 和已有测试资产。
+          </DialogDescription>
+          <div className="mt-5 space-y-4">
+            <label className="block text-sm font-medium">
+              项目名称
+              <Input
+                autoFocus
+                className="mt-1.5"
+                onChange={(event) => {
+                  setEditingName(event.target.value);
+                  if (formError) setFormError("");
+                }}
+                value={editingName}
+              />
+            </label>
+            {formError ? (
+              <p className="text-sm text-[var(--danger)]" role="alert">
+                {formError}
+              </p>
+            ) : null}
+            <div className="flex justify-end gap-2">
+              <Button
+                disabled={Boolean(pendingAction)}
+                onClick={() => setEditingProject(null)}
+                type="button"
+              >
+                取消
+              </Button>
+              <Button
+                disabled={!editingName.trim() || Boolean(pendingAction)}
+                loading={Boolean(
+                  editingProject &&
+                  pendingAction === `rename:${editingProject.id}`,
+                )}
+                onClick={() => editingProject && submitRename(editingProject)}
+                type="button"
+                variant="primary"
+              >
+                保存修改
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

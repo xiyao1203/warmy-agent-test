@@ -41,28 +41,16 @@ describe("ModelConfigList", () => {
     expect(screen.getByText("...cret")).toBeVisible();
     expect(screen.getByText("测试 Agent 对话")).toBeVisible();
     expect(screen.queryByText("sk-production-secret")).not.toBeInTheDocument();
-    expect(screen.getByText("模型").closest("th")).toHaveClass("w-[24%]");
-    expect(screen.getByText("服务与凭证").closest("th")).toHaveClass("w-[32%]");
-    expect(screen.getByText("能力").closest("th")).toHaveClass("w-[20%]");
-    expect(screen.getByText("操作").closest("th")).toHaveClass("w-[24%]");
+    expect(screen.getByText("模型").closest("th")).toHaveClass("w-[27%]");
+    expect(screen.getByText("服务与凭证").closest("th")).toHaveClass("w-[35%]");
+    expect(screen.getByText("能力").closest("th")).toHaveClass("w-[23%]");
+    expect(screen.getByText("操作").closest("th")).toHaveClass("w-[15%]");
     expect(screen.getByRole("table")).toHaveClass("w-full", "table-fixed");
-    expect(
-      screen.getByRole("button", { name: "测试 主模型 连接" }),
-    ).toHaveTextContent("测试连接");
-    expect(
-      screen.getByRole("button", { name: "编辑 主模型" }),
-    ).toHaveTextContent("编辑");
-    expect(
-      screen.getByRole("button", { name: "删除 主模型" }),
-    ).toHaveTextContent("删除");
-    expect(screen.getByRole("button", { name: "编辑 主模型" })).toHaveClass(
-      "shrink-0",
-      "whitespace-nowrap",
-    );
-    expect(screen.getByRole("button", { name: "删除 主模型" })).toHaveClass(
-      "shrink-0",
-      "whitespace-nowrap",
-    );
+    for (const label of ["测试 主模型 连接", "编辑 主模型", "删除 主模型"]) {
+      const action = screen.getByRole("button", { name: label });
+      expect(action).toHaveClass("size-8", "p-0");
+      expect(action).not.toHaveTextContent(/测试连接|编辑|删除/);
+    }
   });
 
   it("creates a fully configured model", async () => {

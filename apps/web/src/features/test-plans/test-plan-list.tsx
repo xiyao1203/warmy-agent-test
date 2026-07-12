@@ -10,6 +10,7 @@ import {
   PlayCircle,
   Plus,
   Settings2,
+  Trash2,
 } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
@@ -34,8 +35,10 @@ import {
 } from "@/components/ui/table";
 import {
   TableActions,
+  TableActionButton,
   tableActionCellClass,
 } from "@/components/ui/table-actions";
+import { TruncatedText } from "@/components/ui/truncated-text";
 
 export function TestPlanList({
   error,
@@ -163,10 +166,12 @@ export function TestPlanList({
                         <ClipboardCheck aria-hidden="true" className="size-4" />
                       </span>
                       <div className="min-w-0">
-                        <p className="truncate font-medium">{plan.name}</p>
-                        <p className="mt-0.5 truncate text-xs text-[var(--muted)]">
+                        <TruncatedText className="font-medium">
+                          {plan.name}
+                        </TruncatedText>
+                        <TruncatedText className="mt-0.5 text-xs text-[var(--muted)]">
                           {plan.description || "暂无描述"}
-                        </p>
+                        </TruncatedText>
                       </div>
                     </div>
                   </TableCell>
@@ -175,18 +180,13 @@ export function TestPlanList({
                   </TableCell>
                   <TableCell className={tableActionCellClass}>
                     <TableActions label={plan.name}>
-                      <Button
-                        asChild
-                        className="shrink-0 px-2.5"
-                        variant="ghost"
-                      >
+                      <TableActionButton asChild label={`配置${plan.name}`}>
                         <Link
-                          aria-label={`配置${plan.name}`}
                           href={`/projects/${projectId}/test-plans/${plan.id}`}
                         >
-                          配置计划
+                          <Settings2 aria-hidden="true" />
                         </Link>
-                      </Button>
+                      </TableActionButton>
                       {onDelete ? (
                         <ConfirmDeleteButton
                           label={plan.name}
@@ -301,10 +301,10 @@ function ConfirmDeleteButton({
       <DialogTrigger asChild>
         <Button
           aria-label={`删除${label}`}
-          className="shrink-0 border-transparent bg-transparent px-2.5 hover:bg-[var(--danger-subtle)]"
+          className="size-8 shrink-0 border-transparent bg-transparent p-0 hover:bg-[var(--danger-subtle)]"
           variant="danger"
         >
-          删除
+          <Trash2 aria-hidden="true" className="size-4" />
         </Button>
       </DialogTrigger>
       <DialogContent>

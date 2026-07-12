@@ -120,13 +120,19 @@ export function TraceComparison({
 
       {/* 对比表格 */}
       <div className="overflow-hidden rounded border border-[var(--hairline)]">
-        <table className="w-full text-sm">
+        <table className="w-full table-fixed text-sm">
           <thead>
             <tr className="border-b border-[var(--hairline)] bg-[var(--canvas-soft)]">
-              <th className="px-4 py-2 text-left font-medium">Span 名称</th>
-              <th className="px-4 py-2 text-right font-medium">{labelA}</th>
-              <th className="px-4 py-2 text-right font-medium">{labelB}</th>
-              <th className="px-4 py-2 text-right font-medium">差异</th>
+              <th className="w-[40%] px-4 py-2 text-left font-medium">
+                Span 名称
+              </th>
+              <th className="w-[20%] px-4 py-2 text-right font-medium">
+                {labelA}
+              </th>
+              <th className="w-[20%] px-4 py-2 text-right font-medium">
+                {labelB}
+              </th>
+              <th className="w-[20%] px-4 py-2 text-right font-medium">差异</th>
             </tr>
           </thead>
           <tbody>
@@ -138,7 +144,10 @@ export function TraceComparison({
                 }`}
               >
                 <td className="px-4 py-2">
-                  <span className={getStatusColor(diff.status)}>
+                  <span
+                    className={`block truncate ${getStatusColor(diff.status)}`}
+                    title={diff.name}
+                  >
                     {diff.name}
                   </span>
                 </td>

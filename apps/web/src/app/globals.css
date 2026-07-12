@@ -6,6 +6,20 @@
   box-sizing: border-box;
 }
 
+.table-action-button {
+  width: 2rem;
+  min-width: 2rem;
+  height: 2rem;
+  padding: 0;
+}
+
+.table-action-button svg {
+  display: block;
+  width: 1rem;
+  height: 1rem;
+  flex: 0 0 1rem;
+}
+
 html,
 body {
   min-height: 100%;

@@ -109,10 +109,9 @@ describe("RunCenter", () => {
     expect(
       screen.getByRole("link", { name: /1. 发布测试计划/ }),
     ).toHaveAttribute("href", "/projects/project-1/test-plans");
-    expect(screen.getByRole("link", { name: "查看结果" })).toHaveAttribute(
-      "href",
-      "/projects/project-1/runs/run-2",
-    );
+    expect(
+      screen.getByRole("link", { name: "查看运行 run-2 结果" }),
+    ).toHaveAttribute("href", "/projects/project-1/runs/run-2");
     fireEvent.click(screen.getByRole("button", { name: "启动测试执行" }));
 
     await waitFor(() => expect(onCreate).toHaveBeenCalledWith("version-1"));

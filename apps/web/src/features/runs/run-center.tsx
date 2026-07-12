@@ -12,6 +12,7 @@ import {
   Search,
   Square,
   Timer,
+  Eye,
 } from "lucide-react";
 import Link from "next/link";
 import { type ReactNode, useMemo, useState } from "react";
@@ -30,6 +31,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { TableActionButton } from "@/components/ui/table-actions";
+import { TruncatedText } from "@/components/ui/truncated-text";
 
 type PlanVersionOption = { id: string; label: string };
 type CreatedRun = { id?: string } | void;
@@ -237,14 +240,14 @@ export function RunCenter({
             title={runs.length ? "没有匹配的运行" : "暂无运行记录"}
           />
         ) : (
-          <Table>
+          <Table className="w-full table-fixed">
             <TableHeader className="bg-[var(--canvas-soft)]">
               <TableRow>
-                <TableHead>运行</TableHead>
-                <TableHead>状态</TableHead>
-                <TableHead>进度</TableHead>
-                <TableHead>创建时间</TableHead>
-                <TableHead className="w-32">操作</TableHead>
+                <TableHead className="w-[34%]">运行</TableHead>
+                <TableHead className="w-[14%]">状态</TableHead>
+                <TableHead className="w-[14%]">进度</TableHead>
+                <TableHead className="w-[26%]">创建时间</TableHead>
+                <TableHead className="w-20">操作</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -259,10 +262,15 @@ export function RunCenter({
                         <Activity aria-hidden="true" className="size-4" />
                       </span>
                       <div>
-                        <p className="font-medium">Run {run.id.slice(0, 8)}</p>
-                        <p className="mt-0.5 text-xs text-[var(--muted)]">
+                        <TruncatedText
+                          className="font-medium"
+                          value={`Run ${run.id}`}
+                        >
+                          Run {run.id.slice(0, 8)}
+                        </TruncatedText>
+                        <TruncatedText className="mt-0.5 text-xs text-[var(--muted)]">
                           Workflow {run.workflow_id ?? "待启动"}
-                        </p>
+                        </TruncatedText>
                       </div>
                     </div>
                   </TableCell>
@@ -280,15 +288,14 @@ export function RunCenter({
                     {new Date(run.created_at).toLocaleString("zh-CN")}
                   </TableCell>
                   <TableCell>
-                    <Button
+                    <TableActionButton
                       asChild
-                      className="whitespace-nowrap"
-                      variant="ghost"
+                      label={`查看运行 ${run.id} 结果`}
                     >
                       <Link href={`/projects/${projectId}/runs/${run.id}`}>
-                        查看结果
+                        <Eye aria-hidden="true" />
                       </Link>
-                    </Button>
+                    </TableActionButton>
                   </TableCell>
                 </TableRow>
               ))}

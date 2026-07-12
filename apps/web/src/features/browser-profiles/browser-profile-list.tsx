@@ -40,6 +40,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Skeleton } from "@/components/uiverse";
+import { TableActionButton } from "@/components/ui/table-actions";
+import { TruncatedText } from "@/components/ui/truncated-text";
 
 import type { BrowserProfile } from "./api";
 
@@ -426,12 +428,12 @@ export function BrowserProfileList({
           <Table className="w-full table-fixed">
             <TableHeader className="bg-[var(--canvas-soft)]">
               <TableRow>
-                <TableHead className="w-[24%]">实例</TableHead>
-                <TableHead className="w-[18%]">目标域名</TableHead>
+                <TableHead className="w-[28%]">实例</TableHead>
+                <TableHead className="w-[20%]">目标域名</TableHead>
                 <TableHead className="w-[10%]">状态</TableHead>
                 <TableHead className="w-[13%]">登录态</TableHead>
-                <TableHead className="w-[11%]">最近验证</TableHead>
-                <TableHead className="w-[24%] whitespace-nowrap">
+                <TableHead className="w-[15%]">最近验证</TableHead>
+                <TableHead className="w-[14%] whitespace-nowrap">
                   操作
                 </TableHead>
               </TableRow>
@@ -441,14 +443,18 @@ export function BrowserProfileList({
                 <TableRow key={profile.profile_id}>
                   <TableCell className="min-w-0">
                     <div className="mx-auto min-w-0 max-w-full text-center">
-                      <p className="truncate font-medium">{profile.name}</p>
+                      <TruncatedText className="font-medium">
+                        {profile.name}
+                      </TruncatedText>
                       <p className="mt-0.5 truncate text-xs text-[var(--muted)]">
                         计划选择后自动复用
                       </p>
                     </div>
                   </TableCell>
-                  <TableCell className="truncate text-[var(--muted)]">
-                    {profile.target_domain || (
+                  <TableCell className="text-[var(--muted)]">
+                    {profile.target_domain ? (
+                      <TruncatedText>{profile.target_domain}</TruncatedText>
+                    ) : (
                       <span className="italic">未设置</span>
                     )}
                   </TableCell>
@@ -474,65 +480,48 @@ export function BrowserProfileList({
                     <div className="mx-auto flex w-fit max-w-full flex-nowrap items-center justify-center gap-2">
                       {profile.status === "running" ? (
                         <>
-                          <Button
-                            className="h-8 shrink-0 whitespace-nowrap px-4 text-xs"
+                          <TableActionButton
                             disabled={
                               busyProfileId === profile.profile_id ||
                               !onCompleteLogin
                             }
+                            label={`完成${profile.name}登录`}
                             onClick={() => void handleCompleteLogin(profile)}
-                            variant="primary"
                           >
-                            我已完成登录
-                          </Button>
-                          <Button
-                            aria-label={`停止浏览器 ${profile.name}`}
-                            className="h-8 shrink-0 whitespace-nowrap px-3 text-xs"
+                            <UserCheck aria-hidden="true" />
+                          </TableActionButton>
+                          <TableActionButton
                             disabled={
                               busyProfileId === profile.profile_id || !onStop
                             }
+                            label={`停止浏览器 ${profile.name}`}
                             onClick={() => void handleStop(profile)}
-                            variant="secondary"
                           >
-                            <Square
-                              aria-hidden="true"
-                              className="mr-1 size-3"
-                            />
-                            停止
-                          </Button>
+                            <Square aria-hidden="true" />
+                          </TableActionButton>
                         </>
                       ) : (
                         <>
-                          <Button
-                            className="h-8 shrink-0 whitespace-nowrap px-4 text-xs"
+                          <TableActionButton
                             disabled={
                               busyProfileId === profile.profile_id || !onStart
                             }
+                            label={`启动${profile.name}并登录`}
                             onClick={() => void handleStart(profile)}
-                            variant="primary"
                           >
-                            <PlayCircle
-                              aria-hidden="true"
-                              className="mr-1 size-4"
-                            />
-                            启动并登录
-                          </Button>
+                            <PlayCircle aria-hidden="true" />
+                          </TableActionButton>
                           {profile.auth_state_status === "ready" ? (
-                            <Button
-                              className="h-8 shrink-0 whitespace-nowrap px-3 text-xs"
+                            <TableActionButton
                               disabled={
                                 busyProfileId === profile.profile_id ||
                                 !onVerify
                               }
+                              label={`验证${profile.name}登录态`}
                               onClick={() => void handleVerify(profile)}
-                              variant="secondary"
                             >
-                              <ShieldCheck
-                                aria-hidden="true"
-                                className="mr-1 size-3"
-                              />
-                              验证登录态
-                            </Button>
+                              <ShieldCheck aria-hidden="true" />
+                            </TableActionButton>
                           ) : null}
                         </>
                       )}

@@ -24,6 +24,12 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  TableActionButton,
+  TableActions,
+  tableActionHeadClass,
+} from "@/components/ui/table-actions";
+import { TruncatedText } from "@/components/ui/truncated-text";
 
 type TestAccount = {
   id: string;
@@ -112,7 +118,7 @@ export function TestAccountList({
                 <TableHead className="w-32">类型</TableHead>
                 <TableHead className="w-40">凭证（掩码）</TableHead>
                 <TableHead className="w-24">状态</TableHead>
-                <TableHead className="w-32">操作</TableHead>
+                <TableHead className={tableActionHeadClass}>操作</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -126,11 +132,13 @@ export function TestAccountList({
                       <span className="grid size-8 shrink-0 place-items-center rounded-[var(--radius-md)] bg-[var(--canvas-soft)]">
                         <User aria-hidden="true" className="size-4" />
                       </span>
-                      <div>
-                        <p className="font-medium">{account.name}</p>
-                        <p className="mt-0.5 text-xs text-[var(--muted)]">
+                      <div className="min-w-0">
+                        <TruncatedText className="font-medium">
+                          {account.name}
+                        </TruncatedText>
+                        <TruncatedText className="mt-0.5 text-xs text-[var(--muted)]">
                           {account.username}
-                        </p>
+                        </TruncatedText>
                       </div>
                     </div>
                   </TableCell>
@@ -150,32 +158,31 @@ export function TestAccountList({
                     </Badge>
                   </TableCell>
                   <TableCell className="text-center">
-                    <div className="flex justify-center gap-1">
+                    <TableActions label={account.name}>
                       {onToggleEnabled && (
-                        <Button
-                          aria-label={account.enabled ? "禁用" : "启用"}
+                        <TableActionButton
+                          label={`${account.enabled ? "禁用" : "启用"}${account.name}`}
                           onClick={() =>
                             onToggleEnabled(account.id, !account.enabled)
                           }
-                          variant="ghost"
                         >
                           {account.enabled ? (
                             <EyeOff className="size-4" />
                           ) : (
                             <Eye className="size-4" />
                           )}
-                        </Button>
+                        </TableActionButton>
                       )}
                       {onDelete && (
-                        <Button
-                          aria-label={`删除${account.name}`}
+                        <TableActionButton
+                          label={`删除${account.name}`}
                           onClick={() => onDelete(account.id)}
-                          variant="ghost"
+                          tone="danger"
                         >
                           <Trash2 className="size-4 text-[var(--danger)]" />
-                        </Button>
+                        </TableActionButton>
                       )}
-                    </div>
+                    </TableActions>
                   </TableCell>
                 </TableRow>
               ))}

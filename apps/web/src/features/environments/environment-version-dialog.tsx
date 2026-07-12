@@ -5,7 +5,7 @@ import type {
   EnvironmentVersionResponse,
   UpdateEnvironmentVersionRequest,
 } from "@warmy/generated-api-client";
-import { Plus } from "lucide-react";
+import { Plus, Trash2 } from "lucide-react";
 import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -17,6 +17,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { TableActionButton } from "@/components/ui/table-actions";
 
 import type { CredentialBinding } from "./api";
 
@@ -447,16 +448,15 @@ function KeyValueEditor({
                 value={row.value}
               />
               {!disabled ? (
-                <Button
-                  aria-label={`删除${label}`}
+                <TableActionButton
                   onClick={() =>
                     onChange(rows.filter((item) => item.id !== row.id))
                   }
-                  type="button"
-                  variant="danger"
+                  label={`删除${label}`}
+                  tone="danger"
                 >
-                  删除
-                </Button>
+                  <Trash2 aria-hidden="true" />
+                </TableActionButton>
               ) : null}
             </div>
           ))}

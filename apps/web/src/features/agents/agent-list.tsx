@@ -5,7 +5,15 @@ import type {
   AgentType,
   CreateAgentRequest,
 } from "@warmy/generated-api-client";
-import { Bot, CheckCircle2, GitCompare, Plus, Rocket } from "lucide-react";
+import {
+  Bot,
+  CheckCircle2,
+  GitCompare,
+  Plus,
+  Rocket,
+  Settings2,
+  Trash2,
+} from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 
@@ -31,9 +39,11 @@ import {
 } from "@/components/ui/table";
 import {
   TableActions,
+  TableActionButton,
   tableActionCellClass,
   tableActionHeadClass,
 } from "@/components/ui/table-actions";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { Skeleton, Tooltip } from "@/components/uiverse";
 
 type AgentListProps = {
@@ -136,10 +146,12 @@ export function AgentList({
                         <Bot aria-hidden="true" className="size-4" />
                       </span>
                       <div className="min-w-0">
-                        <p className="truncate font-medium">{agent.name}</p>
-                        <p className="mt-0.5 truncate text-xs text-[var(--muted)]">
+                        <TruncatedText className="font-medium">
+                          {agent.name}
+                        </TruncatedText>
+                        <TruncatedText className="mt-0.5 text-xs text-[var(--muted)]">
                           {agent.description || "暂无描述"}
-                        </p>
+                        </TruncatedText>
                       </div>
                     </div>
                   </TableCell>
@@ -162,18 +174,13 @@ export function AgentList({
                   </TableCell>
                   <TableCell className={tableActionCellClass}>
                     <TableActions label={agent.name}>
-                      <Button
-                        asChild
-                        className="shrink-0 px-2.5"
-                        variant="ghost"
-                      >
+                      <TableActionButton asChild label={`管理${agent.name}`}>
                         <Link
-                          aria-label={`管理${agent.name}`}
                           href={`/projects/${projectId}/agents/${agent.id}`}
                         >
-                          管理
+                          <Settings2 aria-hidden="true" />
                         </Link>
-                      </Button>
+                      </TableActionButton>
                       {onDelete ? (
                         <ConfirmDeleteButton
                           label={agent.name}
@@ -362,10 +369,10 @@ function ConfirmDeleteButton({
       <DialogTrigger asChild>
         <Button
           aria-label={`删除${label}`}
-          className="shrink-0 border-transparent bg-transparent px-2.5 hover:bg-[var(--danger-subtle)]"
+          className="size-8 shrink-0 border-transparent bg-transparent p-0 hover:bg-[var(--danger-subtle)]"
           variant="danger"
         >
-          删除
+          <Trash2 aria-hidden="true" className="size-4" />
         </Button>
       </DialogTrigger>
       <DialogContent>

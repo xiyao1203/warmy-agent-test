@@ -268,8 +268,8 @@ function ExperimentCard({
               <summary className="cursor-pointer text-xs font-medium text-[var(--muted)]">
                 查看逐用例提升和退化
               </summary>
-              <div className="mt-2 overflow-auto">
-                <table className="w-full text-xs">
+              <div className="mt-2 overflow-hidden">
+                <table className="w-full table-fixed text-xs">
                   <thead>
                     <tr className="border-b border-[var(--hairline)] text-left text-[var(--muted)]">
                       <th className="pb-1.5 pr-3">用例</th>

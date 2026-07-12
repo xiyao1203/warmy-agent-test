@@ -50,10 +50,9 @@ describe("BrowserProfileList", () => {
     expect(screen.getByText(/Worker 通过短期租约恢复登录态/)).toBeVisible();
     expect(screen.getByText("管理员浏览器")).toBeVisible();
     expect(screen.getByText("登录态可用")).toBeVisible();
-    expect(screen.getByRole("button", { name: "启动并登录" })).toHaveClass(
-      "shrink-0",
-      "whitespace-nowrap",
-    );
+    expect(
+      screen.getByRole("button", { name: "启动管理员浏览器并登录" }),
+    ).toHaveClass("size-8", "p-0");
     expect(
       screen.getByRole("button", { name: "管理管理员浏览器" }),
     ).toHaveClass("shrink-0");
@@ -121,11 +120,12 @@ describe("BrowserProfileList", () => {
     );
 
     expect(screen.getByText("登录中")).toBeVisible();
-    expect(screen.getByRole("button", { name: "我已完成登录" })).toHaveClass(
-      "shrink-0",
-      "whitespace-nowrap",
+    expect(
+      screen.getByRole("button", { name: "完成管理员浏览器登录" }),
+    ).toHaveClass("size-8", "p-0");
+    fireEvent.click(
+      screen.getByRole("button", { name: "完成管理员浏览器登录" }),
     );
-    fireEvent.click(screen.getByRole("button", { name: "我已完成登录" }));
     await waitFor(() =>
       expect(onCompleteLogin).toHaveBeenCalledWith("profile-1", {
         stop_after_save: true,
@@ -150,7 +150,9 @@ describe("BrowserProfileList", () => {
       />,
     );
 
-    fireEvent.click(screen.getByRole("button", { name: "验证登录态" }));
+    fireEvent.click(
+      screen.getByRole("button", { name: "验证管理员浏览器登录态" }),
+    );
     await waitFor(() => expect(onVerify).toHaveBeenCalledWith("profile-1"));
     expect(
       screen.queryByText(/\/tmp|storage_state|9222/),

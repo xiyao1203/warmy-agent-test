@@ -7,7 +7,7 @@ import type {
   UserResponse,
   UserStatus,
 } from "@warmy/generated-api-client";
-import { Search } from "lucide-react";
+import { Eye, Search } from "lucide-react";
 import { useMemo, useState } from "react";
 
 import { Badge } from "@/components/ui/badge";
@@ -22,6 +22,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { TableActionButton } from "@/components/ui/table-actions";
+import { TruncatedText } from "@/components/ui/truncated-text";
 
 import { UserDrawer } from "./user-drawer";
 import { CreateUserDialog } from "./user-dialog";
@@ -215,10 +217,12 @@ export function UserManagement({
                   key={user.id}
                 >
                   <TableCell>
-                    <p className="font-medium">{user.display_name}</p>
-                    <p className="mt-0.5 text-xs text-[var(--muted)]">
+                    <TruncatedText className="font-medium">
+                      {user.display_name}
+                    </TruncatedText>
+                    <TruncatedText className="mt-0.5 text-xs text-[var(--muted)]">
                       {user.email}
-                    </p>
+                    </TruncatedText>
                   </TableCell>
                   <TableCell>
                     <Badge
@@ -242,14 +246,12 @@ export function UserManagement({
                     )}
                   </TableCell>
                   <TableCell>
-                    <button
-                      aria-label={`查看${user.display_name}`}
-                      className="rounded-[var(--radius-md)] px-2 py-1 text-sm text-[var(--primary)] hover:bg-[var(--primary-subtle)]"
+                    <TableActionButton
+                      label={`查看${user.display_name}`}
                       onClick={() => setSelectedUser(user)}
-                      type="button"
                     >
-                      查看
-                    </button>
+                      <Eye aria-hidden="true" />
+                    </TableActionButton>
                   </TableCell>
                 </TableRow>
               ))}
