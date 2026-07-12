@@ -18,10 +18,11 @@ import { Button } from "@/components/ui/button";
 import { Skeleton, SkeletonText } from "@/components/uiverse";
 import { Tooltip } from "@/components/uiverse";
 
-import type { ArtifactItem } from "./api";
+import type { ArtifactItem, RunTrustLoopData } from "./api";
 import { artifactDownloadUrl, uploadArtifact } from "./api";
 import { ReportDownloadButton } from "./report-download-button";
 import { StatusBadge } from "./run-center";
+import { TrustLoopPanel } from "./trust-loop-panel";
 import { TraceTimeline, TraceTree, type TraceSpan } from "./trace-tree";
 
 export function RunDetail({
@@ -32,6 +33,9 @@ export function RunDetail({
   projectId,
   run,
   traceSpans = [],
+  trustLoop,
+  trustLoopError = false,
+  trustLoopLoading = false,
 }: {
   artifacts?: ArtifactItem[];
   cases?: RunCaseResponse[];
@@ -40,6 +44,9 @@ export function RunDetail({
   projectId: string;
   run?: RunResponse;
   traceSpans?: TraceSpan[];
+  trustLoop?: RunTrustLoopData;
+  trustLoopError?: boolean;
+  trustLoopLoading?: boolean;
 }) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
@@ -58,7 +65,7 @@ export function RunDetail({
     ? Math.round((finishedCases / run.total_cases) * 100)
     : 0;
   return (
-    <div className="min-w-0 bg-[var(--canvas)] px-6 py-6">
+    <div className="min-w-0 bg-[var(--canvas)] px-4 py-6 sm:px-6">
       <header className="flex flex-wrap items-start justify-between gap-4 border-b border-[var(--hairline)] pb-5">
         <div>
           <p className="text-xs font-medium text-[var(--body)]">运行详情</p>
@@ -70,7 +77,7 @@ export function RunDetail({
             {run.error_cases} 错误 · {run.cancelled_cases} 已取消
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2 max-sm:w-full">
           <StatusBadge status={run.status} />
           <Tooltip content="下载测试报告（JSON/JUnit/HTML）">
             <ReportDownloadButton projectId={projectId} runId={run.id} />
@@ -101,7 +108,7 @@ export function RunDetail({
         </div>
       </header>
       {/* Tabs */}
-      <nav className="mt-5 flex gap-1 border-b border-[var(--hairline)]">
+      <nav className="mt-5 grid grid-cols-4 gap-1 border-b border-[var(--hairline)]">
         {(
           [
             ["overview", "概览"],
@@ -112,7 +119,7 @@ export function RunDetail({
         ).map(([key, label]) => (
           <button
             key={key}
-            className={`rounded-t px-4 py-2 text-sm font-medium transition-colors ${
+            className={`min-w-0 rounded-t px-2 py-2 text-sm font-medium transition-colors sm:px-4 ${
               activeTab === key
                 ? "border-b-2 border-[var(--primary)] text-[var(--primary)]"
                 : "text-[var(--muted)] hover:text-[var(--ink)]"
@@ -138,6 +145,15 @@ export function RunDetail({
                 <SummaryItem label="错误" value={String(run.error_cases)} />
               </dl>
             </div>
+            <TrustLoopPanel
+              data={trustLoop}
+              error={
+                trustLoopError ? "可信闭环结果加载失败，请稍后重试" : undefined
+              }
+              loading={trustLoopLoading}
+              projectId={projectId}
+              runId={run.id}
+            />
           </section>
           <aside className="h-fit rounded-[var(--radius-lg)] border border-[var(--hairline)] bg-[var(--surface)] p-5">
             <div className="flex items-center justify-between gap-3">

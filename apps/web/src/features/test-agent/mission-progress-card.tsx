@@ -4,6 +4,8 @@ import { CheckCircle2, CircleAlert, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
+import { getRunTrustLoop, type RunTrustLoopData } from "@/features/runs";
+
 import { cancelMission, getMission, resumeMission } from "./api";
 import type { MissionProgressOutput } from "./mission-types";
 import { TrustLoopResult } from "./trust-loop-result";
@@ -17,6 +19,7 @@ export function MissionProgressCard({
 }) {
   const [live, setLive] = useState(output);
   const [busy, setBusy] = useState(false);
+  const [trustLoop, setTrustLoop] = useState<RunTrustLoopData>();
   useEffect(() => {
     if (["completed", "failed", "cancelled"].includes(live.status)) return;
     let active = true;
@@ -40,6 +43,28 @@ export function MissionProgressCard({
       window.clearInterval(timer);
     };
   }, [live.status, output.mission_id, projectId]);
+  useEffect(() => {
+    if (!live.run_id) return;
+    let active = true;
+    let timer: number | undefined;
+    const refresh = async () => {
+      try {
+        const value = await getRunTrustLoop(projectId, live.run_id!);
+        if (!active) return;
+        setTrustLoop(value);
+        if (["pending", "running"].includes(value.summary.status)) {
+          timer = window.setTimeout(refresh, 2000);
+        }
+      } catch {
+        if (active) timer = window.setTimeout(refresh, 2000);
+      }
+    };
+    void refresh();
+    return () => {
+      active = false;
+      if (timer !== undefined) window.clearTimeout(timer);
+    };
+  }, [live.run_id, projectId]);
   const terminal = ["completed", "failed", "cancelled"].includes(live.status);
   const failed = live.status === "failed";
   const needsAttention = live.status === "needs_attention";
@@ -116,8 +141,13 @@ export function MissionProgressCard({
           </button>
         ) : null}
       </div>
-      {live.trust_loop ? (
-        <TrustLoopResult projectId={projectId} result={live.trust_loop} />
+      {live.run_id ? (
+        <TrustLoopResult
+          data={trustLoop}
+          loading={!trustLoop}
+          projectId={projectId}
+          runId={live.run_id}
+        />
       ) : null}
     </div>
   );

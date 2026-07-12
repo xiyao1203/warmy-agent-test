@@ -2,10 +2,22 @@ import {
   cancelRunApiV1ProjectsProjectIdRunsRunIdCancelPost,
   createRunApiV1ProjectsProjectIdRunsPost,
   getRunApiV1ProjectsProjectIdRunsRunIdGet,
+  getCalibrationApiV1ProjectsProjectIdRunsRunIdCalibrationGet,
+  getJointGateApiV1ProjectsProjectIdRunsRunIdJointGateGet,
+  getTrustLoopApiV1ProjectsProjectIdRunsRunIdTrustLoopGet,
   listCasesApiV1ProjectsProjectIdRunsRunIdCasesGet,
+  listDiagnosticsApiV1ProjectsProjectIdRunsRunIdDiagnosticsGet,
+  listRegressionsApiV1ProjectsProjectIdRunsRunIdRegressionsGet,
   listRunsApiV1ProjectsProjectIdRunsGet,
   listPlansApiV1ProjectsProjectIdTestPlansGet,
   listVersionsApiV1ProjectsProjectIdTestPlansPlanIdVersionsGet,
+} from "@warmy/generated-api-client";
+import type {
+  CalibrationResponse,
+  DiagnosticResponse,
+  JointGateDecisionResponse,
+  RegressionCandidateResponse,
+  TrustLoopResponse,
 } from "@warmy/generated-api-client";
 
 import { apiClient } from "@/lib/api/client";
@@ -53,6 +65,58 @@ export async function listRunCases(projectId: string, runId: string) {
     throwOnError: true,
   });
   return data.items;
+}
+
+export type RunTrustLoopData = {
+  summary: TrustLoopResponse;
+  diagnostics: DiagnosticResponse[];
+  regressions: RegressionCandidateResponse[];
+  calibration: CalibrationResponse;
+  gate: JointGateDecisionResponse;
+};
+
+export async function getRunTrustLoop(
+  projectId: string,
+  runId: string,
+): Promise<RunTrustLoopData> {
+  const path = { project_id: projectId, run_id: runId };
+  const [summary, diagnostics, regressions, calibration, gate] =
+    await Promise.all([
+      getTrustLoopApiV1ProjectsProjectIdRunsRunIdTrustLoopGet({
+        client: apiClient,
+        path,
+        throwOnError: true,
+      }),
+      listDiagnosticsApiV1ProjectsProjectIdRunsRunIdDiagnosticsGet({
+        client: apiClient,
+        path,
+        query: { limit: 100, offset: 0 },
+        throwOnError: true,
+      }),
+      listRegressionsApiV1ProjectsProjectIdRunsRunIdRegressionsGet({
+        client: apiClient,
+        path,
+        query: { limit: 100, offset: 0 },
+        throwOnError: true,
+      }),
+      getCalibrationApiV1ProjectsProjectIdRunsRunIdCalibrationGet({
+        client: apiClient,
+        path,
+        throwOnError: true,
+      }),
+      getJointGateApiV1ProjectsProjectIdRunsRunIdJointGateGet({
+        client: apiClient,
+        path,
+        throwOnError: true,
+      }),
+    ]);
+  return {
+    calibration: calibration.data,
+    diagnostics: diagnostics.data.items,
+    gate: gate.data,
+    regressions: regressions.data.items,
+    summary: summary.data,
+  };
 }
 
 export async function cancelRun(projectId: string, runId: string) {

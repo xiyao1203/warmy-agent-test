@@ -39,6 +39,17 @@ def test_candidate_cannot_publish_before_reproduction() -> None:
 def test_candidate_publishes_only_after_matching_reproduction() -> None:
     candidate = RegressionCandidate.draft(uuid4(), snapshot())
     candidate.start_reproduction()
+    first_evidence = uuid4()
+    candidate.record_reproduction(
+        reproduced=True,
+        observed_fingerprint=candidate.fingerprint,
+        evidence_ids=(first_evidence,),
+    )
+
+    assert candidate.state is RegressionState.REPRODUCING
+    with pytest.raises(ReproductionRequiredError):
+        candidate.publish()
+
     candidate.record_reproduction(
         reproduced=True,
         observed_fingerprint=candidate.fingerprint,
@@ -46,6 +57,26 @@ def test_candidate_publishes_only_after_matching_reproduction() -> None:
     )
     candidate.publish()
     assert candidate.state is RegressionState.PUBLISHED
+
+
+def test_duplicate_reproduction_evidence_does_not_count_as_independent() -> None:
+    candidate = RegressionCandidate.draft(uuid4(), snapshot())
+    candidate.start_reproduction()
+    evidence_id = uuid4()
+
+    candidate.record_reproduction(
+        reproduced=True,
+        observed_fingerprint=candidate.fingerprint,
+        evidence_ids=(evidence_id,),
+    )
+    candidate.record_reproduction(
+        reproduced=True,
+        observed_fingerprint=candidate.fingerprint,
+        evidence_ids=(evidence_id,),
+    )
+
+    assert candidate.state is RegressionState.REPRODUCING
+    assert candidate.reproduction_evidence_ids == (evidence_id,)
 
 
 @pytest.mark.asyncio

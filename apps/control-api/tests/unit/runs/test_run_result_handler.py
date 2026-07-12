@@ -70,6 +70,14 @@ class InMemoryRunRepository:
         return []
 
 
+class RecordingPostprocessCreator:
+    def __init__(self) -> None:
+        self.calls: list[tuple[object, object]] = []
+
+    async def ensure_created(self, project_id, run_id) -> None:
+        self.calls.append((project_id, run_id))
+
+
 def make_run_with_cases() -> tuple[Run, list[RunCase]]:
     run = Run.create(
         run_id=RunId.new(),
@@ -210,6 +218,36 @@ async def test_apply_run_result_is_idempotent_after_terminal_run() -> None:
     assert first.status is RunStatus.PASSED
     assert second.status is RunStatus.PASSED
     assert repo.saved_results == 1
+
+
+@pytest.mark.asyncio
+async def test_apply_run_result_creates_one_postprocess_job_for_terminal_run() -> None:
+    run, cases = make_run_with_cases()
+    repo = InMemoryRunRepository(run, cases)
+    postprocess = RecordingPostprocessCreator()
+    handler = ApplyRunResultHandler(runs=repo, postprocess=postprocess)
+    command = ApplyRunResultCommand(
+        project_id=run.project_id,
+        run_id=run.run_id,
+        cases=[
+            ApplyRunCaseResult(
+                run_case_id=case.run_case_id,
+                status=RunCaseStatus.PASSED,
+                output={"ok": True},
+                trace=[],
+                duration_ms=1,
+            )
+            for case in cases
+        ],
+    )
+
+    await handler.execute(command)
+    await handler.execute(command)
+
+    assert postprocess.calls == [
+        (run.project_id.value, run.run_id.value),
+        (run.project_id.value, run.run_id.value),
+    ]
 
 
 @pytest.mark.asyncio

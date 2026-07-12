@@ -13,6 +13,11 @@ class Model:
         return self.proposal
 
 
+class FailingModel:
+    async def propose(self, evidence_view: tuple[dict[str, object], ...]) -> DiagnosticProposal:
+        raise RuntimeError("model quota exhausted")
+
+
 @pytest.mark.asyncio
 async def test_diagnosis_without_citations_is_inconclusive() -> None:
     service = DiagnosticService(
@@ -77,3 +82,16 @@ async def test_diagnosis_accepts_evidence_bounded_hypothesis() -> None:
 
     assert result.status == "completed"
     assert result.hypotheses[0].evidence_ids == (evidence_id,)
+
+
+@pytest.mark.asyncio
+async def test_model_failure_degrades_to_inconclusive_without_leaking_provider_error() -> None:
+    evidence_id = uuid4()
+
+    result = await DiagnosticService(FailingModel()).diagnose(
+        ({"id": str(evidence_id), "kind": "http", "error_code": "target_5xx"},)
+    )
+
+    assert result.status == "inconclusive"
+    assert result.reason == "Diagnostic model unavailable"
+    assert "quota" not in result.reason

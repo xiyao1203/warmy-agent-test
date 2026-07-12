@@ -1,81 +1,58 @@
 import { render, screen } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import type { RunTrustLoopData } from "@/features/runs";
+import { expect, it } from "vitest";
 
 import { TrustLoopResult } from "../trust-loop-result";
 
-describe("TrustLoopResult", () => {
-  it("shows independent outcomes and the evidence-backed blocking rule", () => {
-    render(
-      <TrustLoopResult
-        projectId="project-1"
-        result={{
-          outcomes: {
-            execution: {
-              status: "passed",
-              code: "passed",
-              evidence_ids: ["evidence-1"],
-            },
-            assertion: { status: "passed", code: "passed", evidence_ids: [] },
-            quality: { status: "passed", code: "passed", evidence_ids: [] },
-            security: {
-              status: "failed",
-              code: "critical_finding",
-              evidence_ids: ["evidence-1"],
-            },
-          },
-          diagnostics: [],
-          regressions: [],
-          gate: {
-            status: "block",
-            rules: [
-              {
-                code: "critical_security",
-                status: "block",
-                threshold: "<=0",
-                actual: "1",
-                reason: "检测到高危安全问题",
-                evidence_refs: ["evidence-1"],
-              },
-            ],
-          },
-        }}
-      />,
-    );
+it("reuses the persisted Run trust-loop view in Test Agent", () => {
+  const data: RunTrustLoopData = {
+    summary: {
+      job_id: "job-1",
+      project_id: "project-1",
+      run_id: "run-1",
+      pipeline_version: "trust-loop-v1",
+      status: "completed_with_warnings",
+      current_stage: "finalize",
+      classifications: [],
+      diagnostics: { status: "inconclusive", items: [] },
+      regressions: [],
+      calibration: { status: "inconclusive", metrics: {} },
+      joint_gate: { decision: "quarantine" },
+      warning_codes: ["diagnostic_model_unavailable"],
+      error_type: null,
+      created_at: "2026-07-12T00:00:00Z",
+      updated_at: "2026-07-12T00:00:00Z",
+      completed_at: "2026-07-12T00:00:00Z",
+    },
+    diagnostics: [],
+    regressions: [],
+    calibration: {
+      id: null,
+      pipeline_version: "trust-loop-v1",
+      status: "inconclusive",
+      sample_set_version: null,
+      metrics: {},
+      arbitration: {},
+      evaluator_version: null,
+      created_at: null,
+      updated_at: null,
+    },
+    gate: {
+      id: null,
+      pipeline_version: "trust-loop-v1",
+      status: "completed",
+      baseline_run_id: null,
+      decision: "quarantine",
+      rules: [],
+      input_facts: {},
+      explanation: null,
+      created_at: null,
+    },
+  };
 
-    expect(screen.getByText("执行通过")).toBeVisible();
-    expect(screen.getByText("安全阻断")).toBeVisible();
-    expect(screen.getByText(/检测到高危安全问题/)).toBeVisible();
-    expect(
-      screen.getAllByRole("link", { name: "查看证据" })[0],
-    ).toHaveAttribute("href", "/projects/project-1/runs/evidence/evidence-1");
-  });
+  render(<TrustLoopResult data={data} projectId="project-1" runId="run-1" />);
 
-  it("renders review and quarantine without calling them failures", () => {
-    render(
-      <TrustLoopResult
-        projectId="project-1"
-        result={{
-          outcomes: {
-            execution: { status: "passed", code: "passed", evidence_ids: [] },
-            assertion: { status: "passed", code: "passed", evidence_ids: [] },
-            quality: {
-              status: "needs_review",
-              code: "uncalibrated",
-              evidence_ids: ["e-2"],
-            },
-            security: { status: "passed", code: "passed", evidence_ids: [] },
-          },
-          diagnostics: [],
-          regressions: [
-            { id: "r-1", state: "quarantined", fingerprint: "abc" },
-          ],
-          gate: { status: "needs_review", rules: [] },
-        }}
-      />,
-    );
-
-    expect(screen.getByText("质量待复核")).toBeVisible();
-    expect(screen.getByText(/隔离区/)).toBeVisible();
-    expect(screen.getByText("门禁待复核")).toBeVisible();
-  });
+  expect(screen.getByText("完成（有警告）")).toBeVisible();
+  expect(screen.getByText("门禁隔离")).toBeVisible();
+  expect(screen.getByText("暂无回归候选")).toBeVisible();
 });

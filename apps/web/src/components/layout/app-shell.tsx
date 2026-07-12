@@ -12,6 +12,7 @@ import {
   type MouseEvent,
   type ReactNode,
   useCallback,
+  useEffect,
   useState,
 } from "react";
 
@@ -78,16 +79,27 @@ export function AppShell({
       localStorage.getItem("sidebar-collapsed"),
     );
   });
+  const [mobile, setMobile] = useState(() =>
+    typeof window === "undefined" ? false : window.innerWidth < 640,
+  );
+  useEffect(() => {
+    const query = window.matchMedia("(max-width: 639px)");
+    const update = () => setMobile(query.matches);
+    update();
+    query.addEventListener("change", update);
+    return () => query.removeEventListener("change", update);
+  }, []);
+  const effectiveCollapsed = collapsed || mobile;
   const [collapsedTooltip, setCollapsedTooltip] =
     useState<CollapsedSidebarTooltip>(null);
 
   const showCollapsedTooltip = useCallback(
     (label: string, target: HTMLElement) => {
-      if (!collapsed) return;
+      if (!effectiveCollapsed) return;
       const rect = target.getBoundingClientRect();
       setCollapsedTooltip({ label, top: rect.top + rect.height / 2 });
     },
-    [collapsed],
+    [effectiveCollapsed],
   );
 
   const hideCollapsedTooltip = useCallback(() => {
@@ -107,19 +119,19 @@ export function AppShell({
     show: showCollapsedTooltip,
   };
 
-  const sidebarWidth = collapsed ? "3.5rem" : "14rem";
+  const sidebarWidth = effectiveCollapsed ? "3.5rem" : "14rem";
 
   return (
     <div className="h-screen bg-[var(--canvas)] text-[var(--ink)]">
-      <header className="flex h-14 items-center justify-between gap-4 border-b border-[var(--hairline)] bg-[var(--canvas)] px-4">
-        <div className="flex min-w-0 items-center gap-5">
+      <header className="flex h-14 items-center justify-between gap-4 border-b border-[var(--hairline)] bg-[var(--canvas)] px-4 max-sm:gap-1 max-sm:px-2">
+        <div className="flex min-w-0 items-center gap-5 max-sm:gap-2">
           <Link
             aria-label="Warmy Agent Test"
             className="font-display flex shrink-0 items-center gap-2 text-base font-semibold"
             href="/login"
           >
-            <BrandMark compact={collapsed} />
-            {!collapsed && <span>Warmy Agent Test</span>}
+            <BrandMark compact={effectiveCollapsed} />
+            {!effectiveCollapsed && <span>Warmy Agent Test</span>}
           </Link>
           <ProjectSwitcher
             currentProjectId={currentProjectId}
@@ -146,7 +158,7 @@ export function AppShell({
           className="flex shrink-0 flex-col border-r border-[var(--hairline)] bg-[var(--surface)] p-2 transition-[width] duration-200"
           style={{ width: sidebarWidth }}
         >
-          {!collapsed && (
+          {!effectiveCollapsed && (
             <p className="px-3 pb-2 pt-2 text-[11px] font-semibold uppercase tracking-[0.66px] text-[var(--body)]">
               项目导航
             </p>
@@ -157,7 +169,7 @@ export function AppShell({
           >
             <ProjectNavLink
               activeMode="exact"
-              collapsed={collapsed}
+              collapsed={effectiveCollapsed}
               href="/projects"
               icon={<SidebarNavIcon iconName="project-list" tone="indigo" />}
               label="项目列表"
@@ -166,54 +178,54 @@ export function AppShell({
             {activeProjectId ? (
               <>
                 <ProjectNavLink
-                  collapsed={collapsed}
+                  collapsed={effectiveCollapsed}
                   href={projectWorkspacePath(activeProjectId)}
                   icon={<SidebarNavIcon iconName="test-agent" tone="azure" />}
                   label="测试 Agent"
                   tooltip={collapsedTooltipController}
                 />
                 <OverviewNavLink
-                  collapsed={collapsed}
+                  collapsed={effectiveCollapsed}
                   href={overviewHref}
                   tooltip={collapsedTooltipController}
                 />
                 <ProjectNavLink
-                  collapsed={collapsed}
+                  collapsed={effectiveCollapsed}
                   href={`/projects/${activeProjectId}/agents`}
                   icon={<SidebarNavIcon iconName="agent" tone="violet" />}
                   label="智能体"
                   tooltip={collapsedTooltipController}
                 />
                 <ProjectNavLink
-                  collapsed={collapsed}
+                  collapsed={effectiveCollapsed}
                   href={`/projects/${activeProjectId}/datasets`}
                   icon={<SidebarNavIcon iconName="test-case" tone="indigo" />}
                   label="测试用例"
                   tooltip={collapsedTooltipController}
                 />
                 <ProjectNavLink
-                  collapsed={collapsed}
+                  collapsed={effectiveCollapsed}
                   href={`/projects/${activeProjectId}/test-plans`}
                   icon={<SidebarNavIcon iconName="test-plan" tone="amber" />}
                   label="测试计划"
                   tooltip={collapsedTooltipController}
                 />
                 <ProjectNavLink
-                  collapsed={collapsed}
+                  collapsed={effectiveCollapsed}
                   href={`/projects/${activeProjectId}/runs`}
                   icon={<SidebarNavIcon iconName="test-run" tone="emerald" />}
                   label="测试执行"
                   tooltip={collapsedTooltipController}
                 />
                 <ProjectNavLink
-                  collapsed={collapsed}
+                  collapsed={effectiveCollapsed}
                   href={`/projects/${activeProjectId}/environments`}
                   icon={<SidebarNavIcon iconName="environment" tone="teal" />}
                   label="环境与凭证"
                   tooltip={collapsedTooltipController}
                 />
                 <ProjectNavLink
-                  collapsed={collapsed}
+                  collapsed={effectiveCollapsed}
                   href={`/projects/${activeProjectId}/browser-profiles`}
                   icon={
                     <SidebarNavIcon iconName="browser-profile" tone="cyan" />
@@ -222,42 +234,42 @@ export function AppShell({
                   tooltip={collapsedTooltipController}
                 />
                 <ProjectNavLink
-                  collapsed={collapsed}
+                  collapsed={effectiveCollapsed}
                   href={`/projects/${activeProjectId}/models`}
                   icon={<SidebarNavIcon iconName="model" tone="purple" />}
                   label="模型配置"
                   tooltip={collapsedTooltipController}
                 />
                 <ProjectNavLink
-                  collapsed={collapsed}
+                  collapsed={effectiveCollapsed}
                   href={`/projects/${activeProjectId}/scorers`}
                   icon={<SidebarNavIcon iconName="scorer" tone="orange" />}
                   label="评分器"
                   tooltip={collapsedTooltipController}
                 />
                 <ProjectNavLink
-                  collapsed={collapsed}
+                  collapsed={effectiveCollapsed}
                   href={`/projects/${activeProjectId}/experiments`}
                   icon={<SidebarNavIcon iconName="experiment" tone="fuchsia" />}
                   label="实验对比"
                   tooltip={collapsedTooltipController}
                 />
                 <ProjectNavLink
-                  collapsed={collapsed}
+                  collapsed={effectiveCollapsed}
                   href={`/projects/${activeProjectId}/reviews`}
                   icon={<SidebarNavIcon iconName="review" tone="rose" />}
                   label="人工审核"
                   tooltip={collapsedTooltipController}
                 />
                 <ProjectNavLink
-                  collapsed={collapsed}
+                  collapsed={effectiveCollapsed}
                   href={`/projects/${activeProjectId}/security`}
                   icon={<SidebarNavIcon iconName="security" tone="red" />}
                   label="安全测试"
                   tooltip={collapsedTooltipController}
                 />
                 <ProjectNavLink
-                  collapsed={collapsed}
+                  collapsed={effectiveCollapsed}
                   href={`/projects/${activeProjectId}/gates`}
                   icon={<SidebarNavIcon iconName="release-gate" tone="green" />}
                   label="发布门禁"
@@ -268,14 +280,14 @@ export function AppShell({
           </nav>
           {canManageUsers(user) ? (
             <div className="border-t border-[var(--hairline)] pt-3">
-              {!collapsed && (
+              {!effectiveCollapsed && (
                 <p className="px-3 pb-1.5 text-[11px] font-semibold uppercase tracking-[0.66px] text-[var(--body)]">
                   系统管理
                 </p>
               )}
               <Link
                 className={`flex h-9 items-center gap-3 rounded-[var(--radius-sm)] text-sm text-[var(--muted)] transition-colors hover:bg-[var(--canvas-soft)] hover:text-[var(--ink)] ${
-                  collapsed ? "justify-center px-0" : "px-3"
+                  effectiveCollapsed ? "justify-center px-0" : "px-3"
                 }`}
                 href="/system/users"
                 onBlur={hideCollapsedTooltip}
@@ -289,7 +301,7 @@ export function AppShell({
                 title="用户管理"
               >
                 <SidebarNavIcon iconName="user-management" tone="slate-blue" />
-                {!collapsed && <span>用户管理</span>}
+                {!effectiveCollapsed && <span>用户管理</span>}
               </Link>
             </div>
           ) : null}
@@ -297,7 +309,7 @@ export function AppShell({
             <button
               aria-expanded={!collapsed}
               aria-label={collapsed ? "展开侧边栏" : "收起侧边栏"}
-              className={`group relative flex h-9 w-full items-center gap-3 rounded-[var(--radius-sm)] text-sm text-[var(--muted)] transition-colors hover:bg-[var(--canvas-soft)] hover:text-[var(--ink)] ${
+              className={`group relative flex h-9 w-full items-center gap-3 rounded-[var(--radius-sm)] text-sm text-[var(--muted)] transition-colors hover:bg-[var(--canvas-soft)] hover:text-[var(--ink)] max-sm:hidden ${
                 collapsed ? "justify-center px-0" : "px-3"
               }`}
               onBlur={hideCollapsedTooltip}

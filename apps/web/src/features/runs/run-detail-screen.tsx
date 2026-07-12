@@ -5,6 +5,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 import {
   cancelRun,
+  getRunTrustLoop,
   getRun,
   listArtifacts,
   listRunCases,
@@ -51,6 +52,14 @@ export function RunDetailScreen({
   const artifactsQuery = useQuery({
     queryFn: () => listArtifacts(projectId, runId),
     queryKey: ["runs", projectId, runId, "artifacts"],
+  });
+  const trustLoopQuery = useQuery({
+    queryFn: () => getRunTrustLoop(projectId, runId),
+    queryKey: ["runs", projectId, runId, "trust-loop"],
+    refetchInterval: (query) =>
+      ["pending", "running"].includes(query.state.data?.summary.status ?? "")
+        ? 2000
+        : false,
   });
   const runStatus = runQuery.data?.status;
   const refetchRun = runQuery.refetch;
@@ -146,6 +155,9 @@ export function RunDetailScreen({
       onCancel={() => cancelMutation.mutateAsync()}
       projectId={projectId}
       run={runQuery.data}
+      trustLoop={trustLoopQuery.data}
+      trustLoopError={trustLoopQuery.isError}
+      trustLoopLoading={trustLoopQuery.isPending}
     />
   );
 }

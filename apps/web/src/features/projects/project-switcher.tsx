@@ -36,7 +36,7 @@ export function ProjectSwitcher({
     <Popover.Root onOpenChange={setOpen} open={open}>
       <Popover.Trigger asChild>
         <button
-          className="flex h-8 min-w-44 max-w-64 items-center justify-between gap-2 rounded-[var(--radius-md)] border border-[var(--hairline)] bg-[var(--surface)] px-2.5 text-sm hover:bg-[var(--canvas-soft)]"
+          className="flex h-8 min-w-44 max-w-64 items-center justify-between gap-2 rounded-[var(--radius-md)] border border-[var(--hairline)] bg-[var(--surface)] px-2.5 text-sm hover:bg-[var(--canvas-soft)] max-sm:w-28 max-sm:min-w-0"
           type="button"
         >
           <span className="truncate">{currentProject?.name ?? "选择项目"}</span>

@@ -30,15 +30,15 @@
 - Consumes: approved design `docs/superpowers/specs/2026-07-12-run-trust-loop-productization-design.md`
 - Produces: unique active task `TASK-20260712-003` with exact scope and acceptance commands
 
-- [ ] **Step 1: Replace the waiting task entry with the new active task**
+- [x] **Step 1: Replace the waiting task entry with the new active task**
 
 Record status `进行中`, the new specification and this plan, allowed modules, migration/API/Workflow/frontend scope, and the external real-target limitation inherited from `TASK-20260712-002`.
 
-- [ ] **Step 2: Add the same task to the progress ledger**
+- [x] **Step 2: Add the same task to the progress ledger**
 
 Keep `TASK-20260712-002` as `待验证`; do not claim the real-target gate passed.
 
-- [ ] **Step 3: Verify and commit**
+- [x] **Step 3: Verify and commit**
 
 Run: `git diff --check docs/当前任务.md docs/开发进度与变更记录.md`
 Expected: exit 0.
@@ -63,38 +63,38 @@ Commit: `docs: register run trust loop productization`
 - Produces: `RunPostprocessJob.create(project_id, run_id, pipeline_version)`, `start(workflow_id)`, `begin_stage(stage)`, `complete_stage(stage, output, warnings)`, `fail_stage(stage, error_type, error_message, required)`, `finalize()`
 - Produces: `PostprocessRepository.create_or_get(job)`, `get(project_id, run_id, pipeline_version)`, `save(job)`, `list_stage_results(project_id, job_id)`
 
-- [ ] **Step 1: Write failing state-machine tests**
+- [x] **Step 1: Write failing state-machine tests**
 
 Cover ordered stages, required-stage failure, optional-stage warning, final `completed_with_warnings`, and rejection of out-of-order transitions.
 
-- [ ] **Step 2: Run RED**
+- [x] **Step 2: Run RED**
 
 Run: `uv run pytest apps/control-api/tests/unit/run_postprocessing/test_domain.py -q`
 Expected: collection/import failure because the module does not exist.
 
-- [ ] **Step 3: Implement the minimal domain types**
+- [x] **Step 3: Implement the minimal domain types**
 
 Use `PostprocessStatus`, `PostprocessStage`, immutable `StageResult`, and a mutable aggregate that validates the fixed stage order `classify, diagnose, reproduce, calibrate, evaluate_gate, finalize`.
 
-- [ ] **Step 4: Run domain GREEN**
+- [x] **Step 4: Run domain GREEN**
 
 Run: `uv run pytest apps/control-api/tests/unit/run_postprocessing/test_domain.py -q`
 Expected: all pass.
 
-- [ ] **Step 5: Write failing repository and migration tests**
+- [x] **Step 5: Write failing repository and migration tests**
 
 Assert `(project_id, run_id, pipeline_version)` uniqueness, project-scoped reads, stage idempotency, composite project foreign keys, indexes and migration revision `0022`.
 
-- [ ] **Step 6: Run repository RED**
+- [x] **Step 6: Run repository RED**
 
 Run: `uv run pytest apps/control-api/tests/unit/run_postprocessing/test_repository.py apps/control-api/tests/integration/test_migrations.py -q`
 Expected: failures for missing tables/repository/revision.
 
-- [ ] **Step 7: Implement models, repository and migration**
+- [x] **Step 7: Implement models, repository and migration**
 
 Create `run_postprocess_jobs`, `run_postprocess_stage_results`, `run_diagnostics`, `run_regression_candidates`, `run_calibrations`, and `run_joint_gate_decisions`. Store structured payloads as JSON only after application validation; add project/run/status indexes and composite uniqueness.
 
-- [ ] **Step 8: Run GREEN and commit**
+- [x] **Step 8: Run GREEN and commit**
 
 Run: `uv run pytest apps/control-api/tests/unit/run_postprocessing apps/control-api/tests/integration/test_migrations.py -q`
 Expected: all pass, PostgreSQL-only case may skip without test URL.
@@ -117,24 +117,24 @@ Commit: `feat: persist run trust loop jobs`
 - Produces: `PostprocessScheduler.schedule(job) -> str`
 - Consumes from Run handler: `RunPostprocessPort.ensure_scheduled(project_id, run_id)` after `save_result` succeeds
 
-- [ ] **Step 1: Write failing duplicate-callback and scheduling tests**
+- [x] **Step 1: Write failing duplicate-callback and scheduling tests**
 
 Assert a terminal result creates exactly one job in the same API Unit of Work as the Run result, a duplicate callback reuses it, transaction commit happens before scheduling, and a scheduling exception leaves the Run terminal and the job pending.
 
-- [ ] **Step 2: Run RED**
+- [x] **Step 2: Run RED**
 
 Run: `uv run pytest apps/control-api/tests/unit/runs/test_run_result_handler.py apps/control-api/tests/unit/run_postprocessing/test_application.py -q`
 Expected: failures because the postprocess port is absent.
 
-- [ ] **Step 3: Implement the public port and application service**
+- [x] **Step 3: Implement the public port and application service**
 
 Keep the Run module dependent only on `run_postprocessing.public`. Use pipeline version `trust-loop-v1` as a constant and stable Workflow ID `run-trust-loop-{run_id}-trust-loop-v1`.
 
-- [ ] **Step 4: Wire bootstrap dependencies**
+- [x] **Step 4: Wire bootstrap dependencies**
 
 Inject the SQLAlchemy repository and Temporal scheduler into `ApplyRunResultHandler`. Do not schedule cancelled Runs.
 
-- [ ] **Step 5: Run GREEN and commit**
+- [x] **Step 5: Run GREEN and commit**
 
 Run: `uv run pytest apps/control-api/tests/unit/runs/test_run_result_handler.py apps/control-api/tests/unit/run_postprocessing/test_application.py -q`
 Expected: all pass.
@@ -159,32 +159,32 @@ Commit: `feat: schedule terminal run postprocessing`
 - Produces: `TrustLoopProjection.build(job, stage_results) -> dict[str, object]`
 - Consumes: existing `FailureClassifier`, `DiagnosticService`, `RegressionCandidate`, `CalibrationMetrics`, `EvaluationArbiter`, `JointGateEvaluator`
 
-- [ ] **Step 1: Write the failing classification and degradation matrix**
+- [x] **Step 1: Write the failing classification and degradation matrix**
 
 Assert target/test/environment/platform/evaluation mapping, no-evidence diagnosis `inconclusive`, model exception `inconclusive`, and deterministic stage completion despite optional warnings.
 
-- [ ] **Step 2: Run RED**
+- [x] **Step 2: Run RED**
 
 Run: `uv run pytest apps/control-api/tests/unit/run_postprocessing/test_stages.py -q`
 Expected: failure because `PostprocessStageService` is missing.
 
-- [ ] **Step 3: Implement classify and diagnose stages**
+- [x] **Step 3: Implement classify and diagnose stages**
 
 Read Run Cases through a project-scoped port, verify Evidence hashes/scopes, store deterministic classifications, and pass only allowlisted redacted Evidence projections to the diagnostic model.
 
-- [ ] **Step 4: Add failing regression, calibration and gate tests**
+- [x] **Step 4: Add failing regression, calibration and gate tests**
 
 Assert two same-fingerprint reproductions publish, one reproduction remains reproducing, mixed results quarantine, insufficient calibration is explicit, and safety/execution/evidence failures block without compensation.
 
-- [ ] **Step 5: Implement reproduce, calibrate and gate stages**
+- [x] **Step 5: Implement reproduce, calibrate and gate stages**
 
 Apply a bounded minimization budget, permit auto-publication only for target/test failures, preserve baseline IDs, and save ordered gate rules with input facts and explanations.
 
-- [ ] **Step 6: Implement and test the aggregate projection**
+- [x] **Step 6: Implement and test the aggregate projection**
 
 The projection contains job status/current stage, per-case outcomes/classifications/diagnostics, regressions, calibration, gate decision, warning codes and timestamps. Missing optional results remain explicit `inconclusive`/empty values.
 
-- [ ] **Step 7: Run GREEN and commit**
+- [x] **Step 7: Run GREEN and commit**
 
 Run: `uv run pytest apps/control-api/tests/unit/run_postprocessing apps/control-api/tests/unit/diagnostics apps/control-api/tests/unit/regressions apps/control-api/tests/unit/scorers/test_calibration.py apps/control-api/tests/unit/gates/test_joint_gate.py -q`
 Expected: all pass.
@@ -205,25 +205,25 @@ Commit: `feat: execute run trust loop stages`
 - Produces: `POST /internal/projects/{project_id}/runs/{run_id}/trust-loop/{pipeline_version}/finalize`
 - Consumes headers: `X-Internal-Token`; body: `idempotency_key`, `workflow_id`, `attempt`
 
-- [ ] **Step 1: Write failing contract tests**
+- [x] **Step 1: Write failing contract tests**
 
 Cover 403 without the internal token, 404 for foreign project/Run, 409 for out-of-order stage, idempotent replay and sanitized error payloads.
 
-- [ ] **Step 2: Run RED**
+- [x] **Step 2: Run RED**
 
 Run: `uv run pytest apps/control-api/tests/contract/test_run_postprocessing_internal_api.py -q`
 Expected: 404 because routes are missing.
 
-- [ ] **Step 3: Implement schemas and router**
+- [x] **Step 3: Implement schemas and router**
 
 Use strict enums and bounded strings. Never return raw exception representations, model prompts, Evidence payloads or secrets.
 
-- [ ] **Step 4: Wire the router and run GREEN**
+- [x] **Step 4: Wire the router and run GREEN**
 
 Run: `uv run pytest apps/control-api/tests/contract/test_run_postprocessing_internal_api.py -q`
 Expected: all pass.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 Commit: `feat: expose internal trust loop stages`
 
@@ -243,28 +243,28 @@ Commit: `feat: expose internal trust loop stages`
 - Produces Activity: `execute_postprocess_stage(PostprocessStageTask) -> PostprocessStageResponse`
 - Scheduler: `TemporalPostprocessScheduler.schedule(job) -> workflow_id`
 
-- [ ] **Step 1: Write failing workflow state-machine and serialization tests**
+- [x] **Step 1: Write failing workflow state-machine and serialization tests**
 
 Cover ordered stages, optional-stage warning continuation, required-stage terminal failure, cancellation, nested JSON serialization and secret-free task representations.
 
-- [ ] **Step 2: Run RED**
+- [x] **Step 2: Run RED**
 
 Run: `uv run pytest workers/api-runner/tests/test_postprocess_workflow.py apps/control-api/tests/unit/run_postprocessing/test_temporal_scheduler.py -q`
 Expected: import failures for missing Workflow and scheduler.
 
-- [ ] **Step 3: Implement contracts, activity and deterministic Workflow**
+- [x] **Step 3: Implement contracts, activity and deterministic Workflow**
 
 Use bounded retries. Activity calls Control API with `trust_env=False`; Workflow contains no network/database/model access and no non-deterministic calls.
 
-- [ ] **Step 4: Register Worker and implement scheduler**
+- [x] **Step 4: Register Worker and implement scheduler**
 
 Add Workflow and Activity to the same task queue with worker tests proving registration. Use stable Workflow IDs and `REJECT_DUPLICATE` behavior.
 
-- [ ] **Step 5: Add recovery tests**
+- [x] **Step 5: Add recovery tests**
 
 Test duplicate start, activity retry, worker restart replay and resumption from a previously completed stage result.
 
-- [ ] **Step 6: Run GREEN and commit**
+- [x] **Step 6: Run GREEN and commit**
 
 Run: `uv run pytest workers/api-runner/tests/test_postprocess_workflow.py apps/control-api/tests/unit/run_postprocessing/test_temporal_scheduler.py -q`
 Expected: all pass.
@@ -288,29 +288,29 @@ Commit: `feat: orchestrate run trust loop workflow`
 - Produces the five GET endpoints from the approved design
 - Produces generated types `TrustLoopResponse`, `DiagnosticResponse`, `RegressionCandidateResponse`, `CalibrationResponse`, `JointGateDecisionResponse`
 
-- [ ] **Step 1: Write failing public contract tests**
+- [x] **Step 1: Write failing public contract tests**
 
 Cover member authorization, project isolation, 404 for unknown Run, pending projection, completed-with-warnings projection and pagination for diagnostics/regressions.
 
-- [ ] **Step 2: Run RED**
+- [x] **Step 2: Run RED**
 
 Run: `uv run pytest apps/control-api/tests/contract/test_run_trust_loop_api.py -q`
 Expected: route failures.
 
-- [ ] **Step 3: Implement project-scoped query handlers and routes**
+- [x] **Step 3: Implement project-scoped query handlers and routes**
 
 Routes call application query ports only, never ORM. Sort records deterministically and expose no internal error message containing model/provider details.
 
-- [ ] **Step 4: Make Mission consume the shared projection**
+- [x] **Step 4: Make Mission consume the shared projection**
 
 Replace duplicate regression and release-gate evaluation inside Mission `close_loop` with the persisted trust-loop summary for its Run. Keep report generation and review collection, and return `completed_with_warnings` details without changing the Run terminal state.
 
-- [ ] **Step 5: Regenerate OpenAPI client**
+- [x] **Step 5: Regenerate OpenAPI client**
 
 Run: `make api-generate`
 Expected: OpenAPI and typed client include all trust-loop responses.
 
-- [ ] **Step 6: Run GREEN and commit**
+- [x] **Step 6: Run GREEN and commit**
 
 Run: `uv run pytest apps/control-api/tests/contract/test_run_trust_loop_api.py -q && pnpm --filter @warmy/generated-api-client typecheck`
 Expected: all pass.
@@ -336,24 +336,24 @@ Commit: `feat: expose run trust loop api`
 - Consumes generated `TrustLoopResponse`
 - Produces one shared typed view for Run detail and Test Agent result rendering
 
-- [ ] **Step 1: Write failing component tests**
+- [x] **Step 1: Write failing component tests**
 
 Cover pending progress, completed data, warnings, `inconclusive`, Quarantine, blocking gate explanations, Evidence citations and empty optional lists.
 
-- [ ] **Step 2: Run RED**
+- [x] **Step 2: Run RED**
 
 Run: `pnpm --filter @warmy/web test -- trust-loop-panel.test.tsx trust-loop.test.tsx`
 Expected: component/import/assertion failures.
 
-- [ ] **Step 3: Implement API loading and the shared panel**
+- [x] **Step 3: Implement API loading and the shared panel**
 
 Use existing UI primitives, stable dimensions, accessible status labels and links to cited Run Cases/Evidence. Do not introduce nested cards or explanatory marketing copy.
 
-- [ ] **Step 4: Extend E2E coverage**
+- [x] **Step 4: Extend E2E coverage**
 
 Verify navigation from Mission to Run, automatic refresh while pending, final warning/failure states and no overlapping controls at desktop/mobile widths.
 
-- [ ] **Step 5: Run GREEN and commit**
+- [x] **Step 5: Run GREEN and commit**
 
 Run: `pnpm --filter @warmy/web format && pnpm --filter @warmy/web lint && pnpm --filter @warmy/web typecheck && pnpm --filter @warmy/web test && pnpm --filter @warmy/web build`
 Expected: all pass.

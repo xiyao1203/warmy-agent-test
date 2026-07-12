@@ -57,6 +57,12 @@ class MissionAssetExecutor(Protocol):
     ) -> dict[str, object]: ...
 
 
+class MissionTrustLoopReader(Protocol):
+    async def get_summary(
+        self, actor: User, project_id: UUID, run_id: UUID
+    ) -> dict[str, object]: ...
+
+
 class MissionNeedsAttention(RuntimeError):
     def __init__(self, message: str, *, error_type: str = "auth_expired") -> None:
         super().__init__(message)
@@ -69,10 +75,12 @@ class MissionStageService:
         compiler: MissionCompiler,
         executor: MissionAssetExecutor,
         receipts: StageReceiptRepository,
+        trust_loop: MissionTrustLoopReader | None = None,
     ) -> None:
         self._compiler = compiler
         self._executor = executor
         self._receipts = receipts
+        self._trust_loop = trust_loop
 
     async def provision(
         self, *, actor: User, project_id: ProjectId, session_id: UUID, revision: MissionRevision
@@ -176,12 +184,17 @@ class MissionStageService:
 
     async def close_loop(
         self, *, actor: User, project_id: ProjectId, session_id: UUID, revision: MissionRevision
-    ) -> StageReceipt:
+    ) -> StageReceipt | None:
         existing = await self._existing(project_id.value, revision.revision_id, "close_loop")
         if existing:
             return existing
         completed = await self._required(project_id.value, revision.revision_id, "await_run")
         run_id = str(completed.output["run_id"])
+        if self._trust_loop is None:
+            raise RuntimeError("Mission trust loop reader is unavailable")
+        trust_loop = await self._trust_loop.get_summary(actor, project_id.value, UUID(run_id))
+        if str(trust_loop.get("status") or "pending") in {"pending", "running"}:
+            return None
         report = await self._call(
             "reports.generate",
             "execution",
@@ -200,27 +213,8 @@ class MissionStageService:
             {"run_id": run_id, "confidence_threshold": 0.5},
             f"mission:{revision.revision_id}:reviews",
         )
-        run_detail = await self._call(
-            "runs.get_status",
-            "execution",
-            actor,
-            project_id,
-            session_id,
-            {"id": run_id},
-            f"mission:{revision.revision_id}:run-detail",
-        )
-        regression = await self._create_regression_dataset(
-            actor, project_id, session_id, revision, run_detail
-        )
-        gates_result = await self._evaluate_release_gates(
-            actor, project_id, session_id, revision, run_id
-        )
         await self._link_output(revision, "close_loop", report)
         await self._link_output(revision, "close_loop", reviews)
-        if regression:
-            await self._link_output(revision, "close_loop", regression)
-        for gate_result in gates_result:
-            await self._link_output(revision, "close_loop", gate_result)
         return await self._save(
             project_id.value,
             revision.revision_id,
@@ -230,102 +224,9 @@ class MissionStageService:
                 "run_status": completed.output.get("run_status"),
                 "report": report,
                 "reviews": reviews,
-                "regression_dataset": regression,
-                "release_gate_decisions": gates_result,
+                "trust_loop": trust_loop,
             },
         )
-
-    async def _create_regression_dataset(
-        self,
-        actor: User,
-        project_id: ProjectId,
-        session_id: UUID,
-        revision: MissionRevision,
-        run_detail: dict[str, object],
-    ) -> dict[str, object] | None:
-        raw_cases = run_detail.get("cases")
-        if not isinstance(raw_cases, list):
-            return None
-        failed = [
-            case
-            for case in raw_cases
-            if isinstance(case, dict) and str(case.get("status")) in {"failed", "error"}
-        ]
-        if not failed:
-            return None
-        cases = [
-            {
-                "name": f"回归：{case.get('name') or '失败用例'}",
-                "input": dict(case.get("input") or {}),
-                "execution_mode": str(case.get("execution_mode") or "api"),
-                "assertions": list(case.get("assertions") or []),
-                "tags": ["mission-regression", "auto-from-failure"],
-                "scenario": str(case.get("error_type") or "failure-regression"),
-            }
-            for case in failed
-        ]
-        result = await self._call(
-            "datasets.create_with_cases",
-            "test_data",
-            actor,
-            project_id,
-            session_id,
-            {
-                "name": f"任务 {revision.mission_id} 失败回归集",
-                "description": "由全链路测试失败自动沉淀，可用于后续回归",
-                "config": {},
-                "cases": cases,
-            },
-            f"mission:{revision.revision_id}:failure-regression",
-        )
-        version_id = _artifact_id(result, "dataset_version")
-        await self._call(
-            "datasets.publish_version",
-            "test_data",
-            actor,
-            project_id,
-            session_id,
-            {"id": version_id},
-            f"mission:{revision.revision_id}:publish-failure-regression",
-        )
-        return result
-
-    async def _evaluate_release_gates(
-        self,
-        actor: User,
-        project_id: ProjectId,
-        session_id: UUID,
-        revision: MissionRevision,
-        run_id: str,
-    ) -> list[dict[str, object]]:
-        gates = await self._call(
-            "release_gates.list",
-            "review_gate",
-            actor,
-            project_id,
-            session_id,
-            {},
-            f"mission:{revision.revision_id}:list-gates",
-        )
-        items = gates.get("items")
-        results: list[dict[str, object]] = []
-        if not isinstance(items, list):
-            return results
-        for item in items:
-            if not isinstance(item, dict) or not item.get("id"):
-                continue
-            results.append(
-                await self._call(
-                    "release_gates.evaluate",
-                    "review_gate",
-                    actor,
-                    project_id,
-                    session_id,
-                    {"gate_id": str(item["id"]), "run_id": run_id},
-                    f"mission:{revision.revision_id}:gate:{item['id']}",
-                )
-            )
-        return results
 
     async def cancel_run(
         self, *, actor: User, project_id: ProjectId, session_id: UUID, revision: MissionRevision

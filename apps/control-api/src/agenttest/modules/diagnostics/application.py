@@ -28,7 +28,10 @@ class DiagnosticService:
         }
         if not allowed_ids:
             return DiagnosticResult("inconclusive", (), "No admissible evidence")
-        proposal = await self._model.propose(evidence_view)
+        try:
+            proposal = await self._model.propose(evidence_view)
+        except Exception:
+            return DiagnosticResult("inconclusive", (), "Diagnostic model unavailable")
         if not proposal.evidence_ids:
             return DiagnosticResult("inconclusive", (), "Diagnosis has no evidence citations")
         if not set(proposal.evidence_ids).issubset(allowed_ids):
