@@ -42,7 +42,7 @@ class AgentResult:
 
 class GenericHttpAgentAdapter:
     def __init__(self, *, client: httpx.AsyncClient | None = None) -> None:
-        self._client = client or httpx.AsyncClient()
+        self._client = client or httpx.AsyncClient(trust_env=False)
         self._owns_client = client is None
 
     async def execute(self, request: AgentRequest) -> AgentResult:
