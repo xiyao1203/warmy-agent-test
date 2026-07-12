@@ -63,38 +63,38 @@ Commit: `docs: register run trust loop productization`
 - Produces: `RunPostprocessJob.create(project_id, run_id, pipeline_version)`, `start(workflow_id)`, `begin_stage(stage)`, `complete_stage(stage, output, warnings)`, `fail_stage(stage, error_type, error_message, required)`, `finalize()`
 - Produces: `PostprocessRepository.create_or_get(job)`, `get(project_id, run_id, pipeline_version)`, `save(job)`, `list_stage_results(project_id, job_id)`
 
-- [ ] **Step 1: Write failing state-machine tests**
+- [x] **Step 1: Write failing state-machine tests**
 
 Cover ordered stages, required-stage failure, optional-stage warning, final `completed_with_warnings`, and rejection of out-of-order transitions.
 
-- [ ] **Step 2: Run RED**
+- [x] **Step 2: Run RED**
 
 Run: `uv run pytest apps/control-api/tests/unit/run_postprocessing/test_domain.py -q`
 Expected: collection/import failure because the module does not exist.
 
-- [ ] **Step 3: Implement the minimal domain types**
+- [x] **Step 3: Implement the minimal domain types**
 
 Use `PostprocessStatus`, `PostprocessStage`, immutable `StageResult`, and a mutable aggregate that validates the fixed stage order `classify, diagnose, reproduce, calibrate, evaluate_gate, finalize`.
 
-- [ ] **Step 4: Run domain GREEN**
+- [x] **Step 4: Run domain GREEN**
 
 Run: `uv run pytest apps/control-api/tests/unit/run_postprocessing/test_domain.py -q`
 Expected: all pass.
 
-- [ ] **Step 5: Write failing repository and migration tests**
+- [x] **Step 5: Write failing repository and migration tests**
 
 Assert `(project_id, run_id, pipeline_version)` uniqueness, project-scoped reads, stage idempotency, composite project foreign keys, indexes and migration revision `0022`.
 
-- [ ] **Step 6: Run repository RED**
+- [x] **Step 6: Run repository RED**
 
 Run: `uv run pytest apps/control-api/tests/unit/run_postprocessing/test_repository.py apps/control-api/tests/integration/test_migrations.py -q`
 Expected: failures for missing tables/repository/revision.
 
-- [ ] **Step 7: Implement models, repository and migration**
+- [x] **Step 7: Implement models, repository and migration**
 
 Create `run_postprocess_jobs`, `run_postprocess_stage_results`, `run_diagnostics`, `run_regression_candidates`, `run_calibrations`, and `run_joint_gate_decisions`. Store structured payloads as JSON only after application validation; add project/run/status indexes and composite uniqueness.
 
-- [ ] **Step 8: Run GREEN and commit**
+- [x] **Step 8: Run GREEN and commit**
 
 Run: `uv run pytest apps/control-api/tests/unit/run_postprocessing apps/control-api/tests/integration/test_migrations.py -q`
 Expected: all pass, PostgreSQL-only case may skip without test URL.

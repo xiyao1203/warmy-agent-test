@@ -15,6 +15,14 @@ from agenttest.modules.identity.infrastructure.persistence.models import (
     UserSessionModel,
 )
 from agenttest.modules.projects.infrastructure.persistence.models import ProjectMemberModel
+from agenttest.modules.run_postprocessing.infrastructure.models import (
+    RunCalibrationModel,
+    RunDiagnosticModel,
+    RunJointGateDecisionModel,
+    RunPostprocessJobModel,
+    RunPostprocessStageResultModel,
+    RunRegressionCandidateModel,
+)
 from alembic import command
 from alembic.config import Config
 from sqlalchemy import CheckConstraint, UniqueConstraint
@@ -62,6 +70,23 @@ def test_test_case_execution_mode_allows_codex_explore() -> None:
 
     assert "ck_test_cases_execution_mode" in checks
     assert "codex_explore" in checks["ck_test_cases_execution_mode"]
+
+
+def test_run_trust_loop_records_are_project_scoped_and_idempotent() -> None:
+    expected = {
+        RunPostprocessJobModel: "uq_run_postprocess_jobs_project_run_pipeline",
+        RunPostprocessStageResultModel: "uq_run_postprocess_stage_results_job_stage",
+        RunDiagnosticModel: "uq_run_diagnostics_project_case_pipeline",
+        RunRegressionCandidateModel: (
+            "uq_run_regression_candidates_project_fingerprint_pipeline"
+        ),
+        RunCalibrationModel: "uq_run_calibrations_project_run_pipeline",
+        RunJointGateDecisionModel: "uq_run_joint_gate_decisions_project_run_pipeline",
+    }
+
+    for model, unique_name in expected.items():
+        assert "project_id" in model.__table__.columns
+        assert unique_name in constraint_names(model)
 
 
 def postgres_dsn(database_url: str) -> str:

@@ -24,6 +24,7 @@ RUN_STATUSES = "'queued', 'running', 'passed', 'failed', 'error', 'cancelled'"
 class RunModel(Base):
     __tablename__ = "runs"
     __table_args__ = (
+        UniqueConstraint("project_id", "id", name="uq_runs_project_id"),
         UniqueConstraint(
             "project_id",
             "idempotency_key",

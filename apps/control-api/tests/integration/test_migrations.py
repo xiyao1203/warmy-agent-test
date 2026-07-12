@@ -91,7 +91,7 @@ def test_empty_sqlite_database_upgrades_to_head(tmp_path: Path) -> None:
 
     command.upgrade(config, "head")
 
-    assert run(current_sqlite_revision(database_url)) == "0021"
+    assert run(current_sqlite_revision(database_url)) == "0022"
 
 
 def test_sqlite_backfills_existing_scorer_versions(tmp_path: Path) -> None:
@@ -117,11 +117,11 @@ def test_empty_database_upgrade_and_revision_cycle() -> None:
     config = alembic_config(database_url=database_url)
 
     command.upgrade(config, "head")
-    assert run(current_revision(database_url)) == "0021"
+    assert run(current_revision(database_url)) == "0022"
 
     command.downgrade(config, "base")
     command.upgrade(config, "head")
-    assert run(current_revision(database_url)) == "0021"
+    assert run(current_revision(database_url)) == "0022"
 
 
 async def current_revision(database_url: str) -> str:
