@@ -83,6 +83,8 @@ def test_initial_migration_generates_expected_postgresql_schema() -> None:
     assert "test_mission_stage_receipts" in sql
     assert "uq_mission_facts_project_mission_key" in sql
     assert "ix_mission_events_project_mission_sequence" in sql
+    assert "alter table audit.audit_logs set schema public" in sql
+    assert "add column session_id varchar(255)" in sql
 
 
 def test_empty_sqlite_database_upgrades_to_head(tmp_path: Path) -> None:
@@ -91,7 +93,7 @@ def test_empty_sqlite_database_upgrades_to_head(tmp_path: Path) -> None:
 
     command.upgrade(config, "head")
 
-    assert run(current_sqlite_revision(database_url)) == "0022"
+    assert run(current_sqlite_revision(database_url)) == "0024"
 
 
 def test_sqlite_backfills_existing_scorer_versions(tmp_path: Path) -> None:
@@ -117,11 +119,11 @@ def test_empty_database_upgrade_and_revision_cycle() -> None:
     config = alembic_config(database_url=database_url)
 
     command.upgrade(config, "head")
-    assert run(current_revision(database_url)) == "0022"
+    assert run(current_revision(database_url)) == "0024"
 
     command.downgrade(config, "base")
     command.upgrade(config, "head")
-    assert run(current_revision(database_url)) == "0022"
+    assert run(current_revision(database_url)) == "0024"
 
 
 async def current_revision(database_url: str) -> str:

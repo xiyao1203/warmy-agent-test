@@ -35,6 +35,7 @@ htmlcov/
 
 # Build and test output
 .turbo/
+.deepeval/
 playwright-report/
 test-results/
 *.sqlite3

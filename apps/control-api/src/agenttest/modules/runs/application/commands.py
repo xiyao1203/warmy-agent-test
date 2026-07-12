@@ -193,7 +193,12 @@ class ApplyRunResultHandler:
             case.evidence = evidence.to_dict()
             case.quality_summary = {"decision": evidence.quality_decision.value}
             case.security_summary = {"decision": evidence.security_decision.value}
-            case.outcomes = _project_outcomes(case, result.status, evidence)
+            case.outcomes = _project_outcomes(
+                case,
+                result.status,
+                evidence,
+                error_type=result.error_type,
+            )
             if result.status is RunCaseStatus.PASSED:
                 case.pass_case(
                     output=result.output or {},
@@ -247,7 +252,11 @@ def _count(cases: list[RunCase], status: RunCaseStatus) -> int:
 
 
 def _project_outcomes(
-    case: RunCase, status: RunCaseStatus, evidence: RunCaseEvidence
+    case: RunCase,
+    status: RunCaseStatus,
+    evidence: RunCaseEvidence,
+    *,
+    error_type: str | None,
 ) -> RunCaseOutcomes:
     evidence_ids = (uuid5(NAMESPACE_URL, f"agenttest:run-case-evidence:{case.run_case_id.value}"),)
     execution = (
@@ -256,7 +265,7 @@ def _project_outcomes(
         else Outcome.error(
             "execution_cancelled"
             if evidence.execution_outcome is ExecutionOutcome.CANCELLED
-            else "execution_error",
+            else error_type or "execution_error",
             evidence_ids=evidence_ids,
         )
     )

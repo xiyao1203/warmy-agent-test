@@ -3,7 +3,10 @@ from uuid import uuid4
 import pytest
 from agenttest.modules.identity.public import UserId
 from agenttest.modules.projects.public import ProjectId
-from agenttest.modules.run_postprocessing.snapshot_reader import RunPostprocessSnapshotReader
+from agenttest.modules.run_postprocessing.snapshot_reader import (
+    RunPostprocessSnapshotReader,
+    evidence_is_complete,
+)
 from agenttest.modules.runs.domain.entities import Run, RunCase, RunCaseId, RunId
 from agenttest.modules.runs.domain.outcomes import Outcome, RunCaseOutcomes
 from agenttest.modules.runs.domain.value_objects import RunCaseStatus
@@ -20,6 +23,12 @@ class Runs:
 
     async def list_cases(self, project_id, run_id):
         return [self.case]
+
+
+def test_evidence_completeness_requires_an_artifact_or_trace() -> None:
+    assert evidence_is_complete({"artifacts": [], "trace": {}}) is False
+    assert evidence_is_complete({"artifacts": [{"type": "text"}]}) is True
+    assert evidence_is_complete({"trace": {"tools_called": ["search"]}}) is True
 
 
 @pytest.mark.asyncio

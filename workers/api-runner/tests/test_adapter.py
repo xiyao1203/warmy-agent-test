@@ -20,6 +20,8 @@ async def test_adapter_executes_sync_json_and_redacts_headers() -> None:
             json={
                 "output": {"message": "hello world"},
                 "tool_calls": [{"name": "search", "arguments": {"q": "hello"}}],
+                "security_signal": "prompt_injection",
+                "evidence": {"scenario": "prompt_injection", "artifacts": []},
             },
         )
 
@@ -37,7 +39,54 @@ async def test_adapter_executes_sync_json_and_redacts_headers() -> None:
 
     assert result.output == {"message": "hello world"}
     assert result.tool_calls[0]["name"] == "search"
+    assert result.evidence == {
+        "artifacts": [],
+        "scenario": "prompt_injection",
+        "security_signal": "prompt_injection",
+    }
     assert result.trace[0]["attributes"]["http.request.header.authorization"] == "***"
+    await client.aclose()
+
+
+@pytest.mark.asyncio
+async def test_adapter_allowlists_and_sanitizes_untrusted_target_evidence() -> None:
+    async def handler(_request: httpx.Request) -> httpx.Response:
+        return httpx.Response(
+            200,
+            json={
+                "output": "ok",
+                "evidence": {
+                    "scenario": "success",
+                    "request_id": "request-1",
+                    "token": "must-not-leave-target-boundary",
+                    "debug_payload": {"raw": "not-required"},
+                    "artifacts": [
+                        {
+                            "type": "text",
+                            "name": "response.txt",
+                            "metadata": {"cookie": "session=secret", "size": 2},
+                        }
+                    ],
+                },
+            },
+        )
+
+    client = httpx.AsyncClient(transport=httpx.MockTransport(handler))
+    result = await GenericHttpAgentAdapter(client=client).execute(
+        AgentRequest(url="https://agent.example/run", input={"message": "hello"})
+    )
+
+    assert result.evidence == {
+        "scenario": "success",
+        "request_id": "request-1",
+        "artifacts": [
+            {
+                "type": "text",
+                "name": "response.txt",
+                "metadata": {"size": 2},
+            }
+        ],
+    }
     await client.aclose()
 
 
@@ -76,10 +125,16 @@ async def test_adapter_parses_sse_stream() -> None:
 @pytest.mark.asyncio
 async def test_adapter_classifies_target_error() -> None:
     async def handler(_request: httpx.Request) -> httpx.Response:
-        return httpx.Response(422, json={"detail": "invalid prompt"})
+        return httpx.Response(
+            422,
+            json={
+                "error": {"code": "target_product_error"},
+                "evidence": {"scenario": "product_error"},
+            },
+        )
 
     client = httpx.AsyncClient(transport=httpx.MockTransport(handler))
-    with pytest.raises(TargetProductError, match="422"):
+    with pytest.raises(TargetProductError, match="422") as raised:
         await GenericHttpAgentAdapter(client=client).execute(
             AgentRequest(
                 url="https://agent.example/run",
@@ -87,6 +142,23 @@ async def test_adapter_classifies_target_error() -> None:
                 input={"message": "bad"},
             )
         )
+    assert raised.value.code == "target_product_error"
+    assert raised.value.evidence == {"scenario": "product_error"}
+    await client.aclose()
+
+
+@pytest.mark.asyncio
+async def test_adapter_classifies_missing_output_as_protocol_error() -> None:
+    async def handler(_request: httpx.Request) -> httpx.Response:
+        return httpx.Response(200, json={"unexpected": True})
+
+    client = httpx.AsyncClient(transport=httpx.MockTransport(handler))
+    with pytest.raises(TargetProductError) as raised:
+        await GenericHttpAgentAdapter(client=client).execute(
+            AgentRequest(url="https://agent.example/run", input={"message": "bad"})
+        )
+
+    assert raised.value.code == "target_protocol_error"
     await client.aclose()
 
 

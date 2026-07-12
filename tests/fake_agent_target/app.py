@@ -44,6 +44,11 @@ def create_fake_target_app(state: FakeTargetState | None = None) -> FastAPI:
     async def observations() -> dict[str, object]:
         return await target_state.snapshot()
 
+    @app.post("/control/reset")
+    async def reset() -> dict[str, object]:
+        await target_state.configure("success")
+        return {"scenario": "success", "reset": True}
+
     @app.post("/")
     @app.post("/api/agent/invoke")
     async def invoke(request: InvokeRequest):

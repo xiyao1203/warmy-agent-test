@@ -145,7 +145,7 @@ async def test_business_and_audit_rows_roll_back_together() -> None:
         assert await connection.fetchval("select count(*) from users where id = $1", user_id) == 0
         assert (
             await connection.fetchval(
-                "select count(*) from audit.audit_logs where id = $1",
+                "select count(*) from public.audit_logs where id = $1",
                 entry_id,
             )
             == 0

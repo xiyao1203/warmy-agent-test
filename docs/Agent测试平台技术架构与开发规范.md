@@ -861,6 +861,12 @@ class ScorerPlugin(Protocol):
 
 Worker 不读取业务数据库，只通过带内部令牌且包含项目、Mission、Revision 和哈希作用域的 Control API 执行阶段。登录态失效进入 `needs_attention` 并在原 Browser Profile 验证后恢复；取消停止新阶段但保留已有事实和证据。密码、Token、Cookie 与明文 Auth State 禁止进入 Mission 快照和 Temporal History。
 
+### 12.0.1 Run 可信闭环后处理
+
+普通 Run 与 Mission Run 到达终态后，由 Control API 在保存 Run 结果的事务中幂等创建 `trust-loop-v1` 后处理任务；事务提交后使用稳定 Workflow ID 调度 `RunPostprocessWorkflow`。Workflow 仅保存项目、Run、管线版本、阶段和幂等键，按 `classify → diagnose → reproduce → calibrate → evaluate_gate → finalize` 顺序调用带内部令牌的 Control API Activity，Worker 不连接业务数据库。
+
+分类、Evidence 完整性、回归发布和联合门禁均为确定性规则。模型诊断只能引用脱敏 Evidence，失败时降级为 `inconclusive`；回归候选只有在同一指纹经过两次独立成功复现后才能发布，否则进入 Quarantine；执行、安全或 Evidence 失败不可被质量分数补偿。后处理失败不回滚 Run 终态，项目成员通过项目隔离的公开 API 读取任务、诊断、回归、校准和门禁投影。恢复、停用和迁移回滚边界见 `docs/runbooks/run-trust-loop-operations.md`。
+
 ### 12.1 运行工作流
 
 ```text

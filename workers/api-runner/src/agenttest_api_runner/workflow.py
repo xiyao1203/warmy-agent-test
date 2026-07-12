@@ -301,7 +301,7 @@ class RunWorkflow:
                 result = RunCaseResult(
                     run_case_id=case.run_case_id,
                     status="error",
-                    error_type=type(error).__name__,
+                    error_type=workflow_error_type(error),
                     error_message=str(error),
                 )
             results.append(result)
@@ -337,6 +337,19 @@ def callback_task_for(task: RunTask, result: RunResult) -> ResultCallbackTask | 
         project_id=task.callback.project_id,
         result=result,
     )
+
+
+def workflow_error_type(error: Exception) -> str:
+    current: object | None = error
+    visited: set[int] = set()
+    while current is not None and id(current) not in visited:
+        visited.add(id(current))
+        error_type = getattr(current, "type", None)
+        name = str(error_type) if error_type else type(current).__name__
+        if name in {"TransientError", "TimeoutError"}:
+            return "network_unavailable"
+        current = getattr(current, "cause", None)
+    return type(error).__name__
 
 
 def normalize_run_task(task: RunTask | dict[str, object]) -> RunTask:

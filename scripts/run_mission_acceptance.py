@@ -21,6 +21,92 @@ from agenttest.shared.infrastructure.database import (
     create_session_factory,
 )
 
+TRUST_LOOP_SCENARIOS = (
+    "success",
+    "product_error",
+    "protocol_error",
+    "auth_expired",
+    "quota_exceeded",
+    "timeout",
+    "transient_failure",
+    "incomplete_artifact",
+    "prompt_injection",
+)
+
+
+def validate_trust_loop_payload(
+    *,
+    scenario: str,
+    run: dict[str, object],
+    cases: dict[str, object],
+    summary: dict[str, object],
+    diagnostics: dict[str, object],
+    regressions: dict[str, object],
+    calibration: dict[str, object],
+    gate: dict[str, object],
+) -> None:
+    assert summary.get("job_id"), "trust loop must expose one durable job"
+    assert summary.get("run_id") == run.get("id"), "trust loop Run scope mismatch"
+    assert summary.get("status") in {
+        "completed",
+        "completed_with_warnings",
+        "failed",
+    }, "trust loop did not reach a terminal state"
+    serialized = repr((summary, diagnostics, regressions, calibration, gate)).lower()
+    assert "api key" not in serialized and "provider error" not in serialized
+
+    expected_classes = {
+        "product_error": "target_failure",
+        "protocol_error": "target_failure",
+        "auth_expired": "environment_failure",
+        "quota_exceeded": "environment_failure",
+        "timeout": "environment_failure",
+    }
+    raw_classifications = summary.get("classifications")
+    classifications = raw_classifications if isinstance(raw_classifications, list) else []
+    expected = expected_classes.get(scenario)
+    if expected:
+        actual = {
+            str(item.get("failure_class")) for item in classifications if isinstance(item, dict)
+        }
+        assert expected in actual, f"{scenario} did not produce {expected}"
+
+    assert isinstance(diagnostics.get("items"), list)
+    assert calibration.get("status") in {"completed", "inconclusive"}
+    assert gate.get("status") == "completed"
+    assert gate.get("decision") in {"allow", "block", "needs_review", "quarantine"}
+    if scenario in {"incomplete_artifact", "prompt_injection"}:
+        assert gate.get("decision") == "block", f"{scenario} must fail closed"
+
+    raw_candidates = regressions.get("items")
+    candidates = raw_candidates if isinstance(raw_candidates, list) else []
+    for candidate in candidates:
+        if not isinstance(candidate, dict) or candidate.get("status") != "published":
+            continue
+        assert int(candidate.get("reproduction_count") or 0) >= 2, (
+            "published regression requires two independent reproductions"
+        )
+    if scenario in {"product_error", "protocol_error"}:
+        assert candidates, f"{scenario} must produce a regression candidate"
+        assert all(candidate.get("status") != "published" for candidate in candidates), (
+            "unreproduced candidates must remain quarantined"
+        )
+
+    raw_cases = cases.get("items")
+    case_items = raw_cases if isinstance(raw_cases, list) else []
+    if scenario == "transient_failure":
+        recovered = any(
+            item.get("status") == "passed" for item in case_items if isinstance(item, dict)
+        )
+        assert recovered, "transient failure did not recover through Temporal retry"
+    if scenario == "prompt_injection":
+        assert any(
+            isinstance(item, dict)
+            and isinstance(item.get("security_summary"), dict)
+            and item["security_summary"].get("decision") == "blocked"
+            for item in case_items
+        ), "security signal was not persisted as blocked"
+
 
 def unique_run_ids(assets: list[dict[str, object]]) -> list[str]:
     return sorted(
@@ -57,7 +143,21 @@ async def create_acceptance_identity(settings: Settings) -> AcceptanceIdentity:
     return identity
 
 
-async def run_acceptance(*, control_api: str, target_url: str, timeout_seconds: float) -> None:
+async def run_acceptance(
+    *, control_api: str, target_url: str, timeout_seconds: float, scenario: str = "success"
+) -> None:
+    if scenario not in TRUST_LOOP_SCENARIOS:
+        raise ValueError(f"Unsupported trust-loop scenario: {scenario}")
+    async with httpx.AsyncClient(base_url=target_url, timeout=10, trust_env=False) as target:
+        configured = await target.post(
+            "/control/scenario",
+            json={
+                "name": scenario,
+                "failures": 1 if scenario == "transient_failure" else 0,
+                "delay_seconds": 0,
+            },
+        )
+        configured.raise_for_status()
     settings = get_settings()
     identity = await create_acceptance_identity(settings)
     async with httpx.AsyncClient(base_url=control_api, timeout=20, trust_env=False) as client:
@@ -92,9 +192,9 @@ async def run_acceptance(*, control_api: str, target_url: str, timeout_seconds: 
                 "facts": {
                     "target_url": target_url,
                     "access_strategy": "none",
-                    "test_goal": "Verify deterministic chat success",
+                    "test_goal": f"Verify deterministic {scenario} handling",
                     "safety_scope": "read_only",
-                    "scenario_hints": ["success", "security baseline"],
+                    "scenario_hints": [scenario, "security baseline"],
                 },
             },
         )
@@ -140,12 +240,55 @@ async def run_acceptance(*, control_api: str, target_url: str, timeout_seconds: 
                 run_ids = unique_run_ids(body.get("assets", []))
                 if len(run_ids) != 1:
                     raise RuntimeError(f"Expected one Run, found {len(run_ids)}")
-                print(f"Mission {mission_id} reached {body['status']} with Run {run_ids[0]}")
-                if body["status"] != "completed":
+                expected_status = "needs_attention" if scenario == "auth_expired" else "completed"
+                print(
+                    f"Mission {mission_id} reached {body['status']} with Run {run_ids[0]} "
+                    f"for {scenario}"
+                )
+                if body["status"] != expected_status:
                     raise RuntimeError(f"Acceptance mission ended as {body['status']}")
-                return
+                run_id = run_ids[0]
+                break
             await asyncio.sleep(0.5)
-        raise TimeoutError(f"Mission {mission_id} did not finish within {timeout_seconds:g}s")
+        else:
+            raise TimeoutError(f"Mission {mission_id} did not finish within {timeout_seconds:g}s")
+
+        deadline = monotonic() + timeout_seconds
+        trust_url = f"/api/v1/projects/{project_id}/runs/{run_id}/trust-loop"
+        while monotonic() < deadline:
+            trust = await client.get(trust_url)
+            trust.raise_for_status()
+            summary = trust.json()
+            if summary["status"] in {"completed", "completed_with_warnings", "failed"}:
+                break
+            await asyncio.sleep(0.5)
+        else:
+            raise TimeoutError(f"Run {run_id} trust loop did not finish")
+
+        endpoints = {
+            "run": f"/api/v1/projects/{project_id}/runs/{run_id}",
+            "cases": f"/api/v1/projects/{project_id}/runs/{run_id}/cases",
+            "diagnostics": f"/api/v1/projects/{project_id}/runs/{run_id}/diagnostics",
+            "regressions": f"/api/v1/projects/{project_id}/runs/{run_id}/regressions",
+            "calibration": f"/api/v1/projects/{project_id}/runs/{run_id}/calibration",
+            "gate": f"/api/v1/projects/{project_id}/runs/{run_id}/joint-gate",
+        }
+        payloads: dict[str, dict[str, object]] = {}
+        for name, url in endpoints.items():
+            response = await client.get(url)
+            response.raise_for_status()
+            payloads[name] = response.json()
+        validate_trust_loop_payload(
+            scenario=scenario,
+            run=payloads["run"],
+            cases=payloads["cases"],
+            summary=summary,
+            diagnostics=payloads["diagnostics"],
+            regressions=payloads["regressions"],
+            calibration=payloads["calibration"],
+            gate=payloads["gate"],
+        )
+        print(f"Trust loop {summary['job_id']} verified for {scenario}")
 
 
 def main() -> int:
@@ -153,14 +296,19 @@ def main() -> int:
     parser.add_argument("--control-api", default="http://127.0.0.1:8181")
     parser.add_argument("--target-url", default="http://127.0.0.1:8199")
     parser.add_argument("--timeout", type=float, default=120)
+    parser.add_argument("--scenario", choices=TRUST_LOOP_SCENARIOS, default="success")
+    parser.add_argument("--matrix", action="store_true")
     args = parser.parse_args()
-    asyncio.run(
-        run_acceptance(
-            control_api=args.control_api,
-            target_url=args.target_url,
-            timeout_seconds=args.timeout,
+    scenarios = TRUST_LOOP_SCENARIOS if args.matrix else (args.scenario,)
+    for scenario in scenarios:
+        asyncio.run(
+            run_acceptance(
+                control_api=args.control_api,
+                target_url=args.target_url,
+                timeout_seconds=args.timeout,
+                scenario=scenario,
+            )
         )
-    )
     return 0
 
 

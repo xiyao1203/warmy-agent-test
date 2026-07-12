@@ -5,7 +5,12 @@ from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
 from temporalio import activity
 
-from agenttest_api_runner.adapter import AgentRequest, GenericHttpAgentAdapter
+from agenttest_api_runner.adapter import (
+    AgentRequest,
+    AgentResult,
+    GenericHttpAgentAdapter,
+    TargetProductError,
+)
 from agenttest_api_runner.callback import ControlPlaneCallback, ResultCallbackTask
 from agenttest_api_runner.contracts import RunCaseResult, RunCaseTask
 from agenttest_api_runner.credentials import CredentialLeaseClient
@@ -112,23 +117,59 @@ async def execute_agent_case(
         )
     adapter = GenericHttpAgentAdapter()
     try:
-        result = await adapter.execute(
-            build_agent_request(
-                agent_config,
-                task.input,
-                environment=resolved_environment,
-                credential_values=credential_values,
+        try:
+            result = await adapter.execute(
+                build_agent_request(
+                    agent_config,
+                    task.input,
+                    environment=resolved_environment,
+                    credential_values=credential_values,
+                )
             )
-        )
+        except TargetProductError as error:
+            return RunCaseResult(
+                run_case_id=task.run_case_id,
+                status="error",
+                error_type=error.code,
+                error_message=f"Target request failed ({error.code})",
+                evidence=_error_evidence(error.evidence),
+            )
         return RunCaseResult(
             run_case_id=task.run_case_id,
             status=_evaluate_assertions(result.output, task.assertions),
             output=result.output,
             trace=result.trace,
             duration_ms=result.duration_ms,
+            evidence=_success_evidence(result),
         )
     finally:
         credential_values.clear()
+
+
+def _success_evidence(result: AgentResult) -> dict[str, object]:
+    security_signal = result.evidence.get("security_signal")
+    blocked = isinstance(security_signal, str) and bool(security_signal)
+    raw_artifacts = result.evidence.get("artifacts")
+    artifacts = list(raw_artifacts) if isinstance(raw_artifacts, list) else []
+    return {
+        "execution_outcome": "success",
+        "quality_decision": "pass",
+        "security_decision": "blocked" if blocked else "clear",
+        "artifacts": artifacts,
+        "trace": {"tools_called": [str(item.get("name")) for item in result.tool_calls]},
+        "target": dict(result.evidence),
+    }
+
+
+def _error_evidence(target: dict[str, object]) -> dict[str, object]:
+    raw_artifacts = target.get("artifacts")
+    return {
+        "execution_outcome": "error",
+        "quality_decision": "review_required",
+        "security_decision": "clear",
+        "artifacts": list(raw_artifacts) if isinstance(raw_artifacts, list) else [],
+        "target": dict(target),
+    }
 
 
 def _evaluate_assertions(

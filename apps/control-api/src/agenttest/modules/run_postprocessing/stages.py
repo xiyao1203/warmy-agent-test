@@ -181,6 +181,12 @@ class PostprocessStageService:
             candidate.start_reproduction()
             candidates.append((case, candidate))
         if self._reproducer is None:
+            for _, candidate in candidates:
+                candidate.record_reproduction(
+                    reproduced=False,
+                    observed_fingerprint=None,
+                    evidence_ids=(),
+                )
             return StageExecution(
                 "warning",
                 {

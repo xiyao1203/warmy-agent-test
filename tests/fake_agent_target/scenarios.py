@@ -39,13 +39,16 @@ def scenario_response(
         return _error(503, "target_temporarily_unavailable", evidence)
     errors = {
         "product_error": (422, "target_product_error"),
-        "protocol_error": (502, "target_protocol_error"),
         "auth_expired": (401, "auth_expired"),
         "quota_exceeded": (429, "quota_exceeded"),
     }
     if scenario in errors:
         status, code = errors[scenario]
         return _error(status, code, evidence)
+    if scenario == "protocol_error":
+        return ScenarioResponse(200, {"unexpected": True, "evidence": evidence})
+    if scenario == "timeout":
+        return _error(504, "target_timeout", evidence)
     if scenario == "incomplete_artifact":
         evidence["artifacts"] = []
         return ScenarioResponse(200, {"output": "incomplete", "evidence": evidence})

@@ -32,7 +32,7 @@ class RunPostprocessSnapshotReader:
         snapshots = tuple(_case_snapshot(case) for case in cases)
         total = len(cases)
         passed = sum(case.status.value == "passed" for case in cases)
-        evidence_complete = sum(bool(case.evidence) for case in cases)
+        evidence_complete = sum(evidence_is_complete(case.evidence) for case in cases)
         security_findings = sum(
             case.outcomes.security.status.value in {"failed", "error"} for case in cases
         )
@@ -95,3 +95,11 @@ def _normalize_error_type(value: str | None) -> str:
         "timeouterror": "network_unavailable",
     }
     return aliases.get(normalized, normalized)
+
+
+def evidence_is_complete(evidence: dict[str, object]) -> bool:
+    artifacts = evidence.get("artifacts")
+    if isinstance(artifacts, list) and bool(artifacts):
+        return True
+    trace = evidence.get("trace")
+    return isinstance(trace, dict) and any(bool(value) for value in trace.values())

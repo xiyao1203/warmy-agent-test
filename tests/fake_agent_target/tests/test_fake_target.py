@@ -45,7 +45,7 @@ async def test_transient_failure_is_deterministic(
     ("scenario", "status", "error_code"),
     [
         ("product_error", 422, "target_product_error"),
-        ("protocol_error", 502, "target_protocol_error"),
+        ("protocol_error", 200, None),
         ("auth_expired", 401, "auth_expired"),
         ("quota_exceeded", 429, "quota_exceeded"),
         ("incomplete_artifact", 200, None),
@@ -71,6 +71,22 @@ async def test_scenarios_have_stable_observations(
 
     observations = (await client.get("/control/observations")).json()
     assert observations["requests"][-1]["scenario"] == scenario
+
+
+@pytest.mark.asyncio
+async def test_timeout_and_reset_are_deterministic(client: httpx.AsyncClient) -> None:
+    await client.post("/control/scenario", json={"name": "timeout", "delay_seconds": 0})
+    timed_out = await client.post("/api/agent/invoke", json={"input": "slow"})
+    reset = await client.post("/control/reset")
+    success = await client.post("/api/agent/invoke", json={"input": "ready"})
+
+    assert timed_out.status_code == 504
+    assert timed_out.json()["error"]["code"] == "target_timeout"
+    assert reset.json() == {"scenario": "success", "reset": True}
+    assert success.status_code == 200
+    observations = (await client.get("/control/observations")).json()
+    assert observations["attempts"] == 1
+    assert observations["requests"][0]["input"] == "ready"
 
 
 @pytest.mark.asyncio

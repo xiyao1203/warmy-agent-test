@@ -193,6 +193,36 @@ async def test_apply_run_result_persists_unified_evidence() -> None:
 
 
 @pytest.mark.asyncio
+async def test_apply_run_result_preserves_stable_execution_error_code() -> None:
+    run, cases = make_run_with_cases()
+    repo = InMemoryRunRepository(run, cases)
+    handler = ApplyRunResultHandler(runs=repo)
+
+    await handler.execute(
+        ApplyRunResultCommand(
+            project_id=run.project_id,
+            run_id=run.run_id,
+            cases=[
+                ApplyRunCaseResult(
+                    run_case_id=case.run_case_id,
+                    status=RunCaseStatus.ERROR,
+                    error_type="auth_expired",
+                    error_message="Target request failed (auth_expired)",
+                    evidence={
+                        "execution_outcome": "error",
+                        "quality_decision": "review_required",
+                        "security_decision": "clear",
+                    },
+                )
+                for case in cases
+            ],
+        )
+    )
+
+    assert cases[0].outcomes.execution.code == "auth_expired"
+
+
+@pytest.mark.asyncio
 async def test_apply_run_result_is_idempotent_after_terminal_run() -> None:
     run, cases = make_run_with_cases()
     repo = InMemoryRunRepository(run, cases)

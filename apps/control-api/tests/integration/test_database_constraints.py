@@ -77,9 +77,7 @@ def test_run_trust_loop_records_are_project_scoped_and_idempotent() -> None:
         RunPostprocessJobModel: "uq_run_postprocess_jobs_project_run_pipeline",
         RunPostprocessStageResultModel: "uq_run_postprocess_stage_results_job_stage",
         RunDiagnosticModel: "uq_run_diagnostics_project_case_pipeline",
-        RunRegressionCandidateModel: (
-            "uq_run_regression_candidates_project_fingerprint_pipeline"
-        ),
+        RunRegressionCandidateModel: ("uq_run_regression_candidates_project_fingerprint_pipeline"),
         RunCalibrationModel: "uq_run_calibrations_project_run_pipeline",
         RunJointGateDecisionModel: "uq_run_joint_gate_decisions_project_run_pipeline",
     }

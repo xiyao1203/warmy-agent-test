@@ -373,25 +373,25 @@ Commit: `feat: show persisted run trust loop`
 - Produces deterministic scenarios for success, target failure, protocol failure, auth, quota, timeout, transient recovery, incomplete Evidence and security failure
 - Produces `make trust-loop-acceptance`
 
-- [ ] **Step 1: Write failing acceptance assertions**
+- [x] **Step 1: Write failing acceptance assertions**
 
 Assert public API completion, one postprocess job, stable classifications, model degradation, regression publication/quarantine rules, calibration state and non-compensating gate results.
 
-- [ ] **Step 2: Run RED**
+- [x] **Step 2: Run RED**
 
 Run: `uv run pytest tests/acceptance/test_run_trust_loop_public_path.py -q`
 Expected: failures until the complete service stack and API projection are connected.
 
-- [ ] **Step 3: Extend deterministic Fake Target controls**
+- [x] **Step 3: Extend deterministic Fake Target controls**
 
 Keep scenarios independent, resettable and secret-free. Use real HTTP and Temporal paths; do not monkeypatch production services.
 
-- [ ] **Step 4: Run the full public path**
+- [x] **Step 4: Run the full public path**
 
 Run: `make trust-loop-acceptance`
 Expected: all matrix scenarios reach the expected Run and postprocess terminal states with persisted records.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 Commit: `test: verify run trust loop public path`
 
@@ -406,34 +406,34 @@ Commit: `test: verify run trust loop public path`
 **Interfaces:**
 - Produces operator recovery/rollback instructions and final evidence ledger
 
-- [ ] **Step 1: Run backend and architecture gates**
+- [x] **Step 1: Run backend and architecture gates**
 
 Run: `uv run ruff format --check . && uv run ruff check . && uv run mypy apps/control-api/src apps/admin-cli/src && uv run pytest && uv run pytest apps/control-api/tests/architecture -v && uv run python scripts/check_architecture.py`
 Expected: all pass; only explicitly documented external-key tests may skip.
 
-- [ ] **Step 2: Run isolated PostgreSQL gates**
+- [x] **Step 2: Run isolated PostgreSQL gates**
 
 Create a temporary database and run migration, constraints, project isolation, audit and historical upgrade tests with `AGENTTEST_TEST_DATABASE_URL`. Expected: all pass, then drop the database.
 
-- [ ] **Step 3: Run frontend, build and API gates**
+- [x] **Step 3: Run frontend, build and API gates**
 
 Run: `pnpm format && pnpm lint && pnpm typecheck && pnpm test && pnpm build && make api-check`
 Expected: all pass with no generated diff.
 
-- [ ] **Step 4: Run Workflow and public-path gates**
+- [x] **Step 4: Run Workflow and public-path gates**
 
 Run: `uv run pytest workers/api-runner/tests/test_postprocess_workflow.py -q && make trust-loop-acceptance`
 Expected: all pass.
 
-- [ ] **Step 5: Document operations and rollback**
+- [x] **Step 5: Document operations and rollback**
 
 Document pending-job recovery, version-mixed Worker detection, model degradation, Quarantine review, migration downgrade boundaries and safe disablement of new scheduling.
 
-- [ ] **Step 6: Update ledgers with exact evidence**
+- [x] **Step 6: Update ledgers with exact evidence**
 
 Move `TASK-20260712-003` to completed only when all local acceptance criteria pass. Keep the unrelated external real-target verification as a separate waiting item.
 
-- [ ] **Step 7: Commit final records**
+- [x] **Step 7: Commit final records**
 
 Run: `git diff --check && git status --short`
 Expected: no whitespace errors and only intended files before commit; clean after commit.

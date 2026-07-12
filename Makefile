@@ -1,4 +1,4 @@
-.PHONY: bootstrap format lint typecheck test build verify architecture api-generate api-check mission-acceptance
+.PHONY: bootstrap format lint typecheck test build verify architecture api-generate api-check mission-acceptance trust-loop-acceptance
 
 bootstrap:
 	pnpm install --frozen-lockfile
@@ -39,3 +39,6 @@ api-check:
 
 mission-acceptance:
 	uv run python scripts/run_mission_acceptance.py
+
+trust-loop-acceptance:
+	uv run python scripts/run_mission_acceptance.py --matrix

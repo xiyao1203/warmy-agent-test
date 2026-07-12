@@ -95,6 +95,18 @@ async def test_diagnose_stage_without_model_is_explicitly_inconclusive() -> None
 
 
 @pytest.mark.asyncio
+async def test_reproduce_stage_quarantines_without_runtime() -> None:
+    value = snapshot()
+    result = await PostprocessStageService(Reader(value)).execute(
+        value.project_id, value.run_id, PostprocessStage.REPRODUCE
+    )
+
+    assert result.status == "warning"
+    assert result.warning_code == "reproducer_unavailable"
+    assert result.output["items"][0]["state"] == "quarantined"
+
+
+@pytest.mark.asyncio
 async def test_reproduce_stage_publishes_only_after_two_independent_matches() -> None:
     value = snapshot()
     result = await PostprocessStageService(Reader(value), reproducer=Reproducer()).execute(

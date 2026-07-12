@@ -23,6 +23,7 @@ from agenttest_api_runner.workflow import (
     aggregate_results,
     execution_activity_options,
     normalize_run_task,
+    workflow_error_type,
 )
 
 # ── normalize_run_task 协议测试 ──────────────────────────────────────
@@ -329,6 +330,16 @@ def test_execution_policy_bounds_timeout_and_retries() -> None:
 def test_workflow_class_exists_and_is_registered() -> None:
     """Workflow 类正确注册为 Temporal Workflow。"""
     assert getattr(RunWorkflow, "__temporal_workflow_definition", None) is not None
+
+
+def test_workflow_normalizes_exhausted_transient_error() -> None:
+    class Cause:
+        type = "TransientError"
+
+    class Error(Exception):
+        cause = Cause()
+
+    assert workflow_error_type(Error()) == "network_unavailable"
 
 
 # ── CaseScore 数据类测试 ─────────────────────────────────────────────
