@@ -798,7 +798,7 @@ git commit -m "refactor: split test agent chat responsibilities"
 - Modify: `apps/web/src/features/agents/tests/agent-version-dialog.test.tsx`
 - Modify: `apps/web/src/features/environments/tests/environment-list.test.tsx`
 
-- [ ] **Step 1: Add failing pure-codec tests**
+- [x] **Step 1: Add failing pure-codec tests**
 
 Lock the form transformations before moving them:
 
@@ -815,31 +815,31 @@ it("builds target config without plaintext login values", () => {
 });
 ```
 
-- [ ] **Step 2: Run codec and existing UI tests**
+- [x] **Step 2: Run codec and existing UI tests**
 
 Run: `pnpm --filter @warmy/web exec vitest run src/features/agents/tests/agent-version-dialog.test.tsx src/features/environments/tests/environment-list.test.tsx src/features/datasets/tests`
 
 Expected: existing tests pass; new codec imports fail until extraction.
 
-- [ ] **Step 3: Extract Agent Version mapping and sections**
+- [x] **Step 3: Extract Agent Version mapping and sections**
 
 Move `asRecord`, value parsers, template selection, default blocked actions, and submit payload construction to `agent-version-form.ts`. Move `TargetSection` and advanced groups to the two section files. Keep the Dialog component responsible for open state, top-level form state, credential save orchestration, and submit.
 
-- [ ] **Step 4: Extract Environment flow, panels, and editor**
+- [x] **Step 4: Extract Environment flow, panels, and editor**
 
 Move `FlowCard`, `VersionPanel`, and `CredentialSection` to focused files. Move `KeyValueRow`, codecs, `KeyValueEditor`, and create-template dialog to `environment-editor.tsx`. Keep `EnvironmentList` responsible for list composition and selected template/version IDs.
 
-- [ ] **Step 5: Extract Test Case codecs and editors**
+- [x] **Step 5: Extract Test Case codecs and editors**
 
 Move all row conversion functions to `test-case-form-codecs.ts` and the four editors plus accessible icon button to `test-case-editors.tsx`. `TestCaseEditor` retains form submission and top-level field layout.
 
-- [ ] **Step 6: Verify behavior, lint, types, and size threshold**
+- [x] **Step 6: Verify behavior, lint, types, and size threshold**
 
 Run: `pnpm --filter @warmy/web test && pnpm --filter @warmy/web lint && pnpm --filter @warmy/web typecheck && test $(wc -l < apps/web/src/features/agents/agent-version-dialog.tsx) -lt 800 && test $(wc -l < apps/web/src/features/environments/environment-list.tsx) -lt 800 && test $(wc -l < apps/web/src/features/datasets/test-case-editor.tsx) -lt 800`
 
 Expected: all checks pass and every original hotspot is below 800 lines.
 
-- [ ] **Step 7: Commit component decomposition**
+- [x] **Step 7: Commit component decomposition**
 
 ```bash
 git add apps/web/src/features/agents apps/web/src/features/environments apps/web/src/features/datasets

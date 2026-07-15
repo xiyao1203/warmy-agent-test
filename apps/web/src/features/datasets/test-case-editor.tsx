@@ -10,7 +10,6 @@ import type {
 } from "@warmy/generated-api-client";
 import type { ReactNode } from "react";
 import { useState } from "react";
-import { Plus, Trash2 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -23,6 +22,27 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import {
+  AssertionEditor,
+  Field,
+  KeyValueEditor,
+  ScorerEditor,
+  SecurityPolicyEditor,
+} from "./test-case-editors";
+import {
+  assertionsToRows,
+  type AssertionRow,
+  type KeyValueRow,
+  recordToRows,
+  rowsToAssertions,
+  rowsToRecord,
+  rowsToScorers,
+  rowsToSecurityPolicies,
+  scorersToRows,
+  type ScorerRow,
+  securityPoliciesToRows,
+  type SecurityPolicyRow,
+} from "./test-case-form-codecs";
 
 type TestCaseEditorProps = {
   caseItem?: TestCaseResponse;
@@ -31,11 +51,6 @@ type TestCaseEditorProps = {
   triggerIcon?: ReactNode;
   triggerLabel: string;
 };
-
-type KeyValueRow = { id: string; key: string; value: string };
-type AssertionRow = { id: string; type: string; path: string; value: string };
-type ScorerRow = { id: string; name: string; type: string; threshold: string };
-type SecurityPolicyRow = { id: string; type: string; severity: string };
 
 export function TestCaseEditor({
   caseItem,
@@ -373,437 +388,8 @@ export function TestCaseEditor({
   );
 }
 
-/* ── 子组件 ────────────────────────────────────────────────────────── */
-
-function newId() {
-  return Math.random().toString(36).slice(2);
-}
-
-function formatCellValue(value: unknown) {
-  if (value === null || value === undefined) return "";
-  if (typeof value === "string") return value;
-  if (typeof value === "number" || typeof value === "boolean") {
-    return String(value);
-  }
-  return JSON.stringify(value);
-}
-
 function executionModeLabel(mode: ExecutionMode) {
   if (mode === "api") return "API ";
   if (mode === "codex_explore") return "Codex 浏览器探索";
   return "浏览器";
-}
-
-function parseCellValue(value: string) {
-  const trimmed = value.trim();
-  if (!trimmed) return "";
-  if (trimmed === "true") return true;
-  if (trimmed === "false") return false;
-  if (trimmed === "null") return null;
-  if (!Number.isNaN(Number(trimmed)) && /^-?\d+(\.\d+)?$/.test(trimmed)) {
-    return Number(trimmed);
-  }
-  if (
-    trimmed.startsWith("{") ||
-    trimmed.startsWith("[") ||
-    trimmed.startsWith('"')
-  ) {
-    try {
-      return JSON.parse(trimmed) as unknown;
-    } catch {
-      return value;
-    }
-  }
-  return value;
-}
-
-function recordToRows(record: Record<string, unknown>) {
-  return Object.entries(record).map(([key, value]) => ({
-    id: newId(),
-    key,
-    value: formatCellValue(value),
-  }));
-}
-
-function rowsToRecord(rows: KeyValueRow[]) {
-  return Object.fromEntries(
-    rows
-      .filter((row) => row.key.trim())
-      .map((row) => [row.key.trim(), parseCellValue(row.value)]),
-  );
-}
-
-function assertionsToRows(assertions: Array<Record<string, unknown>>) {
-  return assertions.map((assertion) => ({
-    id: newId(),
-    type: formatCellValue(assertion.type ?? "contains"),
-    path: formatCellValue(assertion.path ?? ""),
-    value: formatCellValue(assertion.value ?? ""),
-  }));
-}
-
-function rowsToAssertions(rows: AssertionRow[]) {
-  return rows
-    .filter((row) => row.path.trim() || row.value.trim())
-    .map((row) => ({
-      type: row.type.trim() || "contains",
-      path: row.path.trim(),
-      value: parseCellValue(row.value),
-    }));
-}
-
-function scorersToRows(scorers: Array<Record<string, unknown>>) {
-  return scorers.map((scorer) => ({
-    id: newId(),
-    name: formatCellValue(scorer.name ?? ""),
-    type: formatCellValue(scorer.type ?? "llm_judge"),
-    threshold: formatCellValue(scorer.threshold ?? ""),
-  }));
-}
-
-function rowsToScorers(rows: ScorerRow[]) {
-  return rows
-    .filter((row) => row.name.trim())
-    .map((row) => ({
-      name: row.name.trim(),
-      type: row.type.trim() || "llm_judge",
-      threshold: row.threshold.trim() ? Number(row.threshold) : undefined,
-    }));
-}
-
-function securityPoliciesToRows(policies: Array<Record<string, unknown>>) {
-  return policies.map((policy) => ({
-    id: newId(),
-    type: formatCellValue(policy.type ?? ""),
-    severity: formatCellValue(policy.severity ?? "medium"),
-  }));
-}
-
-function rowsToSecurityPolicies(rows: SecurityPolicyRow[]) {
-  return rows
-    .filter((row) => row.type.trim())
-    .map((row) => ({
-      type: row.type.trim(),
-      severity: row.severity.trim() || "medium",
-    }));
-}
-
-function Field({
-  label,
-  required = false,
-  children,
-}: {
-  label: string;
-  required?: boolean;
-  children: React.ReactNode;
-}) {
-  return (
-    <label className="block text-sm font-medium">
-      {label}
-      {required && <span className="ml-1 text-[var(--danger)]">*</span>}
-      <div className="mt-1.5">{children}</div>
-    </label>
-  );
-}
-
-function KeyValueEditor({
-  addLabel,
-  keyPlaceholder,
-  label,
-  onChange,
-  rows,
-  required = false,
-  valuePlaceholder,
-}: {
-  addLabel: string;
-  keyPlaceholder: string;
-  label: string;
-  onChange: (rows: KeyValueRow[]) => void;
-  rows: KeyValueRow[];
-  required?: boolean;
-  valuePlaceholder: string;
-}) {
-  const updateRow = (id: string, patch: Partial<KeyValueRow>) => {
-    onChange(rows.map((row) => (row.id === id ? { ...row, ...patch } : row)));
-  };
-
-  return (
-    <div>
-      <div className="text-sm font-medium">
-        {label}
-        {required && <span className="ml-1 text-[var(--danger)]">*</span>}
-      </div>
-      <div className="mt-2 space-y-2">
-        {rows.map((row) => (
-          <div
-            className="grid grid-cols-[minmax(120px,1fr)_minmax(180px,2fr)_36px] gap-2"
-            key={row.id}
-          >
-            <Input
-              aria-label={`${label}字段名`}
-              onChange={(event) =>
-                updateRow(row.id, { key: event.target.value })
-              }
-              placeholder={keyPlaceholder}
-              value={row.key}
-            />
-            <Input
-              aria-label={`${label}字段值`}
-              onChange={(event) =>
-                updateRow(row.id, { value: event.target.value })
-              }
-              placeholder={valuePlaceholder}
-              value={row.value}
-            />
-            <IconButton
-              label={`删除${label}字段`}
-              onClick={() =>
-                onChange(rows.filter((item) => item.id !== row.id))
-              }
-            />
-          </div>
-        ))}
-      </div>
-      <Button
-        className="mt-2"
-        onClick={() => onChange([...rows, { id: newId(), key: "", value: "" }])}
-        variant="secondary"
-      >
-        <Plus aria-hidden="true" className="mr-1 size-4" />
-        {addLabel}
-      </Button>
-    </div>
-  );
-}
-
-function AssertionEditor({
-  onChange,
-  rows,
-}: {
-  onChange: (rows: AssertionRow[]) => void;
-  rows: AssertionRow[];
-}) {
-  const updateRow = (id: string, patch: Partial<AssertionRow>) => {
-    onChange(rows.map((row) => (row.id === id ? { ...row, ...patch } : row)));
-  };
-
-  return (
-    <div>
-      <div className="text-sm font-medium">断言规则</div>
-      <div className="mt-2 space-y-2">
-        {rows.map((row) => (
-          <div
-            className="grid grid-cols-[120px_minmax(140px,1fr)_minmax(160px,1fr)_36px] gap-2"
-            key={row.id}
-          >
-            <DropdownSelect
-              aria-label="断言类型"
-              className="h-9 rounded-[var(--radius-md)] border border-[var(--hairline)] bg-[var(--surface)] px-3"
-              onChange={(event) =>
-                updateRow(row.id, { type: event.target.value })
-              }
-              value={row.type}
-            >
-              <option value="contains">包含</option>
-              <option value="equals">等于</option>
-              <option value="exists">存在</option>
-              <option value="regex">正则匹配</option>
-            </DropdownSelect>
-            <Input
-              aria-label="断言字段"
-              onChange={(event) =>
-                updateRow(row.id, { path: event.target.value })
-              }
-              placeholder="字段，如 output.text"
-              value={row.path}
-            />
-            <Input
-              aria-label="断言期望值"
-              onChange={(event) =>
-                updateRow(row.id, { value: event.target.value })
-              }
-              placeholder="期望值"
-              value={row.value}
-            />
-            <IconButton
-              label="删除断言"
-              onClick={() =>
-                onChange(rows.filter((item) => item.id !== row.id))
-              }
-            />
-          </div>
-        ))}
-      </div>
-      <Button
-        className="mt-2"
-        onClick={() =>
-          onChange([
-            ...rows,
-            { id: newId(), path: "", type: "contains", value: "" },
-          ])
-        }
-        variant="secondary"
-      >
-        <Plus aria-hidden="true" className="mr-1 size-4" />
-        添加断言
-      </Button>
-    </div>
-  );
-}
-
-function ScorerEditor({
-  onChange,
-  rows,
-}: {
-  onChange: (rows: ScorerRow[]) => void;
-  rows: ScorerRow[];
-}) {
-  const updateRow = (id: string, patch: Partial<ScorerRow>) => {
-    onChange(rows.map((row) => (row.id === id ? { ...row, ...patch } : row)));
-  };
-
-  return (
-    <div>
-      <div className="text-sm font-medium">评分器</div>
-      <div className="mt-2 space-y-2">
-        {rows.map((row) => (
-          <div
-            className="grid grid-cols-[minmax(120px,1fr)_140px_100px_36px] gap-2"
-            key={row.id}
-          >
-            <Input
-              aria-label="评分器名称"
-              onChange={(event) =>
-                updateRow(row.id, { name: event.target.value })
-              }
-              placeholder="名称，如 helpfulness"
-              value={row.name}
-            />
-            <DropdownSelect
-              aria-label="评分器类型"
-              className="h-9 rounded-[var(--radius-md)] border border-[var(--hairline)] bg-[var(--surface)] px-3"
-              onChange={(event) =>
-                updateRow(row.id, { type: event.target.value })
-              }
-              value={row.type}
-            >
-              <option value="llm_judge">模型裁判</option>
-              <option value="rule">规则评分</option>
-              <option value="visual">视觉评分</option>
-            </DropdownSelect>
-            <Input
-              aria-label="通过阈值"
-              onChange={(event) =>
-                updateRow(row.id, { threshold: event.target.value })
-              }
-              placeholder="0.8"
-              value={row.threshold}
-            />
-            <IconButton
-              label="删除评分器"
-              onClick={() =>
-                onChange(rows.filter((item) => item.id !== row.id))
-              }
-            />
-          </div>
-        ))}
-      </div>
-      <Button
-        className="mt-2"
-        onClick={() =>
-          onChange([
-            ...rows,
-            { id: newId(), name: "", threshold: "0.8", type: "llm_judge" },
-          ])
-        }
-        variant="secondary"
-      >
-        <Plus aria-hidden="true" className="mr-1 size-4" />
-        添加评分器
-      </Button>
-    </div>
-  );
-}
-
-function SecurityPolicyEditor({
-  onChange,
-  rows,
-}: {
-  onChange: (rows: SecurityPolicyRow[]) => void;
-  rows: SecurityPolicyRow[];
-}) {
-  const updateRow = (id: string, patch: Partial<SecurityPolicyRow>) => {
-    onChange(rows.map((row) => (row.id === id ? { ...row, ...patch } : row)));
-  };
-
-  return (
-    <div>
-      <div className="text-sm font-medium">安全策略</div>
-      <div className="mt-2 space-y-2">
-        {rows.map((row) => (
-          <div
-            className="grid grid-cols-[minmax(160px,1fr)_140px_36px] gap-2"
-            key={row.id}
-          >
-            <Input
-              aria-label="安全策略类型"
-              onChange={(event) =>
-                updateRow(row.id, { type: event.target.value })
-              }
-              placeholder="策略，如 pii_redaction"
-              value={row.type}
-            />
-            <DropdownSelect
-              aria-label="安全等级"
-              className="h-9 rounded-[var(--radius-md)] border border-[var(--hairline)] bg-[var(--surface)] px-3"
-              onChange={(event) =>
-                updateRow(row.id, { severity: event.target.value })
-              }
-              value={row.severity}
-            >
-              <option value="low">低</option>
-              <option value="medium">中</option>
-              <option value="high">高</option>
-              <option value="critical">严重</option>
-            </DropdownSelect>
-            <IconButton
-              label="删除安全策略"
-              onClick={() =>
-                onChange(rows.filter((item) => item.id !== row.id))
-              }
-            />
-          </div>
-        ))}
-      </div>
-      <Button
-        className="mt-2"
-        onClick={() =>
-          onChange([...rows, { id: newId(), severity: "medium", type: "" }])
-        }
-        variant="secondary"
-      >
-        <Plus aria-hidden="true" className="mr-1 size-4" />
-        添加安全策略
-      </Button>
-    </div>
-  );
-}
-
-function IconButton({
-  label,
-  onClick,
-}: {
-  label: string;
-  onClick: () => void;
-}) {
-  return (
-    <button
-      aria-label={label}
-      className="grid size-9 place-items-center rounded-[var(--radius-md)] text-[var(--muted)] hover:bg-[var(--danger-subtle)] hover:text-[var(--danger)]"
-      onClick={onClick}
-      type="button"
-    >
-      <Trash2 aria-hidden="true" className="size-4" />
-    </button>
-  );
 }
