@@ -72,7 +72,7 @@
 - Modify: `apps/control-api/tests/integration/test_database_constraints.py`
 - Modify: `apps/control-api/tests/integration/test_migrations.py`
 
-- [ ] **Step 1: Write a locally runnable failing metadata test**
+- [x] **Step 1: Write a locally runnable failing metadata test**
 
 Import `ArtifactModel` and `ForeignKeyConstraint` in `test_database_constraints.py`, then assert that ORM metadata contains the exact composite relationship:
 
@@ -95,13 +95,13 @@ def test_artifacts_enforce_project_run_scope() -> None:
 
 This test requires no database and must fail on the current branch. Add a PostgreSQL-only test using the file’s existing `AGENTTEST_TEST_DATABASE_URL` pattern that seeds the minimum valid Project/Agent/Dataset/TestPlan/Run graph, inserts a valid Artifact, and asserts `asyncpg.ForeignKeyViolationError` for a second Artifact pairing another project with that Run. Extend the migration test to assert `0024 -> 0025` preserves the valid row.
 
-- [ ] **Step 2: Verify RED for the missing composite constraint**
+- [x] **Step 2: Verify RED for the missing composite constraint**
 
 Run: `uv run pytest apps/control-api/tests/integration/test_database_constraints.py::test_artifacts_enforce_project_run_scope -q`
 
 Expected: FAIL because `fk_artifacts_project_run` is absent from `ArtifactModel` metadata.
 
-- [ ] **Step 3: Add migration `0025` and align ORM metadata**
+- [x] **Step 3: Add migration `0025` and align ORM metadata**
 
 Use the existing `uq_runs_project_id` unique constraint as the referenced key:
 
@@ -126,13 +126,13 @@ def downgrade() -> None:
 
 Add the matching `ForeignKeyConstraint` to `ArtifactModel.__table_args__` and retain the existing direct foreign keys only where SQLite/Alembic requires them for historical compatibility.
 
-- [ ] **Step 4: Verify migration and constraint behavior**
+- [x] **Step 4: Verify migration and constraint behavior**
 
 Run: `uv run pytest apps/control-api/tests/integration/test_database_constraints.py apps/control-api/tests/integration/test_migrations.py -q`
 
 Expected: all runnable tests pass; PostgreSQL-only tests either pass with the isolated URL or retain their explicit environment skip.
 
-- [ ] **Step 5: Commit the database invariant**
+- [x] **Step 5: Commit the database invariant**
 
 ```bash
 git add apps/control-api/migrations/versions/0025_artifact_project_scope.py apps/control-api/src/agenttest/modules/artifacts/infrastructure/repositories.py apps/control-api/tests/integration/test_database_constraints.py apps/control-api/tests/integration/test_migrations.py

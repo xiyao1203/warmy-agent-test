@@ -5,7 +5,7 @@ from __future__ import annotations
 from datetime import datetime
 from uuid import UUID
 
-from sqlalchemy import DateTime, ForeignKey, Integer, String, select
+from sqlalchemy import DateTime, ForeignKey, ForeignKeyConstraint, Integer, String, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -18,6 +18,14 @@ from agenttest.shared.infrastructure.database import Base
 
 class ArtifactModel(Base):
     __tablename__ = "artifacts"
+    __table_args__ = (
+        ForeignKeyConstraint(
+            ["project_id", "run_id"],
+            ["runs.project_id", "runs.id"],
+            name="fk_artifacts_project_run",
+            ondelete="CASCADE",
+        ),
+    )
 
     id: Mapped[UUID] = mapped_column(primary_key=True)
     project_id: Mapped[UUID] = mapped_column(
