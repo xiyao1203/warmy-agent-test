@@ -935,7 +935,7 @@ git commit -m "perf: add reproducible performance budgets"
 - Modify: `Makefile`
 - Modify: dependency manifests and lockfiles only if a direct vulnerable dependency requires a compatible patch upgrade
 
-- [ ] **Step 1: Create a deterministic audit command**
+- [x] **Step 1: Create a deterministic audit command**
 
 ```bash
 #!/usr/bin/env bash
@@ -947,21 +947,21 @@ uvx --from pip-audit pip-audit -r /tmp/agenttest-requirements.txt
 
 The script writes no credentials and deletes the temporary export with a trap.
 
-- [ ] **Step 2: Run the audit before dependency changes**
+- [x] **Step 2: Run the audit before dependency changes**
 
 Run: `bash scripts/audit_dependencies.sh`
 
 Expected: exit 0 when no high/critical issue exists; otherwise capture exact package, advisory, installed version, fixed version, and dependency path.
 
-- [ ] **Step 3: Patch compatible direct dependencies only**
+- [x] **Step 3: Patch compatible direct dependencies only**
 
 Use exact stable versions, regenerate `pnpm-lock.yaml` or `uv.lock`, and run the owning package’s tests. Do not use broad major upgrades or overrides that hide an unresolved transitive advisory.
 
-- [ ] **Step 4: Record the audit**
+- [x] **Step 4: Record the audit**
 
 `docs/security/dependency-audit.md` records date, commands, results, upgrades, remaining advisories, exploitability, mitigation, and review date. The production audit must have zero unmitigated high/critical findings.
 
-- [ ] **Step 5: Add audit target and verify**
+- [x] **Step 5: Add audit target and verify**
 
 ```make
 security-audit:
