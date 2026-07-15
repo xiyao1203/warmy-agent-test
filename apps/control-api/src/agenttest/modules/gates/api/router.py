@@ -123,6 +123,7 @@ def create_gate_router(dependencies: GateApiDependencies) -> APIRouter:
         body: EvaluateGateRequest,
         x_csrf_token: str | None = Header(default=None),
     ):
+        """评估门禁是否通过。"""
         actor = await require_writer(
             request, dependencies.actor_for, dependencies.settings, x_csrf_token
         )
@@ -168,6 +169,7 @@ def create_gate_router(dependencies: GateApiDependencies) -> APIRouter:
         body: ExemptRequest,
         x_csrf_token: str | None = Header(default=None),
     ):
+        """临时豁免门禁（记录审计日志）。"""
         actor = await require_writer(
             request, dependencies.actor_for, dependencies.settings, x_csrf_token
         )

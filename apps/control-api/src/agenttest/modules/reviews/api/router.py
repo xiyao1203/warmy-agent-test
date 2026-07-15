@@ -85,6 +85,7 @@ def create_review_router(dependencies: ReviewApiDependencies) -> APIRouter:
 
     @router.get("/stats")
     async def review_stats(request: Request, project_id: UUID):
+        """审核一致性统计。"""
         actor = await reader(request)
         if isinstance(actor, JSONResponse):
             return actor
@@ -100,6 +101,7 @@ def create_review_router(dependencies: ReviewApiDependencies) -> APIRouter:
         body: AutoEnqueueRequest,
         x_csrf_token: str | None = Header(default=None),
     ):
+        """将低置信度用例自动入队。"""
         actor = await writer(request, x_csrf_token)
         if isinstance(actor, JSONResponse):
             return actor
@@ -122,6 +124,7 @@ def create_review_router(dependencies: ReviewApiDependencies) -> APIRouter:
         body: ScoreReviewRequest,
         x_csrf_token: str | None = Header(default=None),
     ):
+        """人工评分。"""
         actor = await writer(request, x_csrf_token)
         if isinstance(actor, JSONResponse):
             return actor
@@ -149,6 +152,7 @@ def create_review_router(dependencies: ReviewApiDependencies) -> APIRouter:
         opinion: str | None = None,
         x_csrf_token: str | None = Header(default=None),
     ):
+        """拒绝审核。"""
         actor = await writer(request, x_csrf_token)
         if isinstance(actor, JSONResponse):
             return actor
@@ -168,6 +172,7 @@ def create_review_router(dependencies: ReviewApiDependencies) -> APIRouter:
         task_id: UUID,
         x_csrf_token: str | None = Header(default=None),
     ):
+        """跳过审核。"""
         actor = await writer(request, x_csrf_token)
         if isinstance(actor, JSONResponse):
             return actor

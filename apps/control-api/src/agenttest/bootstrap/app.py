@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from dataclasses import replace
-
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
@@ -86,7 +84,29 @@ def create_app(
 
 def _legacy_overrides(
     overrides: AppOverrides,
-    **values: object | None,
+    *,
+    auth: AuthApiDependencies | None = None,
+    admin: AdminApiDependencies | None = None,
+    projects: ProjectApiDependencies | None = None,
+    audit: AuditApiDependencies | None = None,
+    agents: AgentApiDependencies | None = None,
+    datasets: DatasetApiDependencies | None = None,
+    test_plans: TestPlanApiDependencies | None = None,
+    environments: EnvironmentApiDependencies | None = None,
+    runs: RunApiDependencies | None = None,
+    user_settings: UserSettingsApiDependencies | None = None,
+    feedback: FeedbackApiDependencies | None = None,
 ) -> AppOverrides:
-    updates = {name: value for name, value in values.items() if value is not None}
-    return replace(overrides, **updates) if updates else overrides
+    return AppOverrides(
+        auth=auth if auth is not None else overrides.auth,
+        admin=admin if admin is not None else overrides.admin,
+        projects=projects if projects is not None else overrides.projects,
+        audit=audit if audit is not None else overrides.audit,
+        agents=agents if agents is not None else overrides.agents,
+        datasets=datasets if datasets is not None else overrides.datasets,
+        test_plans=test_plans if test_plans is not None else overrides.test_plans,
+        environments=(environments if environments is not None else overrides.environments),
+        runs=runs if runs is not None else overrides.runs,
+        user_settings=(user_settings if user_settings is not None else overrides.user_settings),
+        feedback=feedback if feedback is not None else overrides.feedback,
+    )

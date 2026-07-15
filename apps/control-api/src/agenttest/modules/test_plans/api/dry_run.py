@@ -42,6 +42,7 @@ def create_dry_run_router(dependencies: DryRunApiDependencies) -> APIRouter:
         version_id: UUID,
         x_csrf_token: str | None = Header(default=None),
     ):
+        """试运行：预览测试计划版本的执行参数。"""
         actor = await require_writer(
             request, dependencies.actor_for, dependencies.settings, x_csrf_token
         )

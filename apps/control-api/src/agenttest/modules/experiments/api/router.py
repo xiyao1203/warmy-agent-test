@@ -97,6 +97,7 @@ def create_experiment_router(dependencies: ExperimentApiDependencies) -> APIRout
         run_id: UUID | None = None,
         experiment_id: UUID | None = None,
     ):
+        """获取运行统计或实验对比统计。"""
         actor = await require_actor(request, dependencies.actor_for, dependencies.settings)
         if isinstance(actor, JSONResponse):
             return actor
@@ -140,6 +141,7 @@ def create_experiment_router(dependencies: ExperimentApiDependencies) -> APIRout
         experiment_id: UUID,
         x_csrf_token: str | None = Header(default=None),
     ):
+        """执行对比实验：逐用例对比 + 统计。"""
         actor = await require_writer(
             request, dependencies.actor_for, dependencies.settings, x_csrf_token
         )

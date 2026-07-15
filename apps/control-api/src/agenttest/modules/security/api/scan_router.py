@@ -67,6 +67,7 @@ def create_security_scan_router(
         body: SecurityScanRequest,
         x_csrf_token: str | None = Header(default=None),
     ):
+        """触发安全扫描。"""
         actor = await require_writer(
             request, dependencies.actor_for, dependencies.settings, x_csrf_token
         )

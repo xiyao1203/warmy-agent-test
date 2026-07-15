@@ -35,6 +35,7 @@ def create_run_stream_router(dependencies: RunStreamApiDependencies) -> APIRoute
 
     @router.get("/stream")
     async def stream_run_progress(request: Request, project_id: UUID, run_id: UUID):
+        """SSE 端点：实时推送运行进度。"""
         actor = await require_actor(request, dependencies.actor_for, dependencies.settings)
         if isinstance(actor, JSONResponse):
             return actor
