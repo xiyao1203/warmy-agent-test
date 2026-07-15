@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "source": "clean-main Next.js production build recorded before repository hardening",
+  "routes": {
+    "/login": {
+      "gzipBytes": 399362,
+      "rawBytes": 1376351
+    },
+    "/projects": {
+      "gzipBytes": 408575,
+      "rawBytes": 1410587
+    },
+    "/projects/[projectId]/runs": {
+      "gzipBytes": 421506,
+      "rawBytes": 1456279
+    },
+    "/projects/[projectId]/test-agent": {
+      "gzipBytes": 440705,
+      "rawBytes": 1524731
+    }
+  }
+}

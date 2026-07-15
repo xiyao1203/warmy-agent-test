@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "metric": "domInteractive",
+  "samplesPerRoute": 3,
+  "maximumRegressionRatio": 0.1,
+  "routes": {
+    "/login": 1500,
+    "/projects": 1500,
+    "/projects/[projectId]/runs": 1500,
+    "/projects/[projectId]/test-agent": 1500
+  }
+}

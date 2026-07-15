@@ -860,7 +860,7 @@ git commit -m "refactor: decompose oversized feature components"
 - Modify: `apps/web/package.json`
 - Modify: `Makefile`
 
-- [ ] **Step 1: Write failing bundle-report tests**
+- [x] **Step 1: Write failing bundle-report tests**
 
 The script reads `.next/build-manifest.json`, resolves route chunks, computes raw and gzip bytes, and emits deterministic sorted JSON:
 
@@ -874,13 +874,13 @@ assert.deepEqual(report.routes["/login"], {
 
 Budget checking fails when route gzip bytes exceed baseline by more than 5% or a new synchronous chunk exceeds 256000 gzip bytes.
 
-- [ ] **Step 2: Verify report tests fail before scripts exist**
+- [x] **Step 2: Verify report tests fail before scripts exist**
 
 Run: `node --test scripts/tests/web_bundle_budget.test.mjs`
 
 Expected: missing script/module.
 
-- [ ] **Step 3: Implement report and budget commands**
+- [x] **Step 3: Implement report and budget commands**
 
 Add package scripts:
 
@@ -891,11 +891,11 @@ Add package scripts:
 
 Generate the baseline from the already recorded clean-main build; keep route names `/login`, `/projects`, `/projects/[projectId]/test-agent`, and `/projects/[projectId]/runs`.
 
-- [ ] **Step 4: Add navigation sampling without flaky absolute limits**
+- [x] **Step 4: Add navigation sampling without flaky absolute limits**
 
 The Playwright test records three `performance.getEntriesByType('navigation')` samples per route, uses the median `domInteractive`, and compares candidate values with `docs/performance/navigation-baseline.json`; failure threshold is 10% regression on the same local setup. It must skip with an explicit reason when authenticated services are unavailable.
 
-- [ ] **Step 5: Add query-bound tests**
+- [x] **Step 5: Add query-bound tests**
 
 Instrument the SQLAlchemy engine for Run comparison, Experiment statistics, and project lists; assert fixed query ceilings independent of result count. Example:
 
@@ -903,7 +903,7 @@ Instrument the SQLAlchemy engine for Run comparison, Experiment statistics, and 
 assert await count_queries(lambda: service.compare(actor, project_id, run_a, run_b)) <= 4
 ```
 
-- [ ] **Step 6: Add repeatable Make targets**
+- [x] **Step 6: Add repeatable Make targets**
 
 ```make
 performance: build
@@ -913,13 +913,13 @@ performance: build
 
 Keep navigation sampling as `performance-e2e` because it requires running services.
 
-- [ ] **Step 7: Verify budgets**
+- [x] **Step 7: Verify budgets**
 
 Run: `make performance`
 
 Expected: bundle and query budgets pass against the committed baseline.
 
-- [ ] **Step 8: Commit performance evidence**
+- [x] **Step 8: Commit performance evidence**
 
 ```bash
 git add scripts apps/web/package.json apps/web/tests/e2e/performance-budget.spec.ts apps/control-api/tests/performance docs/performance Makefile

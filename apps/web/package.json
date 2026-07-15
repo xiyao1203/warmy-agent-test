@@ -10,6 +10,8 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "e2e": "playwright test",
+    "perf:bundle-report": "node ../../scripts/report_web_bundles.mjs .next",
+    "perf:bundle-check": "node ../../scripts/check_web_bundle_budget.mjs .next ../../docs/performance/web-bundle-baseline.json",
     "promptfoo:eval": "promptfoo eval"
   },
   "dependencies": {
