@@ -1145,7 +1145,15 @@ def _register_artifact_endpoints(
 
     from fastapi import Request
 
-    from agenttest.modules.artifacts.api.router import create_artifact_router
+    from agenttest.bootstrap.project_access import ProjectAccessAdapter
+    from agenttest.modules.artifacts.api.router import (
+        ArtifactApiDependencies,
+        create_artifact_router,
+    )
+    from agenttest.modules.artifacts.application.service import ArtifactService
+    from agenttest.modules.artifacts.infrastructure.repositories import (
+        SqlAlchemyArtifactRepository,
+    )
     from agenttest.modules.artifacts.infrastructure.storage import (
         FileSystemArtifactStorage,
     )
@@ -1153,6 +1161,10 @@ def _register_artifact_endpoints(
         InvalidSessionError,
     )
     from agenttest.modules.identity.public import User
+    from agenttest.modules.projects.infrastructure.persistence.repositories import (
+        SqlAlchemyProjectRepository,
+    )
+    from agenttest.modules.projects.public import ProjectId
     from agenttest.shared.infrastructure.database import (
         create_database_engine,
         create_session_factory,
@@ -1166,6 +1178,13 @@ def _register_artifact_endpoints(
 
     engine = create_database_engine(str(settings.database_url))
     session_factory = create_session_factory(engine)
+    access = ProjectAccessAdapter(SqlAlchemyProjectRepository(session_factory))
+    service = ArtifactService(
+        repository=SqlAlchemyArtifactRepository(session_factory),
+        storage=storage,
+        user_limit_bytes=settings.artifact_user_upload_max_bytes,
+        internal_limit_bytes=settings.artifact_internal_upload_max_bytes,
+    )
 
     async def _actor(request: Request) -> User:
         token = request.cookies.get(settings.session_cookie_name)
@@ -1178,27 +1197,20 @@ def _register_artifact_endpoints(
         if not header or header != request.cookies.get(CSRF_NAME):
             raise PermissionError("CSRF mismatch")
 
-    async def _check_project(project_id: UUID) -> None:
-        """验证项目存在（SQL 查询）。"""
-        from sqlalchemy import text
-
-        async with session_factory() as session:
-            result = await session.execute(
-                text("SELECT 1 FROM projects WHERE id = :pid"),
-                {"pid": project_id},
-            )
-            if result.scalar() is None:
-                from fastapi import HTTPException
-
-                raise HTTPException(status_code=404, detail="Project not found")
+    async def _check_project(actor: User, project_id: UUID, write: bool) -> None:
+        if write:
+            await access.ensure_editor(actor, ProjectId(project_id))
+        else:
+            await access.ensure_member(actor, ProjectId(project_id))
 
     router = create_artifact_router(
-        storage,
-        session_factory=session_factory,
-        _actor=_actor,
-        _check_csrf=_check_csrf,
-        _check_project=_check_project,
-        internal_token=settings.internal_api_token,
+        ArtifactApiDependencies(
+            service=service,
+            actor=_actor,
+            csrf=_check_csrf,
+            project_access=_check_project,
+            internal_token=settings.internal_api_token,
+        )
     )
     app.include_router(router, prefix="/api/v1")
 

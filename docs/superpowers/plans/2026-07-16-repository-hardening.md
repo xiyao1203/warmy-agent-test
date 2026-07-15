@@ -154,7 +154,7 @@ git commit -m "fix: enforce artifact project scope"
 - Modify: `apps/control-api/src/agenttest/bootstrap/settings.py`
 - Modify: `apps/control-api/src/agenttest/bootstrap/app.py`
 
-- [ ] **Step 1: Write failing service tests for bounds, sanitization, scope, and cleanup**
+- [x] **Step 1: Write failing service tests for bounds, sanitization, scope, and cleanup**
 
 Define test doubles implementing the intended ports and assert the public behavior:
 
@@ -184,13 +184,13 @@ async def test_upload_stops_after_configured_limit_and_removes_temporary_object(
 
 Also assert `sanitize_filename("../\x00report.png") == "report.png"`, repository failure aborts the temporary object, and download yields chunks rather than one `bytes` object.
 
-- [ ] **Step 2: Run the unit tests and observe the missing application API**
+- [x] **Step 2: Run the unit tests and observe the missing application API**
 
 Run: `uv run pytest apps/control-api/tests/unit/artifacts/test_artifact_service.py -q`
 
 Expected: collection fails because `ArtifactService`, typed errors, and stream ports do not exist.
 
-- [ ] **Step 3: Define stream-oriented domain ports and the minimal service**
+- [x] **Step 3: Define stream-oriented domain ports and the minimal service**
 
 Use these stable signatures:
 
@@ -216,7 +216,7 @@ class ArtifactRepository(Protocol):
 
 Add `artifact_user_upload_max_bytes=67108864` and `artifact_internal_upload_max_bytes=268435456` to `Settings`, both constrained to positive integers.
 
-- [ ] **Step 4: Implement atomic filesystem storage**
+- [x] **Step 4: Implement atomic filesystem storage**
 
 Generate server-side keys and never concatenate a user path:
 
@@ -236,7 +236,7 @@ def _resolve(self, key: str) -> Path:
 
 `commit()` derives the final content-addressed key from the completed temporary file and uses `Path.replace()`; `iter_chunks()` reads with `asyncio.to_thread` so the event loop is not blocked by large files.
 
-- [ ] **Step 5: Write failing API contract tests**
+- [x] **Step 5: Write failing API contract tests**
 
 Cover authenticated upload, CSRF rejection, cross-project Run rejection, `413 application/problem+json`, internal token rejection, filename sanitization, and streamed download. The API dependency object is:
 
@@ -250,17 +250,17 @@ class ArtifactApiDependencies:
     internal_token: str
 ```
 
-- [ ] **Step 6: Convert the router to a translation-only adapter**
+- [x] **Step 6: Convert the router to a translation-only adapter**
 
 Remove SQLAlchemy, Repository, storage, and session imports. Use `secrets.compare_digest()` for the internal token and map `ArtifactTooLarge` to RFC 7807 status 413, `ArtifactRunNotFound` to 404, and permission failures to 403.
 
-- [ ] **Step 7: Verify Artifact behavior and architecture**
+- [x] **Step 7: Verify Artifact behavior and architecture**
 
 Run: `uv run pytest apps/control-api/tests/unit/artifacts apps/control-api/tests/contract/test_artifacts_api.py apps/control-api/tests/integration/test_database_constraints.py -q`
 
 Expected: all tests pass with no unbounded `await file.read()` in the Artifact router.
 
-- [ ] **Step 8: Commit bounded Artifact handling**
+- [x] **Step 8: Commit bounded Artifact handling**
 
 ```bash
 git add apps/control-api/src/agenttest/modules/artifacts apps/control-api/src/agenttest/bootstrap/settings.py apps/control-api/src/agenttest/bootstrap/app.py apps/control-api/tests/unit/artifacts apps/control-api/tests/contract/test_artifacts_api.py

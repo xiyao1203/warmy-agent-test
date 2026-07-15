@@ -28,6 +28,18 @@ def test_browser_profile_root_defaults_to_private_user_directory() -> None:
     assert settings.browser_profile_root.endswith("/.agenttest/browser-profiles/data")
 
 
+def test_artifact_upload_limits_are_positive_and_have_safe_defaults() -> None:
+    settings = Settings()
+
+    assert settings.artifact_user_upload_max_bytes == 64 * 1024 * 1024
+    assert settings.artifact_internal_upload_max_bytes == 256 * 1024 * 1024
+
+    with pytest.raises(ValidationError):
+        Settings(artifact_user_upload_max_bytes=0)
+    with pytest.raises(ValidationError):
+        Settings(artifact_internal_upload_max_bytes=0)
+
+
 def test_production_rejects_local_internal_token() -> None:
     with pytest.raises(ValidationError):
         Settings(environment="production", internal_api_token="local-internal-token")

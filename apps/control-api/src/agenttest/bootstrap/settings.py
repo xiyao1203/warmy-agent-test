@@ -35,6 +35,8 @@ class Settings(BaseSettings):
     session_ttl_seconds: int = Field(default=28800, ge=300, le=604800)
     control_api_base_url: str = "http://localhost:8181"
     internal_api_token: str = Field(default="local-internal-token", min_length=16)
+    artifact_user_upload_max_bytes: int = Field(default=67_108_864, gt=0)
+    artifact_internal_upload_max_bytes: int = Field(default=268_435_456, gt=0)
     temporal_address: str | None = None
     temporal_namespace: str = "default"
     temporal_task_queue: str = "agenttest-api-runner"

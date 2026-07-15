@@ -5,15 +5,15 @@ from __future__ import annotations
 from datetime import datetime
 from uuid import UUID
 
-from sqlalchemy import DateTime, ForeignKey, ForeignKeyConstraint, Integer, String, select
-from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import DateTime, ForeignKey, ForeignKeyConstraint, Integer, String, select, text
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 from sqlalchemy.orm import Mapped, mapped_column
 
 from agenttest.modules.artifacts.domain.models import (
     Artifact,
     ArtifactId,
 )
-from agenttest.shared.infrastructure.database import Base
+from agenttest.shared.infrastructure.database import Base, session_scope, transaction_scope
 
 
 class ArtifactModel(Base):
@@ -61,8 +61,37 @@ def _to_domain(row: ArtifactModel) -> Artifact:
 class SqlAlchemyArtifactRepository:
     """SqlAlchemy 产物仓库实现。"""
 
-    def __init__(self, session: AsyncSession) -> None:
-        self._session = session
+    def __init__(self, session_factory: async_sessionmaker[AsyncSession]) -> None:
+        self._session_factory = session_factory
+
+    async def run_exists(
+        self,
+        *,
+        project_id: UUID,
+        run_id: UUID,
+        run_case_id: UUID | None,
+    ) -> bool:
+        if run_case_id is None:
+            statement = text("SELECT 1 FROM runs WHERE project_id = :project_id AND id = :run_id")
+            parameters = {"project_id": project_id, "run_id": run_id}
+        else:
+            statement = text(
+                """
+                SELECT 1
+                FROM run_cases rc
+                JOIN runs r ON r.id = rc.run_id
+                WHERE r.project_id = :project_id
+                  AND r.id = :run_id
+                  AND rc.id = :run_case_id
+                """
+            )
+            parameters = {
+                "project_id": project_id,
+                "run_id": run_id,
+                "run_case_id": run_case_id,
+            }
+        async with session_scope(self._session_factory) as session:
+            return await session.scalar(statement, parameters) is not None
 
     async def save(self, artifact: Artifact, *, project_id: UUID) -> None:
         row = ArtifactModel(
@@ -74,11 +103,13 @@ class SqlAlchemyArtifactRepository:
             size_bytes=artifact.size_bytes,
             storage_path=artifact.storage_path,
         )
-        self._session.add(row)
-        await self._session.flush()
+        async with transaction_scope(self._session_factory) as session:
+            session.add(row)
+            await session.flush()
 
     async def get(self, artifact_id: ArtifactId, *, project_id: UUID) -> Artifact | None:
-        row = await self._session.get(ArtifactModel, artifact_id)
+        async with session_scope(self._session_factory) as session:
+            row = await session.get(ArtifactModel, artifact_id)
         if row is None or row.project_id != project_id:
             return None
         return _to_domain(row)
@@ -90,5 +121,6 @@ class SqlAlchemyArtifactRepository:
             .where(ArtifactModel.project_id == project_id)
             .order_by(ArtifactModel.created_at.desc())
         )
-        result = await self._session.execute(stmt)
-        return [_to_domain(r) for r in result.scalars().all()]
+        async with session_scope(self._session_factory) as session:
+            result = await session.execute(stmt)
+            return [_to_domain(r) for r in result.scalars().all()]

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import AsyncIterator
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Protocol
@@ -42,22 +43,32 @@ class ArtifactCreate:
 class ArtifactRepository(Protocol):
     """产物仓库协议。"""
 
+    async def run_exists(
+        self,
+        *,
+        project_id: UUID,
+        run_id: UUID,
+        run_case_id: UUID | None,
+    ) -> bool: ...
     async def save(self, artifact: Artifact, *, project_id: UUID) -> None: ...
     async def get(self, artifact_id: ArtifactId, *, project_id: UUID) -> Artifact | None: ...
     async def list_by_run(self, run_id: UUID, *, project_id: UUID) -> list[Artifact]: ...
 
 
+class UploadSource(Protocol):
+    async def read(self, size: int) -> bytes: ...
+
+
 class ArtifactStorage(Protocol):
     """产物文件存储协议。"""
 
-    async def store(self, *, filename: str, content: bytes) -> str:
-        """保存文件，返回 storage_path。"""
-        ...
-
-    async def retrieve(self, storage_path: str) -> bytes:
-        """读取文件内容。"""
-        ...
-
-    async def delete(self, storage_path: str) -> None:
-        """删除存储的文件。"""
-        ...
+    async def begin(self, *, filename: str) -> str: ...
+    async def append(self, temporary_key: str, chunk: bytes) -> None: ...
+    async def commit(self, temporary_key: str) -> str: ...
+    async def abort(self, temporary_key: str) -> None: ...
+    async def delete(self, storage_path: str) -> None: ...
+    def iter_chunks(
+        self,
+        storage_path: str,
+        chunk_size: int,
+    ) -> AsyncIterator[bytes]: ...
