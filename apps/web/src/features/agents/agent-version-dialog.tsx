@@ -10,12 +10,12 @@ import { useEffect, useMemo, useState } from "react";
 import {
   listBrowserProfiles,
   type BrowserProfile,
-} from "@/features/browser-profiles/api";
+} from "@/features/browser-profiles";
 import {
   createCredentialBinding,
   listCredentialBindings,
   type CredentialBinding,
-} from "@/features/environments/api";
+} from "@/features/environments";
 import { Button } from "@/components/ui/button";
 import { DropdownSelect } from "@/components/ui/dropdown-select";
 import {

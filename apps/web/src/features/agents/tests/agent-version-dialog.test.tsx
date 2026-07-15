@@ -4,19 +4,19 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   type BrowserProfile,
   listBrowserProfiles,
-} from "@/features/browser-profiles/api";
+} from "@/features/browser-profiles";
 import {
   createCredentialBinding,
   listCredentialBindings,
-} from "@/features/environments/api";
+} from "@/features/environments";
 
 import { AgentVersionDialog } from "../agent-version-dialog";
 
-vi.mock("@/features/browser-profiles/api", () => ({
+vi.mock("@/features/browser-profiles", () => ({
   listBrowserProfiles: vi.fn(),
 }));
 
-vi.mock("@/features/environments/api", () => ({
+vi.mock("@/features/environments", () => ({
   createCredentialBinding: vi.fn(),
   listCredentialBindings: vi.fn(),
 }));

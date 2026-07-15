@@ -514,7 +514,7 @@ git commit -m "refactor: move persistence behind application services"
 - Create: `apps/web/src/test/architecture/feature-boundaries.test.ts`
 - Modify: `Makefile`
 
-- [ ] **Step 1: Add failing scanner fixture tests**
+- [x] **Step 1: Add failing scanner fixture tests**
 
 ```python
 def test_api_cannot_import_infrastructure_or_sqlalchemy(tmp_path: Path) -> None:
@@ -532,17 +532,17 @@ def test_api_cannot_call_session_execute(tmp_path: Path) -> None:
 
 Add a Node/Vitest fixture proving `features/agents` cannot import `@/features/environments/api`, while `@/features/environments` is accepted.
 
-- [ ] **Step 2: Run scanners and observe fixture failures**
+- [x] **Step 2: Run scanners and observe fixture failures**
 
 Run: `uv run pytest apps/control-api/tests/architecture/test_module_boundaries.py -q && pnpm --filter @warmy/web exec vitest run src/test/architecture/feature-boundaries.test.ts`
 
 Expected: new cases fail because scanners do not enforce the rules.
 
-- [ ] **Step 3: Extend AST checks and add frontend parser**
+- [x] **Step 3: Extend AST checks and add frontend parser**
 
 The Python scanner checks imports and `ast.Call` attributes for `session.execute`/`session.scalar`. The Node scanner walks production and test `.ts/.tsx` files, determines the source Feature from its path, and rejects another Feature’s path when it contains more than the public package segment.
 
-- [ ] **Step 4: Add both checks to the architecture target**
+- [x] **Step 4: Add both checks to the architecture target**
 
 ```make
 architecture:
@@ -552,13 +552,13 @@ architecture:
 	node scripts/check_frontend_boundaries.mjs
 ```
 
-- [ ] **Step 5: Verify the repository passes the stronger gates**
+- [x] **Step 5: Verify the repository passes the stronger gates**
 
 Run: `make architecture`
 
 Expected: all checks pass and current-source violations are zero.
 
-- [ ] **Step 6: Commit architecture enforcement**
+- [x] **Step 6: Commit architecture enforcement**
 
 ```bash
 git add scripts/check_architecture.py scripts/check_frontend_boundaries.mjs apps/control-api/tests/architecture/test_module_boundaries.py apps/web/src/test/architecture/feature-boundaries.test.ts Makefile

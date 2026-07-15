@@ -26,6 +26,8 @@ build:
 architecture:
 	uv run pytest apps/control-api/tests/architecture -v
 	uv run python scripts/check_architecture.py
+	pnpm --filter @warmy/web exec vitest run src/test/architecture/feature-boundaries.test.ts
+	node scripts/check_frontend_boundaries.mjs
 
 verify: format lint typecheck test build architecture api-check
 

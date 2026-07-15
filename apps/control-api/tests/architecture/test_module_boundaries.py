@@ -46,6 +46,43 @@ def test_api_cannot_import_infrastructure_models(tmp_path: Path) -> None:
     ]
 
 
+def test_api_cannot_import_infrastructure_or_sqlalchemy(tmp_path: Path) -> None:
+    write_module(
+        tmp_path,
+        "agenttest/modules/runs/api/router.py",
+        "from sqlalchemy import text\n",
+    )
+
+    assert find_violations(tmp_path) == [
+        "agenttest/modules/runs/api/router.py: API imports forbidden dependency sqlalchemy"
+    ]
+
+
+def test_api_cannot_import_module_infrastructure(tmp_path: Path) -> None:
+    write_module(
+        tmp_path,
+        "agenttest/modules/runs/api/router.py",
+        "from agenttest.modules.runs.infrastructure.persistence.repositories import Repo\n",
+    )
+
+    assert find_violations(tmp_path) == [
+        "agenttest/modules/runs/api/router.py: API imports module infrastructure"
+    ]
+
+
+def test_api_cannot_call_session_execute_or_scalar(tmp_path: Path) -> None:
+    write_module(
+        tmp_path,
+        "agenttest/modules/runs/api/router.py",
+        "async def f(session):\n    await session.execute('x')\n    await session.scalar('y')\n",
+    )
+
+    assert find_violations(tmp_path) == [
+        "agenttest/modules/runs/api/router.py: API performs persistence call session.execute",
+        "agenttest/modules/runs/api/router.py: API performs persistence call session.scalar",
+    ]
+
+
 def test_cross_module_imports_must_use_public_module(tmp_path: Path) -> None:
     write_module(
         tmp_path,

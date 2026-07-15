@@ -37,6 +37,19 @@ def relative_display_path(source_root: Path, path: Path) -> str:
     return path.relative_to(source_root).as_posix()
 
 
+def session_persistence_calls(tree: ast.AST) -> list[str]:
+    calls: list[str] = []
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Call) or not isinstance(node.func, ast.Attribute):
+            continue
+        if node.func.attr not in {"execute", "scalar"}:
+            continue
+        owner = node.func.value
+        if isinstance(owner, ast.Name) and owner.id == "session":
+            calls.append(f"session.{node.func.attr}")
+    return calls
+
+
 def find_violations(source_root: Path) -> list[str]:
     violations: list[str] = []
     for path in sorted(source_root.rglob("*.py")):
@@ -54,11 +67,22 @@ def find_violations(source_root: Path) -> list[str]:
                     )
 
         if "api" in relative_path.parts:
-            if any(
-                ".infrastructure.persistence.models" in imported_module
-                for imported_module in imports
-            ):
-                violations.append(f"{display_path}: API imports infrastructure persistence models")
+            for imported_module in imports:
+                if ".infrastructure.persistence.models" in imported_module:
+                    violations.append(
+                        f"{display_path}: API imports infrastructure persistence models"
+                    )
+                elif imported_module == "sqlalchemy" or imported_module.startswith("sqlalchemy."):
+                    violations.append(
+                        f"{display_path}: API imports forbidden dependency sqlalchemy"
+                    )
+                elif (
+                    imported_module.startswith("agenttest.modules.")
+                    and ".infrastructure" in imported_module
+                ):
+                    violations.append(f"{display_path}: API imports module infrastructure")
+            for call in session_persistence_calls(tree):
+                violations.append(f"{display_path}: API performs persistence call {call}")
 
         source_module = module_name_for(relative_path)
         if source_module:
