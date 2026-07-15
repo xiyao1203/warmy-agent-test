@@ -728,7 +728,7 @@ git commit -m "refactor: use public frontend feature contracts"
 - Modify: `apps/web/src/features/test-agent/tests/session-history.test.tsx`
 - Modify: `apps/web/src/features/test-agent/tests/timeline-projection.test.ts`
 
-- [ ] **Step 1: Write failing effect-lifecycle tests**
+- [x] **Step 1: Write failing effect-lifecycle tests**
 
 Extract a controller whose observable contract is one stream per active generation:
 
@@ -750,27 +750,27 @@ it("opens one event stream and closes it when generation changes", () => {
 
 Also test retry timer cleanup and cursor preservation.
 
-- [ ] **Step 2: Verify the tests fail before extraction**
+- [x] **Step 2: Verify the tests fail before extraction**
 
 Run: `pnpm --filter @warmy/web exec vitest run src/features/test-agent/tests/chat-effects.test.ts`
 
 Expected: missing controller module.
 
-- [ ] **Step 3: Extract stream/timer effects and pure timeline helpers**
+- [x] **Step 3: Extract stream/timer effects and pure timeline helpers**
 
 Move generation subscription and retry scheduling to `chat-effects.ts`; move `buildTaskStates`, relative-date formatting, and message timeline rendering to `chat-timeline.tsx`; move workspace tabs and loading bar to `chat-workspace.tsx`.
 
-- [ ] **Step 4: Keep `TestAgentChat` as the orchestration shell**
+- [x] **Step 4: Keep `TestAgentChat` as the orchestration shell**
 
 It owns reducer state, selected session, input submission, and composition only. Remove the two existing exhaustive-deps suppressions by using stable callbacks and explicit controller lifecycle.
 
-- [ ] **Step 5: Run Test Agent tests, lint, and line-count check**
+- [x] **Step 5: Run Test Agent tests, lint, and line-count check**
 
 Run: `pnpm --filter @warmy/web exec vitest run src/features/test-agent && pnpm --filter @warmy/web exec eslint src/features/test-agent && test $(wc -l < apps/web/src/features/test-agent/chat-screen.tsx) -lt 800`
 
 Expected: tests and lint pass; `chat-screen.tsx` is below 800 lines.
 
-- [ ] **Step 6: Commit the chat split**
+- [x] **Step 6: Commit the chat split**
 
 ```bash
 git add apps/web/src/features/test-agent
