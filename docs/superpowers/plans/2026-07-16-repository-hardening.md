@@ -576,7 +576,7 @@ git commit -m "test: enforce application and feature boundaries"
 - Create: `apps/control-api/tests/unit/bootstrap/test_composition.py`
 - Modify: `apps/control-api/tests/contract/test_health.py`
 
-- [ ] **Step 1: Write failing composition-shape tests**
+- [x] **Step 1: Write failing composition-shape tests**
 
 ```python
 def test_app_module_is_only_top_level_composition() -> None:
@@ -592,13 +592,13 @@ def test_each_module_exposes_one_register_function() -> None:
         assert callable(getattr(module, "register"))
 ```
 
-- [ ] **Step 2: Verify the shape test fails on the 2251-line file**
+- [x] **Step 2: Verify the shape test fails on the 2251-line file**
 
 Run: `uv run pytest apps/control-api/tests/unit/bootstrap/test_composition.py -q`
 
 Expected: line-count and `_register_` assertions fail.
 
-- [ ] **Step 3: Introduce shared composition context**
+- [x] **Step 3: Introduce shared composition context**
 
 ```python
 @dataclass(frozen=True, slots=True)
@@ -626,11 +626,11 @@ class AppOverrides:
 
 This object contains wiring dependencies only; no business method belongs on it.
 
-- [ ] **Step 4: Move module wiring without moving behavior**
+- [x] **Step 4: Move module wiring without moving behavior**
 
 Create one `register(app: FastAPI, context: BootstrapContext) -> None` per cohesive module group. Each file builds Infrastructure implementations, Application services, and API dependencies, then includes routers. Existing test injection parameters remain supported through a small `AppOverrides` dataclass.
 
-- [ ] **Step 5: Reduce `create_app()` to middleware and registration**
+- [x] **Step 5: Reduce `create_app()` to middleware and registration**
 
 ```python
 def create_app(settings: Settings | None = None, overrides: AppOverrides | None = None) -> FastAPI:
@@ -642,13 +642,13 @@ def create_app(settings: Settings | None = None, overrides: AppOverrides | None 
     return app
 ```
 
-- [ ] **Step 6: Run bootstrap, contract, and architecture suites**
+- [x] **Step 6: Run bootstrap, contract, and architecture suites**
 
 Run: `uv run pytest apps/control-api/tests/unit/bootstrap apps/control-api/tests/contract apps/control-api/tests/architecture -q`
 
 Expected: all pass; `bootstrap/app.py` is at most 350 lines and contains no endpoint business logic.
 
-- [ ] **Step 7: Commit composition cleanup**
+- [x] **Step 7: Commit composition cleanup**
 
 ```bash
 git add apps/control-api/src/agenttest/bootstrap apps/control-api/tests/unit/bootstrap apps/control-api/tests/contract/test_health.py
@@ -670,13 +670,13 @@ git commit -m "refactor: modularize control api composition"
 - Modify: `apps/web/src/features/test-plans/test-plan-version-dialog.tsx`
 - Modify: `apps/web/src/features/test-plans/tests/test-plan-version-dialog.test.tsx`
 
-- [ ] **Step 1: Run the boundary scanner to capture the exact violation list**
+- [x] **Step 1: Run the boundary scanner to capture the exact violation list**
 
 Run: `node scripts/check_frontend_boundaries.mjs`
 
 Expected: violations include Agent Version Dialog, Target Chat, and Test Plan consumers importing another Feature’s `/api` path.
 
-- [ ] **Step 2: Export only the required public symbols**
+- [x] **Step 2: Export only the required public symbols**
 
 For example:
 
@@ -698,17 +698,17 @@ export {
 export type { CredentialBinding } from "./api";
 ```
 
-- [ ] **Step 3: Replace imports and mocks with public module paths**
+- [x] **Step 3: Replace imports and mocks with public module paths**
 
 Use `@/features/browser-profiles`, `@/features/environments`, `@/features/scorers`, and `@/features/gates`. Update `vi.mock()` paths to match the import path exactly.
 
-- [ ] **Step 4: Verify boundary, type, and affected component tests**
+- [x] **Step 4: Verify boundary, type, and affected component tests**
 
 Run: `node scripts/check_frontend_boundaries.mjs && pnpm --filter @warmy/web exec vitest run src/features/agents/tests/agent-version-dialog.test.tsx src/features/test-plans/tests/test-plan-version-dialog.test.tsx && pnpm --filter @warmy/web typecheck`
 
 Expected: no boundary violations and all tests pass.
 
-- [ ] **Step 5: Commit public Feature contracts**
+- [x] **Step 5: Commit public Feature contracts**
 
 ```bash
 git add apps/web/src/features

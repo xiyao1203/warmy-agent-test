@@ -24,13 +24,9 @@ def imported_modules(tree: ast.AST) -> list[str]:
 
 def module_name_for(path: Path) -> str | None:
     parts = path.parts
-    try:
-        modules_index = parts.index("modules")
-    except ValueError:
+    if len(parts) < 3 or parts[0:2] != ("agenttest", "modules"):
         return None
-    if len(parts) <= modules_index + 1:
-        return None
-    return parts[modules_index + 1]
+    return parts[2]
 
 
 def relative_display_path(source_root: Path, path: Path) -> str:

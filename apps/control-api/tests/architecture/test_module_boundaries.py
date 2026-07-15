@@ -2,7 +2,7 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[4]))
-from scripts.check_architecture import find_violations
+from scripts.check_architecture import find_violations, module_name_for
 
 
 def write_module(root: Path, relative_path: str, source: str) -> None:
@@ -96,3 +96,7 @@ def test_cross_module_imports_must_use_public_module(tmp_path: Path) -> None:
         "agenttest/modules/projects/application/queries.py: cross-module import must use "
         "agenttest.modules.identity.public"
     ]
+
+
+def test_bootstrap_modules_directory_is_not_a_domain_module() -> None:
+    assert module_name_for(Path("agenttest/bootstrap/modules/core.py")) is None
