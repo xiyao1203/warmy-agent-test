@@ -72,31 +72,34 @@
 - Modify: `apps/control-api/tests/integration/test_database_constraints.py`
 - Modify: `apps/control-api/tests/integration/test_migrations.py`
 
-- [ ] **Step 1: Write failing database-constraint tests**
+- [ ] **Step 1: Write a locally runnable failing metadata test**
 
-Add a PostgreSQL test that inserts two projects, a Run in project A, then attempts to insert an Artifact using project B and the Run from A:
+Import `ArtifactModel` and `ForeignKeyConstraint` in `test_database_constraints.py`, then assert that ORM metadata contains the exact composite relationship:
 
 ```python
-async def test_artifact_run_must_belong_to_same_project(postgres_connection) -> None:
-    project_a, project_b, run_id = await seed_scoped_run(postgres_connection)
-    with pytest.raises(IntegrityError):
-        await postgres_connection.execute(
-            text(
-                "INSERT INTO artifacts "
-                "(id, project_id, run_id, filename, content_type, size_bytes, storage_path) "
-                "VALUES (:id, :project_id, :run_id, 'evidence.png', 'image/png', 4, 'aa/file')"
-            ),
-            {"id": uuid4(), "project_id": project_b, "run_id": run_id},
-        )
+def test_artifacts_enforce_project_run_scope() -> None:
+    constraints = [
+        item
+        for item in ArtifactModel.__table__.constraints
+        if isinstance(item, ForeignKeyConstraint)
+        and item.name == "fk_artifacts_project_run"
+    ]
+    assert len(constraints) == 1
+    constraint = constraints[0]
+    assert tuple(constraint.column_keys) == ("project_id", "run_id")
+    assert tuple(element.target_fullname for element in constraint.elements) == (
+        "runs.project_id",
+        "runs.id",
+    )
 ```
 
-Extend the migration test to assert `0024 -> 0025` preserves a valid Artifact row and rejects a mismatched row.
+This test requires no database and must fail on the current branch. Add a PostgreSQL-only test using the file’s existing `AGENTTEST_TEST_DATABASE_URL` pattern that seeds the minimum valid Project/Agent/Dataset/TestPlan/Run graph, inserts a valid Artifact, and asserts `asyncpg.ForeignKeyViolationError` for a second Artifact pairing another project with that Run. Extend the migration test to assert `0024 -> 0025` preserves the valid row.
 
-- [ ] **Step 2: Verify the tests fail for the missing composite constraint**
+- [ ] **Step 2: Verify RED for the missing composite constraint**
 
-Run: `uv run pytest apps/control-api/tests/integration/test_database_constraints.py::test_artifact_run_must_belong_to_same_project apps/control-api/tests/integration/test_migrations.py -q`
+Run: `uv run pytest apps/control-api/tests/integration/test_database_constraints.py::test_artifacts_enforce_project_run_scope -q`
 
-Expected: the mismatched insert succeeds or the migration revision is missing.
+Expected: FAIL because `fk_artifacts_project_run` is absent from `ArtifactModel` metadata.
 
 - [ ] **Step 3: Add migration `0025` and align ORM metadata**
 
