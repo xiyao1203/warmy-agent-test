@@ -3,8 +3,15 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime
+from types import SimpleNamespace
+from unittest.mock import ANY, AsyncMock
 from uuid import uuid4
 
+import pytest
+from agenttest.modules.environments.application.snapshots import (
+    EnvironmentSnapshotService,
+    EnvironmentTemplateNotFound,
+)
 from agenttest.modules.environments.domain.entities import (
     EnvironmentTemplate,
     EnvironmentTemplateId,
@@ -112,3 +119,20 @@ def test_snapshot_id_is_unique_per_snapshot() -> None:
     snap1 = make_snapshot("a")
     snap2 = make_snapshot("b")
     assert snap1["id"] != snap2["id"]
+
+
+@pytest.mark.asyncio
+async def test_snapshot_service_checks_project_scope_before_lookup() -> None:
+    access = SimpleNamespace(ensure_member=AsyncMock(), ensure_editor=AsyncMock())
+    templates = SimpleNamespace(get_by_id_and_project=AsyncMock(return_value=None))
+    service = EnvironmentSnapshotService(
+        templates=templates,
+        project_access=access,
+        clock=SimpleNamespace(now=lambda: datetime.now(UTC)),
+    )
+    project_id = uuid4()
+
+    with pytest.raises(EnvironmentTemplateNotFound):
+        await service.list(_make_user(), project_id, uuid4())
+
+    access.ensure_member.assert_awaited_once_with(ANY, ProjectId(project_id))

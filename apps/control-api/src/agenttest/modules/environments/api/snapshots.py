@@ -1,36 +1,39 @@
-"""环境快照 API 端点。"""
-
 from __future__ import annotations
 
-from datetime import UTC, datetime
-from uuid import UUID, uuid4
+from dataclasses import dataclass
+from typing import Protocol
+from uuid import UUID
 
 from fastapi import APIRouter, Header, Request
 from fastapi.responses import JSONResponse
 
-from agenttest.modules.environments.domain.entities import EnvironmentTemplateId
-from agenttest.modules.environments.infrastructure.persistence.repositories import (
-    SqlAlchemyEnvironmentTemplateRepository,
+from agenttest.bootstrap.settings import Settings
+from agenttest.modules.environments.application.snapshots import (
+    EnvironmentSnapshotNotFound,
+    EnvironmentSnapshotService,
+    EnvironmentTemplateNotFound,
 )
-from agenttest.modules.identity.public import InvalidSessionError
-from agenttest.modules.projects.public import ProjectId as Pid
+from agenttest.modules.identity.public import InvalidSessionError, User
 from agenttest.modules.projects.public import ProjectNotFoundError
 from agenttest.shared.api.auth_guard import require_actor, require_writer
 
 
-def create_snapshot_router(
-    *,
-    session_factory,
-    actor_for,
-    check_project,
-    settings,
-) -> APIRouter:
+class ActorResolver(Protocol):
+    async def __call__(self, request: Request) -> User | None: ...
+
+
+@dataclass(frozen=True, slots=True)
+class SnapshotApiDependencies:
+    service: EnvironmentSnapshotService
+    actor_for: ActorResolver
+    settings: Settings
+
+
+def create_snapshot_router(dependencies: SnapshotApiDependencies) -> APIRouter:
     router = APIRouter(
         prefix="/projects/{project_id}/environments/{template_id}/snapshots",
         tags=["environment-snapshots"],
     )
-
-    repo = SqlAlchemyEnvironmentTemplateRepository(session_factory)
 
     @router.post("")
     async def create_snapshot(
@@ -39,64 +42,40 @@ def create_snapshot_router(
         template_id: UUID,
         x_csrf_token: str | None = Header(default=None),
     ):
-        actor = await require_writer(request, actor_for, settings, x_csrf_token)
+        actor = await require_writer(
+            request, dependencies.actor_for, dependencies.settings, x_csrf_token
+        )
         if isinstance(actor, JSONResponse):
             return actor
         try:
-            await check_project(project_id)
-        except ProjectNotFoundError:
-            return JSONResponse(status_code=404, content={"detail": "项目不存在"})
-        except InvalidSessionError:
-            return JSONResponse(status_code=401, content={"detail": "认证失败"})
-
-        template = await repo.get_by_id_and_project(
-            EnvironmentTemplateId(template_id),
-            Pid(project_id),
-        )
-        if template is None:
-            return JSONResponse(status_code=404, content={"detail": "环境模板不存在"})
-
-        snapshot_id = str(uuid4())
-        snapshot = {
-            "id": snapshot_id,
-            "name": f"snapshot-{datetime.now(UTC).strftime('%Y%m%d-%H%M%S')}",
-            "config": dict(template.config),
-            "created_at": datetime.now(UTC).isoformat(),
-        }
-        snapshots = list(template.config.get("snapshots", []))  # type: ignore[call-overload]
-        snapshots.append(snapshot)
-        template.config["snapshots"] = snapshots  # type: ignore[assignment]
-        await repo.save(template)
-        return {"id": snapshot_id, "name": snapshot["name"]}
+            snapshot = await dependencies.service.create(actor, project_id, template_id)
+        except Exception as error:
+            response = _error_response(error)
+            if response is not None:
+                return response
+            raise
+        return {"id": snapshot.snapshot_id, "name": snapshot.name}
 
     @router.get("")
-    async def list_snapshots(
-        request: Request,
-        project_id: UUID,
-        template_id: UUID,
-    ):
-        actor = await require_actor(request, actor_for, settings)
+    async def list_snapshots(request: Request, project_id: UUID, template_id: UUID):
+        actor = await require_actor(request, dependencies.actor_for, dependencies.settings)
         if isinstance(actor, JSONResponse):
             return actor
         try:
-            await check_project(project_id)
-        except ProjectNotFoundError:
-            return JSONResponse(status_code=404, content={"detail": "项目不存在"})
-        except InvalidSessionError:
-            return JSONResponse(status_code=401, content={"detail": "认证失败"})
-
-        template = await repo.get_by_id_and_project(
-            EnvironmentTemplateId(template_id),
-            Pid(project_id),
-        )
-        if template is None:
-            return JSONResponse(status_code=404, content={"detail": "环境模板不存在"})
-
-        snapshots = list(template.config.get("snapshots", []))  # type: ignore[call-overload]
+            snapshots = await dependencies.service.list(actor, project_id, template_id)
+        except Exception as error:
+            response = _error_response(error)
+            if response is not None:
+                return response
+            raise
         return {
             "items": [
-                {"id": s.get("id"), "name": s.get("name"), "created_at": s.get("created_at")}
-                for s in snapshots
+                {
+                    "id": item.snapshot_id,
+                    "name": item.name,
+                    "created_at": item.created_at,
+                }
+                for item in snapshots
             ]
         }
 
@@ -108,31 +87,18 @@ def create_snapshot_router(
         snapshot_id: str,
         x_csrf_token: str | None = Header(default=None),
     ):
-        actor = await require_writer(request, actor_for, settings, x_csrf_token)
+        actor = await require_writer(
+            request, dependencies.actor_for, dependencies.settings, x_csrf_token
+        )
         if isinstance(actor, JSONResponse):
             return actor
         try:
-            await check_project(project_id)
-        except ProjectNotFoundError:
-            return JSONResponse(status_code=404, content={"detail": "项目不存在"})
-        except InvalidSessionError:
-            return JSONResponse(status_code=401, content={"detail": "认证失败"})
-
-        template = await repo.get_by_id_and_project(
-            EnvironmentTemplateId(template_id),
-            Pid(project_id),
-        )
-        if template is None:
-            return JSONResponse(status_code=404, content={"detail": "环境模板不存在"})
-
-        snapshots = list(template.config.get("snapshots", []))  # type: ignore[call-overload]
-        snapshot = next((s for s in snapshots if s.get("id") == snapshot_id), None)
-        if snapshot is None:
-            return JSONResponse(status_code=404, content={"detail": "快照不存在"})
-
-        template.config = dict(snapshot.get("config", {}))  # type: ignore[arg-type]
-        template.config["snapshots"] = snapshots  # type: ignore[assignment]
-        await repo.save(template)
+            await dependencies.service.restore(actor, project_id, template_id, snapshot_id)
+        except Exception as error:
+            response = _error_response(error)
+            if response is not None:
+                return response
+            raise
         return {"status": "restored", "snapshot_id": snapshot_id}
 
     @router.delete("/{snapshot_id}")
@@ -143,27 +109,32 @@ def create_snapshot_router(
         snapshot_id: str,
         x_csrf_token: str | None = Header(default=None),
     ):
-        actor = await require_writer(request, actor_for, settings, x_csrf_token)
+        actor = await require_writer(
+            request, dependencies.actor_for, dependencies.settings, x_csrf_token
+        )
         if isinstance(actor, JSONResponse):
             return actor
         try:
-            await check_project(project_id)
-        except ProjectNotFoundError:
-            return JSONResponse(status_code=404, content={"detail": "项目不存在"})
-        except InvalidSessionError:
-            return JSONResponse(status_code=401, content={"detail": "认证失败"})
-
-        template = await repo.get_by_id_and_project(
-            EnvironmentTemplateId(template_id),
-            Pid(project_id),
-        )
-        if template is None:
-            return JSONResponse(status_code=404, content={"detail": "环境模板不存在"})
-
-        snapshots = list(template.config.get("snapshots", []))  # type: ignore[call-overload]
-        snapshots = [s for s in snapshots if s.get("id") != snapshot_id]
-        template.config["snapshots"] = snapshots  # type: ignore[assignment]
-        await repo.save(template)
+            await dependencies.service.delete(actor, project_id, template_id, snapshot_id)
+        except Exception as error:
+            response = _error_response(error)
+            if response is not None:
+                return response
+            raise
         return {"status": "deleted", "snapshot_id": snapshot_id}
 
     return router
+
+
+def _error_response(error: Exception) -> JSONResponse | None:
+    if isinstance(error, InvalidSessionError):
+        return JSONResponse(status_code=401, content={"detail": "认证失败"})
+    if isinstance(error, PermissionError):
+        return JSONResponse(status_code=403, content={"detail": "Forbidden"})
+    if isinstance(error, ProjectNotFoundError):
+        return JSONResponse(status_code=404, content={"detail": "项目不存在"})
+    if isinstance(error, EnvironmentTemplateNotFound):
+        return JSONResponse(status_code=404, content={"detail": "环境模板不存在"})
+    if isinstance(error, EnvironmentSnapshotNotFound):
+        return JSONResponse(status_code=404, content={"detail": "快照不存在"})
+    return None

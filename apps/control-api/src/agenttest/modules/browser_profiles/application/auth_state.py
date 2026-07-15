@@ -3,13 +3,15 @@ from __future__ import annotations
 import hashlib
 import json
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, Protocol
 from urllib.parse import urlparse
 from uuid import UUID
 
-from agenttest.modules.browser_profiles.infrastructure.auth_state_cipher import (
-    BrowserAuthStateCipher,
-)
+
+class BrowserAuthStateCipher(Protocol):
+    def encrypt(self, project_id: UUID, profile_id: UUID, plaintext: str) -> str: ...
+
+    def decrypt(self, project_id: UUID, profile_id: UUID, envelope: str) -> str: ...
 
 
 @dataclass(frozen=True, slots=True)

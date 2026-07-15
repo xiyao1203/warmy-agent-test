@@ -1361,7 +1361,16 @@ def _register_snapshot_endpoints(
     auth_deps,  # AuthApiDependencies
 ) -> None:
     """注册环境快照 API。"""
-    from agenttest.modules.environments.api.snapshots import create_snapshot_router
+    from agenttest.modules.environments.api.snapshots import (
+        SnapshotApiDependencies,
+        create_snapshot_router,
+    )
+    from agenttest.modules.environments.application.snapshots import (
+        EnvironmentSnapshotService,
+    )
+    from agenttest.modules.environments.infrastructure.persistence.repositories import (
+        SqlAlchemyEnvironmentTemplateRepository,
+    )
     from agenttest.shared.infrastructure.database import (
         create_database_engine,
         create_session_factory,
@@ -1369,19 +1378,8 @@ def _register_snapshot_endpoints(
 
     engine = create_database_engine(str(settings.database_url))
     session_factory = create_session_factory(engine)
-
-    async def check_project(project_id):
-        from sqlalchemy import text
-
-        async with session_factory() as session:
-            result = await session.execute(
-                text("SELECT 1 FROM projects WHERE id = :pid"),
-                {"pid": project_id},
-            )
-            if result.scalar() is None:
-                from fastapi import HTTPException
-
-                raise HTTPException(status_code=404, detail="Project not found")
+    templates = SqlAlchemyEnvironmentTemplateRepository(session_factory)
+    access = ProjectAccessAdapter(SqlAlchemyProjectRepository(session_factory))
 
     async def actor_for(request: Request):
         token = request.cookies.get(settings.session_cookie_name)
@@ -1390,10 +1388,15 @@ def _register_snapshot_endpoints(
         return await auth_deps.current_user.execute(token)
 
     router = create_snapshot_router(
-        session_factory=session_factory,
-        actor_for=actor_for,
-        check_project=check_project,
-        settings=settings,
+        SnapshotApiDependencies(
+            service=EnvironmentSnapshotService(
+                templates=templates,
+                project_access=access,
+                clock=SystemClock(),
+            ),
+            actor_for=actor_for,
+            settings=settings,
+        )
     )
     app.include_router(router, prefix="/api/v1")
 
@@ -1404,7 +1407,14 @@ def _register_dry_run_endpoints(
     auth_deps,  # AuthApiDependencies
 ) -> None:
     """注册测试计划试运行 API。"""
-    from agenttest.modules.test_plans.api.dry_run import create_dry_run_router
+    from agenttest.modules.test_plans.api.dry_run import (
+        DryRunApiDependencies,
+        create_dry_run_router,
+    )
+    from agenttest.modules.test_plans.application.dry_run import DryRunService
+    from agenttest.modules.test_plans.infrastructure.persistence.repositories import (
+        SqlAlchemyTestPlanVersionRepository,
+    )
     from agenttest.shared.infrastructure.database import (
         create_database_engine,
         create_session_factory,
@@ -1412,19 +1422,8 @@ def _register_dry_run_endpoints(
 
     engine = create_database_engine(str(settings.database_url))
     session_factory = create_session_factory(engine)
-
-    async def check_project(project_id):
-        from sqlalchemy import text
-
-        async with session_factory() as session:
-            result = await session.execute(
-                text("SELECT 1 FROM projects WHERE id = :pid"),
-                {"pid": project_id},
-            )
-            if result.scalar() is None:
-                from fastapi import HTTPException
-
-                raise HTTPException(status_code=404, detail="Project not found")
+    versions = SqlAlchemyTestPlanVersionRepository(session_factory)
+    access = ProjectAccessAdapter(SqlAlchemyProjectRepository(session_factory))
 
     async def actor_for(request: Request):
         token = request.cookies.get(settings.session_cookie_name)
@@ -1433,10 +1432,11 @@ def _register_dry_run_endpoints(
         return await auth_deps.current_user.execute(token)
 
     router = create_dry_run_router(
-        session_factory=session_factory,
-        actor_for=actor_for,
-        check_project=check_project,
-        settings=settings,
+        DryRunApiDependencies(
+            service=DryRunService(reader=versions, project_access=access),
+            actor_for=actor_for,
+            settings=settings,
+        )
     )
     app.include_router(router, prefix="/api/v1")
 
@@ -1447,7 +1447,11 @@ def _register_trace_diff_endpoints(
     auth_deps,  # AuthApiDependencies
 ) -> None:
     """注册 Trace 对比 API。"""
-    from agenttest.modules.runs.api.trace_diff import create_trace_diff_router
+    from agenttest.modules.runs.api.trace_diff import (
+        TraceDiffApiDependencies,
+        create_trace_diff_router,
+    )
+    from agenttest.modules.runs.application.comparison import RunComparisonService
     from agenttest.shared.infrastructure.database import (
         create_database_engine,
         create_session_factory,
@@ -1455,19 +1459,8 @@ def _register_trace_diff_endpoints(
 
     engine = create_database_engine(str(settings.database_url))
     session_factory = create_session_factory(engine)
-
-    async def check_project(project_id):
-        from sqlalchemy import text
-
-        async with session_factory() as session:
-            result = await session.execute(
-                text("SELECT 1 FROM projects WHERE id = :pid"),
-                {"pid": project_id},
-            )
-            if result.scalar() is None:
-                from fastapi import HTTPException
-
-                raise HTTPException(status_code=404, detail="Project not found")
+    runs = SqlAlchemyRunRepository(session_factory)
+    access = ProjectAccessAdapter(SqlAlchemyProjectRepository(session_factory))
 
     async def actor_for(request: Request):
         token = request.cookies.get(settings.session_cookie_name)
@@ -1476,10 +1469,11 @@ def _register_trace_diff_endpoints(
         return await auth_deps.current_user.execute(token)
 
     router = create_trace_diff_router(
-        session_factory=session_factory,
-        actor_for=actor_for,
-        check_project=check_project,
-        settings=settings,
+        TraceDiffApiDependencies(
+            compare=RunComparisonService(runs=runs, project_access=access),
+            actor_for=actor_for,
+            settings=settings,
+        )
     )
     app.include_router(router, prefix="/api/v1")
 
@@ -1490,8 +1484,15 @@ def _register_scorer_endpoints(
     auth_deps,  # AuthApiDependencies
 ) -> None:
     """注册评分器 CRUD API。"""
-    from agenttest.modules.scorers.api.router import create_scorer_router
+    from agenttest.modules.scorers.api.router import (
+        ScorerApiDependencies,
+        create_scorer_router,
+    )
     from agenttest.modules.scorers.application.model_judge import ModelJudge
+    from agenttest.modules.scorers.application.service import ScorerService
+    from agenttest.modules.scorers.infrastructure.persistence.repositories import (
+        SqlAlchemyScorerRepository,
+    )
     from agenttest.shared.infrastructure.database import (
         create_database_engine,
         create_session_factory,
@@ -1500,19 +1501,6 @@ def _register_scorer_endpoints(
     engine = create_database_engine(str(settings.database_url))
     session_factory = create_session_factory(engine)
 
-    async def check_project(project_id):
-        from sqlalchemy import text
-
-        async with session_factory() as session:
-            result = await session.execute(
-                text("SELECT 1 FROM projects WHERE id = :pid"),
-                {"pid": project_id},
-            )
-            if result.scalar() is None:
-                from fastapi import HTTPException
-
-                raise HTTPException(status_code=404, detail="Project not found")
-
     async def actor_for(request: Request):
         token = request.cookies.get(settings.session_cookie_name)
         if not token:
@@ -1520,19 +1508,23 @@ def _register_scorer_endpoints(
         return await auth_deps.current_user.execute(token)
 
     router = create_scorer_router(
-        session_factory=session_factory,
-        actor_for=actor_for,
-        check_project=check_project,
-        settings=settings,
-        model_judge=ModelJudge(
-            build_model_config_service(settings),
-            TemporalModelInvoker(
-                address=settings.temporal_address,
-                namespace=settings.temporal_namespace,
-                task_queue=settings.model_runner_task_queue,
-                allow_private_network=settings.model_allow_private_network,
+        ScorerApiDependencies(
+            service=ScorerService(
+                scorers=SqlAlchemyScorerRepository(session_factory),
+                project_access=ProjectAccessAdapter(SqlAlchemyProjectRepository(session_factory)),
+                model_judge=ModelJudge(
+                    build_model_config_service(settings),
+                    TemporalModelInvoker(
+                        address=settings.temporal_address,
+                        namespace=settings.temporal_namespace,
+                        task_queue=settings.model_runner_task_queue,
+                        allow_private_network=settings.model_allow_private_network,
+                    ),
+                ),
             ),
-        ),
+            actor_for=actor_for,
+            settings=settings,
+        )
     )
     app.include_router(router, prefix="/api/v1")
 
@@ -1543,7 +1535,14 @@ def _register_experiment_endpoints(
     auth_deps,
 ) -> None:
     """注册实验对比 API。"""
-    from agenttest.modules.experiments.api.router import create_experiment_router
+    from agenttest.modules.experiments.api.router import (
+        ExperimentApiDependencies,
+        create_experiment_router,
+    )
+    from agenttest.modules.experiments.application.service import ExperimentService
+    from agenttest.modules.experiments.infrastructure.persistence.repositories import (
+        SqlAlchemyExperimentRepository,
+    )
     from agenttest.shared.infrastructure.database import (
         create_database_engine,
         create_session_factory,
@@ -1551,19 +1550,7 @@ def _register_experiment_endpoints(
 
     engine = create_database_engine(str(settings.database_url))
     session_factory = create_session_factory(engine)
-
-    async def check_project(project_id):
-        from sqlalchemy import text
-
-        async with session_factory() as session:
-            result = await session.execute(
-                text("SELECT 1 FROM projects WHERE id = :pid"),
-                {"pid": project_id},
-            )
-            if result.scalar() is None:
-                from fastapi import HTTPException
-
-                raise HTTPException(status_code=404, detail="Project not found")
+    access = ProjectAccessAdapter(SqlAlchemyProjectRepository(session_factory))
 
     async def actor_for(request: Request):
         token = request.cookies.get(settings.session_cookie_name)
@@ -1572,10 +1559,15 @@ def _register_experiment_endpoints(
         return await auth_deps.current_user.execute(token)
 
     router = create_experiment_router(
-        session_factory=session_factory,
-        actor_for=actor_for,
-        check_project=check_project,
-        settings=settings,
+        ExperimentApiDependencies(
+            service=ExperimentService(
+                experiments=SqlAlchemyExperimentRepository(session_factory),
+                runs=SqlAlchemyRunRepository(session_factory),
+                project_access=access,
+            ),
+            actor_for=actor_for,
+            settings=settings,
+        )
     )
     app.include_router(router, prefix="/api/v1")
 
@@ -1586,7 +1578,14 @@ def _register_review_endpoints(
     auth_deps,
 ) -> None:
     """注册人工审核 API。"""
-    from agenttest.modules.reviews.api.router import create_review_router
+    from agenttest.modules.reviews.api.router import (
+        ReviewApiDependencies,
+        create_review_router,
+    )
+    from agenttest.modules.reviews.application.service import ReviewService
+    from agenttest.modules.reviews.infrastructure.persistence.repositories import (
+        SqlAlchemyReviewTaskRepository,
+    )
     from agenttest.shared.infrastructure.database import (
         create_database_engine,
         create_session_factory,
@@ -1594,19 +1593,7 @@ def _register_review_endpoints(
 
     engine = create_database_engine(str(settings.database_url))
     session_factory = create_session_factory(engine)
-
-    async def check_project(project_id):
-        from sqlalchemy import text
-
-        async with session_factory() as session:
-            result = await session.execute(
-                text("SELECT 1 FROM projects WHERE id = :pid"),
-                {"pid": project_id},
-            )
-            if result.scalar() is None:
-                from fastapi import HTTPException
-
-                raise HTTPException(status_code=404, detail="Project not found")
+    access = ProjectAccessAdapter(SqlAlchemyProjectRepository(session_factory))
 
     async def actor_for(request: Request):
         token = request.cookies.get(settings.session_cookie_name)
@@ -1615,10 +1602,14 @@ def _register_review_endpoints(
         return await auth_deps.current_user.execute(token)
 
     router = create_review_router(
-        session_factory=session_factory,
-        actor_for=actor_for,
-        check_project=check_project,
-        settings=settings,
+        ReviewApiDependencies(
+            service=ReviewService(
+                reviews=SqlAlchemyReviewTaskRepository(session_factory),
+                project_access=access,
+            ),
+            actor_for=actor_for,
+            settings=settings,
+        )
     )
     app.include_router(router, prefix="/api/v1")
 
@@ -1629,7 +1620,16 @@ def _register_security_scan_endpoints(
     auth_deps,
 ) -> None:
     """注册安全扫描 API。"""
-    from agenttest.modules.security.api.scan_router import create_security_scan_router
+    from agenttest.bootstrap.security_target import SqlAlchemySecurityTargetResolver
+    from agenttest.modules.security.adapters import create_scanner
+    from agenttest.modules.security.api.scan_router import (
+        SecurityScanApiDependencies,
+        create_security_scan_router,
+    )
+    from agenttest.modules.security.application.scan_service import SecurityScanService
+    from agenttest.modules.security.infrastructure.repositories import (
+        SqlAlchemySecurityScanRepository,
+    )
     from agenttest.shared.infrastructure.database import (
         create_database_engine,
         create_session_factory,
@@ -1638,33 +1638,24 @@ def _register_security_scan_endpoints(
     engine = create_database_engine(str(settings.database_url))
     session_factory = create_session_factory(engine)
 
-    async def check_project(project_id):
-        from sqlalchemy import text
-
-        async with session_factory() as session:
-            result = await session.execute(
-                text("SELECT 1 FROM projects WHERE id = :pid"),
-                {"pid": project_id},
-            )
-            if result.scalar() is None:
-                from fastapi import HTTPException
-
-                raise HTTPException(status_code=404, detail="Project not found")
-
     async def actor_for(request: Request):
         token = request.cookies.get(settings.session_cookie_name)
         if not token:
             return None
         return await auth_deps.current_user.execute(token)
 
-    from agenttest.bootstrap.security_target import SqlAlchemySecurityTargetResolver
-
     router = create_security_scan_router(
-        session_factory=session_factory,
-        actor_for=actor_for,
-        check_project=check_project,
-        settings=settings,
-        target_resolver=SqlAlchemySecurityTargetResolver(session_factory),
+        SecurityScanApiDependencies(
+            service=SecurityScanService(
+                scans=SqlAlchemySecurityScanRepository(session_factory),
+                targets=SqlAlchemySecurityTargetResolver(session_factory),
+                scanner_factory=lambda: create_scanner(settings.promptfoo_bin),
+                project_access=ProjectAccessAdapter(SqlAlchemyProjectRepository(session_factory)),
+                allow_private_network=settings.security_scan_allow_private_network,
+            ),
+            actor_for=actor_for,
+            settings=settings,
+        )
     )
     app.include_router(router, prefix="/api/v1")
 
@@ -1781,8 +1772,14 @@ def _register_gate_endpoints(
     auth_deps,
 ) -> None:
     """注册发布门禁 API。"""
-    from agenttest.bootstrap.gate_evidence import SqlAlchemyGateEvidence
-    from agenttest.modules.gates.api.router import create_gate_router
+    from agenttest.modules.gates.api.router import (
+        GateApiDependencies,
+        create_gate_router,
+    )
+    from agenttest.modules.gates.application.service import GateService
+    from agenttest.modules.gates.infrastructure.persistence.repositories import (
+        SqlAlchemyReleaseGateRepository,
+    )
     from agenttest.shared.infrastructure.database import (
         create_database_engine,
         create_session_factory,
@@ -1791,22 +1788,6 @@ def _register_gate_endpoints(
     engine = create_database_engine(str(settings.database_url))
     session_factory = create_session_factory(engine)
 
-    async def check_project(project_id):
-        from sqlalchemy import text
-
-        async with session_factory() as session:
-            result = await session.execute(
-                text("SELECT 1 FROM projects WHERE id = :pid"),
-                {"pid": project_id},
-            )
-            if result.scalar() is None:
-                from fastapi import HTTPException
-
-                raise HTTPException(
-                    status_code=404,
-                    detail="Project not found",
-                )
-
     async def actor_for(request: Request):
         token = request.cookies.get(settings.session_cookie_name)
         if not token:
@@ -1814,11 +1795,15 @@ def _register_gate_endpoints(
         return await auth_deps.current_user.execute(token)
 
     router = create_gate_router(
-        session_factory=session_factory,
-        actor_for=actor_for,
-        check_project=check_project,
-        settings=settings,
-        evidence_reader=SqlAlchemyGateEvidence(session_factory),
+        GateApiDependencies(
+            service=GateService(
+                gates=SqlAlchemyReleaseGateRepository(session_factory),
+                evidence=SqlAlchemyGateEvidence(session_factory),
+                project_access=ProjectAccessAdapter(SqlAlchemyProjectRepository(session_factory)),
+            ),
+            actor_for=actor_for,
+            settings=settings,
+        )
     )
     app.include_router(router, prefix="/api/v1")
 
@@ -2126,7 +2111,12 @@ def _register_test_account_endpoints(
 ) -> None:
     """注册测试账号 API。"""
     from agenttest.modules.test_accounts.api.router import (
+        TestAccountApiDependencies,
         create_test_account_router,
+    )
+    from agenttest.modules.test_accounts.application.service import TestAccountService
+    from agenttest.modules.test_accounts.infrastructure.persistence.repositories import (
+        SqlAlchemyTestAccountRepository,
     )
     from agenttest.shared.infrastructure.database import (
         create_database_engine,
@@ -2136,22 +2126,6 @@ def _register_test_account_endpoints(
     engine = create_database_engine(str(settings.database_url))
     session_factory = create_session_factory(engine)
 
-    async def check_project(project_id):
-        from sqlalchemy import text
-
-        async with session_factory() as session:
-            result = await session.execute(
-                text("SELECT 1 FROM projects WHERE id = :pid"),
-                {"pid": project_id},
-            )
-            if result.scalar() is None:
-                from fastapi import HTTPException
-
-                raise HTTPException(
-                    status_code=404,
-                    detail="Project not found",
-                )
-
     async def actor_for(request: Request):
         token = request.cookies.get(settings.session_cookie_name)
         if not token:
@@ -2159,10 +2133,14 @@ def _register_test_account_endpoints(
         return await auth_deps.current_user.execute(token)
 
     router = create_test_account_router(
-        session_factory=session_factory,
-        actor_for=actor_for,
-        check_project=check_project,
-        settings=settings,
+        TestAccountApiDependencies(
+            service=TestAccountService(
+                accounts=SqlAlchemyTestAccountRepository(session_factory),
+                project_access=ProjectAccessAdapter(SqlAlchemyProjectRepository(session_factory)),
+            ),
+            actor_for=actor_for,
+            settings=settings,
+        )
     )
     app.include_router(router, prefix="/api/v1")
 
@@ -2173,7 +2151,11 @@ def _register_run_stream_endpoints(
     auth_deps,
 ) -> None:
     """注册运行进度 SSE 端点。"""
-    from agenttest.modules.runs.api.stream import create_run_stream_router
+    from agenttest.modules.runs.api.stream import (
+        RunStreamApiDependencies,
+        create_run_stream_router,
+    )
+    from agenttest.modules.runs.application.event_stream import RunProgressService
     from agenttest.shared.infrastructure.database import (
         create_database_engine,
         create_session_factory,
@@ -2181,22 +2163,8 @@ def _register_run_stream_endpoints(
 
     engine = create_database_engine(str(settings.database_url))
     session_factory = create_session_factory(engine)
-
-    async def check_project(project_id):
-        from sqlalchemy import text
-
-        async with session_factory() as session:
-            result = await session.execute(
-                text("SELECT 1 FROM projects WHERE id = :pid"),
-                {"pid": project_id},
-            )
-            if result.scalar() is None:
-                from fastapi import HTTPException
-
-                raise HTTPException(
-                    status_code=404,
-                    detail="Project not found",
-                )
+    runs = SqlAlchemyRunRepository(session_factory)
+    access = ProjectAccessAdapter(SqlAlchemyProjectRepository(session_factory))
 
     async def actor_for(request: Request):
         token = request.cookies.get(settings.session_cookie_name)
@@ -2205,10 +2173,11 @@ def _register_run_stream_endpoints(
         return await auth_deps.current_user.execute(token)
 
     router = create_run_stream_router(
-        session_factory=session_factory,
-        actor_for=actor_for,
-        check_project=check_project,
-        settings=settings,
+        RunStreamApiDependencies(
+            progress=RunProgressService(runs=runs, project_access=access),
+            actor_for=actor_for,
+            settings=settings,
+        )
     )
     app.include_router(router, prefix="/api/v1")
 
@@ -2222,11 +2191,13 @@ def _register_browser_profile_endpoints(
     from pathlib import Path
 
     from fastapi import Request
-    from sqlalchemy import text
 
     from agenttest.modules.browser_profiles.api.router import (
         BrowserProfileApiDependencies,
         create_browser_profile_router,
+    )
+    from agenttest.modules.browser_profiles.application.service import (
+        BrowserProfileService,
     )
     from agenttest.modules.browser_profiles.infrastructure.repository import (
         SqlAlchemyBrowserProfileRepository,
@@ -2242,24 +2213,6 @@ def _register_browser_profile_endpoints(
     engine = create_database_engine(str(settings.database_url))
     session_factory = create_session_factory(engine)
 
-    async def check_project(actor, project_id, write):
-        role = str(getattr(actor, "role", ""))
-        if role == "super_admin":
-            return
-        user_id = getattr(getattr(actor, "user_id", None), "value", None)
-        async with session_factory() as session:
-            result = await session.execute(
-                text("SELECT role FROM project_members WHERE project_id = :pid AND user_id = :uid"),
-                {"pid": project_id, "uid": user_id},
-            )
-            membership_role = result.scalar()
-            if membership_role is None or (
-                write and str(membership_role) not in {"developer", "tester"}
-            ):
-                from fastapi import HTTPException
-
-                raise HTTPException(status_code=404, detail="Project not found")
-
     async def actor_for(request: Request):
         token = request.cookies.get(settings.session_cookie_name)
         if not token:
@@ -2267,13 +2220,15 @@ def _register_browser_profile_endpoints(
         return await auth_deps.current_user.execute(token)
 
     router = create_browser_profile_router(
-        settings=settings,
-        actor_for=actor_for,
-        check_project=check_project,
-        dependencies=BrowserProfileApiDependencies(
-            repository=SqlAlchemyBrowserProfileRepository(session_factory),
-            runtime=ManagedBrowserProfileRuntime(Path(settings.browser_profile_root)),
-            auth_state=build_browser_auth_state_service(settings),
-        ),
+        BrowserProfileApiDependencies(
+            service=BrowserProfileService(
+                repository=SqlAlchemyBrowserProfileRepository(session_factory),
+                runtime=ManagedBrowserProfileRuntime(Path(settings.browser_profile_root)),
+                auth_state=build_browser_auth_state_service(settings),
+                project_access=ProjectAccessAdapter(SqlAlchemyProjectRepository(session_factory)),
+            ),
+            actor_for=actor_for,
+            settings=settings,
+        )
     )
     app.include_router(router)

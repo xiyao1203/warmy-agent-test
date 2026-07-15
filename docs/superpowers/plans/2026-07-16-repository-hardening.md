@@ -422,7 +422,7 @@ git commit -m "fix: add persistent login throttling"
 - Create: `apps/control-api/tests/unit/test_plans/test_dry_run.py`
 - Modify: `apps/control-api/tests/unit/environments/test_snapshots.py`
 
-- [ ] **Step 1: Add characterization tests for every affected endpoint**
+- [x] **Step 1: Add characterization tests for every affected endpoint**
 
 Before moving code, extend the existing contract suites to lock response fields, status codes, project scoping, and mutation idempotency. Add direct Application tests for the new service signatures:
 
@@ -441,13 +441,13 @@ class RunEventReader(Protocol):
 
 Equivalent typed services must cover snapshots, gates, reviews, scorers, security scans, test accounts, and dry-run readiness.
 
-- [ ] **Step 2: Run affected contract tests as a green characterization baseline**
+- [x] **Step 2: Run affected contract tests as a green characterization baseline**
 
 Run: `uv run pytest apps/control-api/tests/contract/test_trace_diff_api.py apps/control-api/tests/contract/test_scorer_trial_api.py apps/control-api/tests/contract/test_test_plan_readiness_api.py apps/control-api/tests/integration/test_experiment_review_chain.py apps/control-api/tests/integration/test_security_asset_chain.py -q`
 
 Expected: existing behavior passes before refactoring.
 
-- [ ] **Step 3: Extract read/query ports and DTOs module by module**
+- [x] **Step 3: Extract read/query ports and DTOs module by module**
 
 For every module, move SQL statements into an Infrastructure reader implementing an Application Protocol. Every project resource method includes `project_id`:
 
@@ -459,11 +459,11 @@ class RunComparisonReader(Protocol):
 
 Do not expose SQLAlchemy rows, ORM models, sessions, or `dict[str, Any]` from the new ports.
 
-- [ ] **Step 4: Extract command use cases and transaction boundaries**
+- [x] **Step 4: Extract command use cases and transaction boundaries**
 
 Routers call one service method per endpoint. Mutation services own repository calls and the Unit of Work; they return immutable DTOs or raise module-specific Application errors such as `ExperimentNotFound`, `DuplicateBrowserProfile`, and `DryRunAssetMissing`.
 
-- [ ] **Step 5: Replace the 11 remaining router infrastructure imports**
+- [x] **Step 5: Replace the 11 remaining router infrastructure imports**
 
 After Task 2 removed Artifact imports, update Browser Profiles, Environment Snapshots, Experiments, Gates, Reviews, Run Stream, Trace Diff, Scorers, Security Scan, Test Accounts, and Test Plan Dry Run. Router factories receive dependency dataclasses, for example:
 
@@ -485,19 +485,19 @@ def create_trace_diff_router(dependencies: TraceDiffApiDependencies) -> APIRoute
     return router
 ```
 
-- [ ] **Step 6: Run each module suite after its extraction**
+- [x] **Step 6: Run each module suite after its extraction**
 
 Run: `uv run pytest apps/control-api/tests/unit apps/control-api/tests/contract apps/control-api/tests/integration/test_experiment_review_chain.py apps/control-api/tests/integration/test_security_asset_chain.py -q`
 
 Expected: response contracts and project scoping remain unchanged.
 
-- [ ] **Step 7: Confirm the API tree contains no persistence dependency**
+- [x] **Step 7: Confirm the API tree contains no persistence dependency**
 
 Run: `rg -n 'sqlalchemy|\.infrastructure|session\.(execute|scalar)|SqlAlchemy[A-Za-z]+Repository' apps/control-api/src/agenttest/modules/*/api`
 
 Expected: no matches.
 
-- [ ] **Step 8: Commit the Application-boundary refactor**
+- [x] **Step 8: Commit the Application-boundary refactor**
 
 ```bash
 git add apps/control-api/src/agenttest/modules apps/control-api/tests/unit apps/control-api/tests/contract apps/control-api/tests/integration

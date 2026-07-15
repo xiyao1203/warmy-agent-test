@@ -2,6 +2,7 @@ from datetime import UTC, datetime
 from uuid import uuid4
 
 import pytest
+from agenttest.modules.browser_profiles.application.service import DuplicateBrowserProfile
 from agenttest.modules.browser_profiles.domain.entities import BrowserProfile
 from agenttest.modules.browser_profiles.infrastructure.models import BrowserProfileModel
 from agenttest.modules.browser_profiles.infrastructure.repository import (
@@ -10,7 +11,6 @@ from agenttest.modules.browser_profiles.infrastructure.repository import (
 from agenttest.modules.identity.infrastructure.persistence.models import UserModel  # noqa: F401
 from agenttest.modules.projects.infrastructure.persistence.models import ProjectModel  # noqa: F401
 from agenttest.modules.runs.infrastructure.persistence.models import RunCaseModel  # noqa: F401
-from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
 
@@ -80,6 +80,6 @@ async def test_repository_enforces_unique_project_name() -> None:
     )
 
     await repository.add(first)
-    with pytest.raises(IntegrityError):
+    with pytest.raises(DuplicateBrowserProfile):
         await repository.add(second)
     await engine.dispose()

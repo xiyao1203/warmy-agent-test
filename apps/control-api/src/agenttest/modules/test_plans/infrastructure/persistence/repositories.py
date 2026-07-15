@@ -4,14 +4,16 @@ from __future__ import annotations
 
 from base64 import b64decode, b64encode
 from datetime import datetime
+from uuid import UUID
 
-from sqlalchemy import delete, func, select, update
+from sqlalchemy import delete, func, select, text, update
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from agenttest.modules.agents.public import AgentVersionId
 from agenttest.modules.datasets.public import DatasetVersionId
 from agenttest.modules.identity.public import UserId
 from agenttest.modules.projects.public import ProjectId
+from agenttest.modules.test_plans.application.dry_run import DryRunReadModel
 from agenttest.modules.test_plans.domain.entities import (
     EnvironmentTemplateId,
     TestPlan,
@@ -169,6 +171,99 @@ class SqlAlchemyTestPlanVersionRepository:
                     updated_at=version.updated_at,
                 )
             )
+
+    async def get_dry_run_model(
+        self,
+        project_id: UUID,
+        plan_id: UUID,
+        version_id: UUID,
+    ) -> DryRunReadModel | None:
+        async with session_scope(self._session_factory) as session:
+            model = await session.scalar(
+                select(TestPlanVersionModel)
+                .join(TestPlanModel, TestPlanModel.id == TestPlanVersionModel.test_plan_id)
+                .where(
+                    TestPlanVersionModel.id == version_id,
+                    TestPlanModel.id == plan_id,
+                    TestPlanModel.project_id == project_id,
+                )
+            )
+            if model is None:
+                return None
+            version = _to_version(model)
+            agent_ready = await _exists(
+                session,
+                "agent_versions",
+                version.agent_version_id.value if version.agent_version_id else None,
+                published=True,
+            )
+            dataset_ready = await _exists(
+                session,
+                "dataset_versions",
+                version.dataset_version_id.value if version.dataset_version_id else None,
+                published=True,
+            )
+            environment_ready = await _environment_exists(
+                session,
+                project_id,
+                (
+                    version.environment_template_id.value
+                    if version.environment_template_id
+                    else None
+                ),
+            )
+            num_cases = 0
+            if version.dataset_version_id is not None:
+                num_cases = int(
+                    await session.scalar(
+                        text(
+                            "SELECT COUNT(*) FROM test_cases WHERE dataset_version_id = :version_id"
+                        ),
+                        {"version_id": version.dataset_version_id.value},
+                    )
+                    or 0
+                )
+        return DryRunReadModel(
+            version=version,
+            agent_ready=agent_ready,
+            dataset_ready=dataset_ready,
+            environment_ready=environment_ready,
+            num_cases=num_cases,
+        )
+
+
+async def _exists(
+    session: AsyncSession,
+    table_name: str,
+    value: UUID | None,
+    *,
+    published: bool,
+) -> bool:
+    if value is None:
+        return True
+    if table_name not in {"agent_versions", "dataset_versions"}:
+        raise ValueError("Unsupported dry-run asset table")
+    status_clause = " AND status = 'published'" if published else ""
+    statement = text(f"SELECT 1 FROM {table_name} WHERE id = :value{status_clause}")
+    return await session.scalar(statement, {"value": value}) is not None
+
+
+async def _environment_exists(
+    session: AsyncSession,
+    project_id: UUID,
+    value: UUID | None,
+) -> bool:
+    if value is None:
+        return True
+    return (
+        await session.scalar(
+            text(
+                "SELECT 1 FROM environment_templates WHERE id = :value AND project_id = :project_id"
+            ),
+            {"value": value, "project_id": project_id},
+        )
+        is not None
+    )
 
 
 # ── Mappers ─────────────────────────────────────────────────────────────────
