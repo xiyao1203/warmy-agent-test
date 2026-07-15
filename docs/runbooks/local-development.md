@@ -29,6 +29,29 @@ Services:
 The values in `.env.example` are local-only defaults. Do not reuse them in shared or
 production environments.
 
+## Security-sensitive Control API settings
+
+Non-local deployments must provide an independent `AGENTTEST_LOGIN_THROTTLE_PEPPER`
+and keep `AGENTTEST_TRUSTED_PROXY_CIDRS` empty unless requests always arrive through
+known reverse-proxy networks. Only a directly connected peer in that allowlist may
+supply `X-Forwarded-For`; never add public client ranges.
+
+Artifact uploads default to 64 MiB for users and 256 MiB for internal Workers. Override
+`AGENTTEST_ARTIFACT_USER_UPLOAD_MAX_BYTES` or
+`AGENTTEST_ARTIFACT_INTERNAL_UPLOAD_MAX_BYTES` only after confirming object-store,
+proxy, memory, and request-timeout budgets.
+
+## Repository gates
+
+```bash
+make verify
+make performance
+make security-audit
+```
+
+Authenticated navigation sampling additionally requires running services and the E2E
+admin/project environment variables before `make performance-e2e`.
+
 ## Stop infrastructure
 
 ```bash

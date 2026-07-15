@@ -972,7 +972,7 @@ Run: `make security-audit`
 
 Expected: success or a documented upstream-only advisory whose mitigation is enforced elsewhere and whose audit command is configured not to suppress unrelated failures.
 
-- [ ] **Step 6: Commit supply-chain controls**
+- [x] **Step 6: Commit supply-chain controls**
 
 ```bash
 git add scripts/audit_dependencies.sh docs/security/dependency-audit.md Makefile package.json pnpm-lock.yaml pyproject.toml uv.lock
@@ -989,17 +989,17 @@ git commit -m "chore: add dependency security audit"
 - Modify: `docs/开发进度与变更记录.md`
 - Modify: relevant runbooks if configuration or operations changed
 
-- [ ] **Step 1: Update architecture and operations documentation**
+- [x] **Step 1: Update architecture and operations documentation**
 
 Document Artifact limits/streaming, login throttle settings and trusted proxy behavior, Application-only router boundary, modular bootstrap composition, frontend public Feature imports, performance commands, and dependency audit commands. Correct README’s stale project-stage statement.
 
-- [ ] **Step 2: Run focused security and architecture verification**
+- [x] **Step 2: Run focused security and architecture verification**
 
 Run: `uv run pytest apps/control-api/tests/security apps/control-api/tests/architecture apps/control-api/tests/contract/test_auth_api.py apps/control-api/tests/contract/test_artifacts_api.py -q && make architecture`
 
 Expected: all pass with zero API persistence and cross-Feature boundary violations.
 
-- [ ] **Step 3: Run database verification**
+- [x] **Step 3: Run database verification**
 
 Start the repository PostgreSQL service, create a disposable database, run every PostgreSQL-only gate, and delete it even when a test fails:
 
@@ -1015,36 +1015,36 @@ unset AGENTTEST_TEST_DATABASE_URL
 
 Expected: empty upgrade, historical upgrade, constraints, project isolation, audit, and executable-asset migration tests all execute and pass; the disposable database is removed afterward.
 
-- [ ] **Step 4: Run frontend and performance verification**
+- [x] **Step 4: Run frontend and performance verification**
 
 Run: `pnpm --filter @warmy/web exec playwright test tests/e2e/login.spec.ts tests/e2e/test-mission.spec.ts tests/e2e/performance-budget.spec.ts && make performance`
 
 Expected: critical E2E and budgets pass; authenticated navigation sampling may only skip with the documented missing-service condition.
 
-- [ ] **Step 5: Run full repository verification**
+- [x] **Step 5: Run full repository verification**
 
 Run: `make verify && make security-audit && git diff --check`
 
 Expected: all gates pass. Record exact test counts and any environment-conditioned skips.
 
-- [ ] **Step 6: Scan for secrets and review the final diff**
+- [x] **Step 6: Scan for secrets and review the final diff**
 
 Run: `rg -n '(BEGIN (RSA|OPENSSH|EC) PRIVATE KEY|sk-[A-Za-z0-9]{20,}|Authorization: Bearer [A-Za-z0-9._-]{16,}|password\s*=\s*["'"'][^"'"']+["'"'])' --glob '!*.lock' --glob '!docs/superpowers/plans/*.md' . && git diff --stat && git status --short`
 
 Expected: no real secret match; only intended files are modified.
 
-- [ ] **Step 7: Close the repository task records**
+- [x] **Step 7: Close the repository task records**
 
 Move `TASK-20260715-001` to completed with actual files, migrations/API/config changes, exact command results, remaining low-risk debt, and next steps. Set `docs/当前任务.md` to no active task while preserving the independent `TASK-20260712-002` external validation note.
 
-- [ ] **Step 8: Commit final documentation**
+- [x] **Step 8: Commit final documentation**
 
 ```bash
 git add README.md docs
 git commit -m "docs: close repository hardening task"
 ```
 
-- [ ] **Step 9: Verify the branch is ready for review**
+- [x] **Step 9: Verify the branch is ready for review**
 
 Run: `git status --short --branch && git log --oneline main..HEAD`
 

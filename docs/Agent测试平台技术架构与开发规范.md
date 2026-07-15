@@ -329,6 +329,7 @@ features/runs/
 
 - Feature 外部只能从 `index.ts` 导入。
 - Feature 之间禁止读取对方内部文件。
+- 跨 Feature 的静态/动态 import、export、`require` 和测试 mock 均由 AST 门禁检查；测试代码不得绕过公开出口。
 - 页面只负责组合 Feature，不写复杂业务规则。
 - 公共组件不得依赖具体 Feature。
 
@@ -409,9 +410,10 @@ apps/control-api/
 │   ├── main.py
 │   ├── bootstrap/
 │   │   ├── app.py
-│   │   ├── container.py
+│   │   ├── context.py
 │   │   ├── settings.py
-│   │   └── telemetry.py
+│   │   ├── wiring.py
+│   │   └── modules/        # core/assets/execution/quality/assistant/plugins
 │   ├── shared/
 │   │   ├── domain/
 │   │   ├── application/
@@ -477,6 +479,13 @@ modules/runs/
 
 模块公开能力仅从 `public.py` 暴露。禁止跨模块直接导入对方的 ORM、Repository 或内部 Handler。
 
+控制面装配遵循以下边界：
+
+- `bootstrap/app.py` 只创建 FastAPI/Middleware、兼容测试覆盖并依次调用模块 Registrar；不得承载业务查询、事务或持久化操作。
+- `BootstrapContext` 持有共享 Settings、Session Factory、认证/项目访问和 UoW 工厂；`AppOverrides` 是测试替换的唯一入口。
+- `bootstrap/wiring.py` 构造 Infrastructure 实现；`bootstrap/modules/*` 按 Core、Assets、Execution、Quality、Assistant、Plugins 六组注册公开路由与 Application 服务。
+- API 只能依赖 Domain/Application 公开接口，不得导入模块 Infrastructure、SQLAlchemy 或直接调用 Session；该约束由架构测试与源码扫描同时执行。
+
 ### 7.4 Domain 层规范
 
 - Entity 维护业务不变量。
@@ -522,6 +531,8 @@ POST /api/v1/review-tasks/{task_id}/decisions
 - 数据库保存 Token Hash、用户、过期时间和撤销时间。
 - 密码使用 Argon2id。
 - 登录、密码重置和敏感写操作实施限流。
+- 登录限流持久化匿名 HMAC 键，不保存原始账号或 IP；默认窗口 900 秒、阈值 8 次、封禁 1800 秒，成功登录清理对应桶。
+- `X-Forwarded-For` 只在直连 Peer 命中显式 `trusted_proxy_cidrs` 时解析首个地址；默认可信代理列表为空，非本地环境必须提供独立登录限流 Pepper。
 - Cookie 会话的写操作必须有 CSRF 防护。
 - 用户禁用、密码重置或主动注销全部会话后立即撤销 Session。
 
@@ -979,6 +990,13 @@ HTTP Request
 - 容器使用最小基础镜像和非 Root 用户。
 - 生成 SBOM。
 - 第三方插件安装前验证来源、版本和权限。
+- `make security-audit` 审计 Node/Python 全部生产依赖；任何高危/严重项必须修复或由失效即失败的可达性门禁约束，并在 `docs/security/dependency-audit.md` 记录复核时间。
+
+### 14.4 Artifact 边界
+
+- Artifact 的 `(project_id, run_id)` 使用组合外键强制同项目归属，Application 在读写前再次校验项目权限。
+- 上传以 64 KiB 分块流式写入并增量计算 SHA-256；用户/内部默认上限分别为 64 MiB/256 MiB，超限、取消和失败都必须清理临时对象。
+- API 不直接使用 ORM 或对象存储实现；下载采用流式响应，文件名只保留安全 basename，内部 Token 使用常量时间比较。
 
 ---
 
@@ -1023,6 +1041,12 @@ HTTP Request
 - 可选运行时缺失必须返回可分类错误，禁止构造通过、跳过、空发现或中性分数。
 - 报告、会话、任务与生成资产使用 PostgreSQL 事实源并强制校验 `project_id`。
 - CI 扫描自动 Mock 工厂、演示业务响应、进程内事实源、重复运行时地址和浮动容器镜像。
+
+### 15.6 性能预算
+
+- `make performance` 必须通过生产构建、四条核心路由的 Gzip 基线与 5% 回归阈值、256000 bytes 单 Chunk 上限，以及 Run 对比/实验统计/项目列表的固定 SQL 查询上限。
+- `make performance-e2e` 对认证导航执行三次采样；缺少运行服务或 E2E 凭证时只能按明确条件跳过，不能替代静态 Bundle 和 SQL 预算。
+- 基线修改必须附带测量证据，禁止仅为通过门禁提高阈值。
 
 ---
 
