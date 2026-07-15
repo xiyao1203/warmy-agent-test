@@ -23,6 +23,7 @@ from agenttest.modules.identity.application.commands.login import (
     LoginCommand,
     LoginHandler,
     LoginResult,
+    NoopLoginThrottle,
 )
 from agenttest.modules.identity.application.ports import (
     SessionRecord,
@@ -147,6 +148,7 @@ def make_login_handler(
         password_hasher=PlainPasswordHasher(),
         clock=FixedClock(datetime(2026, 1, 1, tzinfo=UTC)),
         session_ttl=__import__("datetime").timedelta(hours=8),
+        throttle=NoopLoginThrottle(),
     )
     return handler, sessions
 
@@ -286,6 +288,7 @@ class TestSessionCookieSecurity:
                     internal_api_token="test-production-internal-token",
                     session_cookie_secure=True,
                     model_credential_key="a2tra2tra2tra2tra2tra2tra2tra2tra2tra2tra2s=",
+                    login_throttle_pepper="test-production-login-throttle-pepper",
                 ),
                 auth_dependencies=deps,
             ),

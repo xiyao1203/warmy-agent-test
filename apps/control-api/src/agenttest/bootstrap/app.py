@@ -132,6 +132,10 @@ from agenttest.modules.identity.application.commands.update_profile import (
     UpdateProfileHandler,
 )
 from agenttest.modules.identity.application.commands.update_user import UpdateUserHandler
+from agenttest.modules.identity.application.login_throttle import (
+    LoginThrottle,
+    LoginThrottlePolicy,
+)
 from agenttest.modules.identity.application.queries.current_user import (
     CsrfValidator,
     CurrentUserQuery,
@@ -143,6 +147,7 @@ from agenttest.modules.identity.application.queries.list_users import (
 from agenttest.modules.identity.infrastructure.passwords import Argon2PasswordHasher
 from agenttest.modules.identity.infrastructure.persistence.repositories import (
     SqlAlchemyCredentialRepository,
+    SqlAlchemyLoginThrottleRepository,
     SqlAlchemySessionRepository,
     SqlAlchemyUserRepository,
 )
@@ -602,6 +607,16 @@ def build_auth_dependencies(settings: Settings) -> AuthApiDependencies:
     sessions = SqlAlchemySessionRepository(session_factory)
     audit = AuditRecorder(SqlAlchemyAuditRepository(session_factory))
     clock = SystemClock()
+    throttle = LoginThrottle(
+        repository=SqlAlchemyLoginThrottleRepository(session_factory),
+        clock=clock,
+        policy=LoginThrottlePolicy(
+            window=timedelta(seconds=settings.login_throttle_window_seconds),
+            max_failures=settings.login_throttle_max_failures,
+            blocked_for=timedelta(seconds=settings.login_throttle_block_seconds),
+        ),
+        pepper=(settings.login_throttle_pepper or settings.internal_api_token).encode(),
+    )
     return AuthApiDependencies(
         login=LoginHandler(
             users=users,
@@ -610,6 +625,7 @@ def build_auth_dependencies(settings: Settings) -> AuthApiDependencies:
             password_hasher=Argon2PasswordHasher(),
             clock=clock,
             session_ttl=timedelta(seconds=settings.session_ttl_seconds),
+            throttle=throttle,
             audit=audit,
         ),
         current_user=CurrentUserQuery(users=users, sessions=sessions, clock=clock),

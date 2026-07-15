@@ -286,7 +286,7 @@ git commit -m "fix: bound and scope artifact transfers"
 - Modify: `apps/control-api/tests/contract/test_auth_api.py`
 - Modify: `apps/control-api/tests/integration/test_migrations.py`
 
-- [ ] **Step 1: Write failing policy tests**
+- [x] **Step 1: Write failing policy tests**
 
 Use a FrozenClock and fake repository to prove the exact policy:
 
@@ -304,7 +304,7 @@ async def test_eighth_failure_blocks_without_revealing_account_existence() -> No
 
 Also prove window reset, block expiry, successful-login clearing, deterministic HMAC-SHA256 keys, and identical handler errors for known and unknown users.
 
-- [ ] **Step 2: Write failing client-address tests**
+- [x] **Step 2: Write failing client-address tests**
 
 ```python
 def test_forwarded_header_is_ignored_for_untrusted_peer() -> None:
@@ -317,13 +317,13 @@ def test_first_forwarded_address_is_used_for_trusted_peer() -> None:
 
 Invalid forwarded values fall back to the direct peer rather than producing a 500.
 
-- [ ] **Step 3: Verify both new suites fail**
+- [x] **Step 3: Verify both new suites fail**
 
 Run: `uv run pytest apps/control-api/tests/unit/identity/test_login_throttle.py apps/control-api/tests/unit/identity/test_client_ip.py -q`
 
 Expected: missing modules and types.
 
-- [ ] **Step 4: Add the persistent model and migration**
+- [x] **Step 4: Add the persistent model and migration**
 
 Create `login_throttles` with `key_hash` primary key, `failure_count`, `window_started_at`, `blocked_until`, and `updated_at`; add `ix_login_throttles_updated_at`. No raw email or IP column is permitted.
 
@@ -337,13 +337,13 @@ class LoginThrottleModel(Base):
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, index=True)
 ```
 
-- [ ] **Step 5: Implement atomic repository and application policy**
+- [x] **Step 5: Implement atomic repository and application policy**
 
 The repository exposes `get`, `record_failure`, `clear`, and `delete_expired(cutoff, limit=100)`. PostgreSQL uses `INSERT .. ON CONFLICT DO UPDATE`; SQLite uses a transactionally equivalent select/update path. The application service creates both account and account-plus-IP HMAC keys and blocks if either bucket is blocked.
 
 Add exact settings `login_throttle_window_seconds=900`, `login_throttle_max_failures=8`, `login_throttle_block_seconds=1800`, `login_throttle_pepper`, and `trusted_proxy_cidrs`. `login_throttle_pepper` is required outside local/test, and `trusted_proxy_cidrs` defaults to an empty tuple.
 
-- [ ] **Step 6: Integrate throttle and source context into login**
+- [x] **Step 6: Integrate throttle and source context into login**
 
 Extend the command without storing secrets:
 
@@ -357,17 +357,17 @@ class LoginCommand:
 
 Call `is_blocked()` before password verification, `record_failure()` on every public authentication failure including unknown users, and `clear_success()` only after successful password verification. Always raise `InvalidCredentialsError` for blocked requests.
 
-- [ ] **Step 7: Add API contract and migration coverage**
+- [x] **Step 7: Add API contract and migration coverage**
 
 Verify the eighth failed login and the first blocked retry both return the same 401 title/detail as an ordinary wrong password; ensure `X-Forwarded-For` is ignored by default. Verify `0025 -> 0026`, empty upgrade, index existence, and downgrade.
 
-- [ ] **Step 8: Run identity and security tests**
+- [x] **Step 8: Run identity and security tests**
 
 Run: `uv run pytest apps/control-api/tests/unit/identity apps/control-api/tests/contract/test_auth_api.py apps/control-api/tests/security/test_session_security.py apps/control-api/tests/integration/test_migrations.py -q`
 
 Expected: all runnable tests pass and no response distinguishes unknown, wrong-password, locked, or throttled accounts.
 
-- [ ] **Step 9: Commit login hardening**
+- [x] **Step 9: Commit login hardening**
 
 ```bash
 git add apps/control-api/migrations/versions/0026_login_throttles.py apps/control-api/src/agenttest/modules/identity apps/control-api/src/agenttest/bootstrap apps/control-api/tests/unit/identity apps/control-api/tests/contract/test_auth_api.py apps/control-api/tests/integration/test_migrations.py

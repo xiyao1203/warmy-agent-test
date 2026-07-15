@@ -12,6 +12,7 @@ from agenttest.modules.identity.application.commands.login import (
     InvalidCredentialsError,
     LoginCommand,
     LoginHandler,
+    NoopLoginThrottle,
 )
 from agenttest.modules.identity.application.ports import SessionRecord
 from agenttest.modules.identity.infrastructure.passwords import Argon2PasswordHasher
@@ -104,6 +105,7 @@ async def test_successful_login_records_audit_without_raw_password() -> None:
         password_hasher=hasher,
         clock=FrozenClock(),
         session_ttl=timedelta(hours=8),
+        throttle=NoopLoginThrottle(),
         audit=AuditRecorder(sink),
     )
 
@@ -123,6 +125,7 @@ async def test_failed_login_records_failure_audit() -> None:
         password_hasher=Argon2PasswordHasher(),
         clock=FrozenClock(),
         session_ttl=timedelta(hours=8),
+        throttle=NoopLoginThrottle(),
         audit=AuditRecorder(sink),
     )
 

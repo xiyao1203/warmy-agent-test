@@ -9,6 +9,7 @@ from agenttest.modules.identity.application.commands.login import (
     InvalidCredentialsError,
     LoginCommand,
     LoginHandler,
+    NoopLoginThrottle,
 )
 from agenttest.modules.identity.application.commands.logout import LogoutHandler
 from agenttest.modules.identity.application.ports import SessionRecord
@@ -32,8 +33,10 @@ class FrozenClock:
 class FakeUserRepository:
     def __init__(self, user: User | None) -> None:
         self.user = user
+        self.email_lookups = 0
 
     async def get_by_email(self, email: Email) -> User | None:
+        self.email_lookups += 1
         if self.user is not None and self.user.email == email:
             return self.user
         return None
@@ -72,6 +75,23 @@ class FakeSessionRepository:
             self.session = replace(self.session, revoked_at=revoked_at)
 
 
+class StubLoginThrottle:
+    def __init__(self, *, blocked: bool = False) -> None:
+        self.blocked = blocked
+        self.failures: list[tuple[str, str]] = []
+        self.cleared: list[tuple[str, str]] = []
+
+    async def is_blocked(self, email: str, source_ip: str) -> bool:
+        return self.blocked
+
+    async def record_failure(self, email: str, source_ip: str) -> bool:
+        self.failures.append((email, source_ip))
+        return self.blocked
+
+    async def clear_success(self, email: str, source_ip: str) -> None:
+        self.cleared.append((email, source_ip))
+
+
 def create_user() -> User:
     return User.create(
         user_id=UserId.new(),
@@ -94,6 +114,7 @@ async def test_correct_password_creates_hashed_server_session() -> None:
         password_hasher=hasher,
         clock=FrozenClock(now),
         session_ttl=timedelta(hours=8),
+        throttle=NoopLoginThrottle(),
     )
 
     result = await handler.execute(LoginCommand(email=user.email, password="correct-password"))
@@ -121,6 +142,7 @@ async def test_wrong_password_and_unknown_email_share_public_error(known_user: b
         password_hasher=hasher,
         clock=FrozenClock(datetime(2026, 6, 25, tzinfo=UTC)),
         session_ttl=timedelta(hours=8),
+        throttle=NoopLoginThrottle(),
     )
 
     with pytest.raises(InvalidCredentialsError, match="Invalid email or password"):
@@ -139,10 +161,97 @@ async def test_disabled_user_cannot_log_in() -> None:
         password_hasher=hasher,
         clock=FrozenClock(datetime(2026, 6, 25, tzinfo=UTC)),
         session_ttl=timedelta(hours=8),
+        throttle=NoopLoginThrottle(),
     )
 
     with pytest.raises(InvalidCredentialsError, match="Invalid email or password"):
         await handler.execute(LoginCommand(email=user.email, password="correct-password"))
+
+
+@pytest.mark.asyncio
+async def test_blocked_login_uses_public_error_before_account_lookup() -> None:
+    users = FakeUserRepository(create_user())
+    throttle = StubLoginThrottle(blocked=True)
+    handler = LoginHandler(
+        users=users,
+        credentials=FakeCredentialRepository(None),
+        sessions=FakeSessionRepository(),
+        password_hasher=Argon2PasswordHasher(),
+        clock=FrozenClock(datetime(2026, 6, 25, tzinfo=UTC)),
+        session_ttl=timedelta(hours=8),
+        throttle=throttle,
+    )
+
+    with pytest.raises(InvalidCredentialsError, match="Invalid email or password"):
+        await handler.execute(
+            LoginCommand(
+                email=Email("user@example.com"),
+                password="wrong",
+                source_ip="203.0.113.9",
+            )
+        )
+
+    assert users.email_lookups == 0
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("known_user", [True, False])
+async def test_every_public_authentication_failure_updates_throttle(
+    known_user: bool,
+) -> None:
+    user = create_user()
+    hasher = Argon2PasswordHasher()
+    throttle = StubLoginThrottle()
+    handler = LoginHandler(
+        users=FakeUserRepository(user if known_user else None),
+        credentials=FakeCredentialRepository(
+            hasher.hash("correct-password") if known_user else None
+        ),
+        sessions=FakeSessionRepository(),
+        password_hasher=hasher,
+        clock=FrozenClock(datetime(2026, 6, 25, tzinfo=UTC)),
+        session_ttl=timedelta(hours=8),
+        throttle=throttle,
+    )
+
+    with pytest.raises(InvalidCredentialsError):
+        await handler.execute(
+            LoginCommand(
+                email=user.email,
+                password="wrong-password",
+                source_ip="203.0.113.9",
+            )
+        )
+
+    assert throttle.failures == [("user@example.com", "203.0.113.9")]
+    assert throttle.cleared == []
+
+
+@pytest.mark.asyncio
+async def test_successful_password_verification_clears_throttle() -> None:
+    user = create_user()
+    hasher = Argon2PasswordHasher()
+    throttle = StubLoginThrottle()
+    handler = LoginHandler(
+        users=FakeUserRepository(user),
+        credentials=FakeCredentialRepository(hasher.hash("correct-password")),
+        sessions=FakeSessionRepository(),
+        password_hasher=hasher,
+        clock=FrozenClock(datetime(2026, 6, 25, tzinfo=UTC)),
+        session_ttl=timedelta(hours=8),
+        throttle=throttle,
+    )
+
+    await handler.execute(
+        LoginCommand(
+            email=user.email,
+            password="correct-password",
+            source_ip="203.0.113.9",
+        )
+    )
+
+    assert throttle.failures == []
+    assert throttle.cleared == [("user@example.com", "203.0.113.9")]
 
 
 @pytest.mark.asyncio
