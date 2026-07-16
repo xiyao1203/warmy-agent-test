@@ -16,6 +16,7 @@ class RunDefinitionCase:
     name: str
     input_snapshot: dict[str, object]
     assertion_snapshot: list[dict[str, object]]
+    case_spec_snapshot: dict[str, object] | None = None
     execution_mode: str = "api"
 
 

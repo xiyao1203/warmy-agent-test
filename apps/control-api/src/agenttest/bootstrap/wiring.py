@@ -12,7 +12,10 @@ from agenttest.bootstrap.agent_relationships import SqlAlchemyAgentRelationships
 from agenttest.bootstrap.gate_evidence import SqlAlchemyGateEvidence
 from agenttest.bootstrap.project_access import ProjectAccessAdapter
 from agenttest.bootstrap.review_collector import SqlAlchemyRunReviewCollector
-from agenttest.bootstrap.run_source import SqlAlchemyRunSource
+from agenttest.bootstrap.run_source import (
+    SqlAlchemyCaseTrialRuntimeSource,
+    SqlAlchemyRunSource,
+)
 from agenttest.bootstrap.settings import Settings, get_settings
 from agenttest.entrypoints.http.health import router as health_router
 from agenttest.modules.agents.api.router import (
@@ -74,6 +77,7 @@ from agenttest.modules.datasets.application.queries import (
     ListDatasetVersionsHandler,
     ListTestCasesHandler,
 )
+from agenttest.modules.datasets.application.trial_runs import CreateCaseTrialRunHandler
 from agenttest.modules.datasets.infrastructure.persistence.repositories import (
     SqlAlchemyDatasetRepository,
     SqlAlchemyDatasetVersionRepository,
@@ -841,6 +845,17 @@ def build_dataset_dependencies(settings: Settings) -> DatasetApiDependencies:
         audit=audit,
     )
     runs = SqlAlchemyRunRepository(session_factory)
+    trial_orchestrator = (
+        TemporalRunOrchestrator(
+            address=settings.temporal_address,
+            control_api_base_url=settings.control_api_base_url,
+            internal_api_token=settings.internal_api_token,
+            namespace=settings.temporal_namespace,
+            task_queue=settings.temporal_task_queue,
+        )
+        if settings.temporal_address
+        else LocalRunOrchestrator()
+    )
     return DatasetApiDependencies(
         list_datasets=ListDatasetsHandler(
             datasets=datasets,
@@ -911,6 +926,15 @@ def build_dataset_dependencies(settings: Settings) -> DatasetApiDependencies:
             audit=audit,
         ),
         duplicate_case=DuplicateTestCaseHandler(cases=cases, add_case=add_case),
+        trial_run=CreateCaseTrialRunHandler(
+            datasets=datasets,
+            versions=versions,
+            cases=cases,
+            runs=runs,
+            project_access=access,
+            runtime_source=SqlAlchemyCaseTrialRuntimeSource(session_factory),
+            orchestrator=trial_orchestrator,
+        ),
         publish_version=PublishDatasetVersionHandler(
             datasets=datasets,
             versions=versions,

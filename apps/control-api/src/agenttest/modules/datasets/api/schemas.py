@@ -332,3 +332,21 @@ class TestCaseValidationIssue(BaseModel):
 class TestCaseValidationResponse(BaseModel):
     ready: bool
     issues: list[TestCaseValidationIssue]
+
+
+class CreateCaseTrialRunRequest(BaseModel):
+    agent_version_id: UUID
+    environment_template_id: UUID
+
+
+class CaseTrialRunResponse(BaseModel):
+    id: UUID
+    project_id: UUID
+    run_type: Literal["case_trial"]
+    source_test_case_id: UUID
+    agent_version_id: UUID
+    dataset_version_id: UUID
+    status: str
+    workflow_id: str | None
+    created: bool
+    href: str

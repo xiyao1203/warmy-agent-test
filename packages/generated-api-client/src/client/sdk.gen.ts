@@ -60,6 +60,9 @@ import type {
   CreateAgentApiV1ProjectsProjectIdAgentsPostData,
   CreateAgentApiV1ProjectsProjectIdAgentsPostErrors,
   CreateAgentApiV1ProjectsProjectIdAgentsPostResponses,
+  CreateCaseTrialRunApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdCasesCaseIdTrialRunsPostData,
+  CreateCaseTrialRunApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdCasesCaseIdTrialRunsPostErrors,
+  CreateCaseTrialRunApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdCasesCaseIdTrialRunsPostResponses,
   CreateConfigApiV1ProjectsProjectIdModelConfigsPostData,
   CreateConfigApiV1ProjectsProjectIdModelConfigsPostErrors,
   CreateConfigApiV1ProjectsProjectIdModelConfigsPostResponses,
@@ -2034,6 +2037,33 @@ export const markCaseReadyApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersion
     >({
       url: "/api/v1/projects/{project_id}/datasets/{dataset_id}/versions/{version_id}/cases/{case_id}/mark-ready",
       ...options,
+    });
+
+/**
+ * Create Case Trial Run
+ */
+export const createCaseTrialRunApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdCasesCaseIdTrialRunsPost =
+  <ThrowOnError extends boolean = false>(
+    options: Options<
+      CreateCaseTrialRunApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdCasesCaseIdTrialRunsPostData,
+      ThrowOnError
+    >,
+  ): RequestResult<
+    CreateCaseTrialRunApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdCasesCaseIdTrialRunsPostResponses,
+    CreateCaseTrialRunApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdCasesCaseIdTrialRunsPostErrors,
+    ThrowOnError
+  > =>
+    (options.client ?? client).post<
+      CreateCaseTrialRunApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdCasesCaseIdTrialRunsPostResponses,
+      CreateCaseTrialRunApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdCasesCaseIdTrialRunsPostErrors,
+      ThrowOnError
+    >({
+      url: "/api/v1/projects/{project_id}/datasets/{dataset_id}/versions/{version_id}/cases/{case_id}/trial-runs",
+      ...options,
+      headers: {
+        "Content-Type": "application/json",
+        ...options.headers,
+      },
     });
 
 /**

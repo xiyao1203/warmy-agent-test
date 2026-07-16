@@ -11,6 +11,8 @@ from fastapi.responses import JSONResponse, Response
 
 from agenttest.bootstrap.settings import Settings
 from agenttest.modules.datasets.api.schemas import (
+    CaseTrialRunResponse,
+    CreateCaseTrialRunRequest,
     CreateDatasetRequest,
     CreateTestCaseRequest,
     DatasetListResponse,
@@ -51,6 +53,10 @@ from agenttest.modules.datasets.application.generate_from_run import (
 from agenttest.modules.datasets.application.import_export import (
     ImportError as DatasetImportError,
 )
+from agenttest.modules.datasets.application.trial_runs import (
+    CreateCaseTrialRunCommand,
+    CreateCaseTrialRunResult,
+)
 from agenttest.modules.datasets.domain.entities import (
     Dataset,
     DatasetId,
@@ -61,6 +67,7 @@ from agenttest.modules.datasets.domain.entities import (
 )
 from agenttest.modules.identity.public import InvalidSessionError, User, UserId
 from agenttest.modules.projects.public import ProjectId, ProjectNotFoundError
+from agenttest.modules.runs.public import RunRuntimeUnavailableError
 from agenttest.shared.api.problem_details import ProblemDetails
 from agenttest.shared.application.uow import UnitOfWorkFactory, null_uow_factory
 
@@ -170,6 +177,14 @@ class DuplicateCaseExecutor(Protocol):
     ) -> TestCase: ...
 
 
+class CreateCaseTrialRunExecutor(Protocol):
+    async def execute(
+        self,
+        actor: User,
+        command: CreateCaseTrialRunCommand,
+    ) -> CreateCaseTrialRunResult: ...
+
+
 class ImportExportExecutor(Protocol):
     async def preview_test_cases(
         self,
@@ -225,6 +240,7 @@ class DatasetApiDependencies:
     delete_case: DeleteCaseExecutor
     mark_case_ready: MarkCaseReadyExecutor
     duplicate_case: DuplicateCaseExecutor
+    trial_run: CreateCaseTrialRunExecutor
     publish_version: PublishVersionExecutor
     import_export: ImportExportExecutor
     generate_from_run: GenerateFromRunExecutor
@@ -726,6 +742,78 @@ def create_dataset_router(
         except ValueError as error:
             return invalid_request(str(error))
         return TestCaseResponse.from_domain(case)
+
+    @router.post(
+        "/{dataset_id}/versions/{version_id}/cases/{case_id}/trial-runs",
+        response_model=CaseTrialRunResponse,
+        status_code=201,
+    )
+    async def create_case_trial_run(
+        request: Request,
+        response: Response,
+        project_id: UUID,
+        dataset_id: UUID,
+        version_id: UUID,
+        case_id: UUID,
+        payload: CreateCaseTrialRunRequest,
+        idempotency_key: str | None = Header(default=None, alias="Idempotency-Key"),
+        x_csrf_token: str | None = Header(default=None),
+    ) -> CaseTrialRunResponse | JSONResponse:
+        actor = await writer(request, x_csrf_token)
+        if isinstance(actor, JSONResponse):
+            return actor
+        if not idempotency_key:
+            return invalid_request("Idempotency-Key is required")
+        try:
+            await project_case(actor, project_id, dataset_id, version_id, case_id)
+            async with dependencies.uow_factory():
+                result = await dependencies.trial_run.execute(
+                    actor,
+                    CreateCaseTrialRunCommand(
+                        project_id=ProjectId(project_id),
+                        case_id=TestCaseId(case_id),
+                        agent_version_id=payload.agent_version_id,
+                        environment_template_id=payload.environment_template_id,
+                        idempotency_key=idempotency_key,
+                    ),
+                )
+        except (
+            DatasetNotFoundError,
+            DatasetVersionNotFoundError,
+            TestCaseNotFoundError,
+            ProjectNotFoundError,
+            LookupError,
+        ):
+            return asset_not_found()
+        except PermissionError:
+            return permission_denied()
+        except RunRuntimeUnavailableError as error:
+            return JSONResponse(
+                ProblemDetails(
+                    type="about:blank",
+                    title="Run runtime unavailable",
+                    status=503,
+                    detail=str(error),
+                ).model_dump(),
+                status_code=503,
+            )
+        except ValueError as error:
+            return invalid_request(str(error))
+        if not result.created:
+            response.status_code = 200
+        run = result.run
+        return CaseTrialRunResponse(
+            id=run.run_id.value,
+            project_id=run.project_id.value,
+            run_type="case_trial",
+            source_test_case_id=case_id,
+            agent_version_id=run.agent_version_id,
+            dataset_version_id=run.dataset_version_id,
+            status=run.status.value,
+            workflow_id=run.workflow_id,
+            created=result.created,
+            href=f"/projects/{project_id}/runs/{run.run_id.value}",
+        )
 
     @router.delete(
         "/{dataset_id}/versions/{version_id}/cases/{case_id}",

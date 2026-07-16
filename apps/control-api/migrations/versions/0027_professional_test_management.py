@@ -55,6 +55,49 @@ def upgrade() -> None:
         batch_op.add_column(sa.Column("created_by", sa.Uuid(), nullable=True))
         batch_op.add_column(sa.Column("updated_by", sa.Uuid(), nullable=True))
 
+    with op.batch_alter_table("runs") as batch_op:
+        batch_op.add_column(
+            sa.Column(
+                "run_type",
+                sa.String(length=32),
+                nullable=False,
+                server_default="plan",
+            )
+        )
+        batch_op.add_column(sa.Column("source_test_case_id", sa.Uuid(), nullable=True))
+        batch_op.alter_column(
+            "test_plan_version_id",
+            existing_type=sa.Uuid(),
+            nullable=True,
+        )
+        batch_op.create_foreign_key(
+            "fk_runs_source_test_case",
+            "test_cases",
+            ["source_test_case_id"],
+            ["id"],
+        )
+        batch_op.create_check_constraint(
+            "ck_runs_type",
+            "run_type IN ('plan', 'case_trial')",
+        )
+        batch_op.create_check_constraint(
+            "ck_runs_source_by_type",
+            "(run_type = 'plan' AND test_plan_version_id IS NOT NULL "
+            "AND source_test_case_id IS NULL) OR "
+            "(run_type = 'case_trial' AND test_plan_version_id IS NULL "
+            "AND source_test_case_id IS NOT NULL)",
+        )
+
+    with op.batch_alter_table("run_cases") as batch_op:
+        batch_op.add_column(
+            sa.Column(
+                "case_spec_snapshot",
+                sa.JSON(),
+                nullable=False,
+                server_default=sa.text("'{}'"),
+            )
+        )
+
     op.execute(
         """
         UPDATE projects
@@ -277,6 +320,21 @@ def downgrade() -> None:
     op.drop_index("ix_test_cases_version_automation", table_name="test_cases")
     op.drop_index("ix_test_cases_version_type", table_name="test_cases")
     op.drop_index("ix_test_cases_version_status", table_name="test_cases")
+
+    with op.batch_alter_table("run_cases") as batch_op:
+        batch_op.drop_column("case_spec_snapshot")
+
+    with op.batch_alter_table("runs") as batch_op:
+        batch_op.drop_constraint("ck_runs_source_by_type", type_="check")
+        batch_op.drop_constraint("ck_runs_type", type_="check")
+        batch_op.drop_constraint("fk_runs_source_test_case", type_="foreignkey")
+        batch_op.alter_column(
+            "test_plan_version_id",
+            existing_type=sa.Uuid(),
+            nullable=False,
+        )
+        batch_op.drop_column("source_test_case_id")
+        batch_op.drop_column("run_type")
 
     with op.batch_alter_table("test_cases") as batch_op:
         for constraint_name, constraint_type in (

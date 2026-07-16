@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from uuid import uuid4
+
 from agenttest.bootstrap.app import create_app
 from agenttest.bootstrap.settings import Settings
 from agenttest.modules.datasets.api.router import (
@@ -18,6 +20,7 @@ from agenttest.modules.datasets.application.commands import (
     UpdateTestCaseHandler,
 )
 from agenttest.modules.datasets.application.import_export import ImportExportService
+from agenttest.modules.datasets.application.trial_runs import CreateCaseTrialRunResult
 from agenttest.modules.datasets.application.queries import (
     GetDatasetHandler,
     GetDatasetVersionHandler,
@@ -41,6 +44,7 @@ from agenttest.modules.datasets.domain.entities import (
 from agenttest.modules.identity.api.router import AuthApiDependencies
 from agenttest.modules.identity.public import Email, SystemRole, User, UserId
 from agenttest.modules.projects.public import ProjectId, ProjectNotFoundError
+from agenttest.modules.runs.public import Run, RunId
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
@@ -181,6 +185,23 @@ class StubGenerateFromRun:
         raise AssertionError("generate-from-run is not used in this contract fixture")
 
 
+class StubTrialRun:
+    async def execute(self, actor: User, command):
+        run = Run.create_case_trial(
+            run_id=RunId.new(),
+            project_id=command.project_id,
+            source_test_case_id=command.case_id.value,
+            agent_version_id=command.agent_version_id,
+            dataset_version_id=uuid4(),
+            idempotency_key=command.idempotency_key,
+            created_by=actor.user_id,
+            config_snapshot={"case_trial": True},
+            plugin_snapshot={"id": "stub"},
+        )
+        run.start("workflow-trial")
+        return CreateCaseTrialRunResult(run=run, created=True)
+
+
 def create_user(role: SystemRole) -> User:
     return User.create(
         user_id=UserId.new(),
@@ -258,6 +279,7 @@ def build_dependencies(
             project_access=access,
         ),
         duplicate_case=DuplicateTestCaseHandler(cases=cases, add_case=add_case),
+        trial_run=StubTrialRun(),
         publish_version=PublishDatasetVersionHandler(
             datasets=datasets,
             versions=versions,
@@ -448,6 +470,20 @@ def test_professional_case_round_trips_and_can_be_marked_ready() -> None:
     assert validation.json() == {"ready": True, "issues": []}
     assert marked_ready.status_code == 200
     assert marked_ready.json()["case_status"] == "ready"
+
+    trial = client.post(
+        f"{cases_url}/{body['id']}/trial-runs",
+        headers={**csrf, "Idempotency-Key": "privacy-trial-1"},
+        json={
+            "agent_version_id": str(uuid4()),
+            "environment_template_id": str(uuid4()),
+        },
+    )
+
+    assert trial.status_code == 201
+    assert trial.json()["run_type"] == "case_trial"
+    assert trial.json()["source_test_case_id"] == body["id"]
+    assert trial.json()["href"].endswith(trial.json()["id"])
 
     exported = client.get(
         f"/api/v1/projects/{project_id.value}/datasets/{dataset_id}"

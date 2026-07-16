@@ -12,11 +12,19 @@ from agenttest.modules.agents.infrastructure.persistence.models import (
 )
 from agenttest.modules.browser_profiles.domain.entities import BrowserProfile
 from agenttest.modules.browser_profiles.infrastructure.models import BrowserProfileModel
+from agenttest.modules.datasets.application.trial_runs import (
+    CaseTrialRuntime,
+    CaseTrialRuntimeSource,
+)
 from agenttest.modules.datasets.infrastructure.persistence.models import (
     DatasetModel,
     DatasetVersionModel,
     TestCaseModel,
 )
+from agenttest.modules.datasets.infrastructure.persistence.repositories import (
+    _to_test_case,
+)
+from agenttest.modules.datasets.public import build_case_spec_snapshot
 from agenttest.modules.environments.infrastructure.persistence.models import (
     CredentialBindingModel,
     EnvironmentTemplateModel,
@@ -251,8 +259,97 @@ class SqlAlchemyRunSource:
                     name=case.name,
                     input_snapshot=dict(case.input),
                     assertion_snapshot=list(case.assertions),
+                    case_spec_snapshot=build_case_spec_snapshot(_to_test_case(case)),
                     execution_mode=str(case.execution_mode),
                 )
                 for case in cases
             ],
+        )
+
+
+class SqlAlchemyCaseTrialRuntimeSource(CaseTrialRuntimeSource):
+    """Resolve same-project immutable Agent and environment inputs for a case trial."""
+
+    def __init__(self, session_factory: async_sessionmaker[AsyncSession]) -> None:
+        self._session_factory = session_factory
+
+    async def load(
+        self,
+        *,
+        project_id: ProjectId,
+        agent_version_id: UUID,
+        environment_template_id: UUID,
+    ) -> CaseTrialRuntime:
+        statement = (
+            select(AgentVersionModel, AgentModel, EnvironmentTemplateModel)
+            .join(AgentModel, AgentModel.id == AgentVersionModel.agent_id)
+            .join(
+                EnvironmentTemplateModel,
+                EnvironmentTemplateModel.id == environment_template_id,
+            )
+            .where(
+                AgentVersionModel.id == agent_version_id,
+                AgentVersionModel.status == "published",
+                AgentModel.project_id == project_id.value,
+                EnvironmentTemplateModel.project_id == project_id.value,
+            )
+        )
+        async with session_scope(self._session_factory) as session:
+            row = (await session.execute(statement)).one_or_none()
+            if row is None:
+                raise ValueError("Published Agent version or project environment was not found")
+            agent_version, agent, environment = row
+            stored_agent_config = dict(agent_version.config)
+            environment_config = dict(environment.config)
+            credential_ids_raw = environment_config.get("credential_binding_ids", [])
+            credential_ids = (
+                [UUID(str(item)) for item in credential_ids_raw]
+                if isinstance(credential_ids_raw, list)
+                else []
+            )
+            credential_rows = (
+                list(
+                    (
+                        await session.scalars(
+                            select(CredentialBindingModel).where(
+                                CredentialBindingModel.project_id == project_id.value,
+                                CredentialBindingModel.id.in_(credential_ids),
+                            )
+                        )
+                    ).all()
+                )
+                if credential_ids
+                else []
+            )
+            if len(credential_rows) != len(set(credential_ids)):
+                raise ValueError("Environment references a missing project credential")
+            environment_config["credential_bindings"] = secret_free_credential_bindings(
+                [
+                    {
+                        "id": str(item.id),
+                        "kind": item.kind,
+                        "injection_location": item.injection_location,
+                        "injection_name": item.injection_name,
+                    }
+                    for item in credential_rows
+                ]
+            )
+        return CaseTrialRuntime(
+            agent_version_id=agent_version.id,
+            config_snapshot={
+                "concurrency": 1,
+                "case_trial": True,
+                "environment_template_id": str(environment_template_id),
+            },
+            plugin_snapshot={
+                "id": "generic-http",
+                "version": "1.0.0",
+                "agent_type": agent.agent_type,
+                "agent_config": invocation_from_stored_config(stored_agent_config).model_dump(
+                    mode="json"
+                ),
+                "agent_metadata": stored_agent_config,
+                "environment_config": environment_config,
+                "scorer_configs": [],
+            },
         )

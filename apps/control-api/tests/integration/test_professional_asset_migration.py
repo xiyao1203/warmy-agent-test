@@ -33,6 +33,9 @@ def test_offline_sql_contains_professional_asset_contract() -> None:
     assert "data_bindings" in sql
     assert "steps" in sql
     assert "postconditions" in sql
+    assert "run_type" in sql
+    assert "source_test_case_id" in sql
+    assert "case_spec_snapshot" in sql
     assert "0027" in sql
 
 
@@ -126,6 +129,12 @@ def test_legacy_project_and_case_are_backfilled_on_sqlite(tmp_path: Path) -> Non
             (case_id,),
         ).fetchone()
         revision = connection.execute("SELECT version_num FROM alembic_version").fetchone()
+        run_columns = {
+            row[1] for row in connection.execute("PRAGMA table_info(runs)").fetchall()
+        }
+        run_case_columns = {
+            row[1] for row in connection.execute("PRAGMA table_info(run_cases)").fetchall()
+        }
 
     assert project is not None
     assert project[0].startswith("P")
@@ -138,4 +147,6 @@ def test_legacy_project_and_case_are_backfilled_on_sqlite(tmp_path: Path) -> Non
     assert json.loads(case[7]) == []
     assert json.loads(case[8]) == []
     assert case[9:] == (user_id, user_id)
+    assert {"run_type", "source_test_case_id"} <= run_columns
+    assert "case_spec_snapshot" in run_case_columns
     assert revision == ("0027",)

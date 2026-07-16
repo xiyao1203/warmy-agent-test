@@ -106,6 +106,7 @@ def _payload(
                 "input": case.input_snapshot,
                 "assertions": case.assertion_snapshot,
                 "execution_mode": case.execution_mode,
+                "case_spec": case.case_spec_snapshot,
             }
             for case in cases
         ],

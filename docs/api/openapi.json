@@ -853,6 +853,77 @@
         "title": "CalibrationResponse",
         "type": "object"
       },
+      "CaseTrialRunResponse": {
+        "properties": {
+          "agent_version_id": {
+            "format": "uuid",
+            "title": "Agent Version Id",
+            "type": "string"
+          },
+          "created": {
+            "title": "Created",
+            "type": "boolean"
+          },
+          "dataset_version_id": {
+            "format": "uuid",
+            "title": "Dataset Version Id",
+            "type": "string"
+          },
+          "href": {
+            "title": "Href",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "project_id": {
+            "format": "uuid",
+            "title": "Project Id",
+            "type": "string"
+          },
+          "run_type": {
+            "const": "case_trial",
+            "title": "Run Type",
+            "type": "string"
+          },
+          "source_test_case_id": {
+            "format": "uuid",
+            "title": "Source Test Case Id",
+            "type": "string"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "workflow_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Workflow Id"
+          }
+        },
+        "required": [
+          "id",
+          "project_id",
+          "run_type",
+          "source_test_case_id",
+          "agent_version_id",
+          "dataset_version_id",
+          "status",
+          "workflow_id",
+          "created",
+          "href"
+        ],
+        "title": "CaseTrialRunResponse",
+        "type": "object"
+      },
       "ChangePasswordRequest": {
         "additionalProperties": false,
         "properties": {
@@ -1064,6 +1135,26 @@
           "name"
         ],
         "title": "CreateBrowserProfileRequest",
+        "type": "object"
+      },
+      "CreateCaseTrialRunRequest": {
+        "properties": {
+          "agent_version_id": {
+            "format": "uuid",
+            "title": "Agent Version Id",
+            "type": "string"
+          },
+          "environment_template_id": {
+            "format": "uuid",
+            "title": "Environment Template Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "agent_version_id",
+          "environment_template_id"
+        ],
+        "title": "CreateCaseTrialRunRequest",
         "type": "object"
       },
       "CreateCredentialBindingRequest": {
@@ -3601,6 +3692,11 @@
       },
       "RunCaseResponse": {
         "properties": {
+          "case_spec_snapshot": {
+            "additionalProperties": true,
+            "title": "Case Spec Snapshot",
+            "type": "object"
+          },
           "duration_ms": {
             "anyOf": [
               {
@@ -3706,7 +3802,8 @@
           "evidence",
           "quality_summary",
           "security_summary",
-          "outcomes"
+          "outcomes",
+          "case_spec_snapshot"
         ],
         "title": "RunCaseResponse",
         "type": "object"
@@ -3772,6 +3869,22 @@
             "title": "Project Id",
             "type": "string"
           },
+          "run_type": {
+            "title": "Run Type",
+            "type": "string"
+          },
+          "source_test_case_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Test Case Id"
+          },
           "started_at": {
             "anyOf": [
               {
@@ -3789,9 +3902,16 @@
             "type": "string"
           },
           "test_plan_version_id": {
-            "format": "uuid",
-            "title": "Test Plan Version Id",
-            "type": "string"
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Test Plan Version Id"
           },
           "total_cases": {
             "title": "Total Cases",
@@ -3813,6 +3933,8 @@
           "id",
           "project_id",
           "test_plan_version_id",
+          "run_type",
+          "source_test_case_id",
           "status",
           "total_cases",
           "passed_cases",
@@ -10275,6 +10397,121 @@
           }
         },
         "summary": "Mark Case Ready",
+        "tags": [
+          "datasets"
+        ]
+      }
+    },
+    "/api/v1/projects/{project_id}/datasets/{dataset_id}/versions/{version_id}/cases/{case_id}/trial-runs": {
+      "post": {
+        "operationId": "create_case_trial_run_api_v1_projects__project_id__datasets__dataset_id__versions__version_id__cases__case_id__trial_runs_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Project Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "dataset_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Dataset Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "version_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Version Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "case_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Case Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Idempotency-Key"
+            }
+          },
+          {
+            "in": "header",
+            "name": "x-csrf-token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Csrf-Token"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateCaseTrialRunRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CaseTrialRunResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Create Case Trial Run",
         "tags": [
           "datasets"
         ]

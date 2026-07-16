@@ -121,6 +121,7 @@ class CreateRunHandler:
                 name=item.name,
                 input_snapshot=item.input_snapshot,
                 assertion_snapshot=item.assertion_snapshot,
+                case_spec_snapshot=item.case_spec_snapshot,
                 execution_mode=item.execution_mode,
             )
             for item in definition.cases

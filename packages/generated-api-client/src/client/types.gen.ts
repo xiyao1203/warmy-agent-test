@@ -476,6 +476,52 @@ export type CalibrationResponse = {
 };
 
 /**
+ * CaseTrialRunResponse
+ */
+export type CaseTrialRunResponse = {
+  /**
+   * Agent Version Id
+   */
+  agent_version_id: string;
+  /**
+   * Created
+   */
+  created: boolean;
+  /**
+   * Dataset Version Id
+   */
+  dataset_version_id: string;
+  /**
+   * Href
+   */
+  href: string;
+  /**
+   * Id
+   */
+  id: string;
+  /**
+   * Project Id
+   */
+  project_id: string;
+  /**
+   * Run Type
+   */
+  run_type: "case_trial";
+  /**
+   * Source Test Case Id
+   */
+  source_test_case_id: string;
+  /**
+   * Status
+   */
+  status: string;
+  /**
+   * Workflow Id
+   */
+  workflow_id: string | null;
+};
+
+/**
  * ChangePasswordRequest
  */
 export type ChangePasswordRequest = {
@@ -611,6 +657,20 @@ export type CreateBrowserProfileRequest = {
    * Target Domain
    */
   target_domain?: string;
+};
+
+/**
+ * CreateCaseTrialRunRequest
+ */
+export type CreateCaseTrialRunRequest = {
+  /**
+   * Agent Version Id
+   */
+  agent_version_id: string;
+  /**
+   * Environment Template Id
+   */
+  environment_template_id: string;
 };
 
 /**
@@ -2127,6 +2187,12 @@ export type RunCaseListResponse = {
  */
 export type RunCaseResponse = {
   /**
+   * Case Spec Snapshot
+   */
+  case_spec_snapshot: {
+    [key: string]: unknown;
+  };
+  /**
    * Duration Ms
    */
   duration_ms: number | null;
@@ -2239,6 +2305,14 @@ export type RunResponse = {
    */
   project_id: string;
   /**
+   * Run Type
+   */
+  run_type: string;
+  /**
+   * Source Test Case Id
+   */
+  source_test_case_id: string | null;
+  /**
    * Started At
    */
   started_at: string | null;
@@ -2249,7 +2323,7 @@ export type RunResponse = {
   /**
    * Test Plan Version Id
    */
-  test_plan_version_id: string;
+  test_plan_version_id: string | null;
   /**
    * Total Cases
    */
@@ -5956,6 +6030,63 @@ export type MarkCaseReadyApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionI
 
 export type MarkCaseReadyApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdCasesCaseIdMarkReadyPostResponse =
   MarkCaseReadyApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdCasesCaseIdMarkReadyPostResponses[keyof MarkCaseReadyApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdCasesCaseIdMarkReadyPostResponses];
+
+export type CreateCaseTrialRunApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdCasesCaseIdTrialRunsPostData =
+  {
+    body: CreateCaseTrialRunRequest;
+    headers?: {
+      /**
+       * Idempotency-Key
+       */
+      "Idempotency-Key"?: string | null;
+      /**
+       * X-Csrf-Token
+       */
+      "x-csrf-token"?: string | null;
+    };
+    path: {
+      /**
+       * Project Id
+       */
+      project_id: string;
+      /**
+       * Dataset Id
+       */
+      dataset_id: string;
+      /**
+       * Version Id
+       */
+      version_id: string;
+      /**
+       * Case Id
+       */
+      case_id: string;
+    };
+    query?: never;
+    url: "/api/v1/projects/{project_id}/datasets/{dataset_id}/versions/{version_id}/cases/{case_id}/trial-runs";
+  };
+
+export type CreateCaseTrialRunApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdCasesCaseIdTrialRunsPostErrors =
+  {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+  };
+
+export type CreateCaseTrialRunApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdCasesCaseIdTrialRunsPostError =
+  CreateCaseTrialRunApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdCasesCaseIdTrialRunsPostErrors[keyof CreateCaseTrialRunApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdCasesCaseIdTrialRunsPostErrors];
+
+export type CreateCaseTrialRunApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdCasesCaseIdTrialRunsPostResponses =
+  {
+    /**
+     * Successful Response
+     */
+    201: CaseTrialRunResponse;
+  };
+
+export type CreateCaseTrialRunApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdCasesCaseIdTrialRunsPostResponse =
+  CreateCaseTrialRunApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdCasesCaseIdTrialRunsPostResponses[keyof CreateCaseTrialRunApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdCasesCaseIdTrialRunsPostResponses];
 
 export type ValidateCaseApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdCasesCaseIdValidatePostData =
   {

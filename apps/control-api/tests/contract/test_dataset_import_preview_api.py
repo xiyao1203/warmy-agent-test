@@ -167,6 +167,11 @@ class StubGenRun:
         raise AssertionError("unused")
 
 
+class StubTrialRun:
+    async def execute(self, *_args: object, **_kwargs: object):
+        raise AssertionError("unused")
+
+
 def mkuser(role: SystemRole) -> User:
     return User.create(
         user_id=UserId.new(),
@@ -202,6 +207,7 @@ def deps(pid: ProjectId, *, member: bool = True) -> DatasetApiDependencies:
             project_access=ac,
         ),
         duplicate_case=DuplicateTestCaseHandler(cases=cs, add_case=add_case),
+        trial_run=StubTrialRun(),
         publish_version=PublishDatasetVersionHandler(datasets=ds, versions=vs, project_access=ac),
         import_export=ImportExportService(cases=cs, project_access=ac),
         generate_from_run=StubGenRun(),

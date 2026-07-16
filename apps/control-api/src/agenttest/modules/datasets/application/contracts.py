@@ -8,6 +8,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
+from agenttest.modules.datasets.domain.entities import TestCase
 from agenttest.modules.datasets.domain.value_objects import (
     ArtifactKind,
     AutomationStatus,
@@ -149,3 +150,34 @@ class PlatformTestCaseV1(BaseModel):
     def secret_free_dump(self) -> dict[str, object]:
         """Return an execution-safe representation without credential values."""
         return self.model_dump(mode="json")
+
+
+def build_case_spec_snapshot(case: TestCase) -> dict[str, object]:
+    """Compile the immutable worker projection of a professional case."""
+    bindings: list[dict[str, object]] = []
+    for raw in case.data_bindings:
+        binding = dict(raw)
+        if binding.get("sensitive") or binding.get("source") == "credential":
+            binding.pop("value", None)
+        bindings.append(binding)
+    return {
+        "schema_version": "platform-test-case/v1",
+        "case_key": case.case_key,
+        "objective": case.objective,
+        "preconditions": list(case.preconditions),
+        "initial_state": dict(case.initial_state) if case.initial_state else None,
+        "input": dict(case.input),
+        "data_bindings": bindings,
+        "steps": [dict(step) for step in case.steps],
+        "expected_outcome": (
+            dict(case.expected_outcome) if case.expected_outcome is not None else None
+        ),
+        "assertions": [dict(item) for item in case.assertions],
+        "scorers": [dict(item) for item in case.scorers],
+        "security_policies": [dict(item) for item in case.security_policies],
+        "artifact_requirements": [dict(item) for item in case.artifact_requirements],
+        "postconditions": list(case.postconditions),
+        "execution_mode": case.execution_mode.value,
+        "timeout_seconds": case.timeout_seconds,
+        "retry_count": case.retry_count,
+    }

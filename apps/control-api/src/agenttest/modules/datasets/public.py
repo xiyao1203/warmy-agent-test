@@ -16,6 +16,7 @@ from agenttest.modules.datasets.application.contracts import (
     DataBindingV1,
     PlatformTestCaseV1,
     TestStepV1,
+    build_case_spec_snapshot,
 )
 from agenttest.modules.datasets.domain.entities import (
     Dataset,
@@ -70,6 +71,7 @@ __all__ = [
     "TestGroup",
     "TestStepV1",
     "VersionStatus",
+    "build_case_spec_snapshot",
 ]
 
 

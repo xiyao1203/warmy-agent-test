@@ -21,6 +21,11 @@ class RunStatus(StrEnum):
         }
 
 
+class RunType(StrEnum):
+    PLAN = "plan"
+    CASE_TRIAL = "case_trial"
+
+
 class RunCaseStatus(StrEnum):
     QUEUED = "queued"
     RUNNING = "running"

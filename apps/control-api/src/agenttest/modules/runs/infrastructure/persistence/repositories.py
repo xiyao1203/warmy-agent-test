@@ -11,7 +11,7 @@ from agenttest.modules.identity.public import UserId
 from agenttest.modules.projects.public import ProjectId
 from agenttest.modules.runs.domain.entities import Run, RunCase, RunCaseId, RunId
 from agenttest.modules.runs.domain.outcomes import RunCaseOutcomes
-from agenttest.modules.runs.domain.value_objects import RunCaseStatus, RunStatus
+from agenttest.modules.runs.domain.value_objects import RunCaseStatus, RunStatus, RunType
 from agenttest.modules.runs.infrastructure.persistence.models import (
     RunCaseModel,
     RunEvaluationModel,
@@ -281,10 +281,14 @@ def _run_model(run: Run) -> RunModel:
     return RunModel(
         id=run.run_id.value,
         project_id=run.project_id.value,
-        test_plan_version_id=run.test_plan_version_id.value,
+        test_plan_version_id=(
+            run.test_plan_version_id.value if run.test_plan_version_id is not None else None
+        ),
         agent_version_id=run.agent_version_id,
         dataset_version_id=run.dataset_version_id,
         idempotency_key=run.idempotency_key,
+        run_type=run.run_type.value,
+        source_test_case_id=run.source_test_case_id,
         status=run.status.value,
         config_snapshot=run.config_snapshot,
         plugin_snapshot=run.plugin_snapshot,
@@ -312,6 +316,7 @@ def _case_model(case: RunCase) -> RunCaseModel:
         status=case.status.value,
         input_snapshot=case.input_snapshot,
         assertion_snapshot=case.assertion_snapshot,
+        case_spec_snapshot=case.case_spec_snapshot,
         output=case.output,
         trace=case.trace,
         error_type=case.error_type,
@@ -332,7 +337,9 @@ def _to_run(model: RunModel) -> Run:
     return Run(
         run_id=RunId(model.id),
         project_id=ProjectId(model.project_id),
-        test_plan_version_id=TestPlanVersionId(model.test_plan_version_id),
+        test_plan_version_id=(
+            TestPlanVersionId(model.test_plan_version_id) if model.test_plan_version_id else None
+        ),
         agent_version_id=model.agent_version_id,
         dataset_version_id=model.dataset_version_id,
         idempotency_key=model.idempotency_key,
@@ -350,6 +357,8 @@ def _to_run(model: RunModel) -> Run:
         error_cases=model.error_cases,
         cancelled_cases=model.cancelled_cases,
         workflow_id=model.workflow_id,
+        run_type=RunType(model.run_type),
+        source_test_case_id=model.source_test_case_id,
     )
 
 
@@ -361,6 +370,7 @@ def _to_case(model: RunCaseModel) -> RunCase:
         name=model.name,
         input_snapshot=dict(model.input_snapshot),
         assertion_snapshot=list(model.assertion_snapshot),
+        case_spec_snapshot=dict(model.case_spec_snapshot or {}),
         execution_mode=str(model.execution_mode or "api"),
         status=RunCaseStatus(model.status),
         created_at=model.created_at,
