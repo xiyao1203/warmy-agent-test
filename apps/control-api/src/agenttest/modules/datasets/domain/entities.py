@@ -489,17 +489,36 @@ class TestCase:
         self.updated_at = datetime.now(UTC)
 
     def mark_ready(self) -> None:
+        issues = self.readiness_issues()
+        if issues:
+            raise ValueError(issues[0][2])
+        self.case_status = TestCaseStatus.READY
+        self.updated_at = datetime.now(UTC)
+
+    def readiness_issues(self) -> list[tuple[str, str, str]]:
+        issues: list[tuple[str, str, str]] = []
+        if self.template is TestCaseTemplate.STEP_BY_STEP and not self.steps:
+            issues.append(
+                (
+                    "steps",
+                    "required",
+                    "step_by_step template requires at least one step",
+                )
+            )
         if not (
             self.assertions
             or self.scorers
             or self.security_policies
             or any(step.get("assertions") for step in self.steps)
         ):
-            raise ValueError("Ready test case requires at least one executable oracle")
-        if self.template is TestCaseTemplate.STEP_BY_STEP and not self.steps:
-            raise ValueError("step_by_step template requires at least one step")
-        self.case_status = TestCaseStatus.READY
-        self.updated_at = datetime.now(UTC)
+            issues.append(
+                (
+                    "assertions",
+                    "missing_oracle",
+                    "Ready test case requires at least one executable oracle",
+                )
+            )
+        return issues
 
     def deprecate(self) -> None:
         self.case_status = TestCaseStatus.DEPRECATED

@@ -56,6 +56,8 @@ from agenttest.modules.datasets.application.commands import (
     CreateDatasetHandler,
     CreateDatasetVersionHandler,
     DeleteTestCaseHandler,
+    DuplicateTestCaseHandler,
+    MarkTestCaseReadyHandler,
     PublishDatasetVersionHandler,
     UpdateDatasetHandler,
     UpdateTestCaseHandler,
@@ -901,6 +903,14 @@ def build_dataset_dependencies(settings: Settings) -> DatasetApiDependencies:
             project_access=access,
             audit=audit,
         ),
+        mark_case_ready=MarkTestCaseReadyHandler(
+            datasets=datasets,
+            versions=versions,
+            cases=cases,
+            project_access=access,
+            audit=audit,
+        ),
+        duplicate_case=DuplicateTestCaseHandler(cases=cases, add_case=add_case),
         publish_version=PublishDatasetVersionHandler(
             datasets=datasets,
             versions=versions,
@@ -910,6 +920,7 @@ def build_dataset_dependencies(settings: Settings) -> DatasetApiDependencies:
         import_export=ImportExportService(
             cases=cases,
             project_access=access,
+            case_key_allocator=SqlAlchemyProjectAssetKeyAllocator(session_factory),
         ),
         generate_from_run=GenerateCasesFromFailedRunHandler(
             runs=runs,

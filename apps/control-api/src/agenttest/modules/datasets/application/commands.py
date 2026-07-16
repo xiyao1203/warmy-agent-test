@@ -7,6 +7,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
+from copy import deepcopy
 from dataclasses import dataclass
 
 from agenttest.modules.audit.public import AuditWriter
@@ -135,6 +136,16 @@ class UpdateTestCaseCommand:
 
 @dataclass(frozen=True, slots=True)
 class DeleteTestCaseCommand:
+    case_id: TestCaseId
+
+
+@dataclass(frozen=True, slots=True)
+class MarkTestCaseReadyCommand:
+    case_id: TestCaseId
+
+
+@dataclass(frozen=True, slots=True)
+class DuplicateTestCaseCommand:
     case_id: TestCaseId
 
 
@@ -286,6 +297,8 @@ class AddTestCaseHandler:
             raise DatasetVersionNotEditableError(version.version_id)
         dataset = await _required_dataset(self._datasets, version.dataset_id)
         await self._project_access.ensure_editor(actor, dataset.project_id)
+        if command.owner_id is not None:
+            await self._project_access.ensure_user_member(command.owner_id, dataset.project_id)
         max_order = await self._cases.get_max_sort_order(version.version_id)
         case_id = TestCaseId.new()
         if self._case_key_allocator is None:
@@ -373,6 +386,8 @@ class UpdateTestCaseHandler:
             raise DatasetVersionNotEditableError(version.version_id)
         dataset = await _required_dataset(self._datasets, version.dataset_id)
         await self._project_access.ensure_editor(actor, dataset.project_id)
+        if command.owner_id is not None:
+            await self._project_access.ensure_user_member(command.owner_id, dataset.project_id)
         case.update(
             name=command.name,
             input=command.input,
@@ -446,6 +461,100 @@ class DeleteTestCaseHandler:
             object_type="test_case",
             object_id=case.case_id.value,
             changes={},
+        )
+
+
+class MarkTestCaseReadyHandler:
+    """校验并把草稿用例标记为可进入正式计划。"""
+
+    def __init__(
+        self,
+        *,
+        datasets: DatasetRepository,
+        versions: DatasetVersionRepository,
+        cases: TestCaseRepository,
+        project_access: ProjectAccessPort,
+        audit: AuditWriter | None = None,
+    ) -> None:
+        self._datasets = datasets
+        self._versions = versions
+        self._cases = cases
+        self._project_access = project_access
+        self._audit = audit
+
+    async def execute(self, actor: User, command: MarkTestCaseReadyCommand) -> TestCase:
+        case = await _required_case(self._cases, command.case_id)
+        version = await _required_version(self._versions, case.dataset_version_id)
+        if not version.is_editable:
+            raise DatasetVersionNotEditableError(version.version_id)
+        dataset = await _required_dataset(self._datasets, version.dataset_id)
+        await self._project_access.ensure_editor(actor, dataset.project_id)
+        case.mark_ready()
+        case.updated_by = actor.user_id
+        await self._cases.save(case)
+        await _record(
+            self._audit,
+            actor=actor,
+            action="datasets.test_case.ready",
+            project_id=dataset.project_id,
+            object_type="test_case",
+            object_id=case.case_id.value,
+            changes={"case_status": {"after": "ready"}},
+        )
+        return case
+
+
+class DuplicateTestCaseHandler:
+    """复制完整专业用例，并生成新的草稿编号与审计信息。"""
+
+    def __init__(
+        self,
+        *,
+        cases: TestCaseRepository,
+        add_case: AddTestCaseHandler,
+    ) -> None:
+        self._cases = cases
+        self._add_case = add_case
+
+    async def execute(self, actor: User, command: DuplicateTestCaseCommand) -> TestCase:
+        source = await _required_case(self._cases, command.case_id)
+        return await self._add_case.execute(
+            actor,
+            AddTestCaseCommand(
+                dataset_version_id=source.dataset_version_id,
+                name=f"{source.name}（副本）",
+                objective=source.objective,
+                template=source.template,
+                case_type=source.case_type,
+                automation_status=source.automation_status,
+                source=TestCaseSource.MANUAL,
+                source_ref=f"duplicate:{source.case_id.value}",
+                component=source.component,
+                requirement_refs=deepcopy(source.requirement_refs),
+                owner_id=source.owner_id,
+                preconditions=deepcopy(source.preconditions),
+                input=deepcopy(source.input),
+                data_bindings=deepcopy(source.data_bindings),
+                steps=deepcopy(source.steps),
+                execution_mode=source.execution_mode,
+                assertions=deepcopy(source.assertions),
+                scorers=deepcopy(source.scorers),
+                initial_state=deepcopy(source.initial_state),
+                expected_outcome=deepcopy(source.expected_outcome),
+                security_policies=deepcopy(source.security_policies),
+                artifact_requirements=deepcopy(source.artifact_requirements),
+                postconditions=deepcopy(source.postconditions),
+                estimated_duration_seconds=source.estimated_duration_seconds,
+                timeout_seconds=source.timeout_seconds,
+                retry_count=source.retry_count,
+                custom_fields=deepcopy(source.custom_fields),
+                tags=deepcopy(source.tags),
+                scenario=source.scenario,
+                priority=source.priority,
+                risk_level=source.risk_level,
+                difficulty=source.difficulty,
+                test_group=source.test_group,
+            ),
         )
 
 

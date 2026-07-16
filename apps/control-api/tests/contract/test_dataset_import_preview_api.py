@@ -22,6 +22,8 @@ from agenttest.modules.datasets.application.commands import (
     CreateDatasetHandler,
     CreateDatasetVersionHandler,
     DeleteTestCaseHandler,
+    DuplicateTestCaseHandler,
+    MarkTestCaseReadyHandler,
     PublishDatasetVersionHandler,
     UpdateDatasetHandler,
     UpdateTestCaseHandler,
@@ -142,6 +144,10 @@ class StubAccess:
         if actor.role not in {SystemRole.SUPER_ADMIN, SystemRole.DEVELOPER, SystemRole.TESTER}:
             raise PermissionError
 
+    async def ensure_user_member(self, _user_id: UserId, pid: ProjectId) -> None:
+        if not self.member or pid != self.project_id:
+            raise ValueError("owner_id must reference a member of the same project")
+
 
 class StubUser:
     def __init__(self, actor: User) -> None:
@@ -175,6 +181,7 @@ def deps(pid: ProjectId, *, member: bool = True) -> DatasetApiDependencies:
     vs = InMemVersions()
     cs = InMemCases()
     ac = StubAccess(pid, member=member)
+    add_case = AddTestCaseHandler(datasets=ds, versions=vs, cases=cs, project_access=ac)
     return DatasetApiDependencies(
         list_datasets=ListDatasetsHandler(datasets=ds, project_access=ac),
         get_dataset=GetDatasetHandler(datasets=ds, project_access=ac),
@@ -185,9 +192,16 @@ def deps(pid: ProjectId, *, member: bool = True) -> DatasetApiDependencies:
         create_version=CreateDatasetVersionHandler(datasets=ds, versions=vs, project_access=ac),
         list_cases=ListTestCasesHandler(datasets=ds, versions=vs, cases=cs, project_access=ac),
         get_case=GetTestCaseHandler(datasets=ds, versions=vs, cases=cs, project_access=ac),
-        add_case=AddTestCaseHandler(datasets=ds, versions=vs, cases=cs, project_access=ac),
+        add_case=add_case,
         update_case=UpdateTestCaseHandler(datasets=ds, versions=vs, cases=cs, project_access=ac),
         delete_case=DeleteTestCaseHandler(datasets=ds, versions=vs, cases=cs, project_access=ac),
+        mark_case_ready=MarkTestCaseReadyHandler(
+            datasets=ds,
+            versions=vs,
+            cases=cs,
+            project_access=ac,
+        ),
+        duplicate_case=DuplicateTestCaseHandler(cases=cs, add_case=add_case),
         publish_version=PublishDatasetVersionHandler(datasets=ds, versions=vs, project_access=ac),
         import_export=ImportExportService(cases=cs, project_access=ac),
         generate_from_run=StubGenRun(),

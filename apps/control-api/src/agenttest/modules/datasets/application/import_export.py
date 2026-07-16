@@ -11,7 +11,11 @@ import csv
 import json
 from io import StringIO
 from typing import Literal
+from uuid import uuid4
 
+from pydantic import ValidationError
+
+from agenttest.modules.datasets.application.contracts import PlatformTestCaseV1
 from agenttest.modules.datasets.application.ports import ProjectAccessPort
 from agenttest.modules.datasets.domain.entities import (
     Dataset,
@@ -24,9 +28,11 @@ from agenttest.modules.datasets.domain.value_objects import (
     ExecutionMode,
     Priority,
     RiskLevel,
+    TestCaseSource,
     TestGroup,
 )
-from agenttest.modules.identity.public import User
+from agenttest.modules.identity.public import User, UserId
+from agenttest.modules.projects.public import ProjectAssetKeyAllocator
 
 ExportFormat = Literal["json", "jsonl", "csv"]
 MAX_IMPORT_BYTES = 10 * 1024 * 1024
@@ -52,9 +58,11 @@ class ImportExportService:
         *,
         cases: TestCaseRepository,
         project_access: ProjectAccessPort,
+        case_key_allocator: ProjectAssetKeyAllocator | None = None,
     ) -> None:
         self._cases = cases
         self._project_access = project_access
+        self._case_key_allocator = case_key_allocator
 
     # ── Import ────────────────────────────────────────────────────────────
 
@@ -84,12 +92,22 @@ class ImportExportService:
         errors: list[dict[str, object]] = []
         cases: list[TestCase] = []
         max_order = await self._cases.get_max_sort_order(version.version_id)
+        import_ref = f"import:{uuid4()}"
 
         for idx, raw in enumerate(parsed):
             if not isinstance(raw, dict):
                 continue
             try:
                 case = _build_test_case(version.version_id, raw, sort_order=max_order + idx + 1)
+                if case.owner_id is not None:
+                    await self._project_access.ensure_user_member(
+                        case.owner_id,
+                        dataset.project_id,
+                    )
+                case.case_key = await self._allocate_case_key(dataset)
+                case.source_ref = import_ref
+                case.created_by = actor.user_id
+                case.updated_by = actor.user_id
                 cases.append(case)
             except ValueError as exc:
                 errors.append({"line": idx + 1, "reason": str(exc)})
@@ -101,6 +119,15 @@ class ImportExportService:
             await self._cases.add(case)
 
         return cases
+
+    async def _allocate_case_key(self, dataset: Dataset) -> str:
+        if self._case_key_allocator is not None:
+            return await self._case_key_allocator.allocate(
+                dataset.project_id,
+                "test_case",
+                "TC",
+            )
+        return f"TC-{TestCaseId.new().value.hex[:12].upper()}"
 
     async def preview_test_cases(
         self,
@@ -153,11 +180,31 @@ class ImportExportService:
 
 _REQUIRED_FIELDS = {"name", "input", "execution_mode"}
 _OPTIONAL_FIELDS = {
+    "case_key",
+    "case_status",
+    "source",
+    "objective",
+    "template",
+    "case_type",
+    "automation_status",
+    "source_ref",
+    "component",
+    "requirement_refs",
+    "owner_id",
+    "preconditions",
+    "data_bindings",
+    "steps",
     "assertions",
     "scorers",
     "initial_state",
     "expected_outcome",
     "security_policies",
+    "artifact_requirements",
+    "postconditions",
+    "estimated_duration_seconds",
+    "timeout_seconds",
+    "retry_count",
+    "custom_fields",
     "tags",
     "scenario",
     "priority",
@@ -172,6 +219,21 @@ _FIELD_ALIASES = {
     "名称": "name",
     "输入": "input",
     "输入数据": "input",
+    "测试目标": "objective",
+    "目标": "objective",
+    "用例模板": "template",
+    "模板": "template",
+    "用例类型": "case_type",
+    "自动化状态": "automation_status",
+    "来源引用": "source_ref",
+    "所属组件": "component",
+    "组件": "component",
+    "关联需求": "requirement_refs",
+    "负责人": "owner_id",
+    "前置条件": "preconditions",
+    "数据绑定": "data_bindings",
+    "操作步骤": "steps",
+    "步骤": "steps",
     "执行模式": "execution_mode",
     "模式": "execution_mode",
     "初始状态": "initial_state",
@@ -184,6 +246,12 @@ _FIELD_ALIASES = {
     "评分规则": "scorers",
     "安全策略": "security_policies",
     "安全规则": "security_policies",
+    "产物要求": "artifact_requirements",
+    "后置条件": "postconditions",
+    "预计耗时": "estimated_duration_seconds",
+    "超时秒数": "timeout_seconds",
+    "重试次数": "retry_count",
+    "扩展字段": "custom_fields",
     "标签": "tags",
     "业务场景": "scenario",
     "场景": "scenario",
@@ -338,7 +406,33 @@ def _validate_import_record(line: int, raw: dict[str, object]) -> list[dict[str,
                         f"{field_name} must be one of: {', '.join(valid_values)}",
                     )
                 )
+    if not errors:
+        try:
+            _validate_professional_record(raw)
+        except ValidationError as error:
+            for detail in error.errors(include_url=False):
+                location = detail.get("loc", ())
+                field = ".".join(str(part) for part in location) or "$"
+                errors.append(
+                    _import_error(
+                        line,
+                        field,
+                        str(detail.get("type", "invalid_value")),
+                        str(detail.get("msg", "invalid value")),
+                    )
+                )
     return errors
+
+
+def _validate_professional_record(raw: dict[str, object]) -> PlatformTestCaseV1:
+    payload = {
+        key: value
+        for key, value in raw.items()
+        if key not in {"sort_order", "case_key", "case_status", "source"}
+    }
+    payload.setdefault("objective", payload.get("name"))
+    payload["source"] = TestCaseSource.IMPORTED
+    return PlatformTestCaseV1.model_validate(payload)
 
 
 def _import_error(line: int, field: str, code: str, message: str) -> dict[str, object]:
@@ -375,9 +469,16 @@ def _parse_csv(content: str) -> list[dict[str, object]]:
                 "input",
                 "initial_state",
                 "expected_outcome",
+                "requirement_refs",
+                "preconditions",
+                "data_bindings",
+                "steps",
                 "assertions",
                 "scorers",
                 "security_policies",
+                "artifact_requirements",
+                "postconditions",
+                "custom_fields",
                 "tags",
             ):
                 try:
@@ -387,7 +488,7 @@ def _parse_csv(content: str) -> list[dict[str, object]]:
                 except json.JSONDecodeError as exc:
                     raise ValueError(f"Invalid JSON in field '{key}': {value}") from exc
             else:
-                record[normalized_key] = value
+                record[normalized_key] = _parse_csv_scalar(normalized_key, value)
         records.append(record)
     return records
 
@@ -417,15 +518,33 @@ def _normalize_field_value(field_name: str, value: object) -> object:
         return _PRIORITY_ALIASES.get(stripped, stripped.upper())
     if field_name == "test_group":
         return _TEST_GROUP_ALIASES.get(stripped, stripped.lower())
+    if field_name in {"template", "case_type", "automation_status"}:
+        return stripped.lower()
     if field_name == "difficulty":
         return {"简单": "easy", "中等": "medium", "困难": "hard"}.get(stripped, stripped)
     return value
 
 
 def _empty_csv_value(field_name: str) -> object:
-    if field_name in {"input", "initial_state", "expected_outcome"}:
+    if field_name in {"input", "initial_state", "expected_outcome", "custom_fields"}:
         return {}
     return []
+
+
+def _parse_csv_scalar(field_name: str, value: str) -> object:
+    if field_name in {
+        "estimated_duration_seconds",
+        "timeout_seconds",
+        "retry_count",
+        "sort_order",
+    }:
+        if not value.strip():
+            return None if field_name != "retry_count" else 0
+        try:
+            return int(value)
+        except ValueError as error:
+            raise ValueError(f"Invalid integer in field '{field_name}': {value}") from error
+    return value
 
 
 def _build_test_case(
@@ -441,80 +560,87 @@ def _build_test_case(
     if not name.strip():
         raise ValueError("name is required")
 
-    execution_mode_raw = str(raw["execution_mode"])
-    try:
-        execution_mode = ExecutionMode(execution_mode_raw)
-    except ValueError as exc:
-        raise ValueError(f"Invalid execution_mode: {execution_mode_raw}") from exc
-
-    priority = None
-    if raw.get("priority"):
-        try:
-            priority = Priority(str(raw["priority"]))
-        except ValueError as exc:
-            raise ValueError(f"Invalid priority: {raw['priority']}") from exc
-
-    risk_level = None
-    if raw.get("risk_level"):
-        try:
-            risk_level = RiskLevel(str(raw["risk_level"]))
-        except ValueError as exc:
-            raise ValueError(f"Invalid risk_level: {raw['risk_level']}") from exc
-
-    test_group = None
-    if raw.get("test_group"):
-        try:
-            test_group = TestGroup(str(raw["test_group"]))
-        except ValueError as exc:
-            raise ValueError(f"Invalid test_group: {raw['test_group']}") from exc
-
     input_value = raw.get("input")
     if not isinstance(input_value, dict):
         raise ValueError("input must be a JSON object")
 
+    try:
+        contract = _validate_professional_record(raw)
+    except ValidationError as error:
+        first = error.errors(include_url=False)[0]
+        raise ValueError(str(first.get("msg", "invalid test case"))) from error
+
     return TestCase.create(
         case_id=TestCaseId.new(),
         dataset_version_id=version_id,  # type: ignore[arg-type]
-        name=name,
-        input=input_value,
-        execution_mode=execution_mode,
-        assertions=_as_list(raw.get("assertions")),
-        scorers=_as_list(raw.get("scorers")),
-        initial_state=_as_dict(raw.get("initial_state")),
-        expected_outcome=_as_dict(raw.get("expected_outcome")),
-        security_policies=_as_list(raw.get("security_policies")),
-        tags=_as_str_list(raw.get("tags")),
-        scenario=str(raw["scenario"]) if raw.get("scenario") else None,
-        priority=priority,
-        risk_level=risk_level,
-        difficulty=str(raw["difficulty"]) if raw.get("difficulty") else None,
-        test_group=test_group,
+        name=contract.name,
+        objective=contract.objective,
+        template=contract.template,
+        case_type=contract.case_type,
+        automation_status=contract.automation_status,
+        source=contract.source,
+        source_ref=contract.source_ref,
+        component=contract.component,
+        requirement_refs=contract.requirement_refs,
+        owner_id=UserId(contract.owner_id) if contract.owner_id else None,
+        preconditions=contract.preconditions,
+        input=contract.input,
+        data_bindings=[item.model_dump(mode="json") for item in contract.data_bindings],
+        steps=[item.model_dump(mode="json") for item in contract.steps],
+        execution_mode=contract.execution_mode,
+        assertions=contract.assertions,
+        scorers=contract.scorers,
+        initial_state=contract.initial_state,
+        expected_outcome=contract.expected_outcome,
+        security_policies=contract.security_policies,
+        artifact_requirements=[
+            item.model_dump(mode="json") for item in contract.artifact_requirements
+        ],
+        postconditions=contract.postconditions,
+        estimated_duration_seconds=contract.estimated_duration_seconds,
+        timeout_seconds=contract.timeout_seconds,
+        retry_count=contract.retry_count,
+        custom_fields=contract.custom_fields,
+        tags=contract.tags,
+        scenario=contract.scenario,
+        priority=contract.priority,
+        risk_level=contract.risk_level,
+        difficulty=contract.difficulty,
+        test_group=contract.test_group,
         sort_order=sort_order,
     )
 
 
-def _as_list(value: object) -> list[dict[str, object]] | None:
-    return value if isinstance(value, list) else None  # type: ignore[return-value]
-
-
-def _as_dict(value: object) -> dict[str, object] | None:
-    return value if isinstance(value, dict) else None  # type: ignore[return-value]
-
-
-def _as_str_list(value: object) -> list[str] | None:
-    return value if isinstance(value, list) else None  # type: ignore[return-value]
-
-
 def _case_to_dict(case: TestCase) -> dict[str, object]:
     return {
+        "case_key": case.case_key,
         "name": case.name,
+        "objective": case.objective,
+        "case_status": case.case_status.value,
+        "template": case.template.value,
+        "case_type": case.case_type.value,
+        "automation_status": case.automation_status.value,
+        "source": case.source.value,
+        "source_ref": case.source_ref,
+        "component": case.component,
+        "requirement_refs": case.requirement_refs,
+        "owner_id": case.owner_id.value if case.owner_id else None,
+        "preconditions": case.preconditions,
         "input": case.input,
+        "data_bindings": case.data_bindings,
+        "steps": case.steps,
         "execution_mode": case.execution_mode.value,
         "assertions": case.assertions,
         "scorers": case.scorers,
         "initial_state": case.initial_state,
         "expected_outcome": case.expected_outcome,
         "security_policies": case.security_policies,
+        "artifact_requirements": case.artifact_requirements,
+        "postconditions": case.postconditions,
+        "estimated_duration_seconds": case.estimated_duration_seconds,
+        "timeout_seconds": case.timeout_seconds,
+        "retry_count": case.retry_count,
+        "custom_fields": case.custom_fields,
         "tags": case.tags,
         "scenario": case.scenario,
         "priority": case.priority.value if case.priority else None,

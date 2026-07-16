@@ -191,6 +191,9 @@ import type {
   DryRunApiV1ProjectsProjectIdTestPlansPlanIdVersionsVersionIdDryRunPostData,
   DryRunApiV1ProjectsProjectIdTestPlansPlanIdVersionsVersionIdDryRunPostErrors,
   DryRunApiV1ProjectsProjectIdTestPlansPlanIdVersionsVersionIdDryRunPostResponses,
+  DuplicateCaseApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdCasesCaseIdDuplicatePostData,
+  DuplicateCaseApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdCasesCaseIdDuplicatePostErrors,
+  DuplicateCaseApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdCasesCaseIdDuplicatePostResponses,
   EnableUserApiV1SystemUsersUserIdEnablePostData,
   EnableUserApiV1SystemUsersUserIdEnablePostErrors,
   EnableUserApiV1SystemUsersUserIdEnablePostResponses,
@@ -410,6 +413,9 @@ import type {
   LogoutApiV1AuthLogoutPostData,
   LogoutApiV1AuthLogoutPostErrors,
   LogoutApiV1AuthLogoutPostResponses,
+  MarkCaseReadyApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdCasesCaseIdMarkReadyPostData,
+  MarkCaseReadyApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdCasesCaseIdMarkReadyPostErrors,
+  MarkCaseReadyApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdCasesCaseIdMarkReadyPostResponses,
   PostMessageApiV1ProjectsProjectIdTestAgentSessionsSessionIdMessagesPostData,
   PostMessageApiV1ProjectsProjectIdTestAgentSessionsSessionIdMessagesPostErrors,
   PostMessageApiV1ProjectsProjectIdTestAgentSessionsSessionIdMessagesPostResponses,
@@ -563,6 +569,9 @@ import type {
   UpsertMissionApiV1ProjectsProjectIdTestMissionsPostData,
   UpsertMissionApiV1ProjectsProjectIdTestMissionsPostErrors,
   UpsertMissionApiV1ProjectsProjectIdTestMissionsPostResponses,
+  ValidateCaseApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdCasesCaseIdValidatePostData,
+  ValidateCaseApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdCasesCaseIdValidatePostErrors,
+  ValidateCaseApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdCasesCaseIdValidatePostResponses,
   ValidateConnectionApiV1ProjectsProjectIdAgentsAgentIdVersionsVersionIdValidateConnectionPostData,
   ValidateConnectionApiV1ProjectsProjectIdAgentsAgentIdVersionsVersionIdValidateConnectionPostErrors,
   ValidateConnectionApiV1ProjectsProjectIdAgentsAgentIdVersionsVersionIdValidateConnectionPostResponses,
@@ -1979,6 +1988,75 @@ export const updateCaseApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdC
         "Content-Type": "application/json",
         ...options.headers,
       },
+    });
+
+/**
+ * Duplicate Case
+ */
+export const duplicateCaseApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdCasesCaseIdDuplicatePost =
+  <ThrowOnError extends boolean = false>(
+    options: Options<
+      DuplicateCaseApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdCasesCaseIdDuplicatePostData,
+      ThrowOnError
+    >,
+  ): RequestResult<
+    DuplicateCaseApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdCasesCaseIdDuplicatePostResponses,
+    DuplicateCaseApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdCasesCaseIdDuplicatePostErrors,
+    ThrowOnError
+  > =>
+    (options.client ?? client).post<
+      DuplicateCaseApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdCasesCaseIdDuplicatePostResponses,
+      DuplicateCaseApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdCasesCaseIdDuplicatePostErrors,
+      ThrowOnError
+    >({
+      url: "/api/v1/projects/{project_id}/datasets/{dataset_id}/versions/{version_id}/cases/{case_id}/duplicate",
+      ...options,
+    });
+
+/**
+ * Mark Case Ready
+ */
+export const markCaseReadyApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdCasesCaseIdMarkReadyPost =
+  <ThrowOnError extends boolean = false>(
+    options: Options<
+      MarkCaseReadyApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdCasesCaseIdMarkReadyPostData,
+      ThrowOnError
+    >,
+  ): RequestResult<
+    MarkCaseReadyApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdCasesCaseIdMarkReadyPostResponses,
+    MarkCaseReadyApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdCasesCaseIdMarkReadyPostErrors,
+    ThrowOnError
+  > =>
+    (options.client ?? client).post<
+      MarkCaseReadyApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdCasesCaseIdMarkReadyPostResponses,
+      MarkCaseReadyApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdCasesCaseIdMarkReadyPostErrors,
+      ThrowOnError
+    >({
+      url: "/api/v1/projects/{project_id}/datasets/{dataset_id}/versions/{version_id}/cases/{case_id}/mark-ready",
+      ...options,
+    });
+
+/**
+ * Validate Case
+ */
+export const validateCaseApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdCasesCaseIdValidatePost =
+  <ThrowOnError extends boolean = false>(
+    options: Options<
+      ValidateCaseApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdCasesCaseIdValidatePostData,
+      ThrowOnError
+    >,
+  ): RequestResult<
+    ValidateCaseApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdCasesCaseIdValidatePostResponses,
+    ValidateCaseApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdCasesCaseIdValidatePostErrors,
+    ThrowOnError
+  > =>
+    (options.client ?? client).post<
+      ValidateCaseApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdCasesCaseIdValidatePostResponses,
+      ValidateCaseApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdCasesCaseIdValidatePostErrors,
+      ThrowOnError
+    >({
+      url: "/api/v1/projects/{project_id}/datasets/{dataset_id}/versions/{version_id}/cases/{case_id}/validate",
+      ...options,
     });
 
 /**

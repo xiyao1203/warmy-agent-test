@@ -23,6 +23,8 @@ from agenttest.modules.datasets.api.schemas import (
     ImportTestCasesResponse,
     TestCaseListResponse,
     TestCaseResponse,
+    TestCaseValidationIssue,
+    TestCaseValidationResponse,
     UpdateDatasetRequest,
     UpdateTestCaseRequest,
 )
@@ -34,6 +36,8 @@ from agenttest.modules.datasets.application.commands import (
     DatasetVersionNotEditableError,
     DatasetVersionNotFoundError,
     DeleteTestCaseCommand,
+    DuplicateTestCaseCommand,
+    MarkTestCaseReadyCommand,
     PublishDatasetVersionCommand,
     TestCaseNotFoundError,
     UpdateDatasetCommand,
@@ -55,7 +59,7 @@ from agenttest.modules.datasets.domain.entities import (
     TestCase,
     TestCaseId,
 )
-from agenttest.modules.identity.public import InvalidSessionError, User
+from agenttest.modules.identity.public import InvalidSessionError, User, UserId
 from agenttest.modules.projects.public import ProjectId, ProjectNotFoundError
 from agenttest.shared.api.problem_details import ProblemDetails
 from agenttest.shared.application.uow import UnitOfWorkFactory, null_uow_factory
@@ -150,6 +154,22 @@ class DeleteCaseExecutor(Protocol):
     async def execute(self, actor: User, command: DeleteTestCaseCommand) -> None: ...
 
 
+class MarkCaseReadyExecutor(Protocol):
+    async def execute(
+        self,
+        actor: User,
+        command: MarkTestCaseReadyCommand,
+    ) -> TestCase: ...
+
+
+class DuplicateCaseExecutor(Protocol):
+    async def execute(
+        self,
+        actor: User,
+        command: DuplicateTestCaseCommand,
+    ) -> TestCase: ...
+
+
 class ImportExportExecutor(Protocol):
     async def preview_test_cases(
         self,
@@ -203,6 +223,8 @@ class DatasetApiDependencies:
     add_case: AddCaseExecutor
     update_case: UpdateCaseExecutor
     delete_case: DeleteCaseExecutor
+    mark_case_ready: MarkCaseReadyExecutor
+    duplicate_case: DuplicateCaseExecutor
     publish_version: PublishVersionExecutor
     import_export: ImportExportExecutor
     generate_from_run: GenerateFromRunExecutor
@@ -533,11 +555,14 @@ def create_dataset_router(
         try:
             await project_version(actor, project_id, dataset_id, version_id)
             async with dependencies.uow_factory():
+                fields = payload.model_dump()
+                if payload.owner_id is not None:
+                    fields["owner_id"] = UserId(payload.owner_id)
                 case = await dependencies.add_case.execute(
                     actor,
                     AddTestCaseCommand(
                         dataset_version_id=DatasetVersionId(version_id),
-                        **payload.model_dump(),
+                        **fields,
                     ),
                 )
         except (
@@ -573,12 +598,119 @@ def create_dataset_router(
         try:
             await project_case(actor, project_id, dataset_id, version_id, case_id)
             async with dependencies.uow_factory():
+                fields = payload.model_dump()
+                if payload.owner_id is not None:
+                    fields["owner_id"] = UserId(payload.owner_id)
                 case = await dependencies.update_case.execute(
                     actor,
                     UpdateTestCaseCommand(
                         case_id=TestCaseId(case_id),
-                        **payload.model_dump(),
+                        **fields,
                     ),
+                )
+        except (
+            DatasetNotFoundError,
+            DatasetVersionNotFoundError,
+            TestCaseNotFoundError,
+            ProjectNotFoundError,
+        ):
+            return asset_not_found()
+        except PermissionError:
+            return permission_denied()
+        except DatasetVersionNotEditableError as error:
+            return conflict(str(error))
+        except ValueError as error:
+            return invalid_request(str(error))
+        return TestCaseResponse.from_domain(case)
+
+    @router.post(
+        "/{dataset_id}/versions/{version_id}/cases/{case_id}/validate",
+        response_model=TestCaseValidationResponse,
+    )
+    async def validate_case(
+        request: Request,
+        project_id: UUID,
+        dataset_id: UUID,
+        version_id: UUID,
+        case_id: UUID,
+    ) -> TestCaseValidationResponse | JSONResponse:
+        actor = await actor_for(request)
+        if isinstance(actor, JSONResponse):
+            return actor
+        try:
+            case = await project_case(actor, project_id, dataset_id, version_id, case_id)
+        except (
+            DatasetNotFoundError,
+            DatasetVersionNotFoundError,
+            TestCaseNotFoundError,
+            ProjectNotFoundError,
+        ):
+            return asset_not_found()
+        issues = [
+            TestCaseValidationIssue(field=field, code=code, message=message)
+            for field, code, message in case.readiness_issues()
+        ]
+        return TestCaseValidationResponse(ready=not issues, issues=issues)
+
+    @router.post(
+        "/{dataset_id}/versions/{version_id}/cases/{case_id}/mark-ready",
+        response_model=TestCaseResponse,
+    )
+    async def mark_case_ready(
+        request: Request,
+        project_id: UUID,
+        dataset_id: UUID,
+        version_id: UUID,
+        case_id: UUID,
+        x_csrf_token: str | None = Header(default=None),
+    ) -> TestCaseResponse | JSONResponse:
+        actor = await writer(request, x_csrf_token)
+        if isinstance(actor, JSONResponse):
+            return actor
+        try:
+            await project_case(actor, project_id, dataset_id, version_id, case_id)
+            async with dependencies.uow_factory():
+                case = await dependencies.mark_case_ready.execute(
+                    actor,
+                    MarkTestCaseReadyCommand(case_id=TestCaseId(case_id)),
+                )
+        except (
+            DatasetNotFoundError,
+            DatasetVersionNotFoundError,
+            TestCaseNotFoundError,
+            ProjectNotFoundError,
+        ):
+            return asset_not_found()
+        except PermissionError:
+            return permission_denied()
+        except DatasetVersionNotEditableError as error:
+            return conflict(str(error))
+        except ValueError as error:
+            return invalid_request(str(error))
+        return TestCaseResponse.from_domain(case)
+
+    @router.post(
+        "/{dataset_id}/versions/{version_id}/cases/{case_id}/duplicate",
+        response_model=TestCaseResponse,
+        status_code=201,
+    )
+    async def duplicate_case(
+        request: Request,
+        project_id: UUID,
+        dataset_id: UUID,
+        version_id: UUID,
+        case_id: UUID,
+        x_csrf_token: str | None = Header(default=None),
+    ) -> TestCaseResponse | JSONResponse:
+        actor = await writer(request, x_csrf_token)
+        if isinstance(actor, JSONResponse):
+            return actor
+        try:
+            await project_case(actor, project_id, dataset_id, version_id, case_id)
+            async with dependencies.uow_factory():
+                case = await dependencies.duplicate_case.execute(
+                    actor,
+                    DuplicateTestCaseCommand(case_id=TestCaseId(case_id)),
                 )
         except (
             DatasetNotFoundError,

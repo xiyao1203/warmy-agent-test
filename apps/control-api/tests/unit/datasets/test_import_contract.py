@@ -4,6 +4,7 @@ import pytest
 from agenttest.modules.datasets.application.import_export import (
     ImportError,
     _build_test_case,
+    _case_to_dict,
     parse_and_validate_import,
 )
 
@@ -66,6 +67,69 @@ def test_import_accepts_codex_explore_execution_mode() -> None:
 
     assert preview["valid_count"] == 1
     assert preview["records"][0]["execution_mode"] == "codex_explore"
+
+
+def test_import_accepts_complete_professional_case_contract() -> None:
+    content = json.dumps(
+        [
+            {
+                "name": "隐私用例",
+                "objective": "验证拒绝越权查询",
+                "template": "step_by_step",
+                "case_type": "security",
+                "automation_status": "automated",
+                "component": "订单",
+                "requirement_refs": ["SEC-17"],
+                "preconditions": ["用户已登录"],
+                "input": {"message": "查询其他用户订单"},
+                "data_bindings": [
+                    {
+                        "name": "account",
+                        "source": "credential",
+                        "reference": "credential://user-a",
+                        "sensitive": True,
+                    }
+                ],
+                "steps": [
+                    {
+                        "step_no": 3,
+                        "action": "发送查询",
+                        "test_data": {"message": "{{ input.message }}"},
+                        "expected_result": "拒绝越权",
+                    }
+                ],
+                "expected_outcome": {"behavior": "deny"},
+                "assertions": [{"type": "not_contains_sensitive_data"}],
+                "postconditions": ["清理会话"],
+                "estimated_duration_seconds": 30,
+                "execution_mode": "api",
+                "timeout_seconds": 60,
+                "retry_count": 1,
+                "custom_fields": {"review": True},
+            }
+        ]
+    )
+
+    result = parse_and_validate_import("json", content)
+    case = _build_test_case(
+        version_id=__import__("uuid").uuid4(),
+        raw=result["records"][0],
+        sort_order=1,
+    )
+
+    assert case.objective == "验证拒绝越权查询"
+    assert case.case_type.value == "security"
+    assert case.steps[0]["step_no"] == 1
+    assert case.steps[0]["expected_result"] == "拒绝越权"
+    assert case.postconditions == ["清理会话"]
+    assert case.custom_fields == {"review": True}
+
+    exported = json.dumps([_case_to_dict(case)], default=str)
+    round_trip = parse_and_validate_import("json", exported)
+
+    assert round_trip["valid_count"] == 1
+    assert round_trip["records"][0]["steps"][0]["expected_result"] == "拒绝越权"
+    assert round_trip["records"][0]["custom_fields"] == {"review": True}
 
 
 # ── 10MB 上限 ─────────────────────────────────────────────────────────

@@ -7,7 +7,7 @@ from __future__ import annotations
 
 from typing import Protocol
 
-from agenttest.modules.identity.public import User
+from agenttest.modules.identity.public import User, UserId
 from agenttest.modules.projects.public import ProjectId
 
 
@@ -15,3 +15,5 @@ class ProjectAccessPort(Protocol):
     async def ensure_member(self, actor: User, project_id: ProjectId) -> None: ...
 
     async def ensure_editor(self, actor: User, project_id: ProjectId) -> None: ...
+
+    async def ensure_user_member(self, user_id: UserId, project_id: ProjectId) -> None: ...
