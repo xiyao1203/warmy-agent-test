@@ -11,6 +11,7 @@ from __future__ import annotations
 
 from uuid import uuid4
 
+import pytest
 from agenttest_api_runner.contracts import (
     CaseScore,
     RunCaseResult,
@@ -125,6 +126,83 @@ def test_normalize_run_task_preserves_case_input_and_assertions() -> None:
         {"type": "contains", "value": "hello"},
         {"type": "status_code", "value": 200},
     ]
+
+
+def test_normalize_run_task_uses_professional_v1_case_snapshot() -> None:
+    task = normalize_run_task(
+        {
+            "run_id": "run-v1",
+            "idempotency_key": "v1",
+            "agent_config": {"endpoint_url": "https://agent.example/run"},
+            "cases": [
+                {
+                    "run_case_id": "case-v1",
+                    "input": {"legacy": True},
+                    "assertions": [],
+                    "case_spec": {
+                        "schema_version": "platform-test-case/v1",
+                        "case_key": "PAY-TC-000001",
+                        "objective": "验证拒绝越权",
+                        "preconditions": ["用户已登录"],
+                        "input": {"message": "查询其他用户订单"},
+                        "data_bindings": [
+                            {
+                                "name": "account",
+                                "source": "credential",
+                                "reference": "credential://user-a",
+                                "sensitive": True,
+                            }
+                        ],
+                        "steps": [
+                            {
+                                "step_no": 1,
+                                "action": "发送查询",
+                                "expected_result": "拒绝",
+                                "assertions": [{"type": "contains", "value": "拒绝"}],
+                            }
+                        ],
+                        "assertions": [{"type": "contains", "value": "隐私"}],
+                        "security_policies": [{"type": "pii_redaction"}],
+                        "postconditions": ["删除生产订单"],
+                        "execution_mode": "browser",
+                    },
+                }
+            ],
+        }
+    )
+
+    case = task.cases[0]
+    assert case.input == {"message": "查询其他用户订单"}
+    assert case.execution_mode == "browser"
+    assert case.assertions == [
+        {"type": "contains", "value": "隐私"},
+        {"type": "contains", "value": "拒绝"},
+    ]
+    assert case.case_spec is not None
+    assert case.case_spec.postconditions == ["删除生产订单"]
+
+
+def test_professional_snapshot_rejects_plaintext_credential_value() -> None:
+    payload = {
+        "run_id": "run-v1",
+        "idempotency_key": "v1-secret",
+        "agent_config": {"endpoint_url": "https://agent.example/run"},
+        "cases": [
+            {
+                "run_case_id": "case-v1",
+                "case_spec": {
+                    "schema_version": "platform-test-case/v1",
+                    "objective": "secure",
+                    "input": {},
+                    "data_bindings": [{"name": "token", "source": "credential", "value": "secret"}],
+                    "execution_mode": "api",
+                },
+            }
+        ],
+    }
+
+    with pytest.raises(ValueError, match="must not contain"):
+        normalize_run_task(payload)
 
 
 # ── 评分器集成测试 ───────────────────────────────────────────────────

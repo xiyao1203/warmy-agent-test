@@ -20,6 +20,7 @@ with workflow.unsafe.imports_passed_through():
     )
     from agenttest_api_runner.contracts import (
         CaseScore,
+        PlatformTestCaseSnapshotV1,
         ResultCallbackConfig,
         RunCaseResult,
         RunCaseTask,
@@ -149,7 +150,7 @@ class RunWorkflow:
                         task.execution_policy,
                         task.agent_config,
                     )
-                    codex_intent = str(case.input.get("test_intent", ""))
+                    codex_intent = _codex_test_intent(case)
                     codex_result = await workflow.execute_activity(
                         run_codex_browser_case,
                         CodexBrowserTaskInput(
@@ -203,7 +204,7 @@ class RunWorkflow:
                         result = _tapnow_to_run_case(tapnow_result, case)
                     else:
                         browser_url = _target_url(case.input, task.agent_config)
-                        browser_steps = _browser_steps(case.input)
+                        browser_steps = _browser_steps_for_case(case)
                         playwright_result = await workflow.execute_activity(
                             run_playwright_case,
                             PlaywrightTaskInput(
@@ -365,16 +366,29 @@ def normalize_run_task(task: RunTask | dict[str, object]) -> RunTask:
         )
     cases_raw = task.get("cases", [])
     case_items = cases_raw if isinstance(cases_raw, list) else []
-    cases = [
-        RunCaseTask(
-            run_case_id=str(case["run_case_id"]),
-            input=dict(case.get("input", {})),
-            assertions=list(case.get("assertions", [])),
-            execution_mode=str(case.get("execution_mode", "api")),
+    cases: list[RunCaseTask] = []
+    for case in case_items:
+        if not isinstance(case, dict):
+            continue
+        spec_raw = case.get("case_spec")
+        spec = (
+            PlatformTestCaseSnapshotV1.from_payload(dict(spec_raw))
+            if isinstance(spec_raw, dict) and spec_raw
+            else None
         )
-        for case in case_items
-        if isinstance(case, dict)
-    ]
+        cases.append(
+            RunCaseTask(
+                run_case_id=str(case["run_case_id"]),
+                input=dict(spec.input if spec else case.get("input", {})),
+                assertions=(
+                    spec.executable_assertions if spec else list(case.get("assertions", []))
+                ),
+                execution_mode=(
+                    spec.execution_mode if spec else str(case.get("execution_mode", "api"))
+                ),
+                case_spec=spec,
+            )
+        )
     agent_config_raw = task.get("agent_config", {})
     environment_raw = task.get("environment", {})
     execution_policy_raw = task.get("execution_policy", {})
@@ -484,7 +498,7 @@ def _tapnow_to_run_case(result: TapNowResult, case: RunCaseTask) -> RunCaseResul
     )
 
 
-def _browser_steps(case_input: dict[str, object]) -> list[dict[str, str]]:
+def _browser_steps(case_input: dict[str, object]) -> list[dict[str, object]]:
     """从用例 input 中提取 Playwright 操作步骤。"""
     raw = case_input.get("steps")
     if isinstance(raw, list):
@@ -498,6 +512,57 @@ def _browser_steps(case_input: dict[str, object]) -> list[dict[str, str]]:
             if isinstance(step, dict)
         ]
     return []
+
+
+def _browser_steps_for_case(case: RunCaseTask) -> list[dict[str, object]]:
+    if case.case_spec is None:
+        return _browser_steps(case.input)
+    compiled: list[dict[str, object]] = []
+    for step in case.case_spec.steps:
+        test_data_raw = step.get("test_data", {})
+        test_data = dict(test_data_raw) if isinstance(test_data_raw, dict) else {}
+        compiled.append(
+            {
+                "step_no": int(step.get("step_no", len(compiled) + 1)),
+                "action": str(test_data.get("action") or step.get("action") or ""),
+                "target": str(test_data.get("target") or ""),
+                "value": str(test_data.get("value") or ""),
+                "test_data": test_data,
+                "expected_result": str(step.get("expected_result") or ""),
+                "assertions": [
+                    dict(item) for item in step.get("assertions", []) if isinstance(item, dict)
+                ],
+                "artifact_requirements": [
+                    dict(item)
+                    for item in step.get("artifact_requirements", [])
+                    if isinstance(item, dict)
+                ],
+            }
+        )
+    return compiled
+
+
+def _codex_test_intent(case: RunCaseTask) -> str:
+    if case.case_spec is None:
+        return str(case.input.get("test_intent", ""))
+    spec = case.case_spec
+    sections = [f"测试目标：{spec.objective}"]
+    if spec.preconditions:
+        sections.append("前置条件：" + "；".join(spec.preconditions))
+    if spec.steps:
+        sections.append(
+            "执行步骤："
+            + "；".join(
+                f"{step.get('step_no', index)}. {step.get('action', '')}；预期："
+                f"{step.get('expected_result', '')}"
+                for index, step in enumerate(spec.steps, start=1)
+            )
+        )
+    if spec.expected_outcome:
+        sections.append(f"总体期望：{spec.expected_outcome}")
+    if spec.security_policies:
+        sections.append(f"安全边界：{spec.security_policies}")
+    return "\n".join(sections)
 
 
 def _codex_browser_mode(
@@ -609,6 +674,8 @@ def _playwright_to_run_case(
                     "target": s.target,
                     "status": s.status,
                     "error": s.error,
+                    "expected_result": s.expected_result,
+                    "artifact_requirements": s.artifact_requirements,
                 }
                 for s in playwright_result.steps
             ],

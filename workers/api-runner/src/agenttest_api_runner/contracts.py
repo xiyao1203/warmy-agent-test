@@ -5,6 +5,78 @@ from typing import Any
 
 
 @dataclass(frozen=True, slots=True)
+class PlatformTestCaseSnapshotV1:
+    schema_version: str
+    case_key: str | None
+    objective: str
+    preconditions: list[str]
+    initial_state: dict[str, Any] | None
+    input: dict[str, Any]
+    data_bindings: list[dict[str, Any]]
+    steps: list[dict[str, Any]]
+    expected_outcome: dict[str, Any] | None
+    assertions: list[dict[str, Any]]
+    scorers: list[dict[str, Any]]
+    security_policies: list[dict[str, Any]]
+    artifact_requirements: list[dict[str, Any]]
+    postconditions: list[str]
+    execution_mode: str
+    timeout_seconds: int | None
+    retry_count: int
+
+    @classmethod
+    def from_payload(cls, raw: dict[str, Any]) -> PlatformTestCaseSnapshotV1:
+        if raw.get("schema_version") != "platform-test-case/v1":
+            raise ValueError("Unsupported case_spec schema_version")
+        bindings = _object_list(raw.get("data_bindings", []), "data_bindings")
+        for binding in bindings:
+            if (binding.get("sensitive") or binding.get("source") == "credential") and (
+                "value" in binding
+            ):
+                raise ValueError("Credential binding snapshot must not contain a value")
+        return cls(
+            schema_version="platform-test-case/v1",
+            case_key=str(raw["case_key"]) if raw.get("case_key") else None,
+            objective=str(raw.get("objective") or "").strip(),
+            preconditions=_string_list(raw.get("preconditions", []), "preconditions"),
+            initial_state=(
+                dict(raw["initial_state"]) if isinstance(raw.get("initial_state"), dict) else None
+            ),
+            input=_object(raw.get("input", {}), "input"),
+            data_bindings=bindings,
+            steps=_object_list(raw.get("steps", []), "steps"),
+            expected_outcome=(
+                dict(raw["expected_outcome"])
+                if isinstance(raw.get("expected_outcome"), dict)
+                else None
+            ),
+            assertions=_object_list(raw.get("assertions", []), "assertions"),
+            scorers=_object_list(raw.get("scorers", []), "scorers"),
+            security_policies=_object_list(raw.get("security_policies", []), "security_policies"),
+            artifact_requirements=_object_list(
+                raw.get("artifact_requirements", []), "artifact_requirements"
+            ),
+            postconditions=_string_list(raw.get("postconditions", []), "postconditions"),
+            execution_mode=str(raw.get("execution_mode") or "api"),
+            timeout_seconds=(
+                int(raw["timeout_seconds"]) if isinstance(raw.get("timeout_seconds"), int) else None
+            ),
+            retry_count=int(raw.get("retry_count", 0)),
+        )
+
+    @property
+    def executable_assertions(self) -> list[dict[str, Any]]:
+        return [
+            *self.assertions,
+            *[
+                dict(assertion)
+                for step in self.steps
+                for assertion in _object_list(step.get("assertions", []), "step.assertions")
+            ],
+        ]
+
+
+@dataclass(frozen=True, slots=True)
 class ResultCallbackConfig:
     base_url: str
     internal_token: str
@@ -17,6 +89,7 @@ class RunCaseTask:
     input: dict[str, Any]
     assertions: list[dict[str, Any]]
     execution_mode: str = "api"
+    case_spec: PlatformTestCaseSnapshotV1 | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -69,3 +142,21 @@ class RunResult:
     status: str
     cases: list[RunCaseResult]
     reports: list[ReportArtifact] = field(default_factory=list)
+
+
+def _object(value: Any, field_name: str) -> dict[str, Any]:
+    if not isinstance(value, dict):
+        raise ValueError(f"{field_name} must be an object")
+    return dict(value)
+
+
+def _object_list(value: Any, field_name: str) -> list[dict[str, Any]]:
+    if not isinstance(value, list) or not all(isinstance(item, dict) for item in value):
+        raise ValueError(f"{field_name} must be a list of objects")
+    return [dict(item) for item in value]
+
+
+def _string_list(value: Any, field_name: str) -> list[str]:
+    if not isinstance(value, list) or not all(isinstance(item, str) for item in value):
+        raise ValueError(f"{field_name} must be a list of strings")
+    return list(value)
