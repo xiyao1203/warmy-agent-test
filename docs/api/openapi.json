@@ -262,6 +262,17 @@
             ],
             "title": "Baseline Version Id"
           },
+          "connection_status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Connection Status"
+          },
           "created_at": {
             "format": "date-time",
             "title": "Created At",
@@ -271,6 +282,21 @@
             "format": "uuid",
             "title": "Created By",
             "type": "string"
+          },
+          "credential_binding_count": {
+            "default": 0,
+            "title": "Credential Binding Count",
+            "type": "integer"
+          },
+          "current_version": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ResourceReference"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "current_version_id": {
             "anyOf": [
@@ -300,14 +326,63 @@
             "title": "Id",
             "type": "string"
           },
+          "last_run_status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Run Status"
+          },
+          "model": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Model"
+          },
           "name": {
             "title": "Name",
             "type": "string"
+          },
+          "pass_rate": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pass Rate"
           },
           "project_id": {
             "format": "uuid",
             "title": "Project Id",
             "type": "string"
+          },
+          "protocol": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Protocol"
+          },
+          "tool_count": {
+            "default": 0,
+            "title": "Tool Count",
+            "type": "integer"
           },
           "updated_at": {
             "format": "date-time",
@@ -318,6 +393,17 @@
             "format": "uuid",
             "title": "Updated By",
             "type": "string"
+          },
+          "version_status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Version Status"
           }
         },
         "required": [
@@ -2111,6 +2197,26 @@
       },
       "DatasetResponse": {
         "properties": {
+          "api_count": {
+            "default": 0,
+            "title": "Api Count",
+            "type": "integer"
+          },
+          "browser_count": {
+            "default": 0,
+            "title": "Browser Count",
+            "type": "integer"
+          },
+          "case_count": {
+            "default": 0,
+            "title": "Case Count",
+            "type": "integer"
+          },
+          "codex_explore_count": {
+            "default": 0,
+            "title": "Codex Explore Count",
+            "type": "integer"
+          },
           "created_at": {
             "format": "date-time",
             "title": "Created At",
@@ -2137,14 +2243,55 @@
             "title": "Id",
             "type": "string"
           },
+          "latest_version": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ResourceReference"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "name": {
             "title": "Name",
             "type": "string"
+          },
+          "priority_coverage": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "title": "Priority Coverage",
+            "type": "object"
           },
           "project_id": {
             "format": "uuid",
             "title": "Project Id",
             "type": "string"
+          },
+          "published_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Published At"
+          },
+          "ready_count": {
+            "default": 0,
+            "title": "Ready Count",
+            "type": "integer"
+          },
+          "source_distribution": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "title": "Source Distribution",
+            "type": "object"
           },
           "updated_at": {
             "format": "date-time",
@@ -2155,6 +2302,17 @@
             "format": "uuid",
             "title": "Updated By",
             "type": "string"
+          },
+          "version_status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Version Status"
           }
         },
         "required": [
@@ -2394,6 +2552,16 @@
       },
       "EnvironmentTemplateResponse": {
         "properties": {
+          "browser_profile_ref": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ResourceReference"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "config": {
             "additionalProperties": true,
             "title": "Config",
@@ -2408,6 +2576,21 @@
             "format": "uuid",
             "title": "Created By",
             "type": "string"
+          },
+          "credential_binding_count": {
+            "default": 0,
+            "title": "Credential Binding Count",
+            "type": "integer"
+          },
+          "current_version": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ResourceReference"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "description": {
             "anyOf": [
@@ -2425,6 +2608,30 @@
             "title": "Id",
             "type": "string"
           },
+          "last_run_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Run At"
+          },
+          "last_validated_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Validated At"
+          },
           "name": {
             "title": "Name",
             "type": "string"
@@ -2441,6 +2648,28 @@
             "format": "date-time",
             "title": "Updated At",
             "type": "string"
+          },
+          "validation_status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Validation Status"
+          },
+          "version_status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Version Status"
           }
         },
         "required": [
@@ -2666,6 +2895,162 @@
         "title": "ExemptRequest",
         "type": "object"
       },
+      "ExperimentListResponse": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ExperimentSummaryResponse"
+            },
+            "title": "Items",
+            "type": "array"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "ExperimentListResponse",
+        "type": "object"
+      },
+      "ExperimentSummaryResponse": {
+        "properties": {
+          "baseline_run_ref": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ResourceReference"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "candidate_run_ref": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ResourceReference"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "case_count": {
+            "default": 0,
+            "title": "Case Count",
+            "type": "integer"
+          },
+          "cost_delta": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cost Delta"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "improved_count": {
+            "default": 0,
+            "title": "Improved Count",
+            "type": "integer"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "pass_rate_delta": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pass Rate Delta"
+          },
+          "project_id": {
+            "format": "uuid",
+            "title": "Project Id",
+            "type": "string"
+          },
+          "regressed_count": {
+            "default": 0,
+            "title": "Regressed Count",
+            "type": "integer"
+          },
+          "result_json": {
+            "additionalProperties": true,
+            "title": "Result Json",
+            "type": "object"
+          },
+          "run_a_id": {
+            "format": "uuid",
+            "title": "Run A Id",
+            "type": "string"
+          },
+          "run_b_id": {
+            "format": "uuid",
+            "title": "Run B Id",
+            "type": "string"
+          },
+          "score_delta": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Score Delta"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "project_id",
+          "name",
+          "run_a_id",
+          "run_b_id",
+          "status",
+          "result_json",
+          "description",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "ExperimentSummaryResponse",
+        "type": "object"
+      },
       "ExportTestCasesResponse": {
         "properties": {
           "content": {
@@ -2758,6 +3143,142 @@
         ],
         "title": "FeedbackType",
         "type": "string"
+      },
+      "GateListResponse": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/GateSummaryResponse"
+            },
+            "title": "Items",
+            "type": "array"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "GateListResponse",
+        "type": "object"
+      },
+      "GateSummaryResponse": {
+        "properties": {
+          "blocking_count": {
+            "default": 0,
+            "title": "Blocking Count",
+            "type": "integer"
+          },
+          "cost_limit": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cost Limit"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "critical_cases": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Critical Cases",
+            "type": "array"
+          },
+          "enabled": {
+            "title": "Enabled",
+            "type": "boolean"
+          },
+          "evaluated_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Evaluated At"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "last_decision": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Decision"
+          },
+          "last_run_ref": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ResourceReference"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "project_id": {
+            "format": "uuid",
+            "title": "Project Id",
+            "type": "string"
+          },
+          "rule_summary": {
+            "default": "",
+            "title": "Rule Summary",
+            "type": "string"
+          },
+          "scope": {
+            "default": "project",
+            "title": "Scope",
+            "type": "string"
+          },
+          "security_threshold": {
+            "title": "Security Threshold",
+            "type": "number"
+          },
+          "success_rate_threshold": {
+            "title": "Success Rate Threshold",
+            "type": "number"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "project_id",
+          "name",
+          "success_rate_threshold",
+          "critical_cases",
+          "cost_limit",
+          "security_threshold",
+          "enabled",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "GateSummaryResponse",
+        "type": "object"
       },
       "HTTPValidationError": {
         "properties": {
@@ -3319,6 +3840,16 @@
       },
       "ProjectResponse": {
         "properties": {
+          "active_environment_count": {
+            "default": 0,
+            "title": "Active Environment Count",
+            "type": "integer"
+          },
+          "agent_count": {
+            "default": 0,
+            "title": "Agent Count",
+            "type": "integer"
+          },
           "archived": {
             "title": "Archived",
             "type": "boolean"
@@ -3332,6 +3863,11 @@
             "format": "uuid",
             "title": "Created By",
             "type": "string"
+          },
+          "dataset_count": {
+            "default": 0,
+            "title": "Dataset Count",
+            "type": "integer"
           },
           "description": {
             "anyOf": [
@@ -3353,6 +3889,39 @@
             "title": "Key",
             "type": "string"
           },
+          "last_run": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ResourceReference"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "last_run_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Run At"
+          },
+          "last_run_status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Run Status"
+          },
           "lead_user_id": {
             "anyOf": [
               {
@@ -3365,9 +3934,19 @@
             ],
             "title": "Lead User Id"
           },
+          "member_count": {
+            "default": 0,
+            "title": "Member Count",
+            "type": "integer"
+          },
           "name": {
             "title": "Name",
             "type": "string"
+          },
+          "open_review_count": {
+            "default": 0,
+            "title": "Open Review Count",
+            "type": "integer"
           },
           "status": {
             "enum": [
@@ -3376,6 +3955,16 @@
             ],
             "title": "Status",
             "type": "string"
+          },
+          "test_case_count": {
+            "default": 0,
+            "title": "Test Case Count",
+            "type": "integer"
+          },
+          "test_plan_count": {
+            "default": 0,
+            "title": "Test Plan Count",
+            "type": "integer"
           },
           "updated_at": {
             "format": "date-time",
@@ -3663,6 +4252,281 @@
         "title": "ResetPasswordRequest",
         "type": "object"
       },
+      "ResourceReference": {
+        "description": "An internal reference whose href is created only from an allowlisted type.",
+        "properties": {
+          "href": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Href"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "key": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Key"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "resource_type": {
+            "$ref": "#/components/schemas/ResourceType"
+          },
+          "status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Status"
+          },
+          "version": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Version"
+          }
+        },
+        "required": [
+          "resource_type",
+          "id",
+          "name",
+          "href"
+        ],
+        "title": "ResourceReference",
+        "type": "object"
+      },
+      "ResourceType": {
+        "enum": [
+          "user",
+          "project",
+          "agent",
+          "agent_version",
+          "dataset",
+          "dataset_version",
+          "test_case",
+          "test_plan",
+          "test_plan_version",
+          "run",
+          "environment",
+          "environment_version",
+          "scorer",
+          "experiment",
+          "security_scan",
+          "security_profile",
+          "review",
+          "release_gate"
+        ],
+        "title": "ResourceType",
+        "type": "string"
+      },
+      "ReviewListResponse": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ReviewSummaryResponse"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "total"
+        ],
+        "title": "ReviewListResponse",
+        "type": "object"
+      },
+      "ReviewSummaryResponse": {
+        "properties": {
+          "age_seconds": {
+            "default": 0,
+            "title": "Age Seconds",
+            "type": "integer"
+          },
+          "assignee_ref": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ResourceReference"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "case_ref": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ResourceReference"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "confidence": {
+            "title": "Confidence",
+            "type": "number"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "enqueue_reason": {
+            "default": "low_confidence",
+            "title": "Enqueue Reason",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "opinion": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Opinion"
+          },
+          "priority": {
+            "default": 0,
+            "title": "Priority",
+            "type": "integer"
+          },
+          "project_id": {
+            "format": "uuid",
+            "title": "Project Id",
+            "type": "string"
+          },
+          "reviewed_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reviewed At"
+          },
+          "reviewer_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reviewer Id"
+          },
+          "rubric_scores": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "type": "number"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rubric Scores"
+          },
+          "run_case_id": {
+            "format": "uuid",
+            "title": "Run Case Id",
+            "type": "string"
+          },
+          "run_ref": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ResourceReference"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "score": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Score"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "project_id",
+          "run_case_id",
+          "status",
+          "confidence",
+          "reviewer_id",
+          "score",
+          "opinion",
+          "rubric_scores",
+          "created_at",
+          "updated_at",
+          "reviewed_at"
+        ],
+        "title": "ReviewSummaryResponse",
+        "type": "object"
+      },
       "RiskLevel": {
         "description": "风险评估等级。",
         "enum": [
@@ -3826,6 +4690,16 @@
       },
       "RunResponse": {
         "properties": {
+          "agent_ref": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ResourceReference"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "cancelled_cases": {
             "title": "Cancelled Cases",
             "type": "integer"
@@ -3842,10 +4716,52 @@
             ],
             "title": "Completed At"
           },
+          "cost": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cost"
+          },
           "created_at": {
             "format": "date-time",
             "title": "Created At",
             "type": "string"
+          },
+          "created_by_ref": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ResourceReference"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "dataset_ref": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ResourceReference"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "duration_ms": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Duration Ms"
           },
           "error_cases": {
             "title": "Error Cases",
@@ -3864,14 +4780,43 @@
             "title": "Passed Cases",
             "type": "integer"
           },
+          "plan_ref": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ResourceReference"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "progress": {
+            "default": 0.0,
+            "title": "Progress",
+            "type": "number"
+          },
           "project_id": {
             "format": "uuid",
             "title": "Project Id",
             "type": "string"
           },
+          "run_number": {
+            "title": "Run Number",
+            "type": "string"
+          },
           "run_type": {
             "title": "Run Type",
             "type": "string"
+          },
+          "source_case_ref": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ResourceReference"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "source_test_case_id": {
             "anyOf": [
@@ -3913,9 +4858,28 @@
             ],
             "title": "Test Plan Version Id"
           },
+          "token_usage": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "type": "integer"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Token Usage"
+          },
           "total_cases": {
             "title": "Total Cases",
             "type": "integer"
+          },
+          "trigger_type": {
+            "default": "manual",
+            "title": "Trigger Type",
+            "type": "string"
           },
           "workflow_id": {
             "anyOf": [
@@ -3930,6 +4894,7 @@
           }
         },
         "required": [
+          "run_number",
           "id",
           "project_id",
           "test_plan_version_id",
@@ -3985,6 +4950,181 @@
           "score"
         ],
         "title": "ScoreReviewRequest",
+        "type": "object"
+      },
+      "ScorerListResponse": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ScorerSummaryResponse"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "total"
+        ],
+        "title": "ScorerListResponse",
+        "type": "object"
+      },
+      "ScorerSummaryResponse": {
+        "properties": {
+          "config_json": {
+            "additionalProperties": true,
+            "title": "Config Json",
+            "type": "object"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "enabled": {
+            "title": "Enabled",
+            "type": "boolean"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "last_calibrated_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Calibrated At"
+          },
+          "latest_published_version_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Latest Published Version Id"
+          },
+          "latest_published_version_number": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Latest Published Version Number"
+          },
+          "latest_version": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ResourceReference"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "project_id": {
+            "format": "uuid",
+            "title": "Project Id",
+            "type": "string"
+          },
+          "scorer_type": {
+            "title": "Scorer Type",
+            "type": "string"
+          },
+          "threshold": {
+            "title": "Threshold",
+            "type": "number"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          },
+          "usage_count": {
+            "default": 0,
+            "title": "Usage Count",
+            "type": "integer"
+          },
+          "version_status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Version Status"
+          },
+          "weight": {
+            "title": "Weight",
+            "type": "number"
+          }
+        },
+        "required": [
+          "id",
+          "project_id",
+          "name",
+          "scorer_type",
+          "weight",
+          "threshold",
+          "config_json",
+          "description",
+          "enabled",
+          "latest_published_version_id",
+          "latest_published_version_number",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "ScorerSummaryResponse",
+        "type": "object"
+      },
+      "SecurityScanListResponse": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/SecurityScanSummaryResponse"
+            },
+            "title": "Items",
+            "type": "array"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "SecurityScanListResponse",
         "type": "object"
       },
       "SecurityScanRequest": {
@@ -4044,6 +5184,201 @@
           "agent_version_id"
         ],
         "title": "SecurityScanRequest",
+        "type": "object"
+      },
+      "SecurityScanSummaryResponse": {
+        "properties": {
+          "agent_ref": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ResourceReference"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "agent_version_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Agent Version Id"
+          },
+          "completed_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Completed At"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "critical_count": {
+            "default": 0,
+            "title": "Critical Count",
+            "type": "integer"
+          },
+          "duration_ms": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Duration Ms"
+          },
+          "environment_version_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Environment Version Id"
+          },
+          "findings": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Findings",
+            "type": "array"
+          },
+          "high_count": {
+            "default": 0,
+            "title": "High Count",
+            "type": "integer"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "low_count": {
+            "default": 0,
+            "title": "Low Count",
+            "type": "integer"
+          },
+          "medium_count": {
+            "default": 0,
+            "title": "Medium Count",
+            "type": "integer"
+          },
+          "profile_ref": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ResourceReference"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "project_id": {
+            "format": "uuid",
+            "title": "Project Id",
+            "type": "string"
+          },
+          "run_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Run Id"
+          },
+          "run_ref": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ResourceReference"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "scan_type": {
+            "title": "Scan Type",
+            "type": "string"
+          },
+          "security_profile_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Security Profile Id"
+          },
+          "started_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Started At"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "summary": {
+            "additionalProperties": true,
+            "title": "Summary",
+            "type": "object"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "project_id",
+          "status",
+          "scan_type",
+          "run_id",
+          "agent_version_id",
+          "environment_version_id",
+          "security_profile_id",
+          "findings",
+          "summary",
+          "created_at",
+          "updated_at",
+          "completed_at"
+        ],
+        "title": "SecurityScanSummaryResponse",
         "type": "object"
       },
       "SendTargetMessageRequest": {
@@ -4791,6 +6126,26 @@
       },
       "TestPlanResponse": {
         "properties": {
+          "agent_ref": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ResourceReference"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "case_count": {
+            "default": 0,
+            "title": "Case Count",
+            "type": "integer"
+          },
+          "concurrency": {
+            "default": 1,
+            "title": "Concurrency",
+            "type": "integer"
+          },
           "created_at": {
             "format": "date-time",
             "title": "Created At",
@@ -4800,6 +6155,16 @@
             "format": "uuid",
             "title": "Created By",
             "type": "string"
+          },
+          "dataset_ref": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ResourceReference"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "description": {
             "anyOf": [
@@ -4812,19 +6177,87 @@
             ],
             "title": "Description"
           },
+          "environment_ref": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ResourceReference"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "id": {
             "format": "uuid",
             "title": "Id",
             "type": "string"
           },
+          "last_run_status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Run Status"
+          },
+          "latest_version": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ResourceReference"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "name": {
             "title": "Name",
             "type": "string"
+          },
+          "pass_rate": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pass Rate"
           },
           "project_id": {
             "format": "uuid",
             "title": "Project Id",
             "type": "string"
+          },
+          "repeat_count": {
+            "default": 1,
+            "title": "Repeat Count",
+            "type": "integer"
+          },
+          "retry_count": {
+            "default": 0,
+            "title": "Retry Count",
+            "type": "integer"
+          },
+          "scorer_count": {
+            "default": 0,
+            "title": "Scorer Count",
+            "type": "integer"
+          },
+          "timeout_seconds": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Timeout Seconds"
           },
           "updated_at": {
             "format": "date-time",
@@ -4835,6 +6268,17 @@
             "format": "uuid",
             "title": "Updated By",
             "type": "string"
+          },
+          "version_status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Version Status"
           }
         },
         "required": [
@@ -12083,7 +13527,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/ExperimentListResponse"
+                }
               }
             },
             "description": "Successful Response"
@@ -12384,7 +13830,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/GateListResponse"
+                }
               }
             },
             "description": "Successful Response"
@@ -13730,7 +15178,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/ReviewListResponse"
+                }
               }
             },
             "description": "Successful Response"
@@ -15160,7 +16610,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/ScorerListResponse"
+                }
               }
             },
             "description": "Successful Response"
@@ -15644,7 +17096,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/SecurityScanListResponse"
+                }
               }
             },
             "description": "Successful Response"

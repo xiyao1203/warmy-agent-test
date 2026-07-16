@@ -31,6 +31,7 @@ from agenttest.modules.datasets.domain.value_objects import (
     TestGroup,
     VersionStatus,
 )
+from agenttest.shared.application.core_summaries import DatasetSummaryMetrics
 
 
 class CreateDatasetRequest(BaseModel):
@@ -170,7 +171,7 @@ class ExportTestCasesResponse(BaseModel):
     content: str
 
 
-class DatasetResponse(BaseModel):
+class DatasetResponse(DatasetSummaryMetrics):
     id: UUID
     project_id: UUID
     name: str
@@ -181,7 +182,11 @@ class DatasetResponse(BaseModel):
     updated_at: datetime
 
     @classmethod
-    def from_domain(cls, dataset: Dataset) -> "DatasetResponse":
+    def from_domain(
+        cls,
+        dataset: Dataset,
+        summary: DatasetSummaryMetrics | None = None,
+    ) -> "DatasetResponse":
         return cls(
             id=dataset.dataset_id.value,
             project_id=dataset.project_id.value,
@@ -191,6 +196,7 @@ class DatasetResponse(BaseModel):
             updated_by=dataset.updated_by.value,
             created_at=dataset.created_at,
             updated_at=dataset.updated_at,
+            **(summary.model_dump() if summary else {}),
         )
 
 

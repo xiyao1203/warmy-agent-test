@@ -59,6 +59,11 @@ from agenttest.modules.test_plans.public import (
     TestPlanConfig,
     TestPlanVersionId,
 )
+from agenttest.shared.application.core_summaries import CoreSummaryReader
+from agenttest.shared.application.resource_reference import (
+    ResourceReference,
+    ResourceType,
+)
 
 
 class HandlerPlatformGateway:
@@ -82,6 +87,7 @@ class HandlerPlatformGateway:
         models=None,
         invoker: ModelInvoker | None = None,
         connection_validator=None,
+        summaries: CoreSummaryReader | None = None,
     ) -> None:
         self._agents = agents
         self._datasets = datasets
@@ -100,6 +106,7 @@ class HandlerPlatformGateway:
         self._models = models
         self._invoker = invoker
         self._connection_validator = connection_validator
+        self._summaries = summaries
 
     async def execute(
         self,
@@ -115,7 +122,28 @@ class HandlerPlatformGateway:
 
         if capability == "agents.list":
             items, _ = await self._agents.list_agents.execute(actor, project_id)
-            return {"items": [_agent(item) for item in items]}
+            agent_summaries = (
+                await self._summaries.agents(
+                    project_id.value, [item.agent_id.value for item in items]
+                )
+                if self._summaries
+                else {}
+            )
+            return {
+                "items": [
+                    _summary_item(
+                        _agent(item),
+                        agent_summaries.get(item.agent_id.value),
+                        _resource_ref(
+                            ResourceType.AGENT,
+                            item.agent_id.value,
+                            project_id.value,
+                            item.name,
+                        ),
+                    )
+                    for item in items
+                ]
+            }
         if capability == "agents.create":
             agent_type = AgentType(str(values["config"].get("agent_type", "generic_http")))
             item = await self._agents.create_agent.execute(
@@ -137,7 +165,28 @@ class HandlerPlatformGateway:
 
         if capability == "environments.list":
             items, _ = await self._environments.list_templates.execute(actor, project_id)
-            return {"items": [_environment(item) for item in items]}
+            environment_summaries = (
+                await self._summaries.environments(
+                    project_id.value, [item.template_id.value for item in items]
+                )
+                if self._summaries
+                else {}
+            )
+            return {
+                "items": [
+                    _summary_item(
+                        _environment(item),
+                        environment_summaries.get(item.template_id.value),
+                        _resource_ref(
+                            ResourceType.ENVIRONMENT,
+                            item.template_id.value,
+                            project_id.value,
+                            item.name,
+                        ),
+                    )
+                    for item in items
+                ]
+            }
         if capability == "environments.create":
             item = await self._environments.create_template.execute(
                 actor,
@@ -173,13 +222,48 @@ class HandlerPlatformGateway:
 
         if capability == "datasets.list":
             items, _ = await self._datasets.list_datasets.execute(actor, project_id)
-            return {"items": [_dataset(item) for item in items]}
+            dataset_summaries = (
+                await self._summaries.datasets(
+                    project_id.value, [item.dataset_id.value for item in items]
+                )
+                if self._summaries
+                else {}
+            )
+            return {
+                "items": [
+                    _summary_item(
+                        _dataset(item),
+                        dataset_summaries.get(item.dataset_id.value),
+                        _resource_ref(
+                            ResourceType.DATASET,
+                            item.dataset_id.value,
+                            project_id.value,
+                            item.name,
+                        ),
+                    )
+                    for item in items
+                ]
+            }
         if capability == "test_cases.list":
             items, _ = await self._datasets.list_cases.execute(
                 actor,
                 DatasetVersionId(UUID(str(values["dataset_version_id"]))),
             )
-            return {"items": [_test_case(item) for item in items]}
+            return {
+                "items": [
+                    _summary_item(
+                        _test_case(item),
+                        None,
+                        _resource_ref(
+                            ResourceType.TEST_CASE,
+                            item.case_id.value,
+                            project_id.value,
+                            item.name,
+                        ),
+                    )
+                    for item in items
+                ]
+            }
         if capability == "test_cases.get":
             item = await self._datasets.get_case.execute(
                 actor,
@@ -286,7 +370,28 @@ class HandlerPlatformGateway:
 
         if capability == "test_plans.list":
             items, _ = await self._plans.list_plans.execute(actor, project_id)
-            return {"items": [_plan(item) for item in items]}
+            plan_summaries = (
+                await self._summaries.test_plans(
+                    project_id.value, [item.test_plan_id.value for item in items]
+                )
+                if self._summaries
+                else {}
+            )
+            return {
+                "items": [
+                    _summary_item(
+                        _plan(item),
+                        plan_summaries.get(item.test_plan_id.value),
+                        _resource_ref(
+                            ResourceType.TEST_PLAN,
+                            item.test_plan_id.value,
+                            project_id.value,
+                            item.name,
+                        ),
+                    )
+                    for item in items
+                ]
+            }
         if capability == "test_plans.create_version":
             async with self._plans.uow_factory():
                 plan = await self._plans.create_plan.execute(
@@ -324,7 +429,29 @@ class HandlerPlatformGateway:
 
         if capability == "runs.list":
             items = await self._runs.list_runs.execute(actor, project_id)
-            return {"items": [_run(item) for item in items]}
+            run_summaries = (
+                await self._summaries.runs(
+                    project_id.value, [item.run_id.value for item in items]
+                )
+                if self._summaries
+                else {}
+            )
+            return {
+                "items": [
+                    _summary_item(
+                        _run(item),
+                        run_summaries.get(item.run_id.value),
+                        _resource_ref(
+                            ResourceType.RUN,
+                            item.run_id.value,
+                            project_id.value,
+                            f"Run {str(item.run_id.value)[:8]}",
+                            status=item.status.value,
+                        ),
+                    )
+                    for item in items
+                ]
+            }
         if capability == "runs.get_status":
             run_id = RunId(UUID(str(values["id"])))
             item = await self._runs.get_run.execute(actor, project_id, run_id)
@@ -385,7 +512,28 @@ class HandlerPlatformGateway:
         project_id = context.project_id
         if capability == "scorers.list":
             items, _ = await self._scorers.list_by_project(project_id)
-            return {"items": [_scorer(item) for item in items]}
+            scorer_summaries = (
+                await self._summaries.scorers(
+                    project_id.value, [item.scorer_id.value for item in items]
+                )
+                if self._summaries
+                else {}
+            )
+            return {
+                "items": [
+                    _summary_item(
+                        _scorer(item),
+                        scorer_summaries.get(item.scorer_id.value),
+                        _resource_ref(
+                            ResourceType.SCORER,
+                            item.scorer_id.value,
+                            project_id.value,
+                            item.name,
+                        ),
+                    )
+                    for item in items
+                ]
+            }
         if capability == "scorers.create":
             config = dict(values["config"])
             item = Scorer.create(
@@ -402,7 +550,29 @@ class HandlerPlatformGateway:
             return _created("scorer", item.scorer_id.value, _scorer(item))
         if capability == "experiments.list":
             items = await self._experiments.list_by_project(project_id)
-            return {"items": [_experiment(item) for item in items]}
+            experiment_summaries = (
+                await self._summaries.experiments(
+                    project_id.value, [item.experiment_id.value for item in items]
+                )
+                if self._summaries
+                else {}
+            )
+            return {
+                "items": [
+                    _summary_item(
+                        _experiment(item),
+                        experiment_summaries.get(item.experiment_id.value),
+                        _resource_ref(
+                            ResourceType.EXPERIMENT,
+                            item.experiment_id.value,
+                            project_id.value,
+                            item.name,
+                            status=item.status.value,
+                        ),
+                    )
+                    for item in items
+                ]
+            }
         if capability == "experiments.create":
             item = Experiment.create(
                 experiment_id=ExperimentId.new(),
@@ -416,7 +586,29 @@ class HandlerPlatformGateway:
             return _created("experiment", item.experiment_id.value, _experiment(item))
         if capability == "security_scans.list":
             items = await self._security.list_by_project(project_id.value)
-            return {"items": [_security_scan(item) for item in items]}
+            scan_summaries = (
+                await self._summaries.security_scans(
+                    project_id.value, [item.scan_id for item in items]
+                )
+                if self._summaries
+                else {}
+            )
+            return {
+                "items": [
+                    _summary_item(
+                        _security_scan(item),
+                        scan_summaries.get(item.scan_id),
+                        _resource_ref(
+                            ResourceType.SECURITY_SCAN,
+                            item.scan_id,
+                            project_id.value,
+                            f"Security scan {str(item.scan_id)[:8]}",
+                            status=item.status.value,
+                        ),
+                    )
+                    for item in items
+                ]
+            }
         if capability == "security_scans.start":
             version = await self._agents.get_version.execute(
                 context.actor,
@@ -457,7 +649,30 @@ class HandlerPlatformGateway:
             return _created("security_scan", scan.scan_id, _security_scan(scan))
         if capability == "reviews.list":
             items, total = await self._reviews.list_by_project(project_id)
-            return {"items": [_review(item) for item in items], "total": total}
+            review_summaries = (
+                await self._summaries.reviews(
+                    project_id.value, [item.task_id.value for item in items]
+                )
+                if self._summaries
+                else {}
+            )
+            return {
+                "items": [
+                    _summary_item(
+                        _review(item),
+                        review_summaries.get(item.task_id.value),
+                        _resource_ref(
+                            ResourceType.REVIEW,
+                            item.task_id.value,
+                            project_id.value,
+                            f"Review {str(item.task_id.value)[:8]}",
+                            status=item.status.value,
+                        ),
+                    )
+                    for item in items
+                ],
+                "total": total,
+            }
         if capability == "reviews.enqueue":
             items = await self._reviews.auto_enqueue_low_confidence(
                 project_id,
@@ -470,7 +685,28 @@ class HandlerPlatformGateway:
             }
         if capability == "release_gates.list":
             items = await self._gates.list_by_project(project_id.value)
-            return {"items": [_gate(item) for item in items]}
+            gate_summaries = (
+                await self._summaries.gates(
+                    project_id.value, [item.gate_id.value for item in items]
+                )
+                if self._summaries
+                else {}
+            )
+            return {
+                "items": [
+                    _summary_item(
+                        _gate(item),
+                        gate_summaries.get(item.gate_id.value),
+                        _resource_ref(
+                            ResourceType.RELEASE_GATE,
+                            item.gate_id.value,
+                            project_id.value,
+                            item.name,
+                        ),
+                    )
+                    for item in items
+                ]
+            }
         if capability == "release_gates.evaluate":
             gate = await self._gates.get_by_id_and_project(
                 ReleaseGateId(UUID(str(values["gate_id"]))), project_id.value
@@ -767,6 +1003,35 @@ def _artifact(kind: str, value: UUID, relation: str = "created") -> dict[str, st
 
 def _created(kind, value, payload, relation="created"):
     return {**payload, "artifacts": [_artifact(kind, value, relation)]}
+
+
+def _resource_ref(
+    resource_type: ResourceType,
+    resource_id: UUID,
+    project_id: UUID,
+    name: str,
+    *,
+    status: str | None = None,
+) -> ResourceReference:
+    return ResourceReference.build(
+        resource_type=resource_type,
+        resource_id=resource_id,
+        project_id=project_id,
+        name=name,
+        status=status,
+    )
+
+
+def _summary_item(
+    payload: dict[str, object],
+    summary: BaseModel | None,
+    resource_ref: ResourceReference,
+) -> dict[str, object]:
+    result = dict(payload)
+    if summary is not None:
+        result.update(summary.model_dump(mode="json"))
+    result["resource_ref"] = resource_ref.model_dump(mode="json")
+    return result
 
 
 def _optional(value: Any) -> str | None:

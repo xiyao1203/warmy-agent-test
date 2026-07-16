@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import datetime
 from typing import Protocol
 from uuid import UUID
 
@@ -18,6 +19,7 @@ from agenttest.modules.experiments.domain.entities import Experiment
 from agenttest.modules.identity.public import InvalidSessionError, User
 from agenttest.modules.projects.public import ProjectNotFoundError
 from agenttest.shared.api.auth_guard import require_actor, require_writer
+from agenttest.shared.application.core_summaries import CoreSummaryReader, ExperimentSummaryMetrics
 
 
 class CreateExperimentRequest(BaseModel):
@@ -25,6 +27,23 @@ class CreateExperimentRequest(BaseModel):
     run_a_id: UUID
     run_b_id: UUID
     description: str | None = None
+
+
+class ExperimentSummaryResponse(ExperimentSummaryMetrics):
+    id: UUID
+    project_id: UUID
+    name: str
+    run_a_id: UUID
+    run_b_id: UUID
+    status: str
+    result_json: dict[str, object]
+    description: str | None
+    created_at: datetime
+    updated_at: datetime
+
+
+class ExperimentListResponse(BaseModel):
+    items: list[ExperimentSummaryResponse]
 
 
 class ActorResolver(Protocol):
@@ -36,12 +55,13 @@ class ExperimentApiDependencies:
     service: ExperimentService
     actor_for: ActorResolver
     settings: Settings
+    summaries: CoreSummaryReader | None = None
 
 
 def create_experiment_router(dependencies: ExperimentApiDependencies) -> APIRouter:
     router = APIRouter(prefix="/projects/{project_id}/experiments", tags=["experiments"])
 
-    @router.get("")
+    @router.get("", response_model=ExperimentListResponse)
     async def list_experiments(
         request: Request,
         project_id: UUID,
@@ -58,7 +78,25 @@ def create_experiment_router(dependencies: ExperimentApiDependencies) -> APIRout
             if response is not None:
                 return response
             raise
-        return {"items": [_to_dict(item) for item in items]}
+        summaries = (
+            await dependencies.summaries.experiments(
+                project_id,
+                [item.experiment_id.value for item in items],
+            )
+            if dependencies.summaries
+            else {}
+        )
+        return {
+            "items": [
+                {
+                    **_to_dict(item),
+                    **summaries[item.experiment_id.value].model_dump(),
+                }
+                if item.experiment_id.value in summaries
+                else _to_dict(item)
+                for item in items
+            ]
+        }
 
     @router.post("")
     async def create_experiment(

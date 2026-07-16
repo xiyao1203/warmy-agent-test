@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import datetime
 from typing import Protocol
 from uuid import UUID
 
@@ -22,6 +23,7 @@ from agenttest.modules.scorers.application.service import (
 )
 from agenttest.modules.scorers.domain.entities import Scorer
 from agenttest.shared.api.auth_guard import require_actor, require_writer
+from agenttest.shared.application.core_summaries import CoreSummaryReader, ScorerSummaryMetrics
 
 
 class CreateScorerRequest(BaseModel):
@@ -48,6 +50,27 @@ class TrialScorerRequest(BaseModel):
     reference: object | None = None
 
 
+class ScorerSummaryResponse(ScorerSummaryMetrics):
+    id: UUID
+    project_id: UUID
+    name: str
+    scorer_type: str
+    weight: float
+    threshold: float
+    config_json: dict[str, object]
+    description: str | None
+    enabled: bool
+    latest_published_version_id: UUID | None
+    latest_published_version_number: int | None
+    created_at: datetime
+    updated_at: datetime
+
+
+class ScorerListResponse(BaseModel):
+    items: list[ScorerSummaryResponse]
+    total: int
+
+
 class ActorResolver(Protocol):
     async def __call__(self, request: Request) -> User | None: ...
 
@@ -57,12 +80,13 @@ class ScorerApiDependencies:
     service: ScorerService
     actor_for: ActorResolver
     settings: Settings
+    summaries: CoreSummaryReader | None = None
 
 
 def create_scorer_router(dependencies: ScorerApiDependencies) -> APIRouter:
     router = APIRouter(prefix="/projects/{project_id}/scorers", tags=["scorers"])
 
-    @router.get("")
+    @router.get("", response_model=ScorerListResponse)
     async def list_scorers(request: Request, project_id: UUID, limit: int = 50, offset: int = 0):
         actor = await require_actor(request, dependencies.actor_for, dependencies.settings)
         if isinstance(actor, JSONResponse):
@@ -74,8 +98,24 @@ def create_scorer_router(dependencies: ScorerApiDependencies) -> APIRouter:
             if response is not None:
                 return response
             raise
+        summaries = (
+            await dependencies.summaries.scorers(
+                project_id,
+                [item.scorer.scorer_id.value for item in page.items],
+            )
+            if dependencies.summaries
+            else {}
+        )
         return {
-            "items": [_scorer_to_dict(item.scorer, item.published_version) for item in page.items],
+            "items": [
+                {
+                    **_scorer_to_dict(item.scorer, item.published_version),
+                    **summaries[item.scorer.scorer_id.value].model_dump(),
+                }
+                if item.scorer.scorer_id.value in summaries
+                else _scorer_to_dict(item.scorer, item.published_version)
+                for item in page.items
+            ],
             "total": page.total,
         }
 

@@ -67,6 +67,7 @@ from agenttest.modules.identity.public import InvalidSessionError, User, UserId
 from agenttest.modules.projects.public import ProjectId, ProjectNotFoundError
 from agenttest.modules.runs.public import RunRuntimeUnavailableError
 from agenttest.shared.api.problem_details import ProblemDetails
+from agenttest.shared.application.core_summaries import CoreSummaryReader
 from agenttest.shared.application.uow import UnitOfWorkFactory, null_uow_factory
 
 CSRF_COOKIE_NAME = "agenttest_csrf"
@@ -243,6 +244,7 @@ class DatasetApiDependencies:
     import_export: ImportExportExecutor
     generate_from_run: GenerateFromRunExecutor
     uow_factory: UnitOfWorkFactory = null_uow_factory
+    summaries: CoreSummaryReader | None = None
 
 
 def create_dataset_router(
@@ -334,8 +336,19 @@ def create_dataset_router(
             )
         except ProjectNotFoundError:
             return asset_not_found()
+        summaries = (
+            await dependencies.summaries.datasets(
+                project_id,
+                [item.dataset_id.value for item in items],
+            )
+            if dependencies.summaries
+            else {}
+        )
         return DatasetListResponse(
-            items=[DatasetResponse.from_domain(item) for item in items],
+            items=[
+                DatasetResponse.from_domain(item, summaries.get(item.dataset_id.value))
+                for item in items
+            ],
             next_cursor=next_cursor,
         )
 

@@ -41,6 +41,7 @@ from agenttest.modules.test_plans.domain.entities import (
     TestPlanVersionId,
 )
 from agenttest.shared.api.problem_details import ProblemDetails
+from agenttest.shared.application.core_summaries import CoreSummaryReader
 from agenttest.shared.application.uow import UnitOfWorkFactory, null_uow_factory
 
 CSRF_COOKIE_NAME = "agenttest_csrf"
@@ -129,6 +130,7 @@ class TestPlanApiDependencies:
     update_version: UpdateVersionExecutor
     publish_version: PublishVersionExecutor
     uow_factory: UnitOfWorkFactory = null_uow_factory
+    summaries: CoreSummaryReader | None = None
 
 
 def create_test_plan_router(
@@ -206,8 +208,19 @@ def create_test_plan_router(
             )
         except ProjectNotFoundError:
             return not_found()
+        summaries = (
+            await dependencies.summaries.test_plans(
+                project_id,
+                [item.test_plan_id.value for item in items],
+            )
+            if dependencies.summaries
+            else {}
+        )
         return TestPlanListResponse(
-            items=[TestPlanResponse.from_domain(item) for item in items],
+            items=[
+                TestPlanResponse.from_domain(item, summaries.get(item.test_plan_id.value))
+                for item in items
+            ],
             next_cursor=next_cursor,
         )
 

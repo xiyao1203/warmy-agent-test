@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import datetime
 from typing import Protocol
 from uuid import UUID
 
@@ -21,6 +22,7 @@ from agenttest.modules.gates.domain.entities import ReleaseGate
 from agenttest.modules.identity.public import InvalidSessionError, User
 from agenttest.modules.projects.public import ProjectNotFoundError
 from agenttest.shared.api.auth_guard import require_actor, require_writer
+from agenttest.shared.application.core_summaries import CoreSummaryReader, GateSummaryMetrics
 
 
 class CreateGateRequest(BaseModel):
@@ -40,6 +42,23 @@ class ExemptRequest(BaseModel):
     reason: str
 
 
+class GateSummaryResponse(GateSummaryMetrics):
+    id: UUID
+    project_id: UUID
+    name: str
+    success_rate_threshold: float
+    critical_cases: list[str]
+    cost_limit: float | None
+    security_threshold: float
+    enabled: bool
+    created_at: datetime
+    updated_at: datetime
+
+
+class GateListResponse(BaseModel):
+    items: list[GateSummaryResponse]
+
+
 class ActorResolver(Protocol):
     async def __call__(self, request: Request) -> User | None: ...
 
@@ -49,12 +68,13 @@ class GateApiDependencies:
     service: GateService
     actor_for: ActorResolver
     settings: Settings
+    summaries: CoreSummaryReader | None = None
 
 
 def create_gate_router(dependencies: GateApiDependencies) -> APIRouter:
     router = APIRouter(prefix="/projects/{project_id}/gates", tags=["release-gates"])
 
-    @router.get("")
+    @router.get("", response_model=GateListResponse)
     async def list_gates(request: Request, project_id: UUID):
         actor = await require_actor(request, dependencies.actor_for, dependencies.settings)
         if isinstance(actor, JSONResponse):
@@ -66,7 +86,22 @@ def create_gate_router(dependencies: GateApiDependencies) -> APIRouter:
             if response is not None:
                 return response
             raise
-        return {"items": [_gate_to_dict(gate) for gate in gates]}
+        summaries = (
+            await dependencies.summaries.gates(
+                project_id,
+                [gate.gate_id.value for gate in gates],
+            )
+            if dependencies.summaries
+            else {}
+        )
+        return {
+            "items": [
+                {**_gate_to_dict(gate), **summaries[gate.gate_id.value].model_dump()}
+                if gate.gate_id.value in summaries
+                else _gate_to_dict(gate)
+                for gate in gates
+            ]
+        }
 
     @router.post("")
     async def create_gate(

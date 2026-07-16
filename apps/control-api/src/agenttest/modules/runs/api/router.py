@@ -32,6 +32,7 @@ from agenttest.modules.runs.domain.entities import Run, RunCase, RunCaseId, RunI
 from agenttest.modules.runs.domain.value_objects import RunCaseStatus
 from agenttest.modules.test_plans.public import TestPlanVersionId
 from agenttest.shared.api.problem_details import ProblemDetails
+from agenttest.shared.application.core_summaries import CoreSummaryReader
 from agenttest.shared.application.uow import UnitOfWorkFactory, null_uow_factory
 
 CSRF_COOKIE_NAME = "agenttest_csrf"
@@ -94,6 +95,7 @@ class RunApiDependencies:
     apply_result: ApplyResultExecutor
     postprocess: PostprocessScheduleExecutor | None = None
     uow_factory: UnitOfWorkFactory = null_uow_factory
+    summaries: CoreSummaryReader | None = None
 
 
 def create_run_router(
@@ -181,7 +183,17 @@ def create_run_router(
             )
         except ProjectNotFoundError:
             return not_found()
-        return RunListResponse(items=[RunResponse.from_domain(run) for run in runs])
+        summaries = (
+            await dependencies.summaries.runs(
+                project_id,
+                [run.run_id.value for run in runs],
+            )
+            if dependencies.summaries
+            else {}
+        )
+        return RunListResponse(
+            items=[RunResponse.from_domain(run, summaries.get(run.run_id.value)) for run in runs]
+        )
 
     @router.get("/{run_id}", response_model=RunResponse)
     async def get_run(

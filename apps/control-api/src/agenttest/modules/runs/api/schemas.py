@@ -6,13 +6,14 @@ from uuid import UUID
 from pydantic import BaseModel, Field
 
 from agenttest.modules.runs.domain.entities import Run, RunCase
+from agenttest.shared.application.core_summaries import RunSummaryMetrics
 
 
 class CreateRunRequest(BaseModel):
     test_plan_version_id: UUID
 
 
-class RunResponse(BaseModel):
+class RunResponse(RunSummaryMetrics):
     id: UUID
     project_id: UUID
     test_plan_version_id: UUID | None
@@ -30,7 +31,11 @@ class RunResponse(BaseModel):
     completed_at: datetime | None
 
     @classmethod
-    def from_domain(cls, run: Run) -> RunResponse:
+    def from_domain(
+        cls,
+        run: Run,
+        summary: RunSummaryMetrics | None = None,
+    ) -> RunResponse:
         return cls(
             id=run.run_id.value,
             project_id=run.project_id.value,
@@ -49,6 +54,11 @@ class RunResponse(BaseModel):
             created_at=run.created_at,
             started_at=run.started_at,
             completed_at=run.completed_at,
+            **(
+                summary.model_dump()
+                if summary
+                else {"run_number": f"RUN-{str(run.run_id.value).split('-')[0].upper()}"}
+            ),
         )
 
 

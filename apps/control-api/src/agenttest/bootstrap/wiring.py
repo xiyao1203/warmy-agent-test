@@ -9,6 +9,7 @@ from starlette.requests import Request
 from starlette.responses import Response
 
 from agenttest.bootstrap.agent_relationships import SqlAlchemyAgentRelationshipsReader
+from agenttest.bootstrap.core_summaries import SqlAlchemyCoreSummaryReader
 from agenttest.bootstrap.gate_evidence import SqlAlchemyGateEvidence
 from agenttest.bootstrap.project_access import ProjectAccessAdapter
 from agenttest.bootstrap.review_collector import SqlAlchemyRunReviewCollector
@@ -739,6 +740,7 @@ def build_project_dependencies(settings: Settings) -> ProjectApiDependencies:
         update_member=UpdateProjectMemberHandler(projects=repository, audit=audit),
         remove_member=RemoveProjectMemberHandler(projects=repository, audit=audit),
         uow_factory=lambda: SqlAlchemyUnitOfWork(session_factory),
+        summaries=SqlAlchemyCoreSummaryReader(session_factory),
     )
 
 
@@ -824,6 +826,7 @@ def build_agent_dependencies(settings: Settings) -> AgentApiDependencies:
         publication_validator=BrowserProfilePublicationValidator(
             SqlAlchemyBrowserProfileRepository(session_factory)
         ),
+        summaries=SqlAlchemyCoreSummaryReader(session_factory),
     )
 
 
@@ -952,6 +955,7 @@ def build_dataset_dependencies(settings: Settings) -> DatasetApiDependencies:
             add_case=add_case,
         ),
         uow_factory=lambda: SqlAlchemyUnitOfWork(session_factory),
+        summaries=SqlAlchemyCoreSummaryReader(session_factory),
     )
 
 
@@ -1011,6 +1015,7 @@ def build_test_plan_dependencies(settings: Settings) -> TestPlanApiDependencies:
             audit=audit,
         ),
         uow_factory=lambda: SqlAlchemyUnitOfWork(session_factory),
+        summaries=SqlAlchemyCoreSummaryReader(session_factory),
     )
 
 
@@ -1075,6 +1080,7 @@ def build_environment_dependencies(settings: Settings) -> EnvironmentApiDependen
             audit=audit,
         ),
         uow_factory=lambda: SqlAlchemyUnitOfWork(session_factory),
+        summaries=SqlAlchemyCoreSummaryReader(session_factory),
     )
 
 
@@ -1184,6 +1190,7 @@ def build_run_dependencies(settings: Settings) -> RunApiDependencies:
         ),
         postprocess=postprocess,
         uow_factory=lambda: SqlAlchemyUnitOfWork(session_factory),
+        summaries=SqlAlchemyCoreSummaryReader(session_factory),
     )
 
 
@@ -1561,6 +1568,7 @@ def _register_scorer_endpoints(
             ),
             actor_for=actor_for,
             settings=settings,
+            summaries=SqlAlchemyCoreSummaryReader(session_factory),
         )
     )
     app.include_router(router, prefix="/api/v1")
@@ -1604,6 +1612,7 @@ def _register_experiment_endpoints(
             ),
             actor_for=actor_for,
             settings=settings,
+            summaries=SqlAlchemyCoreSummaryReader(session_factory),
         )
     )
     app.include_router(router, prefix="/api/v1")
@@ -1646,6 +1655,7 @@ def _register_review_endpoints(
             ),
             actor_for=actor_for,
             settings=settings,
+            summaries=SqlAlchemyCoreSummaryReader(session_factory),
         )
     )
     app.include_router(router, prefix="/api/v1")
@@ -1692,6 +1702,7 @@ def _register_security_scan_endpoints(
             ),
             actor_for=actor_for,
             settings=settings,
+            summaries=SqlAlchemyCoreSummaryReader(session_factory),
         )
     )
     app.include_router(router, prefix="/api/v1")
@@ -1840,6 +1851,7 @@ def _register_gate_endpoints(
             ),
             actor_for=actor_for,
             settings=settings,
+            summaries=SqlAlchemyCoreSummaryReader(session_factory),
         )
     )
     app.include_router(router, prefix="/api/v1")
@@ -2020,6 +2032,7 @@ def _register_test_agent_endpoints(
         connection_validator=HttpAgentConnectionValidator(
             allow_private_network=settings.security_scan_allow_private_network
         ),
+        summaries=SqlAlchemyCoreSummaryReader(session_factory),
     )
     composite_gateway = CompositePlatformGateway(
         gateway,

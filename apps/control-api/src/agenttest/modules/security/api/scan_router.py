@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import datetime
 from typing import Literal, Protocol
 from uuid import UUID
 
@@ -20,6 +21,10 @@ from agenttest.modules.security.application.scan_service import (
 )
 from agenttest.modules.security.domain.models import SecurityScan
 from agenttest.shared.api.auth_guard import require_actor, require_writer
+from agenttest.shared.application.core_summaries import (
+    CoreSummaryReader,
+    SecurityScanSummaryMetrics,
+)
 
 
 class SecurityScanRequest(BaseModel):
@@ -28,6 +33,26 @@ class SecurityScanRequest(BaseModel):
     environment_version_id: UUID | None = None
     security_profile_id: UUID | None = None
     scan_type: Literal["full", "quick"] = "full"
+
+
+class SecurityScanSummaryResponse(SecurityScanSummaryMetrics):
+    id: UUID
+    project_id: UUID
+    status: str
+    scan_type: str
+    run_id: UUID | None
+    agent_version_id: UUID | None
+    environment_version_id: UUID | None
+    security_profile_id: UUID | None
+    findings: list[dict[str, object]]
+    summary: dict[str, object]
+    created_at: datetime
+    updated_at: datetime
+    completed_at: datetime | None
+
+
+class SecurityScanListResponse(BaseModel):
+    items: list[SecurityScanSummaryResponse]
 
 
 class ActorResolver(Protocol):
@@ -39,6 +64,7 @@ class SecurityScanApiDependencies:
     service: SecurityScanService
     actor_for: ActorResolver
     settings: Settings
+    summaries: CoreSummaryReader | None = None
 
 
 def create_security_scan_router(
@@ -46,7 +72,7 @@ def create_security_scan_router(
 ) -> APIRouter:
     router = APIRouter(prefix="/projects/{project_id}/security/scans", tags=["security-scans"])
 
-    @router.get("")
+    @router.get("", response_model=SecurityScanListResponse)
     async def list_scans(request: Request, project_id: UUID, limit: int = 50):
         actor = await require_actor(request, dependencies.actor_for, dependencies.settings)
         if isinstance(actor, JSONResponse):
@@ -58,7 +84,22 @@ def create_security_scan_router(
             if response is not None:
                 return response
             raise
-        return {"items": [_scan_to_dict(scan) for scan in scans]}
+        summaries = (
+            await dependencies.summaries.security_scans(
+                project_id,
+                [scan.scan_id for scan in scans],
+            )
+            if dependencies.summaries
+            else {}
+        )
+        return {
+            "items": [
+                {**_scan_to_dict(scan), **summaries[scan.scan_id].model_dump()}
+                if scan.scan_id in summaries
+                else _scan_to_dict(scan)
+                for scan in scans
+            ]
+        }
 
     @router.post("")
     async def trigger_scan(

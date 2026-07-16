@@ -40,6 +40,7 @@ from agenttest.modules.environments.domain.entities import (
 from agenttest.modules.identity.public import InvalidSessionError, User
 from agenttest.modules.projects.public import ProjectId, ProjectNotFoundError
 from agenttest.shared.api.problem_details import ProblemDetails
+from agenttest.shared.application.core_summaries import CoreSummaryReader
 from agenttest.shared.application.uow import UnitOfWorkFactory, null_uow_factory
 
 CSRF_COOKIE_NAME = "agenttest_csrf"
@@ -152,6 +153,7 @@ class EnvironmentApiDependencies:
     update_version: UpdateVersionExecutor | None = None
     publish_version: PublishVersionExecutor | None = None
     uow_factory: UnitOfWorkFactory = null_uow_factory
+    summaries: CoreSummaryReader | None = None
 
 
 def create_environment_router(
@@ -221,8 +223,22 @@ def create_environment_router(
             )
         except ProjectNotFoundError:
             return asset_not_found()
+        summaries = (
+            await dependencies.summaries.environments(
+                project_id,
+                [item.template_id.value for item in items],
+            )
+            if dependencies.summaries
+            else {}
+        )
         return EnvironmentTemplateListResponse(
-            items=[EnvironmentTemplateResponse.from_domain(item) for item in items],
+            items=[
+                EnvironmentTemplateResponse.from_domain(
+                    item,
+                    summaries.get(item.template_id.value),
+                )
+                for item in items
+            ],
             next_cursor=next_cursor,
         )
 

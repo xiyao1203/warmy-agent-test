@@ -5,6 +5,7 @@ from uuid import UUID
 from pydantic import BaseModel, ConfigDict, Field
 
 from agenttest.modules.projects.domain.entities import Project, ProjectMemberRole
+from agenttest.shared.application.core_summaries import ProjectSummaryMetrics
 
 
 class CreateProjectRequest(BaseModel):
@@ -38,7 +39,7 @@ class ProjectMemberResponse(BaseModel):
     role: ProjectMemberRole
 
 
-class ProjectResponse(BaseModel):
+class ProjectResponse(ProjectSummaryMetrics):
     id: UUID
     key: str
     name: str
@@ -52,7 +53,11 @@ class ProjectResponse(BaseModel):
     updated_at: datetime
 
     @classmethod
-    def from_domain(cls, project: Project) -> "ProjectResponse":
+    def from_domain(
+        cls,
+        project: Project,
+        summary: ProjectSummaryMetrics | None = None,
+    ) -> "ProjectResponse":
         return cls(
             id=project.project_id.value,
             key=project.key,
@@ -65,6 +70,7 @@ class ProjectResponse(BaseModel):
             updated_by=(project.updated_by or project.created_by).value,
             created_at=project.created_at,
             updated_at=project.updated_at,
+            **(summary.model_dump() if summary else {}),
         )
 
 

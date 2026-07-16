@@ -7,6 +7,11 @@ from uuid import UUID, uuid4
 
 import agenttest.bootstrap.wiring  # noqa: F401 - register all ORM metadata
 import pytest
+from agenttest.bootstrap.core_summaries import SqlAlchemyCoreSummaryReader
+from agenttest.modules.agents.infrastructure.persistence.models import (
+    AgentModel,
+    AgentVersionModel,
+)
 from agenttest.modules.experiments.application.service import ExperimentService
 from agenttest.modules.identity.public import Email, SystemRole, User, UserId
 from agenttest.modules.projects.application.queries.list_projects import ListProjectsHandler
@@ -22,17 +27,24 @@ from agenttest.modules.runs.infrastructure.persistence.models import RunCaseMode
 from agenttest.modules.runs.infrastructure.persistence.repositories import SqlAlchemyRunRepository
 from agenttest.shared.infrastructure.database import Base
 from sqlalchemy import event
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.ext.asyncio import (
     AsyncEngine,
     AsyncSession,
     async_sessionmaker,
     create_async_engine,
 )
+from sqlalchemy.ext.compiler import compiles
 
 
 class AllowProjectAccess:
     async def ensure_member(self, _actor: User, _project_id: object) -> None:
         return None
+
+
+@compiles(JSONB, "sqlite")
+def compile_jsonb_for_sqlite(_type, _compiler, **_kwargs) -> str:
+    return "JSON"
 
 
 def actor() -> User:
@@ -217,6 +229,36 @@ async def test_project_list_uses_two_queries_regardless_of_project_count() -> No
         await engine.dispose()
 
 
+@pytest.mark.asyncio
+async def test_core_agent_summaries_do_not_add_queries_per_list_row() -> None:
+    engine = create_async_engine("sqlite+aiosqlite:///:memory:")
+    async with engine.begin() as connection:
+        await connection.run_sync(
+            lambda sync_connection: Base.metadata.create_all(
+                sync_connection,
+                tables=[AgentModel.__table__, AgentVersionModel.__table__],
+            )
+        )
+    sessions = async_sessionmaker(engine, expire_on_commit=False)
+    project_id = uuid4()
+    creator = uuid4()
+    ids: list[UUID] = []
+    try:
+        reader = SqlAlchemyCoreSummaryReader(sessions)
+        query_counts: list[int] = []
+        for start, stop in ((0, 1), (1, 40)):
+            models = agent_models(project_id, creator, range(start, stop))
+            ids.extend(model.id for model in models)
+            async with sessions.begin() as session:
+                session.add_all(models)
+            query_counts.append(
+                await count_queries(engine, lambda: reader.agents(project_id, ids))
+            )
+        assert query_counts == [1, 1]
+    finally:
+        await engine.dispose()
+
+
 def project_models(creator: UUID, indexes: range) -> list[ProjectModel | ProjectMemberModel]:
     now = datetime.now(UTC)
     models: list[ProjectModel | ProjectMemberModel] = []
@@ -226,8 +268,10 @@ def project_models(creator: UUID, indexes: range) -> list[ProjectModel | Project
             [
                 ProjectModel(
                     id=project_id,
+                    key=f"PRJ{index:06d}",
                     name=f"project-{index}",
                     description=None,
+                    lead_user_id=None,
                     archived_at=None,
                     created_at=now,
                     updated_at=now,
@@ -247,3 +291,23 @@ def project_models(creator: UUID, indexes: range) -> list[ProjectModel | Project
             ]
         )
     return models
+
+
+def agent_models(project_id: UUID, creator: UUID, indexes: range) -> list[AgentModel]:
+    now = datetime.now(UTC)
+    return [
+        AgentModel(
+            id=uuid4(),
+            project_id=project_id,
+            name=f"agent-{index}",
+            description=None,
+            agent_type="generic_http",
+            current_version_id=None,
+            baseline_version_id=None,
+            created_at=now,
+            updated_at=now,
+            created_by=creator,
+            updated_by=creator,
+        )
+        for index in indexes
+    ]

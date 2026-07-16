@@ -127,6 +127,10 @@ export type AgentResponse = {
    */
   baseline_version_id?: string | null;
   /**
+   * Connection Status
+   */
+  connection_status?: string | null;
+  /**
    * Created At
    */
   created_at: string;
@@ -134,6 +138,11 @@ export type AgentResponse = {
    * Created By
    */
   created_by: string;
+  /**
+   * Credential Binding Count
+   */
+  credential_binding_count?: number;
+  current_version?: ResourceReference | null;
   /**
    * Current Version Id
    */
@@ -147,13 +156,33 @@ export type AgentResponse = {
    */
   id: string;
   /**
+   * Last Run Status
+   */
+  last_run_status?: string | null;
+  /**
+   * Model
+   */
+  model?: string | null;
+  /**
    * Name
    */
   name: string;
   /**
+   * Pass Rate
+   */
+  pass_rate?: number | null;
+  /**
    * Project Id
    */
   project_id: string;
+  /**
+   * Protocol
+   */
+  protocol?: string | null;
+  /**
+   * Tool Count
+   */
+  tool_count?: number;
   /**
    * Updated At
    */
@@ -162,6 +191,10 @@ export type AgentResponse = {
    * Updated By
    */
   updated_by: string;
+  /**
+   * Version Status
+   */
+  version_status?: string | null;
 };
 
 /**
@@ -1194,6 +1227,22 @@ export type DatasetListResponse = {
  */
 export type DatasetResponse = {
   /**
+   * Api Count
+   */
+  api_count?: number;
+  /**
+   * Browser Count
+   */
+  browser_count?: number;
+  /**
+   * Case Count
+   */
+  case_count?: number;
+  /**
+   * Codex Explore Count
+   */
+  codex_explore_count?: number;
+  /**
    * Created At
    */
   created_at: string;
@@ -1209,14 +1258,35 @@ export type DatasetResponse = {
    * Id
    */
   id: string;
+  latest_version?: ResourceReference | null;
   /**
    * Name
    */
   name: string;
   /**
+   * Priority Coverage
+   */
+  priority_coverage?: {
+    [key: string]: number;
+  };
+  /**
    * Project Id
    */
   project_id: string;
+  /**
+   * Published At
+   */
+  published_at?: string | null;
+  /**
+   * Ready Count
+   */
+  ready_count?: number;
+  /**
+   * Source Distribution
+   */
+  source_distribution?: {
+    [key: string]: number;
+  };
   /**
    * Updated At
    */
@@ -1225,6 +1295,10 @@ export type DatasetResponse = {
    * Updated By
    */
   updated_by: string;
+  /**
+   * Version Status
+   */
+  version_status?: string | null;
 };
 
 /**
@@ -1366,6 +1440,7 @@ export type EnvironmentTemplateListResponse = {
  * EnvironmentTemplateResponse
  */
 export type EnvironmentTemplateResponse = {
+  browser_profile_ref?: ResourceReference | null;
   /**
    * Config
    */
@@ -1381,6 +1456,11 @@ export type EnvironmentTemplateResponse = {
    */
   created_by: string;
   /**
+   * Credential Binding Count
+   */
+  credential_binding_count?: number;
+  current_version?: ResourceReference | null;
+  /**
    * Description
    */
   description: string | null;
@@ -1388,6 +1468,14 @@ export type EnvironmentTemplateResponse = {
    * Id
    */
   id: string;
+  /**
+   * Last Run At
+   */
+  last_run_at?: string | null;
+  /**
+   * Last Validated At
+   */
+  last_validated_at?: string | null;
   /**
    * Name
    */
@@ -1401,6 +1489,14 @@ export type EnvironmentTemplateResponse = {
    * Updated At
    */
   updated_at: string;
+  /**
+   * Validation Status
+   */
+  validation_status?: string | null;
+  /**
+   * Version Status
+   */
+  version_status?: string | null;
 };
 
 /**
@@ -1535,6 +1631,90 @@ export type ExemptRequest = {
 };
 
 /**
+ * ExperimentListResponse
+ */
+export type ExperimentListResponse = {
+  /**
+   * Items
+   */
+  items: Array<ExperimentSummaryResponse>;
+};
+
+/**
+ * ExperimentSummaryResponse
+ */
+export type ExperimentSummaryResponse = {
+  baseline_run_ref?: ResourceReference | null;
+  candidate_run_ref?: ResourceReference | null;
+  /**
+   * Case Count
+   */
+  case_count?: number;
+  /**
+   * Cost Delta
+   */
+  cost_delta?: number | null;
+  /**
+   * Created At
+   */
+  created_at: string;
+  /**
+   * Description
+   */
+  description: string | null;
+  /**
+   * Id
+   */
+  id: string;
+  /**
+   * Improved Count
+   */
+  improved_count?: number;
+  /**
+   * Name
+   */
+  name: string;
+  /**
+   * Pass Rate Delta
+   */
+  pass_rate_delta?: number | null;
+  /**
+   * Project Id
+   */
+  project_id: string;
+  /**
+   * Regressed Count
+   */
+  regressed_count?: number;
+  /**
+   * Result Json
+   */
+  result_json: {
+    [key: string]: unknown;
+  };
+  /**
+   * Run A Id
+   */
+  run_a_id: string;
+  /**
+   * Run B Id
+   */
+  run_b_id: string;
+  /**
+   * Score Delta
+   */
+  score_delta?: number | null;
+  /**
+   * Status
+   */
+  status: string;
+  /**
+   * Updated At
+   */
+  updated_at: string;
+};
+
+/**
  * ExportTestCasesResponse
  */
 export type ExportTestCasesResponse = {
@@ -1587,6 +1767,83 @@ export type FeedbackResponse = {
  * 反馈类型枚举。
  */
 export type FeedbackType = "bug" | "feature" | "ux" | "other";
+
+/**
+ * GateListResponse
+ */
+export type GateListResponse = {
+  /**
+   * Items
+   */
+  items: Array<GateSummaryResponse>;
+};
+
+/**
+ * GateSummaryResponse
+ */
+export type GateSummaryResponse = {
+  /**
+   * Blocking Count
+   */
+  blocking_count?: number;
+  /**
+   * Cost Limit
+   */
+  cost_limit: number | null;
+  /**
+   * Created At
+   */
+  created_at: string;
+  /**
+   * Critical Cases
+   */
+  critical_cases: Array<string>;
+  /**
+   * Enabled
+   */
+  enabled: boolean;
+  /**
+   * Evaluated At
+   */
+  evaluated_at?: string | null;
+  /**
+   * Id
+   */
+  id: string;
+  /**
+   * Last Decision
+   */
+  last_decision?: string | null;
+  last_run_ref?: ResourceReference | null;
+  /**
+   * Name
+   */
+  name: string;
+  /**
+   * Project Id
+   */
+  project_id: string;
+  /**
+   * Rule Summary
+   */
+  rule_summary?: string;
+  /**
+   * Scope
+   */
+  scope?: string;
+  /**
+   * Security Threshold
+   */
+  security_threshold: number;
+  /**
+   * Success Rate Threshold
+   */
+  success_rate_threshold: number;
+  /**
+   * Updated At
+   */
+  updated_at: string;
+};
 
 /**
  * HTTPValidationError
@@ -1966,6 +2223,14 @@ export type ProjectMembersResponse = {
  */
 export type ProjectResponse = {
   /**
+   * Active Environment Count
+   */
+  active_environment_count?: number;
+  /**
+   * Agent Count
+   */
+  agent_count?: number;
+  /**
    * Archived
    */
   archived: boolean;
@@ -1978,6 +2243,10 @@ export type ProjectResponse = {
    */
   created_by: string;
   /**
+   * Dataset Count
+   */
+  dataset_count?: number;
+  /**
    * Description
    */
   description: string | null;
@@ -1989,18 +2258,43 @@ export type ProjectResponse = {
    * Key
    */
   key: string;
+  last_run?: ResourceReference | null;
+  /**
+   * Last Run At
+   */
+  last_run_at?: string | null;
+  /**
+   * Last Run Status
+   */
+  last_run_status?: string | null;
   /**
    * Lead User Id
    */
   lead_user_id: string | null;
   /**
+   * Member Count
+   */
+  member_count?: number;
+  /**
    * Name
    */
   name: string;
   /**
+   * Open Review Count
+   */
+  open_review_count?: number;
+  /**
    * Status
    */
   status: "active" | "archived";
+  /**
+   * Test Case Count
+   */
+  test_case_count?: number;
+  /**
+   * Test Plan Count
+   */
+  test_plan_count?: number;
   /**
    * Updated At
    */
@@ -2166,6 +2460,147 @@ export type ResetPasswordRequest = {
 };
 
 /**
+ * ResourceReference
+ *
+ * An internal reference whose href is created only from an allowlisted type.
+ */
+export type ResourceReference = {
+  /**
+   * Href
+   */
+  href: string | null;
+  /**
+   * Id
+   */
+  id: string;
+  /**
+   * Key
+   */
+  key?: string | null;
+  /**
+   * Name
+   */
+  name: string;
+  resource_type: ResourceType;
+  /**
+   * Status
+   */
+  status?: string | null;
+  /**
+   * Version
+   */
+  version?: number | string | null;
+};
+
+/**
+ * ResourceType
+ */
+export type ResourceType =
+  | "user"
+  | "project"
+  | "agent"
+  | "agent_version"
+  | "dataset"
+  | "dataset_version"
+  | "test_case"
+  | "test_plan"
+  | "test_plan_version"
+  | "run"
+  | "environment"
+  | "environment_version"
+  | "scorer"
+  | "experiment"
+  | "security_scan"
+  | "security_profile"
+  | "review"
+  | "release_gate";
+
+/**
+ * ReviewListResponse
+ */
+export type ReviewListResponse = {
+  /**
+   * Items
+   */
+  items: Array<ReviewSummaryResponse>;
+  /**
+   * Total
+   */
+  total: number;
+};
+
+/**
+ * ReviewSummaryResponse
+ */
+export type ReviewSummaryResponse = {
+  /**
+   * Age Seconds
+   */
+  age_seconds?: number;
+  assignee_ref?: ResourceReference | null;
+  case_ref?: ResourceReference | null;
+  /**
+   * Confidence
+   */
+  confidence: number;
+  /**
+   * Created At
+   */
+  created_at: string;
+  /**
+   * Enqueue Reason
+   */
+  enqueue_reason?: string;
+  /**
+   * Id
+   */
+  id: string;
+  /**
+   * Opinion
+   */
+  opinion: string | null;
+  /**
+   * Priority
+   */
+  priority?: number;
+  /**
+   * Project Id
+   */
+  project_id: string;
+  /**
+   * Reviewed At
+   */
+  reviewed_at: string | null;
+  /**
+   * Reviewer Id
+   */
+  reviewer_id: string | null;
+  /**
+   * Rubric Scores
+   */
+  rubric_scores: {
+    [key: string]: number;
+  } | null;
+  /**
+   * Run Case Id
+   */
+  run_case_id: string;
+  run_ref?: ResourceReference | null;
+  /**
+   * Score
+   */
+  score: number | null;
+  /**
+   * Status
+   */
+  status: string;
+  /**
+   * Updated At
+   */
+  updated_at: string;
+};
+
+/**
  * RiskLevel
  *
  * 风险评估等级。
@@ -2272,6 +2707,7 @@ export type RunListResponse = {
  * RunResponse
  */
 export type RunResponse = {
+  agent_ref?: ResourceReference | null;
   /**
    * Cancelled Cases
    */
@@ -2281,9 +2717,19 @@ export type RunResponse = {
    */
   completed_at: string | null;
   /**
+   * Cost
+   */
+  cost?: number | null;
+  /**
    * Created At
    */
   created_at: string;
+  created_by_ref?: ResourceReference | null;
+  dataset_ref?: ResourceReference | null;
+  /**
+   * Duration Ms
+   */
+  duration_ms?: number | null;
   /**
    * Error Cases
    */
@@ -2300,14 +2746,24 @@ export type RunResponse = {
    * Passed Cases
    */
   passed_cases: number;
+  plan_ref?: ResourceReference | null;
+  /**
+   * Progress
+   */
+  progress?: number;
   /**
    * Project Id
    */
   project_id: string;
   /**
+   * Run Number
+   */
+  run_number: string;
+  /**
    * Run Type
    */
   run_type: string;
+  source_case_ref?: ResourceReference | null;
   /**
    * Source Test Case Id
    */
@@ -2325,9 +2781,19 @@ export type RunResponse = {
    */
   test_plan_version_id: string | null;
   /**
+   * Token Usage
+   */
+  token_usage?: {
+    [key: string]: number;
+  } | null;
+  /**
    * Total Cases
    */
   total_cases: number;
+  /**
+   * Trigger Type
+   */
+  trigger_type?: string;
   /**
    * Workflow Id
    */
@@ -2355,6 +2821,103 @@ export type ScoreReviewRequest = {
 };
 
 /**
+ * ScorerListResponse
+ */
+export type ScorerListResponse = {
+  /**
+   * Items
+   */
+  items: Array<ScorerSummaryResponse>;
+  /**
+   * Total
+   */
+  total: number;
+};
+
+/**
+ * ScorerSummaryResponse
+ */
+export type ScorerSummaryResponse = {
+  /**
+   * Config Json
+   */
+  config_json: {
+    [key: string]: unknown;
+  };
+  /**
+   * Created At
+   */
+  created_at: string;
+  /**
+   * Description
+   */
+  description: string | null;
+  /**
+   * Enabled
+   */
+  enabled: boolean;
+  /**
+   * Id
+   */
+  id: string;
+  /**
+   * Last Calibrated At
+   */
+  last_calibrated_at?: string | null;
+  /**
+   * Latest Published Version Id
+   */
+  latest_published_version_id: string | null;
+  /**
+   * Latest Published Version Number
+   */
+  latest_published_version_number: number | null;
+  latest_version?: ResourceReference | null;
+  /**
+   * Name
+   */
+  name: string;
+  /**
+   * Project Id
+   */
+  project_id: string;
+  /**
+   * Scorer Type
+   */
+  scorer_type: string;
+  /**
+   * Threshold
+   */
+  threshold: number;
+  /**
+   * Updated At
+   */
+  updated_at: string;
+  /**
+   * Usage Count
+   */
+  usage_count?: number;
+  /**
+   * Version Status
+   */
+  version_status?: string | null;
+  /**
+   * Weight
+   */
+  weight: number;
+};
+
+/**
+ * SecurityScanListResponse
+ */
+export type SecurityScanListResponse = {
+  /**
+   * Items
+   */
+  items: Array<SecurityScanSummaryResponse>;
+};
+
+/**
  * SecurityScanRequest
  */
 export type SecurityScanRequest = {
@@ -2378,6 +2941,95 @@ export type SecurityScanRequest = {
    * Security Profile Id
    */
   security_profile_id?: string | null;
+};
+
+/**
+ * SecurityScanSummaryResponse
+ */
+export type SecurityScanSummaryResponse = {
+  agent_ref?: ResourceReference | null;
+  /**
+   * Agent Version Id
+   */
+  agent_version_id: string | null;
+  /**
+   * Completed At
+   */
+  completed_at: string | null;
+  /**
+   * Created At
+   */
+  created_at: string;
+  /**
+   * Critical Count
+   */
+  critical_count?: number;
+  /**
+   * Duration Ms
+   */
+  duration_ms?: number | null;
+  /**
+   * Environment Version Id
+   */
+  environment_version_id: string | null;
+  /**
+   * Findings
+   */
+  findings: Array<{
+    [key: string]: unknown;
+  }>;
+  /**
+   * High Count
+   */
+  high_count?: number;
+  /**
+   * Id
+   */
+  id: string;
+  /**
+   * Low Count
+   */
+  low_count?: number;
+  /**
+   * Medium Count
+   */
+  medium_count?: number;
+  profile_ref?: ResourceReference | null;
+  /**
+   * Project Id
+   */
+  project_id: string;
+  /**
+   * Run Id
+   */
+  run_id: string | null;
+  run_ref?: ResourceReference | null;
+  /**
+   * Scan Type
+   */
+  scan_type: string;
+  /**
+   * Security Profile Id
+   */
+  security_profile_id: string | null;
+  /**
+   * Started At
+   */
+  started_at?: string | null;
+  /**
+   * Status
+   */
+  status: string;
+  /**
+   * Summary
+   */
+  summary: {
+    [key: string]: unknown;
+  };
+  /**
+   * Updated At
+   */
+  updated_at: string;
 };
 
 /**
@@ -2796,6 +3448,15 @@ export type TestPlanListResponse = {
  * TestPlanResponse
  */
 export type TestPlanResponse = {
+  agent_ref?: ResourceReference | null;
+  /**
+   * Case Count
+   */
+  case_count?: number;
+  /**
+   * Concurrency
+   */
+  concurrency?: number;
   /**
    * Created At
    */
@@ -2804,22 +3465,49 @@ export type TestPlanResponse = {
    * Created By
    */
   created_by: string;
+  dataset_ref?: ResourceReference | null;
   /**
    * Description
    */
   description: string | null;
+  environment_ref?: ResourceReference | null;
   /**
    * Id
    */
   id: string;
   /**
+   * Last Run Status
+   */
+  last_run_status?: string | null;
+  latest_version?: ResourceReference | null;
+  /**
    * Name
    */
   name: string;
   /**
+   * Pass Rate
+   */
+  pass_rate?: number | null;
+  /**
    * Project Id
    */
   project_id: string;
+  /**
+   * Repeat Count
+   */
+  repeat_count?: number;
+  /**
+   * Retry Count
+   */
+  retry_count?: number;
+  /**
+   * Scorer Count
+   */
+  scorer_count?: number;
+  /**
+   * Timeout Seconds
+   */
+  timeout_seconds?: number | null;
   /**
    * Updated At
    */
@@ -2828,6 +3516,10 @@ export type TestPlanResponse = {
    * Updated By
    */
   updated_by: string;
+  /**
+   * Version Status
+   */
+  version_status?: string | null;
 };
 
 /**
@@ -7077,8 +7769,11 @@ export type ListExperimentsApiV1ProjectsProjectIdExperimentsGetResponses = {
   /**
    * Successful Response
    */
-  200: unknown;
+  200: ExperimentListResponse;
 };
+
+export type ListExperimentsApiV1ProjectsProjectIdExperimentsGetResponse =
+  ListExperimentsApiV1ProjectsProjectIdExperimentsGetResponses[keyof ListExperimentsApiV1ProjectsProjectIdExperimentsGetResponses];
 
 export type CreateExperimentApiV1ProjectsProjectIdExperimentsPostData = {
   body: CreateExperimentRequest;
@@ -7259,8 +7954,11 @@ export type ListGatesApiV1ProjectsProjectIdGatesGetResponses = {
   /**
    * Successful Response
    */
-  200: unknown;
+  200: GateListResponse;
 };
+
+export type ListGatesApiV1ProjectsProjectIdGatesGetResponse =
+  ListGatesApiV1ProjectsProjectIdGatesGetResponses[keyof ListGatesApiV1ProjectsProjectIdGatesGetResponses];
 
 export type CreateGateApiV1ProjectsProjectIdGatesPostData = {
   body: CreateGateRequest;
@@ -8064,8 +8762,11 @@ export type ListReviewsApiV1ProjectsProjectIdReviewsGetResponses = {
   /**
    * Successful Response
    */
-  200: unknown;
+  200: ReviewListResponse;
 };
+
+export type ListReviewsApiV1ProjectsProjectIdReviewsGetResponse =
+  ListReviewsApiV1ProjectsProjectIdReviewsGetResponses[keyof ListReviewsApiV1ProjectsProjectIdReviewsGetResponses];
 
 export type AutoEnqueueApiV1ProjectsProjectIdReviewsAutoEnqueuePostData = {
   body: AutoEnqueueRequest;
@@ -8938,8 +9639,11 @@ export type ListScorersApiV1ProjectsProjectIdScorersGetResponses = {
   /**
    * Successful Response
    */
-  200: unknown;
+  200: ScorerListResponse;
 };
+
+export type ListScorersApiV1ProjectsProjectIdScorersGetResponse =
+  ListScorersApiV1ProjectsProjectIdScorersGetResponses[keyof ListScorersApiV1ProjectsProjectIdScorersGetResponses];
 
 export type CreateScorerApiV1ProjectsProjectIdScorersPostData = {
   body: CreateScorerRequest;
@@ -9222,8 +9926,11 @@ export type ListScansApiV1ProjectsProjectIdSecurityScansGetResponses = {
   /**
    * Successful Response
    */
-  200: unknown;
+  200: SecurityScanListResponse;
 };
+
+export type ListScansApiV1ProjectsProjectIdSecurityScansGetResponse =
+  ListScansApiV1ProjectsProjectIdSecurityScansGetResponses[keyof ListScansApiV1ProjectsProjectIdSecurityScansGetResponses];
 
 export type TriggerScanApiV1ProjectsProjectIdSecurityScansPostData = {
   body: SecurityScanRequest;

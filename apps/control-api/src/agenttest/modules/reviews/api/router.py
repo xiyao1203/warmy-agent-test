@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import datetime
 from typing import Protocol
 from uuid import UUID
 
@@ -19,6 +20,7 @@ from agenttest.modules.reviews.application.service import (
 )
 from agenttest.modules.reviews.domain.entities import ReviewTask
 from agenttest.shared.api.auth_guard import require_actor, require_writer
+from agenttest.shared.application.core_summaries import CoreSummaryReader, ReviewSummaryMetrics
 
 
 class ScoreReviewRequest(BaseModel):
@@ -32,6 +34,26 @@ class AutoEnqueueRequest(BaseModel):
     confidence_threshold: float = 0.5
 
 
+class ReviewSummaryResponse(ReviewSummaryMetrics):
+    id: UUID
+    project_id: UUID
+    run_case_id: UUID
+    status: str
+    confidence: float
+    reviewer_id: UUID | None
+    score: float | None
+    opinion: str | None
+    rubric_scores: dict[str, float] | None
+    created_at: datetime
+    updated_at: datetime
+    reviewed_at: datetime | None
+
+
+class ReviewListResponse(BaseModel):
+    items: list[ReviewSummaryResponse]
+    total: int
+
+
 class ActorResolver(Protocol):
     async def __call__(self, request: Request) -> User | None: ...
 
@@ -41,6 +63,7 @@ class ReviewApiDependencies:
     service: ReviewService
     actor_for: ActorResolver
     settings: Settings
+    summaries: CoreSummaryReader | None = None
 
 
 def create_review_router(dependencies: ReviewApiDependencies) -> APIRouter:
@@ -60,7 +83,7 @@ def create_review_router(dependencies: ReviewApiDependencies) -> APIRouter:
             csrf_header,
         )
 
-    @router.get("")
+    @router.get("", response_model=ReviewListResponse)
     async def list_reviews(
         request: Request,
         project_id: UUID,
@@ -81,7 +104,23 @@ def create_review_router(dependencies: ReviewApiDependencies) -> APIRouter:
             )
         except (ProjectNotFoundError, PermissionError) as error:
             return _access_error(error)
-        return {"items": [_to_dict(task) for task in tasks], "total": total}
+        summaries = (
+            await dependencies.summaries.reviews(
+                project_id,
+                [task.task_id.value for task in tasks],
+            )
+            if dependencies.summaries
+            else {}
+        )
+        return {
+            "items": [
+                {**_to_dict(task), **summaries[task.task_id.value].model_dump()}
+                if task.task_id.value in summaries
+                else _to_dict(task)
+                for task in tasks
+            ],
+            "total": total,
+        }
 
     @router.get("/stats")
     async def review_stats(request: Request, project_id: UUID):
