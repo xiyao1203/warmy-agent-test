@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from datetime import UTC, datetime
+from types import SimpleNamespace
 from uuid import uuid4
 
 import pytest
@@ -34,6 +36,8 @@ from agenttest.modules.datasets.domain.value_objects import (
 from agenttest.modules.datasets.domain.value_objects import (
     TestCaseType as CaseType,
 )
+from agenttest.modules.datasets.infrastructure.persistence.repositories import _to_test_case
+from agenttest.modules.identity.public import UserId
 from pydantic import ValidationError
 
 
@@ -185,3 +189,66 @@ def test_add_case_command_carries_professional_fields() -> None:
 
     assert command.objective == "验证隐私边界"
     assert command.steps[0]["action"] == "发送消息"
+
+
+def test_repository_mapper_preserves_professional_case_fields() -> None:
+    now = datetime.now(UTC)
+    owner = uuid4()
+    model = SimpleNamespace(
+        id=uuid4(),
+        dataset_version_id=uuid4(),
+        case_key="QA-TC-000001",
+        name="安全测试",
+        objective="验证隐私边界",
+        case_status="ready",
+        template="step_by_step",
+        case_type="security",
+        automation_status="automated",
+        source="manual",
+        source_ref=None,
+        component="privacy",
+        requirement_refs=["SEC-1"],
+        owner_id=owner,
+        input={"message": "hello"},
+        initial_state=None,
+        preconditions=["已登录"],
+        data_bindings=[],
+        steps=[
+            {
+                "step_no": 1,
+                "action": "发送",
+                "test_data": {},
+                "expected_result": "拒绝",
+            }
+        ],
+        execution_mode="api",
+        expected_outcome={"behavior": "deny"},
+        assertions=[{"type": "contains"}],
+        scorers=[],
+        security_policies=[],
+        artifact_requirements=[],
+        postconditions=["清理"],
+        estimated_duration_seconds=30,
+        timeout_seconds=60,
+        retry_count=1,
+        custom_fields={"review": True},
+        tags=["security"],
+        scenario="privacy",
+        priority="P0",
+        risk_level="critical",
+        difficulty="hard",
+        test_group="test",
+        sort_order=1,
+        created_by=owner,
+        updated_by=owner,
+        created_at=now,
+        updated_at=now,
+    )
+
+    case = _to_test_case(model)
+
+    assert case.case_key == "QA-TC-000001"
+    assert case.objective == "验证隐私边界"
+    assert case.owner_id == UserId(owner)
+    assert case.steps[0]["action"] == "发送"
+    assert case.custom_fields == {"review": True}

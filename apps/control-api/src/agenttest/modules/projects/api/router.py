@@ -152,7 +152,15 @@ def create_project_router(
         try:
             async with dependencies.uow_factory():
                 project = await dependencies.create_project.execute(
-                    actor, CreateProjectCommand(name=payload.name)
+                    actor,
+                    CreateProjectCommand(
+                        name=payload.name,
+                        key=payload.key,
+                        description=payload.description,
+                        lead_user_id=(
+                            UserId(payload.lead_user_id) if payload.lead_user_id else None
+                        ),
+                    ),
                 )
         except ProjectAccessDeniedError:
             return permission_denied()
@@ -186,6 +194,10 @@ def create_project_router(
                     RenameProjectCommand(
                         project_id=ProjectId(project_id),
                         name=payload.name,
+                        description=payload.description,
+                        lead_user_id=(
+                            UserId(payload.lead_user_id) if payload.lead_user_id else None
+                        ),
                     ),
                 )
         except ProjectNotFoundError:

@@ -1,3 +1,4 @@
+import re
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from enum import StrEnum
@@ -27,6 +28,12 @@ class Project:
     project_id: ProjectId
     name: str
     created_by: UserId
+    key: str = ""
+    description: str | None = None
+    lead_user_id: UserId | None = None
+    updated_by: UserId | None = None
+    created_at: datetime = field(default_factory=lambda: datetime.now(UTC))
+    updated_at: datetime = field(default_factory=lambda: datetime.now(UTC))
     archived_at: datetime | None = None
     _members: dict[UserId, ProjectMemberRole] = field(default_factory=dict)
 
@@ -37,14 +44,27 @@ class Project:
         project_id: ProjectId,
         name: str,
         created_by: UserId,
+        key: str | None = None,
+        description: str | None = None,
+        lead_user_id: UserId | None = None,
     ) -> "Project":
         normalized_name = name.strip()
         if not normalized_name:
             raise ValueError("Project name is required")
+        normalized_key = (key or f"P{project_id.value.hex[:8]}").strip().upper()
+        if not re.fullmatch(r"[A-Z][A-Z0-9-]{1,11}", normalized_key):
+            raise ValueError("Project key must be 2-12 uppercase letters, numbers or hyphens")
+        now = datetime.now(UTC)
         return cls(
             project_id=project_id,
             name=normalized_name,
             created_by=created_by,
+            key=normalized_key,
+            description=description.strip() if description and description.strip() else None,
+            lead_user_id=lead_user_id,
+            updated_by=created_by,
+            created_at=now,
+            updated_at=now,
         )
 
     @property
@@ -56,10 +76,22 @@ class Project:
         if not normalized_name:
             raise ValueError("Project name is required")
         self.name = normalized_name
+        self.updated_at = datetime.now(UTC)
+
+    def update_details(
+        self,
+        *,
+        description: str | None = None,
+        lead_user_id: UserId | None = None,
+    ) -> None:
+        self.description = description.strip() if description and description.strip() else None
+        self.lead_user_id = lead_user_id
+        self.updated_at = datetime.now(UTC)
 
     def archive(self, archived_at: datetime | None = None) -> None:
         if self.archived_at is None:
             self.archived_at = archived_at or datetime.now(UTC)
+            self.updated_at = self.archived_at
 
     def add_member(self, user_id: UserId, role: ProjectMemberRole) -> None:
         self._members[user_id] = role

@@ -141,6 +141,31 @@ def test_super_admin_creates_and_lists_all_projects() -> None:
     assert [item["name"] for item in listed.json()["items"]] == ["Project A"]
 
 
+def test_project_api_round_trips_professional_metadata() -> None:
+    admin = create_user(SystemRole.SUPER_ADMIN, "admin@example.com")
+    repository = InMemoryProjectRepository()
+    client = client_for(admin, repository)
+
+    created = client.post(
+        "/api/v1/projects",
+        headers={"X-CSRF-Token": "csrf-token"},
+        json={
+            "name": "Professional QA",
+            "key": "qa-core",
+            "description": "Agent regression program",
+            "lead_user_id": str(admin.user_id.value),
+        },
+    )
+
+    assert created.status_code == 201
+    body = created.json()
+    assert body["key"] == "QA-CORE"
+    assert body["description"] == "Agent regression program"
+    assert body["lead_user_id"] == str(admin.user_id.value)
+    assert body["status"] == "active"
+    assert body["created_at"] == body["updated_at"]
+
+
 def test_normal_user_lists_only_assigned_projects_and_other_project_is_404() -> None:
     admin = create_user(SystemRole.SUPER_ADMIN, "admin@example.com")
     user = create_user(SystemRole.DEVELOPER, "developer@example.com")

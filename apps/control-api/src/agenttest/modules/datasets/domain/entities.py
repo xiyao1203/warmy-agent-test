@@ -263,6 +263,8 @@ class TestCase:
     difficulty: str | None = None
     test_group: TestGroup | None = None
     sort_order: int = 0
+    created_by: UserId | None = None
+    updated_by: UserId | None = None
     created_at: datetime | None = None
     updated_at: datetime | None = None
 
@@ -300,6 +302,7 @@ class TestCase:
         timeout_seconds: int | None = None,
         retry_count: int = 0,
         custom_fields: dict[str, object] | None = None,
+        created_by: UserId | None = None,
         tags: list[str] | None = None,
         scenario: str | None = None,
         priority: Priority | None = None,
@@ -366,6 +369,8 @@ class TestCase:
             difficulty=difficulty,
             test_group=test_group,
             sort_order=sort_order,
+            created_by=created_by,
+            updated_by=created_by,
             created_at=now,
             updated_at=now,
         )

@@ -89,6 +89,8 @@ def test_initial_migration_generates_expected_postgresql_schema() -> None:
     assert "fk_artifacts_project_run" in sql
     assert "login_throttles" in sql
     assert "ix_login_throttles_updated_at" in sql
+    assert "project_sequences" in sql
+    assert "uq_test_cases_case_key" in sql
 
 
 def test_empty_sqlite_database_upgrades_to_head(tmp_path: Path) -> None:
@@ -97,7 +99,7 @@ def test_empty_sqlite_database_upgrades_to_head(tmp_path: Path) -> None:
 
     command.upgrade(config, "head")
 
-    assert run(current_sqlite_revision(database_url)) == "0026"
+    assert run(current_sqlite_revision(database_url)) == "0027"
 
 
 def test_login_throttle_migration_is_private_indexed_and_reversible(tmp_path: Path) -> None:
@@ -151,11 +153,11 @@ def test_empty_database_upgrade_and_revision_cycle() -> None:
     config = alembic_config(database_url=database_url)
 
     command.upgrade(config, "head")
-    assert run(current_revision(database_url)) == "0026"
+    assert run(current_revision(database_url)) == "0027"
 
     command.downgrade(config, "base")
     command.upgrade(config, "head")
-    assert run(current_revision(database_url)) == "0026"
+    assert run(current_revision(database_url)) == "0027"
 
 
 async def current_revision(database_url: str) -> str:

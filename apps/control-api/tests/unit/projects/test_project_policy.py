@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from datetime import UTC, datetime
+from types import SimpleNamespace
 from uuid import uuid4
 
 import pytest
@@ -14,6 +16,7 @@ from agenttest.modules.projects.domain.policies import (
     ProjectAccessPolicy,
     ProjectNotFoundError,
 )
+from agenttest.modules.projects.infrastructure.persistence.repositories import _to_project
 
 
 def create_user(role: SystemRole, email: str) -> User:
@@ -91,3 +94,56 @@ def test_project_supports_rename_archive_and_member_role_changes() -> None:
     assert project.name == "Renamed Project"
     assert project.member_role(member_id) is ProjectMemberRole.REVIEWER
     assert project.is_archived is True
+
+
+def test_project_normalizes_professional_metadata() -> None:
+    lead_id = UserId.new()
+    project = Project.create(
+        project_id=ProjectId(uuid4()),
+        name="Professional QA",
+        key="qa-team",
+        description="  Agent regression program  ",
+        lead_user_id=lead_id,
+        created_by=UserId.new(),
+    )
+
+    assert project.key == "QA-TEAM"
+    assert project.description == "Agent regression program"
+    assert project.lead_user_id == lead_id
+    assert project.created_at == project.updated_at
+
+
+def test_project_rejects_invalid_key() -> None:
+    with pytest.raises(ValueError, match="Project key"):
+        Project.create(
+            project_id=ProjectId(uuid4()),
+            name="Invalid",
+            key="1",
+            created_by=UserId.new(),
+        )
+
+
+def test_project_repository_mapper_preserves_professional_metadata() -> None:
+    now = datetime.now(UTC)
+    creator = uuid4()
+    lead = uuid4()
+    project = _to_project(
+        SimpleNamespace(
+            id=uuid4(),
+            key="QA-CORE",
+            name="QA",
+            description="Professional tests",
+            lead_user_id=lead,
+            created_by=creator,
+            updated_by=creator,
+            created_at=now,
+            updated_at=now,
+            archived_at=None,
+        ),
+        [],
+    )
+
+    assert project.key == "QA-CORE"
+    assert project.description == "Professional tests"
+    assert project.lead_user_id == UserId(lead)
+    assert project.created_at == now

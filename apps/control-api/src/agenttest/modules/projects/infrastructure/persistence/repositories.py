@@ -1,6 +1,6 @@
 from uuid import UUID, uuid4
 
-from sqlalchemy import delete, func, select, update
+from sqlalchemy import delete, func, select, text, update
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from agenttest.modules.identity.public import UserId
@@ -71,13 +71,15 @@ class SqlAlchemyProjectRepository:
             session.add(
                 ProjectModel(
                     id=project.project_id.value,
+                    key=project.key,
                     name=project.name,
-                    description=None,
+                    description=project.description,
+                    lead_user_id=(project.lead_user_id.value if project.lead_user_id else None),
                     archived_at=project.archived_at,
-                    created_at=func.now(),
-                    updated_at=func.now(),
+                    created_at=project.created_at,
+                    updated_at=project.updated_at,
                     created_by=project.created_by.value,
-                    updated_by=project.created_by.value,
+                    updated_by=(project.updated_by or project.created_by).value,
                 )
             )
             await session.flush()
@@ -90,9 +92,11 @@ class SqlAlchemyProjectRepository:
                 .where(ProjectModel.id == project.project_id.value)
                 .values(
                     name=project.name,
+                    description=project.description,
+                    lead_user_id=(project.lead_user_id.value if project.lead_user_id else None),
                     archived_at=project.archived_at,
-                    updated_at=func.now(),
-                    updated_by=project.created_by.value,
+                    updated_at=project.updated_at,
+                    updated_by=(project.updated_by or project.created_by).value,
                 )
             )
             await session.execute(
@@ -119,14 +123,60 @@ class SqlAlchemyProjectRepository:
             )
 
 
+class SqlAlchemyProjectAssetKeyAllocator:
+    """原子分配项目内可读资源编号。"""
+
+    def __init__(self, session_factory: async_sessionmaker[AsyncSession]) -> None:
+        self._session_factory = session_factory
+
+    async def allocate(
+        self,
+        project_id: ProjectId,
+        resource_type: str,
+        marker: str,
+    ) -> str:
+        async with transaction_scope(self._session_factory) as session:
+            project_key = await session.scalar(
+                select(ProjectModel.key).where(ProjectModel.id == project_id.value)
+            )
+            if project_key is None:
+                raise KeyError("Project not found")
+            sequence = await session.scalar(
+                text(
+                    """
+                    INSERT INTO project_sequences (
+                        project_id, resource_type, next_value, updated_at
+                    ) VALUES (
+                        :project_id, :resource_type, 2, CURRENT_TIMESTAMP
+                    )
+                    ON CONFLICT (project_id, resource_type)
+                    DO UPDATE SET
+                        next_value = project_sequences.next_value + 1,
+                        updated_at = CURRENT_TIMESTAMP
+                    RETURNING next_value - 1
+                    """
+                ),
+                {"project_id": project_id.value, "resource_type": resource_type},
+            )
+            if not isinstance(sequence, int):
+                raise RuntimeError("Project sequence allocation failed")
+            return f"{project_key}-{marker}-{sequence:06d}"
+
+
 def _to_project(
     model: ProjectModel,
     members: list[ProjectMemberModel],
 ) -> Project:
     project = Project(
         project_id=ProjectId(model.id),
+        key=model.key,
         name=model.name,
+        description=model.description,
+        lead_user_id=UserId(model.lead_user_id) if model.lead_user_id else None,
         created_by=UserId(model.created_by),
+        updated_by=UserId(model.updated_by),
+        created_at=model.created_at,
+        updated_at=model.updated_at,
         archived_at=model.archived_at,
     )
     for member in members:

@@ -35,7 +35,7 @@ from agenttest.modules.datasets.domain.value_objects import (
     TestGroup,
 )
 from agenttest.modules.identity.public import User, UserId
-from agenttest.modules.projects.public import ProjectId
+from agenttest.modules.projects.public import ProjectAssetKeyAllocator, ProjectId
 
 # ── Commands ────────────────────────────────────────────────────────────────
 
@@ -270,12 +270,14 @@ class AddTestCaseHandler:
         versions: DatasetVersionRepository,
         cases: TestCaseRepository,
         project_access: ProjectAccessPort,
+        case_key_allocator: ProjectAssetKeyAllocator | None = None,
         audit: AuditWriter | None = None,
     ) -> None:
         self._datasets = datasets
         self._versions = versions
         self._cases = cases
         self._project_access = project_access
+        self._case_key_allocator = case_key_allocator
         self._audit = audit
 
     async def execute(self, actor: User, command: AddTestCaseCommand) -> TestCase:
@@ -285,9 +287,19 @@ class AddTestCaseHandler:
         dataset = await _required_dataset(self._datasets, version.dataset_id)
         await self._project_access.ensure_editor(actor, dataset.project_id)
         max_order = await self._cases.get_max_sort_order(version.version_id)
+        case_id = TestCaseId.new()
+        if self._case_key_allocator is None:
+            case_key = f"TC-{case_id.value.hex[:12].upper()}"
+        else:
+            case_key = await self._case_key_allocator.allocate(
+                dataset.project_id,
+                "test_case",
+                "TC",
+            )
         case = TestCase.create(
-            case_id=TestCaseId.new(),
+            case_id=case_id,
             dataset_version_id=version.version_id,
+            case_key=case_key,
             name=command.name,
             input=command.input,
             execution_mode=command.execution_mode,
@@ -314,6 +326,7 @@ class AddTestCaseHandler:
             timeout_seconds=command.timeout_seconds,
             retry_count=command.retry_count,
             custom_fields=command.custom_fields,
+            created_by=actor.user_id,
             tags=command.tags,
             scenario=command.scenario,
             priority=command.priority,
@@ -394,6 +407,7 @@ class UpdateTestCaseHandler:
             test_group=command.test_group,
             sort_order=command.sort_order,
         )
+        case.updated_by = actor.user_id
         await self._cases.save(case)
         return case
 

@@ -178,6 +178,7 @@ from agenttest.modules.projects.application.queries.list_projects import (
     ListProjectsHandler,
 )
 from agenttest.modules.projects.infrastructure.persistence.repositories import (
+    SqlAlchemyProjectAssetKeyAllocator,
     SqlAlchemyProjectRepository,
 )
 from agenttest.modules.reports.api.router import create_report_router
@@ -834,6 +835,7 @@ def build_dataset_dependencies(settings: Settings) -> DatasetApiDependencies:
         versions=versions,
         cases=cases,
         project_access=access,
+        case_key_allocator=SqlAlchemyProjectAssetKeyAllocator(session_factory),
         audit=audit,
     )
     runs = SqlAlchemyRunRepository(session_factory)
