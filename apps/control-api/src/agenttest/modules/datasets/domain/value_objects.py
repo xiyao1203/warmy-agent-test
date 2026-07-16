@@ -47,3 +47,80 @@ class TestGroup(StrEnum):
     TRAIN = "train"
     VALIDATION = "validation"
     TEST = "test"
+
+
+class TestCaseStatus(StrEnum):
+    """用例评审状态；与数据集版本的发布状态相互独立。"""
+
+    DRAFT = "draft"
+    READY = "ready"
+    DEPRECATED = "deprecated"
+
+
+class TestCaseTemplate(StrEnum):
+    """专业测试用例模板。"""
+
+    STEP_BY_STEP = "step_by_step"
+    TEXT = "text"
+    BDD = "bdd"
+    AI_EVAL = "ai_eval"
+
+
+class TestCaseType(StrEnum):
+    """测试用例覆盖的质量类型。"""
+
+    FUNCTIONAL = "functional"
+    REGRESSION = "regression"
+    SMOKE = "smoke"
+    INTEGRATION = "integration"
+    E2E = "e2e"
+    SECURITY = "security"
+    PERFORMANCE = "performance"
+    USABILITY = "usability"
+    EXPLORATORY = "exploratory"
+
+
+class AutomationStatus(StrEnum):
+    """用例自动化成熟度。"""
+
+    MANUAL = "manual"
+    CANDIDATE = "candidate"
+    AUTOMATED = "automated"
+
+
+class TestCaseSource(StrEnum):
+    """用例来源，用于审计和列表筛选。"""
+
+    MANUAL = "manual"
+    AGENT_GENERATED = "agent_generated"
+    IMPORTED = "imported"
+    RUN_REGRESSION = "run_regression"
+
+
+class DataBindingSource(StrEnum):
+    """测试数据的受控来源。"""
+
+    LITERAL = "literal"
+    ENVIRONMENT = "environment"
+    CREDENTIAL = "credential"
+    FIXTURE = "fixture"
+    GENERATED = "generated"
+
+
+class DataValueType(StrEnum):
+    """表单和执行器共同使用的数据值类型。"""
+
+    STRING = "string"
+    NUMBER = "number"
+    BOOLEAN = "boolean"
+    JSON = "json"
+
+
+class ArtifactKind(StrEnum):
+    """专业用例可以要求采集的标准证据类型。"""
+
+    RESPONSE = "response"
+    SCREENSHOT = "screenshot"
+    TRACE = "trace"
+    CANVAS_SNAPSHOT = "canvas_snapshot"
+    FILE = "file"

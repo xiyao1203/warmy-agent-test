@@ -11,6 +11,12 @@ from agenttest.modules.datasets.application.commands import (
     CreateDatasetVersionCommand,
     PublishDatasetVersionCommand,
 )
+from agenttest.modules.datasets.application.contracts import (
+    ArtifactRequirementV1,
+    DataBindingV1,
+    PlatformTestCaseV1,
+    TestStepV1,
+)
 from agenttest.modules.datasets.domain.entities import (
     Dataset,
     DatasetId,
@@ -20,14 +26,28 @@ from agenttest.modules.datasets.domain.entities import (
     TestCaseId,
 )
 from agenttest.modules.datasets.domain.value_objects import (
+    ArtifactKind,
+    AutomationStatus,
+    DataBindingSource,
+    DataValueType,
     ExecutionMode,
     Priority,
     RiskLevel,
+    TestCaseSource,
+    TestCaseStatus,
+    TestCaseTemplate,
+    TestCaseType,
     TestGroup,
     VersionStatus,
 )
 
 __all__ = [
+    "ArtifactKind",
+    "ArtifactRequirementV1",
+    "AutomationStatus",
+    "DataBindingSource",
+    "DataBindingV1",
+    "DataValueType",
     "Dataset",
     "AddTestCaseCommand",
     "CreateDatasetCommand",
@@ -38,11 +58,17 @@ __all__ = [
     "DatasetVersionRef",
     "ExecutionMode",
     "Priority",
+    "PlatformTestCaseV1",
     "PublishDatasetVersionCommand",
     "RiskLevel",
     "TestCase",
     "TestCaseId",
+    "TestCaseSource",
+    "TestCaseStatus",
+    "TestCaseTemplate",
+    "TestCaseType",
     "TestGroup",
+    "TestStepV1",
     "VersionStatus",
 ]
 

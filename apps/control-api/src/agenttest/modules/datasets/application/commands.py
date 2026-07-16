@@ -25,12 +25,16 @@ from agenttest.modules.datasets.domain.repositories import (
     TestCaseRepository,
 )
 from agenttest.modules.datasets.domain.value_objects import (
+    AutomationStatus,
     ExecutionMode,
     Priority,
     RiskLevel,
+    TestCaseSource,
+    TestCaseTemplate,
+    TestCaseType,
     TestGroup,
 )
-from agenttest.modules.identity.public import User
+from agenttest.modules.identity.public import User, UserId
 from agenttest.modules.projects.public import ProjectId
 
 # ── Commands ────────────────────────────────────────────────────────────────
@@ -63,9 +67,27 @@ class AddTestCaseCommand:
     execution_mode: ExecutionMode
     assertions: list[dict[str, object]] | None = None
     scorers: list[dict[str, object]] | None = None
+    objective: str | None = None
+    template: TestCaseTemplate | None = None
+    case_type: TestCaseType | None = None
+    automation_status: AutomationStatus | None = None
+    source: TestCaseSource | None = None
+    source_ref: str | None = None
+    component: str | None = None
+    requirement_refs: list[str] | None = None
+    owner_id: UserId | None = None
     initial_state: dict[str, object] | None = None
+    preconditions: list[str] | None = None
+    data_bindings: list[dict[str, object]] | None = None
+    steps: list[dict[str, object]] | None = None
     expected_outcome: dict[str, object] | None = None
     security_policies: list[dict[str, object]] | None = None
+    artifact_requirements: list[dict[str, object]] | None = None
+    postconditions: list[str] | None = None
+    estimated_duration_seconds: int | None = None
+    timeout_seconds: int | None = None
+    retry_count: int = 0
+    custom_fields: dict[str, object] | None = None
     tags: list[str] | None = None
     scenario: str | None = None
     priority: Priority | None = None
@@ -82,9 +104,26 @@ class UpdateTestCaseCommand:
     execution_mode: ExecutionMode | None = None
     assertions: list[dict[str, object]] | None = None
     scorers: list[dict[str, object]] | None = None
+    objective: str | None = None
+    template: TestCaseTemplate | None = None
+    case_type: TestCaseType | None = None
+    automation_status: AutomationStatus | None = None
+    source_ref: str | None = None
+    component: str | None = None
+    requirement_refs: list[str] | None = None
+    owner_id: UserId | None = None
     initial_state: dict[str, object] | None = None
+    preconditions: list[str] | None = None
+    data_bindings: list[dict[str, object]] | None = None
+    steps: list[dict[str, object]] | None = None
     expected_outcome: dict[str, object] | None = None
     security_policies: list[dict[str, object]] | None = None
+    artifact_requirements: list[dict[str, object]] | None = None
+    postconditions: list[str] | None = None
+    estimated_duration_seconds: int | None = None
+    timeout_seconds: int | None = None
+    retry_count: int | None = None
+    custom_fields: dict[str, object] | None = None
     tags: list[str] | None = None
     scenario: str | None = None
     priority: Priority | None = None
@@ -254,9 +293,27 @@ class AddTestCaseHandler:
             execution_mode=command.execution_mode,
             assertions=command.assertions,
             scorers=command.scorers,
+            objective=command.objective,
+            template=command.template,
+            case_type=command.case_type,
+            automation_status=command.automation_status,
+            source=command.source,
+            source_ref=command.source_ref,
+            component=command.component,
+            requirement_refs=command.requirement_refs,
+            owner_id=command.owner_id,
             initial_state=command.initial_state,
+            preconditions=command.preconditions,
+            data_bindings=command.data_bindings,
+            steps=command.steps,
             expected_outcome=command.expected_outcome,
             security_policies=command.security_policies,
+            artifact_requirements=command.artifact_requirements,
+            postconditions=command.postconditions,
+            estimated_duration_seconds=command.estimated_duration_seconds,
+            timeout_seconds=command.timeout_seconds,
+            retry_count=command.retry_count,
+            custom_fields=command.custom_fields,
             tags=command.tags,
             scenario=command.scenario,
             priority=command.priority,
@@ -309,9 +366,26 @@ class UpdateTestCaseHandler:
             execution_mode=command.execution_mode,
             assertions=command.assertions,
             scorers=command.scorers,
+            objective=command.objective,
+            template=command.template,
+            case_type=command.case_type,
+            automation_status=command.automation_status,
+            source_ref=command.source_ref,
+            component=command.component,
+            requirement_refs=command.requirement_refs,
+            owner_id=command.owner_id,
             initial_state=command.initial_state,
+            preconditions=command.preconditions,
+            data_bindings=command.data_bindings,
+            steps=command.steps,
             expected_outcome=command.expected_outcome,
             security_policies=command.security_policies,
+            artifact_requirements=command.artifact_requirements,
+            postconditions=command.postconditions,
+            estimated_duration_seconds=command.estimated_duration_seconds,
+            timeout_seconds=command.timeout_seconds,
+            retry_count=command.retry_count,
+            custom_fields=command.custom_fields,
             tags=command.tags,
             scenario=command.scenario,
             priority=command.priority,

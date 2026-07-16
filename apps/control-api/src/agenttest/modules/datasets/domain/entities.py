@@ -15,9 +15,14 @@ from datetime import UTC, datetime
 from uuid import UUID, uuid4
 
 from agenttest.modules.datasets.domain.value_objects import (
+    AutomationStatus,
     ExecutionMode,
     Priority,
     RiskLevel,
+    TestCaseSource,
+    TestCaseStatus,
+    TestCaseTemplate,
+    TestCaseType,
     TestGroup,
     VersionStatus,
 )
@@ -228,9 +233,29 @@ class TestCase:
     execution_mode: ExecutionMode
     assertions: list[dict[str, object]]
     scorers: list[dict[str, object]]
+    case_key: str | None = None
+    objective: str | None = None
+    case_status: TestCaseStatus = TestCaseStatus.DRAFT
+    template: TestCaseTemplate = TestCaseTemplate.AI_EVAL
+    case_type: TestCaseType = TestCaseType.FUNCTIONAL
+    automation_status: AutomationStatus = AutomationStatus.AUTOMATED
+    source: TestCaseSource = TestCaseSource.MANUAL
+    source_ref: str | None = None
+    component: str | None = None
+    requirement_refs: list[str] = field(default_factory=list)
+    owner_id: UserId | None = None
     initial_state: dict[str, object] | None = None
+    preconditions: list[str] = field(default_factory=list)
+    data_bindings: list[dict[str, object]] = field(default_factory=list)
+    steps: list[dict[str, object]] = field(default_factory=list)
     expected_outcome: dict[str, object] | None = None
     security_policies: list[dict[str, object]] = field(default_factory=list)
+    artifact_requirements: list[dict[str, object]] = field(default_factory=list)
+    postconditions: list[str] = field(default_factory=list)
+    estimated_duration_seconds: int | None = None
+    timeout_seconds: int | None = None
+    retry_count: int = 0
+    custom_fields: dict[str, object] = field(default_factory=dict)
     tags: list[str] = field(default_factory=list)
     scenario: str | None = None
     priority: Priority | None = None
@@ -252,9 +277,29 @@ class TestCase:
         execution_mode: ExecutionMode,
         assertions: list[dict[str, object]] | None = None,
         scorers: list[dict[str, object]] | None = None,
+        case_key: str | None = None,
+        objective: str | None = None,
+        case_status: TestCaseStatus | None = None,
+        template: TestCaseTemplate | None = None,
+        case_type: TestCaseType | None = None,
+        automation_status: AutomationStatus | None = None,
+        source: TestCaseSource | None = None,
+        source_ref: str | None = None,
+        component: str | None = None,
+        requirement_refs: list[str] | None = None,
+        owner_id: UserId | None = None,
         initial_state: dict[str, object] | None = None,
+        preconditions: list[str] | None = None,
+        data_bindings: list[dict[str, object]] | None = None,
+        steps: list[dict[str, object]] | None = None,
         expected_outcome: dict[str, object] | None = None,
         security_policies: list[dict[str, object]] | None = None,
+        artifact_requirements: list[dict[str, object]] | None = None,
+        postconditions: list[str] | None = None,
+        estimated_duration_seconds: int | None = None,
+        timeout_seconds: int | None = None,
+        retry_count: int = 0,
+        custom_fields: dict[str, object] | None = None,
         tags: list[str] | None = None,
         scenario: str | None = None,
         priority: Priority | None = None,
@@ -273,6 +318,15 @@ class TestCase:
             raise ValueError("Test case name is required")
         if input is None:
             raise ValueError("Test case input is required")
+        normalized_objective = (objective or normalized_name).strip()
+        if not normalized_objective:
+            raise ValueError("Test case objective is required")
+        normalized_steps = _normalize_steps(steps or [])
+        selected_template = template or TestCaseTemplate.AI_EVAL
+        if selected_template is TestCaseTemplate.STEP_BY_STEP and not normalized_steps:
+            raise ValueError("step_by_step template requires at least one step")
+        if retry_count < 0 or retry_count > 10:
+            raise ValueError("retry_count must be between 0 and 10")
         now = datetime.now(UTC)
         return cls(
             case_id=case_id,
@@ -282,9 +336,29 @@ class TestCase:
             execution_mode=execution_mode,
             assertions=assertions or [],
             scorers=scorers or [],
+            case_key=case_key,
+            objective=normalized_objective,
+            case_status=case_status or TestCaseStatus.DRAFT,
+            template=selected_template,
+            case_type=case_type or TestCaseType.FUNCTIONAL,
+            automation_status=automation_status or AutomationStatus.AUTOMATED,
+            source=source or TestCaseSource.MANUAL,
+            source_ref=source_ref,
+            component=component,
+            requirement_refs=requirement_refs or [],
+            owner_id=owner_id,
             initial_state=initial_state,
+            preconditions=preconditions or [],
+            data_bindings=data_bindings or [],
+            steps=normalized_steps,
             expected_outcome=expected_outcome,
             security_policies=security_policies or [],
+            artifact_requirements=artifact_requirements or [],
+            postconditions=postconditions or [],
+            estimated_duration_seconds=estimated_duration_seconds,
+            timeout_seconds=timeout_seconds,
+            retry_count=retry_count,
+            custom_fields=custom_fields or {},
             tags=tags or [],
             scenario=scenario,
             priority=priority,
@@ -304,9 +378,26 @@ class TestCase:
         execution_mode: ExecutionMode | None = None,
         assertions: list[dict[str, object]] | None = None,
         scorers: list[dict[str, object]] | None = None,
+        objective: str | None = None,
+        template: TestCaseTemplate | None = None,
+        case_type: TestCaseType | None = None,
+        automation_status: AutomationStatus | None = None,
+        source_ref: str | None = None,
+        component: str | None = None,
+        requirement_refs: list[str] | None = None,
+        owner_id: UserId | None = None,
         initial_state: dict[str, object] | None = None,
+        preconditions: list[str] | None = None,
+        data_bindings: list[dict[str, object]] | None = None,
+        steps: list[dict[str, object]] | None = None,
         expected_outcome: dict[str, object] | None = None,
         security_policies: list[dict[str, object]] | None = None,
+        artifact_requirements: list[dict[str, object]] | None = None,
+        postconditions: list[str] | None = None,
+        estimated_duration_seconds: int | None = None,
+        timeout_seconds: int | None = None,
+        retry_count: int | None = None,
+        custom_fields: dict[str, object] | None = None,
         tags: list[str] | None = None,
         scenario: str | None = None,
         priority: Priority | None = None,
@@ -331,12 +422,51 @@ class TestCase:
             self.assertions = assertions
         if scorers is not None:
             self.scorers = scorers
+        if objective is not None:
+            normalized_objective = objective.strip()
+            if not normalized_objective:
+                raise ValueError("Test case objective is required")
+            self.objective = normalized_objective
+        if template is not None:
+            self.template = template
+        if case_type is not None:
+            self.case_type = case_type
+        if automation_status is not None:
+            self.automation_status = automation_status
+        if source_ref is not None:
+            self.source_ref = source_ref
+        if component is not None:
+            self.component = component
+        if requirement_refs is not None:
+            self.requirement_refs = requirement_refs
+        if owner_id is not None:
+            self.owner_id = owner_id
         if initial_state is not None:
             self.initial_state = initial_state
+        if preconditions is not None:
+            self.preconditions = preconditions
+        if data_bindings is not None:
+            self.data_bindings = data_bindings
+        if steps is not None:
+            self.steps = _normalize_steps(steps)
         if expected_outcome is not None:
             self.expected_outcome = expected_outcome
         if security_policies is not None:
             self.security_policies = security_policies
+        if artifact_requirements is not None:
+            self.artifact_requirements = artifact_requirements
+        if postconditions is not None:
+            self.postconditions = postconditions
+        if estimated_duration_seconds is not None:
+            self.estimated_duration_seconds = estimated_duration_seconds
+        if timeout_seconds is not None:
+            self.timeout_seconds = timeout_seconds
+        if retry_count is not None:
+            if retry_count < 0 or retry_count > 10:
+                raise ValueError("retry_count must be between 0 and 10")
+            self.retry_count = retry_count
+        if custom_fields is not None:
+            self.custom_fields = custom_fields
         if tags is not None:
             self.tags = tags
         if scenario is not None:
@@ -352,3 +482,35 @@ class TestCase:
         if sort_order is not None:
             self.sort_order = sort_order
         self.updated_at = datetime.now(UTC)
+
+    def mark_ready(self) -> None:
+        if not (
+            self.assertions
+            or self.scorers
+            or self.security_policies
+            or any(step.get("assertions") for step in self.steps)
+        ):
+            raise ValueError("Ready test case requires at least one executable oracle")
+        if self.template is TestCaseTemplate.STEP_BY_STEP and not self.steps:
+            raise ValueError("step_by_step template requires at least one step")
+        self.case_status = TestCaseStatus.READY
+        self.updated_at = datetime.now(UTC)
+
+    def deprecate(self) -> None:
+        self.case_status = TestCaseStatus.DEPRECATED
+        self.updated_at = datetime.now(UTC)
+
+
+def _normalize_steps(steps: list[dict[str, object]]) -> list[dict[str, object]]:
+    normalized: list[dict[str, object]] = []
+    for index, raw in enumerate(steps, start=1):
+        action = str(raw.get("action") or "").strip()
+        expected_result = str(raw.get("expected_result") or "").strip()
+        if not action:
+            raise ValueError("Test step action is required")
+        if not expected_result:
+            raise ValueError("Test step expected_result is required")
+        normalized.append(
+            {**raw, "step_no": index, "action": action, "expected_result": expected_result}
+        )
+    return normalized
