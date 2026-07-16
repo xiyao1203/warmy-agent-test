@@ -2,16 +2,22 @@
 
 import { useQuery } from "@tanstack/react-query";
 
+import { listAgents } from "@/features/agents";
+import { listEnvironmentTemplates } from "@/features/environments";
+
 import {
   createDatasetVersion,
+  createTestCaseTrialRun,
   createTestCase,
   deleteTestCase,
   getDataset,
   listDatasetVersions,
   listTestCases,
   importTestCases,
+  markTestCaseReady,
   previewTestCaseImport,
   updateTestCase,
+  validateTestCase,
 } from "./api";
 import { DatasetDetail } from "./dataset-detail";
 
@@ -38,6 +44,16 @@ export function DatasetDetailScreen({
     enabled: !!latestVersion,
     queryFn: () => listTestCases(projectId, datasetId, latestVersion!.id),
     queryKey: ["test-cases", projectId, datasetId, latestVersion?.id],
+  });
+
+  const agentsQuery = useQuery({
+    queryFn: () => listAgents(projectId),
+    queryKey: ["agents", projectId, "test-case-trial"],
+  });
+
+  const environmentsQuery = useQuery({
+    queryFn: () => listEnvironmentTemplates(projectId),
+    queryKey: ["environments", projectId, "test-case-trial"],
   });
 
   async function ensureEditableVersion() {
@@ -146,7 +162,37 @@ export function DatasetDetailScreen({
           payload,
         );
       }}
+      onValidateCase={async (caseId) => {
+        if (!latestVersion) throw new Error("请先创建草稿版本");
+        return validateTestCase(projectId, datasetId, latestVersion.id, caseId);
+      }}
+      onMarkReady={async (caseId) => {
+        if (!latestVersion) throw new Error("请先创建草稿版本");
+        await markTestCaseReady(projectId, datasetId, latestVersion.id, caseId);
+      }}
+      onTrialRun={async (caseId, agentVersionId, environmentTemplateId) => {
+        if (!latestVersion) throw new Error("请先创建草稿版本");
+        return createTestCaseTrialRun(
+          projectId,
+          datasetId,
+          latestVersion.id,
+          caseId,
+          {
+            agent_version_id: agentVersionId,
+            environment_template_id: environmentTemplateId,
+          },
+        );
+      }}
       projectId={projectId}
+      trialAgents={(agentsQuery.data?.items ?? []).flatMap((agent) =>
+        agent.current_version_id
+          ? [{ id: agent.current_version_id, name: agent.name }]
+          : [],
+      )}
+      trialEnvironments={(environmentsQuery.data ?? []).map((environment) => ({
+        id: environment.id,
+        name: environment.name,
+      }))}
       versions={versionsQuery.data ?? []}
     />
   );

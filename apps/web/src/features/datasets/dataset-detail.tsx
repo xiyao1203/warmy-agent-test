@@ -6,8 +6,17 @@ import type {
   DatasetVersionResponse,
   ImportPreviewResponse,
   TestCaseResponse,
+  TestCaseValidationResponse,
 } from "@warmy/generated-api-client";
-import { CheckSquare, Eye, Pencil, Plus, Square, Trash2 } from "lucide-react";
+import {
+  CheckCircle2,
+  CheckSquare,
+  Eye,
+  Pencil,
+  Plus,
+  Square,
+  Trash2,
+} from "lucide-react";
 import Link from "next/link";
 import { useCallback, useMemo, useState } from "react";
 
@@ -28,6 +37,7 @@ import { Skeleton } from "@/components/uiverse";
 import { ImportWizard } from "./import-wizard";
 import { TestCaseDetail } from "./test-case-detail";
 import { TestCaseEditor } from "./test-case-editor";
+import { TestCaseTrialRun, type TrialRunTarget } from "./test-case-trial-run";
 
 type DatasetDetailProps = {
   dataset: DatasetResponse;
@@ -43,6 +53,13 @@ type DatasetDetailProps = {
     caseId: string,
     payload: CreateTestCaseRequest,
   ) => Promise<unknown>;
+  onValidateCase?: (caseId: string) => Promise<TestCaseValidationResponse>;
+  onMarkReady?: (caseId: string) => Promise<unknown>;
+  onTrialRun?: (
+    caseId: string,
+    agentVersionId: string,
+    environmentTemplateId: string,
+  ) => Promise<unknown>;
   onRefresh?: () => void;
   onImport?: (
     content: string,
@@ -53,6 +70,8 @@ type DatasetDetailProps = {
     format: "json" | "jsonl" | "csv",
   ) => Promise<ImportPreviewResponse>;
   projectId: string;
+  trialAgents?: TrialRunTarget[];
+  trialEnvironments?: TrialRunTarget[];
 };
 
 export function DatasetDetail({
@@ -67,13 +86,21 @@ export function DatasetDetail({
   onImport,
   onPreviewImport,
   onUpdateCase,
+  onValidateCase,
+  onMarkReady,
+  onTrialRun,
   projectId,
+  trialAgents = [],
+  trialEnvironments = [],
   versions = [],
 }: DatasetDetailProps) {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [search, setSearch] = useState("");
   const [deleting, setDeleting] = useState(false);
   const [viewingCase, setViewingCase] = useState<TestCaseResponse | null>(null);
+  const [validationByCase, setValidationByCase] = useState<
+    Record<string, TestCaseValidationResponse>
+  >({});
 
   const filteredCases = useMemo(() => {
     if (!search.trim()) return cases;
@@ -294,14 +321,14 @@ export function DatasetDetail({
                       </button>
                     </TableHead>
                   )}
-                  <TableHead className={canSelectCases ? "w-[34%]" : "w-[38%]"}>
-                    用例名称
+                  <TableHead className={canSelectCases ? "w-[27%]" : "w-[31%]"}>
+                    用例 / 目标
                   </TableHead>
-                  <TableHead className="w-[11%]">优先级</TableHead>
-                  <TableHead className="w-[12%]">风险等级</TableHead>
-                  <TableHead className="w-[13%]">执行模式</TableHead>
-                  <TableHead className="w-[12%]">断言</TableHead>
-                  <TableHead className="w-[18%]">操作</TableHead>
+                  <TableHead className="w-[13%]">分类 / 状态</TableHead>
+                  <TableHead className="w-[11%]">优先级 / 风险</TableHead>
+                  <TableHead className="w-[13%]">自动化 / 模式</TableHead>
+                  <TableHead className="w-[11%]">步骤 / 断言</TableHead>
+                  <TableHead className="w-[31%]">操作</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -331,33 +358,56 @@ export function DatasetDetail({
                       <div className="mx-auto min-w-0 max-w-full text-left">
                         <p className="truncate font-medium">{c.name}</p>
                         <p className="mt-0.5 truncate text-xs text-[var(--muted)]">
-                          {c.input
-                            ? JSON.stringify(c.input).slice(0, 80)
-                            : "无输入"}
+                          {c.case_key ?? "未编号"} · {c.component ?? "未分组件"}
+                        </p>
+                        <p className="mt-0.5 line-clamp-2 text-xs text-[var(--muted)]">
+                          {c.objective || "未填写测试目标"}
                         </p>
                       </div>
                     </TableCell>
                     <TableCell className="whitespace-nowrap text-center">
-                      <Badge tone={c.priority === "P0" ? "danger" : "neutral"}>
-                        {c.priority || "P2"}
-                      </Badge>
+                      <div className="space-y-1">
+                        <Badge>{caseTypeLabel(c.case_type)}</Badge>
+                        <div>
+                          <Badge
+                            tone={
+                              c.case_status === "ready" ? "accent" : "neutral"
+                            }
+                          >
+                            {caseStatusLabel(c.case_status)}
+                          </Badge>
+                        </div>
+                      </div>
                     </TableCell>
                     <TableCell className="whitespace-nowrap text-center">
-                      <Badge
-                        tone={c.risk_level === "high" ? "danger" : "neutral"}
-                      >
-                        {c.risk_level || "中"}
-                      </Badge>
+                      <div className="space-y-1">
+                        <Badge
+                          tone={c.priority === "P0" ? "danger" : "neutral"}
+                        >
+                          {c.priority || "未设置"}
+                        </Badge>
+                        <div>
+                          <Badge
+                            tone={
+                              c.risk_level === "high" ? "danger" : "neutral"
+                            }
+                          >
+                            {riskLabel(c.risk_level)}
+                          </Badge>
+                        </div>
+                      </div>
                     </TableCell>
                     <TableCell className="whitespace-nowrap text-center text-sm text-[var(--muted)]">
-                      {executionModeLabel(c.execution_mode)}
+                      <p>{automationLabel(c.automation_status)}</p>
+                      <p className="mt-1 text-xs">
+                        {executionModeLabel(c.execution_mode)}
+                      </p>
                     </TableCell>
                     <TableCell className="whitespace-nowrap text-center">
-                      <Badge tone={c.assertions?.length ? "accent" : "neutral"}>
-                        {c.assertions?.length
-                          ? `${c.assertions.length} 条`
-                          : "未配置"}
-                      </Badge>
+                      <p className="text-sm">{c.steps.length} 步</p>
+                      <p className="mt-1 text-xs text-[var(--muted)]">
+                        {c.assertions.length} 条断言
+                      </p>
                     </TableCell>
                     <TableCell>
                       <div className="mx-auto flex w-fit max-w-full justify-center gap-1 whitespace-nowrap">
@@ -383,6 +433,53 @@ export function DatasetDetail({
                             triggerLabel="编辑"
                           />
                         )}
+                        {canEditExistingCases && onValidateCase && (
+                          <Button
+                            aria-label={`校验${c.name}`}
+                            onClick={async () => {
+                              const result = await onValidateCase(c.id);
+                              setValidationByCase((current) => ({
+                                ...current,
+                                [c.id]: result,
+                              }));
+                            }}
+                            variant="secondary"
+                          >
+                            校验
+                          </Button>
+                        )}
+                        {canEditExistingCases &&
+                          onMarkReady &&
+                          c.case_status !== "ready" && (
+                            <Button
+                              aria-label={`标记${c.name}就绪`}
+                              disabled={validationByCase[c.id]?.ready === false}
+                              onClick={async () => {
+                                await onMarkReady(c.id);
+                                onRefresh?.();
+                              }}
+                              variant="secondary"
+                            >
+                              <CheckCircle2
+                                aria-hidden="true"
+                                className="mr-1 size-4"
+                              />
+                              就绪
+                            </Button>
+                          )}
+                        {canEditExistingCases && onTrialRun && (
+                          <TestCaseTrialRun
+                            agents={trialAgents}
+                            environments={trialEnvironments}
+                            onRun={(agentVersionId, environmentTemplateId) =>
+                              onTrialRun(
+                                c.id,
+                                agentVersionId,
+                                environmentTemplateId,
+                              )
+                            }
+                          />
+                        )}
                         {canEditExistingCases && onDeleteCases && (
                           <Button
                             aria-label={`删除${c.name}`}
@@ -394,6 +491,15 @@ export function DatasetDetail({
                           </Button>
                         )}
                       </div>
+                      {validationByCase[c.id] && (
+                        <p
+                          className={`mt-1 text-center text-xs ${validationByCase[c.id].ready ? "text-[var(--success)]" : "text-[var(--danger)]"}`}
+                        >
+                          {validationByCase[c.id].ready
+                            ? "校验通过"
+                            : `${validationByCase[c.id].issues.length} 个问题`}
+                        </p>
+                      )}
                     </TableCell>
                   </TableRow>
                 ))}
@@ -412,6 +518,59 @@ export function DatasetDetail({
         />
       )}
     </div>
+  );
+}
+
+function caseTypeLabel(value: string) {
+  return (
+    (
+      {
+        functional: "功能",
+        regression: "回归",
+        smoke: "冒烟",
+        integration: "集成",
+        e2e: "端到端",
+        security: "安全",
+        performance: "性能",
+        usability: "可用性",
+        exploratory: "探索",
+      } as Record<string, string>
+    )[value] ?? value
+  );
+}
+
+function caseStatusLabel(value: string) {
+  return (
+    (
+      { draft: "草稿", ready: "就绪", deprecated: "已废弃" } as Record<
+        string,
+        string
+      >
+    )[value] ?? value
+  );
+}
+
+function automationLabel(value: string) {
+  return (
+    (
+      {
+        manual: "人工",
+        candidate: "自动化候选",
+        automated: "已自动化",
+      } as Record<string, string>
+    )[value] ?? value
+  );
+}
+
+function riskLabel(value: string | null) {
+  if (!value) return "未设置";
+  return (
+    (
+      { high: "高风险", medium: "中风险", low: "低风险" } as Record<
+        string,
+        string
+      >
+    )[value] ?? value
   );
 }
 

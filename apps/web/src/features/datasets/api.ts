@@ -1,5 +1,6 @@
 import {
   addCaseApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdCasesPost,
+  createCaseTrialRunApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdCasesCaseIdTrialRunsPost,
   createDatasetApiV1ProjectsProjectIdDatasetsPost,
   createVersionApiV1ProjectsProjectIdDatasetsDatasetIdVersionsPost,
   deleteCaseApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdCasesCaseIdDelete,
@@ -9,9 +10,11 @@ import {
   listCasesApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdCasesGet,
   listDatasetsApiV1ProjectsProjectIdDatasetsGet,
   listVersionsApiV1ProjectsProjectIdDatasetsDatasetIdVersionsGet,
+  markCaseReadyApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdCasesCaseIdMarkReadyPost,
   publishVersionApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdPublishPost,
   previewImportApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdImportsPreviewPost,
   updateCaseApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdCasesCaseIdPatch,
+  validateCaseApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdCasesCaseIdValidatePost,
   type CreateDatasetRequest,
   type CreateTestCaseRequest,
   type ImportTestCasesRequest,
@@ -181,6 +184,81 @@ export async function deleteTestCase(
       throwOnError: true,
     },
   );
+}
+
+export async function validateTestCase(
+  projectId: string,
+  datasetId: string,
+  versionId: string,
+  caseId: string,
+) {
+  const { data } =
+    await validateCaseApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdCasesCaseIdValidatePost(
+      {
+        client: apiClient,
+        headers: csrfHeaders(),
+        path: {
+          case_id: caseId,
+          dataset_id: datasetId,
+          project_id: projectId,
+          version_id: versionId,
+        },
+        throwOnError: true,
+      },
+    );
+  return data;
+}
+
+export async function markTestCaseReady(
+  projectId: string,
+  datasetId: string,
+  versionId: string,
+  caseId: string,
+) {
+  const { data } =
+    await markCaseReadyApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdCasesCaseIdMarkReadyPost(
+      {
+        client: apiClient,
+        headers: csrfHeaders(),
+        path: {
+          case_id: caseId,
+          dataset_id: datasetId,
+          project_id: projectId,
+          version_id: versionId,
+        },
+        throwOnError: true,
+      },
+    );
+  return data;
+}
+
+export async function createTestCaseTrialRun(
+  projectId: string,
+  datasetId: string,
+  versionId: string,
+  caseId: string,
+  body: { agent_version_id: string; environment_template_id: string },
+) {
+  const { data } =
+    await createCaseTrialRunApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdCasesCaseIdTrialRunsPost(
+      {
+        body,
+        client: apiClient,
+        headers: {
+          ...csrfHeaders(),
+          "Idempotency-Key":
+            globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${caseId}`,
+        },
+        path: {
+          case_id: caseId,
+          dataset_id: datasetId,
+          project_id: projectId,
+          version_id: versionId,
+        },
+        throwOnError: true,
+      },
+    );
+  return data;
 }
 
 export async function importTestCases(

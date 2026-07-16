@@ -63,7 +63,14 @@ export function TestCaseDetail({
         <div className="mt-6 space-y-6">
           {/* 基本信息 */}
           <Section icon={<Layers className="size-4" />} title="基本信息">
-            <Field label="ID" value={caseItem.id} />
+            <Field label="用例编号" value={caseItem.case_key ?? "未编号"} />
+            <Field label="状态" value={caseItem.case_status} />
+            <Field label="类型" value={caseItem.case_type} />
+            <Field label="自动化" value={caseItem.automation_status} />
+            <Field label="来源" value={caseItem.source} />
+            {caseItem.component && (
+              <Field label="组件" value={caseItem.component} />
+            )}
             {caseItem.scenario && (
               <Field label="业务场景" value={caseItem.scenario} />
             )}
@@ -79,10 +86,51 @@ export function TestCaseDetail({
             )}
           </Section>
 
+          <Section icon={<Target className="size-4" />} title="测试目标">
+            <p className="whitespace-pre-wrap text-sm leading-6">
+              {caseItem.objective}
+            </p>
+          </Section>
+
+          {caseItem.preconditions.length > 0 && (
+            <Section icon={<Settings className="size-4" />} title="前置条件">
+              <OrderedText values={caseItem.preconditions} />
+            </Section>
+          )}
+
           {/* 输入数据 */}
           <Section icon={<Target className="size-4" />} title="输入数据">
             <JsonBlock data={caseItem.input} />
           </Section>
+
+          {caseItem.data_bindings.length > 0 && (
+            <Section icon={<Settings className="size-4" />} title="数据绑定">
+              <JsonBlock data={caseItem.data_bindings} />
+            </Section>
+          )}
+
+          {caseItem.steps.length > 0 && (
+            <Section icon={<Layers className="size-4" />} title="标准操作步骤">
+              <div className="space-y-3">
+                {caseItem.steps.map((step, index) => (
+                  <div
+                    className="rounded border border-[var(--hairline)] p-3"
+                    key={index}
+                  >
+                    <p className="text-xs font-semibold">
+                      步骤 {Number(step.step_no ?? index + 1)}
+                    </p>
+                    <p className="mt-2 text-sm">{String(step.action ?? "")}</p>
+                    {step.test_data && <JsonBlock data={step.test_data} />}
+                    <p className="mt-2 text-xs text-[var(--muted)]">预期结果</p>
+                    <p className="mt-1 text-sm">
+                      {String(step.expected_result ?? "")}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </Section>
+          )}
 
           {/* 初始状态 */}
           {caseItem.initial_state &&
@@ -127,6 +175,36 @@ export function TestCaseDetail({
                 <JsonBlock data={caseItem.security_policies} />
               </Section>
             )}
+
+          {caseItem.postconditions.length > 0 && (
+            <Section icon={<Settings className="size-4" />} title="后置条件">
+              <OrderedText values={caseItem.postconditions} />
+            </Section>
+          )}
+
+          <Section icon={<Settings className="size-4" />} title="执行设置">
+            <Field
+              label="执行模式"
+              value={executionModeLabel(caseItem.execution_mode)}
+            />
+            <Field
+              label="预计时长"
+              value={
+                caseItem.estimated_duration_seconds
+                  ? `${caseItem.estimated_duration_seconds} 秒`
+                  : "未设置"
+              }
+            />
+            <Field
+              label="超时"
+              value={
+                caseItem.timeout_seconds
+                  ? `${caseItem.timeout_seconds} 秒`
+                  : "继承计划"
+              }
+            />
+            <Field label="重试" value={`${caseItem.retry_count} 次`} />
+          </Section>
         </div>
       </div>
     </div>
@@ -175,5 +253,15 @@ function JsonBlock({ data }: { data: unknown }) {
     <pre className="max-h-48 overflow-auto rounded border border-[var(--hairline)] bg-[var(--canvas-soft)] p-3 text-xs font-mono">
       {JSON.stringify(data, null, 2)}
     </pre>
+  );
+}
+
+function OrderedText({ values }: { values: string[] }) {
+  return (
+    <ol className="list-decimal space-y-1 pl-5 text-sm">
+      {values.map((value, index) => (
+        <li key={`${value}-${index}`}>{value}</li>
+      ))}
+    </ol>
   );
 }

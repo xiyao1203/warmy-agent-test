@@ -20,7 +20,7 @@ describe("TestCaseEditor", () => {
     fireEvent.change(screen.getByLabelText("输入数据字段值"), {
       target: { value: "true" },
     });
-    fireEvent.click(screen.getByRole("button", { name: "保存用例" }));
+    fireEvent.click(screen.getByRole("button", { name: "保存草稿" }));
 
     await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
     expect(onSubmit).toHaveBeenCalledWith(
