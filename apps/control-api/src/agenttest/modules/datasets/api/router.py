@@ -32,6 +32,7 @@ from agenttest.modules.datasets.api.schemas import (
 )
 from agenttest.modules.datasets.application.commands import (
     AddTestCaseCommand,
+    CreateCaseTrialRunCommand,
     CreateDatasetCommand,
     CreateDatasetVersionCommand,
     DatasetNotFoundError,
@@ -53,10 +54,7 @@ from agenttest.modules.datasets.application.generate_from_run import (
 from agenttest.modules.datasets.application.import_export import (
     ImportError as DatasetImportError,
 )
-from agenttest.modules.datasets.application.trial_runs import (
-    CreateCaseTrialRunCommand,
-    CreateCaseTrialRunResult,
-)
+from agenttest.modules.datasets.application.trial_runs import CreateCaseTrialRunResult
 from agenttest.modules.datasets.domain.entities import (
     Dataset,
     DatasetId,

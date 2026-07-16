@@ -12,6 +12,7 @@ def test_dataset_case_input_accepts_platform_standard_fields() -> None:
             "cases": [
                 {
                     "name": "完整字段用例",
+                    "objective": "验证基础问候响应",
                     "input": {"message": "hello"},
                     "execution_mode": "api",
                     "initial_state": {"user_tier": "free"},
@@ -44,6 +45,7 @@ def test_dataset_case_input_accepts_codex_browser_mode() -> None:
             "cases": [
                 {
                     "name": "画布自动探索",
+                    "objective": "验证画布主流程可用",
                     "input": {
                         "url": "https://example.test/canvas",
                         "test_intent": "打开画布并确认主流程可用",
@@ -66,6 +68,7 @@ def test_dataset_case_input_rejects_unknown_enums() -> None:
                 "cases": [
                     {
                         "name": "bad enum",
+                        "objective": "bad",
                         "input": {"message": "hello"},
                         "execution_mode": "canvas",
                         "priority": "P99",
@@ -82,13 +85,40 @@ def test_agent_case_raw_payload_maps_to_full_dataset_command() -> None:
         dataset_version_id=DatasetVersionId.new(),
         raw={
             "name": "Agent 同步用例",
+            "objective": "验证 Agent 同步响应",
+            "template": "step_by_step",
+            "case_type": "functional",
+            "automation_status": "automated",
+            "component": "chat",
+            "requirement_refs": ["CHAT-1"],
+            "preconditions": ["服务可用"],
             "input": {"message": "hello"},
+            "data_bindings": [
+                {
+                    "name": "locale",
+                    "source": "literal",
+                    "value": "zh-CN",
+                }
+            ],
+            "steps": [
+                {
+                    "step_no": 7,
+                    "action": "发送问候",
+                    "test_data": {"message": "hello"},
+                    "expected_result": "返回 hello",
+                }
+            ],
             "execution_mode": "api",
             "initial_state": {"locale": "zh-CN"},
             "expected_outcome": {"contains": "hello"},
             "assertions": [{"type": "contains", "value": "hello"}],
             "scorers": [{"type": "llm_judge", "threshold": 0.8}],
             "security_policies": [{"type": "pii_redaction"}],
+            "artifact_requirements": [{"kind": "response", "required": True}],
+            "postconditions": ["清理会话"],
+            "timeout_seconds": 30,
+            "retry_count": 1,
+            "custom_fields": {"review": True},
             "tags": ["agent", "sync"],
             "scenario": "基础问候",
             "priority": "P0",
@@ -99,10 +129,15 @@ def test_agent_case_raw_payload_maps_to_full_dataset_command() -> None:
         fallback_name="Fallback",
         fallback_input=None,
         default_execution_mode="api",
+        source_ref="agent-generation:session-1",
     )
 
     assert command.name == "Agent 同步用例"
     assert command.input == {"message": "hello"}
+    assert command.objective == "验证 Agent 同步响应"
+    assert command.steps and command.steps[0]["step_no"] == 1
+    assert command.steps[0]["expected_result"] == "返回 hello"
+    assert command.data_bindings and command.data_bindings[0]["value"] == "zh-CN"
     assert command.initial_state == {"locale": "zh-CN"}
     assert command.expected_outcome == {"contains": "hello"}
     assert command.security_policies == [{"type": "pii_redaction"}]
@@ -112,3 +147,6 @@ def test_agent_case_raw_payload_maps_to_full_dataset_command() -> None:
     assert command.risk_level and command.risk_level.value == "critical"
     assert command.difficulty == "medium"
     assert command.test_group and command.test_group.value == "validation"
+    assert command.source and command.source.value == "agent_generated"
+    assert command.source_ref == "agent-generation:session-1"
+    assert command.postconditions == ["清理会话"]

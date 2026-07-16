@@ -9,6 +9,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from copy import deepcopy
 from dataclasses import dataclass
+from uuid import UUID
 
 from agenttest.modules.audit.public import AuditWriter
 from agenttest.modules.datasets.application.ports import ProjectAccessPort
@@ -147,6 +148,15 @@ class MarkTestCaseReadyCommand:
 @dataclass(frozen=True, slots=True)
 class DuplicateTestCaseCommand:
     case_id: TestCaseId
+
+
+@dataclass(frozen=True, slots=True)
+class CreateCaseTrialRunCommand:
+    project_id: ProjectId
+    case_id: TestCaseId
+    agent_version_id: UUID
+    environment_template_id: UUID
+    idempotency_key: str
 
 
 @dataclass(frozen=True, slots=True)

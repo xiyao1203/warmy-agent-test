@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import Any
 from uuid import UUID, uuid4
 
-from pydantic import BaseModel
+from pydantic import BaseModel, TypeAdapter, ValidationError
 
 from agenttest.modules.agents.public import (
     AgentConfig,
@@ -18,14 +18,16 @@ from agenttest.modules.agents.public import (
 )
 from agenttest.modules.datasets.public import (
     AddTestCaseCommand,
+    CreateCaseTrialRunCommand,
     CreateDatasetCommand,
     CreateDatasetVersionCommand,
     DatasetVersionId,
-    ExecutionMode,
-    Priority,
+    MarkTestCaseReadyCommand,
+    PlatformTestCaseV1,
     PublishDatasetVersionCommand,
-    RiskLevel,
-    TestGroup,
+    TestCaseId,
+    TestCaseSource,
+    UpdateTestCaseCommand,
 )
 from agenttest.modules.environments.public import (
     CreateEnvironmentTemplateCommand,
@@ -33,6 +35,7 @@ from agenttest.modules.environments.public import (
 )
 from agenttest.modules.experiments.public import Experiment, ExperimentId
 from agenttest.modules.gates.public import ReleaseGateId, evaluate_evidence
+from agenttest.modules.identity.public import UserId
 from agenttest.modules.model_configs.public import (
     InvocationMessage,
     ModelInvoker,
@@ -171,6 +174,79 @@ class HandlerPlatformGateway:
         if capability == "datasets.list":
             items, _ = await self._datasets.list_datasets.execute(actor, project_id)
             return {"items": [_dataset(item) for item in items]}
+        if capability == "test_cases.list":
+            items, _ = await self._datasets.list_cases.execute(
+                actor,
+                DatasetVersionId(UUID(str(values["dataset_version_id"]))),
+            )
+            return {"items": [_test_case(item) for item in items]}
+        if capability == "test_cases.get":
+            item = await self._datasets.get_case.execute(
+                actor,
+                TestCaseId(UUID(str(values["case_id"]))),
+            )
+            return _test_case(item)
+        if capability == "test_cases.create":
+            contract = PlatformTestCaseV1.model_validate(values["case"])
+            item = await self._datasets.add_case.execute(
+                actor,
+                _test_case_command_from_contract(
+                    dataset_version_id=DatasetVersionId(UUID(str(values["dataset_version_id"]))),
+                    contract=contract,
+                    source_ref=f"agent-session:{context.session_id}",
+                ),
+            )
+            return _created("test_case", item.case_id.value, _test_case(item))
+        if capability == "test_cases.update":
+            contract = PlatformTestCaseV1.model_validate(values["case"])
+            item = await self._datasets.update_case.execute(
+                actor,
+                _test_case_update_command(
+                    TestCaseId(UUID(str(values["case_id"]))),
+                    contract,
+                ),
+            )
+            return _created(
+                "test_case",
+                item.case_id.value,
+                _test_case(item),
+                relation="updated",
+            )
+        if capability == "test_cases.validate":
+            item = await self._datasets.get_case.execute(
+                actor,
+                TestCaseId(UUID(str(values["case_id"]))),
+            )
+            issues = item.readiness_issues()
+            return {
+                "test_case": _test_case(item),
+                "ready": not issues,
+                "issues": [
+                    {"field": field, "code": code, "message": message}
+                    for field, code, message in issues
+                ],
+            }
+        if capability == "test_cases.mark_ready":
+            item = await self._datasets.mark_case_ready.execute(
+                actor,
+                MarkTestCaseReadyCommand(TestCaseId(UUID(str(values["case_id"])))),
+            )
+            return _created("test_case", item.case_id.value, _test_case(item), relation="updated")
+        if capability == "test_cases.trial_run":
+            result = await self._datasets.trial_run.execute(
+                actor,
+                CreateCaseTrialRunCommand(
+                    project_id=project_id,
+                    case_id=TestCaseId(UUID(str(values["case_id"]))),
+                    agent_version_id=UUID(str(values["agent_version_id"])),
+                    environment_template_id=UUID(str(values["environment_template_id"])),
+                    idempotency_key=(
+                        context.idempotency_key
+                        or f"agent-trial:{context.session_id}:{values['case_id']}"
+                    ),
+                ),
+            )
+            return _created("run", result.run.run_id.value, _run(result.run))
         if capability == "datasets.create_with_cases":
             async with self._datasets.uow_factory():
                 dataset = await self._datasets.create_dataset.execute(
@@ -194,6 +270,7 @@ class HandlerPlatformGateway:
                             fallback_name=f"Case {index + 1}",
                             fallback_input=None,
                             default_execution_mode="api",
+                            source_ref=f"agent-session:{context.session_id}",
                         ),
                     )
                     cases.append(str(case.case_id.value))
@@ -483,6 +560,16 @@ class HandlerPlatformGateway:
 
         is_canvas = agent.agent_type.value == "canvas"
         canvas_url = str(values.get("canvas_url", version.config.api_url))
+        professional_contract = (
+            "每条用例必须严格使用平台 PlatformTestCaseV1 格式：\n"
+            "- name、objective、template、case_type、automation_status\n"
+            "- component、requirement_refs、preconditions、input、data_bindings\n"
+            "- steps: 有序数组，每步必须含 step_no、action、test_data、expected_result\n"
+            "- expected_outcome、assertions、scorers、security_policies\n"
+            "- artifact_requirements、postconditions、execution_mode、timeout_seconds、"
+            "retry_count、tags、priority、risk_level\n"
+            "不得在 data_bindings 写入密码或 Token 明文；敏感数据只写 reference。\n"
+        )
 
         if is_canvas:
             prompt = (
@@ -494,13 +581,11 @@ class HandlerPlatformGateway:
                 f"- 画布 URL: {canvas_url}\n"
                 f"- 描述: {agent.description or '未提供'}\n"
                 + (f"\n场景提示:\n{hints_text}\n" if hints else "")
-                + "\n请生成 JSON 数组 cases，每个元素包含:\n"
-                "- name: 用例名称\n"
-                '- execution_mode: "codex_explore"\n'
-                "- input: { url: 画布页面地址, test_intent: 自然语言测试目标, timeout: 120 }\n"
-                "  如必须固定步骤，也可附加 steps；"
-                "优先使用 test_intent 让 Codex 规划浏览器探索。\n"
-                "- assertions: canvas 专用断言规则列表\n"
+                + "\n"
+                + professional_contract
+                + '- execution_mode 必须为 "codex_explore"\n'
+                + "- input 包含 url 和 test_intent\n"
+                + "- assertions 可使用 canvas 专用规则：\n"
                 '  支持: { type: "canvas_schema" }, '
                 '{ type: "node_count", min_count: N }, '
                 '{ type: "node_types", required_types: ["text", "image"] }, '
@@ -519,12 +604,9 @@ class HandlerPlatformGateway:
                 f"- API: {version.config.api_url}\n"
                 f"- 描述: {agent.description or '未提供'}\n"
                 + (f"\n场景提示:\n{hints_text}\n" if hints else "")
-                + "\n请生成 JSON 数组 cases，每个元素包含:\n"
-                "- name: 用例名称\n"
-                "- input: 输入参数字典\n"
-                '- execution_mode: "api"\n'
-                "- assertions: 断言规则列表\n"
-                "- tags: 标签列表\n\n"
+                + "\n"
+                + professional_contract
+                + '- execution_mode 必须为 "api"\n\n'
                 "按以下分类各生成 2-3 条: 正常场景、边界条件、异常输入。\n"
                 '返回 JSON: {"cases": [...]}'
             )
@@ -547,8 +629,12 @@ class HandlerPlatformGateway:
 
         if not cases or not isinstance(cases, list):
             raise ValueError("No valid test cases generated")
-
-        default_execution_mode = "codex_explore" if is_canvas else "api"
+        try:
+            validated_cases = TypeAdapter(list[PlatformTestCaseV1]).validate_python(cases)
+        except ValidationError as error:
+            raise ValueError(
+                f"Generated test cases do not match platform format: {error}"
+            ) from error
 
         async with self._datasets.uow_factory():
             dataset = await self._datasets.create_dataset.execute(
@@ -563,25 +649,13 @@ class HandlerPlatformGateway:
                 context.actor, CreateDatasetVersionCommand(dataset.dataset_id)
             )
             case_ids = []
-            for index, raw in enumerate(cases):
-                case_input = dict(raw.get("input") or {})
-                if not case_input:
-                    if is_canvas:
-                        case_input = {
-                            "url": canvas_url,
-                            "test_intent": str(raw.get("name") or f"画布用例 {index + 1}"),
-                            "timeout": 120,
-                        }
-                    else:
-                        case_input = {"input": f"auto_generated_case_{index + 1}"}
+            for contract in validated_cases:
                 case = await self._datasets.add_case.execute(
                     context.actor,
-                    _test_case_command_from_raw(
+                    _test_case_command_from_contract(
                         dataset_version_id=version.version_id,
-                        raw=dict(raw),
-                        fallback_name=f"Auto Case {index + 1}",
-                        fallback_input=case_input,
-                        default_execution_mode=default_execution_mode,
+                        contract=contract,
+                        source_ref=f"agent-generation:{context.session_id}",
                     ),
                 )
                 case_ids.append(str(case.case_id.value))
@@ -706,48 +780,90 @@ def _test_case_command_from_raw(
     fallback_name: str,
     fallback_input: dict[str, object] | None,
     default_execution_mode: str,
+    source_ref: str = "agent-generated",
 ) -> AddTestCaseCommand:
     case_input = _dict_value(raw.get("input")) or fallback_input
     if not case_input:
         raise ValueError(f"Test case {fallback_name} input is required")
+    payload = dict(raw)
+    payload["name"] = str(raw.get("name") or fallback_name)
+    payload["objective"] = str(raw.get("objective") or payload["name"])
+    payload["input"] = case_input
+    payload["execution_mode"] = str(raw.get("execution_mode") or default_execution_mode)
+    payload["source"] = TestCaseSource.AGENT_GENERATED
+    contract = PlatformTestCaseV1.model_validate(payload)
+    return _test_case_command_from_contract(
+        dataset_version_id=dataset_version_id,
+        contract=contract,
+        source_ref=source_ref,
+    )
 
+
+def _test_case_command_from_contract(
+    *,
+    dataset_version_id: DatasetVersionId,
+    contract: PlatformTestCaseV1,
+    source_ref: str,
+) -> AddTestCaseCommand:
+    fields = _test_case_command_fields(contract)
     return AddTestCaseCommand(
         dataset_version_id=dataset_version_id,
-        name=str(raw.get("name") or fallback_name),
-        input=case_input,
-        execution_mode=ExecutionMode(str(raw.get("execution_mode") or default_execution_mode)),
-        assertions=_list_of_dicts(raw.get("assertions")),
-        scorers=_list_of_dicts(raw.get("scorers")),
-        initial_state=_dict_value(raw.get("initial_state")),
-        expected_outcome=_dict_value(raw.get("expected_outcome")),
-        security_policies=_list_of_dicts(raw.get("security_policies")),
-        tags=_list_of_strings(raw.get("tags")),
-        scenario=_optional(raw.get("scenario")),
-        priority=_enum_or_none(Priority, raw.get("priority")),
-        risk_level=_enum_or_none(RiskLevel, raw.get("risk_level")),
-        difficulty=_optional(raw.get("difficulty")),
-        test_group=_enum_or_none(TestGroup, raw.get("test_group")),
+        source=TestCaseSource.AGENT_GENERATED,
+        source_ref=source_ref,
+        **fields,
     )
+
+
+def _test_case_update_command(
+    case_id: TestCaseId,
+    contract: PlatformTestCaseV1,
+) -> UpdateTestCaseCommand:
+    return UpdateTestCaseCommand(
+        case_id=case_id,
+        source_ref=contract.source_ref or "agent-updated",
+        **_test_case_command_fields(contract),
+    )
+
+
+def _test_case_command_fields(contract: PlatformTestCaseV1) -> dict[str, Any]:
+    return {
+        "name": contract.name,
+        "objective": contract.objective,
+        "template": contract.template,
+        "case_type": contract.case_type,
+        "automation_status": contract.automation_status,
+        "component": contract.component,
+        "requirement_refs": contract.requirement_refs,
+        "owner_id": UserId(contract.owner_id) if contract.owner_id else None,
+        "preconditions": contract.preconditions,
+        "input": contract.input,
+        "data_bindings": [item.model_dump(mode="json") for item in contract.data_bindings],
+        "steps": [item.model_dump(mode="json") for item in contract.steps],
+        "execution_mode": contract.execution_mode,
+        "assertions": contract.assertions,
+        "scorers": contract.scorers,
+        "initial_state": contract.initial_state,
+        "expected_outcome": contract.expected_outcome,
+        "security_policies": contract.security_policies,
+        "artifact_requirements": [
+            item.model_dump(mode="json") for item in contract.artifact_requirements
+        ],
+        "postconditions": contract.postconditions,
+        "estimated_duration_seconds": contract.estimated_duration_seconds,
+        "timeout_seconds": contract.timeout_seconds,
+        "retry_count": contract.retry_count,
+        "custom_fields": contract.custom_fields,
+        "tags": contract.tags,
+        "scenario": contract.scenario,
+        "priority": contract.priority,
+        "risk_level": contract.risk_level,
+        "difficulty": contract.difficulty,
+        "test_group": contract.test_group,
+    }
 
 
 def _dict_value(value: object) -> dict[str, object] | None:
     return dict(value) if isinstance(value, dict) else None
-
-
-def _list_of_dicts(value: object) -> list[dict[str, object]]:
-    if not isinstance(value, list):
-        return []
-    return [dict(item) for item in value if isinstance(item, dict)]
-
-
-def _list_of_strings(value: object) -> list[str]:
-    if not isinstance(value, list):
-        return []
-    return [str(item) for item in value if isinstance(item, str)]
-
-
-def _enum_or_none(enum_cls, value: object):
-    return enum_cls(str(value)) if value else None
 
 
 def _agent_version(value: Any):
@@ -772,6 +888,47 @@ def _environment(item):
 
 def _dataset(item):
     return {"id": str(item.dataset_id.value), "name": item.name}
+
+
+def _test_case(item):
+    return {
+        "id": str(item.case_id.value),
+        "dataset_version_id": str(item.dataset_version_id.value),
+        "case_key": item.case_key,
+        "name": item.name,
+        "objective": item.objective,
+        "case_status": item.case_status.value,
+        "template": item.template.value,
+        "case_type": item.case_type.value,
+        "automation_status": item.automation_status.value,
+        "source": item.source.value,
+        "source_ref": item.source_ref,
+        "component": item.component,
+        "requirement_refs": item.requirement_refs,
+        "owner_id": str(item.owner_id.value) if item.owner_id else None,
+        "preconditions": item.preconditions,
+        "initial_state": item.initial_state,
+        "input": item.input,
+        "data_bindings": item.data_bindings,
+        "steps": item.steps,
+        "expected_outcome": item.expected_outcome,
+        "assertions": item.assertions,
+        "scorers": item.scorers,
+        "security_policies": item.security_policies,
+        "artifact_requirements": item.artifact_requirements,
+        "postconditions": item.postconditions,
+        "estimated_duration_seconds": item.estimated_duration_seconds,
+        "execution_mode": item.execution_mode.value,
+        "timeout_seconds": item.timeout_seconds,
+        "retry_count": item.retry_count,
+        "custom_fields": item.custom_fields,
+        "tags": item.tags,
+        "scenario": item.scenario,
+        "priority": item.priority.value if item.priority else None,
+        "risk_level": item.risk_level.value if item.risk_level else None,
+        "difficulty": item.difficulty,
+        "test_group": item.test_group.value if item.test_group else None,
+    }
 
 
 def _plan(item):

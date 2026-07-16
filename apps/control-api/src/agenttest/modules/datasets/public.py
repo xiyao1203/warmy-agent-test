@@ -7,9 +7,12 @@ from __future__ import annotations
 
 from agenttest.modules.datasets.application.commands import (
     AddTestCaseCommand,
+    CreateCaseTrialRunCommand,
     CreateDatasetCommand,
     CreateDatasetVersionCommand,
+    MarkTestCaseReadyCommand,
     PublishDatasetVersionCommand,
+    UpdateTestCaseCommand,
 )
 from agenttest.modules.datasets.application.contracts import (
     ArtifactRequirementV1,
@@ -53,6 +56,7 @@ __all__ = [
     "AddTestCaseCommand",
     "CreateDatasetCommand",
     "CreateDatasetVersionCommand",
+    "CreateCaseTrialRunCommand",
     "DatasetId",
     "DatasetVersion",
     "DatasetVersionId",
@@ -60,6 +64,7 @@ __all__ = [
     "ExecutionMode",
     "Priority",
     "PlatformTestCaseV1",
+    "MarkTestCaseReadyCommand",
     "PublishDatasetVersionCommand",
     "RiskLevel",
     "TestCase",
@@ -71,6 +76,7 @@ __all__ = [
     "TestGroup",
     "TestStepV1",
     "VersionStatus",
+    "UpdateTestCaseCommand",
     "build_case_spec_snapshot",
 ]
 

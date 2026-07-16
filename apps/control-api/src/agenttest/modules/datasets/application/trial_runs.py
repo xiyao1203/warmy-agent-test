@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from typing import Protocol
 from uuid import UUID
 
+from agenttest.modules.datasets.application.commands import CreateCaseTrialRunCommand
 from agenttest.modules.datasets.application.contracts import build_case_spec_snapshot
 from agenttest.modules.datasets.application.ports import ProjectAccessPort
 from agenttest.modules.datasets.domain.entities import TestCase, TestCaseId
@@ -42,15 +43,6 @@ class CaseTrialRuntimeSource(Protocol):
         agent_version_id: UUID,
         environment_template_id: UUID,
     ) -> CaseTrialRuntime: ...
-
-
-@dataclass(frozen=True, slots=True)
-class CreateCaseTrialRunCommand:
-    project_id: ProjectId
-    case_id: TestCaseId
-    agent_version_id: UUID
-    environment_template_id: UUID
-    idempotency_key: str
 
 
 @dataclass(frozen=True, slots=True)
