@@ -54,12 +54,16 @@ export async function createCredentialBinding(
   return data as CredentialBinding;
 }
 
-export async function listEnvironmentTemplates(projectId: string) {
+export async function listEnvironmentTemplates(
+  projectId: string,
+  signal?: AbortSignal,
+) {
   const { data } =
     await listTemplatesApiV1ProjectsProjectIdEnvironmentTemplatesGet({
       client: apiClient,
       path: { project_id: projectId },
       query: { limit: 100 },
+      signal,
       throwOnError: true,
     });
   return data.items;

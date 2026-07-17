@@ -26,11 +26,12 @@ import { CONTROL_API_URL } from "@/lib/api/base-url";
 import { csrfHeaders } from "@/lib/api/csrf";
 import { responseProblem } from "@/lib/api/problem";
 
-export async function listRuns(projectId: string) {
+export async function listRuns(projectId: string, signal?: AbortSignal) {
   const { data } = await listRunsApiV1ProjectsProjectIdRunsGet({
     client: apiClient,
     path: { project_id: projectId },
     query: { limit: 100 },
+    signal,
     throwOnError: true,
   });
   return data.items;
@@ -50,19 +51,29 @@ export async function createRun(projectId: string, testPlanVersionId: string) {
   return data;
 }
 
-export async function getRun(projectId: string, runId: string) {
+export async function getRun(
+  projectId: string,
+  runId: string,
+  signal?: AbortSignal,
+) {
   const { data } = await getRunApiV1ProjectsProjectIdRunsRunIdGet({
     client: apiClient,
     path: { project_id: projectId, run_id: runId },
+    signal,
     throwOnError: true,
   });
   return data;
 }
 
-export async function listRunCases(projectId: string, runId: string) {
+export async function listRunCases(
+  projectId: string,
+  runId: string,
+  signal?: AbortSignal,
+) {
   const { data } = await listCasesApiV1ProjectsProjectIdRunsRunIdCasesGet({
     client: apiClient,
     path: { project_id: projectId, run_id: runId },
+    signal,
     throwOnError: true,
   });
   return data.items;
@@ -176,11 +187,13 @@ export interface ArtifactItem {
 export async function listArtifacts(
   projectId: string,
   runId: string,
+  signal?: AbortSignal,
 ): Promise<ArtifactItem[]> {
   const { data } =
     await listArtifactsApiV1ProjectsProjectIdRunsRunIdArtifactsGet({
       client: apiClient,
       path: { project_id: projectId, run_id: runId },
+      signal,
       throwOnError: true,
     });
   return (data as { items?: ArtifactItem[] }).items ?? [];

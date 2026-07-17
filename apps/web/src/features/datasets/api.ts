@@ -25,11 +25,12 @@ import {
 import { apiClient } from "@/lib/api/client";
 import { csrfHeaders } from "@/lib/api/csrf";
 
-export async function listDatasets(projectId: string) {
+export async function listDatasets(projectId: string, signal?: AbortSignal) {
   const { data } = await listDatasetsApiV1ProjectsProjectIdDatasetsGet({
     client: apiClient,
     path: { project_id: projectId },
     query: { limit: 100 },
+    signal,
     throwOnError: true,
   });
   return data;
@@ -44,10 +45,15 @@ export async function deleteDataset(projectId: string, datasetId: string) {
   });
 }
 
-export async function getDataset(projectId: string, datasetId: string) {
+export async function getDataset(
+  projectId: string,
+  datasetId: string,
+  signal?: AbortSignal,
+) {
   const { data } = await getDatasetApiV1ProjectsProjectIdDatasetsDatasetIdGet({
     client: apiClient,
     path: { dataset_id: datasetId, project_id: projectId },
+    signal,
     throwOnError: true,
   });
   return data;
@@ -70,11 +76,13 @@ export async function createDataset(
 export async function listDatasetVersions(
   projectId: string,
   datasetId: string,
+  signal?: AbortSignal,
 ) {
   const { data } =
     await listVersionsApiV1ProjectsProjectIdDatasetsDatasetIdVersionsGet({
       client: apiClient,
       path: { dataset_id: datasetId, project_id: projectId },
+      signal,
       throwOnError: true,
     });
   return data.items;
@@ -98,6 +106,7 @@ export async function listTestCases(
   projectId: string,
   datasetId: string,
   versionId: string,
+  signal?: AbortSignal,
 ) {
   const { data } =
     await listCasesApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdCasesGet(
@@ -109,6 +118,7 @@ export async function listTestCases(
           version_id: versionId,
         },
         query: { limit: 500 },
+        signal,
         throwOnError: true,
       },
     );

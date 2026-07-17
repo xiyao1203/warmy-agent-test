@@ -1,24 +1,22 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 import {
   completeBrowserProfileLogin,
   createBrowserProfile,
   deleteBrowserProfile,
-  listBrowserProfiles,
   startBrowserProfile,
   stopBrowserProfile,
   updateBrowserProfile,
   verifyBrowserProfile,
 } from "./api";
 import { BrowserProfileList } from "./browser-profile-list";
+import { browserProfileQueries, invalidateBrowserProfileList } from "./queries";
 
 export function BrowserProfileListScreen({ projectId }: { projectId: string }) {
-  const query = useQuery({
-    queryFn: () => listBrowserProfiles(projectId),
-    queryKey: ["browser-profiles", projectId],
-  });
+  const query = useQuery(browserProfileQueries.list(projectId));
+  const queryClient = useQueryClient();
 
   if (query.isPending) {
     return <BrowserProfileList loading projectId={projectId} />;
@@ -28,7 +26,7 @@ export function BrowserProfileListScreen({ projectId }: { projectId: string }) {
   }
 
   async function refresh() {
-    await query.refetch();
+    await invalidateBrowserProfileList(queryClient, projectId);
   }
 
   return (

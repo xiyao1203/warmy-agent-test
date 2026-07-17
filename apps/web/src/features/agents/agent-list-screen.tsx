@@ -1,19 +1,18 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 
 import { problemKind } from "@/lib/api/problem";
 
-import { createAgent, deleteAgent, listAgents } from "./api";
+import { createAgent, deleteAgent } from "./api";
 import { AgentList } from "./agent-list";
+import { agentQueries, invalidateAgentList } from "./queries";
 
 export function AgentListScreen({ projectId }: { projectId: string }) {
   const router = useRouter();
-  const agentsQuery = useQuery({
-    queryFn: () => listAgents(projectId),
-    queryKey: ["agents", projectId],
-  });
+  const queryClient = useQueryClient();
+  const agentsQuery = useQuery(agentQueries.list(projectId));
 
   if (agentsQuery.isPending) {
     return <AgentList loading projectId={projectId} />;
@@ -40,7 +39,7 @@ export function AgentListScreen({ projectId }: { projectId: string }) {
       }}
       onDelete={async (agentId) => {
         await deleteAgent(projectId, agentId);
-        await agentsQuery.refetch();
+        await invalidateAgentList(queryClient, projectId);
       }}
       projectId={projectId}
     />

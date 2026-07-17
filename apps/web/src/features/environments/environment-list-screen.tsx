@@ -1,22 +1,20 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 import {
   createEnvironmentTemplate,
   createEnvironmentVersion,
   deleteEnvironmentTemplate,
-  listEnvironmentTemplates,
   publishEnvironmentVersion,
   updateEnvironmentVersion,
 } from "./api";
 import { EnvironmentList } from "./environment-list";
+import { environmentQueries, invalidateEnvironmentList } from "./queries";
 
 export function EnvironmentListScreen({ projectId }: { projectId: string }) {
-  const envQuery = useQuery({
-    queryFn: () => listEnvironmentTemplates(projectId),
-    queryKey: ["environment-templates", projectId],
-  });
+  const envQuery = useQuery(environmentQueries.list(projectId));
+  const queryClient = useQueryClient();
 
   if (envQuery.isPending) {
     return <EnvironmentList loading projectId={projectId} />;
@@ -26,7 +24,7 @@ export function EnvironmentListScreen({ projectId }: { projectId: string }) {
   }
 
   async function refresh() {
-    await envQuery.refetch();
+    await invalidateEnvironmentList(queryClient, projectId);
   }
 
   return (

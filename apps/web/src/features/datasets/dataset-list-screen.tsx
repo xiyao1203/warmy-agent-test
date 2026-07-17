@@ -1,17 +1,16 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { problemKind } from "@/lib/api/problem";
 
-import { createDataset, deleteDataset, listDatasets } from "./api";
+import { createDataset, deleteDataset } from "./api";
 import { DatasetList } from "./dataset-list";
+import { datasetQueries, invalidateDatasetList } from "./queries";
 
 export function DatasetListScreen({ projectId }: { projectId: string }) {
-  const datasetsQuery = useQuery({
-    queryFn: () => listDatasets(projectId),
-    queryKey: ["datasets", projectId],
-  });
+  const queryClient = useQueryClient();
+  const datasetsQuery = useQuery(datasetQueries.list(projectId));
 
   if (datasetsQuery.isPending) {
     return <DatasetList loading projectId={projectId} />;
@@ -34,11 +33,11 @@ export function DatasetListScreen({ projectId }: { projectId: string }) {
       datasets={datasetsQuery.data.items}
       onCreate={async (payload) => {
         await createDataset(projectId, payload);
-        await datasetsQuery.refetch();
+        await invalidateDatasetList(queryClient, projectId);
       }}
       onDelete={async (datasetId) => {
         await deleteDataset(projectId, datasetId);
-        await datasetsQuery.refetch();
+        await invalidateDatasetList(queryClient, projectId);
       }}
       projectId={projectId}
     />

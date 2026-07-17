@@ -17,11 +17,12 @@ import {
 import { apiClient } from "@/lib/api/client";
 import { csrfHeaders } from "@/lib/api/csrf";
 
-export async function listTestPlans(projectId: string) {
+export async function listTestPlans(projectId: string, signal?: AbortSignal) {
   const { data } = await listPlansApiV1ProjectsProjectIdTestPlansGet({
     client: apiClient,
     path: { project_id: projectId },
     query: { limit: 100 },
+    signal,
     throwOnError: true,
   });
   return data;
@@ -36,10 +37,15 @@ export async function deleteTestPlan(projectId: string, planId: string) {
   });
 }
 
-export async function getTestPlan(projectId: string, planId: string) {
+export async function getTestPlan(
+  projectId: string,
+  planId: string,
+  signal?: AbortSignal,
+) {
   const { data } = await getPlanApiV1ProjectsProjectIdTestPlansPlanIdGet({
     client: apiClient,
     path: { plan_id: planId, project_id: projectId },
+    signal,
     throwOnError: true,
   });
   return data;
@@ -59,11 +65,16 @@ export async function createTestPlan(
   return data;
 }
 
-export async function listTestPlanVersions(projectId: string, planId: string) {
+export async function listTestPlanVersions(
+  projectId: string,
+  planId: string,
+  signal?: AbortSignal,
+) {
   const { data } =
     await listVersionsApiV1ProjectsProjectIdTestPlansPlanIdVersionsGet({
       client: apiClient,
       path: { plan_id: planId, project_id: projectId },
+      signal,
       throwOnError: true,
     });
   return data.items;
@@ -129,12 +140,16 @@ export async function publishTestPlanVersion(
   return data;
 }
 
-export async function listEnvironmentTemplates(projectId: string) {
+export async function listEnvironmentTemplates(
+  projectId: string,
+  signal?: AbortSignal,
+) {
   const { data } =
     await listTemplatesApiV1ProjectsProjectIdEnvironmentTemplatesGet({
       client: apiClient,
       path: { project_id: projectId },
       query: { limit: 100 },
+      signal,
       throwOnError: true,
     });
   return data.items;

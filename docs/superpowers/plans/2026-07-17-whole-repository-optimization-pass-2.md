@@ -387,7 +387,7 @@ git commit -m "refactor(web): standardize generated api usage"
 - Modify: `apps/web/src/components/layout/app-shell.tsx`
 - Modify/Create: associated Vitest component/model tests
 
-- [ ] **Step 1: Add Query key and cancellation tests**
+- [x] **Step 1: Add Query key and cancellation tests**
 
 Assert resource hierarchy and reuse:
 
@@ -400,13 +400,13 @@ expect(datasetQueries.cases(projectId, datasetId, versionId).queryKey).toEqual([
 
 Call a Query Function with an aborted signal and assert the SDK receives that signal. Add a mutation test proving only the owning resource prefix is invalidated.
 
-- [ ] **Step 2: Run Query tests and observe RED**
+- [x] **Step 2: Run Query tests and observe RED**
 
 Run: `pnpm --filter @warmy/web exec vitest run src/features/**/tests/*quer*.test.ts`
 
 Expected: factories do not exist and current purpose-suffixed keys do not match.
 
-- [ ] **Step 3: Implement Feature-owned Query factories**
+- [x] **Step 3: Implement Feature-owned Query factories**
 
 Each `queries.ts` exports stable key factories and `queryOptions`; Screen components import them from the Feature public export. Replace direct resource Query literals. Mutations use `useMutation` plus precise invalidation or `setQueryData`; retain explicit `refetch` only for operations that must return newly created version data synchronously.
 

@@ -20,20 +20,26 @@ import {
 import { apiClient } from "@/lib/api/client";
 import { csrfHeaders } from "@/lib/api/csrf";
 
-export async function listAgents(projectId: string) {
+export async function listAgents(projectId: string, signal?: AbortSignal) {
   const { data } = await listAgentsApiV1ProjectsProjectIdAgentsGet({
     client: apiClient,
     path: { project_id: projectId },
     query: { limit: 100 },
+    signal,
     throwOnError: true,
   });
   return data;
 }
 
-export async function getAgent(projectId: string, agentId: string) {
+export async function getAgent(
+  projectId: string,
+  agentId: string,
+  signal?: AbortSignal,
+) {
   const { data } = await getAgentApiV1ProjectsProjectIdAgentsAgentIdGet({
     client: apiClient,
     path: { agent_id: agentId, project_id: projectId },
+    signal,
     throwOnError: true,
   });
   return data;
@@ -171,21 +177,28 @@ export type AgentRelationships = {
 export async function getAgentRelationships(
   projectId: string,
   agentId: string,
+  signal?: AbortSignal,
 ): Promise<AgentRelationships> {
   const { data } =
     await getRelationshipsApiV1ProjectsProjectIdAgentsAgentIdRelationshipsGet({
       client: apiClient,
       path: { agent_id: agentId, project_id: projectId },
+      signal,
       throwOnError: true,
     });
   return data as AgentRelationships;
 }
 
-export async function listAgentVersions(projectId: string, agentId: string) {
+export async function listAgentVersions(
+  projectId: string,
+  agentId: string,
+  signal?: AbortSignal,
+) {
   const { data } =
     await listVersionsApiV1ProjectsProjectIdAgentsAgentIdVersionsGet({
       client: apiClient,
       path: { agent_id: agentId, project_id: projectId },
+      signal,
       throwOnError: true,
     });
   return data.items;

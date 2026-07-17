@@ -1,6 +1,7 @@
 export { EnvironmentList } from "./environment-list";
 export { EnvironmentListScreen } from "./environment-list-screen";
 export { EnvironmentVersionDialog } from "./environment-version-dialog";
+export { environmentQueries, invalidateEnvironmentList } from "./queries";
 export {
   createCredentialBinding,
   createEnvironmentTemplate,

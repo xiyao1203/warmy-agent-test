@@ -3,15 +3,9 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useCallback, useEffect, useRef, useState } from "react";
 
-import {
-  cancelRun,
-  getRunTrustLoop,
-  getRun,
-  listArtifacts,
-  listRunCases,
-  runEventsUrl,
-} from "./api";
+import { cancelRun, runEventsUrl } from "./api";
 import { RunDetail } from "./run-detail";
+import { runQueries } from "./queries";
 
 /** SSE 重连配置 */
 const MAX_RECONNECT_ATTEMPTS = 3;
@@ -35,8 +29,7 @@ export function RunDetailScreen({
   const reconnectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const runQuery = useQuery({
-    queryFn: () => getRun(projectId, runId),
-    queryKey: ["runs", projectId, runId],
+    ...runQueries.detail(projectId, runId),
     refetchInterval: (query) => {
       const status = query.state.data?.status;
       if (status !== "running" && status !== "queued") {
@@ -45,17 +38,10 @@ export function RunDetailScreen({
       return eventStreamAvailable ? false : 3000;
     },
   });
-  const casesQuery = useQuery({
-    queryFn: () => listRunCases(projectId, runId),
-    queryKey: ["runs", projectId, runId, "cases"],
-  });
-  const artifactsQuery = useQuery({
-    queryFn: () => listArtifacts(projectId, runId),
-    queryKey: ["runs", projectId, runId, "artifacts"],
-  });
+  const casesQuery = useQuery(runQueries.cases(projectId, runId));
+  const artifactsQuery = useQuery(runQueries.artifacts(projectId, runId));
   const trustLoopQuery = useQuery({
-    queryFn: () => getRunTrustLoop(projectId, runId),
-    queryKey: ["runs", projectId, runId, "trust-loop"],
+    ...runQueries.trustLoop(projectId, runId),
     refetchInterval: (query) =>
       ["pending", "running"].includes(query.state.data?.summary.status ?? "")
         ? 2000

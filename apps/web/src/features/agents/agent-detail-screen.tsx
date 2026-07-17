@@ -5,9 +5,6 @@ import { useQuery } from "@tanstack/react-query";
 import {
   createAgentVersion,
   diffAgentVersions,
-  getAgent,
-  getAgentRelationships,
-  listAgentVersions,
   publishAgentVersion,
   setBaselineAgentVersion,
   setCurrentAgentVersion,
@@ -15,6 +12,7 @@ import {
   updateAgent,
 } from "./api";
 import { AgentDetail } from "./agent-detail";
+import { agentQueries } from "./queries";
 
 export function AgentDetailScreen({
   agentId,
@@ -23,18 +21,11 @@ export function AgentDetailScreen({
   agentId: string;
   projectId: string;
 }) {
-  const agentQuery = useQuery({
-    queryFn: () => getAgent(projectId, agentId),
-    queryKey: ["agent", projectId, agentId],
-  });
-  const versionsQuery = useQuery({
-    queryFn: () => listAgentVersions(projectId, agentId),
-    queryKey: ["agent-versions", projectId, agentId],
-  });
-  const relationshipsQuery = useQuery({
-    queryFn: () => getAgentRelationships(projectId, agentId),
-    queryKey: ["agent-relationships", projectId, agentId],
-  });
+  const agentQuery = useQuery(agentQueries.detail(projectId, agentId));
+  const versionsQuery = useQuery(agentQueries.versions(projectId, agentId));
+  const relationshipsQuery = useQuery(
+    agentQueries.relationships(projectId, agentId),
+  );
 
   if (agentQuery.isPending || versionsQuery.isPending) {
     return (
