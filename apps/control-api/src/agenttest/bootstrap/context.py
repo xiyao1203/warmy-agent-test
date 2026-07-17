@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from agenttest.bootstrap.project_access import ProjectAccessAdapter
+from agenttest.bootstrap.providers.identity import build_auth_dependencies
 from agenttest.bootstrap.settings import Settings
 from agenttest.modules.agents.api.router import AgentApiDependencies
 from agenttest.modules.audit.api.router import AuditApiDependencies
@@ -56,8 +57,6 @@ class BootstrapContext:
 
 
 def build_context(settings: Settings, overrides: AppOverrides) -> BootstrapContext:
-    from agenttest.bootstrap.wiring import build_auth_dependencies
-
     engine = create_database_engine(str(settings.database_url))
     session_factory = create_session_factory(engine)
     auth = overrides.auth or build_auth_dependencies(settings)

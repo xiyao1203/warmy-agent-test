@@ -5,9 +5,9 @@ from datetime import UTC, datetime, timedelta
 from unittest.mock import Mock
 from uuid import UUID, uuid4
 
-import agenttest.bootstrap.wiring  # noqa: F401 - register all ORM metadata
 import pytest
 from agenttest.bootstrap.core_summaries import SqlAlchemyCoreSummaryReader
+from agenttest.bootstrap.model_registry import register_models
 from agenttest.modules.agents.infrastructure.persistence.models import (
     AgentModel,
     AgentVersionModel,
@@ -43,6 +43,8 @@ from sqlalchemy.ext.asyncio import (
     create_async_engine,
 )
 from sqlalchemy.ext.compiler import compiles
+
+register_models()
 
 
 class AllowProjectAccess:

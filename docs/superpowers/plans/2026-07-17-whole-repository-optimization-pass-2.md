@@ -70,7 +70,7 @@ git commit -m "docs: plan repository optimization pass two"
 - Modify: `apps/control-api/tests/architecture/test_module_boundaries.py`
 - Modify: `apps/control-api/tests/unit/bootstrap/test_composition.py`
 
-- [ ] **Step 1: Add failing architecture tests for one composition root**
+- [x] **Step 1: Add failing architecture tests for one composition root**
 
 Add assertions equivalent to:
 
@@ -84,7 +84,7 @@ def test_legacy_wiring_is_not_a_runtime_dependency() -> None:
 
 Add a source compilation test importing `agenttest.bootstrap.model_registry` and asserting `Base.metadata.tables` contains representative Identity, Project, Run and Audit tables.
 
-- [ ] **Step 2: Run the new tests and observe RED**
+- [x] **Step 2: Run the new tests and observe RED**
 
 Run:
 
@@ -94,13 +94,13 @@ uv run pytest apps/control-api/tests/architecture/test_module_boundaries.py apps
 
 Expected: failure because `context.py` imports the legacy module and `wiring.py` still exists.
 
-- [ ] **Step 3: Extract the Identity provider**
+- [x] **Step 3: Extract the Identity provider**
 
 Move the complete current `build_auth_dependencies(settings)` implementation from `bootstrap/wiring.py:627-667` into `bootstrap/providers/identity.py` without changing its repositories, Argon2 hasher, login throttle policy, cookie/CSRF settings or returned `AuthApiDependencies` fields.
 
 Update `context.py` to import this provider at module scope; preserve `AppOverrides` and `BootstrapContext` signatures.
 
-- [ ] **Step 4: Add explicit ORM model registration**
+- [x] **Step 4: Add explicit ORM model registration**
 
 Create `bootstrap/model_registry.py` with explicit imports of each module's persistence `models` module and a public function:
 
@@ -112,7 +112,7 @@ def register_models() -> MetaData:
 
 The module may import for registration only; it must not create engines, sessions, repositories, or business objects. Replace the performance test's `import agenttest.bootstrap.wiring` side effect with `register_models()`.
 
-- [ ] **Step 5: Delete the legacy wiring and verify GREEN**
+- [x] **Step 5: Delete the legacy wiring and verify GREEN**
 
 Delete `bootstrap/wiring.py`, then run:
 
@@ -123,7 +123,7 @@ uv run mypy apps/control-api/src
 
 Expected: all pass; no API registration, override or metadata table is lost.
 
-- [ ] **Step 6: Commit the composition cleanup**
+- [x] **Step 6: Commit the composition cleanup**
 
 ```bash
 git add apps/control-api/src/agenttest/bootstrap apps/control-api/tests

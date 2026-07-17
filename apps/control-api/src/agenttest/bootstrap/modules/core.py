@@ -1,7 +1,19 @@
 from fastapi import FastAPI
 
-from agenttest.bootstrap import wiring
 from agenttest.bootstrap.context import BootstrapContext
+from agenttest.bootstrap.providers.core import (
+    build_admin_dependencies,
+    build_agent_dependencies,
+    build_audit_dependencies,
+    build_dataset_dependencies,
+    build_environment_dependencies,
+    build_feedback_dependencies,
+    build_model_config_service,
+    build_project_dependencies,
+    build_run_dependencies,
+    build_test_plan_dependencies,
+    build_user_settings_dependencies,
+)
 from agenttest.entrypoints.http.health import router as health_router
 from agenttest.modules.agents.api.router import create_agent_router
 from agenttest.modules.audit.api.router import create_audit_router
@@ -56,7 +68,7 @@ def register(app: FastAPI, context: BootstrapContext) -> None:
     app.include_router(health_router, prefix="/api/v1")
     app.include_router(create_auth_router(auth, settings), prefix="/api/v1")
 
-    admin = overrides.admin or wiring.build_admin_dependencies(settings)
+    admin = overrides.admin or build_admin_dependencies(settings)
     app.include_router(
         create_admin_router(
             admin,
@@ -67,7 +79,7 @@ def register(app: FastAPI, context: BootstrapContext) -> None:
         prefix="/api/v1",
     )
 
-    projects = overrides.projects or wiring.build_project_dependencies(settings)
+    projects = overrides.projects or build_project_dependencies(settings)
     app.include_router(
         create_project_router(
             projects,
@@ -78,7 +90,7 @@ def register(app: FastAPI, context: BootstrapContext) -> None:
         prefix="/api/v1",
     )
 
-    audits = overrides.audit or wiring.build_audit_dependencies(settings)
+    audits = overrides.audit or build_audit_dependencies(settings)
     app.include_router(
         create_audit_router(
             audits,
@@ -88,7 +100,7 @@ def register(app: FastAPI, context: BootstrapContext) -> None:
         prefix="/api/v1",
     )
 
-    agents = overrides.agents or wiring.build_agent_dependencies(settings)
+    agents = overrides.agents or build_agent_dependencies(settings)
     app.include_router(
         create_agent_router(
             agents,
@@ -99,7 +111,7 @@ def register(app: FastAPI, context: BootstrapContext) -> None:
         prefix="/api/v1",
     )
 
-    datasets = overrides.datasets or wiring.build_dataset_dependencies(settings)
+    datasets = overrides.datasets or build_dataset_dependencies(settings)
     app.include_router(
         create_dataset_router(
             datasets,
@@ -110,7 +122,7 @@ def register(app: FastAPI, context: BootstrapContext) -> None:
         prefix="/api/v1",
     )
 
-    test_plans = overrides.test_plans or wiring.build_test_plan_dependencies(settings)
+    test_plans = overrides.test_plans or build_test_plan_dependencies(settings)
     app.include_router(
         create_test_plan_router(
             test_plans,
@@ -121,7 +133,7 @@ def register(app: FastAPI, context: BootstrapContext) -> None:
         prefix="/api/v1",
     )
 
-    environments = overrides.environments or wiring.build_environment_dependencies(settings)
+    environments = overrides.environments or build_environment_dependencies(settings)
     app.include_router(
         create_environment_router(
             environments,
@@ -134,7 +146,7 @@ def register(app: FastAPI, context: BootstrapContext) -> None:
 
     app.include_router(
         create_model_config_router(
-            service=wiring.build_model_config_service(settings),
+            service=build_model_config_service(settings),
             invoker=TemporalModelInvoker(
                 address=settings.temporal_address,
                 namespace=settings.temporal_namespace,
@@ -148,7 +160,7 @@ def register(app: FastAPI, context: BootstrapContext) -> None:
         prefix="/api/v1",
     )
 
-    runs = overrides.runs or wiring.build_run_dependencies(settings)
+    runs = overrides.runs or build_run_dependencies(settings)
     app.include_router(
         create_run_router(
             runs,
@@ -200,13 +212,13 @@ def register(app: FastAPI, context: BootstrapContext) -> None:
         prefix="/api/v1",
     )
 
-    user_settings = overrides.user_settings or wiring.build_user_settings_dependencies(settings)
+    user_settings = overrides.user_settings or build_user_settings_dependencies(settings)
     app.include_router(
         create_user_settings_router(user_settings, settings),
         prefix="/api/v1",
     )
 
-    feedback = overrides.feedback or wiring.build_feedback_dependencies(settings)
+    feedback = overrides.feedback or build_feedback_dependencies(settings)
     app.include_router(
         create_feedback_router(feedback, settings),
         prefix="/api/v1",
