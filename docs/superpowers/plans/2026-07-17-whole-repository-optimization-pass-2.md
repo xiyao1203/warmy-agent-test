@@ -410,7 +410,7 @@ Expected: factories do not exist and current purpose-suffixed keys do not match.
 
 Each `queries.ts` exports stable key factories and `queryOptions`; Screen components import them from the Feature public export. Replace direct resource Query literals. Mutations use `useMutation` plus precise invalidation or `setQueryData`; retain explicit `refetch` only for operations that must return newly created version data synchronously.
 
-- [ ] **Step 4: Extract pure models and controlled sections from UI hotspots**
+- [x] **Step 4: Extract pure models and controlled sections from UI hotspots**
 
 Move existing functions/components without changing markup or class names:
 
@@ -422,11 +422,11 @@ Move existing functions/components without changing markup or class names:
 
 Container components retain state ownership until a behavior test proves a Hook extraction is safe.
 
-- [ ] **Step 5: Add behavior-preservation tests for extracted models/components**
+- [x] **Step 5: Add behavior-preservation tests for extracted models/components**
 
 Cover Chat task-state projection and relative dates, Agent relationship empty/content states, Test Case numeric conversion, Test Plan field validation, command keyboard navigation and mobile navigation focus. Reuse existing accessible labels and test IDs; do not add test-only production branches.
 
-- [ ] **Step 6: Verify Web behavior and bundle budgets**
+- [x] **Step 6: Verify Web behavior and bundle budgets**
 
 Run:
 
@@ -441,7 +441,7 @@ pnpm --filter @warmy/web run perf:bundle-check
 
 Expected: no visual/token/route change, all tests pass, and no bundle threshold increases.
 
-- [ ] **Step 7: Commit Query and component ownership**
+- [x] **Step 7: Commit Query and component ownership**
 
 ```bash
 git add apps/web/src
