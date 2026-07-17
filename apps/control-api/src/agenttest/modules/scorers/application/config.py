@@ -1,3 +1,5 @@
+"""评分器运行配置的 Application 边界模型。"""
+
 from __future__ import annotations
 
 from typing import Literal
@@ -7,6 +9,8 @@ from pydantic import BaseModel, ConfigDict, Field
 
 
 class RuleScorerConfig(BaseModel):
+    """确定性规则评分配置。"""
+
     model_config = ConfigDict(extra="forbid", frozen=True)
     type: Literal["rule"] = "rule"
     operator: Literal["contains", "exact"]
@@ -14,12 +18,16 @@ class RuleScorerConfig(BaseModel):
 
 
 class ReferenceScorerConfig(BaseModel):
+    """参考结果评分配置。"""
+
     model_config = ConfigDict(extra="forbid", frozen=True)
     type: Literal["reference"] = "reference"
     operator: Literal["contains", "exact"] = "exact"
 
 
 class ModelScorerConfig(BaseModel):
+    """模型裁判评分配置。"""
+
     model_config = ConfigDict(extra="forbid", frozen=True)
     type: Literal["model"] = "model"
     rubric: str = Field(min_length=1, max_length=4000)
@@ -27,6 +35,8 @@ class ModelScorerConfig(BaseModel):
 
 
 class DeepEvalScorerConfig(BaseModel):
+    """DeepEval 评分配置。"""
+
     model_config = ConfigDict(extra="forbid", frozen=True)
     type: Literal["deepeval"] = "deepeval"
     metric: Literal["tool_correctness"] = "tool_correctness"
@@ -37,6 +47,8 @@ ScorerConfig = RuleScorerConfig | ReferenceScorerConfig | ModelScorerConfig | De
 
 
 def parse_scorer_config(scorer_type: str, value: dict[str, object]) -> ScorerConfig:
+    """按评分器类型校验运行配置。"""
+
     payload = {**value, "type": scorer_type}
     if scorer_type == "rule":
         return RuleScorerConfig.model_validate(payload)

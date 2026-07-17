@@ -70,7 +70,7 @@ function StepIndicator({ currentIndex }: { currentIndex: number }) {
           <div
             className={`flex size-7 items-center justify-center rounded-full text-xs font-semibold transition-colors ${
               idx < currentIndex
-                ? "bg-[var(--primary)] text-white"
+                ? "bg-[var(--primary)] text-[var(--on-primary)]"
                 : idx === currentIndex
                   ? "border-2 border-[var(--primary)] text-[var(--primary)]"
                   : "border border-[var(--hairline)] text-[var(--muted)]"
@@ -566,11 +566,11 @@ export function TestPlanVersionDialog({
                   <span className="text-xs text-[var(--muted)]">检查中...</span>
                 ) : readiness ? (
                   readiness.ready ? (
-                    <span className="rounded bg-emerald-100 px-2 py-0.5 text-xs font-medium text-emerald-700">
+                    <span className="rounded bg-[var(--success-subtle)] px-2 py-0.5 text-xs font-medium text-[var(--success)]">
                       就绪
                     </span>
                   ) : (
-                    <span className="rounded bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-700">
+                    <span className="rounded bg-[var(--warning-subtle)] px-2 py-0.5 text-xs font-medium text-[var(--warning)]">
                       待完善
                     </span>
                   )

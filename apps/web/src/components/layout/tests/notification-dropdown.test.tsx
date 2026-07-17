@@ -20,6 +20,13 @@ vi.mock("next/link", () => ({
 
 import { NotificationDropdown } from "../notification-dropdown";
 
+function openNotifications() {
+  fireEvent.pointerDown(screen.getByRole("button", { name: "通知" }), {
+    button: 0,
+    ctrlKey: false,
+  });
+}
+
 describe("NotificationDropdown", () => {
   it("renders the notification bell icon", () => {
     render(<NotificationDropdown />);
@@ -31,8 +38,7 @@ describe("NotificationDropdown", () => {
   it("shows dropdown when clicking the bell icon", () => {
     render(<NotificationDropdown />);
 
-    const button = screen.getByRole("button");
-    fireEvent.click(button);
+    openNotifications();
 
     expect(screen.getByText("通知中心")).toBeInTheDocument();
   });
@@ -40,8 +46,7 @@ describe("NotificationDropdown", () => {
   it("shows empty state when no notifications", () => {
     render(<NotificationDropdown />);
 
-    const button = screen.getByRole("button");
-    fireEvent.click(button);
+    openNotifications();
 
     expect(screen.getByText("暂无新通知")).toBeInTheDocument();
   });
@@ -49,8 +54,7 @@ describe("NotificationDropdown", () => {
   it("shows link to notification settings", () => {
     render(<NotificationDropdown />);
 
-    const button = screen.getByRole("button");
-    fireEvent.click(button);
+    openNotifications();
 
     const settingsLink = screen.getByText("通知偏好设置");
     expect(settingsLink).toBeInTheDocument();

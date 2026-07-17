@@ -17,7 +17,7 @@ export function PulseButton({
 }: PulseButtonProps) {
   return (
     <button
-      className={`group relative inline-flex h-9 items-center justify-center gap-2 rounded-[var(--radius-md)] border border-[var(--primary)] bg-[var(--primary)] px-4 text-sm font-medium text-white transition-all hover:bg-[var(--primary-active)] hover:shadow-[0_0_20px_rgba(var(--primary-rgb,245,78,0),0.5)] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[var(--primary)] focus-visible:ring-offset-2 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 ${pulse ? "animate-pulse-subtle" : ""} ${className}`}
+      className={`group relative inline-flex h-9 items-center justify-center gap-2 rounded-[var(--radius-md)] border border-[var(--primary)] bg-[var(--primary)] px-4 text-sm font-medium text-[var(--on-primary)] transition-colors hover:bg-[var(--primary-active)] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[var(--primary)] focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 ${pulse ? "animate-pulse-subtle" : ""} ${className}`}
       disabled={loading || props.disabled}
       {...props}
     >

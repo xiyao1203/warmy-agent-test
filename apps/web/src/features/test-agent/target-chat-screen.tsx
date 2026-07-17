@@ -382,7 +382,7 @@ export function TargetChatScreen({ projectId }: { projectId: string }) {
                 aria-label="发送"
                 className={`absolute bottom-2 right-2 rounded-lg p-1.5 transition-all ${
                   input.trim()
-                    ? "bg-[var(--primary)] text-white hover:bg-[var(--primary-hover)]"
+                    ? "bg-[var(--primary)] text-[var(--on-primary)] hover:bg-[var(--primary-hover)]"
                     : "cursor-default text-[var(--muted)]"
                 }`}
                 disabled={!input.trim()}

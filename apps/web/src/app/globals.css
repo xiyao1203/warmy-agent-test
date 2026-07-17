@@ -25,6 +25,10 @@ body {
   min-height: 100%;
 }
 
+html {
+  background: var(--canvas);
+}
+
 body {
   margin: 0;
   background: var(--canvas);
@@ -58,147 +62,360 @@ samp {
 
 .brand-mark {
   display: inline-grid;
-  width: 2rem;
-  height: 2rem;
+  width: 1.75rem;
+  height: 1.75rem;
   flex: 0 0 auto;
   place-items: center;
 }
 
 .brand-mark-compact {
-  width: 2.125rem;
-  height: 2.125rem;
+  width: 1.625rem;
+  height: 1.625rem;
 }
 
 .brand-mark-glyph {
   width: 100%;
   height: 100%;
-  filter: drop-shadow(0 8px 15px rgba(37, 99, 235, 0.18));
-  transform-origin: 50% 56%;
-  animation: iconfont-soft-float 4.8s ease-in-out infinite;
 }
 
-.brand-mark-orbit {
-  transform-origin: 38px 31px;
-  animation: iconfont-orbit 5.8s ease-in-out infinite;
+.brand-mark-surface {
+  fill: var(--primary);
 }
 
-.brand-mark-orbit-secondary {
-  animation-delay: -1.8s;
+.brand-mark-spark {
+  fill: var(--on-primary);
+  opacity: 0.95;
 }
 
-.iconfont-project-visual {
-  width: min(15rem, 72vw);
-  aspect-ratio: 3 / 2;
+.brand-mark-core {
+  fill: var(--primary);
 }
 
-.iconfont-project-visual svg {
-  width: 100%;
-  height: 100%;
-  overflow: visible;
-  filter: drop-shadow(0 18px 34px rgba(37, 99, 235, 0.14));
+/* ===== Application shell ===== */
+.app-shell {
+  height: 100dvh;
+  overflow: hidden;
+  background: var(--canvas);
+  color: var(--ink);
 }
 
-.iconfont-visual-float {
-  transform-origin: 50% 50%;
-  animation: iconfont-soft-float 5.2s ease-in-out infinite;
-}
-
-.iconfont-visual-pulse {
-  transform-origin: 128px 54px;
-  animation: iconfont-soft-pulse 3.4s ease-in-out infinite;
-}
-
-.iconfont-visual-spark {
-  transform-origin: 190px 69px;
-  animation: iconfont-spark 2.8s ease-in-out infinite;
-}
-
-.iconfont-visual-spark-secondary {
-  animation-delay: -1.2s;
-  transform-origin: 51px 44px;
-}
-
-.project-loading-motion {
-  display: inline-flex;
+.app-topbar {
+  display: flex;
+  height: var(--topbar-height);
   align-items: center;
-  gap: 0.625rem;
-  color: var(--muted);
+  justify-content: space-between;
+  gap: 1rem;
+  border-bottom: 1px solid var(--hairline);
+  background: color-mix(in srgb, var(--surface) 94%, transparent);
+  padding: 0 0.75rem;
+}
+
+.app-brand {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--ink);
   font-size: 0.875rem;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+  text-decoration: none;
 }
 
-.project-loading-motion-orbit {
-  position: relative;
+.app-body {
+  display: flex;
+  height: calc(100dvh - var(--topbar-height));
+  min-width: 0;
+}
+
+.app-sidebar {
+  display: flex;
+  flex: 0 0 auto;
+  flex-direction: column;
+  min-height: 0;
+  border-right: 1px solid var(--hairline);
+  background: var(--surface);
+  padding: 0.625rem 0.5rem;
+  transition: width var(--motion-standard) ease;
+}
+
+.app-navigation {
+  min-height: 0;
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.app-nav-group {
+  margin-top: 0.75rem;
+}
+
+.app-nav-label {
+  margin: 0 0 0.25rem;
+  padding: 0 0.625rem;
+  color: var(--muted);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+
+.app-nav-link {
+  display: flex;
+  height: 2rem;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 0.625rem;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  padding: 0 0.625rem;
+  color: var(--muted);
+  font: inherit;
+  font-size: 0.8125rem;
+  text-decoration: none;
+  transition:
+    background var(--motion-fast) ease,
+    color var(--motion-fast) ease;
+}
+
+[data-collapsed="true"] .app-nav-link {
+  justify-content: center;
+  padding-inline: 0;
+}
+
+.app-nav-link:hover {
+  background: var(--canvas-soft);
+  color: var(--ink);
+}
+
+.app-nav-link[data-active="true"] {
+  background: var(--primary-subtle);
+  color: var(--primary);
+  font-weight: 600;
+}
+
+.app-main {
+  min-width: 0;
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  background: var(--canvas);
+}
+
+.workspace-page {
+  width: 100%;
+  max-width: var(--content-max-width);
+  min-width: 0;
+  margin-inline: auto;
+  padding: 1.25rem;
+}
+
+.workspace-page > header:first-child {
+  padding-bottom: 1rem;
+}
+
+.workspace-page h1 {
+  letter-spacing: -0.02em;
+}
+
+@media (max-width: 759px) {
+  .workspace-page {
+    padding: 1rem;
+  }
+}
+
+.app-icon-button {
   display: inline-grid;
-  width: 1.125rem;
-  height: 1.125rem;
+  width: var(--control-height-sm);
+  height: var(--control-height-sm);
+  flex: 0 0 auto;
   place-items: center;
-  border: 1px solid rgba(var(--primary-rgb), 0.22);
-  border-radius: 9999px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--muted);
+  transition:
+    background var(--motion-fast) ease,
+    color var(--motion-fast) ease;
 }
 
-.project-loading-motion-orbit::before {
-  position: absolute;
-  content: "";
-  border-radius: 9999px;
+.app-icon-button:hover {
+  background: var(--canvas-soft);
+  color: var(--ink);
 }
 
-.project-loading-motion-orbit span {
-  position: absolute;
-  border-radius: 9999px;
+.app-search-trigger,
+.app-create-button,
+.app-status-indicator {
+  display: inline-flex;
+  height: var(--control-height-sm);
+  align-items: center;
+  gap: 0.5rem;
+  border-radius: var(--radius-md);
+  padding-inline: 0.625rem;
+  font-size: 0.75rem;
 }
 
-.project-loading-motion-orbit::before {
-  width: 0.375rem;
-  height: 0.375rem;
+.app-search-trigger {
+  min-width: 9rem;
+  justify-content: flex-start;
+  border: 1px solid var(--hairline);
+  background: var(--canvas-soft);
+  color: var(--muted);
+}
+
+.app-search-trigger:hover {
+  border-color: var(--hairline-strong);
+  color: var(--body);
+}
+
+kbd {
+  display: inline-flex;
+  min-height: 1.25rem;
+  align-items: center;
+  border: 1px solid var(--hairline);
+  border-radius: 4px;
+  background: var(--surface);
+  padding-inline: 0.35rem;
+  color: var(--muted);
+  font-size: 0.6875rem;
+  line-height: 1;
+}
+
+.app-search-trigger kbd {
+  margin-left: auto;
+}
+
+.app-create-button {
+  border: 1px solid var(--primary);
   background: var(--primary);
-  animation: iconfont-orbit 1.4s linear infinite;
+  color: var(--on-primary);
+  font-weight: 600;
 }
 
-.project-loading-motion-orbit span {
-  width: 0.75rem;
-  height: 0.75rem;
-  background: rgba(var(--primary-rgb), 0.14);
-  animation: iconfont-soft-pulse 1.6s ease-in-out infinite;
+.app-create-button:hover {
+  border-color: var(--primary-active);
+  background: var(--primary-active);
 }
 
-@keyframes iconfont-soft-float {
-  0%,
-  100% {
-    transform: translate3d(0, 0, 0) rotate(0deg);
-  }
-  50% {
-    transform: translate3d(0, -4px, 0) rotate(-1.5deg);
-  }
+.app-status-indicator {
+  color: var(--muted);
+  text-decoration: none;
 }
 
-@keyframes iconfont-soft-pulse {
-  0%,
-  100% {
-    transform: scale(1);
-    opacity: 1;
-  }
-  50% {
-    transform: scale(1.05);
-    opacity: 0.86;
-  }
+.app-status-indicator:hover {
+  background: var(--canvas-soft);
+  color: var(--ink);
 }
 
-@keyframes iconfont-spark {
-  0%,
-  100% {
-    transform: scale(1) rotate(0deg);
-  }
-  50% {
-    transform: scale(1.12) rotate(10deg);
-  }
+.app-menu {
+  z-index: var(--layer-dropdown);
+  overflow: hidden;
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-lg);
+  background: var(--surface-raised);
+  padding: 0.25rem;
+  box-shadow: var(--shadow-overlay);
 }
 
-@keyframes iconfont-orbit {
-  0% {
-    transform: rotate(0deg) translateX(3px) rotate(0deg);
+.app-menu-item,
+.app-command-item {
+  display: flex;
+  min-height: 2rem;
+  cursor: default;
+  align-items: center;
+  gap: 0.5rem;
+  border-radius: var(--radius-sm);
+  padding: 0.375rem 0.5rem;
+  color: var(--body);
+  font-size: 0.8125rem;
+  text-decoration: none;
+  outline: none;
+}
+
+.app-select-trigger {
+  background: var(--surface) !important;
+  color: var(--ink) !important;
+}
+
+.app-select-trigger:hover {
+  background: var(--canvas-soft) !important;
+}
+
+.app-menu-item[data-highlighted],
+.app-command-item[data-active="true"],
+.app-command-item:hover,
+.app-command-item:focus-visible {
+  background: var(--canvas-soft);
+  color: var(--ink);
+}
+
+.app-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: var(--layer-drawer);
+  background: var(--overlay);
+  animation: fadeIn var(--motion-fast) ease both;
+}
+
+.app-mobile-navigation {
+  position: fixed;
+  inset: 0 auto 0 0;
+  z-index: calc(var(--layer-drawer) + 1);
+  width: min(19rem, calc(100vw - 3rem));
+  overflow: hidden;
+  border-right: 1px solid var(--hairline);
+  background: var(--surface);
+  box-shadow: var(--shadow-overlay);
+}
+
+.app-mobile-navigation .app-navigation {
+  height: calc(100dvh - var(--topbar-height));
+  padding: 0.625rem 0.5rem 1.5rem;
+}
+
+.app-command-palette {
+  position: fixed;
+  top: min(18vh, 9rem);
+  left: 50%;
+  z-index: var(--layer-modal);
+  width: min(36rem, calc(100vw - 2rem));
+  transform: translateX(-50%);
+  overflow: hidden;
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-lg);
+  background: var(--surface-raised);
+  box-shadow: var(--shadow-overlay);
+}
+
+.app-command-item {
+  min-height: 2.5rem;
+}
+
+@media (max-width: 759px) {
+  .app-topbar {
+    gap: 0.375rem;
+    padding-inline: 0.5rem;
   }
-  100% {
-    transform: rotate(360deg) translateX(3px) rotate(-360deg);
+
+  .app-search-trigger {
+    min-width: 0;
+    width: var(--control-height-sm);
+    justify-content: center;
+    padding: 0;
+  }
+
+  .app-create-button {
+    width: var(--control-height-sm);
+    justify-content: center;
+    padding: 0;
+  }
+
+  .app-sidebar,
+  .app-status-indicator,
+  .app-search-trigger > span,
+  .app-search-trigger kbd {
+    display: none;
   }
 }
 
@@ -251,12 +468,6 @@ textarea[data-focus-owner="composer"]:focus-visible {
 /* ===== Dark mode image/asset dimming ===== */
 .dark img:not([src*=".svg"]) {
   filter: brightness(0.9);
-}
-
-@media (prefers-color-scheme: dark) {
-  img:not([src*=".svg"]) {
-    filter: brightness(0.9);
-  }
 }
 
 /* ===== Codex-level chat animations ===== */
@@ -312,14 +523,9 @@ textarea[data-focus-owner="composer"]:focus-visible {
 
   .animate-fadeIn,
   .animate-slideIn,
+  .app-overlay,
   .chat-scroll,
-  .brand-mark-glyph,
-  .brand-mark-orbit,
-  .iconfont-visual-float,
-  .iconfont-visual-pulse,
-  .iconfont-visual-spark,
-  .project-loading-motion-orbit::before,
-  .project-loading-motion-orbit span {
+  .brand-mark-glyph {
     animation: none !important;
     scroll-behavior: auto !important;
   }

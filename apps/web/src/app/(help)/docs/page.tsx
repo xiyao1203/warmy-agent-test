@@ -234,7 +234,7 @@ export default function DocsPage() {
           </p>
         </div>
         <Link
-          className="inline-flex shrink-0 items-center justify-center gap-2 rounded-[var(--radius-md)] bg-[var(--primary)] px-3 py-2 text-sm font-medium text-white hover:bg-[var(--primary-active)]"
+          className="inline-flex shrink-0 items-center justify-center gap-2 rounded-[var(--radius-md)] bg-[var(--primary)] px-3 py-2 text-sm font-medium text-[var(--on-primary)] hover:bg-[var(--primary-active)]"
           href="/feedback"
         >
           <MessageSquare className="size-4" />

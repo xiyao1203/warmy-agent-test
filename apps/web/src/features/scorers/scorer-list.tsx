@@ -91,7 +91,7 @@ export function ScorerList({ projectId }: { projectId: string }) {
 
   if (loading) {
     return (
-      <div className="min-w-0 px-6 py-6">
+      <div className="workspace-page">
         <header className="border-b border-[var(--hairline)] pb-5">
           <Skeleton className="h-7 w-32" />
           <Skeleton className="mt-2 h-4 w-72" />
@@ -109,7 +109,7 @@ export function ScorerList({ projectId }: { projectId: string }) {
   }
 
   return (
-    <div className="min-w-0 px-6 py-6">
+    <div className="workspace-page">
       <header className="flex items-center justify-between gap-4 border-b border-[var(--hairline)] pb-5">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">评分器</h1>

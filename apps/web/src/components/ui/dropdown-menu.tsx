@@ -15,7 +15,7 @@ export function DropdownMenuContent({
   return (
     <DropdownMenuPrimitive.Portal>
       <DropdownMenuPrimitive.Content
-        className={`z-50 min-w-40 rounded-[var(--radius-lg)] border border-[var(--hairline)] bg-[var(--surface)] p-1 ${className}`}
+        className={`z-50 min-w-40 rounded-[var(--radius-lg)] border border-[var(--hairline)] bg-[var(--surface-raised)] p-1 shadow-[var(--shadow-overlay)] ${className}`}
         side={side}
         sideOffset={sideOffset}
         {...props}
@@ -30,7 +30,7 @@ export function DropdownMenuItem({
 }: ComponentProps<typeof DropdownMenuPrimitive.Item>) {
   return (
     <DropdownMenuPrimitive.Item
-      className={`flex h-8 cursor-default select-none items-center rounded-[var(--radius-lg)] px-2 text-sm text-[var(--ink)] outline-none data-[disabled]:opacity-50 data-[highlighted]:bg-[var(--canvas-soft)] ${className}`}
+      className={`flex h-8 cursor-default select-none items-center rounded-[var(--radius-sm)] px-2 text-sm text-[var(--ink)] outline-none data-[disabled]:opacity-50 data-[highlighted]:bg-[var(--canvas-soft)] ${className}`}
       {...props}
     />
   );

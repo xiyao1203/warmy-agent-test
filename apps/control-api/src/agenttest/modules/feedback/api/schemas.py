@@ -2,19 +2,11 @@
 
 from __future__ import annotations
 
-from enum import StrEnum
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field
 
-
-class FeedbackType(StrEnum):
-    """反馈类型枚举。"""
-
-    BUG = "bug"
-    FEATURE = "feature"
-    UX = "ux"
-    OTHER = "other"
+from agenttest.modules.feedback.domain.value_objects import FeedbackType
 
 
 class CreateFeedbackRequest(BaseModel):

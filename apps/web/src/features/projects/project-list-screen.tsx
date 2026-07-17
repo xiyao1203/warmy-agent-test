@@ -44,9 +44,9 @@ import {
 } from "@/components/ui/table-actions";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import {
-  IconfontProjectVisual,
+  ProjectEmptyVisual,
   ProjectLoadingMotion,
-} from "@/components/visuals/iconfont-inspired-visuals";
+} from "@/components/visuals/project-state-visuals";
 
 type ProjectListScreenProps = {
   error?: "service";
@@ -138,7 +138,7 @@ export function ProjectListScreen({
   }
 
   return (
-    <div className="min-w-0 px-6 py-6">
+    <div className="workspace-page">
       <header className="flex items-start justify-between gap-4 border-b border-[var(--hairline)] pb-5">
         <div>
           <h1
@@ -540,7 +540,7 @@ function ProjectListState({
           action={<CreateProjectDialog onCreate={onCreate} />}
           description="创建第一个项目后即可进入测试 Agent。"
           title="暂无项目"
-          visual={<IconfontProjectVisual />}
+          visual={<ProjectEmptyVisual />}
         />
       </section>
     );

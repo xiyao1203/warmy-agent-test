@@ -14,32 +14,32 @@ type ToastProps = {
 
 const typeConfig = {
   error: {
-    bg: "bg-red-50 dark:bg-red-950/50",
-    border: "border-red-200 dark:border-red-800",
+    bg: "bg-[var(--danger-subtle)]",
+    border: "border-[var(--danger)]",
     icon: XCircle,
-    iconColor: "text-red-500",
-    textColor: "text-red-800 dark:text-red-200",
+    iconColor: "text-[var(--danger)]",
+    textColor: "text-[var(--danger)]",
   },
   info: {
-    bg: "bg-blue-50 dark:bg-blue-950/50",
-    border: "border-blue-200 dark:border-blue-800",
+    bg: "bg-[var(--info-subtle)]",
+    border: "border-[var(--info)]",
     icon: Info,
-    iconColor: "text-blue-500",
-    textColor: "text-blue-800 dark:text-blue-200",
+    iconColor: "text-[var(--info)]",
+    textColor: "text-[var(--info)]",
   },
   success: {
-    bg: "bg-emerald-50 dark:bg-emerald-950/50",
-    border: "border-emerald-200 dark:border-emerald-800",
+    bg: "bg-[var(--success-subtle)]",
+    border: "border-[var(--success)]",
     icon: CheckCircle,
-    iconColor: "text-emerald-500",
-    textColor: "text-emerald-800 dark:text-emerald-200",
+    iconColor: "text-[var(--success)]",
+    textColor: "text-[var(--success)]",
   },
   warning: {
-    bg: "bg-amber-50 dark:bg-amber-950/50",
-    border: "border-amber-200 dark:border-amber-800",
+    bg: "bg-[var(--warning-subtle)]",
+    border: "border-[var(--warning)]",
     icon: AlertCircle,
-    iconColor: "text-amber-500",
-    textColor: "text-amber-800 dark:text-amber-200",
+    iconColor: "text-[var(--warning)]",
+    textColor: "text-[var(--warning)]",
   },
 };
 
@@ -59,12 +59,13 @@ export function Toast({
 
   return (
     <div
-      className={`flex items-center gap-3 rounded-[var(--radius)] border p-4 shadow-lg ${config.bg} ${config.border}`}
+      className={`flex items-center gap-3 rounded-[var(--radius-md)] border p-4 shadow-[var(--shadow-overlay)] ${config.bg} ${config.border}`}
     >
       <Icon className={`size-5 shrink-0 ${config.iconColor}`} />
       <p className={`text-sm font-medium ${config.textColor}`}>{message}</p>
       <button
-        className={`ml-auto shrink-0 rounded-full p-1 hover:bg-black/5 dark:hover:bg-white/5 ${config.textColor}`}
+        aria-label="关闭通知"
+        className={`ml-auto shrink-0 rounded-[var(--radius-sm)] p-1 hover:bg-[var(--canvas-soft)] ${config.textColor}`}
         onClick={onClose}
       >
         <X className="size-4" />

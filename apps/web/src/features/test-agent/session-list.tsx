@@ -40,7 +40,7 @@ export function SessionList({
     : items;
 
   const statusIcons: Record<string, string> = {
-    active: "bg-green-400",
+    active: "bg-[var(--success)]",
     archived: "bg-[var(--muted)]",
     processing: "bg-[var(--primary)] animate-pulse",
   };
@@ -54,7 +54,7 @@ export function SessionList({
   }
 
   return (
-    <aside className="flex h-full min-h-0 flex-col overflow-hidden border-r border-[var(--hairline)] bg-[var(--canvas-soft)]/70">
+    <aside className="flex h-full min-h-0 flex-col overflow-hidden border-r border-[var(--hairline)] bg-[var(--surface-inset)]">
       {/* New session header */}
       <div className="flex h-12 shrink-0 items-center gap-1 border-b border-[var(--hairline)] px-2.5">
         <Button
@@ -73,7 +73,7 @@ export function SessionList({
           <Search className="absolute left-2 top-1/2 size-3.5 -translate-y-1/2 text-[var(--muted)]" />
           <Input
             aria-label="搜索会话"
-            className="h-8 w-full border-transparent bg-[var(--surface)] pl-7 text-xs shadow-sm"
+            className="h-8 w-full border-[var(--hairline)] bg-[var(--surface)] pl-7 text-xs"
             onChange={(e) => setSearch(e.target.value)}
             placeholder="搜索会话…"
             value={search}
@@ -103,9 +103,9 @@ export function SessionList({
             <div className="group relative mb-1" key={item.session_id}>
               <button
                 aria-label={item.title}
-                className={`min-h-9 w-full rounded-lg px-3 py-2 pr-9 text-left text-sm transition-colors ${
+                className={`min-h-9 w-full rounded-[var(--radius-md)] px-3 py-2 pr-9 text-left text-sm transition-colors ${
                   activeId === item.session_id
-                    ? "bg-[var(--surface)] font-medium text-[var(--ink)] shadow-sm"
+                    ? "bg-[var(--primary-subtle)] font-medium text-[var(--primary)]"
                     : "text-[var(--body)] hover:bg-[var(--surface)]/75 hover:text-[var(--ink)]"
                 }`}
                 onClick={() => onSelect(item.session_id)}
@@ -156,7 +156,7 @@ export function SessionList({
               取消
             </Button>
             <button
-              className="inline-flex h-9 items-center justify-center rounded-full bg-[var(--danger)] px-5 text-sm font-medium text-white hover:opacity-90"
+              className="inline-flex h-9 items-center justify-center rounded-[var(--radius-md)] bg-[var(--danger)] px-4 text-sm font-medium text-[var(--on-primary)] hover:opacity-90"
               onClick={() => {
                 if (!deleteTarget) return;
                 onDelete(deleteTarget.session_id);

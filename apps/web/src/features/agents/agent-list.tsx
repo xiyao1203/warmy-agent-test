@@ -46,6 +46,7 @@ import {
 } from "@/components/ui/table-actions";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { Skeleton, Tooltip } from "@/components/uiverse";
+import { useCreateIntent } from "@/lib/use-create-intent";
 
 type AgentListProps = {
   agents?: AgentResponse[];
@@ -86,7 +87,7 @@ export function AgentList({
   }
 
   return (
-    <div className="min-w-0 px-6 py-6">
+    <div className="workspace-page">
       <header className="flex items-start justify-between gap-4 border-b border-[var(--hairline)] pb-5">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">
@@ -276,7 +277,7 @@ function CreateAgentDialog({
 }: {
   onCreate: (payload: CreateAgentRequest) => Promise<unknown>;
 }) {
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useCreateIntent("agent");
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [agentType, setAgentType] = useState<AgentType>("generic_http");
@@ -454,7 +455,7 @@ function StatusPanel({
 
 function AgentListSkeleton() {
   return (
-    <div className="min-w-0 px-6 py-6">
+    <div className="workspace-page">
       {/* Header skeleton */}
       <header className="flex items-start justify-between gap-4 border-b border-[var(--hairline)] pb-5">
         <div>

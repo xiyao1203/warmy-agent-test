@@ -4,31 +4,25 @@ from __future__ import annotations
 
 import html
 from datetime import UTC, datetime
-from typing import Any
+
+from agenttest.modules.reports.application.contracts import ReportFormat, RunReport
 
 
 class HtmlReportGenerator:
-    """HTML 格式报告生成器。
+    """生成人类可读的 HTML 报告。"""
 
-    生成人类可读的 HTML 报告。
-    """
+    format: ReportFormat = "html"
+    media_type = "text/html"
 
-    def generate(self, run_data: dict[str, Any]) -> str:
-        """生成 HTML 报告。
+    def generate(self, run_data: RunReport) -> str:
+        """生成 HTML 报告正文。"""
 
-        Args:
-            run_data: 运行数据。
-
-        Returns:
-            HTML 字符串。
-        """
         run_id = run_data.get("run_id", "")
-        total = int(run_data.get("total_cases", 0))  # type: ignore[arg-type]
-        passed = int(run_data.get("passed_cases", 0))  # type: ignore[arg-type]
-        failed = int(run_data.get("failed_cases", 0))  # type: ignore[arg-type]
-        cases = run_data.get("cases", [])  # type: ignore[assignment]
+        total = int(run_data.get("total_cases", 0))
+        passed = int(run_data.get("passed_cases", 0))
+        failed = int(run_data.get("failed_cases", 0))
+        cases = run_data.get("cases", [])
 
-        # 生成用例表格行
         case_rows = ""
         for case in cases:
             status_class = "passed" if case.get("status") == "passed" else "failed"

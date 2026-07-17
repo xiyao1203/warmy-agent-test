@@ -492,7 +492,7 @@ function formatBytes(bytes: number): string {
 
 function RunDetailSkeleton() {
   return (
-    <div className="min-w-0 bg-[var(--canvas)] px-6 py-6">
+    <div className="workspace-page bg-[var(--canvas)]">
       {/* Header skeleton */}
       <header className="flex flex-wrap items-start justify-between gap-4 border-b border-[var(--hairline)] pb-5">
         <div>

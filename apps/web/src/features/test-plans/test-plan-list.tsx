@@ -40,6 +40,7 @@ import {
   tableActionCellClass,
 } from "@/components/ui/table-actions";
 import { TruncatedText } from "@/components/ui/truncated-text";
+import { useCreateIntent } from "@/lib/use-create-intent";
 
 export function TestPlanList({
   error,
@@ -64,7 +65,7 @@ export function TestPlanList({
     return <StatusPanel title="测试计划列表暂时不可用" />;
   }
   return (
-    <div className="min-w-0 px-6 py-6">
+    <div className="workspace-page">
       <header className="flex items-start justify-between gap-4 border-b border-[var(--hairline)] pb-5">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">测试计划</h1>
@@ -246,7 +247,7 @@ function CreatePlanDialog({
 }: {
   onCreate: (payload: CreateTestPlanRequest) => Promise<unknown>;
 }) {
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useCreateIntent("plan");
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [error, setError] = useState("");

@@ -150,7 +150,7 @@ export function RunResultWorkbench({
                 key={item.value}
                 className={`rounded px-2 py-1 text-xs font-medium transition-colors ${
                   filter === item.value
-                    ? "bg-[var(--primary)] text-white"
+                    ? "bg-[var(--primary)] text-[var(--on-primary)]"
                     : "text-[var(--muted)] hover:bg-[var(--canvas-soft)]"
                 }`}
                 onClick={() => setFilter(item.value)}

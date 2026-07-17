@@ -16,7 +16,17 @@ from agenttest.modules.model_configs.infrastructure.temporal_invoker import (
 )
 from agenttest.modules.projects.api.router import create_project_router
 from agenttest.modules.reports.api.router import create_report_router
+from agenttest.modules.reports.application.export import ReportExportService
 from agenttest.modules.reports.application.service import ReportService
+from agenttest.modules.reports.infrastructure.generators.html_report import (
+    HtmlReportGenerator,
+)
+from agenttest.modules.reports.infrastructure.generators.json_report import (
+    JsonReportGenerator,
+)
+from agenttest.modules.reports.infrastructure.generators.junit_report import (
+    JunitReportGenerator,
+)
 from agenttest.modules.run_postprocessing.api.internal_router import (
     create_internal_postprocess_router,
 )
@@ -173,9 +183,16 @@ def register(app: FastAPI, context: BootstrapContext) -> None:
 
     app.include_router(
         create_report_router(
-            service=ReportService(
-                runs=SqlAlchemyRunRepository(context.session_factory),
-                project_access=context.project_access,
+            exporter=ReportExportService(
+                reports=ReportService(
+                    runs=SqlAlchemyRunRepository(context.session_factory),
+                    project_access=context.project_access,
+                ),
+                renderers=[
+                    JsonReportGenerator(),
+                    JunitReportGenerator(),
+                    HtmlReportGenerator(),
+                ],
             ),
             current_user=auth.current_user,
             settings=settings,

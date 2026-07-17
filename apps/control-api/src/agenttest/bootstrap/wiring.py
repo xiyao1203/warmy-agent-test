@@ -189,7 +189,17 @@ from agenttest.modules.projects.infrastructure.persistence.repositories import (
     SqlAlchemyProjectRepository,
 )
 from agenttest.modules.reports.api.router import create_report_router
+from agenttest.modules.reports.application.export import ReportExportService
 from agenttest.modules.reports.application.service import ReportService
+from agenttest.modules.reports.infrastructure.generators.html_report import (
+    HtmlReportGenerator,
+)
+from agenttest.modules.reports.infrastructure.generators.json_report import (
+    JsonReportGenerator,
+)
+from agenttest.modules.reports.infrastructure.generators.junit_report import (
+    JunitReportGenerator,
+)
 from agenttest.modules.reviews.infrastructure.persistence.repositories import (
     SqlAlchemyReviewTaskRepository,
 )
@@ -436,9 +446,16 @@ def create_app(
     report_projects = SqlAlchemyProjectRepository(report_session_factory)
     app.include_router(
         create_report_router(
-            service=ReportService(
-                runs=report_runs,
-                project_access=ProjectAccessAdapter(report_projects),
+            exporter=ReportExportService(
+                reports=ReportService(
+                    runs=report_runs,
+                    project_access=ProjectAccessAdapter(report_projects),
+                ),
+                renderers=[
+                    JsonReportGenerator(),
+                    JunitReportGenerator(),
+                    HtmlReportGenerator(),
+                ],
             ),
             current_user=dependencies.current_user,
             settings=resolved_settings,

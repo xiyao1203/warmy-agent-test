@@ -10,9 +10,9 @@ from pydantic import ValidationError
 
 from agenttest.modules.identity.public import User
 from agenttest.modules.projects.public import ProjectId
+from agenttest.modules.scorers.application.config import ModelScorerConfig, parse_scorer_config
 from agenttest.modules.scorers.application.evaluate import evaluate_deterministic
 from agenttest.modules.scorers.application.model_judge import ModelJudge
-from agenttest.modules.scorers.domain.config import ModelScorerConfig, parse_scorer_config
 from agenttest.modules.scorers.domain.entities import Scorer, ScorerId
 from agenttest.modules.scorers.domain.value_objects import ScorerType
 

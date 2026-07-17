@@ -62,7 +62,7 @@ export function DropdownSelect({
         <DropdownMenuPrimitive.Trigger asChild disabled={disabled}>
           <button
             aria-haspopup="listbox"
-            className={`inline-flex h-9 w-full min-w-0 items-center justify-between gap-2 rounded border border-[var(--hairline)] bg-[var(--surface)] px-3 text-left text-sm text-[var(--ink)] shadow-none outline-none transition-colors hover:bg-[var(--canvas-soft)] focus:border-[var(--primary)] disabled:cursor-not-allowed disabled:opacity-50 ${className}`}
+            className={`app-select-trigger inline-flex h-9 w-full min-w-0 items-center justify-between gap-2 rounded-[var(--radius-md)] border border-[var(--hairline)] px-3 text-left text-sm shadow-none outline-none transition-colors hover:border-[var(--hairline-strong)] hover:bg-[var(--canvas-soft)] focus:border-[var(--primary)] disabled:cursor-not-allowed disabled:opacity-50 ${className}`}
             disabled={disabled}
             type="button"
           >
@@ -79,13 +79,13 @@ export function DropdownSelect({
           <DropdownMenuPrimitive.Content
             align="start"
             avoidCollisions={false}
-            className="z-50 max-h-72 min-w-[var(--radix-dropdown-menu-trigger-width)] overflow-y-auto rounded-[var(--radius-lg)] border border-[var(--hairline)] bg-[var(--surface)] p-1 shadow-xl"
+            className="z-50 max-h-72 min-w-[var(--radix-dropdown-menu-trigger-width)] overflow-y-auto rounded-[var(--radius-lg)] border border-[var(--hairline)] bg-[var(--surface-raised)] p-1 shadow-[var(--shadow-overlay)]"
             side="bottom"
             sideOffset={6}
           >
             {options.map((option) => (
               <DropdownMenuPrimitive.Item
-                className="flex min-h-8 cursor-default select-none items-center gap-2 rounded-[var(--radius-md)] px-2 text-sm text-[var(--ink)] outline-none data-[disabled]:opacity-50 data-[highlighted]:bg-[var(--primary-subtle)] data-[highlighted]:text-[var(--primary)]"
+                className="flex min-h-8 cursor-default select-none items-center gap-2 rounded-[var(--radius-sm)] px-2 text-sm text-[var(--ink)] outline-none data-[disabled]:opacity-50 data-[highlighted]:bg-[var(--canvas-soft)]"
                 disabled={option.disabled}
                 key={`${option.value}-${String(option.label)}`}
                 onSelect={() => emitChange(option.value)}

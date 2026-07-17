@@ -1,74 +1,94 @@
-/* ============================================
-   Apple-inspired Design Tokens
-   Source of truth: docs/design.md
-   ============================================ */
+/* GLM Coding-inspired workspace design tokens.
+   Product surfaces consume semantic variables only. */
 
-:root {
-  /* === Surface === */
-  --canvas: #ffffff;
-  --canvas-soft: #f5f5f7;
+:root,
+.light {
+  color-scheme: light;
+
+  /* Surfaces */
+  --canvas: #f7f7f8;
+  --canvas-soft: #f1f1f3;
   --surface: #ffffff;
-  --surface-strong: #d2d2d7;
-  --surface-pearl: #fafafc;
-  --surface-tile-1: #272729;
-  --surface-tile-2: #2a2a2c;
-  --surface-tile-3: #252527;
-  --surface-black: #000000;
+  --surface-raised: #ffffff;
+  --surface-strong: #e4e4e7;
+  --surface-pearl: #fafafa;
+  --surface-inset: #f4f4f5;
+  --surface-tile-1: #202022;
+  --surface-tile-2: #27272a;
+  --surface-tile-3: #18181b;
+  --surface-black: #111113;
 
-  /* === Hairlines (no shadows — color-only depth) === */
-  --hairline: #e0e0e0;
-  --hairline-soft: #f0f0f0;
-  --hairline-strong: #d2d2d7;
+  /* Borders */
+  --hairline: #e4e4e7;
+  --hairline-soft: #eeeeef;
+  --hairline-strong: #d4d4d8;
 
-  /* === Text === */
-  --ink: #1d1d1f;
-  --body: #1d1d1f;
-  --muted: #7a7a7a;
-  --muted-soft: #cccccc;
+  /* Text */
+  --ink: #18181b;
+  --body: #3f3f46;
+  --muted: #71717a;
+  --muted-soft: #a1a1aa;
   --on-dark: #ffffff;
-  --body-on-dark: #ffffff;
-  --body-muted: #cccccc;
+  --body-on-dark: #f4f4f5;
+  --body-muted: #a1a1aa;
 
-  /* === Brand (single accent: Action Blue) === */
-  --primary: #0066cc;
-  --primary-active: #0071e3;
-  --primary-on-dark: #2997ff;
-  --primary-rgb: 0, 102, 204;
-  --primary-subtle: rgba(0, 102, 204, 0.08);
+  /* Product accent */
+  --primary: #e94b43;
+  --primary-active: #d83d36;
+  --primary-hover: #df433b;
+  --primary-on-dark: #ff6b61;
+  --primary-rgb: 233, 75, 67;
+  --primary-subtle: rgba(233, 75, 67, 0.09);
+  --primary-subtle-strong: rgba(233, 75, 67, 0.16);
+  --on-primary: #ffffff;
 
-  /* === Semantic === */
-  --success: #1f8a65;
-  --success-subtle: #dafbe1;
-  --warning: #9a6700;
-  --warning-subtle: #fff1c2;
-  --danger: #cf2d56;
-  --danger-subtle: #ffebe9;
+  /* Semantic status */
+  --success: #16875f;
+  --success-subtle: #e9f7f1;
+  --warning: #a15c00;
+  --warning-subtle: #fff6e5;
+  --danger: #d93d48;
+  --danger-subtle: #fff0f1;
+  --info: #2468b4;
+  --info-subtle: #eef5fd;
 
-  /* === Focus & Overlay === */
-  --focus-ring: #0071e3;
-  --focus-ring-subtle: rgba(0, 102, 204, 0.2);
-  --overlay: rgba(29, 29, 31, 0.45);
+  /* Interaction and layering */
+  --focus-ring: #e94b43;
+  --focus-ring-subtle: rgba(233, 75, 67, 0.22);
+  --overlay: rgba(24, 24, 27, 0.46);
+  --shadow-overlay:
+    0 16px 48px rgba(24, 24, 27, 0.14), 0 2px 8px rgba(24, 24, 27, 0.08);
+  --shadow-product: 0 18px 48px rgba(24, 24, 27, 0.14);
 
-  /* === Radius === */
-  --radius-sm: 8px;
-  --radius-md: 11px;
-  --radius-lg: 18px;
+  /* Shape and density */
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
   --radius-pill: 9999px;
+  --control-height-sm: 32px;
+  --control-height-md: 36px;
+  --control-height-lg: 40px;
+  --sidebar-width: 240px;
+  --sidebar-width-collapsed: 60px;
+  --topbar-height: 52px;
+  --content-max-width: 1600px;
 
-  /* === Typography === */
+  /* Type */
   --font-sans:
-    system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text",
-    "SF Pro Display", Inter, sans-serif;
-  --font-display:
-    "Alibaba PuHuiTi 2.0", "Alibaba PuHuiTi", "Alimama ShuHeiTi",
-    "HarmonyOS Sans SC", "PingFang SC", "Microsoft YaHei UI", "SF Pro Display",
-    system-ui, sans-serif;
-  --font-code: "SF Mono", "JetBrains Mono", "Fira Code", monospace;
+    Inter, "HarmonyOS Sans SC", "PingFang SC", "Microsoft YaHei UI",
+    -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-display: var(--font-sans);
+  --font-code: "SFMono-Regular", "JetBrains Mono", "Fira Code", monospace;
 
-  /* === Product shadow (single purpose: product imagery only) === */
-  --shadow-product: rgba(0, 0, 0, 0.22) 3px 5px 30px 0;
+  /* Timing and z-index */
+  --motion-fast: 120ms;
+  --motion-standard: 180ms;
+  --layer-dropdown: 50;
+  --layer-drawer: 60;
+  --layer-modal: 70;
+  --layer-toast: 80;
 
-  /* === Backward-compatible aliases === */
+  /* Backward-compatible semantic aliases */
   --background: var(--canvas);
   --surface-subtle: var(--canvas-soft);
   --border: var(--hairline);
@@ -83,81 +103,59 @@
   --accent-text: var(--primary);
   --accent-rgb: var(--primary-rgb);
   --selected: var(--primary-subtle);
-  --shadow-overlay: none;
+  --card: var(--surface);
+  --surface-hover: var(--canvas-soft);
 }
 
-/* ===== Dark Mode: System Preference ===== */
-@media (prefers-color-scheme: dark) {
-  :root:not(.light) {
-    /* === Surface === */
-    --canvas: #000000;
-    --canvas-soft: #1d1d1f;
-    --surface: #1d1d1f;
-    --surface-strong: #272729;
-
-    /* === Hairlines === */
-    --hairline: rgba(255, 255, 255, 0.16);
-    --hairline-soft: rgba(255, 255, 255, 0.08);
-    --hairline-strong: rgba(255, 255, 255, 0.24);
-
-    /* === Text === */
-    --ink: #ffffff;
-    --body: #cccccc;
-    --muted: rgba(255, 255, 255, 0.56);
-    --muted-soft: rgba(255, 255, 255, 0.36);
-
-    /* === Brand (Sky Link Blue on dark) === */
-    --primary: #2997ff;
-    --primary-active: #40a9ff;
-    --primary-on-dark: #2997ff;
-    --primary-rgb: 41, 151, 255;
-    --primary-subtle: rgba(41, 151, 255, 0.15);
-
-    /* === Semantic === */
-    --success-subtle: rgba(31, 138, 101, 0.15);
-    --warning-subtle: rgba(210, 153, 34, 0.15);
-    --danger-subtle: rgba(207, 45, 86, 0.15);
-
-    /* === Focus & Overlay === */
-    --focus-ring: #2997ff;
-    --focus-ring-subtle: rgba(41, 151, 255, 0.25);
-    --overlay: rgba(0, 0, 0, 0.72);
-  }
-}
-
-/* ===== Dark Mode: Manual Class Toggle ===== */
 .dark {
-  /* === Surface === */
-  --canvas: #000000;
-  --canvas-soft: #1d1d1f;
-  --surface: #1d1d1f;
-  --surface-strong: #272729;
+  color-scheme: dark;
 
-  /* === Hairlines === */
-  --hairline: rgba(255, 255, 255, 0.16);
-  --hairline-soft: rgba(255, 255, 255, 0.08);
-  --hairline-strong: rgba(255, 255, 255, 0.24);
+  --canvas: #111113;
+  --canvas-soft: #18181b;
+  --surface: #1f1f22;
+  --surface-raised: #27272a;
+  --surface-strong: #303036;
+  --surface-pearl: #18181b;
+  --surface-inset: #161618;
+  --surface-tile-1: #202022;
+  --surface-tile-2: #27272a;
+  --surface-tile-3: #18181b;
+  --surface-black: #09090b;
 
-  /* === Text === */
-  --ink: #ffffff;
-  --body: #cccccc;
-  --muted: rgba(255, 255, 255, 0.56);
-  --muted-soft: rgba(255, 255, 255, 0.36);
+  --hairline: #303036;
+  --hairline-soft: #29292e;
+  --hairline-strong: #3f3f46;
 
-  /* === Brand (Sky Link Blue on dark) === */
-  --primary: #2997ff;
-  --primary-active: #40a9ff;
-  --primary-on-dark: #2997ff;
-  --primary-rgb: 41, 151, 255;
-  --primary-subtle: rgba(41, 151, 255, 0.15);
+  --ink: #fafafa;
+  --body: #d4d4d8;
+  --muted: #a1a1aa;
+  --muted-soft: #71717a;
+  --on-dark: #ffffff;
+  --body-on-dark: #f4f4f5;
+  --body-muted: #a1a1aa;
 
-  /* === Semantic === */
-  --success-subtle: rgba(31, 138, 101, 0.15);
-  --warning-subtle: rgba(210, 153, 34, 0.15);
-  --danger-subtle: rgba(207, 45, 86, 0.15);
+  --primary: #ff6b61;
+  --primary-active: #ff8179;
+  --primary-hover: #ff786f;
+  --primary-on-dark: #ff6b61;
+  --primary-rgb: 255, 107, 97;
+  --primary-subtle: rgba(255, 107, 97, 0.14);
+  --primary-subtle-strong: rgba(255, 107, 97, 0.22);
+  --on-primary: #171717;
 
-  /* === Focus & Overlay === */
-  --focus-ring: #2997ff;
-  --focus-ring-subtle: rgba(41, 151, 255, 0.25);
+  --success: #5cc99d;
+  --success-subtle: rgba(52, 211, 153, 0.14);
+  --warning: #f0b85a;
+  --warning-subtle: rgba(245, 158, 11, 0.14);
+  --danger: #ff737d;
+  --danger-subtle: rgba(244, 63, 94, 0.15);
+  --info: #7ab7f7;
+  --info-subtle: rgba(59, 130, 246, 0.15);
+
+  --focus-ring: #ff6b61;
+  --focus-ring-subtle: rgba(255, 107, 97, 0.28);
   --overlay: rgba(0, 0, 0, 0.72);
+  --shadow-overlay:
+    0 18px 56px rgba(0, 0, 0, 0.44), 0 2px 12px rgba(0, 0, 0, 0.28);
+  --shadow-product: 0 18px 48px rgba(0, 0, 0, 0.36);
 }

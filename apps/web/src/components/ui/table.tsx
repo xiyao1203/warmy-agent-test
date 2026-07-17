@@ -10,9 +10,9 @@ export function Table({
   ...props
 }: TableHTMLAttributes<HTMLTableElement>) {
   return (
-    <div className="min-w-0 overflow-hidden">
+    <div className="min-w-0 overflow-x-auto">
       <table
-        className={`w-full table-fixed border-collapse text-left text-sm ${className}`}
+        className={`w-full table-fixed border-collapse text-left text-[13px] ${className}`}
         {...props}
       />
     </div>
@@ -33,7 +33,7 @@ export function TableRow({
 }: HTMLAttributes<HTMLTableRowElement>) {
   return (
     <tr
-      className={`border-b border-[var(--hairline)] last:border-b-0 ${className}`}
+      className={`border-b border-[var(--hairline)] transition-colors last:border-b-0 hover:bg-[var(--canvas-soft)] ${className}`}
       {...props}
     />
   );
@@ -45,7 +45,7 @@ export function TableHead({
 }: ThHTMLAttributes<HTMLTableCellElement>) {
   return (
     <th
-      className={`h-9 px-3 text-center text-xs font-medium text-[var(--muted)] ${className}`}
+      className={`h-9 bg-[var(--surface-inset)] px-3 text-left text-xs font-medium text-[var(--muted)] ${className}`}
       {...props}
     />
   );
@@ -57,7 +57,7 @@ export function TableCell({
 }: TdHTMLAttributes<HTMLTableCellElement>) {
   return (
     <td
-      className={`h-11 min-w-0 px-3 text-center align-middle ${className}`}
+      className={`h-11 min-w-0 px-3 text-left align-middle ${className}`}
       {...props}
     />
   );

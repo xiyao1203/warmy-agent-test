@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from agenttest.modules.scorers.domain.config import (
+from agenttest.modules.scorers.application.config import (
     DeepEvalScorerConfig,
     ModelScorerConfig,
     ReferenceScorerConfig,

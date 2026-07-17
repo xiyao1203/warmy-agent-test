@@ -11,7 +11,7 @@ import {
 } from "./table";
 
 describe("Table", () => {
-  it("keeps list columns inside the available width without horizontal scrolling", () => {
+  it("contains wide list columns in a local horizontal scroller", () => {
     const { container } = render(
       <Table data-testid="compact-table">
         <TableBody>
@@ -24,16 +24,15 @@ describe("Table", () => {
 
     expect(container.firstElementChild).toHaveClass(
       "min-w-0",
-      "overflow-hidden",
+      "overflow-x-auto",
     );
-    expect(container.firstElementChild).not.toHaveClass("overflow-x-auto");
     expect(screen.getByTestId("compact-table")).toHaveClass(
       "w-full",
       "table-fixed",
     );
   });
 
-  it("centers table headers by default", () => {
+  it("left aligns table headers by default for scanability", () => {
     render(
       <Table>
         <TableHeader>
@@ -45,11 +44,11 @@ describe("Table", () => {
     );
 
     expect(screen.getByRole("columnheader", { name: "操作" })).toHaveClass(
-      "text-center",
+      "text-left",
     );
   });
 
-  it("centers table cells by default", () => {
+  it("left aligns table cells by default for scanability", () => {
     render(
       <Table>
         <TableBody>
@@ -60,6 +59,6 @@ describe("Table", () => {
       </Table>,
     );
 
-    expect(screen.getByRole("cell", { name: "值" })).toHaveClass("text-center");
+    expect(screen.getByRole("cell", { name: "值" })).toHaveClass("text-left");
   });
 });

@@ -272,7 +272,7 @@ export function BrowserProfileList({
   }
 
   return (
-    <div className="min-w-0 px-6 py-6">
+    <div className="workspace-page">
       <div className="mb-5 flex items-start justify-between gap-4 border-b border-[var(--hairline)] pb-5">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">浏览器实例</h1>

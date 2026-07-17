@@ -9,13 +9,10 @@ from fastapi.responses import HTMLResponse, JSONResponse, PlainTextResponse
 from agenttest.bootstrap.settings import Settings
 from agenttest.modules.identity.public import InvalidSessionError, User
 from agenttest.modules.projects.public import ProjectId, ProjectNotFoundError
+from agenttest.modules.reports.application.export import ExportedReport
 from agenttest.modules.reports.application.service import (
     ReportNotFoundError,
-    ReportService,
 )
-from agenttest.modules.reports.generators.html_report import HtmlReportGenerator
-from agenttest.modules.reports.generators.json_report import JsonReportGenerator
-from agenttest.modules.reports.generators.junit_report import JunitReportGenerator
 from agenttest.modules.runs.public import RunId
 
 
@@ -23,9 +20,21 @@ class CurrentUserExecutor(Protocol):
     async def execute(self, session_token: str) -> User: ...
 
 
+class ReportExporter(Protocol):
+    """报告导出 Application 能力。"""
+
+    async def export(
+        self,
+        actor: User,
+        project_id: ProjectId,
+        run_id: RunId,
+        report_format: str,
+    ) -> ExportedReport: ...
+
+
 def create_report_router(
     *,
-    service: ReportService,
+    exporter: ReportExporter,
     current_user: CurrentUserExecutor,
     settings: Settings,
 ) -> APIRouter:
@@ -46,22 +55,19 @@ def create_report_router(
             return JSONResponse(status_code=401, content={"detail": "认证失败"})
         try:
             actor = await current_user.execute(token)
-            report = await service.build(actor, ProjectId(project_id), RunId(run_id))
+            report = await exporter.export(
+                actor,
+                ProjectId(project_id),
+                RunId(run_id),
+                format,
+            )
         except InvalidSessionError:
             return JSONResponse(status_code=401, content={"detail": "认证失败"})
         except (ProjectNotFoundError, ReportNotFoundError):
             return JSONResponse(status_code=404, content={"detail": "运行不存在"})
 
-        if format == "json":
-            return PlainTextResponse(
-                JsonReportGenerator().generate(report),
-                media_type="application/json",
-            )
-        if format == "junit":
-            return PlainTextResponse(
-                JunitReportGenerator().generate(report),
-                media_type="application/xml",
-            )
-        return HTMLResponse(HtmlReportGenerator().generate(report))
+        if report.media_type == "text/html":
+            return HTMLResponse(report.content)
+        return PlainTextResponse(report.content, media_type=report.media_type)
 
     return router

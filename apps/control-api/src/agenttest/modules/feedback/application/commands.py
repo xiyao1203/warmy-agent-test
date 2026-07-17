@@ -4,16 +4,15 @@ from __future__ import annotations
 
 from uuid import UUID
 
-from agenttest.modules.feedback.api.schemas import FeedbackType
-from agenttest.modules.feedback.infrastructure.persistence.repositories import (
-    SqlAlchemyFeedbackRepository,
-)
+from agenttest.modules.feedback.application.ports import FeedbackRepository
+from agenttest.modules.feedback.domain.entities import Feedback
+from agenttest.modules.feedback.domain.value_objects import FeedbackType
 
 
 class CreateFeedbackHandler:
     """创建反馈处理器。"""
 
-    def __init__(self, repository: SqlAlchemyFeedbackRepository) -> None:
+    def __init__(self, repository: FeedbackRepository) -> None:
         self._repository = repository
 
     async def execute(
@@ -25,8 +24,6 @@ class CreateFeedbackHandler:
         contact: str | None,
         user_id: UUID | None,
     ) -> UUID:
-        from agenttest.modules.feedback.domain.entities import Feedback
-
         feedback = Feedback.create(
             feedback_type=feedback_type,
             title=title,

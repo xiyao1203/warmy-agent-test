@@ -17,7 +17,7 @@ from agenttest.bootstrap.run_source import (
     browser_profile_snapshot,
     secret_free_credential_bindings,
 )
-from agenttest.modules.agents.domain.invocation import (
+from agenttest.modules.agents.public import (
     AgentInvocationConfig,
     InvocationProtocol,
     invocation_from_stored_config,

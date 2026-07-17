@@ -79,7 +79,7 @@ export function TraceTimeline({ spans, onSpanClick }: TraceTimelineProps) {
                 <div className="flex items-center gap-2">
                   <span className="text-sm font-medium">{span.name}</span>
                   {isError && (
-                    <span className="rounded bg-[var(--danger)] px-1.5 py-0.5 text-xs text-white">
+                    <span className="rounded bg-[var(--danger)] px-1.5 py-0.5 text-xs text-[var(--on-primary)]">
                       错误
                     </span>
                   )}

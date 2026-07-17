@@ -4,24 +4,19 @@ from __future__ import annotations
 
 import json
 from datetime import UTC, datetime
-from typing import Any
+
+from agenttest.modules.reports.application.contracts import ReportFormat, RunReport
 
 
 class JsonReportGenerator:
-    """JSON 格式报告生成器。
+    """生成标准化测试结果 JSON。"""
 
-    生成标准化测试结果 JSON 格式。
-    """
+    format: ReportFormat = "json"
+    media_type = "application/json"
 
-    def generate(self, run_data: dict[str, Any]) -> str:
-        """生成 JSON 报告。
+    def generate(self, run_data: RunReport) -> str:
+        """生成 JSON 报告正文。"""
 
-        Args:
-            run_data: 运行数据。
-
-        Returns:
-            JSON 字符串。
-        """
         report = {
             "format_version": "1.0",
             "generated_at": datetime.now(UTC).isoformat(),
@@ -35,5 +30,4 @@ class JsonReportGenerator:
             "failed_cases": run_data.get("failed_cases"),
             "cases": run_data.get("cases", []),
         }
-
         return json.dumps(report, indent=2, ensure_ascii=False)

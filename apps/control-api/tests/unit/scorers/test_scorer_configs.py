@@ -6,14 +6,14 @@ Covers Rule/Reference/Model discriminated configs and trial results.
 from __future__ import annotations
 
 import pytest
-from agenttest.modules.scorers.application.evaluate import TrialResult, evaluate_deterministic
-from agenttest.modules.scorers.domain.config import (
+from agenttest.modules.scorers.application.config import (
     DeepEvalScorerConfig,
     ModelScorerConfig,
     ReferenceScorerConfig,
     RuleScorerConfig,
     parse_scorer_config,
 )
+from agenttest.modules.scorers.application.evaluate import TrialResult, evaluate_deterministic
 from pydantic import ValidationError
 
 # ── Config parsing ────────────────────────────────────────────────────────

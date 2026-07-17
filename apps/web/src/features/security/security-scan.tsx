@@ -102,7 +102,7 @@ export function SecurityScanPage({ projectId }: { projectId: string }) {
   }
 
   return (
-    <div className="min-w-0 px-6 py-6">
+    <div className="workspace-page">
       <header className="flex items-center justify-between gap-4 border-b border-[var(--hairline)] pb-5">
         <div>
           <h1 className="flex items-center gap-2 text-2xl font-semibold tracking-tight">

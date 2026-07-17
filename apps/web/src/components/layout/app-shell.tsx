@@ -1,18 +1,45 @@
 "use client";
 
+import * as DialogPrimitive from "@radix-ui/react-dialog";
+import * as DropdownMenuPrimitive from "@radix-ui/react-dropdown-menu";
 import type {
   ProjectResponse,
   UserResponse,
 } from "@warmy/generated-api-client";
-import { PanelLeftClose, PanelLeftOpen } from "lucide-react";
-import Link from "next/link";
-import { usePathname } from "next/navigation";
 import {
-  type FocusEvent,
-  type MouseEvent,
+  Activity,
+  Blocks,
+  Bot,
+  Check,
+  ChevronRight,
+  ClipboardCheck,
+  Gauge,
+  GitCompareArrows,
+  KeyRound,
+  LayoutDashboard,
+  ListChecks,
+  Menu,
+  Monitor,
+  PanelLeftClose,
+  PanelLeftOpen,
+  Plus,
+  Search,
+  Settings2,
+  ShieldCheck,
+  SlidersHorizontal,
+  Sparkles,
+  Users,
+  X,
+  type LucideIcon,
+} from "lucide-react";
+import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
+import {
   type ReactNode,
   useCallback,
   useEffect,
+  useMemo,
+  useRef,
   useState,
 } from "react";
 
@@ -24,11 +51,6 @@ import { projectOverviewPath, projectWorkspacePath } from "@/lib/routes";
 import { BrandMark } from "./brand-mark";
 import { HelpDropdown } from "./help-dropdown";
 import { NotificationDropdown } from "./notification-dropdown";
-import {
-  SidebarColorIcon,
-  type SidebarIconName,
-  type SidebarIconTone,
-} from "./sidebar-icons";
 import { ThemeToggle } from "./theme-toggle";
 import { UserDropdown } from "./user-dropdown";
 
@@ -41,21 +63,121 @@ type AppShellProps = {
   workspaceMode?: "agent" | "management";
 };
 
-type CollapsedSidebarTooltip = {
+type NavigationItem = {
+  exact?: boolean;
+  href: string;
+  icon: LucideIcon;
   label: string;
-  top: number;
-} | null;
-
-type CollapsedSidebarTooltipController = {
-  hide: () => void;
-  show: (label: string, target: HTMLElement) => void;
 };
+
+type NavigationGroup = {
+  items: NavigationItem[];
+  label: string;
+};
+
+const MOBILE_QUERY = "(max-width: 759px)";
 
 export function initialSidebarCollapsed(
   viewportWidth: number,
   storedPreference: string | null,
 ) {
-  return viewportWidth < 760 || storedPreference === "true";
+  return viewportWidth >= 760 && storedPreference === "true";
+}
+
+function projectNavigation(projectId: string): NavigationGroup[] {
+  return [
+    {
+      label: "工作台",
+      items: [
+        {
+          href: projectWorkspacePath(projectId),
+          icon: Sparkles,
+          label: "测试 Agent",
+        },
+        {
+          href: projectOverviewPath(projectId),
+          icon: LayoutDashboard,
+          label: "概览",
+        },
+      ],
+    },
+    {
+      label: "测试资产",
+      items: [
+        { href: `/projects/${projectId}/agents`, icon: Bot, label: "智能体" },
+        {
+          href: `/projects/${projectId}/datasets`,
+          icon: ListChecks,
+          label: "测试用例",
+        },
+        {
+          href: `/projects/${projectId}/test-plans`,
+          icon: ClipboardCheck,
+          label: "测试计划",
+        },
+      ],
+    },
+    {
+      label: "执行中心",
+      items: [
+        {
+          href: `/projects/${projectId}/runs`,
+          icon: Activity,
+          label: "测试执行",
+        },
+        {
+          href: `/projects/${projectId}/environments`,
+          icon: KeyRound,
+          label: "环境与凭证",
+        },
+        {
+          href: `/projects/${projectId}/browser-profiles`,
+          icon: Monitor,
+          label: "浏览器实例",
+        },
+      ],
+    },
+    {
+      label: "评测与治理",
+      items: [
+        {
+          href: `/projects/${projectId}/scorers`,
+          icon: Gauge,
+          label: "评分器",
+        },
+        {
+          href: `/projects/${projectId}/experiments`,
+          icon: GitCompareArrows,
+          label: "实验对比",
+        },
+        {
+          href: `/projects/${projectId}/reviews`,
+          icon: Check,
+          label: "人工审核",
+        },
+        {
+          href: `/projects/${projectId}/security`,
+          icon: ShieldCheck,
+          label: "安全测试",
+        },
+        {
+          href: `/projects/${projectId}/gates`,
+          icon: SlidersHorizontal,
+          label: "发布门禁",
+        },
+      ],
+    },
+    {
+      label: "系统设置",
+      items: [
+        {
+          href: `/projects/${projectId}/models`,
+          icon: Settings2,
+          label: "模型配置",
+        },
+      ],
+    },
+  ];
 }
 
 export function AppShell({
@@ -66,80 +188,131 @@ export function AppShell({
   user,
   workspaceMode = "management",
 }: AppShellProps) {
+  const pathname = usePathname();
   const activeProjectId =
     currentProjectId || (projects.length > 0 ? projects[0].id : null);
-  const overviewHref = activeProjectId
-    ? projectOverviewPath(activeProjectId)
-    : "/projects";
+  const [collapsed, setCollapsed] = useState(false);
+  const [mobile, setMobile] = useState(false);
+  const [mobileNavigationOpen, setMobileNavigationOpen] = useState(false);
+  const [commandOpen, setCommandOpen] = useState(false);
 
-  const [collapsed, setCollapsed] = useState(() => {
-    if (typeof window === "undefined") return false;
-    return initialSidebarCollapsed(
-      window.innerWidth,
-      localStorage.getItem("sidebar-collapsed"),
-    );
-  });
-  const [mobile, setMobile] = useState(() =>
-    typeof window === "undefined" ? false : window.innerWidth < 640,
-  );
   useEffect(() => {
-    const query = window.matchMedia("(max-width: 639px)");
-    const update = () => setMobile(query.matches);
+    function restoreCollapsePreference() {
+      setCollapsed(
+        initialSidebarCollapsed(
+          window.innerWidth,
+          localStorage.getItem("sidebar-collapsed"),
+        ),
+      );
+    }
+    restoreCollapsePreference();
+  }, []);
+
+  useEffect(() => {
+    const media = window.matchMedia(MOBILE_QUERY);
+    const update = () => {
+      setMobile(media.matches);
+      if (!media.matches) setMobileNavigationOpen(false);
+    };
     update();
-    query.addEventListener("change", update);
-    return () => query.removeEventListener("change", update);
+    media.addEventListener("change", update);
+    return () => media.removeEventListener("change", update);
   }, []);
-  const effectiveCollapsed = collapsed || mobile;
-  const [collapsedTooltip, setCollapsedTooltip] =
-    useState<CollapsedSidebarTooltip>(null);
 
-  const showCollapsedTooltip = useCallback(
-    (label: string, target: HTMLElement) => {
-      if (!effectiveCollapsed) return;
-      const rect = target.getBoundingClientRect();
-      setCollapsedTooltip({ label, top: rect.top + rect.height / 2 });
-    },
-    [effectiveCollapsed],
+  useEffect(() => {
+    function handleShortcut(event: KeyboardEvent) {
+      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") {
+        event.preventDefault();
+        setCommandOpen((value) => !value);
+      }
+    }
+    window.addEventListener("keydown", handleShortcut);
+    return () => window.removeEventListener("keydown", handleShortcut);
+  }, []);
+
+  const groups = useMemo(
+    () => (activeProjectId ? projectNavigation(activeProjectId) : []),
+    [activeProjectId],
   );
-
-  const hideCollapsedTooltip = useCallback(() => {
-    setCollapsedTooltip(null);
-  }, []);
+  const items = useMemo(
+    () => [
+      { exact: true, href: "/projects", icon: Blocks, label: "项目列表" },
+      ...groups.flatMap((group) => group.items),
+      ...(canManageUsers(user)
+        ? [
+            {
+              href: "/system/users",
+              icon: Users,
+              label: "用户与权限",
+            },
+          ]
+        : []),
+    ],
+    [groups, user],
+  );
+  const activeItem = items.find((item) => isRouteActive(pathname, item));
 
   const toggleSidebar = useCallback(() => {
-    setCollapsedTooltip(null);
-    setCollapsed((prev) => {
-      const next = !prev;
+    setCollapsed((value) => {
+      const next = !value;
       localStorage.setItem("sidebar-collapsed", String(next));
       return next;
     });
   }, []);
-  const collapsedTooltipController = {
-    hide: hideCollapsedTooltip,
-    show: showCollapsedTooltip,
-  };
-
-  const sidebarWidth = effectiveCollapsed ? "3.5rem" : "14rem";
 
   return (
-    <div className="h-screen bg-[var(--canvas)] text-[var(--ink)]">
-      <header className="flex h-14 items-center justify-between gap-4 border-b border-[var(--hairline)] bg-[var(--canvas)] px-4 max-sm:gap-1 max-sm:px-2">
-        <div className="flex min-w-0 items-center gap-5 max-sm:gap-2">
+    <div className="app-shell">
+      <header className="app-topbar">
+        <div className="flex min-w-0 items-center gap-2">
+          {mobile ? (
+            <button
+              aria-label="打开导航"
+              className="app-icon-button"
+              onClick={() => setMobileNavigationOpen(true)}
+              type="button"
+            >
+              <Menu aria-hidden="true" className="size-4" />
+            </button>
+          ) : null}
           <Link
             aria-label="Warmy Agent Test"
-            className="font-display flex shrink-0 items-center gap-2 text-base font-semibold"
+            className="app-brand"
             href="/login"
           >
-            <BrandMark compact={effectiveCollapsed} />
-            {!effectiveCollapsed && <span>Warmy Agent Test</span>}
+            <BrandMark compact />
+            <span className="max-sm:hidden">Warmy</span>
           </Link>
+          <div className="h-4 w-px bg-[var(--hairline)] max-sm:hidden" />
           <ProjectSwitcher
             currentProjectId={currentProjectId}
             onSelect={onProjectSelect}
             projects={projects}
           />
+          <Breadcrumb currentLabel={activeItem?.label} />
         </div>
-        <div className="flex items-center justify-end gap-1">
+
+        <div className="flex shrink-0 items-center gap-1">
+          <button
+            aria-label="全局搜索"
+            className="app-search-trigger"
+            onClick={() => setCommandOpen(true)}
+            type="button"
+          >
+            <Search aria-hidden="true" className="size-4" />
+            <span className="max-lg:hidden">搜索</span>
+            <kbd className="max-lg:hidden">⌘ K</kbd>
+          </button>
+          <QuickCreate projectId={activeProjectId} />
+          {activeProjectId ? (
+            <Link
+              aria-label="查看运行中心"
+              className="app-status-indicator max-md:hidden"
+              href={`/projects/${activeProjectId}/runs`}
+            >
+              <Activity aria-hidden="true" className="size-3.5" />
+              运行中心
+            </Link>
+          ) : null}
           <ThemeToggle />
           <HelpDropdown />
           <NotificationDropdown />
@@ -153,308 +326,404 @@ export function AppShell({
           />
         </div>
       </header>
-      <div className="flex h-[calc(100vh-3.5rem)]">
+
+      <div className="app-body">
         <aside
-          className="flex shrink-0 flex-col border-r border-[var(--hairline)] bg-[var(--surface)] p-2 transition-[width] duration-200"
-          style={{ width: sidebarWidth }}
+          className="app-sidebar max-[759px]:hidden"
+          data-collapsed={collapsed}
+          style={{
+            width: collapsed
+              ? "var(--sidebar-width-collapsed)"
+              : "var(--sidebar-width)",
+          }}
         >
-          {!effectiveCollapsed && (
-            <p className="px-3 pb-2 pt-2 text-[11px] font-semibold uppercase tracking-[0.66px] text-[var(--body)]">
-              项目导航
-            </p>
-          )}
-          <nav
-            aria-label="项目导航"
-            className="flex-1 space-y-1 overflow-y-auto min-h-0"
+          <Navigation
+            collapsed={collapsed}
+            groups={groups}
+            onNavigate={undefined}
+            pathname={pathname}
+            showUsers={canManageUsers(user)}
+          />
+          <button
+            aria-expanded={!collapsed}
+            aria-label={collapsed ? "展开侧边栏" : "收起侧边栏"}
+            className="app-nav-link mt-auto w-full"
+            onClick={toggleSidebar}
+            title={collapsed ? "展开侧边栏" : "收起侧边栏"}
+            type="button"
           >
-            <ProjectNavLink
-              activeMode="exact"
-              collapsed={effectiveCollapsed}
-              href="/projects"
-              icon={<SidebarNavIcon iconName="project-list" tone="indigo" />}
-              label="项目列表"
-              tooltip={collapsedTooltipController}
-            />
-            {activeProjectId ? (
-              <>
-                <ProjectNavLink
-                  collapsed={effectiveCollapsed}
-                  href={projectWorkspacePath(activeProjectId)}
-                  icon={<SidebarNavIcon iconName="test-agent" tone="azure" />}
-                  label="测试 Agent"
-                  tooltip={collapsedTooltipController}
-                />
-                <OverviewNavLink
-                  collapsed={effectiveCollapsed}
-                  href={overviewHref}
-                  tooltip={collapsedTooltipController}
-                />
-                <ProjectNavLink
-                  collapsed={effectiveCollapsed}
-                  href={`/projects/${activeProjectId}/agents`}
-                  icon={<SidebarNavIcon iconName="agent" tone="violet" />}
-                  label="智能体"
-                  tooltip={collapsedTooltipController}
-                />
-                <ProjectNavLink
-                  collapsed={effectiveCollapsed}
-                  href={`/projects/${activeProjectId}/datasets`}
-                  icon={<SidebarNavIcon iconName="test-case" tone="indigo" />}
-                  label="测试用例"
-                  tooltip={collapsedTooltipController}
-                />
-                <ProjectNavLink
-                  collapsed={effectiveCollapsed}
-                  href={`/projects/${activeProjectId}/test-plans`}
-                  icon={<SidebarNavIcon iconName="test-plan" tone="amber" />}
-                  label="测试计划"
-                  tooltip={collapsedTooltipController}
-                />
-                <ProjectNavLink
-                  collapsed={effectiveCollapsed}
-                  href={`/projects/${activeProjectId}/runs`}
-                  icon={<SidebarNavIcon iconName="test-run" tone="emerald" />}
-                  label="测试执行"
-                  tooltip={collapsedTooltipController}
-                />
-                <ProjectNavLink
-                  collapsed={effectiveCollapsed}
-                  href={`/projects/${activeProjectId}/environments`}
-                  icon={<SidebarNavIcon iconName="environment" tone="teal" />}
-                  label="环境与凭证"
-                  tooltip={collapsedTooltipController}
-                />
-                <ProjectNavLink
-                  collapsed={effectiveCollapsed}
-                  href={`/projects/${activeProjectId}/browser-profiles`}
-                  icon={
-                    <SidebarNavIcon iconName="browser-profile" tone="cyan" />
-                  }
-                  label="浏览器实例"
-                  tooltip={collapsedTooltipController}
-                />
-                <ProjectNavLink
-                  collapsed={effectiveCollapsed}
-                  href={`/projects/${activeProjectId}/models`}
-                  icon={<SidebarNavIcon iconName="model" tone="purple" />}
-                  label="模型配置"
-                  tooltip={collapsedTooltipController}
-                />
-                <ProjectNavLink
-                  collapsed={effectiveCollapsed}
-                  href={`/projects/${activeProjectId}/scorers`}
-                  icon={<SidebarNavIcon iconName="scorer" tone="orange" />}
-                  label="评分器"
-                  tooltip={collapsedTooltipController}
-                />
-                <ProjectNavLink
-                  collapsed={effectiveCollapsed}
-                  href={`/projects/${activeProjectId}/experiments`}
-                  icon={<SidebarNavIcon iconName="experiment" tone="fuchsia" />}
-                  label="实验对比"
-                  tooltip={collapsedTooltipController}
-                />
-                <ProjectNavLink
-                  collapsed={effectiveCollapsed}
-                  href={`/projects/${activeProjectId}/reviews`}
-                  icon={<SidebarNavIcon iconName="review" tone="rose" />}
-                  label="人工审核"
-                  tooltip={collapsedTooltipController}
-                />
-                <ProjectNavLink
-                  collapsed={effectiveCollapsed}
-                  href={`/projects/${activeProjectId}/security`}
-                  icon={<SidebarNavIcon iconName="security" tone="red" />}
-                  label="安全测试"
-                  tooltip={collapsedTooltipController}
-                />
-                <ProjectNavLink
-                  collapsed={effectiveCollapsed}
-                  href={`/projects/${activeProjectId}/gates`}
-                  icon={<SidebarNavIcon iconName="release-gate" tone="green" />}
-                  label="发布门禁"
-                  tooltip={collapsedTooltipController}
-                />
-              </>
-            ) : null}
-          </nav>
-          {canManageUsers(user) ? (
-            <div className="border-t border-[var(--hairline)] pt-3">
-              {!effectiveCollapsed && (
-                <p className="px-3 pb-1.5 text-[11px] font-semibold uppercase tracking-[0.66px] text-[var(--body)]">
-                  系统管理
-                </p>
-              )}
-              <Link
-                className={`flex h-9 items-center gap-3 rounded-[var(--radius-sm)] text-sm text-[var(--muted)] transition-colors hover:bg-[var(--canvas-soft)] hover:text-[var(--ink)] ${
-                  effectiveCollapsed ? "justify-center px-0" : "px-3"
-                }`}
-                href="/system/users"
-                onBlur={hideCollapsedTooltip}
-                onFocus={(event) =>
-                  showCollapsedTooltip("用户管理", event.currentTarget)
-                }
-                onMouseEnter={(event) =>
-                  showCollapsedTooltip("用户管理", event.currentTarget)
-                }
-                onMouseLeave={hideCollapsedTooltip}
-                title="用户管理"
-              >
-                <SidebarNavIcon iconName="user-management" tone="slate-blue" />
-                {!effectiveCollapsed && <span>用户管理</span>}
-              </Link>
-            </div>
-          ) : null}
-          <div className="mt-auto border-t border-[var(--hairline)] pt-2">
-            <button
-              aria-expanded={!collapsed}
-              aria-label={collapsed ? "展开侧边栏" : "收起侧边栏"}
-              className={`group relative flex h-9 w-full items-center gap-3 rounded-[var(--radius-sm)] text-sm text-[var(--muted)] transition-colors hover:bg-[var(--canvas-soft)] hover:text-[var(--ink)] max-sm:hidden ${
-                collapsed ? "justify-center px-0" : "px-3"
-              }`}
-              onBlur={hideCollapsedTooltip}
-              onFocus={(event) =>
-                showCollapsedTooltip(
-                  collapsed ? "展开侧边栏" : "收起侧边栏",
-                  event.currentTarget,
-                )
-              }
-              onMouseEnter={(event) =>
-                showCollapsedTooltip(
-                  collapsed ? "展开侧边栏" : "收起侧边栏",
-                  event.currentTarget,
-                )
-              }
-              onMouseLeave={hideCollapsedTooltip}
-              onClick={toggleSidebar}
-              title={collapsed ? "展开侧边栏" : "收起侧边栏"}
-              type="button"
-            >
-              {collapsed ? (
-                <PanelLeftOpen aria-hidden="true" className="size-4 shrink-0" />
-              ) : (
-                <PanelLeftClose
-                  aria-hidden="true"
-                  className="size-4 shrink-0"
-                />
-              )}
-              {!collapsed && <span>收起菜单</span>}
-            </button>
-          </div>
-          {collapsedTooltip ? (
-            <div
-              className="pointer-events-none fixed left-16 z-[80] -translate-y-1/2 whitespace-nowrap rounded-[var(--radius-md)] border border-[var(--hairline)] bg-[var(--surface)] px-2 py-1 text-xs font-medium text-[var(--ink)] shadow-md"
-              role="tooltip"
-              style={{ top: collapsedTooltip.top }}
-            >
-              {collapsedTooltip.label}
-            </div>
-          ) : null}
+            {collapsed ? (
+              <PanelLeftOpen aria-hidden="true" className="size-4" />
+            ) : (
+              <PanelLeftClose aria-hidden="true" className="size-4" />
+            )}
+            {!collapsed ? <span>收起菜单</span> : null}
+          </button>
         </aside>
-        <main className="min-w-0 flex-1 overflow-y-auto">{children}</main>
-        {workspaceMode === "agent" ? (
-          <aside className="border-l border-[var(--hairline)] bg-[var(--surface)] max-[1279px]:hidden" />
-        ) : null}
+
+        <main className="app-main" data-workspace-mode={workspaceMode}>
+          {children}
+        </main>
       </div>
+
+      <MobileNavigation
+        groups={groups}
+        onOpenChange={setMobileNavigationOpen}
+        open={mobileNavigationOpen}
+        pathname={pathname}
+        showUsers={canManageUsers(user)}
+      />
+      <CommandPalette
+        items={items}
+        onOpenChange={setCommandOpen}
+        open={commandOpen}
+      />
     </div>
   );
 }
 
-function OverviewNavLink({
+function Breadcrumb({ currentLabel }: { currentLabel?: string }) {
+  if (!currentLabel || currentLabel === "项目列表") return null;
+  return (
+    <div
+      aria-label="面包屑"
+      className="ml-1 flex min-w-0 items-center gap-1 text-xs text-[var(--muted)] max-xl:hidden"
+      role="navigation"
+    >
+      <ChevronRight aria-hidden="true" className="size-3.5" />
+      <span className="max-w-36 truncate text-[var(--body)]">
+        {currentLabel}
+      </span>
+    </div>
+  );
+}
+
+function Navigation({
   collapsed,
-  href,
-  tooltip,
+  groups,
+  onNavigate,
+  pathname,
+  showUsers,
 }: {
   collapsed: boolean;
-  href: string;
-  tooltip: CollapsedSidebarTooltipController;
+  groups: NavigationGroup[];
+  onNavigate?: () => void;
+  pathname: string;
+  showUsers: boolean;
 }) {
-  const pathname = usePathname();
-  const isActive = pathname === href;
-  const label = "概览";
+  return (
+    <nav aria-label="项目导航" className="app-navigation">
+      <NavigationLink
+        collapsed={collapsed}
+        item={{
+          exact: true,
+          href: "/projects",
+          icon: Blocks,
+          label: "项目列表",
+        }}
+        onNavigate={onNavigate}
+        pathname={pathname}
+      />
+      {groups.map((group) => (
+        <div className="app-nav-group" key={group.label}>
+          {!collapsed ? <p className="app-nav-label">{group.label}</p> : null}
+          <div className="space-y-0.5">
+            {group.items.map((item) => (
+              <NavigationLink
+                collapsed={collapsed}
+                item={item}
+                key={item.href}
+                onNavigate={onNavigate}
+                pathname={pathname}
+              />
+            ))}
+          </div>
+        </div>
+      ))}
+      {showUsers ? (
+        <div className="app-nav-group border-t border-[var(--hairline)] pt-2">
+          <NavigationLink
+            collapsed={collapsed}
+            item={{ href: "/system/users", icon: Users, label: "用户与权限" }}
+            onNavigate={onNavigate}
+            pathname={pathname}
+          />
+        </div>
+      ) : null}
+    </nav>
+  );
+}
 
-  function handleTooltipOpen(
-    event: FocusEvent<HTMLAnchorElement> | MouseEvent<HTMLAnchorElement>,
-  ) {
-    tooltip.show(label, event.currentTarget);
-  }
-
+function NavigationLink({
+  collapsed,
+  item,
+  onNavigate,
+  pathname,
+}: {
+  collapsed: boolean;
+  item: NavigationItem;
+  onNavigate?: () => void;
+  pathname: string;
+}) {
+  const active = isRouteActive(pathname, item);
+  const Icon = item.icon;
   return (
     <Link
-      className={`flex h-9 items-center gap-3 rounded-[var(--radius-sm)] text-sm transition-colors ${
-        collapsed ? "justify-center px-0" : "px-3"
-      } ${
-        isActive
-          ? "bg-[var(--primary-subtle)] font-medium text-[var(--primary)]"
-          : "text-[var(--muted)] hover:bg-[var(--canvas-soft)] hover:text-[var(--ink)]"
-      }`}
-      href={href}
-      onBlur={tooltip.hide}
-      onFocus={handleTooltipOpen}
-      onMouseEnter={handleTooltipOpen}
-      onMouseLeave={tooltip.hide}
-      title={label}
+      aria-current={active ? "page" : undefined}
+      aria-label={item.label}
+      className="app-nav-link"
+      data-active={active}
+      href={item.href}
+      onClick={onNavigate}
+      title={collapsed ? item.label : undefined}
     >
-      <SidebarNavIcon iconName="overview" tone="sky" />
-      {!collapsed && <span>{label}</span>}
+      <Icon
+        aria-hidden="true"
+        className="size-4 shrink-0 text-current"
+        data-navigation-icon="monochrome"
+      />
+      {!collapsed ? <span className="truncate">{item.label}</span> : null}
     </Link>
   );
 }
 
-function SidebarNavIcon({
-  iconName,
-  tone,
-}: {
-  iconName: SidebarIconName;
-  tone: SidebarIconTone;
-}) {
-  return <SidebarColorIcon name={iconName} tone={tone} />;
+function QuickCreate({ projectId }: { projectId: string | null }) {
+  if (!projectId) return null;
+  const links = [
+    { href: `/projects/${projectId}/datasets?create=dataset`, label: "用例集" },
+    {
+      href: `/projects/${projectId}/test-plans?create=plan`,
+      label: "测试计划",
+    },
+    { href: `/projects/${projectId}/agents?create=agent`, label: "智能体" },
+  ];
+  return (
+    <DropdownMenuPrimitive.Root>
+      <DropdownMenuPrimitive.Trigger asChild>
+        <button
+          aria-label="快速创建"
+          className="app-create-button"
+          type="button"
+        >
+          <Plus aria-hidden="true" className="size-4" />
+          <span className="max-md:hidden">新建</span>
+        </button>
+      </DropdownMenuPrimitive.Trigger>
+      <DropdownMenuPrimitive.Portal>
+        <DropdownMenuPrimitive.Content
+          align="end"
+          aria-label="快速创建"
+          className="app-menu w-44"
+          sideOffset={7}
+        >
+          <DropdownMenuPrimitive.Label className="px-2 py-1.5 text-xs text-[var(--muted)]">
+            创建测试资产
+          </DropdownMenuPrimitive.Label>
+          {links.map((link) => (
+            <DropdownMenuPrimitive.Item asChild key={link.href}>
+              <Link className="app-menu-item" href={link.href}>
+                <Plus aria-hidden="true" className="size-4" />
+                {link.label}
+              </Link>
+            </DropdownMenuPrimitive.Item>
+          ))}
+        </DropdownMenuPrimitive.Content>
+      </DropdownMenuPrimitive.Portal>
+    </DropdownMenuPrimitive.Root>
+  );
 }
 
-function ProjectNavLink({
-  collapsed,
-  href,
-  icon,
-  label,
-  tooltip,
-  activeMode = "section",
+function MobileNavigation({
+  groups,
+  onOpenChange,
+  open,
+  pathname,
+  showUsers,
 }: {
-  activeMode?: "exact" | "section";
-  collapsed: boolean;
-  href: string;
-  icon: ReactNode;
-  label: string;
-  tooltip: CollapsedSidebarTooltipController;
+  groups: NavigationGroup[];
+  onOpenChange: (open: boolean) => void;
+  open: boolean;
+  pathname: string;
+  showUsers: boolean;
 }) {
-  const pathname = usePathname();
-  const isActive =
-    activeMode === "exact"
-      ? pathname === href
-      : pathname === href || Boolean(pathname?.startsWith(href + "/"));
-  function handleTooltipOpen(
-    event: FocusEvent<HTMLAnchorElement> | MouseEvent<HTMLAnchorElement>,
-  ) {
-    tooltip.show(label, event.currentTarget);
+  return (
+    <DialogPrimitive.Root onOpenChange={onOpenChange} open={open}>
+      <DialogPrimitive.Portal>
+        <DialogPrimitive.Overlay className="app-overlay" />
+        <DialogPrimitive.Content
+          aria-describedby={undefined}
+          className="app-mobile-navigation"
+        >
+          <div className="flex h-13 items-center justify-between border-b border-[var(--hairline)] px-4">
+            <DialogPrimitive.Title className="text-sm font-semibold">
+              项目导航
+            </DialogPrimitive.Title>
+            <DialogPrimitive.Close
+              aria-label="关闭导航"
+              className="app-icon-button"
+            >
+              <X aria-hidden="true" className="size-4" />
+            </DialogPrimitive.Close>
+          </div>
+          <Navigation
+            collapsed={false}
+            groups={groups}
+            onNavigate={() => onOpenChange(false)}
+            pathname={pathname}
+            showUsers={showUsers}
+          />
+        </DialogPrimitive.Content>
+      </DialogPrimitive.Portal>
+    </DialogPrimitive.Root>
+  );
+}
+
+function CommandPalette({
+  items,
+  onOpenChange,
+  open,
+}: {
+  items: NavigationItem[];
+  onOpenChange: (open: boolean) => void;
+  open: boolean;
+}) {
+  const [query, setQuery] = useState("");
+  const [activeIndex, setActiveIndex] = useState(0);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const router = useRouter();
+  const filtered = items.filter((item) =>
+    item.label.toLocaleLowerCase().includes(query.trim().toLocaleLowerCase()),
+  );
+
+  function openActiveItem() {
+    const item = filtered[activeIndex];
+    if (!item) return;
+    router.push(item.href);
+    onOpenChange(false);
+    setQuery("");
+    setActiveIndex(0);
   }
 
   return (
-    <Link
-      className={`flex h-9 items-center gap-3 rounded-[var(--radius-sm)] text-sm transition-colors ${
-        collapsed ? "justify-center px-0" : "px-3"
-      } ${
-        isActive
-          ? "bg-[var(--primary-subtle)] font-medium text-[var(--primary)]"
-          : "text-[var(--muted)] hover:bg-[var(--canvas-soft)] hover:text-[var(--ink)]"
-      }`}
-      href={href}
-      onBlur={tooltip.hide}
-      onFocus={handleTooltipOpen}
-      onMouseEnter={handleTooltipOpen}
-      onMouseLeave={tooltip.hide}
-      title={label}
+    <DialogPrimitive.Root
+      onOpenChange={(next) => {
+        onOpenChange(next);
+        if (!next) {
+          setQuery("");
+          setActiveIndex(0);
+        }
+      }}
+      open={open}
     >
-      {icon}
-      {!collapsed && <span>{label}</span>}
-    </Link>
+      <DialogPrimitive.Portal>
+        <DialogPrimitive.Overlay className="app-overlay" />
+        <DialogPrimitive.Content
+          aria-describedby={undefined}
+          className="app-command-palette"
+          onOpenAutoFocus={(event) => {
+            event.preventDefault();
+            inputRef.current?.focus();
+          }}
+        >
+          <DialogPrimitive.Title className="sr-only">
+            全局搜索
+          </DialogPrimitive.Title>
+          <div className="flex items-center gap-2 border-b border-[var(--hairline)] px-4">
+            <Search aria-hidden="true" className="size-4 text-[var(--muted)]" />
+            <input
+              aria-activedescendant={
+                filtered.length ? `command-option-${activeIndex}` : undefined
+              }
+              aria-controls="command-results"
+              aria-label="全局搜索"
+              aria-autocomplete="list"
+              autoFocus
+              className="h-12 min-w-0 flex-1 bg-transparent text-sm text-[var(--ink)] placeholder:text-[var(--muted)]"
+              onChange={(event) => {
+                setQuery(event.target.value);
+                setActiveIndex(0);
+              }}
+              onKeyDown={(event) => {
+                if (!filtered.length) return;
+                if (event.key === "ArrowDown") {
+                  event.preventDefault();
+                  setActiveIndex((index) => (index + 1) % filtered.length);
+                } else if (event.key === "ArrowUp") {
+                  event.preventDefault();
+                  setActiveIndex(
+                    (index) => (index - 1 + filtered.length) % filtered.length,
+                  );
+                } else if (event.key === "Home") {
+                  event.preventDefault();
+                  setActiveIndex(0);
+                } else if (event.key === "End") {
+                  event.preventDefault();
+                  setActiveIndex(filtered.length - 1);
+                } else if (event.key === "Enter") {
+                  event.preventDefault();
+                  openActiveItem();
+                }
+              }}
+              placeholder="搜索平台页面…"
+              ref={inputRef}
+              role="searchbox"
+              value={query}
+            />
+            <kbd>ESC</kbd>
+          </div>
+          <div className="max-h-[min(26rem,60vh)] overflow-y-auto p-2">
+            {filtered.length ? (
+              <div aria-label="搜索结果" id="command-results" role="listbox">
+                {filtered.map((item, index) => {
+                  const Icon = item.icon;
+                  return (
+                    <Link
+                      aria-label={item.label}
+                      aria-selected={index === activeIndex}
+                      className="app-command-item"
+                      data-active={index === activeIndex}
+                      href={item.href}
+                      id={`command-option-${index}`}
+                      key={item.href}
+                      onClick={() => {
+                        onOpenChange(false);
+                        setQuery("");
+                        setActiveIndex(0);
+                      }}
+                      onMouseMove={() => setActiveIndex(index)}
+                      role="option"
+                    >
+                      <Icon aria-hidden="true" className="size-4" />
+                      <span>{item.label}</span>
+                      <ChevronRight
+                        aria-hidden="true"
+                        className="ml-auto size-4 text-[var(--muted-soft)]"
+                      />
+                    </Link>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="grid min-h-24 place-items-center text-sm text-[var(--muted)]">
+                没有匹配的页面
+              </div>
+            )}
+          </div>
+          <div className="flex items-center justify-between border-t border-[var(--hairline)] px-4 py-2 text-xs text-[var(--muted)]">
+            <span>快速前往平台任意核心模块</span>
+            <span>回车打开</span>
+          </div>
+        </DialogPrimitive.Content>
+      </DialogPrimitive.Portal>
+    </DialogPrimitive.Root>
   );
+}
+
+function isRouteActive(
+  pathname: string,
+  item: Pick<NavigationItem, "exact" | "href">,
+) {
+  return item.exact
+    ? pathname === item.href
+    : pathname === item.href || pathname.startsWith(`${item.href}/`);
 }

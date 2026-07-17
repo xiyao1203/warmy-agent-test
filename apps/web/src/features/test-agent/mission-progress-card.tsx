@@ -100,7 +100,7 @@ export function MissionProgressCard({
       <div className="mt-2 flex gap-2">
         {needsAttention ? (
           <button
-            className="rounded-md bg-[var(--primary)] px-2 py-1 text-xs text-white disabled:opacity-50"
+            className="rounded-[var(--radius-sm)] bg-[var(--primary)] px-2 py-1 text-xs text-[var(--on-primary)] disabled:opacity-50"
             disabled={busy}
             onClick={async () => {
               setBusy(true);
