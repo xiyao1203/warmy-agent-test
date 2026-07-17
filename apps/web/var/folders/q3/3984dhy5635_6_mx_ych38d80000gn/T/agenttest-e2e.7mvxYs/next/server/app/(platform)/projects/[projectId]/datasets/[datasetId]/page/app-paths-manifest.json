@@ -1,0 +1,3 @@
+{
+  "/(platform)/projects/[projectId]/datasets/[datasetId]/page": "app/(platform)/projects/[projectId]/datasets/[datasetId]/page.js"
+}

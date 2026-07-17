@@ -3,6 +3,7 @@ set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 RUNTIME_DIR="$(mktemp -d "${TMPDIR:-/tmp}/agenttest-e2e.XXXXXX")"
+WEB_RUNTIME_DIR="$RUNTIME_DIR/web"
 BACKEND_PID=""
 FRONTEND_PID=""
 
@@ -36,6 +37,17 @@ done
 export AGENTTEST_DATABASE_URL="sqlite+aiosqlite:///$RUNTIME_DIR/e2e.db"
 uv run alembic -c "$ROOT_DIR/apps/control-api/alembic.ini" upgrade head
 
+mkdir -p "$WEB_RUNTIME_DIR"
+cp \
+    "$ROOT_DIR/apps/web/package.json" \
+    "$ROOT_DIR/apps/web/next.config.ts" \
+    "$ROOT_DIR/apps/web/next-env.d.ts" \
+    "$ROOT_DIR/apps/web/postcss.config.mjs" \
+    "$ROOT_DIR/apps/web/tsconfig.json" \
+    "$WEB_RUNTIME_DIR/"
+cp -R "$ROOT_DIR/apps/web/public" "$ROOT_DIR/apps/web/src" "$WEB_RUNTIME_DIR/"
+ln -s "$ROOT_DIR/apps/web/node_modules" "$WEB_RUNTIME_DIR/node_modules"
+
 (
     cd "$ROOT_DIR/apps/control-api"
     exec uv run uvicorn agenttest.main:app \
@@ -59,8 +71,8 @@ if [[ "$backend_ready" != "true" ]]; then
 fi
 
 (
-    cd "$ROOT_DIR/apps/web"
-    export AGENTTEST_NEXT_DIST_DIR="$RUNTIME_DIR/next"
+    cd "$WEB_RUNTIME_DIR"
+    export AGENTTEST_NEXT_DIST_DIR="../next"
     NEXT_PUBLIC_CONTROL_API_URL="http://127.0.0.1:8181" \
         pnpm build
     NEXT_PUBLIC_CONTROL_API_URL="http://127.0.0.1:8181" \

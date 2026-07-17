@@ -1,0 +1,3 @@
+{
+  "/(platform)/projects/[projectId]/gates/page": "app/(platform)/projects/[projectId]/gates/page.js"
+}
