@@ -264,11 +264,11 @@ git commit -m "refactor(test-agent): split platform capabilities"
 - Create: `apps/control-api/tests/unit/shared/test_typed_payloads.py`
 - Modify: `apps/control-api/tests/architecture/test_module_boundaries.py`
 
-- [ ] **Step 1: Add failure-closed payload parsing tests**
+- [x] **Step 1: Add failure-closed payload parsing tests**
 
 Cover wrong types for confidence, scores, retry policy, scorer IDs and run-case IDs. Assertions must require a classified `ValueError`/validation error rather than coercing invalid containers or silently using defaults.
 
-- [ ] **Step 2: Add a production suppression budget test**
+- [x] **Step 2: Add a production suppression budget test**
 
 Scan production Python sources and allow only exact optional-dependency reasons:
 
@@ -279,17 +279,17 @@ assert business_type_ignore_codes(source_root) <= ALLOWED
 
 The test must report file/line/code without printing runtime secrets.
 
-- [ ] **Step 3: Run tests and observe RED**
+- [x] **Step 3: Run tests and observe RED**
 
 Run: `uv run pytest apps/control-api/tests/unit/shared/test_typed_payloads.py apps/control-api/tests/architecture/test_module_boundaries.py -q`
 
 Expected: invalid payload tests or suppression budget fail on current `arg-type/assignment/misc` ignores.
 
-- [ ] **Step 4: Introduce typed parsers at each boundary**
+- [x] **Step 4: Introduce typed parsers at each boundary**
 
 Use `isinstance` narrowing and small functions returning `UUID | None`, `float`, `dict[str, object]`, or validated DTOs. Do not change valid serialized payloads or Domain method signatures.
 
-- [ ] **Step 5: Verify focused behavior and mypy**
+- [x] **Step 5: Verify focused behavior and mypy**
 
 Run:
 
@@ -300,7 +300,7 @@ uv run mypy apps/control-api/src
 
 Expected: valid payload behavior passes, invalid input fails closed, and no business conversion `type: ignore` remains in touched modules.
 
-- [ ] **Step 6: Commit the typed boundaries**
+- [x] **Step 6: Commit the typed boundaries**
 
 ```bash
 git add apps/control-api/src apps/control-api/tests
