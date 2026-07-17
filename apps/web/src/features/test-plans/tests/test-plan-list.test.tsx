@@ -5,12 +5,48 @@ import { TestPlanDetail } from "../test-plan-detail";
 import { TestPlanList } from "../test-plan-list";
 
 const plan = {
+  agent_ref: {
+    href: "/projects/project-1/agents/agent-1",
+    id: "agent-version-2",
+    name: "客服 Agent",
+    resource_type: "agent_version" as const,
+    version: 2,
+  },
+  case_count: 48,
+  concurrency: 4,
   created_at: "2026-06-25T10:00:00Z",
   created_by: "user-1",
   description: "发布门禁",
   id: "plan-1",
+  dataset_ref: {
+    href: "/projects/project-1/datasets/dataset-1",
+    id: "dataset-version-3",
+    name: "对话回归",
+    resource_type: "dataset_version" as const,
+    version: 3,
+  },
+  environment_ref: {
+    href: "/projects/project-1/environments",
+    id: "environment-1",
+    name: "预发环境",
+    resource_type: "environment" as const,
+  },
+  last_run_status: "passed",
+  latest_version: {
+    href: "/projects/project-1/test-plans/plan-1",
+    id: "plan-version-4",
+    name: "回归计划",
+    resource_type: "test_plan_version" as const,
+    status: "published",
+    version: 4,
+  },
   name: "回归计划",
   project_id: "project-1",
+  pass_rate: 0.96,
+  repeat_count: 2,
+  retry_count: 1,
+  scorer_count: 3,
+  timeout_seconds: 120,
   updated_at: "2026-06-25T10:00:00Z",
   updated_by: "user-1",
 };
@@ -73,17 +109,29 @@ describe("TestPlanList", () => {
     rerender(
       <TestPlanList onDelete={vi.fn()} plans={[plan]} projectId="project-1" />,
     );
-    expect(screen.getByText("回归计划")).toBeVisible();
+    expect(screen.getAllByText("回归计划").length).toBeGreaterThan(0);
     expect(screen.getByRole("columnheader", { name: "计划信息" })).toHaveClass(
-      "w-[54%]",
-    );
-    expect(screen.getByRole("columnheader", { name: "更新时间" })).toHaveClass(
       "w-[20%]",
     );
+    expect(
+      screen.getByRole("columnheader", { name: "资产绑定" }),
+    ).toBeVisible();
+    expect(
+      screen.getByRole("columnheader", { name: "执行配置" }),
+    ).toBeVisible();
+    expect(
+      screen.getByRole("columnheader", { name: "版本与结果" }),
+    ).toBeVisible();
     expect(screen.getByRole("columnheader", { name: "下一步" })).toHaveClass(
-      "w-[26%]",
+      "w-[13%]",
       "whitespace-nowrap",
     );
+    expect(screen.getByText(/用例 48 · 重复 2 · 并发 4/)).toBeVisible();
+    expect(screen.getByText(/超时 120 秒 · 重试 1 · 评分器 3/)).toBeVisible();
+    expect(screen.getByText(/通过率 96.0%/)).toBeVisible();
+    expect(
+      screen.getByRole("link", { name: /客服 Agent.*v2/ }),
+    ).toHaveAttribute("href", "/projects/project-1/agents/agent-1");
     expect(screen.getByRole("table")).toHaveClass("w-full", "table-fixed");
     expect(screen.getByRole("group", { name: "回归计划 操作" })).toHaveClass(
       "whitespace-nowrap",

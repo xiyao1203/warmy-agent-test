@@ -55,7 +55,7 @@ class Project:
         if not re.fullmatch(r"[A-Z][A-Z0-9-]{1,11}", normalized_key):
             raise ValueError("Project key must be 2-12 uppercase letters, numbers or hyphens")
         now = datetime.now(UTC)
-        return cls(
+        project = cls(
             project_id=project_id,
             name=normalized_name,
             created_by=created_by,
@@ -66,6 +66,10 @@ class Project:
             created_at=now,
             updated_at=now,
         )
+        project.add_member(created_by, ProjectMemberRole.DEVELOPER)
+        if lead_user_id is not None:
+            project.add_member(lead_user_id, ProjectMemberRole.DEVELOPER)
+        return project
 
     @property
     def is_archived(self) -> bool:
@@ -84,6 +88,8 @@ class Project:
         description: str | None = None,
         lead_user_id: UserId | None = None,
     ) -> None:
+        if lead_user_id is not None and lead_user_id not in self._members:
+            raise ValueError("Project lead must be a current member")
         self.description = description.strip() if description and description.strip() else None
         self.lead_user_id = lead_user_id
         self.updated_at = datetime.now(UTC)
@@ -102,6 +108,8 @@ class Project:
         self._members[user_id] = role
 
     def remove_member(self, user_id: UserId) -> None:
+        if user_id == self.lead_user_id:
+            raise ValueError("Cannot remove the active project lead")
         self._members.pop(user_id, None)
 
     def member_role(self, user_id: UserId) -> ProjectMemberRole | None:

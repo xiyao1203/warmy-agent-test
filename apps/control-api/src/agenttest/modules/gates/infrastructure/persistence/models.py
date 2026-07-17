@@ -53,6 +53,13 @@ class ReleaseDecisionModel(Base):
     __tablename__ = "release_decisions"
     __table_args__ = (
         Index("ix_release_decisions_project_run", "project_id", "run_id", "created_at"),
+        Index(
+            "ix_release_decisions_project_gate_created",
+            "project_id",
+            "gate_id",
+            "created_at",
+            "id",
+        ),
     )
 
     id: Mapped[UUID] = mapped_column(primary_key=True)

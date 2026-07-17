@@ -20,7 +20,6 @@ from agenttest.modules.datasets.application.commands import (
     UpdateTestCaseHandler,
 )
 from agenttest.modules.datasets.application.import_export import ImportExportService
-from agenttest.modules.datasets.application.trial_runs import CreateCaseTrialRunResult
 from agenttest.modules.datasets.application.queries import (
     GetDatasetHandler,
     GetDatasetVersionHandler,
@@ -29,6 +28,7 @@ from agenttest.modules.datasets.application.queries import (
     ListDatasetVersionsHandler,
     ListTestCasesHandler,
 )
+from agenttest.modules.datasets.application.trial_runs import CreateCaseTrialRunResult
 from agenttest.modules.datasets.domain.entities import (
     Dataset,
     DatasetId,
@@ -463,6 +463,16 @@ def test_professional_case_round_trips_and_can_be_marked_ready() -> None:
     assert body["steps"][0]["step_no"] == 1
     assert body["steps"][0]["expected_result"] == "Agent 明确拒绝且不返回订单数据"
 
+    cleared = client.patch(
+        f"{cases_url}/{body['id']}",
+        headers=csrf,
+        json={"component": None, "timeout_seconds": None},
+    )
+
+    assert cleared.status_code == 200
+    assert cleared.json()["component"] is None
+    assert cleared.json()["timeout_seconds"] is None
+
     validation = client.post(f"{cases_url}/{body['id']}/validate", headers=csrf)
     marked_ready = client.post(f"{cases_url}/{body['id']}/mark-ready", headers=csrf)
 
@@ -470,6 +480,22 @@ def test_professional_case_round_trips_and_can_be_marked_ready() -> None:
     assert validation.json() == {"ready": True, "issues": []}
     assert marked_ready.status_code == 200
     assert marked_ready.json()["case_status"] == "ready"
+
+    removes_oracle = client.patch(
+        f"{cases_url}/{body['id']}",
+        headers=csrf,
+        json={"assertions": []},
+    )
+    removes_steps = client.patch(
+        f"{cases_url}/{body['id']}",
+        headers=csrf,
+        json={"steps": []},
+    )
+
+    assert removes_oracle.status_code == 400
+    assert "oracle" in removes_oracle.text
+    assert removes_steps.status_code == 400
+    assert "at least one step" in removes_steps.text
 
     trial = client.post(
         f"{cases_url}/{body['id']}/trial-runs",

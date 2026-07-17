@@ -41,6 +41,21 @@ class RunModel(Base):
             name="ck_runs_source_by_type",
         ),
         Index("ix_runs_project_status_created", "project_id", "status", "created_at"),
+        Index("ix_runs_project_created_latest", "project_id", "created_at", "id"),
+        Index(
+            "ix_runs_project_agent_created",
+            "project_id",
+            "agent_version_id",
+            "created_at",
+            "id",
+        ),
+        Index(
+            "ix_runs_project_plan_created",
+            "project_id",
+            "test_plan_version_id",
+            "created_at",
+            "id",
+        ),
     )
 
     id: Mapped[UUID] = mapped_column(primary_key=True)

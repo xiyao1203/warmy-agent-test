@@ -9,6 +9,8 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { ReactNode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import { runFixture } from "@/test/fixtures";
+
 import { RunDetailScreen } from "../run-detail-screen";
 import { RunCenterScreen } from "../run-center-screen";
 import { RunCenter } from "../run-center";
@@ -43,21 +45,53 @@ afterEach(() => {
   vi.useRealTimers();
 });
 
-const running = {
+const running = runFixture({
+  agent_ref: {
+    href: "/projects/project-1/agents/agent-1",
+    id: "agent-version-2",
+    name: "客服 Agent",
+    resource_type: "agent_version",
+    version: 2,
+  },
   cancelled_cases: 0,
   completed_at: null,
   created_at: "2026-06-26T10:00:00Z",
+  created_by_ref: {
+    href: null,
+    id: "user-1",
+    name: "测试工程师",
+    resource_type: "user",
+  },
+  cost: 0.0245,
+  dataset_ref: {
+    href: "/projects/project-1/datasets/dataset-1",
+    id: "dataset-version-3",
+    name: "对话回归",
+    resource_type: "dataset_version",
+    version: 3,
+  },
+  duration_ms: 5600,
   error_cases: 0,
   failed_cases: 0,
   id: "run-1",
   passed_cases: 1,
+  plan_ref: {
+    href: "/projects/project-1/test-plans/plan-1",
+    id: "plan-version-4",
+    name: "回归计划",
+    resource_type: "test_plan_version",
+    version: 4,
+  },
+  progress: 1 / 3,
   project_id: "project-1",
   started_at: "2026-06-26T10:00:01Z",
   status: "running",
   test_plan_version_id: "version-1",
   total_cases: 3,
+  token_usage: { total: 2048 },
+  trigger_type: "manual",
   workflow_id: "run-run-1",
-};
+});
 
 function renderWithQueryClient(children: ReactNode) {
   const client = new QueryClient({
@@ -86,6 +120,7 @@ describe("RunCenter", () => {
             completed_at: "2026-06-26T10:02:00Z",
             id: "run-2",
             passed_cases: 3,
+            run_number: "RUN-0002",
             status: "passed",
             total_cases: 3,
           },
@@ -97,12 +132,17 @@ describe("RunCenter", () => {
     expect(screen.getByText("2")).toBeVisible();
     expect(screen.getAllByText("运行中").length).toBeGreaterThan(0);
     expect(screen.getByText("通过率")).toBeVisible();
-    expect(screen.getByText("1 / 3")).toBeVisible();
+    expect(screen.getByText(/1 \/ 3/)).toBeVisible();
+    expect(screen.getAllByRole("link", { name: /回归计划.*v4/ })).toHaveLength(
+      2,
+    );
+    expect(screen.getAllByText(/成本 0.0245/)).toHaveLength(2);
+    expect(screen.getAllByText("测试工程师")).toHaveLength(2);
     fireEvent.change(screen.getByLabelText("搜索运行"), {
       target: { value: "run-2" },
     });
-    expect(screen.queryByText("Run run-1")).not.toBeInTheDocument();
-    expect(screen.getByText("Run run-2")).toBeVisible();
+    expect(screen.queryByText("RUN-0001")).not.toBeInTheDocument();
+    expect(screen.getByText("RUN-0002")).toBeVisible();
     fireEvent.change(screen.getByLabelText("测试计划版本"), {
       target: { value: "version-1" },
     });
@@ -187,6 +227,7 @@ describe("RunDetail", () => {
             duration_ms: 120,
             error_message: "upstream timed out",
             error_type: "TransientError",
+            case_spec_snapshot: {},
             evidence: {
               execution_outcome: "error",
               quality_decision: "review_required",

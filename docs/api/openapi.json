@@ -846,6 +846,52 @@
         "title": "BatchConfirmationDecision",
         "type": "object"
       },
+      "BrowserOperationV1": {
+        "additionalProperties": false,
+        "description": "Deterministic browser instruction kept separate from the human test step.",
+        "properties": {
+          "action": {
+            "enum": [
+              "goto",
+              "click",
+              "fill",
+              "wait",
+              "screenshot"
+            ],
+            "title": "Action",
+            "type": "string"
+          },
+          "target": {
+            "anyOf": [
+              {
+                "maxLength": 2000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Target"
+          },
+          "value": {
+            "anyOf": [
+              {
+                "maxLength": 10000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Value"
+          }
+        },
+        "required": [
+          "action"
+        ],
+        "title": "BrowserOperationV1",
+        "type": "object"
+      },
       "CalibrationResponse": {
         "properties": {
           "arbitration": {
@@ -5731,8 +5777,7 @@
           },
           "steps": {
             "items": {
-              "additionalProperties": true,
-              "type": "object"
+              "$ref": "#/components/schemas/TestStepV1"
             },
             "title": "Steps",
             "type": "array"
@@ -6446,6 +6491,16 @@
             "minLength": 1,
             "title": "Expected Result",
             "type": "string"
+          },
+          "operation": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/BrowserOperationV1"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "step_no": {
             "minimum": 1.0,

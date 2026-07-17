@@ -1,6 +1,8 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
+import { projectFixture } from "@/test/fixtures";
+
 import { ProjectOverview } from "../project-overview";
 
 const user = {
@@ -36,7 +38,7 @@ describe("ProjectOverview", () => {
           { role: "viewer", user_id: "user-2" },
         ]}
         assetSummary={{ agents: 2, datasets: 3, testPlans: 1 }}
-        project={{ archived: true, id: "project-1", name: "项目 A" }}
+        project={projectFixture({ archived: true, status: "archived" })}
         user={user}
       />,
     );
@@ -64,7 +66,7 @@ describe("ProjectOverview", () => {
     render(
       <ProjectOverview
         members={[]}
-        project={{ archived: false, id: "project-1", name: "项目 A" }}
+        project={projectFixture()}
         user={{ ...user, role: "super_admin" }}
       />,
     );

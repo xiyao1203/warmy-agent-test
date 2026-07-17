@@ -76,6 +76,29 @@ def execution_activity_options(
     )
 
 
+def case_execution_activity_options(
+    case: RunCaseTask,
+    fallback_timeout: timedelta,
+    fallback_retry: RetryPolicy,
+) -> tuple[timedelta, RetryPolicy]:
+    """Apply an immutable professional case's bounded execution policy."""
+    if case.case_spec is None:
+        return fallback_timeout, fallback_retry
+    timeout_seconds = case.case_spec.timeout_seconds
+    timeout = (
+        timedelta(seconds=max(1, min(timeout_seconds, 86_400)))
+        if timeout_seconds is not None
+        else fallback_timeout
+    )
+    return timeout, RetryPolicy(
+        initial_interval=fallback_retry.initial_interval,
+        backoff_coefficient=fallback_retry.backoff_coefficient,
+        maximum_interval=fallback_retry.maximum_interval,
+        maximum_attempts=max(1, min(case.case_spec.retry_count + 1, 11)),
+        non_retryable_error_types=fallback_retry.non_retryable_error_types,
+    )
+
+
 def aggregate_results(statuses: list[str]) -> str:
     if "cancelled" in statuses:
         return "cancelled"
@@ -131,6 +154,11 @@ class RunWorkflow:
         activity_timeout, activity_retry_policy = execution_activity_options(task.execution_policy)
         results: list[RunCaseResult] = []
         for case in task.cases:
+            case_activity_timeout, case_retry_policy = case_execution_activity_options(
+                case,
+                activity_timeout,
+                activity_retry_policy,
+            )
             if self._cancel_requested:
                 results.append(
                     RunCaseResult(
@@ -144,6 +172,11 @@ class RunWorkflow:
             try:
                 # ── 执行模式分发 ─────────────────────────────────
                 if case.execution_mode == "codex_explore":
+                    codex_timeout = (
+                        case_activity_timeout
+                        if case.case_spec is not None
+                        else timedelta(seconds=_int_value(case.input.get("timeout"), 120))
+                    )
                     codex_url = _target_url(case.input, task.agent_config)
                     browser_profile_id = _target_browser_profile_id(
                         case.input,
@@ -157,7 +190,7 @@ class RunWorkflow:
                             run_case_id=case.run_case_id,
                             test_intent=codex_intent,
                             target_url=codex_url,
-                            timeout_seconds=_int_value(case.input.get("timeout"), 120),
+                            timeout_seconds=int(codex_timeout.total_seconds()),
                             model=_codex_model(case.input, task.execution_policy),
                             model_provider=_codex_model_provider(
                                 case.input,
@@ -174,22 +207,18 @@ class RunWorkflow:
                             storage_state_key=str(case.input.get("storage_state_key", "")),
                             credentials=_extract_credentials(case.input),
                         ),
-                        start_to_close_timeout=timedelta(
-                            seconds=_int_value(case.input.get("timeout"), 120)
-                        ),
+                        start_to_close_timeout=codex_timeout,
                         heartbeat_timeout=timedelta(seconds=60),
-                        retry_policy=RetryPolicy(
-                            maximum_attempts=1,
-                        ),
+                        retry_policy=case_retry_policy,
                     )
                     result = _codex_to_run_case(codex_result, case)
                     if result.status == "passed" and _is_canvas_target(task):
                         tapnow_result = await workflow.execute_activity(
                             run_tapnow_case,
                             _tapnow_task(task, case),
-                            start_to_close_timeout=activity_timeout,
+                            start_to_close_timeout=case_activity_timeout,
                             heartbeat_timeout=timedelta(seconds=30),
-                            retry_policy=activity_retry_policy,
+                            retry_policy=case_retry_policy,
                         )
                         result = _tapnow_to_run_case(tapnow_result, case)
                 elif case.execution_mode == "browser":
@@ -197,9 +226,9 @@ class RunWorkflow:
                         tapnow_result = await workflow.execute_activity(
                             run_tapnow_case,
                             _tapnow_task(task, case),
-                            start_to_close_timeout=activity_timeout,
+                            start_to_close_timeout=case_activity_timeout,
                             heartbeat_timeout=timedelta(seconds=30),
-                            retry_policy=activity_retry_policy,
+                            retry_policy=case_retry_policy,
                         )
                         result = _tapnow_to_run_case(tapnow_result, case)
                     else:
@@ -211,10 +240,11 @@ class RunWorkflow:
                                 run_case_id=case.run_case_id,
                                 url=browser_url,
                                 steps=browser_steps,
+                                timeout_ms=int(case_activity_timeout.total_seconds() * 1000),
                             ),
-                            start_to_close_timeout=activity_timeout,
+                            start_to_close_timeout=case_activity_timeout,
                             heartbeat_timeout=timedelta(seconds=30),
-                            retry_policy=activity_retry_policy,
+                            retry_policy=case_retry_policy,
                         )
                         result = _playwright_to_run_case(playwright_result, case)
                 else:
@@ -236,9 +266,9 @@ class RunWorkflow:
                     result = await workflow.execute_activity(
                         execute_agent_case,
                         args=[case, task.agent_config, _environment_with_lease(task)],
-                        start_to_close_timeout=activity_timeout,
+                        start_to_close_timeout=case_activity_timeout,
                         heartbeat_timeout=timedelta(seconds=30),
-                        retry_policy=activity_retry_policy,
+                        retry_policy=case_retry_policy,
                     )
                 # ── 执行确定性评分器 ───────────────────────────────
                 if task.scorer_configs and result.status == "passed" and result.output:
@@ -481,7 +511,11 @@ def _tapnow_task(task: RunTask, case: RunCaseTask) -> TapNowTaskInput:
         browser_profile_id=browser_profile_id,
         control_api_base_url=task.callback.base_url,
         internal_token=task.callback.internal_token,
-        timeout_ms=_int_value(case.input.get("timeout_ms"), 120_000),
+        timeout_ms=(
+            case.case_spec.timeout_seconds * 1000
+            if case.case_spec is not None and case.case_spec.timeout_seconds is not None
+            else _int_value(case.input.get("timeout_ms"), 120_000)
+        ),
     )
 
 
@@ -519,14 +553,19 @@ def _browser_steps_for_case(case: RunCaseTask) -> list[dict[str, object]]:
         return _browser_steps(case.input)
     compiled: list[dict[str, object]] = []
     for step in case.case_spec.steps:
+        operation_raw = step.get("operation")
+        if not isinstance(operation_raw, dict):
+            raise ValueError("Professional browser step requires a typed operation")
+        operation = dict(operation_raw)
         test_data_raw = step.get("test_data", {})
         test_data = dict(test_data_raw) if isinstance(test_data_raw, dict) else {}
         compiled.append(
             {
                 "step_no": int(step.get("step_no", len(compiled) + 1)),
-                "action": str(test_data.get("action") or step.get("action") or ""),
-                "target": str(test_data.get("target") or ""),
-                "value": str(test_data.get("value") or ""),
+                "action": str(operation.get("action") or ""),
+                "target": str(operation.get("target") or ""),
+                "value": str(operation.get("value") or ""),
+                "description": str(step.get("action") or ""),
                 "test_data": test_data,
                 "expected_result": str(step.get("expected_result") or ""),
                 "assertions": [

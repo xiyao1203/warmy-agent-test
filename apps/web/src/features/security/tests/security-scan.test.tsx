@@ -18,9 +18,19 @@ const target: SecurityTarget = {
 };
 
 const scan: SecurityScanItem = {
+  agent_ref: {
+    href: "/projects/project-1/agents/agent-1",
+    id: "agent-version-1",
+    name: "客服 Agent",
+    resource_type: "agent_version",
+    version: 2,
+  },
   agent_version_id: "agent-version-1",
   completed_at: "2026-07-04T10:10:00Z",
   created_at: "2026-07-04T10:00:00Z",
+  critical_count: 1,
+  duration_ms: 600000,
+  environment_version_id: null,
   findings: [
     {
       category: "injection",
@@ -33,10 +43,27 @@ const scan: SecurityScanItem = {
     },
   ],
   id: "scan-1234567890",
+  high_count: 2,
+  low_count: 4,
+  medium_count: 3,
+  profile_ref: {
+    href: "/projects/project-1/security",
+    id: "security-profile-1",
+    name: "OWASP LLM",
+    resource_type: "security_profile",
+  },
   project_id: "project-1",
   run_id: "run-1",
+  run_ref: {
+    href: "/projects/project-1/runs/run-1",
+    id: "run-1",
+    name: "RUN-0001",
+    resource_type: "run",
+  },
   scan_type: "full",
+  security_profile_id: null,
   status: "completed",
+  started_at: "2026-07-04T10:00:00Z",
   summary: { injection: 1, jailbreak: 0, leak: 0, score: 0.72 },
   updated_at: "2026-07-04T10:10:00Z",
 };
@@ -55,6 +82,7 @@ describe("SecurityScanPage", () => {
     render(<SecurityScanPage projectId="project-1" />);
 
     expect(await screen.findByText("scan-1234567")).toBeVisible();
+    expect(screen.getByText(/严重 1 · 高 2 · 中 3 · 低 4/)).toBeVisible();
     expect(screen.getByText(/结果会进入发布门禁评估/)).toBeVisible();
     expect(
       screen.getByRole("link", { name: /1. 选择 Agent 版本/ }),
@@ -67,6 +95,10 @@ describe("SecurityScanPage", () => {
     ).toHaveAttribute("href", "/projects/project-1/gates");
 
     fireEvent.click(screen.getByText("scan-1234567"));
+    expect(screen.getByRole("link", { name: /RUN-0001/ })).toHaveAttribute(
+      "href",
+      "/projects/project-1/runs/run-1",
+    );
     expect(
       screen.getByText(/安全发现会作为同一次运行的门禁证据/),
     ).toBeVisible();

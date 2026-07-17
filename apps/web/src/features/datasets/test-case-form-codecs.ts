@@ -1,18 +1,21 @@
 export type KeyValueRow = { id: string; key: string; value: string };
 export type AssertionRow = {
   id: string;
+  raw: Record<string, unknown>;
   type: string;
   path: string;
   value: string;
 };
 export type ScorerRow = {
   id: string;
+  raw: Record<string, unknown>;
   name: string;
   type: string;
   threshold: string;
 };
 export type SecurityPolicyRow = {
   id: string;
+  raw: Record<string, unknown>;
   type: string;
   severity: string;
 };
@@ -74,6 +77,7 @@ export function assertionsToRows(
 ): AssertionRow[] {
   return assertions.map((assertion) => ({
     id: newFormRowId(),
+    raw: { ...assertion },
     type: formatCellValue(assertion.type ?? "contains"),
     path: formatCellValue(assertion.path ?? ""),
     value: formatCellValue(assertion.value ?? ""),
@@ -82,12 +86,22 @@ export function assertionsToRows(
 
 export function rowsToAssertions(rows: AssertionRow[]) {
   return rows
-    .filter((row) => row.path.trim() || row.value.trim())
-    .map((row) => ({
-      type: row.type.trim() || "contains",
-      path: row.path.trim(),
-      value: parseCellValue(row.value),
-    }));
+    .filter(
+      (row) =>
+        Object.keys(row.raw).length > 0 ||
+        Boolean(row.path.trim() || row.value.trim()),
+    )
+    .map((row) => {
+      const assertion: Record<string, unknown> = {
+        ...row.raw,
+        type: row.type.trim() || "contains",
+      };
+      if (row.path.trim()) assertion.path = row.path.trim();
+      else delete assertion.path;
+      if (row.value.trim()) assertion.value = parseCellValue(row.value);
+      else delete assertion.value;
+      return assertion;
+    });
 }
 
 export function scorersToRows(
@@ -95,6 +109,7 @@ export function scorersToRows(
 ): ScorerRow[] {
   return scorers.map((scorer) => ({
     id: newFormRowId(),
+    raw: { ...scorer },
     name: formatCellValue(scorer.name ?? ""),
     type: formatCellValue(scorer.type ?? "llm_judge"),
     threshold: formatCellValue(scorer.threshold ?? ""),
@@ -103,12 +118,20 @@ export function scorersToRows(
 
 export function rowsToScorers(rows: ScorerRow[]) {
   return rows
-    .filter((row) => row.name.trim())
-    .map((row) => ({
-      name: row.name.trim(),
-      type: row.type.trim() || "llm_judge",
-      threshold: row.threshold.trim() ? Number(row.threshold) : undefined,
-    }));
+    .filter(
+      (row) => Object.keys(row.raw).length > 0 || Boolean(row.name.trim()),
+    )
+    .map((row) => {
+      const scorer: Record<string, unknown> = {
+        ...row.raw,
+        type: row.type.trim() || "llm_judge",
+      };
+      if (row.name.trim()) scorer.name = row.name.trim();
+      else delete scorer.name;
+      if (row.threshold.trim()) scorer.threshold = Number(row.threshold);
+      else delete scorer.threshold;
+      return scorer;
+    });
 }
 
 export function securityPoliciesToRows(
@@ -116,6 +139,7 @@ export function securityPoliciesToRows(
 ): SecurityPolicyRow[] {
   return policies.map((policy) => ({
     id: newFormRowId(),
+    raw: { ...policy },
     type: formatCellValue(policy.type ?? ""),
     severity: formatCellValue(policy.severity ?? "medium"),
   }));
@@ -123,9 +147,17 @@ export function securityPoliciesToRows(
 
 export function rowsToSecurityPolicies(rows: SecurityPolicyRow[]) {
   return rows
-    .filter((row) => row.type.trim())
-    .map((row) => ({
-      type: row.type.trim(),
-      severity: row.severity.trim() || "medium",
-    }));
+    .filter(
+      (row) => Object.keys(row.raw).length > 0 || Boolean(row.type.trim()),
+    )
+    .map((row) => {
+      const policy: Record<string, unknown> = {
+        ...row.raw,
+        type: row.type.trim(),
+      };
+      if (!policy.type) delete policy.type;
+      if (row.severity.trim()) policy.severity = row.severity.trim();
+      else delete policy.severity;
+      return policy;
+    });
 }

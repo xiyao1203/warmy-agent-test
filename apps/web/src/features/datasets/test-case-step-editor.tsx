@@ -1,6 +1,7 @@
 import { ArrowDown, ArrowUp, Copy, Plus, Trash2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { DropdownSelect } from "@/components/ui/dropdown-select";
 import { Input } from "@/components/ui/input";
 
 import { AssertionEditor } from "./test-case-editors";
@@ -56,6 +57,49 @@ export function TestCaseStepEditor({
                   value={row.action}
                 />
               </label>
+              <div className="rounded-[var(--radius-md)] bg-[var(--surface-subtle)] p-3">
+                <div className="text-xs font-medium">
+                  浏览器自动化动作（可选）
+                </div>
+                <p className="mt-1 text-xs text-[var(--muted)]">
+                  浏览器用例标记为就绪前，每个步骤都必须配置结构化动作；上方操作仍保留给人工阅读。
+                </p>
+                <div className="mt-2 grid gap-2 md:grid-cols-3">
+                  <DropdownSelect
+                    aria-label={`步骤 ${index + 1} 自动化动作`}
+                    onChange={(event) =>
+                      update(row.id, {
+                        operationAction: event.target
+                          .value as TestStepRow["operationAction"],
+                      })
+                    }
+                    value={row.operationAction}
+                  >
+                    <option value="">人工执行 / 暂不配置</option>
+                    <option value="goto">打开地址</option>
+                    <option value="click">点击</option>
+                    <option value="fill">填写</option>
+                    <option value="wait">等待元素</option>
+                    <option value="screenshot">截图</option>
+                  </DropdownSelect>
+                  <Input
+                    aria-label={`步骤 ${index + 1} 自动化目标`}
+                    onChange={(event) =>
+                      update(row.id, { operationTarget: event.target.value })
+                    }
+                    placeholder="URL 或选择器，如 #submit"
+                    value={row.operationTarget}
+                  />
+                  <Input
+                    aria-label={`步骤 ${index + 1} 自动化值`}
+                    onChange={(event) =>
+                      update(row.id, { operationValue: event.target.value })
+                    }
+                    placeholder="填写动作使用的值"
+                    value={row.operationValue}
+                  />
+                </div>
+              </div>
               <label className="block text-xs font-medium">
                 测试数据（JSON 对象）
                 <textarea
@@ -150,6 +194,9 @@ export function TestCaseStepEditor({
               assertions: [],
               expectedResult: "",
               id: newFormRowId(),
+              operationAction: "",
+              operationTarget: "",
+              operationValue: "",
               testData: "{}",
             },
           ])

@@ -168,6 +168,7 @@ export function AssertionEditor({
             {
               id: newFormRowId(),
               path: "",
+              raw: {},
               type: "contains",
               value: "",
             },
@@ -247,6 +248,7 @@ export function ScorerEditor({
             {
               id: newFormRowId(),
               name: "",
+              raw: {},
               threshold: "0.8",
               type: "llm_judge",
             },
@@ -316,7 +318,7 @@ export function SecurityPolicyEditor({
         onClick={() =>
           onChange([
             ...rows,
-            { id: newFormRowId(), severity: "medium", type: "" },
+            { id: newFormRowId(), raw: {}, severity: "medium", type: "" },
           ])
         }
         variant="secondary"

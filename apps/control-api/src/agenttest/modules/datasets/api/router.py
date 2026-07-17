@@ -46,6 +46,7 @@ from agenttest.modules.datasets.application.commands import (
     UpdateDatasetCommand,
     UpdateTestCaseCommand,
 )
+from agenttest.modules.datasets.application.contracts import PlatformTestCaseV1
 from agenttest.modules.datasets.application.generate_from_run import (
     GenerateFromRunCommand,
     GenerateFromRunResult,
@@ -65,7 +66,7 @@ from agenttest.modules.datasets.domain.entities import (
 )
 from agenttest.modules.identity.public import InvalidSessionError, User, UserId
 from agenttest.modules.projects.public import ProjectId, ProjectNotFoundError
-from agenttest.modules.runs.public import RunRuntimeUnavailableError
+from agenttest.modules.runs.public import RunIdempotencyConflict, RunRuntimeUnavailableError
 from agenttest.shared.api.problem_details import ProblemDetails
 from agenttest.shared.application.core_summaries import CoreSummaryReader
 from agenttest.shared.application.uow import UnitOfWorkFactory, null_uow_factory
@@ -623,16 +624,21 @@ def create_dataset_router(
         if isinstance(actor, JSONResponse):
             return actor
         try:
-            await project_case(actor, project_id, dataset_id, version_id, case_id)
+            stored_case = await project_case(actor, project_id, dataset_id, version_id, case_id)
             async with dependencies.uow_factory():
-                fields = payload.model_dump()
-                if payload.owner_id is not None:
-                    fields["owner_id"] = UserId(payload.owner_id)
+                provided_fields = frozenset(payload.model_fields_set)
+                patch_fields = payload.model_dump(exclude_unset=True)
+                sort_order = patch_fields.pop("sort_order", None)
+                merged = PlatformTestCaseV1.from_domain(stored_case).model_dump()
+                merged.update(patch_fields)
+                contract = PlatformTestCaseV1.model_validate(merged)
                 case = await dependencies.update_case.execute(
                     actor,
-                    UpdateTestCaseCommand(
-                        case_id=TestCaseId(case_id),
-                        **fields,
+                    _test_case_update_command(
+                        TestCaseId(case_id),
+                        contract,
+                        provided_fields,
+                        sort_order,
                     ),
                 )
         except (
@@ -808,6 +814,8 @@ def create_dataset_router(
                 ).model_dump(),
                 status_code=503,
             )
+        except RunIdempotencyConflict as error:
+            return conflict(str(error))
         except ValueError as error:
             return invalid_request(str(error))
         if not result.created:
@@ -1070,6 +1078,61 @@ def create_dataset_router(
 
 def authentication_required() -> JSONResponse:
     return problem_response(401, "Authentication required", "A valid session is required")
+
+
+def _test_case_update_command(
+    case_id: TestCaseId,
+    contract: PlatformTestCaseV1,
+    provided_fields: frozenset[str],
+    sort_order: int | None,
+) -> UpdateTestCaseCommand:
+    has = provided_fields.__contains__
+    return UpdateTestCaseCommand(
+        case_id=case_id,
+        name=contract.name if has("name") else None,
+        input=contract.input if has("input") else None,
+        execution_mode=contract.execution_mode if has("execution_mode") else None,
+        assertions=contract.assertions if has("assertions") else None,
+        scorers=contract.scorers if has("scorers") else None,
+        objective=contract.objective if has("objective") else None,
+        template=contract.template if has("template") else None,
+        case_type=contract.case_type if has("case_type") else None,
+        automation_status=(contract.automation_status if has("automation_status") else None),
+        source_ref=contract.source_ref if has("source_ref") else None,
+        component=contract.component if has("component") else None,
+        requirement_refs=(contract.requirement_refs if has("requirement_refs") else None),
+        owner_id=(UserId(contract.owner_id) if has("owner_id") and contract.owner_id else None),
+        initial_state=contract.initial_state if has("initial_state") else None,
+        preconditions=contract.preconditions if has("preconditions") else None,
+        data_bindings=(
+            [item.model_dump(mode="json") for item in contract.data_bindings]
+            if has("data_bindings")
+            else None
+        ),
+        steps=([item.model_dump(mode="json") for item in contract.steps] if has("steps") else None),
+        expected_outcome=(contract.expected_outcome if has("expected_outcome") else None),
+        security_policies=(contract.security_policies if has("security_policies") else None),
+        artifact_requirements=(
+            [item.model_dump(mode="json") for item in contract.artifact_requirements]
+            if has("artifact_requirements")
+            else None
+        ),
+        postconditions=contract.postconditions if has("postconditions") else None,
+        estimated_duration_seconds=(
+            contract.estimated_duration_seconds if has("estimated_duration_seconds") else None
+        ),
+        timeout_seconds=contract.timeout_seconds if has("timeout_seconds") else None,
+        retry_count=contract.retry_count if has("retry_count") else None,
+        custom_fields=contract.custom_fields if has("custom_fields") else None,
+        tags=contract.tags if has("tags") else None,
+        scenario=contract.scenario if has("scenario") else None,
+        priority=contract.priority if has("priority") else None,
+        risk_level=contract.risk_level if has("risk_level") else None,
+        difficulty=contract.difficulty if has("difficulty") else None,
+        test_group=contract.test_group if has("test_group") else None,
+        sort_order=sort_order,
+        provided_fields=provided_fields,
+    )
 
 
 def csrf_failed() -> JSONResponse:

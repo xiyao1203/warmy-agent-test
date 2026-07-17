@@ -2,21 +2,7 @@ import { CONTROL_API_URL as API_BASE } from "@/lib/api/base-url";
 import { csrfHeaders } from "@/lib/api/csrf";
 import { responseProblem } from "@/lib/api/problem";
 
-export type ScorerItem = {
-  id: string;
-  project_id: string;
-  name: string;
-  scorer_type: string;
-  weight: number;
-  threshold: number;
-  config_json: Record<string, unknown>;
-  description: string | null;
-  enabled: boolean;
-  latest_published_version_id?: string | null;
-  latest_published_version_number?: number | null;
-  created_at: string;
-  updated_at: string;
-};
+export type ScorerItem = ScorerSummaryResponse;
 
 export async function listScorers(projectId: string) {
   const res = await fetch(
@@ -117,3 +103,4 @@ export async function trialScorer(
     confidence: number;
   }>;
 }
+import type { ScorerSummaryResponse } from "@warmy/generated-api-client";

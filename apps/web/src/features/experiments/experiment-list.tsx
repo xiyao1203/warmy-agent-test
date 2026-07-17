@@ -25,6 +25,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { ListCard, ListCardMeta } from "@/components/ui/list-card";
+import { ResourceReferenceLink } from "@/components/ui/resource-reference-link";
 
 import type { ExperimentItem } from "./api";
 import type { ExperimentRun } from "./api";
@@ -219,10 +220,27 @@ function ExperimentCard({
       badge={
         <Badge tone={STATUS_TONES[exp.status] ?? "neutral"}>{exp.status}</Badge>
       }
-      description={`A: ${exp.run_a_id.slice(0, 8)} · B: ${exp.run_b_id.slice(0, 8)}`}
+      description={`对比用例 ${exp.case_count ?? 0} 个 · 提升 ${exp.improved_count ?? 0} · 退化 ${exp.regressed_count ?? 0}`}
       footer={
         <>
-          <ListCardMeta items={[exp.description ?? undefined]} />
+          <div className="grid gap-2 text-xs text-[var(--muted)] md:grid-cols-2">
+            <p>
+              基线：
+              <ResourceReferenceLink reference={exp.baseline_run_ref} />
+            </p>
+            <p>
+              候选：
+              <ResourceReferenceLink reference={exp.candidate_run_ref} />
+            </p>
+          </div>
+          <ListCardMeta
+            items={[
+              exp.description ?? undefined,
+              `通过率差异 ${formatDelta(exp.pass_rate_delta, "%")}`,
+              `评分差异 ${formatDelta(exp.score_delta)}`,
+              `成本差异 ${formatDelta(exp.cost_delta)}`,
+            ]}
+          />
           {summary ? (
             <div className="mt-4 flex flex-wrap gap-4 text-xs">
               <SummaryChip
@@ -343,6 +361,12 @@ function ExperimentCard({
       title={exp.name}
     />
   );
+}
+
+function formatDelta(value?: number | null, suffix = "") {
+  if (value == null) return "暂无数据";
+  const normalized = suffix === "%" ? value * 100 : value;
+  return `${normalized > 0 ? "+" : ""}${normalized.toFixed(2)}${suffix}`;
 }
 
 function SummaryChip({

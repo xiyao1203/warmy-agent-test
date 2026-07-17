@@ -2,29 +2,14 @@ import { CONTROL_API_URL as API_BASE } from "@/lib/api/base-url";
 import { csrfHeaders } from "@/lib/api/csrf";
 import { responseProblem } from "@/lib/api/problem";
 
-export type GateItem = {
-  id: string;
-  project_id: string;
-  name: string;
-  success_rate_threshold: number;
-  critical_cases: string[];
-  cost_limit: number | null;
-  security_threshold: number;
-  enabled: boolean;
-  created_at: string;
-  updated_at: string;
-};
+export type GateItem = GateSummaryResponse;
 
 export type GateResult = {
   passed: boolean;
   failures: string[];
 };
 
-export type GateRun = {
-  id: string;
-  status: string;
-  created_at: string;
-};
+export type GateRun = Pick<RunResponse, "created_at" | "id" | "status">;
 
 export async function listGates(projectId: string) {
   const res = await fetch(
@@ -104,3 +89,7 @@ export async function deleteGate(projectId: string, gateId: string) {
   );
   if (!res.ok) throw await responseProblem(res, "删除门禁失败");
 }
+import type {
+  GateSummaryResponse,
+  RunResponse,
+} from "@warmy/generated-api-client";

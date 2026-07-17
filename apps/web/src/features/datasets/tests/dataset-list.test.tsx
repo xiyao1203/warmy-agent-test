@@ -6,12 +6,27 @@ import { DatasetList } from "../dataset-list";
 import { TestCaseEditor } from "../test-case-editor";
 
 const dataset = {
+  api_count: 12,
+  browser_count: 5,
+  case_count: 20,
+  codex_explore_count: 3,
   created_at: "2026-06-25T10:00:00Z",
   created_by: "user-1",
   description: "Agent 对话回归集",
   id: "dataset-1",
+  latest_version: {
+    href: "/projects/project-1/datasets/dataset-1",
+    id: "dataset-version-3",
+    name: "对话回归",
+    resource_type: "dataset_version" as const,
+    status: "published",
+    version: 3,
+  },
   name: "对话回归",
   project_id: "project-1",
+  priority_coverage: { P0: 4, P1: 16 },
+  ready_count: 18,
+  source_distribution: { agent_generated: 8, manual: 12 },
   updated_at: "2026-06-25T10:00:00Z",
   updated_by: "user-1",
 };
@@ -89,14 +104,28 @@ describe("DatasetList", () => {
         projectId="project-1"
       />,
     );
-    expect(screen.getByText("对话回归")).toBeVisible();
+    expect(screen.getAllByText("对话回归").length).toBeGreaterThan(0);
     expect(screen.getByText("Agent 对话回归集")).toBeVisible();
     expect(
       screen.getByRole("columnheader", { name: "用例集信息" }),
-    ).toHaveClass("w-[54%]");
+    ).toHaveClass("w-[25%]");
     expect(screen.getByRole("columnheader", { name: "更新时间" })).toHaveClass(
-      "w-[20%]",
+      "w-[12%]",
     );
+    expect(
+      screen.getByRole("columnheader", { name: "最新版本" }),
+    ).toBeVisible();
+    expect(
+      screen.getByRole("columnheader", { name: "用例覆盖" }),
+    ).toBeVisible();
+    expect(screen.getByText(/用例 20 · 就绪 18/)).toBeVisible();
+    expect(screen.getByText(/优先级：P0 4 · P1 16/)).toBeVisible();
+    expect(
+      screen.getByText(/来源：agent_generated 8 · manual 12/),
+    ).toBeVisible();
+    expect(
+      screen.getByRole("link", { name: /对话回归.*v3.*published/ }),
+    ).toHaveAttribute("href", "/projects/project-1/datasets/dataset-1");
     expect(screen.getByRole("table")).toHaveClass("w-full", "table-fixed");
     expect(screen.getByRole("group", { name: "对话回归 操作" })).toHaveClass(
       "whitespace-nowrap",

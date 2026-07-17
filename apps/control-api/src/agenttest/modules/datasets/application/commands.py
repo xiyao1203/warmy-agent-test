@@ -39,6 +39,23 @@ from agenttest.modules.datasets.domain.value_objects import (
 from agenttest.modules.identity.public import User, UserId
 from agenttest.modules.projects.public import ProjectAssetKeyAllocator, ProjectId
 
+_NULLABLE_TEST_CASE_FIELDS = frozenset(
+    {
+        "component",
+        "difficulty",
+        "estimated_duration_seconds",
+        "expected_outcome",
+        "initial_state",
+        "owner_id",
+        "priority",
+        "risk_level",
+        "scenario",
+        "source_ref",
+        "test_group",
+        "timeout_seconds",
+    }
+)
+
 # ── Commands ────────────────────────────────────────────────────────────────
 
 
@@ -133,6 +150,7 @@ class UpdateTestCaseCommand:
     difficulty: str | None = None
     test_group: TestGroup | None = None
     sort_order: int | None = None
+    provided_fields: frozenset[str] = frozenset()
 
 
 @dataclass(frozen=True, slots=True)
@@ -432,6 +450,9 @@ class UpdateTestCaseHandler:
             test_group=command.test_group,
             sort_order=command.sort_order,
         )
+        for field_name in _NULLABLE_TEST_CASE_FIELDS & command.provided_fields:
+            if getattr(command, field_name) is None:
+                setattr(case, field_name, None)
         case.updated_by = actor.user_id
         await self._cases.save(case)
         return case

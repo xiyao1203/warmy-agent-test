@@ -121,7 +121,9 @@ export function TestCaseDetail({
                       步骤 {Number(step.step_no ?? index + 1)}
                     </p>
                     <p className="mt-2 text-sm">{String(step.action ?? "")}</p>
-                    {step.test_data && <JsonBlock data={step.test_data} />}
+                    {Boolean(step.test_data) ? (
+                      <JsonBlock data={step.test_data} />
+                    ) : null}
                     <p className="mt-2 text-xs text-[var(--muted)]">预期结果</p>
                     <p className="mt-1 text-sm">
                       {String(step.expected_result ?? "")}

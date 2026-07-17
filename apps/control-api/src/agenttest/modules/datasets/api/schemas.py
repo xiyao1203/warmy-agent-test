@@ -251,7 +251,7 @@ class TestCaseResponse(BaseModel):
     preconditions: list[str]
     input: dict[str, object]
     data_bindings: list[dict[str, object]]
-    steps: list[dict[str, object]]
+    steps: list[TestStepV1]
     execution_mode: ExecutionMode
     assertions: list[dict[str, object]]
     scorers: list[dict[str, object]]
@@ -296,7 +296,7 @@ class TestCaseResponse(BaseModel):
             preconditions=case.preconditions,
             input=case.input,
             data_bindings=case.data_bindings,
-            steps=case.steps,
+            steps=[TestStepV1.model_validate(step) for step in case.steps],
             execution_mode=case.execution_mode,
             assertions=case.assertions,
             scorers=case.scorers,

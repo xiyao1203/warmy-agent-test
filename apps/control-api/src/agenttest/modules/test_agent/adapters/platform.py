@@ -41,6 +41,7 @@ from agenttest.modules.model_configs.public import (
     ModelInvoker,
     ModelPurpose,
 )
+from agenttest.modules.projects.public import ProjectId
 from agenttest.modules.runs.public import CreateRunCommand, RunId
 from agenttest.modules.scorers.public import Scorer, ScorerId, ScorerType
 from agenttest.modules.security.public import (
@@ -245,9 +246,11 @@ class HandlerPlatformGateway:
                 ]
             }
         if capability == "test_cases.list":
+            version_id = DatasetVersionId(UUID(str(values["dataset_version_id"])))
+            await self._require_dataset_version_in_project(actor, project_id, version_id)
             items, _ = await self._datasets.list_cases.execute(
                 actor,
-                DatasetVersionId(UUID(str(values["dataset_version_id"]))),
+                version_id,
             )
             return {
                 "items": [
@@ -265,45 +268,51 @@ class HandlerPlatformGateway:
                 ]
             }
         if capability == "test_cases.get":
-            item = await self._datasets.get_case.execute(
-                actor,
-                TestCaseId(UUID(str(values["case_id"]))),
+            item = await self._require_test_case_in_project(
+                actor, project_id, TestCaseId(UUID(str(values["case_id"])))
             )
-            return _test_case(item)
+            return _test_case_result(item, project_id.value)
         if capability == "test_cases.create":
             contract = PlatformTestCaseV1.model_validate(values["case"])
+            version_id = DatasetVersionId(UUID(str(values["dataset_version_id"])))
+            await self._require_dataset_version_in_project(actor, project_id, version_id)
             item = await self._datasets.add_case.execute(
                 actor,
                 _test_case_command_from_contract(
-                    dataset_version_id=DatasetVersionId(UUID(str(values["dataset_version_id"]))),
+                    dataset_version_id=version_id,
                     contract=contract,
                     source_ref=f"agent-session:{context.session_id}",
                 ),
             )
-            return _created("test_case", item.case_id.value, _test_case(item))
+            return _created(
+                "test_case",
+                item.case_id.value,
+                _test_case_result(item, project_id.value),
+            )
         if capability == "test_cases.update":
             contract = PlatformTestCaseV1.model_validate(values["case"])
+            case_id = TestCaseId(UUID(str(values["case_id"])))
+            await self._require_test_case_in_project(actor, project_id, case_id)
             item = await self._datasets.update_case.execute(
                 actor,
                 _test_case_update_command(
-                    TestCaseId(UUID(str(values["case_id"]))),
+                    case_id,
                     contract,
                 ),
             )
             return _created(
                 "test_case",
                 item.case_id.value,
-                _test_case(item),
+                _test_case_result(item, project_id.value),
                 relation="updated",
             )
         if capability == "test_cases.validate":
-            item = await self._datasets.get_case.execute(
-                actor,
-                TestCaseId(UUID(str(values["case_id"]))),
+            item = await self._require_test_case_in_project(
+                actor, project_id, TestCaseId(UUID(str(values["case_id"])))
             )
             issues = item.readiness_issues()
             return {
-                "test_case": _test_case(item),
+                "test_case": _test_case_result(item, project_id.value),
                 "ready": not issues,
                 "issues": [
                     {"field": field, "code": code, "message": message}
@@ -311,22 +320,31 @@ class HandlerPlatformGateway:
                 ],
             }
         if capability == "test_cases.mark_ready":
+            case_id = TestCaseId(UUID(str(values["case_id"])))
+            await self._require_test_case_in_project(actor, project_id, case_id)
             item = await self._datasets.mark_case_ready.execute(
                 actor,
-                MarkTestCaseReadyCommand(TestCaseId(UUID(str(values["case_id"])))),
+                MarkTestCaseReadyCommand(case_id),
             )
-            return _created("test_case", item.case_id.value, _test_case(item), relation="updated")
+            return _created(
+                "test_case",
+                item.case_id.value,
+                _test_case_result(item, project_id.value),
+                relation="updated",
+            )
         if capability == "test_cases.trial_run":
+            case_id = TestCaseId(UUID(str(values["case_id"])))
+            case = await self._require_test_case_in_project(actor, project_id, case_id)
             result = await self._datasets.trial_run.execute(
                 actor,
                 CreateCaseTrialRunCommand(
                     project_id=project_id,
-                    case_id=TestCaseId(UUID(str(values["case_id"]))),
+                    case_id=case_id,
                     agent_version_id=UUID(str(values["agent_version_id"])),
                     environment_template_id=UUID(str(values["environment_template_id"])),
                     idempotency_key=(
                         context.idempotency_key
-                        or f"agent-trial:{context.session_id}:{values['case_id']}"
+                        or _case_trial_fallback_key(context, values, case.updated_at)
                     ),
                 ),
             )
@@ -430,9 +448,7 @@ class HandlerPlatformGateway:
         if capability == "runs.list":
             items = await self._runs.list_runs.execute(actor, project_id)
             run_summaries = (
-                await self._summaries.runs(
-                    project_id.value, [item.run_id.value for item in items]
-                )
+                await self._summaries.runs(project_id.value, [item.run_id.value for item in items])
                 if self._summaries
                 else {}
             )
@@ -801,6 +817,9 @@ class HandlerPlatformGateway:
             "- name、objective、template、case_type、automation_status\n"
             "- component、requirement_refs、preconditions、input、data_bindings\n"
             "- steps: 有序数组，每步必须含 step_no、action、test_data、expected_result\n"
+            "- browser 模式的每个 steps 项还必须含 operation: "
+            '{action: "goto|click|fill|wait|screenshot", target, value}；'
+            "action 保留人工可读描述，不得用它代替 operation\n"
             "- expected_outcome、assertions、scorers、security_policies\n"
             "- artifact_requirements、postconditions、execution_mode、timeout_seconds、"
             "retry_count、tags、priority、risk_level\n"
@@ -981,6 +1000,32 @@ class HandlerPlatformGateway:
             },
         )
 
+    async def _require_dataset_version_in_project(
+        self,
+        actor,
+        project_id: ProjectId,
+        version_id: DatasetVersionId,
+    ):
+        version = await self._datasets.get_version.execute(actor, version_id)
+        dataset = await self._datasets.get_dataset.execute(actor, version.dataset_id)
+        if dataset.project_id != project_id:
+            raise ValueError("Dataset version does not exist in current project")
+        return version
+
+    async def _require_test_case_in_project(
+        self,
+        actor,
+        project_id: ProjectId,
+        case_id: TestCaseId,
+    ):
+        case = await self._datasets.get_case.execute(actor, case_id)
+        await self._require_dataset_version_in_project(
+            actor,
+            project_id,
+            case.dataset_version_id,
+        )
+        return case
+
 
 class CompositePlatformGateway:
     def __init__(self, platform: HandlerPlatformGateway, missions) -> None:
@@ -1032,6 +1077,27 @@ def _summary_item(
         result.update(summary.model_dump(mode="json"))
     result["resource_ref"] = resource_ref.model_dump(mode="json")
     return result
+
+
+def _test_case_result(item, project_id: UUID) -> dict[str, object]:
+    return _summary_item(
+        _test_case(item),
+        None,
+        _resource_ref(
+            ResourceType.TEST_CASE,
+            item.case_id.value,
+            project_id,
+            item.name,
+        ),
+    )
+
+
+def _case_trial_fallback_key(context, values, updated_at) -> str:
+    updated = updated_at.isoformat() if updated_at else "unknown"
+    return (
+        f"agent-trial:{context.session_id}:{values['case_id']}:"
+        f"{values['agent_version_id']}:{values['environment_template_id']}:{updated}"
+    )[:200]
 
 
 def _optional(value: Any) -> str | None:

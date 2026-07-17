@@ -184,4 +184,8 @@ def _to_project(
             UserId(member.user_id),
             ProjectMemberRole(member.role),
         )
+    if project.member_role(project.created_by) is None:
+        project.add_member(project.created_by, ProjectMemberRole.DEVELOPER)
+    if project.lead_user_id is not None and project.member_role(project.lead_user_id) is None:
+        project.add_member(project.lead_user_id, ProjectMemberRole.DEVELOPER)
     return project

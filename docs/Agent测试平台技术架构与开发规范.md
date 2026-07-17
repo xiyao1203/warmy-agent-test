@@ -352,6 +352,8 @@ UI Component
 - 表单状态由 React Hook Form 管理。
 - 仅真正跨页面、非服务端、非 URL 状态使用轻量全局 Store。
 - 禁止将 API DTO 原样散布到所有组件，复杂页面需要 View Model 转换。
+- 核心列表消费 OpenAPI 生成的 Summary DTO；HTTP 页面与测试 Agent 的列表能力必须来自同一个 Application 读模型，禁止各自拼接不同统计口径。
+- 跨资源导航统一使用 `ResourceReference {type,id,key,name,status,version,href}`；前端只允许渲染 `/projects/...` 站内路径，其他值降级为纯文本。
 
 ### 6.5 前端权限
 
@@ -519,6 +521,8 @@ POST /api/v1/review-tasks/{task_id}/decisions
 - 错误响应采用 RFC 7807 Problem Details。
 - 请求使用 Pydantic Schema 校验。
 - 分页列表默认使用 Cursor Pagination。
+- 跨模块列表摘要由只读 Application Port 批量投影，API 不能逐行调用其他模块或直接查询其 ORM；查询数量必须有固定上界测试。
+- `ResourceReference.href` 只能由服务端基于资源类型 Allowlist 生成站内路径，禁止接受模型或客户端提供的任意 URL。
 - 创建运行等可重试请求支持 `Idempotency-Key`。
 - 并发编辑使用版本号或 `updated_at` 做乐观锁。
 - 实时进度优先使用 SSE；双向协作场景才使用 WebSocket。
@@ -603,6 +607,7 @@ user_credentials
 user_sessions
 projects
 project_members
+project_sequences
 ```
 
 #### Agent 与插件
@@ -627,6 +632,8 @@ test_case_versions
 test_plans
 test_plan_versions
 ```
+
+`test_cases` 的标准核心字段为：项目内唯一 `case_key`、目标、模板、类型、状态、自动化状态、来源、组件/需求/负责人、准备与收尾条件、输入/初始状态/数据绑定、有序步骤及逐步测试数据和预期、整体断言/评分/安全/证据，以及执行超时、重试和受限扩展字段。确定性浏览器步骤使用独立的受限 `operation`，不得复用人工 `action` 或任意 `test_data` 作为 Playwright 指令。JSONB 只保存嵌套专业契约和快照；列表筛选、状态、类型、来源、优先级和关联键保持结构化列或有界投影。
 
 #### 执行与结果
 
@@ -691,6 +698,7 @@ get_by_id(run_id: UUID) -> Run | None
 - Run 必须引用确切版本，不引用“最新版本”。
 - 评分器模型、Prompt 和配置同样保存版本快照。
 - 原始 Trace 和 Artifact 元数据不得被后续运行覆盖。
+- 人工表单、导入、Agent 生成和失败回归写入同一 `PlatformTestCaseV1`；发布的数据集版本不可变，RunCase 保存无秘密的完整 `case_spec_snapshot`。
 
 ### 8.6 删除策略
 
@@ -722,6 +730,7 @@ get_by_id(run_id: UUID) -> Run | None
 - 大表索引使用不阻塞写入的方式创建。
 - 应用发布必须向后兼容至少一个迁移阶段。
 - CI 在空数据库和上一版本数据库上验证迁移。
+- 项目/用例可读编号使用项目级序列表原子分配，迁移必须验证历史回填、唯一约束、并发分配和项目间隔离。
 
 ---
 
@@ -899,6 +908,8 @@ CreateRun
 → CleanupEnvironment
 ```
 
+`run_type=case_trial` 表示从专业用例发起的单用例试运行：它不引用测试计划版本，必须引用来源用例、已发布 Agent 版本、执行环境和唯一 RunCase 快照。创建命令先完成项目隔离、完整就绪校验、风险确认，并按项目、用例、Agent 版本、环境和递归脱敏快照生成请求指纹；同键不同指纹冲突。正式计划 Run 也按项目、计划版本生成请求指纹并执行同键请求精确复用。两类 Run 的唯一键并发写入都在仓储保存点内完成，失败写入只回滚保存点，应用层可在同一 API 外层工作单元中回读唯一胜出 Run。Worker 的 API、Browser 和 Codex Explore 路径均从 `case_spec_snapshot` 读取输入、步骤、断言、评分、安全、证据、超时和重试要求，不连接业务数据库。正式聚合默认排除 trial。
+
 ### 12.2 工作流规范
 
 - Workflow 代码必须确定性。
@@ -990,7 +1001,7 @@ HTTP Request
 - 容器使用最小基础镜像和非 Root 用户。
 - 生成 SBOM。
 - 第三方插件安装前验证来源、版本和权限。
-- `make security-audit` 审计 Node/Python 全部生产依赖；任何高危/严重项必须修复或由失效即失败的可达性门禁约束，并在 `docs/security/dependency-audit.md` 记录复核时间。
+- `make security-audit` 审计 Node/Python 全部生产依赖，并从中危开始阻断。锁文件导出后按精确版本、禁用二次解析执行 Python 审计；上游错误固定已知漏洞版本时，只允许经兼容性测试的根级精确 Override，并在 `docs/security/dependency-audit.md` 记录原因、验证和回滚方式。
 
 ### 14.4 Artifact 边界
 
@@ -1044,7 +1055,7 @@ HTTP Request
 
 ### 15.6 性能预算
 
-- `make performance` 必须通过生产构建、四条核心路由的 Gzip 基线与 5% 回归阈值、256000 bytes 单 Chunk 上限，以及 Run 对比/实验统计/项目列表的固定 SQL 查询上限。
+- `make performance` 必须通过生产构建、四条核心路由的 Gzip 基线与 5% 回归阈值、256000 bytes 单 Chunk 上限，以及 Run 对比/实验统计/项目与全量核心 Summary 列表的固定 SQL 查询上限。
 - `make performance-e2e` 对认证导航执行三次采样；缺少运行服务或 E2E 凭证时只能按明确条件跳过，不能替代静态 Bundle 和 SQL 预算。
 - 基线修改必须附带测量证据，禁止仅为通过门禁提高阈值。
 
@@ -1127,7 +1138,7 @@ production
 |---|---:|---|
 | DeepEval | 4.0.7 | Agent 评测和 LLM-as-a-Judge |
 | Playwright | 1.61.1 | 确定性浏览器回归 |
-| Browser Harness | 0.1.3 | 探索测试和修复候选 |
+| Browser Harness | 0.1.5 | 探索测试和修复候选；Pillow 安全覆盖见供应链审计 |
 | Promptfoo | 0.121.17 | 基础红队和安全扫描 |
 | Temporal Python SDK | 1.29.0 | 工作流和 Activity |
 | Microsoft PyRIT | 0.14.0 | 高级多轮红队，第二阶段 |

@@ -205,6 +205,57 @@ def test_professional_snapshot_rejects_plaintext_credential_value() -> None:
         normalize_run_task(payload)
 
 
+def test_professional_snapshot_rejects_nested_plaintext_secret_fields() -> None:
+    payload = {
+        "run_id": "run-v1",
+        "idempotency_key": "v1-nested-secret",
+        "agent_config": {"endpoint_url": "https://agent.example/run"},
+        "cases": [
+            {
+                "run_case_id": "case-v1",
+                "case_spec": {
+                    "schema_version": "platform-test-case/v1",
+                    "objective": "secure",
+                    "input": {"headers": {"Authorization": "Bearer secret"}},
+                    "data_bindings": [],
+                    "steps": [],
+                    "execution_mode": "api",
+                },
+            }
+        ],
+    }
+
+    with pytest.raises(ValueError, match="sensitive fields"):
+        normalize_run_task(payload)
+
+
+@pytest.mark.parametrize("key", ["apiKey", "accessToken", "clientSecret"])
+def test_professional_snapshot_rejects_camel_case_plaintext_secret_fields(
+    key: str,
+) -> None:
+    payload = {
+        "run_id": "run-v1",
+        "idempotency_key": f"v1-camel-secret-{key}",
+        "agent_config": {"endpoint_url": "https://agent.example/run"},
+        "cases": [
+            {
+                "run_case_id": "case-v1",
+                "case_spec": {
+                    "schema_version": "platform-test-case/v1",
+                    "objective": "secure",
+                    "input": {key: "plain-secret"},
+                    "data_bindings": [],
+                    "steps": [],
+                    "execution_mode": "api",
+                },
+            }
+        ],
+    }
+
+    with pytest.raises(ValueError, match="sensitive fields"):
+        normalize_run_task(payload)
+
+
 # ── 评分器集成测试 ───────────────────────────────────────────────────
 
 

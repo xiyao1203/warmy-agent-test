@@ -463,6 +463,26 @@ export type BatchConfirmationDecision = {
 };
 
 /**
+ * BrowserOperationV1
+ *
+ * Deterministic browser instruction kept separate from the human test step.
+ */
+export type BrowserOperationV1 = {
+  /**
+   * Action
+   */
+  action: "goto" | "click" | "fill" | "wait" | "screenshot";
+  /**
+   * Target
+   */
+  target?: string | null;
+  /**
+   * Value
+   */
+  value?: string | null;
+};
+
+/**
  * CalibrationResponse
  */
 export type CalibrationResponse = {
@@ -3235,9 +3255,7 @@ export type TestCaseResponse = {
   /**
    * Steps
    */
-  steps: Array<{
-    [key: string]: unknown;
-  }>;
+  steps: Array<TestStepV1>;
   /**
    * Tags
    */
@@ -3607,6 +3625,7 @@ export type TestStepV1 = {
    * Expected Result
    */
   expected_result: string;
+  operation?: BrowserOperationV1 | null;
   /**
    * Step No
    */

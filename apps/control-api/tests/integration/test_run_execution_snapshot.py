@@ -13,6 +13,7 @@ from datetime import UTC, datetime
 from uuid import uuid4
 
 from agenttest.bootstrap.run_source import (
+    _run_definition_case,
     browser_profile_snapshot,
     secret_free_credential_bindings,
 )
@@ -22,6 +23,7 @@ from agenttest.modules.agents.domain.invocation import (
     invocation_from_stored_config,
 )
 from agenttest.modules.browser_profiles.domain.entities import BrowserProfile
+from agenttest.modules.datasets.public import DatasetVersionId, ExecutionMode, TestCase, TestCaseId
 from agenttest.modules.identity.public import UserId
 from agenttest.modules.projects.public import ProjectId
 from agenttest.modules.runs.application.ports import RunDefinition, RunDefinitionCase
@@ -196,6 +198,39 @@ def test_run_source_browser_profile_snapshot_contains_only_immutable_reference()
         "auth_state_sha256": "a" * 64,
     }
     assert "encrypted" not in repr(snapshot)
+
+
+def test_plan_run_case_uses_one_secret_free_snapshot_for_storage_and_temporal() -> None:
+    case = TestCase.create(
+        case_id=TestCaseId.new(),
+        dataset_version_id=DatasetVersionId.new(),
+        name="secure plan case",
+        input={
+            "message": "hello",
+            "apiKey": "input-secret",
+            "token_usage": 7,
+        },
+        assertions=[
+            {
+                "type": "contains",
+                "value": "hello",
+                "clientSecret": "assertion-secret",
+            }
+        ],
+        execution_mode=ExecutionMode.API,
+        created_by=UserId.new(),
+    )
+
+    definition_case = _run_definition_case(case)
+
+    assert definition_case.input_snapshot == {
+        "message": "hello",
+        "apiKey": "[REDACTED]",
+        "token_usage": 7,
+    }
+    assert definition_case.assertion_snapshot[0]["clientSecret"] == "[REDACTED]"
+    assert definition_case.input_snapshot == definition_case.case_spec_snapshot["input"]
+    assert definition_case.assertion_snapshot == definition_case.case_spec_snapshot["assertions"]
 
 
 def test_run_definition_includes_scorer_configs_for_all_scorer_types() -> None:

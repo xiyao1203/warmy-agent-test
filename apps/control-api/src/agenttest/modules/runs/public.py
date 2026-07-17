@@ -2,6 +2,8 @@ from agenttest.modules.runs.application.commands import CreateRunCommand, RunNot
 from agenttest.modules.runs.application.failure_classifier import FailureClassifier
 from agenttest.modules.runs.application.ports import (
     ProjectAccessPort,
+    RunIdempotencyConflict,
+    RunIdempotencyKeyExists,
     RunOrchestrator,
     RunRepository,
     RunRuntimeUnavailableError,
@@ -25,6 +27,8 @@ __all__ = [
     "RunCaseStatus",
     "RunErrorType",
     "RunId",
+    "RunIdempotencyConflict",
+    "RunIdempotencyKeyExists",
     "RunNotFoundError",
     "RunRepository",
     "RunOrchestrator",

@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+import json
 from dataclasses import dataclass
+from hashlib import sha256
 from uuid import NAMESPACE_URL, uuid5
 
 from agenttest.modules.identity.public import User
@@ -9,6 +11,8 @@ from agenttest.modules.run_postprocessing.public import RunPostprocessCreator
 from agenttest.modules.runs.application.ports import (
     ProjectAccessPort,
     ReviewCollectorPort,
+    RunIdempotencyConflict,
+    RunIdempotencyKeyExists,
     RunOrchestrator,
     RunRepository,
     RunSourcePort,
@@ -21,7 +25,7 @@ from agenttest.modules.runs.domain.evidence import (
     SecurityDecision,
 )
 from agenttest.modules.runs.domain.outcomes import Outcome, RunCaseOutcomes
-from agenttest.modules.runs.domain.value_objects import RunCaseStatus, RunStatus
+from agenttest.modules.runs.domain.value_objects import RunCaseStatus, RunStatus, RunType
 from agenttest.modules.test_plans.public import TestPlanVersionId
 
 
@@ -91,9 +95,10 @@ class CreateRunHandler:
         key = command.idempotency_key.strip()
         if not key:
             raise ValueError("Idempotency-Key is required")
+        request_fingerprint = _plan_run_request_fingerprint(command)
         existing = await self._runs.get_by_idempotency_key(command.project_id, key)
         if existing is not None:
-            return CreateRunResult(run=existing, created=False)
+            return _reuse_exact_plan_run(existing, command, request_fingerprint)
         await self._orchestrator.ensure_available()
         definition = await self._source.load(
             command.project_id,
@@ -109,7 +114,10 @@ class CreateRunHandler:
             dataset_version_id=definition.dataset_version_id,
             idempotency_key=key,
             created_by=actor.user_id,
-            config_snapshot=definition.config_snapshot,
+            config_snapshot={
+                **definition.config_snapshot,
+                "plan_run_request_fingerprint": request_fingerprint,
+            },
             plugin_snapshot=definition.plugin_snapshot,
             total_cases=len(definition.cases),
         )
@@ -126,11 +134,54 @@ class CreateRunHandler:
             )
             for item in definition.cases
         ]
-        await self._runs.add(run, cases)
+        try:
+            await self._runs.add(run, cases)
+        except RunIdempotencyKeyExists:
+            winner = await self._runs.get_by_idempotency_key(command.project_id, key)
+            if winner is None:
+                raise RuntimeError(
+                    "Run idempotency conflict was not visible after transaction rollback"
+                ) from None
+            return _reuse_exact_plan_run(winner, command, request_fingerprint)
         workflow_id = await self._orchestrator.start(run, cases)
         run.start(workflow_id)
         await self._runs.save(run)
         return CreateRunResult(run=run, created=True)
+
+
+def _plan_run_request_fingerprint(command: CreateRunCommand) -> str:
+    canonical = json.dumps(
+        {
+            "run_type": RunType.PLAN.value,
+            "project_id": str(command.project_id.value),
+            "test_plan_version_id": str(command.test_plan_version_id.value),
+        },
+        separators=(",", ":"),
+        sort_keys=True,
+    ).encode()
+    return sha256(canonical).hexdigest()
+
+
+def _reuse_exact_plan_run(
+    existing: Run,
+    command: CreateRunCommand,
+    request_fingerprint: str,
+) -> CreateRunResult:
+    stored_fingerprint = existing.config_snapshot.get("plan_run_request_fingerprint")
+    legacy_exact_match = (
+        stored_fingerprint is None
+        and existing.run_type is RunType.PLAN
+        and existing.test_plan_version_id == command.test_plan_version_id
+    )
+    if not legacy_exact_match and (
+        existing.run_type is not RunType.PLAN
+        or existing.test_plan_version_id != command.test_plan_version_id
+        or stored_fingerprint != request_fingerprint
+    ):
+        raise RunIdempotencyConflict(
+            "Idempotency-Key is already used by a different plan run request"
+        )
+    return CreateRunResult(run=existing, created=False)
 
 
 class CancelRunHandler:

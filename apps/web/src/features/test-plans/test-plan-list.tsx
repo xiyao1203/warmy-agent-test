@@ -25,6 +25,7 @@ import {
 } from "@/components/ui/dialog";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Input } from "@/components/ui/input";
+import { ResourceReferenceLink } from "@/components/ui/resource-reference-link";
 import {
   Table,
   TableBody,
@@ -147,9 +148,11 @@ export function TestPlanList({
           <Table className="w-full table-fixed">
             <TableHeader className="bg-[var(--canvas-soft)]">
               <TableRow>
-                <TableHead className="w-[54%]">计划信息</TableHead>
-                <TableHead className="w-[20%]">更新时间</TableHead>
-                <TableHead className="w-[26%] whitespace-nowrap">
+                <TableHead className="w-[20%]">计划信息</TableHead>
+                <TableHead className="w-[27%]">资产绑定</TableHead>
+                <TableHead className="w-[22%]">执行配置</TableHead>
+                <TableHead className="w-[18%]">版本与结果</TableHead>
+                <TableHead className="w-[13%] whitespace-nowrap">
                   下一步
                 </TableHead>
               </TableRow>
@@ -175,8 +178,41 @@ export function TestPlanList({
                       </div>
                     </div>
                   </TableCell>
-                  <TableCell className="whitespace-nowrap text-center text-sm text-[var(--muted)]">
-                    {new Date(plan.updated_at).toLocaleDateString("zh-CN")}
+                  <TableCell className="space-y-1 text-left text-xs">
+                    <p>
+                      Agent：
+                      <ResourceReferenceLink reference={plan.agent_ref} />
+                    </p>
+                    <p>
+                      用例集：
+                      <ResourceReferenceLink reference={plan.dataset_ref} />
+                    </p>
+                    <p>
+                      环境：
+                      <ResourceReferenceLink reference={plan.environment_ref} />
+                    </p>
+                  </TableCell>
+                  <TableCell className="text-left text-xs leading-5 text-[var(--muted)]">
+                    <p>
+                      用例 {plan.case_count ?? 0} · 重复{" "}
+                      {plan.repeat_count ?? 1} · 并发 {plan.concurrency ?? 1}
+                    </p>
+                    <p>
+                      超时 {plan.timeout_seconds ?? "暂无数据"} 秒 · 重试{" "}
+                      {plan.retry_count ?? 0} · 评分器 {plan.scorer_count ?? 0}
+                    </p>
+                  </TableCell>
+                  <TableCell className="space-y-1 text-left text-xs">
+                    <ResourceReferenceLink reference={plan.latest_version} />
+                    <p className="text-[var(--muted)]">
+                      最近运行 {plan.last_run_status || "暂无数据"}
+                    </p>
+                    <p className="text-[var(--muted)]">
+                      通过率{" "}
+                      {plan.pass_rate == null
+                        ? "暂无数据"
+                        : `${(plan.pass_rate * 100).toFixed(1)}%`}
+                    </p>
                   </TableCell>
                   <TableCell className={tableActionCellClass}>
                     <TableActions label={plan.name}>

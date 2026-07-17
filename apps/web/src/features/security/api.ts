@@ -12,18 +12,12 @@ export type Finding = {
   score: number;
 };
 
-export type SecurityScanItem = {
-  id: string;
-  project_id: string;
-  status: string;
-  scan_type: string;
+export type SecurityScanItem = Omit<
+  SecurityScanSummaryResponse,
+  "findings" | "summary"
+> & {
   findings: Finding[];
   summary: Record<string, number>;
-  created_at: string;
-  updated_at: string;
-  completed_at: string | null;
-  agent_version_id: string | null;
-  run_id: string | null;
 };
 
 export type SecurityTarget = {
@@ -103,3 +97,4 @@ export async function getScan(projectId: string, scanId: string) {
   if (!res.ok) throw await responseProblem(res, "加载安全扫描详情失败");
   return res.json() as Promise<SecurityScanItem>;
 }
+import type { SecurityScanSummaryResponse } from "@warmy/generated-api-client";

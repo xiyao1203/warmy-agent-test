@@ -16,6 +16,7 @@ from agenttest.modules.datasets.application.commands import (
 )
 from agenttest.modules.datasets.application.contracts import (
     ArtifactRequirementV1,
+    BrowserOperationV1,
     DataBindingV1,
     PlatformTestCaseV1,
     TestStepV1,
@@ -49,6 +50,7 @@ __all__ = [
     "ArtifactKind",
     "ArtifactRequirementV1",
     "AutomationStatus",
+    "BrowserOperationV1",
     "DataBindingSource",
     "DataBindingV1",
     "DataValueType",

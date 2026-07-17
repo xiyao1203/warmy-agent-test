@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from typing import cast
 from uuid import UUID
 
 from sqlalchemy import or_, select
@@ -24,7 +25,7 @@ from agenttest.modules.datasets.infrastructure.persistence.models import (
 from agenttest.modules.datasets.infrastructure.persistence.repositories import (
     _to_test_case,
 )
-from agenttest.modules.datasets.public import build_case_spec_snapshot
+from agenttest.modules.datasets.public import TestCase, build_case_spec_snapshot
 from agenttest.modules.environments.infrastructure.persistence.models import (
     CredentialBindingModel,
     EnvironmentTemplateModel,
@@ -62,6 +63,21 @@ def browser_profile_snapshot(profile: BrowserProfile) -> dict[str, object]:
         "auth_state_version": profile.auth_state_version,
         "auth_state_sha256": profile.auth_state_sha256,
     }
+
+
+def _run_definition_case(case: TestCase) -> RunDefinitionCase:
+    """Build every persisted/Temporal case view from one sanitized source."""
+    snapshot = build_case_spec_snapshot(case)
+    input_snapshot = cast(dict[str, object], snapshot["input"])
+    assertion_snapshot = cast(list[dict[str, object]], snapshot["assertions"])
+    return RunDefinitionCase(
+        test_case_id=case.case_id.value,
+        name=case.name,
+        input_snapshot=dict(input_snapshot),
+        assertion_snapshot=[dict(item) for item in assertion_snapshot],
+        case_spec_snapshot=snapshot,
+        execution_mode=case.execution_mode.value,
+    )
 
 
 class SqlAlchemyRunSource:
@@ -253,17 +269,7 @@ class SqlAlchemyRunSource:
             dataset_version_id=dataset_version.id,
             config_snapshot=dict(plan_version.config),
             plugin_snapshot=plugin_snapshot,
-            cases=[
-                RunDefinitionCase(
-                    test_case_id=case.id,
-                    name=case.name,
-                    input_snapshot=dict(case.input),
-                    assertion_snapshot=list(case.assertions),
-                    case_spec_snapshot=build_case_spec_snapshot(_to_test_case(case)),
-                    execution_mode=str(case.execution_mode),
-                )
-                for case in cases
-            ],
+            cases=[_run_definition_case(_to_test_case(case)) for case in cases],
         )
 
 

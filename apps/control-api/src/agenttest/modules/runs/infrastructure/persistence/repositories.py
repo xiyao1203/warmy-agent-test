@@ -4,11 +4,13 @@ from datetime import UTC, datetime
 from uuid import UUID, uuid4
 
 from sqlalchemy import select, update
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from agenttest.modules.evaluations.public import CaseScoreInput, build_evaluation_summary
 from agenttest.modules.identity.public import UserId
 from agenttest.modules.projects.public import ProjectId
+from agenttest.modules.runs.application.ports import RunIdempotencyKeyExists
 from agenttest.modules.runs.domain.entities import Run, RunCase, RunCaseId, RunId
 from agenttest.modules.runs.domain.outcomes import RunCaseOutcomes
 from agenttest.modules.runs.domain.value_objects import RunCaseStatus, RunStatus, RunType
@@ -65,10 +67,20 @@ class SqlAlchemyRunRepository:
         return [_to_run(model) for model in models]
 
     async def add(self, run: Run, cases: list[RunCase]) -> None:
-        async with transaction_scope(self._session_factory) as session:
-            session.add(_run_model(run))
-            await session.flush()
-            session.add_all([_case_model(case) for case in cases])
+        try:
+            async with transaction_scope(self._session_factory) as session:
+                # The API already owns an outer unit of work. Keep the insert in a
+                # savepoint so an idempotency-key race does not poison that outer
+                # transaction before the handler can read the committed winner.
+                async with session.begin_nested():
+                    session.add(_run_model(run))
+                    await session.flush()
+                    session.add_all([_case_model(case) for case in cases])
+                    await session.flush()
+        except IntegrityError as error:
+            if _is_idempotency_key_conflict(error):
+                raise RunIdempotencyKeyExists from error
+            raise
 
     async def save(self, run: Run) -> None:
         async with transaction_scope(self._session_factory) as session:
@@ -275,6 +287,19 @@ class SqlAlchemyRunRepository:
         async with session_scope(self._session_factory) as session:
             models = list((await session.scalars(statement)).all())
         return [_to_case(model) for model in models]
+
+
+def _is_idempotency_key_conflict(error: IntegrityError) -> bool:
+    diagnostic = getattr(error.orig, "diag", None)
+    constraint_name = getattr(diagnostic, "constraint_name", None)
+    if constraint_name == "uq_runs_project_idempotency_key":
+        return True
+    message = str(error.orig).lower()
+    if "uq_runs_project_idempotency_key" in message:
+        return True
+    return (
+        "runs.project_id" in message and "runs.idempotency_key" in message and "unique" in message
+    )
 
 
 def _run_model(run: Run) -> RunModel:

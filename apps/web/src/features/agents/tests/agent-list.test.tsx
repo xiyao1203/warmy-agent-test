@@ -65,17 +65,19 @@ describe("AgentList", () => {
     expect(screen.getByText("下一步：创建连接版本")).toBeVisible();
     expect(
       screen.getByRole("columnheader", { name: "智能体信息" }),
-    ).toHaveClass("w-[28%]");
-    expect(screen.getByRole("columnheader", { name: "接入类型" })).toHaveClass(
-      "w-[14%]",
-    );
-    expect(screen.getByRole("columnheader", { name: "闭环状态" })).toHaveClass(
-      "w-[32%]",
-    );
+    ).toHaveClass("w-[25%]");
+    expect(
+      screen.getByRole("columnheader", { name: "接入与模型" }),
+    ).toHaveClass("w-[21%]");
+    expect(
+      screen.getByRole("columnheader", { name: "版本与质量" }),
+    ).toHaveClass("w-[31%]");
     expect(screen.getByRole("columnheader", { name: "更新时间" })).toHaveClass(
       "w-[13%]",
     );
     expect(screen.getByRole("table")).toHaveClass("w-full", "table-fixed");
+    expect(screen.getByText(/工具 0 · 凭证绑定 0/)).toBeVisible();
+    expect(screen.getAllByText("暂无数据").length).toBeGreaterThan(0);
     const actions = screen.getByRole("group", { name: "客服 Agent 操作" });
     expect(actions).toHaveClass("whitespace-nowrap");
     expect(
@@ -98,6 +100,42 @@ describe("AgentList", () => {
     expect(onCreate).toHaveBeenCalledWith(
       expect.objectContaining({ agent_type: "canvas", name: "评测 Agent" }),
     );
+  });
+
+  it("shows decision-ready version, connection, model and quality fields", () => {
+    render(
+      <AgentList
+        agents={[
+          {
+            ...agent,
+            connection_status: "ready",
+            credential_binding_count: 2,
+            current_version: {
+              href: "/projects/project-1/agents/agent-1",
+              id: "version-3",
+              name: "客服 Agent",
+              resource_type: "agent_version",
+              status: "published",
+              version: 3,
+            },
+            current_version_id: "version-3",
+            last_run_status: "passed",
+            model: "gpt-5",
+            pass_rate: 0.925,
+            protocol: "responses",
+            tool_count: 4,
+          },
+        ]}
+        projectId="project-1"
+      />,
+    );
+
+    expect(
+      screen.getByRole("link", { name: /客服 Agent.*v3.*published/ }),
+    ).toHaveAttribute("href", "/projects/project-1/agents/agent-1");
+    expect(screen.getByText(/协议 responses · 模型 gpt-5/)).toBeVisible();
+    expect(screen.getByText(/工具 4 · 凭证绑定 2/)).toBeVisible();
+    expect(screen.getByText(/通过率 92.5%/)).toBeVisible();
   });
 
   it("summarizes current, baseline and next action for published agents", () => {

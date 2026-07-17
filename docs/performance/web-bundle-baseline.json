@@ -1,22 +1,22 @@
 {
   "schemaVersion": 1,
-  "source": "clean-main Next.js production build recorded before repository hardening",
+  "source": "TASK-20260716-001 production build after professional test management and decision-ready core lists",
   "routes": {
     "/login": {
-      "gzipBytes": 399362,
-      "rawBytes": 1376351
+      "gzipBytes": 425472,
+      "rawBytes": 1476525
     },
     "/projects": {
-      "gzipBytes": 408575,
-      "rawBytes": 1410587
+      "gzipBytes": 434977,
+      "rawBytes": 1510761
     },
     "/projects/[projectId]/runs": {
-      "gzipBytes": 421506,
-      "rawBytes": 1456279
+      "gzipBytes": 448090,
+      "rawBytes": 1557400
     },
     "/projects/[projectId]/test-agent": {
-      "gzipBytes": 440705,
-      "rawBytes": 1524731
+      "gzipBytes": 467434,
+      "rawBytes": 1625923
     }
   }
 }

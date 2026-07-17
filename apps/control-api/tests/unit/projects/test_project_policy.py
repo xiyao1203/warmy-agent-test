@@ -98,19 +98,36 @@ def test_project_supports_rename_archive_and_member_role_changes() -> None:
 
 def test_project_normalizes_professional_metadata() -> None:
     lead_id = UserId.new()
+    creator_id = UserId.new()
     project = Project.create(
         project_id=ProjectId(uuid4()),
         name="Professional QA",
         key="qa-team",
         description="  Agent regression program  ",
         lead_user_id=lead_id,
-        created_by=UserId.new(),
+        created_by=creator_id,
     )
 
     assert project.key == "QA-TEAM"
     assert project.description == "Agent regression program"
     assert project.lead_user_id == lead_id
+    assert project.member_role(creator_id) is ProjectMemberRole.DEVELOPER
+    assert project.member_role(lead_id) is ProjectMemberRole.DEVELOPER
     assert project.created_at == project.updated_at
+
+
+def test_project_rejects_assigning_or_removing_a_non_member_lead() -> None:
+    project = create_project()
+    lead_id = UserId.new()
+
+    with pytest.raises(ValueError, match="current member"):
+        project.update_details(lead_user_id=lead_id)
+
+    project.add_member(lead_id, ProjectMemberRole.TESTER)
+    project.update_details(lead_user_id=lead_id)
+
+    with pytest.raises(ValueError, match="active project lead"):
+        project.remove_member(lead_id)
 
 
 def test_project_rejects_invalid_key() -> None:
@@ -146,4 +163,6 @@ def test_project_repository_mapper_preserves_professional_metadata() -> None:
     assert project.key == "QA-CORE"
     assert project.description == "Professional tests"
     assert project.lead_user_id == UserId(lead)
+    assert project.member_role(UserId(creator)) is ProjectMemberRole.DEVELOPER
+    assert project.member_role(UserId(lead)) is ProjectMemberRole.DEVELOPER
     assert project.created_at == now

@@ -102,6 +102,24 @@ def test_sensitive_binding_must_use_reference_instead_of_literal_value() -> None
         )
 
 
+def test_secret_free_dump_recursively_redacts_mixed_style_secret_keys() -> None:
+    case = _professional_case(
+        input={
+            "apiKey": "top-secret",
+            "nested": {"accessToken": "bearer-secret", "safe_value": "visible"},
+        },
+        custom_fields={"clientSecret": "client-secret"},
+    )
+
+    dumped = case.secret_free_dump()
+
+    assert dumped["input"] == {
+        "apiKey": "[REDACTED]",
+        "nested": {"accessToken": "[REDACTED]", "safe_value": "visible"},
+    }
+    assert dumped["custom_fields"] == {"clientSecret": "[REDACTED]"}
+
+
 def test_ready_case_requires_machine_or_semantic_oracle() -> None:
     with pytest.raises(ValidationError, match="oracle"):
         _professional_case(
@@ -117,6 +135,49 @@ def test_ready_case_requires_machine_or_semantic_oracle() -> None:
                 }
             ],
         )
+
+
+def test_ready_browser_case_requires_typed_operations_for_every_step() -> None:
+    with pytest.raises(ValidationError, match="browser operation"):
+        _professional_case(case_status=CaseStatus.READY)
+
+    case = _professional_case(
+        case_status=CaseStatus.READY,
+        steps=[
+            {
+                "step_no": 1,
+                "action": "点击提交并观察收据",
+                "operation": {"action": "click", "target": "#submit"},
+                "expected_result": "页面显示收据",
+            }
+        ],
+    )
+
+    assert case.steps[0].action == "点击提交并观察收据"
+    assert case.steps[0].operation is not None
+    assert case.steps[0].operation.action == "click"
+
+
+def test_domain_browser_case_cannot_be_ready_without_typed_operations() -> None:
+    case = CaseEntity.create(
+        case_id=CaseId(uuid4()),
+        dataset_version_id=DatasetVersionId(uuid4()),
+        name="浏览器结账",
+        input={"url": "https://shop.test"},
+        execution_mode=ExecutionMode.BROWSER,
+        template=CaseTemplate.STEP_BY_STEP,
+        steps=[
+            {
+                "step_no": 1,
+                "action": "点击提交",
+                "expected_result": "显示收据",
+            }
+        ],
+        assertions=[{"type": "contains", "value": "收据"}],
+    )
+
+    with pytest.raises(ValueError, match="browser operation"):
+        case.mark_ready()
 
 
 def test_custom_fields_are_size_bounded() -> None:

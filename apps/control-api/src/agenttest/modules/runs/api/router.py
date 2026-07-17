@@ -27,7 +27,10 @@ from agenttest.modules.runs.application.commands import (
     CreateRunResult,
     RunNotFoundError,
 )
-from agenttest.modules.runs.application.ports import RunRuntimeUnavailableError
+from agenttest.modules.runs.application.ports import (
+    RunIdempotencyConflict,
+    RunRuntimeUnavailableError,
+)
 from agenttest.modules.runs.domain.entities import Run, RunCase, RunCaseId, RunId
 from agenttest.modules.runs.domain.value_objects import RunCaseStatus
 from agenttest.modules.test_plans.public import TestPlanVersionId
@@ -160,6 +163,8 @@ def create_run_router(
             return denied()
         except RunRuntimeUnavailableError as error:
             return problem(503, "Run runtime unavailable", str(error))
+        except RunIdempotencyConflict as error:
+            return problem(409, "Conflict", str(error))
         except ValueError as error:
             return invalid(str(error))
         if not result.created:

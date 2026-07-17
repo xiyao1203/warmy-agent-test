@@ -3,7 +3,9 @@
 from __future__ import annotations
 
 import json
-from typing import Self
+import re
+from collections.abc import Mapping
+from typing import Literal, Self, cast
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
@@ -25,6 +27,36 @@ from agenttest.modules.datasets.domain.value_objects import (
 )
 
 MAX_CUSTOM_FIELDS_BYTES = 16 * 1024
+REDACTED_SECRET = "[REDACTED]"
+_SENSITIVE_KEYS = frozenset(
+    {
+        "api_key",
+        "authorization",
+        "cookie",
+        "credentials",
+        "password",
+        "passwd",
+        "proxy_authorization",
+        "secret",
+        "secret_key",
+        "set_cookie",
+        "token",
+        "x_api_key",
+    }
+)
+_SENSITIVE_SUFFIXES = (
+    "_api_key",
+    "_cookie",
+    "_credential",
+    "_password",
+    "_passwd",
+    "_secret",
+    "_token",
+)
+_SENSITIVE_COLLAPSED_KEYS = frozenset(key.replace("_", "") for key in _SENSITIVE_KEYS)
+_SENSITIVE_COLLAPSED_SUFFIXES = tuple(
+    suffix.removeprefix("_").replace("_", "") for suffix in _SENSITIVE_SUFFIXES
+)
 
 
 class ArtifactRequirementV1(BaseModel):
@@ -56,11 +88,28 @@ class DataBindingV1(BaseModel):
         return self
 
 
+class BrowserOperationV1(BaseModel):
+    """Deterministic browser instruction kept separate from the human test step."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    action: Literal["goto", "click", "fill", "wait", "screenshot"]
+    target: str | None = Field(default=None, max_length=2000)
+    value: str | None = Field(default=None, max_length=10000)
+
+    @model_validator(mode="after")
+    def require_action_target(self) -> Self:
+        if self.action != "screenshot" and not (self.target or "").strip():
+            raise ValueError(f"browser operation {self.action} requires target")
+        return self
+
+
 class TestStepV1(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     step_no: int = Field(ge=1)
     action: str = Field(min_length=1, max_length=4000)
+    operation: BrowserOperationV1 | None = None
     test_data: dict[str, object] = Field(default_factory=dict)
     expected_result: str = Field(min_length=1, max_length=4000)
     assertions: list[dict[str, object]] = Field(default_factory=list, max_length=50)
@@ -115,6 +164,47 @@ class PlatformTestCaseV1(BaseModel):
     retry_count: int = Field(default=0, ge=0, le=10)
     custom_fields: dict[str, object] = Field(default_factory=dict)
 
+    @classmethod
+    def from_domain(cls, case: TestCase) -> Self:
+        return cls.model_validate(
+            {
+                "case_key": case.case_key,
+                "name": case.name,
+                "objective": case.objective or case.name,
+                "case_status": case.case_status,
+                "template": case.template,
+                "case_type": case.case_type,
+                "automation_status": case.automation_status,
+                "source": case.source,
+                "source_ref": case.source_ref,
+                "component": case.component,
+                "requirement_refs": case.requirement_refs,
+                "owner_id": case.owner_id.value if case.owner_id else None,
+                "priority": case.priority,
+                "risk_level": case.risk_level,
+                "difficulty": case.difficulty,
+                "tags": case.tags,
+                "test_group": case.test_group,
+                "scenario": case.scenario,
+                "preconditions": case.preconditions,
+                "initial_state": case.initial_state,
+                "input": case.input,
+                "data_bindings": case.data_bindings,
+                "steps": case.steps,
+                "expected_outcome": case.expected_outcome,
+                "assertions": case.assertions,
+                "scorers": case.scorers,
+                "security_policies": case.security_policies,
+                "artifact_requirements": case.artifact_requirements,
+                "postconditions": case.postconditions,
+                "estimated_duration_seconds": case.estimated_duration_seconds,
+                "execution_mode": case.execution_mode,
+                "timeout_seconds": case.timeout_seconds,
+                "retry_count": case.retry_count,
+                "custom_fields": case.custom_fields,
+            }
+        )
+
     @model_validator(mode="after")
     def validate_professional_contract(self) -> Self:
         self.steps = [
@@ -125,6 +215,14 @@ class PlatformTestCaseV1(BaseModel):
             raise ValueError("step_by_step template requires at least one step")
         if self.case_status is TestCaseStatus.READY and not self._has_oracle:
             raise ValueError("Ready test case requires at least one executable oracle")
+        if (
+            self.case_status is TestCaseStatus.READY
+            and self.execution_mode is ExecutionMode.BROWSER
+            and any(step.operation is None for step in self.steps)
+        ):
+            raise ValueError(
+                "Ready browser test case requires a typed browser operation for every step"
+            )
         try:
             encoded = json.dumps(
                 self.custom_fields,
@@ -149,7 +247,10 @@ class PlatformTestCaseV1(BaseModel):
 
     def secret_free_dump(self) -> dict[str, object]:
         """Return an execution-safe representation without credential values."""
-        return self.model_dump(mode="json")
+        return cast(
+            dict[str, object],
+            sanitize_secret_values(self.model_dump(mode="json")),
+        )
 
 
 def build_case_spec_snapshot(case: TestCase) -> dict[str, object]:
@@ -160,7 +261,7 @@ def build_case_spec_snapshot(case: TestCase) -> dict[str, object]:
         if binding.get("sensitive") or binding.get("source") == "credential":
             binding.pop("value", None)
         bindings.append(binding)
-    return {
+    snapshot = {
         "schema_version": "platform-test-case/v1",
         "case_key": case.case_key,
         "objective": case.objective,
@@ -181,3 +282,29 @@ def build_case_spec_snapshot(case: TestCase) -> dict[str, object]:
         "timeout_seconds": case.timeout_seconds,
         "retry_count": case.retry_count,
     }
+    return cast(dict[str, object], sanitize_secret_values(snapshot))
+
+
+def sanitize_secret_values(value: object) -> object:
+    """Recursively redact secret-bearing keys without changing safe metric names."""
+    if isinstance(value, Mapping):
+        return {
+            str(key): (
+                REDACTED_SECRET if _is_sensitive_key(str(key)) else sanitize_secret_values(item)
+            )
+            for key, item in value.items()
+        }
+    if isinstance(value, list | tuple):
+        return [sanitize_secret_values(item) for item in value]
+    return value
+
+
+def _is_sensitive_key(key: str) -> bool:
+    normalized = re.sub(r"[^a-z0-9]+", "_", key.strip().lower()).strip("_")
+    collapsed = normalized.replace("_", "")
+    return (
+        normalized in _SENSITIVE_KEYS
+        or normalized.endswith(_SENSITIVE_SUFFIXES)
+        or collapsed in _SENSITIVE_COLLAPSED_KEYS
+        or collapsed.endswith(_SENSITIVE_COLLAPSED_SUFFIXES)
+    )

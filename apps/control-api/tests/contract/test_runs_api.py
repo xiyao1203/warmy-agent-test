@@ -224,6 +224,26 @@ def test_create_is_idempotent_and_can_be_cancelled() -> None:
     assert cancelled.json()["status"] == "cancelled"
 
 
+def test_create_rejects_same_idempotency_key_for_a_different_plan() -> None:
+    client, project_id, orchestrator, _ = client_for()
+    headers = {"X-CSRF-Token": "csrf-token", "Idempotency-Key": "release-conflict"}
+
+    first = client.post(
+        f"/api/v1/projects/{project_id.value}/runs",
+        headers=headers,
+        json={"test_plan_version_id": str(uuid4())},
+    )
+    conflict = client.post(
+        f"/api/v1/projects/{project_id.value}/runs",
+        headers=headers,
+        json={"test_plan_version_id": str(uuid4())},
+    )
+
+    assert first.status_code == 201
+    assert conflict.status_code == 409
+    assert len(orchestrator.started) == 1
+
+
 def test_run_list_and_cases_are_project_scoped() -> None:
     client, project_id, _, _ = client_for()
     created = client.post(

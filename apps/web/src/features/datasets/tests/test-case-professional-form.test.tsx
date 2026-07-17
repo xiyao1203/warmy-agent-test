@@ -117,6 +117,48 @@ describe("professional test case form", () => {
       }),
     );
   });
+
+  it("edits browser automation separately from the engineer-readable step", async () => {
+    const onSubmit = vi.fn().mockResolvedValue(undefined);
+    render(<TestCaseEditor onSubmit={onSubmit} triggerLabel="新增用例" />);
+
+    fireEvent.click(screen.getByRole("button", { name: "新增用例" }));
+    fireEvent.change(screen.getByLabelText("用例名称"), {
+      target: { value: "浏览器结账" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "操作步骤" }));
+    fireEvent.click(screen.getByRole("button", { name: "添加操作步骤" }));
+    fireEvent.change(screen.getByLabelText("步骤 1 操作"), {
+      target: { value: "点击提交并确认出现收据" },
+    });
+    fireEvent.change(screen.getByLabelText("步骤 1 预期结果"), {
+      target: { value: "收据包含订单号" },
+    });
+    fireEvent.change(screen.getByLabelText("步骤 1 自动化动作"), {
+      target: { value: "click" },
+    });
+    fireEvent.change(screen.getByLabelText("步骤 1 自动化目标"), {
+      target: { value: "#submit" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "收尾与执行" }));
+    fireEvent.change(screen.getByLabelText("执行模式"), {
+      target: { value: "browser" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "保存草稿" }));
+
+    await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
+    expect(onSubmit).toHaveBeenCalledWith(
+      expect.objectContaining({
+        execution_mode: "browser",
+        steps: [
+          expect.objectContaining({
+            action: "点击提交并确认出现收据",
+            operation: { action: "click", target: "#submit" },
+          }),
+        ],
+      }),
+    );
+  });
 });
 
 const professionalCase = {

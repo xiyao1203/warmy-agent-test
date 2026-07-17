@@ -3,6 +3,37 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any
 
+REDACTED_SECRET = "[REDACTED]"
+_SENSITIVE_KEYS = frozenset(
+    {
+        "api_key",
+        "authorization",
+        "cookie",
+        "credentials",
+        "password",
+        "passwd",
+        "proxy_authorization",
+        "secret",
+        "secret_key",
+        "set_cookie",
+        "token",
+        "x_api_key",
+    }
+)
+_SENSITIVE_SUFFIXES = (
+    "_api_key",
+    "_cookie",
+    "_credential",
+    "_password",
+    "_passwd",
+    "_secret",
+    "_token",
+)
+_SENSITIVE_COLLAPSED_KEYS = frozenset(key.replace("_", "") for key in _SENSITIVE_KEYS)
+_SENSITIVE_COLLAPSED_SUFFIXES = tuple(
+    suffix.removeprefix("_").replace("_", "") for suffix in _SENSITIVE_SUFFIXES
+)
+
 
 @dataclass(frozen=True, slots=True)
 class PlatformTestCaseSnapshotV1:
@@ -34,6 +65,8 @@ class PlatformTestCaseSnapshotV1:
                 "value" in binding
             ):
                 raise ValueError("Credential binding snapshot must not contain a value")
+        if _contains_unredacted_sensitive_field(raw):
+            raise ValueError("Professional case snapshot contains sensitive fields")
         return cls(
             schema_version="platform-test-case/v1",
             case_key=str(raw["case_key"]) if raw.get("case_key") else None,
@@ -160,3 +193,25 @@ def _string_list(value: Any, field_name: str) -> list[str]:
     if not isinstance(value, list) or not all(isinstance(item, str) for item in value):
         raise ValueError(f"{field_name} must be a list of strings")
     return list(value)
+
+
+def _contains_unredacted_sensitive_field(value: object) -> bool:
+    if isinstance(value, dict):
+        for key, item in value.items():
+            normalized = "".join(
+                character if character.isalnum() else "_" for character in str(key).lower()
+            ).strip("_")
+            collapsed = normalized.replace("_", "")
+            if (
+                normalized in _SENSITIVE_KEYS
+                or normalized.endswith(_SENSITIVE_SUFFIXES)
+                or collapsed in _SENSITIVE_COLLAPSED_KEYS
+                or collapsed.endswith(_SENSITIVE_COLLAPSED_SUFFIXES)
+            ) and item != REDACTED_SECRET:
+                return True
+            if _contains_unredacted_sensitive_field(item):
+                return True
+        return False
+    if isinstance(value, list | tuple):
+        return any(_contains_unredacted_sensitive_field(item) for item in value)
+    return False

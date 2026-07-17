@@ -38,6 +38,9 @@ export type TestStepRow = {
   action: string;
   testData: string;
   expectedResult: string;
+  operationAction: "" | "goto" | "click" | "fill" | "wait" | "screenshot";
+  operationTarget: string;
+  operationValue: string;
   assertions: AssertionRow[];
   artifacts: ArtifactRequirementRow[];
 };
@@ -88,27 +91,48 @@ export function compactDataBindings(rows: DataBindingRow[]) {
 export function stepRows(
   steps: TestCaseResponse["steps"] | undefined,
 ): TestStepRow[] {
-  return (steps ?? []).map((step) => ({
-    action: text(step.action),
-    artifacts: artifactRows(step.artifact_requirements),
-    assertions: assertionsToRows(asRecords(step.assertions)),
-    expectedResult: text(step.expected_result),
-    id: newFormRowId(),
-    testData: formatJsonObject(step.test_data),
-  }));
+  return (steps ?? []).map((step) => {
+    const operation =
+      step.operation && typeof step.operation === "object"
+        ? step.operation
+        : undefined;
+    return {
+      action: text(step.action),
+      artifacts: artifactRows(step.artifact_requirements),
+      assertions: assertionsToRows(asRecords(step.assertions)),
+      expectedResult: text(step.expected_result),
+      id: newFormRowId(),
+      operationAction: validBrowserAction(operation?.action),
+      operationTarget: text(operation?.target),
+      operationValue: text(operation?.value),
+      testData: formatJsonObject(step.test_data),
+    };
+  });
 }
 
 export function compactSteps(rows: TestStepRow[]): TestStepV1[] {
   return rows
     .filter((row) => row.action.trim() || row.expectedResult.trim())
-    .map((row, index) => ({
-      action: row.action.trim(),
-      artifact_requirements: compactArtifacts(row.artifacts),
-      assertions: rowsToAssertions(row.assertions),
-      expected_result: row.expectedResult.trim(),
-      step_no: index + 1,
-      test_data: parseJsonObject(row.testData, `步骤 ${index + 1} 测试数据`),
-    }));
+    .map((row, index) => {
+      const operation = row.operationAction
+        ? {
+            action: row.operationAction,
+            ...(row.operationTarget.trim()
+              ? { target: row.operationTarget.trim() }
+              : {}),
+            ...(row.operationValue ? { value: row.operationValue } : {}),
+          }
+        : undefined;
+      return {
+        action: row.action.trim(),
+        artifact_requirements: compactArtifacts(row.artifacts),
+        assertions: rowsToAssertions(row.assertions),
+        expected_result: row.expectedResult.trim(),
+        operation,
+        step_no: index + 1,
+        test_data: parseJsonObject(row.testData, `步骤 ${index + 1} 测试数据`),
+      };
+    });
 }
 
 export function artifactRows(value: unknown): ArtifactRequirementRow[] {
@@ -220,4 +244,10 @@ function validArtifactKind(value: unknown): ArtifactKind {
   ].includes(String(value))
     ? (value as ArtifactKind)
     : "response";
+}
+
+function validBrowserAction(value: unknown): TestStepRow["operationAction"] {
+  return ["goto", "click", "fill", "wait", "screenshot"].includes(String(value))
+    ? (value as TestStepRow["operationAction"])
+    : "";
 }

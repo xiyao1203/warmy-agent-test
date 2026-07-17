@@ -8,6 +8,7 @@ from collections.abc import Sequence
 
 import sqlalchemy as sa
 from alembic import op
+from sqlalchemy.dialects.postgresql import JSONB
 
 revision: str = "0027"
 down_revision: str | None = "0026"
@@ -16,6 +17,9 @@ depends_on: str | Sequence[str] | None = None
 
 
 def upgrade() -> None:
+    dialect = op.get_bind().dialect.name
+    professional_json_type = JSONB() if dialect == "postgresql" else sa.JSON()
+
     with op.batch_alter_table("projects") as batch_op:
         batch_op.add_column(sa.Column("key", sa.String(length=12), nullable=True))
         batch_op.add_column(sa.Column("lead_user_id", sa.Uuid(), nullable=True))
@@ -41,17 +45,19 @@ def upgrade() -> None:
         batch_op.add_column(sa.Column("source", sa.String(length=32), nullable=True))
         batch_op.add_column(sa.Column("source_ref", sa.String(length=500), nullable=True))
         batch_op.add_column(sa.Column("component", sa.String(length=200), nullable=True))
-        batch_op.add_column(sa.Column("requirement_refs", sa.JSON(), nullable=True))
+        batch_op.add_column(sa.Column("requirement_refs", professional_json_type, nullable=True))
         batch_op.add_column(sa.Column("owner_id", sa.Uuid(), nullable=True))
-        batch_op.add_column(sa.Column("preconditions", sa.JSON(), nullable=True))
-        batch_op.add_column(sa.Column("data_bindings", sa.JSON(), nullable=True))
-        batch_op.add_column(sa.Column("steps", sa.JSON(), nullable=True))
-        batch_op.add_column(sa.Column("artifact_requirements", sa.JSON(), nullable=True))
-        batch_op.add_column(sa.Column("postconditions", sa.JSON(), nullable=True))
+        batch_op.add_column(sa.Column("preconditions", professional_json_type, nullable=True))
+        batch_op.add_column(sa.Column("data_bindings", professional_json_type, nullable=True))
+        batch_op.add_column(sa.Column("steps", professional_json_type, nullable=True))
+        batch_op.add_column(
+            sa.Column("artifact_requirements", professional_json_type, nullable=True)
+        )
+        batch_op.add_column(sa.Column("postconditions", professional_json_type, nullable=True))
         batch_op.add_column(sa.Column("estimated_duration_seconds", sa.Integer(), nullable=True))
         batch_op.add_column(sa.Column("timeout_seconds", sa.Integer(), nullable=True))
         batch_op.add_column(sa.Column("retry_count", sa.Integer(), nullable=True))
-        batch_op.add_column(sa.Column("custom_fields", sa.JSON(), nullable=True))
+        batch_op.add_column(sa.Column("custom_fields", professional_json_type, nullable=True))
         batch_op.add_column(sa.Column("created_by", sa.Uuid(), nullable=True))
         batch_op.add_column(sa.Column("updated_by", sa.Uuid(), nullable=True))
 
@@ -105,11 +111,36 @@ def upgrade() -> None:
         WHERE key IS NULL
         """
     )
+    if dialect == "postgresql":
+        for column_name in (
+            "input",
+            "initial_state",
+            "expected_outcome",
+            "assertions",
+            "scorers",
+            "security_policies",
+            "tags",
+        ):
+            op.execute(
+                f"ALTER TABLE test_cases ALTER COLUMN {column_name} "
+                f"TYPE JSONB USING {column_name}::jsonb"
+            )
+    oracle_status = (
+        "CASE WHEN json_array_length(COALESCE(assertions, '[]')) > 0 "
+        "OR json_array_length(COALESCE(scorers, '[]')) > 0 "
+        "OR json_array_length(COALESCE(security_policies, '[]')) > 0 "
+        "THEN 'ready' ELSE 'draft' END"
+        if dialect == "sqlite"
+        else "CASE WHEN jsonb_array_length(COALESCE(assertions::jsonb, '[]'::jsonb)) > 0 "
+        "OR jsonb_array_length(COALESCE(scorers::jsonb, '[]'::jsonb)) > 0 "
+        "OR jsonb_array_length(COALESCE(security_policies::jsonb, '[]'::jsonb)) > 0 "
+        "THEN 'ready' ELSE 'draft' END"
+    )
     op.execute(
-        """
+        f"""
         UPDATE test_cases
         SET objective = COALESCE(NULLIF(trim(scenario), ''), name),
-            case_status = 'ready',
+            case_status = {oracle_status},
             template = 'ai_eval',
             case_type = 'functional',
             automation_status = 'automated',
@@ -121,7 +152,7 @@ def upgrade() -> None:
             artifact_requirements = '[]',
             postconditions = '[]',
             retry_count = 0,
-            custom_fields = '{}',
+            custom_fields = '{{}}',
             created_by = (
                 SELECT dv.created_by
                 FROM dataset_versions AS dv
@@ -135,7 +166,6 @@ def upgrade() -> None:
         """
     )
 
-    dialect = op.get_bind().dialect.name
     if dialect == "sqlite":
         _backfill_case_keys_sqlite()
     else:
@@ -164,10 +194,13 @@ def upgrade() -> None:
             ["lead_user_id"],
             ["id"],
         )
-        batch_op.create_check_constraint(
-            "ck_projects_key_format",
-            "length(key) BETWEEN 2 AND 12 AND key = upper(key)",
+        key_check = (
+            "length(key) BETWEEN 2 AND 12 AND key = upper(key) "
+            "AND key GLOB '[A-Z]*' AND key NOT GLOB '*[^A-Z0-9-]*'"
+            if dialect == "sqlite"
+            else "key ~ '^[A-Z][A-Z0-9-]{1,11}$'"
         )
+        batch_op.create_check_constraint("ck_projects_key_format", key_check)
 
     with op.batch_alter_table("test_cases") as batch_op:
         for column_name, column_type in (
@@ -178,14 +211,14 @@ def upgrade() -> None:
             ("case_type", sa.String(length=32)),
             ("automation_status", sa.String(length=32)),
             ("source", sa.String(length=32)),
-            ("requirement_refs", sa.JSON()),
-            ("preconditions", sa.JSON()),
-            ("data_bindings", sa.JSON()),
-            ("steps", sa.JSON()),
-            ("artifact_requirements", sa.JSON()),
-            ("postconditions", sa.JSON()),
+            ("requirement_refs", professional_json_type),
+            ("preconditions", professional_json_type),
+            ("data_bindings", professional_json_type),
+            ("steps", professional_json_type),
+            ("artifact_requirements", professional_json_type),
+            ("postconditions", professional_json_type),
             ("retry_count", sa.Integer()),
-            ("custom_fields", sa.JSON()),
+            ("custom_fields", professional_json_type),
             ("created_by", sa.Uuid()),
             ("updated_by", sa.Uuid()),
         ):
@@ -263,6 +296,26 @@ def upgrade() -> None:
         "test_cases",
         ["dataset_version_id", "automation_status"],
     )
+    op.create_index(
+        "ix_runs_project_created_latest",
+        "runs",
+        ["project_id", "created_at", "id"],
+    )
+    op.create_index(
+        "ix_runs_project_agent_created",
+        "runs",
+        ["project_id", "agent_version_id", "created_at", "id"],
+    )
+    op.create_index(
+        "ix_runs_project_plan_created",
+        "runs",
+        ["project_id", "test_plan_version_id", "created_at", "id"],
+    )
+    op.create_index(
+        "ix_release_decisions_project_gate_created",
+        "release_decisions",
+        ["project_id", "gate_id", "created_at", "id"],
+    )
 
 
 def _backfill_case_keys_sqlite() -> None:
@@ -317,6 +370,13 @@ def _backfill_case_keys_postgresql() -> None:
 
 
 def downgrade() -> None:
+    op.drop_index(
+        "ix_release_decisions_project_gate_created",
+        table_name="release_decisions",
+    )
+    op.drop_index("ix_runs_project_plan_created", table_name="runs")
+    op.drop_index("ix_runs_project_agent_created", table_name="runs")
+    op.drop_index("ix_runs_project_created_latest", table_name="runs")
     op.drop_index("ix_test_cases_version_automation", table_name="test_cases")
     op.drop_index("ix_test_cases_version_type", table_name="test_cases")
     op.drop_index("ix_test_cases_version_status", table_name="test_cases")

@@ -19,6 +19,7 @@ import { useEffect, useState } from "react";
 
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ResourceReferenceLink } from "@/components/ui/resource-reference-link";
 import {
   Table,
   TableBody,
@@ -162,11 +163,12 @@ export function EnvironmentList({
           <Table className="w-full table-fixed">
             <TableHeader className="bg-[var(--canvas-soft)]">
               <TableRow>
-                <TableHead className="w-[34%]">环境信息</TableHead>
-                <TableHead className="w-[12%]">类型</TableHead>
-                <TableHead className="w-[16%]">版本</TableHead>
-                <TableHead className="w-[16%]">更新时间</TableHead>
-                <TableHead className="w-[22%]">下一步</TableHead>
+                <TableHead className="w-[22%]">环境信息</TableHead>
+                <TableHead className="w-[10%]">类型</TableHead>
+                <TableHead className="w-[20%]">当前版本</TableHead>
+                <TableHead className="w-[25%]">绑定与验证</TableHead>
+                <TableHead className="w-[13%]">最近使用</TableHead>
+                <TableHead className="w-[10%]">操作</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -267,16 +269,39 @@ function TemplateRow({
           </Badge>
         </TableCell>
         <TableCell className="text-center">
+          <div className="text-left text-xs">
+            <ResourceReferenceLink reference={template.current_version} />
+          </div>
           <button
-            className="text-sm font-medium text-[var(--primary)] hover:underline"
+            className="mt-1 text-xs font-medium text-[var(--primary)] hover:underline"
             onClick={handleToggleVersions}
             type="button"
           >
             {versionsLoaded ? `${versions.length} 个版本` : "查看版本"}
           </button>
         </TableCell>
-        <TableCell className="whitespace-nowrap text-center text-sm text-[var(--muted)]">
-          {new Date(template.updated_at).toLocaleDateString("zh-CN")}
+        <TableCell className="text-left text-xs leading-5 text-[var(--muted)]">
+          <p>凭证绑定 {template.credential_binding_count ?? 0}</p>
+          <p>
+            浏览器：
+            <ResourceReferenceLink reference={template.browser_profile_ref} />
+          </p>
+          <p>验证 {template.validation_status || "未验证"}</p>
+          <p>
+            {template.last_validated_at
+              ? new Date(template.last_validated_at).toLocaleString("zh-CN")
+              : "尚未验证"}
+          </p>
+        </TableCell>
+        <TableCell className="text-left text-xs leading-5 text-[var(--muted)]">
+          <p>
+            {template.last_run_at
+              ? new Date(template.last_run_at).toLocaleString("zh-CN")
+              : "尚未执行"}
+          </p>
+          <p>
+            更新 {new Date(template.updated_at).toLocaleDateString("zh-CN")}
+          </p>
         </TableCell>
         <TableCell className="text-center">
           <div className="flex items-center justify-center gap-1">
@@ -307,7 +332,7 @@ function TemplateRow({
       {/* Version detail panel */}
       {showVersions ? (
         <TableRow>
-          <TableCell colSpan={5}>
+          <TableCell colSpan={6}>
             <VersionPanel
               credentials={credentials}
               draftVersion={draftVersion}

@@ -1,12 +1,14 @@
 # Professional Test Management Implementation Plan
 
+**Status:** Completed on 2026-07-16. Verification evidence is recorded in `docs/开发进度与变更记录.md` under `TASK-20260716-001`; unchecked step boxes below preserve the original execution plan rather than live task state.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (- [ ]) syntax for tracking.
 
 **Goal:** Build one professional test-case contract shared by manual forms, AI generation, imports, plans and execution, while enriching every core platform list with decision-ready cross-resource data.
 
 **Architecture:** The Datasets module owns PlatformTestCaseV1 and publishes typed application contracts. Projects and Datasets receive additive PostgreSQL migrations and deterministic backfills; Runs persist secret-free immutable snapshots; Test Agent consumes module public APIs. Core list pages use application Summary DTOs and bounded aggregate reads, while the Web app renders the generated OpenAPI types through feature-local forms and tables.
 
-**Tech Stack:** Python 3.12, FastAPI, Pydantic v2, SQLAlchemy 2, Alembic, PostgreSQL JSONB, Temporal, pytest, Next.js 15, React 19, TypeScript, Vitest, Testing Library, Playwright, generated OpenAPI client.
+**Tech Stack:** Python 3.12, FastAPI, Pydantic v2, SQLAlchemy 2, Alembic, PostgreSQL JSONB, Temporal, pytest, Next.js 16.2.9, React 19, TypeScript, Vitest, Testing Library, Playwright, generated OpenAPI client.
 
 ---
 

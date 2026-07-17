@@ -29,7 +29,7 @@ from agenttest.modules.datasets.domain.value_objects import (
 )
 from agenttest.modules.identity.public import Email, SystemRole, User, UserId
 from agenttest.modules.projects.public import ProjectId
-from agenttest.modules.runs.public import Run, RunCase, RunType
+from agenttest.modules.runs.public import Run, RunCase, RunIdempotencyKeyExists, RunType
 
 
 class ItemRepository:
@@ -64,6 +64,19 @@ class RunRepository:
 
     async def save(self, run: Run) -> None:
         assert run in self.runs
+
+
+class RacingRunRepository(RunRepository):
+    def __init__(self) -> None:
+        super().__init__()
+        self.winner: Run | None = None
+        self.winner_cases: list[RunCase] = []
+
+    async def add(self, run: Run, cases: list[RunCase]) -> None:
+        assert self.winner is not None
+        self.runs.append(self.winner)
+        self.cases.extend(self.winner_cases)
+        raise RunIdempotencyKeyExists
 
 
 class Access:
@@ -127,7 +140,16 @@ def build_handler():
         name="拒绝越权",
         objective="验证隐私保护",
         template=CaseTemplate.STEP_BY_STEP,
-        input={"message": "查询其他用户订单"},
+        input={
+            "message": "查询其他用户订单",
+            "password": "input-password",
+            "headers": {"Authorization": "Bearer input-token"},
+            "apiKey": "camel-api-key",
+            "accessToken": "camel-access-token",
+            "clientSecret": "camel-client-secret",
+            "token_usage": 42,
+        },
+        initial_state={"browser": {"cookie": "session=initial-secret"}},
         data_bindings=[
             {
                 "name": "token",
@@ -141,7 +163,7 @@ def build_handler():
             {
                 "step_no": 1,
                 "action": "发送查询",
-                "test_data": {},
+                "test_data": {"api_key": "step-api-key"},
                 "expected_result": "拒绝",
                 "assertions": [],
                 "artifact_requirements": [],
@@ -149,6 +171,8 @@ def build_handler():
         ],
         execution_mode=ExecutionMode.API,
         assertions=[{"type": "contains", "value": "拒绝"}],
+        expected_outcome={"secret": "expected-secret"},
+        security_policies=[{"type": "pii_redaction", "token": "policy-token"}],
         postconditions=["清理会话"],
         created_by=actor.user_id,
     )
@@ -191,7 +215,22 @@ async def test_case_trial_is_idempotent_and_uses_secret_free_snapshot() -> None:
     assert snapshot["schema_version"] == "platform-test-case/v1"
     assert snapshot["case_key"] == "PAY-TC-000001"
     assert snapshot["steps"][0]["expected_result"] == "拒绝"
-    assert "plain-secret" not in json.dumps(snapshot)
+    serialized = json.dumps(snapshot)
+    for secret in (
+        "plain-secret",
+        "input-password",
+        "Bearer input-token",
+        "session=initial-secret",
+        "camel-api-key",
+        "camel-access-token",
+        "camel-client-secret",
+        "step-api-key",
+        "expected-secret",
+        "policy-token",
+    ):
+        assert secret not in serialized
+    assert snapshot["input"]["token_usage"] == 42
+    assert runs.cases[0].input_snapshot == snapshot["input"]
 
 
 @pytest.mark.asyncio
@@ -211,3 +250,60 @@ async def test_case_trial_rejects_cross_project_without_creating_run() -> None:
         )
 
     assert runs.runs == []
+
+
+@pytest.mark.asyncio
+async def test_case_trial_rejects_same_key_for_a_different_target_or_snapshot() -> None:
+    actor, project_id, case, runs, orchestrator, handler = build_handler()
+    agent_version_id = uuid4()
+    environment_template_id = uuid4()
+    command = CreateCaseTrialRunCommand(
+        project_id=project_id,
+        case_id=case.case_id,
+        agent_version_id=agent_version_id,
+        environment_template_id=environment_template_id,
+        idempotency_key="request-exact",
+    )
+    await handler.execute(actor, command)
+
+    with pytest.raises(ValueError, match="different trial request"):
+        await handler.execute(
+            actor,
+            CreateCaseTrialRunCommand(
+                project_id=project_id,
+                case_id=case.case_id,
+                agent_version_id=uuid4(),
+                environment_template_id=environment_template_id,
+                idempotency_key="request-exact",
+            ),
+        )
+
+    case.input["message"] = "修改后的查询"
+    with pytest.raises(ValueError, match="different trial request"):
+        await handler.execute(actor, command)
+
+    assert len(runs.runs) == 1
+    assert orchestrator.started == 1
+
+
+@pytest.mark.asyncio
+async def test_case_trial_recovers_a_matching_concurrent_unique_conflict() -> None:
+    actor, project_id, case, _runs, orchestrator, handler = build_handler()
+    command = CreateCaseTrialRunCommand(
+        project_id=project_id,
+        case_id=case.case_id,
+        agent_version_id=uuid4(),
+        environment_template_id=uuid4(),
+        idempotency_key="concurrent-trial",
+    )
+    normal_result = await handler.execute(actor, command)
+
+    racing = RacingRunRepository()
+    racing.winner = normal_result.run
+    racing.winner_cases = []
+    handler._runs = racing
+    result = await handler.execute(actor, command)
+
+    assert result.created is False
+    assert result.run.run_id == normal_result.run.run_id
+    assert orchestrator.started == 1

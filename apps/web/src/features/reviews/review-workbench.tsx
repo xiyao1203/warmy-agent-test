@@ -19,6 +19,7 @@ import { useCallback, useEffect, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { ResourceReferenceLink } from "@/components/ui/resource-reference-link";
 
 import type { ReviewTask } from "./api";
 import { listReviews, scoreReview, rejectReview, skipReview } from "./api";
@@ -237,6 +238,15 @@ export function ReviewWorkbench({ projectId }: { projectId: string }) {
                       置信度 {(t.confidence * 100).toFixed(0)}%
                       {t.score != null ? ` · 评分 ${t.score.toFixed(2)}` : ""}
                     </p>
+                    <p className="mt-0.5 text-xs text-[var(--muted)]">
+                      运行 {t.run_ref?.name ?? "暂无数据"} · 用例{" "}
+                      {t.case_ref?.name ?? t.run_case_id.slice(0, 12)}
+                    </p>
+                    <p className="mt-0.5 text-xs text-[var(--muted)]">
+                      原因 {t.enqueue_reason || "low_confidence"} · 优先级{" "}
+                      {t.priority ?? 0} · 等待 {formatAge(t.age_seconds ?? 0)} ·
+                      处理人 {t.assignee_ref?.name ?? "未分配"}
+                    </p>
                   </div>
                   <Badge tone={STATUS_TONES[t.status] ?? "neutral"}>
                     {STATUS_LABELS[t.status] ?? t.status}
@@ -270,6 +280,28 @@ export function ReviewWorkbench({ projectId }: { projectId: string }) {
                   用例 ID
                 </p>
                 <p className="mt-1 font-mono text-sm">{selected.run_case_id}</p>
+              </div>
+              <div className="grid gap-2 text-xs text-[var(--muted)]">
+                <p>
+                  运行：
+                  <ResourceReferenceLink reference={selected.run_ref} />
+                </p>
+                <p>
+                  用例：
+                  <ResourceReferenceLink reference={selected.case_ref} />
+                </p>
+                <p>
+                  处理人：
+                  <ResourceReferenceLink
+                    emptyLabel="未分配"
+                    reference={selected.assignee_ref}
+                  />
+                </p>
+                <p>
+                  进入原因 {selected.enqueue_reason || "low_confidence"} ·
+                  优先级 {selected.priority ?? 0} · 等待{" "}
+                  {formatAge(selected.age_seconds ?? 0)}
+                </p>
               </div>
               <div className="grid grid-cols-2 gap-3 text-sm">
                 <div>
@@ -443,6 +475,13 @@ export function ReviewWorkbench({ projectId }: { projectId: string }) {
       </div>
     </div>
   );
+}
+
+function formatAge(seconds: number) {
+  if (seconds < 60) return `${seconds} 秒`;
+  if (seconds < 3600) return `${Math.floor(seconds / 60)} 分钟`;
+  if (seconds < 86400) return `${Math.floor(seconds / 3600)} 小时`;
+  return `${Math.floor(seconds / 86400)} 天`;
 }
 
 function FlowCard({

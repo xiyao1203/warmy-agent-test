@@ -518,6 +518,17 @@ class TestCase:
                     "Ready test case requires at least one executable oracle",
                 )
             )
+        if self.execution_mode is ExecutionMode.BROWSER:
+            for index, step in enumerate(self.steps, start=1):
+                if not _is_valid_browser_operation(step.get("operation")):
+                    issues.append(
+                        (
+                            f"steps.{index}.operation",
+                            "missing_browser_operation",
+                            "Ready browser test case requires a typed browser operation "
+                            "for every step",
+                        )
+                    )
         return issues
 
     def deprecate(self) -> None:
@@ -538,3 +549,12 @@ def _normalize_steps(steps: list[dict[str, object]]) -> list[dict[str, object]]:
             {**raw, "step_no": index, "action": action, "expected_result": expected_result}
         )
     return normalized
+
+
+def _is_valid_browser_operation(value: object) -> bool:
+    if not isinstance(value, dict):
+        return False
+    action = str(value.get("action") or "")
+    if action not in {"goto", "click", "fill", "wait", "screenshot"}:
+        return False
+    return action == "screenshot" or bool(str(value.get("target") or "").strip())

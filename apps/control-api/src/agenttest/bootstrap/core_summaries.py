@@ -113,16 +113,25 @@ class SqlAlchemyCoreSummaryReader:
             for project_id, count in review_rows:
                 summaries[project_id].open_review_count = int(count)
 
+            ranked_runs = (
+                select(
+                    RunModel.id.label("row_id"),
+                    func.row_number()
+                    .over(
+                        partition_by=RunModel.project_id,
+                        order_by=(RunModel.created_at.desc(), RunModel.id.desc()),
+                    )
+                    .label("row_rank"),
+                )
+                .where(RunModel.project_id.in_(ids))
+                .subquery()
+            )
             latest_runs = await session.execute(
                 select(RunModel)
-                .where(RunModel.project_id.in_(ids))
-                .order_by(RunModel.project_id, RunModel.created_at.desc())
+                .join(ranked_runs, ranked_runs.c.row_id == RunModel.id)
+                .where(ranked_runs.c.row_rank == 1)
             )
-            seen: set[UUID] = set()
             for run in latest_runs.scalars():
-                if run.project_id in seen:
-                    continue
-                seen.add(run.project_id)
                 summary = summaries[run.project_id]
                 summary.last_run = _run_ref(run)
                 summary.last_run_status = run.status
@@ -164,20 +173,29 @@ class SqlAlchemyCoreSummaryReader:
                 )
 
             if version_to_agent:
-                run_rows = await session.execute(
-                    select(RunModel, RunEvaluationModel.pass_rate)
-                    .outerjoin(RunEvaluationModel, RunEvaluationModel.run_id == RunModel.id)
+                ranked_runs = (
+                    select(
+                        RunModel.id.label("row_id"),
+                        func.row_number()
+                        .over(
+                            partition_by=RunModel.agent_version_id,
+                            order_by=(RunModel.created_at.desc(), RunModel.id.desc()),
+                        )
+                        .label("row_rank"),
+                    )
                     .where(
                         RunModel.project_id == project_id,
                         RunModel.agent_version_id.in_(version_to_agent),
                     )
-                    .order_by(RunModel.agent_version_id, RunModel.created_at.desc())
+                    .subquery()
                 )
-                seen_versions: set[UUID] = set()
+                run_rows = await session.execute(
+                    select(RunModel, RunEvaluationModel.pass_rate)
+                    .join(ranked_runs, ranked_runs.c.row_id == RunModel.id)
+                    .outerjoin(RunEvaluationModel, RunEvaluationModel.run_id == RunModel.id)
+                    .where(ranked_runs.c.row_rank == 1)
+                )
                 for run, pass_rate in run_rows:
-                    if run.agent_version_id in seen_versions:
-                        continue
-                    seen_versions.add(run.agent_version_id)
                     summary = summaries[version_to_agent[run.agent_version_id]]
                     summary.last_run_status = run.status
                     summary.pass_rate = float(pass_rate) if pass_rate is not None else None
@@ -190,18 +208,31 @@ class SqlAlchemyCoreSummaryReader:
         if not ids:
             return summaries
         async with self._session_factory() as session:
+            ranked_versions = (
+                select(
+                    DatasetVersionModel.id.label("row_id"),
+                    func.row_number()
+                    .over(
+                        partition_by=DatasetVersionModel.dataset_id,
+                        order_by=(
+                            DatasetVersionModel.version_number.desc(),
+                            DatasetVersionModel.id.desc(),
+                        ),
+                    )
+                    .label("row_rank"),
+                )
+                .join(DatasetModel, DatasetModel.id == DatasetVersionModel.dataset_id)
+                .where(DatasetModel.project_id == project_id, DatasetModel.id.in_(ids))
+                .subquery()
+            )
             result = await session.execute(
                 select(DatasetModel, DatasetVersionModel)
                 .join(DatasetVersionModel, DatasetVersionModel.dataset_id == DatasetModel.id)
-                .where(DatasetModel.project_id == project_id, DatasetModel.id.in_(ids))
-                .order_by(DatasetModel.id, DatasetVersionModel.version_number.desc())
+                .join(ranked_versions, ranked_versions.c.row_id == DatasetVersionModel.id)
+                .where(ranked_versions.c.row_rank == 1)
             )
             version_to_dataset: dict[UUID, UUID] = {}
-            seen: set[UUID] = set()
             for dataset, version in result:
-                if dataset.id in seen:
-                    continue
-                seen.add(dataset.id)
                 version_to_dataset[version.id] = dataset.id
                 summaries[dataset.id] = DatasetSummaryMetrics(
                     latest_version=ResourceReference.build(
@@ -264,15 +295,30 @@ class SqlAlchemyCoreSummaryReader:
         if not ids:
             return summaries
         async with self._session_factory() as session:
+            ranked_versions = (
+                select(
+                    TestPlanVersionModel.id.label("row_id"),
+                    func.row_number()
+                    .over(
+                        partition_by=TestPlanVersionModel.test_plan_id,
+                        order_by=(
+                            TestPlanVersionModel.version_number.desc(),
+                            TestPlanVersionModel.id.desc(),
+                        ),
+                    )
+                    .label("row_rank"),
+                )
+                .join(TestPlanModel, TestPlanModel.id == TestPlanVersionModel.test_plan_id)
+                .where(TestPlanModel.project_id == project_id, TestPlanModel.id.in_(ids))
+                .subquery()
+            )
             versions_result = await session.execute(
                 select(TestPlanModel, TestPlanVersionModel)
                 .join(TestPlanVersionModel, TestPlanVersionModel.test_plan_id == TestPlanModel.id)
-                .where(TestPlanModel.project_id == project_id, TestPlanModel.id.in_(ids))
-                .order_by(TestPlanModel.id, TestPlanVersionModel.version_number.desc())
+                .join(ranked_versions, ranked_versions.c.row_id == TestPlanVersionModel.id)
+                .where(ranked_versions.c.row_rank == 1)
             )
-            latest: dict[UUID, tuple[TestPlanModel, TestPlanVersionModel]] = {}
-            for plan, version in versions_result:
-                latest.setdefault(plan.id, (plan, version))
+            latest = {plan.id: (plan, version) for plan, version in versions_result}
             agent_refs = await _agent_version_refs(
                 session,
                 project_id,
@@ -337,21 +383,32 @@ class SqlAlchemyCoreSummaryReader:
                     scorer_count=scorer_count,
                 )
             if latest_version_to_plan:
-                run_rows = await session.execute(
-                    select(RunModel, RunEvaluationModel.pass_rate)
-                    .outerjoin(RunEvaluationModel, RunEvaluationModel.run_id == RunModel.id)
+                ranked_runs = (
+                    select(
+                        RunModel.id.label("row_id"),
+                        func.row_number()
+                        .over(
+                            partition_by=RunModel.test_plan_version_id,
+                            order_by=(RunModel.created_at.desc(), RunModel.id.desc()),
+                        )
+                        .label("row_rank"),
+                    )
                     .where(
                         RunModel.project_id == project_id,
                         RunModel.test_plan_version_id.in_(latest_version_to_plan),
                     )
-                    .order_by(RunModel.test_plan_version_id, RunModel.created_at.desc())
+                    .subquery()
                 )
-                seen_versions: set[UUID] = set()
+                run_rows = await session.execute(
+                    select(RunModel, RunEvaluationModel.pass_rate)
+                    .join(ranked_runs, ranked_runs.c.row_id == RunModel.id)
+                    .outerjoin(RunEvaluationModel, RunEvaluationModel.run_id == RunModel.id)
+                    .where(ranked_runs.c.row_rank == 1)
+                )
                 for run, pass_rate in run_rows:
                     version_id = run.test_plan_version_id
-                    if version_id is None or version_id in seen_versions:
+                    if version_id is None:
                         continue
-                    seen_versions.add(version_id)
                     summary = summaries[latest_version_to_plan[version_id]]
                     summary.last_run_status = run.status
                     summary.pass_rate = float(pass_rate) if pass_rate is not None else None
@@ -426,6 +483,29 @@ class SqlAlchemyCoreSummaryReader:
         if not ids:
             return summaries
         async with self._session_factory() as session:
+            ranked_versions = (
+                select(
+                    EnvironmentVersionModel.id.label("row_id"),
+                    func.row_number()
+                    .over(
+                        partition_by=EnvironmentVersionModel.environment_template_id,
+                        order_by=(
+                            EnvironmentVersionModel.version_number.desc(),
+                            EnvironmentVersionModel.id.desc(),
+                        ),
+                    )
+                    .label("row_rank"),
+                )
+                .join(
+                    EnvironmentTemplateModel,
+                    EnvironmentTemplateModel.id == EnvironmentVersionModel.environment_template_id,
+                )
+                .where(
+                    EnvironmentTemplateModel.project_id == project_id,
+                    EnvironmentTemplateModel.id.in_(ids),
+                )
+                .subquery()
+            )
             result = await session.execute(
                 select(EnvironmentTemplateModel, EnvironmentVersionModel)
                 .join(
@@ -433,17 +513,14 @@ class SqlAlchemyCoreSummaryReader:
                     EnvironmentVersionModel.environment_template_id == EnvironmentTemplateModel.id,
                 )
                 .where(
-                    EnvironmentTemplateModel.project_id == project_id,
-                    EnvironmentTemplateModel.id.in_(ids),
+                    ranked_versions.c.row_rank == 1,
                 )
-                .order_by(
-                    EnvironmentTemplateModel.id,
-                    EnvironmentVersionModel.version_number.desc(),
+                .join(
+                    ranked_versions,
+                    ranked_versions.c.row_id == EnvironmentVersionModel.id,
                 )
             )
-            latest: dict[UUID, tuple[EnvironmentTemplateModel, EnvironmentVersionModel]] = {}
-            for template, version in result:
-                latest.setdefault(template.id, (template, version))
+            latest = {template.id: (template, version) for template, version in result}
             browser_ids: list[UUID | None] = []
             for _, version in latest.values():
                 raw = _dict(version.config).get("browser_profile_id")
@@ -469,23 +546,32 @@ class SqlAlchemyCoreSummaryReader:
                     validation_status=_string(config.get("validation_status")),
                     last_validated_at=None,
                 )
-            run_rows = await session.execute(
-                select(TestPlanVersionModel.environment_template_id, RunModel.created_at)
+            ranked_runs = (
+                select(
+                    TestPlanVersionModel.environment_template_id.label("template_id"),
+                    RunModel.created_at.label("created_at"),
+                    func.row_number()
+                    .over(
+                        partition_by=TestPlanVersionModel.environment_template_id,
+                        order_by=(RunModel.created_at.desc(), RunModel.id.desc()),
+                    )
+                    .label("row_rank"),
+                )
                 .join(RunModel, RunModel.test_plan_version_id == TestPlanVersionModel.id)
                 .where(
                     RunModel.project_id == project_id,
                     TestPlanVersionModel.environment_template_id.in_(ids),
                 )
-                .order_by(
-                    TestPlanVersionModel.environment_template_id,
-                    RunModel.created_at.desc(),
+                .subquery()
+            )
+            run_rows = await session.execute(
+                select(ranked_runs.c.template_id, ranked_runs.c.created_at).where(
+                    ranked_runs.c.row_rank == 1
                 )
             )
-            seen: set[UUID] = set()
             for template_id, created_at in run_rows:
-                if template_id is None or template_id in seen:
+                if template_id is None:
                     continue
-                seen.add(template_id)
                 summaries[template_id].last_run_at = created_at
         return summaries
 
@@ -494,18 +580,31 @@ class SqlAlchemyCoreSummaryReader:
         if not ids:
             return summaries
         async with self._session_factory() as session:
+            ranked_versions = (
+                select(
+                    ScorerVersionModel.id.label("row_id"),
+                    func.row_number()
+                    .over(
+                        partition_by=ScorerVersionModel.scorer_id,
+                        order_by=(
+                            ScorerVersionModel.version_number.desc(),
+                            ScorerVersionModel.id.desc(),
+                        ),
+                    )
+                    .label("row_rank"),
+                )
+                .join(ScorerModel, ScorerModel.id == ScorerVersionModel.scorer_id)
+                .where(ScorerModel.project_id == project_id, ScorerModel.id.in_(ids))
+                .subquery()
+            )
             result = await session.execute(
                 select(ScorerModel, ScorerVersionModel)
                 .join(ScorerVersionModel, ScorerVersionModel.scorer_id == ScorerModel.id)
-                .where(ScorerModel.project_id == project_id, ScorerModel.id.in_(ids))
-                .order_by(ScorerModel.id, ScorerVersionModel.version_number.desc())
+                .join(ranked_versions, ranked_versions.c.row_id == ScorerVersionModel.id)
+                .where(ranked_versions.c.row_rank == 1)
             )
             version_to_scorer: dict[UUID, UUID] = {}
-            seen: set[UUID] = set()
             for scorer, version in result:
-                if scorer.id in seen:
-                    continue
-                seen.add(scorer.id)
                 version_to_scorer[version.id] = scorer.id
                 summaries[scorer.id] = ScorerSummaryMetrics(
                     latest_version=ResourceReference.build(
@@ -667,20 +766,34 @@ class SqlAlchemyCoreSummaryReader:
                 )
             )
             gates = list(gate_result.scalars())
-            decision_result = await session.execute(
-                select(ReleaseDecisionModel)
+            ranked_decisions = (
+                select(
+                    ReleaseDecisionModel.id.label("row_id"),
+                    func.row_number()
+                    .over(
+                        partition_by=ReleaseDecisionModel.gate_id,
+                        order_by=(
+                            ReleaseDecisionModel.created_at.desc(),
+                            ReleaseDecisionModel.id.desc(),
+                        ),
+                    )
+                    .label("row_rank"),
+                )
                 .where(
                     ReleaseDecisionModel.project_id == project_id,
                     ReleaseDecisionModel.gate_id.in_(ids),
                 )
-                .order_by(
-                    ReleaseDecisionModel.gate_id,
-                    ReleaseDecisionModel.created_at.desc(),
-                )
+                .subquery()
             )
-            latest: dict[UUID, ReleaseDecisionModel] = {}
-            for decision_row in decision_result.scalars():
-                latest.setdefault(decision_row.gate_id, decision_row)
+            decision_result = await session.execute(
+                select(ReleaseDecisionModel)
+                .join(
+                    ranked_decisions,
+                    ranked_decisions.c.row_id == ReleaseDecisionModel.id,
+                )
+                .where(ranked_decisions.c.row_rank == 1)
+            )
+            latest = {item.gate_id: item for item in decision_result.scalars()}
             run_refs = await _run_refs(
                 session,
                 project_id,

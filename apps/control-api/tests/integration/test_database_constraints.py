@@ -190,11 +190,12 @@ async def test_database_rejects_duplicate_identity_and_membership_values() -> No
 
             await connection.execute(
                 """
-                INSERT INTO projects (
-                    id, name, created_at, updated_at, created_by, updated_by
-                ) VALUES ($1, $2, $3, $3, $4, $4)
-                """,
+                    INSERT INTO projects (
+                        id, key, name, created_at, updated_at, created_by, updated_by
+                    ) VALUES ($1, $2, $3, $4, $4, $5, $5)
+                    """,
                 project_id,
+                "CONSTRAINTS",
                 "Project",
                 now,
                 user_id,

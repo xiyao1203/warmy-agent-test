@@ -1,6 +1,8 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
+import { projectFixture } from "@/test/fixtures";
+
 import { ProjectSwitcher } from "../project-switcher";
 
 describe("ProjectSwitcher", () => {
@@ -11,8 +13,14 @@ describe("ProjectSwitcher", () => {
         currentProjectId="project-a"
         onSelect={onSelect}
         projects={[
-          { archived: false, id: "project-a", name: "项目 A" },
-          { archived: true, id: "project-b", name: "项目 B" },
+          projectFixture({ id: "project-a" }),
+          projectFixture({
+            archived: true,
+            id: "project-b",
+            key: "PRJ002",
+            name: "项目 B",
+            status: "archived",
+          }),
         ]}
       />,
     );
