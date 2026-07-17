@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
 
-import { problemMessage, responseProblem } from "../problem";
+import {
+  normalizeGeneratedError,
+  problemKind,
+  problemMessage,
+  responseProblem,
+} from "../problem";
 
 describe("API problem details", () => {
   it("extracts actionable detail from generated client errors", () => {
@@ -37,5 +42,25 @@ describe("API problem details", () => {
 
     expect(error.message).toBe("服务暂时不可用");
     expect(error.status).toBe(502);
+  });
+
+  it.each([
+    [401, "authentication"],
+    [403, "permission"],
+    [404, "not-found"],
+    [409, "conflict"],
+    [422, "validation"],
+  ] as const)("normalizes generated status %s", (status, kind) => {
+    const error = normalizeGeneratedError({ detail: "API detail" }, status);
+
+    expect(problemKind(error)).toBe(kind);
+    expect(problemMessage(error, "请求失败")).toBe("API detail");
+  });
+
+  it("does not expose non-JSON generated proxy bodies", () => {
+    const error = normalizeGeneratedError("proxy failure", 502);
+
+    expect(problemKind(error)).toBe("service");
+    expect(problemMessage(error, "请求失败")).toBe("服务暂时不可用");
   });
 });

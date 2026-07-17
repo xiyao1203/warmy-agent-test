@@ -1,24 +1,25 @@
 import {
   createTemplateApiV1ProjectsProjectIdEnvironmentTemplatesPost,
+  createCredentialApiV1ProjectsProjectIdCredentialsPost,
   createVersionApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdVersionsPost,
   deleteTemplateApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdDelete,
   getTemplateApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdGet,
   getVersionApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdVersionsVersionIdGet,
   listTemplatesApiV1ProjectsProjectIdEnvironmentTemplatesGet,
+  listCredentialsApiV1ProjectsProjectIdCredentialsGet,
   listVersionsApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdVersionsGet,
   publishVersionApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdVersionsVersionIdPublishPost,
   updateTemplateApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdPatch,
   updateVersionApiV1ProjectsProjectIdEnvironmentTemplatesTemplateIdVersionsVersionIdPatch,
   type CreateEnvironmentTemplateRequest,
   type CreateEnvironmentVersionRequest,
+  type CreateCredentialBindingRequest,
   type UpdateEnvironmentTemplateRequest,
   type UpdateEnvironmentVersionRequest,
 } from "@warmy/generated-api-client";
 
 import { apiClient } from "@/lib/api/client";
-import { CONTROL_API_URL } from "@/lib/api/base-url";
 import { csrfHeaders } from "@/lib/api/csrf";
-import { responseProblem } from "@/lib/api/problem";
 
 export type CredentialBinding = {
   id: string;
@@ -31,38 +32,26 @@ export type CredentialBinding = {
 };
 
 export async function listCredentialBindings(projectId: string) {
-  const response = await fetch(
-    `${CONTROL_API_URL}/api/v1/projects/${projectId}/credentials`,
-    { credentials: "include" },
-  );
-  if (!response.ok) throw await responseProblem(response, "加载凭证失败");
-  return ((await response.json()).items ?? []) as CredentialBinding[];
+  const { data } = await listCredentialsApiV1ProjectsProjectIdCredentialsGet({
+    client: apiClient,
+    path: { project_id: projectId },
+    throwOnError: true,
+  });
+  return (data as { items?: CredentialBinding[] }).items ?? [];
 }
 
 export async function createCredentialBinding(
   projectId: string,
-  payload: {
-    alias: string;
-    kind: string;
-    injection_location: string;
-    injection_name: string;
-    value: string;
-  },
+  payload: CreateCredentialBindingRequest,
 ) {
-  const response = await fetch(
-    `${CONTROL_API_URL}/api/v1/projects/${projectId}/credentials`,
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        ...(csrfHeaders() as Record<string, string>),
-      },
-      credentials: "include",
-      body: JSON.stringify(payload),
-    },
-  );
-  if (!response.ok) throw await responseProblem(response, "保存凭证失败");
-  return response.json() as Promise<CredentialBinding>;
+  const { data } = await createCredentialApiV1ProjectsProjectIdCredentialsPost({
+    body: payload,
+    client: apiClient,
+    headers: csrfHeaders(),
+    path: { project_id: projectId },
+    throwOnError: true,
+  });
+  return data as CredentialBinding;
 }
 
 export async function listEnvironmentTemplates(projectId: string) {

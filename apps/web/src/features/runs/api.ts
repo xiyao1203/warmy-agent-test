@@ -7,6 +7,7 @@ import {
   getTrustLoopApiV1ProjectsProjectIdRunsRunIdTrustLoopGet,
   listCasesApiV1ProjectsProjectIdRunsRunIdCasesGet,
   listDiagnosticsApiV1ProjectsProjectIdRunsRunIdDiagnosticsGet,
+  listArtifactsApiV1ProjectsProjectIdRunsRunIdArtifactsGet,
   listRegressionsApiV1ProjectsProjectIdRunsRunIdRegressionsGet,
   listRunsApiV1ProjectsProjectIdRunsGet,
   listPlansApiV1ProjectsProjectIdTestPlansGet,
@@ -176,10 +177,12 @@ export async function listArtifacts(
   projectId: string,
   runId: string,
 ): Promise<ArtifactItem[]> {
-  const url = `${CONTROL_API_URL}/api/v1/projects/${projectId}/runs/${runId}/artifacts`;
-  const res = await fetch(url, { credentials: "include" });
-  if (!res.ok) throw await responseProblem(res, "加载运行产物失败");
-  const data = await res.json();
+  const { data } =
+    await listArtifactsApiV1ProjectsProjectIdRunsRunIdArtifactsGet({
+      client: apiClient,
+      path: { project_id: projectId, run_id: runId },
+      throwOnError: true,
+    });
   return (data as { items?: ArtifactItem[] }).items ?? [];
 }
 
@@ -198,6 +201,7 @@ export async function uploadArtifact(
   const form = new FormData();
   form.append("file", file);
   const url = `${CONTROL_API_URL}/api/v1/projects/${projectId}/runs/${runId}/artifacts`;
+  // raw-fetch-allowed: multipart upload stream is absent from the generated contract
   const res = await fetch(url, {
     body: form,
     credentials: "include",

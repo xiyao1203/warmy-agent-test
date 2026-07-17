@@ -3,6 +3,7 @@ import {
   createCaseTrialRunApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdCasesCaseIdTrialRunsPost,
   createDatasetApiV1ProjectsProjectIdDatasetsPost,
   createVersionApiV1ProjectsProjectIdDatasetsDatasetIdVersionsPost,
+  deleteDatasetApiV1ProjectsProjectIdDatasetsDatasetIdDelete,
   deleteCaseApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdCasesCaseIdDelete,
   exportCasesApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdExportGet,
   getDatasetApiV1ProjectsProjectIdDatasetsDatasetIdGet,
@@ -22,7 +23,6 @@ import {
 } from "@warmy/generated-api-client";
 
 import { apiClient } from "@/lib/api/client";
-import { CONTROL_API_URL as API_BASE } from "@/lib/api/base-url";
 import { csrfHeaders } from "@/lib/api/csrf";
 
 export async function listDatasets(projectId: string) {
@@ -36,14 +36,12 @@ export async function listDatasets(projectId: string) {
 }
 
 export async function deleteDataset(projectId: string, datasetId: string) {
-  await fetch(
-    `${API_BASE}/api/v1/projects/${projectId}/datasets/${datasetId}`,
-    {
-      method: "DELETE",
-      headers: csrfHeaders() as Record<string, string>,
-      credentials: "include",
-    },
-  );
+  await deleteDatasetApiV1ProjectsProjectIdDatasetsDatasetIdDelete({
+    client: apiClient,
+    headers: csrfHeaders(),
+    path: { dataset_id: datasetId, project_id: projectId },
+    throwOnError: true,
+  });
 }
 
 export async function getDataset(projectId: string, datasetId: string) {

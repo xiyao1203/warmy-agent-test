@@ -1,106 +1,93 @@
-import { CONTROL_API_URL as API_BASE } from "@/lib/api/base-url";
+import {
+  createScorerApiV1ProjectsProjectIdScorersPost,
+  deleteScorerApiV1ProjectsProjectIdScorersScorerIdDelete,
+  listScorersApiV1ProjectsProjectIdScorersGet,
+  trialScorerApiV1ProjectsProjectIdScorersScorerIdTrialPost,
+  updateScorerApiV1ProjectsProjectIdScorersScorerIdPatch,
+  type CreateScorerRequest,
+  type ScorerSummaryResponse,
+  type TrialScorerRequest,
+  type UpdateScorerRequest,
+} from "@warmy/generated-api-client";
+
+import { apiClient } from "@/lib/api/client";
 import { csrfHeaders } from "@/lib/api/csrf";
-import { responseProblem } from "@/lib/api/problem";
 
 export type ScorerItem = ScorerSummaryResponse;
 
-export async function listScorers(projectId: string) {
-  const res = await fetch(
-    `${API_BASE}/api/v1/projects/${projectId}/scorers?limit=100`,
-    { credentials: "include" },
-  );
-  if (!res.ok) throw await responseProblem(res, "加载评分器失败");
-  const data = await res.json();
-  return data.items as ScorerItem[];
+const scorerPath = (projectId: string, scorerId: string) => ({
+  project_id: projectId,
+  scorer_id: scorerId,
+});
+
+export async function listScorers(projectId: string, signal?: AbortSignal) {
+  const { data } = await listScorersApiV1ProjectsProjectIdScorersGet({
+    client: apiClient,
+    path: { project_id: projectId },
+    query: { limit: 100 },
+    signal,
+    throwOnError: true,
+  });
+  return data.items;
 }
 
 export async function createScorer(
   projectId: string,
-  payload: {
-    name: string;
-    scorer_type: string;
-    weight?: number;
-    threshold?: number;
-    config_json?: Record<string, unknown>;
-    description?: string | null;
-  },
+  payload: CreateScorerRequest,
 ) {
-  const res = await fetch(`${API_BASE}/api/v1/projects/${projectId}/scorers`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      ...(csrfHeaders() as Record<string, string>),
-    },
-    credentials: "include",
-    body: JSON.stringify(payload),
+  const { data } = await createScorerApiV1ProjectsProjectIdScorersPost({
+    body: payload,
+    client: apiClient,
+    headers: csrfHeaders(),
+    path: { project_id: projectId },
+    throwOnError: true,
   });
-  if (!res.ok) throw await responseProblem(res, "创建评分器失败");
-  return res.json() as Promise<ScorerItem>;
+  return data as ScorerItem;
 }
 
 export async function updateScorer(
   projectId: string,
   scorerId: string,
-  payload: {
-    name?: string;
-    weight?: number;
-    threshold?: number;
-    config_json?: Record<string, unknown>;
-    description?: string | null;
-    enabled?: boolean;
-  },
+  payload: UpdateScorerRequest,
 ) {
-  const res = await fetch(
-    `${API_BASE}/api/v1/projects/${projectId}/scorers/${scorerId}`,
+  const { data } = await updateScorerApiV1ProjectsProjectIdScorersScorerIdPatch(
     {
-      method: "PATCH",
-      headers: {
-        "Content-Type": "application/json",
-        ...(csrfHeaders() as Record<string, string>),
-      },
-      credentials: "include",
-      body: JSON.stringify(payload),
+      body: payload,
+      client: apiClient,
+      headers: csrfHeaders(),
+      path: scorerPath(projectId, scorerId),
+      throwOnError: true,
     },
   );
-  if (!res.ok) throw await responseProblem(res, "更新评分器失败");
-  return res.json() as Promise<ScorerItem>;
+  return data as ScorerItem;
 }
 
 export async function deleteScorer(projectId: string, scorerId: string) {
-  const res = await fetch(
-    `${API_BASE}/api/v1/projects/${projectId}/scorers/${scorerId}`,
-    {
-      method: "DELETE",
-      headers: csrfHeaders() as Record<string, string>,
-      credentials: "include",
-    },
-  );
-  if (!res.ok) throw await responseProblem(res, "删除评分器失败");
+  await deleteScorerApiV1ProjectsProjectIdScorersScorerIdDelete({
+    client: apiClient,
+    headers: csrfHeaders(),
+    path: scorerPath(projectId, scorerId),
+    throwOnError: true,
+  });
 }
 
 export async function trialScorer(
   projectId: string,
   scorerId: string,
-  payload: { input?: unknown; output: unknown; reference?: unknown },
+  payload: TrialScorerRequest,
 ) {
-  const response = await fetch(
-    `${API_BASE}/api/v1/projects/${projectId}/scorers/${scorerId}/trial`,
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        ...(csrfHeaders() as Record<string, string>),
-      },
-      credentials: "include",
-      body: JSON.stringify(payload),
-    },
-  );
-  if (!response.ok) throw await responseProblem(response, "评分器试评失败");
-  return response.json() as Promise<{
+  const { data } =
+    await trialScorerApiV1ProjectsProjectIdScorersScorerIdTrialPost({
+      body: payload,
+      client: apiClient,
+      headers: csrfHeaders(),
+      path: scorerPath(projectId, scorerId),
+      throwOnError: true,
+    });
+  return data as {
     score: number;
     passed: boolean;
     explanation: string;
     confidence: number;
-  }>;
+  };
 }
-import type { ScorerSummaryResponse } from "@warmy/generated-api-client";

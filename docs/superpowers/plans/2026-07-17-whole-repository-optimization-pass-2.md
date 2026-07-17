@@ -315,17 +315,17 @@ git commit -m "refactor(api): type dynamic payload boundaries"
 - Create: `apps/web/src/test/architecture/generated-client-usage.test.ts`
 - Modify: relevant Feature API tests
 
-- [ ] **Step 1: Add an architecture test for raw Control API fetches**
+- [x] **Step 1: Add an architecture test for raw Control API fetches**
 
 Scan production Feature sources. Allow raw Control API `fetch` only in files/functions registered for SSE, upload/download streams or third-party navigation. The initial test must list each violating JSON endpoint and fail.
 
-- [ ] **Step 2: Run the test and observe RED**
+- [x] **Step 2: Run the test and observe RED**
 
 Run: `pnpm --filter @warmy/web exec vitest run src/test/architecture/generated-client-usage.test.ts`
 
 Expected: violations include Browser Profiles and remaining Agent/Dataset/Scorer/Review/Gate JSON mutations.
 
-- [ ] **Step 3: Migrate each JSON endpoint to its generated SDK function**
+- [x] **Step 3: Migrate each JSON endpoint to its generated SDK function**
 
 Use this exact pattern:
 
@@ -343,11 +343,11 @@ return data;
 
 Accept optional `signal?: AbortSignal` on list/detail functions used by Query. Replace handwritten response types with generated exports. Keep `runEventsUrl`, Artifact download URLs and upload streaming only where generated SDK cannot preserve the existing semantics.
 
-- [ ] **Step 4: Normalize generated and raw Problem Details**
+- [x] **Step 4: Normalize generated and raw Problem Details**
 
 Extend `problemKind/problemMessage` only as required to read generated client errors; preserve existing Chinese fallbacks. Add tests for 401/403/404/409/422 and non-JSON proxy responses.
 
-- [ ] **Step 5: Verify APIs and zero schema drift**
+- [x] **Step 5: Verify APIs and zero schema drift**
 
 Run:
 
@@ -359,7 +359,7 @@ make api-check
 
 Expected: all Web tests/typecheck pass and OpenAPI/generated output has no diff.
 
-- [ ] **Step 6: Commit generated-client convergence**
+- [x] **Step 6: Commit generated-client convergence**
 
 ```bash
 git add apps/web/src packages/generated-api-client docs/api/openapi.json

@@ -44,6 +44,19 @@ export function problemMessage(error: unknown, fallback: string): string {
   return fallback;
 }
 
+export function normalizeGeneratedError(
+  error: unknown,
+  status: number,
+): ApiErrorShape | ApiProblemError {
+  if (error && typeof error === "object" && !(error instanceof Error)) {
+    return { ...(error as ApiErrorShape), status };
+  }
+  if (error instanceof Error && error.message.trim()) {
+    return new ApiProblemError(error.message, status);
+  }
+  return new ApiProblemError("服务暂时不可用", status);
+}
+
 export async function responseProblem(
   response: Response,
   fallback: string,
