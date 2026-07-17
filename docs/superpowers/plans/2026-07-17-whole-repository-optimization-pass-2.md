@@ -17,7 +17,7 @@
 - Verify: `docs/api/openapi.json`
 - Verify: `packages/generated-api-client/src/client`
 
-- [ ] **Step 1: Record the branch, commit, and file hotspot baseline**
+- [x] **Step 1: Record the branch, commit, and file hotspot baseline**
 
 Run:
 
@@ -30,13 +30,13 @@ rg --files apps/web/src -g '*.ts' -g '*.tsx' | xargs wc -l | sort -nr | head -20
 
 Expected: branch is `codex/whole-repository-optimization-pass-2`; only plan/task documentation is changed; the known 2301/1333/1249/1113-line hotspots are present.
 
-- [ ] **Step 2: Run the pre-change quality baseline**
+- [x] **Step 2: Run the pre-change quality baseline**
 
 Run: `make verify`
 
 Expected: format, lint, TypeScript/mypy, Web/Python tests, build, architecture and API generation pass with zero tracked OpenAPI/client drift.
 
-- [ ] **Step 3: Run pre-change performance and browser baselines**
+- [x] **Step 3: Run pre-change performance and browser baselines**
 
 Run:
 
@@ -47,11 +47,11 @@ pnpm --filter @warmy/web e2e
 
 Expected: four route budgets and backend query budgets pass; complete Playwright passes with only the explicitly credential-gated performance scenario allowed to skip.
 
-- [ ] **Step 4: Record exact counts and measured hotspot sizes**
+- [x] **Step 4: Record exact counts and measured hotspot sizes**
 
 Add the commands, counts, skips and file sizes to `TASK-20260717-003` in the progress ledger. Do not infer performance improvements from line count.
 
-- [ ] **Step 5: Commit the baseline record**
+- [x] **Step 5: Commit the baseline record**
 
 ```bash
 git add docs/开发进度与变更记录.md docs/当前任务.md docs/superpowers/plans/2026-07-17-whole-repository-optimization-pass-2.md
