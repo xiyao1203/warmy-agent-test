@@ -17,6 +17,7 @@ import { useCallback, useEffect, useState } from "react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { ResourceReferenceLink } from "@/components/ui/resource-reference-link";
 import {
   Dialog,
   DialogContent,
@@ -206,6 +207,19 @@ export function ScorerList({ projectId }: { projectId: string }) {
                   权重 {s.weight} · 阈值 {s.threshold}
                   {s.description ? ` · ${s.description}` : ""}
                 </p>
+                <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-[var(--muted)]">
+                  <span>
+                    最新版本：
+                    <ResourceReferenceLink reference={s.latest_version} />
+                  </span>
+                  <span>引用次数 {s.usage_count ?? 0}</span>
+                  <span>
+                    最近校准{" "}
+                    {s.last_calibrated_at
+                      ? new Date(s.last_calibrated_at).toLocaleString("zh-CN")
+                      : "暂无数据"}
+                  </span>
+                </div>
               </div>
               <div className="flex shrink-0 items-center gap-1.5">
                 <Button asChild className="px-3" variant="secondary">

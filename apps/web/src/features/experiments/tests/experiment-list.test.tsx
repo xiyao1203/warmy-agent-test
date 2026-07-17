@@ -14,11 +14,30 @@ const api = vi.hoisted(() => ({
 vi.mock("../api", () => api);
 
 const experiment: ExperimentItem = {
+  baseline_run_ref: {
+    href: "/projects/project-1/runs/run-a-123456789",
+    id: "run-a-123456789",
+    name: "RUN-BASELINE",
+    resource_type: "run",
+    status: "passed",
+  },
+  candidate_run_ref: {
+    href: "/projects/project-1/runs/run-b-123456789",
+    id: "run-b-123456789",
+    name: "RUN-CANDIDATE",
+    resource_type: "run",
+    status: "passed",
+  },
+  case_count: 8,
+  cost_delta: -0.01,
   created_at: "2026-07-01T10:00:00Z",
   description: "v2 对比 v1",
   id: "experiment-1",
+  improved_count: 2,
   name: "客服 Agent v2 回归对比",
   project_id: "project-1",
+  pass_rate_delta: 0.125,
+  regressed_count: 1,
   result_json: {
     case_diffs: [
       {
@@ -40,6 +59,7 @@ const experiment: ExperimentItem = {
   },
   run_a_id: "run-a-123456789",
   run_b_id: "run-b-123456789",
+  score_delta: 0.08,
   status: "completed",
   updated_at: "2026-07-01T10:00:00Z",
 };
@@ -58,6 +78,12 @@ describe("ExperimentList", () => {
     render(<ExperimentList projectId="project-1" />);
 
     expect(await screen.findByText("客服 Agent v2 回归对比")).toBeVisible();
+    expect(screen.getByText(/对比用例 8 个 · 提升 2 · 退化 1/)).toBeVisible();
+    expect(screen.getByRole("link", { name: /RUN-BASELINE/ })).toHaveAttribute(
+      "href",
+      "/projects/project-1/runs/run-a-123456789",
+    );
+    expect(screen.getByText("通过率差异 +12.50%")).toBeVisible();
     expect(screen.getByText(/比较提升、退化和耗时变化/)).toBeVisible();
     expect(
       screen.getByRole("link", { name: /1. 完成两次运行/ }),

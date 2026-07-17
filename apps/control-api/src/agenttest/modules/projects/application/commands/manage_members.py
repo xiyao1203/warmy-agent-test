@@ -17,7 +17,9 @@ from agenttest.modules.projects.domain.repositories import ProjectRepository
 @dataclass(frozen=True, slots=True)
 class RenameProjectCommand:
     project_id: ProjectId
-    name: str
+    name: str | None = None
+    description: str | None = None
+    lead_user_id: UserId | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -36,7 +38,19 @@ class RenameProjectHandler:
         project = await required_project(self._projects, command.project_id)
         ProjectAccessPolicy.ensure_can_manage_members(actor, project)
         before = project.name
-        project.rename(command.name)
+        if command.name is not None:
+            project.rename(command.name)
+        if command.lead_user_id is not None and (
+            command.lead_user_id != project.created_by
+            and project.member_role(command.lead_user_id) is None
+        ):
+            raise ValueError("Project lead must be the creator or a current member")
+        if command.description is not None or command.lead_user_id is not None:
+            project.update_details(
+                description=command.description,
+                lead_user_id=command.lead_user_id,
+            )
+        project.updated_by = actor.user_id
         await self._projects.save(project)
         await _record(
             self._audit,

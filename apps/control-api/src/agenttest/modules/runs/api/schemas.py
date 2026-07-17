@@ -6,16 +6,19 @@ from uuid import UUID
 from pydantic import BaseModel, Field
 
 from agenttest.modules.runs.domain.entities import Run, RunCase
+from agenttest.shared.application.core_summaries import RunSummaryMetrics
 
 
 class CreateRunRequest(BaseModel):
     test_plan_version_id: UUID
 
 
-class RunResponse(BaseModel):
+class RunResponse(RunSummaryMetrics):
     id: UUID
     project_id: UUID
-    test_plan_version_id: UUID
+    test_plan_version_id: UUID | None
+    run_type: str
+    source_test_case_id: UUID | None
     status: str
     total_cases: int
     passed_cases: int
@@ -28,11 +31,19 @@ class RunResponse(BaseModel):
     completed_at: datetime | None
 
     @classmethod
-    def from_domain(cls, run: Run) -> RunResponse:
+    def from_domain(
+        cls,
+        run: Run,
+        summary: RunSummaryMetrics | None = None,
+    ) -> RunResponse:
         return cls(
             id=run.run_id.value,
             project_id=run.project_id.value,
-            test_plan_version_id=run.test_plan_version_id.value,
+            test_plan_version_id=(
+                run.test_plan_version_id.value if run.test_plan_version_id else None
+            ),
+            run_type=run.run_type.value,
+            source_test_case_id=run.source_test_case_id,
             status=run.status.value,
             total_cases=run.total_cases,
             passed_cases=run.passed_cases,
@@ -43,6 +54,11 @@ class RunResponse(BaseModel):
             created_at=run.created_at,
             started_at=run.started_at,
             completed_at=run.completed_at,
+            **(
+                summary.model_dump()
+                if summary
+                else {"run_number": f"RUN-{str(run.run_id.value).split('-')[0].upper()}"}
+            ),
         )
 
 
@@ -64,6 +80,7 @@ class RunCaseResponse(BaseModel):
     quality_summary: dict[str, object]
     security_summary: dict[str, object]
     outcomes: dict[str, object]
+    case_spec_snapshot: dict[str, object]
 
     @classmethod
     def from_domain(cls, case: RunCase) -> RunCaseResponse:
@@ -81,6 +98,7 @@ class RunCaseResponse(BaseModel):
             quality_summary=case.quality_summary,
             security_summary=case.security_summary,
             outcomes=case.outcomes.to_dict(),
+            case_spec_snapshot=case.case_spec_snapshot,
         )
 
 

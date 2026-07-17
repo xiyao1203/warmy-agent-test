@@ -19,7 +19,7 @@ class PlaywrightTaskInput:
 
     run_case_id: str
     url: str
-    steps: list[dict[str, str]]
+    steps: list[dict[str, object]]
     timeout_ms: int = 30000
 
 
@@ -34,6 +34,8 @@ class PlaywrightStepResult:
     screenshot_base64: str | None = None
     duration_ms: int = 0
     error: str | None = None
+    expected_result: str = ""
+    artifact_requirements: list[dict[str, object]] = field(default_factory=list)
 
 
 @dataclass(frozen=True, slots=True)
@@ -101,22 +103,26 @@ async def run_playwright_case(inp: PlaywrightTaskInput) -> PlaywrightResult:
                     step_results.append(
                         PlaywrightStepResult(
                             step_index=i,
-                            action=step.get("action", ""),
-                            target=step.get("target", ""),
+                            action=str(step.get("action", "")),
+                            target=str(step.get("target", "")),
                             status="passed",
                             screenshot_base64=screenshot_b64,
                             duration_ms=int((datetime.now(UTC) - start_ts).total_seconds() * 1000),
+                            expected_result=str(step.get("expected_result", "")),
+                            artifact_requirements=_artifact_requirements(step),
                         )
                     )
                 except Exception as exc:
                     step_results.append(
                         PlaywrightStepResult(
                             step_index=i,
-                            action=step.get("action", ""),
-                            target=step.get("target", ""),
+                            action=str(step.get("action", "")),
+                            target=str(step.get("target", "")),
                             status="error",
                             error=str(exc),
                             duration_ms=int((datetime.now(UTC) - start_ts).total_seconds() * 1000),
+                            expected_result=str(step.get("expected_result", "")),
+                            artifact_requirements=_artifact_requirements(step),
                         )
                     )
 
@@ -169,11 +175,11 @@ async def run_playwright_case(inp: PlaywrightTaskInput) -> PlaywrightResult:
     )
 
 
-async def _execute_step(page, step: dict[str, str], timeout_ms: int) -> None:
+async def _execute_step(page, step: dict[str, object], timeout_ms: int) -> None:
     """执行单个步骤。"""
-    action = step.get("action", "")
-    target = step.get("target", "")
-    value = step.get("value", "")
+    action = str(step.get("action", ""))
+    target = str(step.get("target", ""))
+    value = str(step.get("value", ""))
 
     if action == "goto":
         await page.goto(target, timeout=timeout_ms)
@@ -187,6 +193,13 @@ async def _execute_step(page, step: dict[str, str], timeout_ms: int) -> None:
         pass  # Screenshot is taken after each step anyway
     else:
         raise ValueError(f"Unknown action: {action}")
+
+
+def _artifact_requirements(step: dict[str, object]) -> list[dict[str, object]]:
+    raw = step.get("artifact_requirements", [])
+    if not isinstance(raw, list):
+        return []
+    return [dict(item) for item in raw if isinstance(item, dict)]
 
 
 def dependency_unavailable_result(inp: PlaywrightTaskInput) -> PlaywrightResult:

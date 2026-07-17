@@ -36,6 +36,7 @@ from agenttest.modules.projects.domain.policies import (
     ProjectNotFoundError,
 )
 from agenttest.shared.api.problem_details import ProblemDetails
+from agenttest.shared.application.core_summaries import CoreSummaryReader
 from agenttest.shared.application.uow import UnitOfWorkFactory, null_uow_factory
 
 CSRF_COOKIE_NAME = "agenttest_csrf"
@@ -93,6 +94,7 @@ class ProjectApiDependencies:
     update_member: ManageMemberExecutor
     remove_member: RemoveMemberExecutor
     uow_factory: UnitOfWorkFactory = null_uow_factory
+    summaries: CoreSummaryReader | None = None
 
 
 def create_project_router(
@@ -136,8 +138,21 @@ def create_project_router(
         if isinstance(actor, JSONResponse):
             return actor
         projects = await dependencies.list_projects.execute(actor)
+        summaries = (
+            await dependencies.summaries.projects(
+                [project.project_id.value for project in projects]
+            )
+            if dependencies.summaries
+            else {}
+        )
         return ProjectListResponse(
-            items=[ProjectResponse.from_domain(project) for project in projects]
+            items=[
+                ProjectResponse.from_domain(
+                    project,
+                    summaries.get(project.project_id.value),
+                )
+                for project in projects
+            ]
         )
 
     @router.post("", response_model=ProjectResponse, status_code=201)
@@ -152,7 +167,15 @@ def create_project_router(
         try:
             async with dependencies.uow_factory():
                 project = await dependencies.create_project.execute(
-                    actor, CreateProjectCommand(name=payload.name)
+                    actor,
+                    CreateProjectCommand(
+                        name=payload.name,
+                        key=payload.key,
+                        description=payload.description,
+                        lead_user_id=(
+                            UserId(payload.lead_user_id) if payload.lead_user_id else None
+                        ),
+                    ),
                 )
         except ProjectAccessDeniedError:
             return permission_denied()
@@ -186,6 +209,10 @@ def create_project_router(
                     RenameProjectCommand(
                         project_id=ProjectId(project_id),
                         name=payload.name,
+                        description=payload.description,
+                        lead_user_id=(
+                            UserId(payload.lead_user_id) if payload.lead_user_id else None
+                        ),
                     ),
                 )
         except ProjectNotFoundError:

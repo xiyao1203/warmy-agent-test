@@ -39,7 +39,7 @@ from pydantic_ai.messages import (
 )
 from pydantic_ai.models import Model, ModelRequestParameters, StreamedResponse
 from pydantic_ai.settings import ModelSettings
-from pydantic_ai.usage import Usage
+from pydantic_ai.usage import RequestUsage
 
 from agenttest.modules.model_configs.public import (
     InvocationMessage,
@@ -150,17 +150,16 @@ class TemporalModel(Model):
         )
 
         parts = _parse_response_parts(result.content, tools)
-        usage = Usage(
-            requests=1,
-            request_tokens=result.prompt_tokens,
-            response_tokens=result.completion_tokens,
-            total_tokens=result.total_tokens,
+        usage = RequestUsage(
+            input_tokens=result.prompt_tokens,
+            output_tokens=result.completion_tokens,
         )
         return ModelResponse(
             parts=parts,
             usage=usage,
             model_name=self._display_name,
             timestamp=datetime.now(UTC),
+            provider_name=self.system,
         )
 
     @asynccontextmanager
@@ -247,19 +246,16 @@ class TemporalModel(Model):
                 return self._model
 
             @property
-            def timestamp(self):
-                return self._ts
+            def provider_name(self) -> str:
+                return "temporal"
 
-            def usage(self) -> Usage:
-                final = stream_result[0]
-                if final:
-                    return Usage(
-                        requests=1,
-                        request_tokens=final.prompt_tokens,
-                        response_tokens=final.completion_tokens,
-                        total_tokens=final.total_tokens,
-                    )
-                return Usage()
+            @property
+            def provider_url(self) -> None:
+                return None
+
+            @property
+            def timestamp(self) -> datetime:
+                return self._ts
 
             async def _get_event_iterator(
                 self,
@@ -288,6 +284,10 @@ class TemporalModel(Model):
                 final = stream_result[0]
                 all_parts: list[ModelResponsePart] = []
                 if final:
+                    self._usage = RequestUsage(
+                        input_tokens=final.prompt_tokens,
+                        output_tokens=final.completion_tokens,
+                    )
                     all_parts = _parse_response_parts(final.content, tools)
 
                 # 回退：如果流式 chunks 为空，用完整响应做句子分块

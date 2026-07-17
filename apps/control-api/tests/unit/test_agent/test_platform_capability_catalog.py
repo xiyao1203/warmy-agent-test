@@ -12,6 +12,13 @@ def test_catalog_covers_every_professional_console_module() -> None:
         "agents.create",
         "environments.list",
         "datasets.create_with_cases",
+        "test_cases.list",
+        "test_cases.get",
+        "test_cases.create",
+        "test_cases.update",
+        "test_cases.validate",
+        "test_cases.mark_ready",
+        "test_cases.trial_run",
         "test_plans.create_version",
         "runs.start",
         "scorers.list",
@@ -22,3 +29,8 @@ def test_catalog_covers_every_professional_console_module() -> None:
     }
     assert next(spec for spec in specs if spec.name == "runs.start").risk is RiskLevel.HIGH_IMPACT
     assert next(spec for spec in specs if spec.name == "agents.list").risk is RiskLevel.READ
+    assert (
+        next(spec for spec in specs if spec.name == "test_cases.trial_run").risk
+        is RiskLevel.HIGH_IMPACT
+    )
+    assert next(spec for spec in specs if spec.name == "test_cases.validate").risk is RiskLevel.READ

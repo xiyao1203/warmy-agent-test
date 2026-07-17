@@ -18,6 +18,7 @@ import { useEffect, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { DropdownSelect } from "@/components/ui/dropdown-select";
+import { ResourceReferenceLink } from "@/components/ui/resource-reference-link";
 import type { Finding, SecurityScanItem } from "./api";
 import type { SecurityTarget } from "./api";
 import { listScans, listSecurityTargets, triggerScan } from "./api";
@@ -216,6 +217,19 @@ export function SecurityScanPage({ projectId }: { projectId: string }) {
                       {scan.scan_type} ·{" "}
                       {new Date(scan.created_at).toLocaleString("zh-CN")}
                     </p>
+                    <p className="mt-0.5 text-xs text-[var(--muted)]">
+                      Agent {scan.agent_ref?.name ?? "暂无数据"} · 运行{" "}
+                      {scan.run_ref?.name ?? "暂无数据"} · 配置{" "}
+                      {scan.profile_ref?.name ?? "暂无数据"}
+                    </p>
+                    <p className="mt-0.5 text-xs text-[var(--muted)]">
+                      严重 {scan.critical_count ?? 0} · 高{" "}
+                      {scan.high_count ?? 0} · 中 {scan.medium_count ?? 0} · 低{" "}
+                      {scan.low_count ?? 0} · 耗时{" "}
+                      {scan.duration_ms == null
+                        ? "暂无数据"
+                        : `${scan.duration_ms} ms`}
+                    </p>
                   </div>
                   <Badge
                     tone={
@@ -266,6 +280,31 @@ export function SecurityScanPage({ projectId }: { projectId: string }) {
                 >
                   {selectedScan.status}
                 </Badge>
+              </div>
+
+              <div className="grid gap-2 text-xs text-[var(--muted)]">
+                <p>
+                  Agent：
+                  <ResourceReferenceLink reference={selectedScan.agent_ref} />
+                </p>
+                <p>
+                  运行：
+                  <ResourceReferenceLink reference={selectedScan.run_ref} />
+                </p>
+                <p>
+                  安全配置：
+                  <ResourceReferenceLink reference={selectedScan.profile_ref} />
+                </p>
+                <p>
+                  开始时间{" "}
+                  {selectedScan.started_at
+                    ? new Date(selectedScan.started_at).toLocaleString("zh-CN")
+                    : "暂无数据"}{" "}
+                  · 耗时{" "}
+                  {selectedScan.duration_ms == null
+                    ? "暂无数据"
+                    : `${selectedScan.duration_ms} ms`}
+                </p>
               </div>
 
               {/* 统计摘要 */}

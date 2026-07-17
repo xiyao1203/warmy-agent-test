@@ -1,26 +1,29 @@
-"""Scorer CRUD API 路由。"""
+"""Scorer HTTP adapter."""
 
 from __future__ import annotations
 
-import json
-from datetime import UTC, datetime
+from dataclasses import dataclass
+from datetime import datetime
+from typing import Protocol
 from uuid import UUID
 
 from fastapi import APIRouter, Header, Request
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel, Field, ValidationError
+from pydantic import BaseModel, Field
 
-from agenttest.modules.identity.public import InvalidSessionError
-from agenttest.modules.projects.public import ProjectId, ProjectNotFoundError
-from agenttest.modules.scorers.application.evaluate import evaluate_deterministic
-from agenttest.modules.scorers.application.model_judge import ModelJudge
-from agenttest.modules.scorers.domain.config import ModelScorerConfig, parse_scorer_config
-from agenttest.modules.scorers.domain.entities import Scorer, ScorerId
-from agenttest.modules.scorers.domain.value_objects import ScorerType
-from agenttest.modules.scorers.infrastructure.persistence.repositories import (
-    SqlAlchemyScorerRepository,
+from agenttest.bootstrap.settings import Settings
+from agenttest.modules.identity.public import InvalidSessionError, User
+from agenttest.modules.projects.public import ProjectNotFoundError
+from agenttest.modules.scorers.application.service import (
+    PublishedVersion,
+    ScorerNotFound,
+    ScorerRuntimeUnavailable,
+    ScorerService,
+    ScorerValidationError,
 )
+from agenttest.modules.scorers.domain.entities import Scorer
 from agenttest.shared.api.auth_guard import require_actor, require_writer
+from agenttest.shared.application.core_summaries import CoreSummaryReader, ScorerSummaryMetrics
 
 
 class CreateScorerRequest(BaseModel):
@@ -47,61 +50,73 @@ class TrialScorerRequest(BaseModel):
     reference: object | None = None
 
 
-def create_scorer_router(
-    *,
-    session_factory,
-    actor_for,
-    check_project,
-    settings,
-    model_judge: ModelJudge | None = None,
-    repo: SqlAlchemyScorerRepository | None = None,
-) -> APIRouter:
-    """创建评分器 CRUD 路由。"""
-    router = APIRouter(
-        prefix="/projects/{project_id}/scorers",
-        tags=["scorers"],
-    )
+class ScorerSummaryResponse(ScorerSummaryMetrics):
+    id: UUID
+    project_id: UUID
+    name: str
+    scorer_type: str
+    weight: float
+    threshold: float
+    config_json: dict[str, object]
+    description: str | None
+    enabled: bool
+    latest_published_version_id: UUID | None
+    latest_published_version_number: int | None
+    created_at: datetime
+    updated_at: datetime
 
-    versioning_enabled = repo is None
-    if repo is None:
-        repo = SqlAlchemyScorerRepository(session_factory)
 
-    @router.get("")
-    async def list_scorers(
-        request: Request,
-        project_id: UUID,
-        limit: int = 50,
-        offset: int = 0,
-    ):
-        actor = await require_actor(request, actor_for, settings)
+class ScorerListResponse(BaseModel):
+    items: list[ScorerSummaryResponse]
+    total: int
+
+
+class ActorResolver(Protocol):
+    async def __call__(self, request: Request) -> User | None: ...
+
+
+@dataclass(frozen=True, slots=True)
+class ScorerApiDependencies:
+    service: ScorerService
+    actor_for: ActorResolver
+    settings: Settings
+    summaries: CoreSummaryReader | None = None
+
+
+def create_scorer_router(dependencies: ScorerApiDependencies) -> APIRouter:
+    router = APIRouter(prefix="/projects/{project_id}/scorers", tags=["scorers"])
+
+    @router.get("", response_model=ScorerListResponse)
+    async def list_scorers(request: Request, project_id: UUID, limit: int = 50, offset: int = 0):
+        actor = await require_actor(request, dependencies.actor_for, dependencies.settings)
         if isinstance(actor, JSONResponse):
             return actor
         try:
-            await check_project(project_id)
-        except ProjectNotFoundError:
-            return JSONResponse(status_code=404, content={"detail": "项目不存在"})
-        except InvalidSessionError:
-            return JSONResponse(status_code=401, content={"detail": "认证失败"})
-
-        scorers, total = await repo.list_by_project(
-            ProjectId(project_id),
-            limit=limit,
-            offset=offset,
-        )
-        published_versions = (
-            await repo.latest_published_versions(
-                ProjectId(project_id),
-                [s.scorer_id.value for s in scorers],
+            page = await dependencies.service.list(actor, project_id, limit=limit, offset=offset)
+        except Exception as error:
+            response = _access_error(error)
+            if response is not None:
+                return response
+            raise
+        summaries = (
+            await dependencies.summaries.scorers(
+                project_id,
+                [item.scorer.scorer_id.value for item in page.items],
             )
-            if versioning_enabled
+            if dependencies.summaries
             else {}
         )
         return {
             "items": [
-                _scorer_to_dict(s, published_version=published_versions.get(s.scorer_id.value))
-                for s in scorers
+                {
+                    **_scorer_to_dict(item.scorer, item.published_version),
+                    **summaries[item.scorer.scorer_id.value].model_dump(),
+                }
+                if item.scorer.scorer_id.value in summaries
+                else _scorer_to_dict(item.scorer, item.published_version)
+                for item in page.items
             ],
-            "total": total,
+            "total": page.total,
         }
 
     @router.post("")
@@ -111,64 +126,45 @@ def create_scorer_router(
         body: CreateScorerRequest,
         x_csrf_token: str | None = Header(default=None),
     ):
-        actor = await require_writer(request, actor_for, settings, x_csrf_token)
+        actor = await require_writer(
+            request, dependencies.actor_for, dependencies.settings, x_csrf_token
+        )
         if isinstance(actor, JSONResponse):
             return actor
         try:
-            await check_project(project_id)
-        except ProjectNotFoundError:
-            return JSONResponse(status_code=404, content={"detail": "项目不存在"})
-        except InvalidSessionError:
-            return JSONResponse(status_code=401, content={"detail": "认证失败"})
-
-        try:
-            scorer_type = ScorerType(body.scorer_type)
-        except ValueError:
-            return JSONResponse(
-                status_code=422,
-                content={"detail": f"无效的评分器类型: {body.scorer_type}"},
-            )
-        try:
-            validated_config = parse_scorer_config(scorer_type.value, body.config_json)
-        except (ValueError, ValidationError) as error:
-            return JSONResponse(status_code=422, content={"detail": str(error)})
-
-        try:
-            scorer = Scorer.create(
-                scorer_id=ScorerId.new(),
-                project_id=ProjectId(project_id),
+            item = await dependencies.service.create(
+                actor,
+                project_id,
                 name=body.name,
-                scorer_type=scorer_type,
+                scorer_type=body.scorer_type,
                 weight=body.weight,
                 threshold=body.threshold,
-                config_json=validated_config.model_dump(mode="json", exclude={"type"}),
+                config_json=body.config_json,
                 description=body.description,
             )
-        except ValueError as e:
-            return JSONResponse(status_code=422, content={"detail": str(e)})
-
-        await repo.add(scorer)
-        published_version = None
-        if versioning_enabled:
-            published_version = await repo.publish_version(scorer, actor.user_id.value)
-        return _scorer_to_dict(scorer, published_version=published_version)
+        except ScorerValidationError as error:
+            return JSONResponse(status_code=422, content={"detail": str(error)})
+        except Exception as error:
+            response = _access_error(error)
+            if response is not None:
+                return response
+            raise
+        return _scorer_to_dict(item.scorer, item.published_version)
 
     @router.get("/{scorer_id}")
-    async def get_scorer(
-        request: Request,
-        project_id: UUID,
-        scorer_id: UUID,
-    ):
-        actor = await require_actor(request, actor_for, settings)
+    async def get_scorer(request: Request, project_id: UUID, scorer_id: UUID):
+        actor = await require_actor(request, dependencies.actor_for, dependencies.settings)
         if isinstance(actor, JSONResponse):
             return actor
-
-        scorer = await repo.get_by_id_and_project(
-            ScorerId(scorer_id),
-            ProjectId(project_id),
-        )
-        if scorer is None:
+        try:
+            scorer = await dependencies.service.get(actor, project_id, scorer_id)
+        except ScorerNotFound:
             return JSONResponse(status_code=404, content={"detail": "评分器不存在"})
+        except Exception as error:
+            response = _access_error(error)
+            if response is not None:
+                return response
+            raise
         return _scorer_to_dict(scorer)
 
     @router.patch("/{scorer_id}")
@@ -179,50 +175,33 @@ def create_scorer_router(
         body: UpdateScorerRequest,
         x_csrf_token: str | None = Header(default=None),
     ):
-        actor = await require_writer(request, actor_for, settings, x_csrf_token)
+        actor = await require_writer(
+            request, dependencies.actor_for, dependencies.settings, x_csrf_token
+        )
         if isinstance(actor, JSONResponse):
             return actor
-
-        scorer = await repo.get_by_id_and_project(
-            ScorerId(scorer_id),
-            ProjectId(project_id),
-        )
-        if scorer is None:
+        try:
+            item = await dependencies.service.update(
+                actor,
+                project_id,
+                scorer_id,
+                name=body.name,
+                weight=body.weight,
+                threshold=body.threshold,
+                config_json=body.config_json,
+                description=body.description,
+                enabled=body.enabled,
+            )
+        except ScorerNotFound:
             return JSONResponse(status_code=404, content={"detail": "评分器不存在"})
-
-        if body.name is not None:
-            try:
-                scorer.rename(body.name)
-            except ValueError as e:
-                return JSONResponse(status_code=422, content={"detail": str(e)})
-        if body.weight is not None:
-            try:
-                scorer.update_weight(body.weight)
-            except ValueError as e:
-                return JSONResponse(status_code=422, content={"detail": str(e)})
-        if body.threshold is not None:
-            try:
-                scorer.update_threshold(body.threshold)
-            except ValueError as e:
-                return JSONResponse(status_code=422, content={"detail": str(e)})
-        if body.config_json is not None:
-            try:
-                validated_config = parse_scorer_config(scorer.scorer_type.value, body.config_json)
-            except (ValueError, ValidationError) as error:
-                return JSONResponse(status_code=422, content={"detail": str(error)})
-            scorer.config_json = validated_config.model_dump(mode="json", exclude={"type"})
-            scorer.updated_at = datetime.now(UTC)
-        if body.description is not None:
-            scorer.description = body.description
-            scorer.updated_at = datetime.now(UTC)
-        if body.enabled is not None and body.enabled != scorer.enabled:
-            scorer.toggle()
-
-        await repo.save(scorer)
-        published_version = None
-        if versioning_enabled:
-            published_version = await repo.publish_version(scorer, actor.user_id.value)
-        return _scorer_to_dict(scorer, published_version=published_version)
+        except ScorerValidationError as error:
+            return JSONResponse(status_code=422, content={"detail": str(error)})
+        except Exception as error:
+            response = _access_error(error)
+            if response is not None:
+                return response
+            raise
+        return _scorer_to_dict(item.scorer, item.published_version)
 
     @router.delete("/{scorer_id}")
     async def delete_scorer(
@@ -231,17 +210,20 @@ def create_scorer_router(
         scorer_id: UUID,
         x_csrf_token: str | None = Header(default=None),
     ):
-        actor = await require_writer(request, actor_for, settings, x_csrf_token)
+        actor = await require_writer(
+            request, dependencies.actor_for, dependencies.settings, x_csrf_token
+        )
         if isinstance(actor, JSONResponse):
             return actor
-
-        scorer = await repo.get_by_id_and_project(
-            ScorerId(scorer_id),
-            ProjectId(project_id),
-        )
-        if scorer is None:
+        try:
+            await dependencies.service.delete(actor, project_id, scorer_id)
+        except ScorerNotFound:
             return JSONResponse(status_code=404, content={"detail": "评分器不存在"})
-        await repo.delete(ScorerId(scorer_id))
+        except Exception as error:
+            response = _access_error(error)
+            if response is not None:
+                return response
+            raise
         return {"status": "deleted", "scorer_id": str(scorer_id)}
 
     @router.post("/{scorer_id}/trial")
@@ -252,67 +234,61 @@ def create_scorer_router(
         body: TrialScorerRequest,
         x_csrf_token: str | None = Header(default=None),
     ):
-        actor = await require_writer(request, actor_for, settings, x_csrf_token)
+        actor = await require_writer(
+            request, dependencies.actor_for, dependencies.settings, x_csrf_token
+        )
         if isinstance(actor, JSONResponse):
             return actor
-        scorer = await repo.get_by_id_and_project(ScorerId(scorer_id), ProjectId(project_id))
-        if scorer is None:
-            return JSONResponse(status_code=404, content={"detail": "评分器不存在"})
         try:
-            config = parse_scorer_config(scorer.scorer_type.value, scorer.config_json)
-            if isinstance(config, ModelScorerConfig):
-                if model_judge is None:
-                    return JSONResponse(status_code=503, content={"detail": "模型评分运行时不可用"})
-                judged = await model_judge.judge_text(
-                    actor,
-                    ProjectId(project_id),
-                    input_text=json.dumps(body.input, ensure_ascii=False),
-                    output_text=json.dumps(body.output, ensure_ascii=False),
-                    rubric=config.rubric,
-                )
-                return {
-                    "score": judged.score,
-                    "passed": judged.passed,
-                    "explanation": judged.explanation,
-                    "confidence": judged.confidence,
-                    "model_config_id": judged.model_config_id,
-                    "model_name": judged.model_name,
-                }
-            result = evaluate_deterministic(
-                config,
+            return await dependencies.service.trial(
+                actor,
+                project_id,
+                scorer_id,
                 output=body.output,
+                input_value=body.input,
                 reference=body.reference,
             )
-            return {
-                "score": result.score,
-                "passed": result.passed,
-                "explanation": result.explanation,
-                "confidence": result.confidence,
-            }
-        except (ValueError, ValidationError) as error:
+        except ScorerNotFound:
+            return JSONResponse(status_code=404, content={"detail": "评分器不存在"})
+        except ScorerRuntimeUnavailable:
+            return JSONResponse(status_code=503, content={"detail": "模型评分运行时不可用"})
+        except ScorerValidationError as error:
             return JSONResponse(status_code=422, content={"detail": str(error)})
+        except Exception as error:
+            response = _access_error(error)
+            if response is not None:
+                return response
+            raise
 
     return router
 
 
+def _access_error(error: Exception) -> JSONResponse | None:
+    if isinstance(error, InvalidSessionError):
+        return JSONResponse(status_code=401, content={"detail": "认证失败"})
+    if isinstance(error, PermissionError):
+        return JSONResponse(status_code=403, content={"detail": "Forbidden"})
+    if isinstance(error, ProjectNotFoundError):
+        return JSONResponse(status_code=404, content={"detail": "项目不存在"})
+    return None
+
+
 def _scorer_to_dict(
-    s: Scorer,
-    *,
-    published_version: tuple[UUID, int] | None = None,
+    scorer: Scorer, published_version: PublishedVersion | None = None
 ) -> dict[str, object]:
     version_id, version_number = published_version or (None, None)
     return {
-        "id": str(s.scorer_id.value),
-        "project_id": str(s.project_id.value),
-        "name": s.name,
-        "scorer_type": s.scorer_type.value,
-        "weight": s.weight,
-        "threshold": s.threshold,
-        "config_json": s.config_json,
-        "description": s.description,
-        "enabled": s.enabled,
+        "id": str(scorer.scorer_id.value),
+        "project_id": str(scorer.project_id.value),
+        "name": scorer.name,
+        "scorer_type": scorer.scorer_type.value,
+        "weight": scorer.weight,
+        "threshold": scorer.threshold,
+        "config_json": scorer.config_json,
+        "description": scorer.description,
+        "enabled": scorer.enabled,
         "latest_published_version_id": str(version_id) if version_id else None,
         "latest_published_version_number": version_number,
-        "created_at": s.created_at.isoformat(),
-        "updated_at": s.updated_at.isoformat(),
+        "created_at": scorer.created_at.isoformat(),
+        "updated_at": scorer.updated_at.isoformat(),
     }

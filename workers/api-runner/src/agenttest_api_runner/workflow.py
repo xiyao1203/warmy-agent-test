@@ -20,6 +20,7 @@ with workflow.unsafe.imports_passed_through():
     )
     from agenttest_api_runner.contracts import (
         CaseScore,
+        PlatformTestCaseSnapshotV1,
         ResultCallbackConfig,
         RunCaseResult,
         RunCaseTask,
@@ -72,6 +73,29 @@ def execution_activity_options(
         maximum_interval=timedelta(seconds=10),
         maximum_attempts=max_retries + 1,
         non_retryable_error_types=ACTIVITY_RETRY_POLICY.non_retryable_error_types,
+    )
+
+
+def case_execution_activity_options(
+    case: RunCaseTask,
+    fallback_timeout: timedelta,
+    fallback_retry: RetryPolicy,
+) -> tuple[timedelta, RetryPolicy]:
+    """Apply an immutable professional case's bounded execution policy."""
+    if case.case_spec is None:
+        return fallback_timeout, fallback_retry
+    timeout_seconds = case.case_spec.timeout_seconds
+    timeout = (
+        timedelta(seconds=max(1, min(timeout_seconds, 86_400)))
+        if timeout_seconds is not None
+        else fallback_timeout
+    )
+    return timeout, RetryPolicy(
+        initial_interval=fallback_retry.initial_interval,
+        backoff_coefficient=fallback_retry.backoff_coefficient,
+        maximum_interval=fallback_retry.maximum_interval,
+        maximum_attempts=max(1, min(case.case_spec.retry_count + 1, 11)),
+        non_retryable_error_types=fallback_retry.non_retryable_error_types,
     )
 
 
@@ -130,6 +154,11 @@ class RunWorkflow:
         activity_timeout, activity_retry_policy = execution_activity_options(task.execution_policy)
         results: list[RunCaseResult] = []
         for case in task.cases:
+            case_activity_timeout, case_retry_policy = case_execution_activity_options(
+                case,
+                activity_timeout,
+                activity_retry_policy,
+            )
             if self._cancel_requested:
                 results.append(
                     RunCaseResult(
@@ -143,20 +172,25 @@ class RunWorkflow:
             try:
                 # ── 执行模式分发 ─────────────────────────────────
                 if case.execution_mode == "codex_explore":
+                    codex_timeout = (
+                        case_activity_timeout
+                        if case.case_spec is not None
+                        else timedelta(seconds=_int_value(case.input.get("timeout"), 120))
+                    )
                     codex_url = _target_url(case.input, task.agent_config)
                     browser_profile_id = _target_browser_profile_id(
                         case.input,
                         task.execution_policy,
                         task.agent_config,
                     )
-                    codex_intent = str(case.input.get("test_intent", ""))
+                    codex_intent = _codex_test_intent(case)
                     codex_result = await workflow.execute_activity(
                         run_codex_browser_case,
                         CodexBrowserTaskInput(
                             run_case_id=case.run_case_id,
                             test_intent=codex_intent,
                             target_url=codex_url,
-                            timeout_seconds=_int_value(case.input.get("timeout"), 120),
+                            timeout_seconds=int(codex_timeout.total_seconds()),
                             model=_codex_model(case.input, task.execution_policy),
                             model_provider=_codex_model_provider(
                                 case.input,
@@ -173,22 +207,18 @@ class RunWorkflow:
                             storage_state_key=str(case.input.get("storage_state_key", "")),
                             credentials=_extract_credentials(case.input),
                         ),
-                        start_to_close_timeout=timedelta(
-                            seconds=_int_value(case.input.get("timeout"), 120)
-                        ),
+                        start_to_close_timeout=codex_timeout,
                         heartbeat_timeout=timedelta(seconds=60),
-                        retry_policy=RetryPolicy(
-                            maximum_attempts=1,
-                        ),
+                        retry_policy=case_retry_policy,
                     )
                     result = _codex_to_run_case(codex_result, case)
                     if result.status == "passed" and _is_canvas_target(task):
                         tapnow_result = await workflow.execute_activity(
                             run_tapnow_case,
                             _tapnow_task(task, case),
-                            start_to_close_timeout=activity_timeout,
+                            start_to_close_timeout=case_activity_timeout,
                             heartbeat_timeout=timedelta(seconds=30),
-                            retry_policy=activity_retry_policy,
+                            retry_policy=case_retry_policy,
                         )
                         result = _tapnow_to_run_case(tapnow_result, case)
                 elif case.execution_mode == "browser":
@@ -196,24 +226,25 @@ class RunWorkflow:
                         tapnow_result = await workflow.execute_activity(
                             run_tapnow_case,
                             _tapnow_task(task, case),
-                            start_to_close_timeout=activity_timeout,
+                            start_to_close_timeout=case_activity_timeout,
                             heartbeat_timeout=timedelta(seconds=30),
-                            retry_policy=activity_retry_policy,
+                            retry_policy=case_retry_policy,
                         )
                         result = _tapnow_to_run_case(tapnow_result, case)
                     else:
                         browser_url = _target_url(case.input, task.agent_config)
-                        browser_steps = _browser_steps(case.input)
+                        browser_steps = _browser_steps_for_case(case)
                         playwright_result = await workflow.execute_activity(
                             run_playwright_case,
                             PlaywrightTaskInput(
                                 run_case_id=case.run_case_id,
                                 url=browser_url,
                                 steps=browser_steps,
+                                timeout_ms=int(case_activity_timeout.total_seconds() * 1000),
                             ),
-                            start_to_close_timeout=activity_timeout,
+                            start_to_close_timeout=case_activity_timeout,
                             heartbeat_timeout=timedelta(seconds=30),
-                            retry_policy=activity_retry_policy,
+                            retry_policy=case_retry_policy,
                         )
                         result = _playwright_to_run_case(playwright_result, case)
                 else:
@@ -235,9 +266,9 @@ class RunWorkflow:
                     result = await workflow.execute_activity(
                         execute_agent_case,
                         args=[case, task.agent_config, _environment_with_lease(task)],
-                        start_to_close_timeout=activity_timeout,
+                        start_to_close_timeout=case_activity_timeout,
                         heartbeat_timeout=timedelta(seconds=30),
-                        retry_policy=activity_retry_policy,
+                        retry_policy=case_retry_policy,
                     )
                 # ── 执行确定性评分器 ───────────────────────────────
                 if task.scorer_configs and result.status == "passed" and result.output:
@@ -365,16 +396,29 @@ def normalize_run_task(task: RunTask | dict[str, object]) -> RunTask:
         )
     cases_raw = task.get("cases", [])
     case_items = cases_raw if isinstance(cases_raw, list) else []
-    cases = [
-        RunCaseTask(
-            run_case_id=str(case["run_case_id"]),
-            input=dict(case.get("input", {})),
-            assertions=list(case.get("assertions", [])),
-            execution_mode=str(case.get("execution_mode", "api")),
+    cases: list[RunCaseTask] = []
+    for case in case_items:
+        if not isinstance(case, dict):
+            continue
+        spec_raw = case.get("case_spec")
+        spec = (
+            PlatformTestCaseSnapshotV1.from_payload(dict(spec_raw))
+            if isinstance(spec_raw, dict) and spec_raw
+            else None
         )
-        for case in case_items
-        if isinstance(case, dict)
-    ]
+        cases.append(
+            RunCaseTask(
+                run_case_id=str(case["run_case_id"]),
+                input=dict(spec.input if spec else case.get("input", {})),
+                assertions=(
+                    spec.executable_assertions if spec else list(case.get("assertions", []))
+                ),
+                execution_mode=(
+                    spec.execution_mode if spec else str(case.get("execution_mode", "api"))
+                ),
+                case_spec=spec,
+            )
+        )
     agent_config_raw = task.get("agent_config", {})
     environment_raw = task.get("environment", {})
     execution_policy_raw = task.get("execution_policy", {})
@@ -467,7 +511,11 @@ def _tapnow_task(task: RunTask, case: RunCaseTask) -> TapNowTaskInput:
         browser_profile_id=browser_profile_id,
         control_api_base_url=task.callback.base_url,
         internal_token=task.callback.internal_token,
-        timeout_ms=_int_value(case.input.get("timeout_ms"), 120_000),
+        timeout_ms=(
+            case.case_spec.timeout_seconds * 1000
+            if case.case_spec is not None and case.case_spec.timeout_seconds is not None
+            else _int_value(case.input.get("timeout_ms"), 120_000)
+        ),
     )
 
 
@@ -484,7 +532,7 @@ def _tapnow_to_run_case(result: TapNowResult, case: RunCaseTask) -> RunCaseResul
     )
 
 
-def _browser_steps(case_input: dict[str, object]) -> list[dict[str, str]]:
+def _browser_steps(case_input: dict[str, object]) -> list[dict[str, object]]:
     """从用例 input 中提取 Playwright 操作步骤。"""
     raw = case_input.get("steps")
     if isinstance(raw, list):
@@ -498,6 +546,62 @@ def _browser_steps(case_input: dict[str, object]) -> list[dict[str, str]]:
             if isinstance(step, dict)
         ]
     return []
+
+
+def _browser_steps_for_case(case: RunCaseTask) -> list[dict[str, object]]:
+    if case.case_spec is None:
+        return _browser_steps(case.input)
+    compiled: list[dict[str, object]] = []
+    for step in case.case_spec.steps:
+        operation_raw = step.get("operation")
+        if not isinstance(operation_raw, dict):
+            raise ValueError("Professional browser step requires a typed operation")
+        operation = dict(operation_raw)
+        test_data_raw = step.get("test_data", {})
+        test_data = dict(test_data_raw) if isinstance(test_data_raw, dict) else {}
+        compiled.append(
+            {
+                "step_no": int(step.get("step_no", len(compiled) + 1)),
+                "action": str(operation.get("action") or ""),
+                "target": str(operation.get("target") or ""),
+                "value": str(operation.get("value") or ""),
+                "description": str(step.get("action") or ""),
+                "test_data": test_data,
+                "expected_result": str(step.get("expected_result") or ""),
+                "assertions": [
+                    dict(item) for item in step.get("assertions", []) if isinstance(item, dict)
+                ],
+                "artifact_requirements": [
+                    dict(item)
+                    for item in step.get("artifact_requirements", [])
+                    if isinstance(item, dict)
+                ],
+            }
+        )
+    return compiled
+
+
+def _codex_test_intent(case: RunCaseTask) -> str:
+    if case.case_spec is None:
+        return str(case.input.get("test_intent", ""))
+    spec = case.case_spec
+    sections = [f"测试目标：{spec.objective}"]
+    if spec.preconditions:
+        sections.append("前置条件：" + "；".join(spec.preconditions))
+    if spec.steps:
+        sections.append(
+            "执行步骤："
+            + "；".join(
+                f"{step.get('step_no', index)}. {step.get('action', '')}；预期："
+                f"{step.get('expected_result', '')}"
+                for index, step in enumerate(spec.steps, start=1)
+            )
+        )
+    if spec.expected_outcome:
+        sections.append(f"总体期望：{spec.expected_outcome}")
+    if spec.security_policies:
+        sections.append(f"安全边界：{spec.security_policies}")
+    return "\n".join(sections)
 
 
 def _codex_browser_mode(
@@ -609,6 +713,8 @@ def _playwright_to_run_case(
                     "target": s.target,
                     "status": s.status,
                     "error": s.error,
+                    "expected_result": s.expected_result,
+                    "artifact_requirements": s.artifact_requirements,
                 }
                 for s in playwright_result.steps
             ],

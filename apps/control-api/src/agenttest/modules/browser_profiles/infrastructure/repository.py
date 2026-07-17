@@ -6,8 +6,10 @@ from datetime import UTC, datetime
 from uuid import UUID
 
 from sqlalchemy import delete, select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
+from agenttest.modules.browser_profiles.application.service import DuplicateBrowserProfile
 from agenttest.modules.browser_profiles.domain.entities import BrowserProfile
 from agenttest.modules.browser_profiles.infrastructure.models import BrowserProfileModel
 
@@ -17,22 +19,28 @@ class SqlAlchemyBrowserProfileRepository:
         self._session_factory = session_factory
 
     async def add(self, item: BrowserProfile) -> None:
-        async with self._session_factory() as session, session.begin():
-            session.add(BrowserProfileModel(**_model_values(item)))
+        try:
+            async with self._session_factory() as session, session.begin():
+                session.add(BrowserProfileModel(**_model_values(item)))
+        except IntegrityError as error:
+            raise DuplicateBrowserProfile from error
 
     async def save(self, item: BrowserProfile) -> None:
-        async with self._session_factory() as session, session.begin():
-            model = await session.scalar(
-                select(BrowserProfileModel).where(
-                    BrowserProfileModel.id == item.id,
-                    BrowserProfileModel.project_id == item.project_id,
+        try:
+            async with self._session_factory() as session, session.begin():
+                model = await session.scalar(
+                    select(BrowserProfileModel).where(
+                        BrowserProfileModel.id == item.id,
+                        BrowserProfileModel.project_id == item.project_id,
+                    )
                 )
-            )
-            if model is None:
-                raise LookupError("浏览器实例不存在")
-            for key, value in _model_values(item).items():
-                if key != "id":
-                    setattr(model, key, value)
+                if model is None:
+                    raise LookupError("浏览器实例不存在")
+                for key, value in _model_values(item).items():
+                    if key != "id":
+                        setattr(model, key, value)
+        except IntegrityError as error:
+            raise DuplicateBrowserProfile from error
 
     async def get(self, project_id: UUID, profile_id: UUID) -> BrowserProfile | None:
         async with self._session_factory() as session:

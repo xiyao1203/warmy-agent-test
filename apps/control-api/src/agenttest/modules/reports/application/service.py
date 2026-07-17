@@ -52,7 +52,7 @@ class ReportService:
         return {
             "run_id": str(run.run_id.value),
             "project_id": str(run.project_id.value),
-            "plan_id": str(run.test_plan_version_id.value),
+            "plan_id": (str(run.test_plan_version_id.value) if run.test_plan_version_id else None),
             "status": run.status.value,
             "started_at": run.started_at.isoformat() if run.started_at else None,
             "completed_at": run.completed_at.isoformat() if run.completed_at else None,

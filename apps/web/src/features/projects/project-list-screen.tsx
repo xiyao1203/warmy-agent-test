@@ -27,6 +27,7 @@ import {
 } from "@/components/ui/dialog";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Input } from "@/components/ui/input";
+import { ResourceReferenceLink } from "@/components/ui/resource-reference-link";
 import {
   Table,
   TableBody,
@@ -218,9 +219,10 @@ export function ProjectListScreen({
             <Table className="w-full table-fixed max-[640px]:block">
               <TableHeader className="bg-[var(--canvas-soft)] max-[640px]:hidden">
                 <TableRow>
-                  <TableHead className="w-[42%]">项目</TableHead>
-                  <TableHead className="w-[16%]">状态</TableHead>
-                  <TableHead className="w-[22%]">默认入口</TableHead>
+                  <TableHead className="w-[26%]">项目</TableHead>
+                  <TableHead className="w-[12%]">状态</TableHead>
+                  <TableHead className="w-[31%]">资产概览</TableHead>
+                  <TableHead className="w-[19%]">最近运行</TableHead>
                   <TableHead className={tableActionHeadClass}>操作</TableHead>
                 </TableRow>
               </TableHeader>
@@ -243,11 +245,16 @@ export function ProjectListScreen({
                             />
                           </span>
                           <div className="min-w-0">
-                            <TruncatedText className="font-medium">
-                              {project.name}
-                            </TruncatedText>
+                            <div className="flex min-w-0 items-center gap-1.5">
+                              <span className="shrink-0 font-mono text-xs text-[var(--muted)]">
+                                {project.key}
+                              </span>
+                              <TruncatedText className="font-medium">
+                                {project.name}
+                              </TruncatedText>
+                            </div>
                             <TruncatedText className="mt-0.5 text-xs text-[var(--muted)]">
-                              {project.id}
+                              {project.description || project.id}
                             </TruncatedText>
                           </div>
                         </div>
@@ -264,13 +271,38 @@ export function ProjectListScreen({
                           </Badge>
                         </span>
                       </TableCell>
-                      <TableCell className="text-sm text-[var(--muted)] max-[640px]:contents">
+                      <TableCell className="text-xs leading-5 text-[var(--muted)] max-[640px]:contents">
                         <span className="hidden self-center text-left max-[640px]:block">
-                          默认入口
+                          资产概览
                         </span>
-                        <span className="text-center max-[640px]:text-left">
-                          {project.archived ? "已归档不可进入" : "测试 Agent"}
+                        <div className="text-left">
+                          <p>
+                            成员 {project.member_count ?? 0} · Agent{" "}
+                            {project.agent_count ?? 0} · 用例集{" "}
+                            {project.dataset_count ?? 0}
+                          </p>
+                          <p>
+                            用例 {project.test_case_count ?? 0} · 计划{" "}
+                            {project.test_plan_count ?? 0} · 环境{" "}
+                            {project.active_environment_count ?? 0}
+                          </p>
+                          <p>待审核 {project.open_review_count ?? 0}</p>
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-left text-xs max-[640px]:contents">
+                        <span className="hidden self-center text-left text-[var(--muted)] max-[640px]:block">
+                          最近运行
                         </span>
+                        <div className="space-y-1">
+                          <ResourceReferenceLink reference={project.last_run} />
+                          <p className="text-[var(--muted)]">
+                            {project.last_run_at
+                              ? new Date(project.last_run_at).toLocaleString(
+                                  "zh-CN",
+                                )
+                              : "尚未执行"}
+                          </p>
+                        </div>
                       </TableCell>
                       <TableCell
                         className={`${tableActionCellClass} max-[640px]:contents`}

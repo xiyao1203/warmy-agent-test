@@ -8,6 +8,7 @@ from uuid import uuid4
 
 import asyncpg
 import pytest
+from agenttest.modules.artifacts.infrastructure.repositories import ArtifactModel
 from agenttest.modules.audit.infrastructure.persistence.models import AuditLogModel
 from agenttest.modules.datasets.infrastructure.persistence.models import TestCaseModel
 from agenttest.modules.identity.infrastructure.persistence.models import (
@@ -25,7 +26,7 @@ from agenttest.modules.run_postprocessing.infrastructure.models import (
 )
 from alembic import command
 from alembic.config import Config
-from sqlalchemy import CheckConstraint, UniqueConstraint
+from sqlalchemy import CheckConstraint, ForeignKeyConstraint, UniqueConstraint
 
 
 def constraint_names(model: type[object]) -> set[str]:
@@ -49,6 +50,22 @@ def test_session_token_hash_is_unique() -> None:
     assert any(
         isinstance(item, UniqueConstraint) and item.name == "uq_user_sessions_token_hash"
         for item in constraints
+    )
+
+
+def test_artifacts_enforce_project_run_scope() -> None:
+    constraints = [
+        item
+        for item in ArtifactModel.__table__.constraints
+        if isinstance(item, ForeignKeyConstraint) and item.name == "fk_artifacts_project_run"
+    ]
+
+    assert len(constraints) == 1
+    constraint = constraints[0]
+    assert tuple(constraint.column_keys) == ("project_id", "run_id")
+    assert tuple(element.target_fullname for element in constraint.elements) == (
+        "runs.project_id",
+        "runs.id",
     )
 
 
@@ -173,11 +190,12 @@ async def test_database_rejects_duplicate_identity_and_membership_values() -> No
 
             await connection.execute(
                 """
-                INSERT INTO projects (
-                    id, name, created_at, updated_at, created_by, updated_by
-                ) VALUES ($1, $2, $3, $3, $4, $4)
-                """,
+                    INSERT INTO projects (
+                        id, key, name, created_at, updated_at, created_by, updated_by
+                    ) VALUES ($1, $2, $3, $4, $4, $5, $5)
+                    """,
                 project_id,
+                "CONSTRAINTS",
                 "Project",
                 now,
                 user_id,

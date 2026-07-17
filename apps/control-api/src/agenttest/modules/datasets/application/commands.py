@@ -7,7 +7,9 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
+from copy import deepcopy
 from dataclasses import dataclass
+from uuid import UUID
 
 from agenttest.modules.audit.public import AuditWriter
 from agenttest.modules.datasets.application.ports import ProjectAccessPort
@@ -25,13 +27,34 @@ from agenttest.modules.datasets.domain.repositories import (
     TestCaseRepository,
 )
 from agenttest.modules.datasets.domain.value_objects import (
+    AutomationStatus,
     ExecutionMode,
     Priority,
     RiskLevel,
+    TestCaseSource,
+    TestCaseTemplate,
+    TestCaseType,
     TestGroup,
 )
-from agenttest.modules.identity.public import User
-from agenttest.modules.projects.public import ProjectId
+from agenttest.modules.identity.public import User, UserId
+from agenttest.modules.projects.public import ProjectAssetKeyAllocator, ProjectId
+
+_NULLABLE_TEST_CASE_FIELDS = frozenset(
+    {
+        "component",
+        "difficulty",
+        "estimated_duration_seconds",
+        "expected_outcome",
+        "initial_state",
+        "owner_id",
+        "priority",
+        "risk_level",
+        "scenario",
+        "source_ref",
+        "test_group",
+        "timeout_seconds",
+    }
+)
 
 # ── Commands ────────────────────────────────────────────────────────────────
 
@@ -63,9 +86,27 @@ class AddTestCaseCommand:
     execution_mode: ExecutionMode
     assertions: list[dict[str, object]] | None = None
     scorers: list[dict[str, object]] | None = None
+    objective: str | None = None
+    template: TestCaseTemplate | None = None
+    case_type: TestCaseType | None = None
+    automation_status: AutomationStatus | None = None
+    source: TestCaseSource | None = None
+    source_ref: str | None = None
+    component: str | None = None
+    requirement_refs: list[str] | None = None
+    owner_id: UserId | None = None
     initial_state: dict[str, object] | None = None
+    preconditions: list[str] | None = None
+    data_bindings: list[dict[str, object]] | None = None
+    steps: list[dict[str, object]] | None = None
     expected_outcome: dict[str, object] | None = None
     security_policies: list[dict[str, object]] | None = None
+    artifact_requirements: list[dict[str, object]] | None = None
+    postconditions: list[str] | None = None
+    estimated_duration_seconds: int | None = None
+    timeout_seconds: int | None = None
+    retry_count: int = 0
+    custom_fields: dict[str, object] | None = None
     tags: list[str] | None = None
     scenario: str | None = None
     priority: Priority | None = None
@@ -82,9 +123,26 @@ class UpdateTestCaseCommand:
     execution_mode: ExecutionMode | None = None
     assertions: list[dict[str, object]] | None = None
     scorers: list[dict[str, object]] | None = None
+    objective: str | None = None
+    template: TestCaseTemplate | None = None
+    case_type: TestCaseType | None = None
+    automation_status: AutomationStatus | None = None
+    source_ref: str | None = None
+    component: str | None = None
+    requirement_refs: list[str] | None = None
+    owner_id: UserId | None = None
     initial_state: dict[str, object] | None = None
+    preconditions: list[str] | None = None
+    data_bindings: list[dict[str, object]] | None = None
+    steps: list[dict[str, object]] | None = None
     expected_outcome: dict[str, object] | None = None
     security_policies: list[dict[str, object]] | None = None
+    artifact_requirements: list[dict[str, object]] | None = None
+    postconditions: list[str] | None = None
+    estimated_duration_seconds: int | None = None
+    timeout_seconds: int | None = None
+    retry_count: int | None = None
+    custom_fields: dict[str, object] | None = None
     tags: list[str] | None = None
     scenario: str | None = None
     priority: Priority | None = None
@@ -92,11 +150,31 @@ class UpdateTestCaseCommand:
     difficulty: str | None = None
     test_group: TestGroup | None = None
     sort_order: int | None = None
+    provided_fields: frozenset[str] = frozenset()
 
 
 @dataclass(frozen=True, slots=True)
 class DeleteTestCaseCommand:
     case_id: TestCaseId
+
+
+@dataclass(frozen=True, slots=True)
+class MarkTestCaseReadyCommand:
+    case_id: TestCaseId
+
+
+@dataclass(frozen=True, slots=True)
+class DuplicateTestCaseCommand:
+    case_id: TestCaseId
+
+
+@dataclass(frozen=True, slots=True)
+class CreateCaseTrialRunCommand:
+    project_id: ProjectId
+    case_id: TestCaseId
+    agent_version_id: UUID
+    environment_template_id: UUID
+    idempotency_key: str
 
 
 @dataclass(frozen=True, slots=True)
@@ -231,12 +309,14 @@ class AddTestCaseHandler:
         versions: DatasetVersionRepository,
         cases: TestCaseRepository,
         project_access: ProjectAccessPort,
+        case_key_allocator: ProjectAssetKeyAllocator | None = None,
         audit: AuditWriter | None = None,
     ) -> None:
         self._datasets = datasets
         self._versions = versions
         self._cases = cases
         self._project_access = project_access
+        self._case_key_allocator = case_key_allocator
         self._audit = audit
 
     async def execute(self, actor: User, command: AddTestCaseCommand) -> TestCase:
@@ -245,18 +325,49 @@ class AddTestCaseHandler:
             raise DatasetVersionNotEditableError(version.version_id)
         dataset = await _required_dataset(self._datasets, version.dataset_id)
         await self._project_access.ensure_editor(actor, dataset.project_id)
+        if command.owner_id is not None:
+            await self._project_access.ensure_user_member(command.owner_id, dataset.project_id)
         max_order = await self._cases.get_max_sort_order(version.version_id)
+        case_id = TestCaseId.new()
+        if self._case_key_allocator is None:
+            case_key = f"TC-{case_id.value.hex[:12].upper()}"
+        else:
+            case_key = await self._case_key_allocator.allocate(
+                dataset.project_id,
+                "test_case",
+                "TC",
+            )
         case = TestCase.create(
-            case_id=TestCaseId.new(),
+            case_id=case_id,
             dataset_version_id=version.version_id,
+            case_key=case_key,
             name=command.name,
             input=command.input,
             execution_mode=command.execution_mode,
             assertions=command.assertions,
             scorers=command.scorers,
+            objective=command.objective,
+            template=command.template,
+            case_type=command.case_type,
+            automation_status=command.automation_status,
+            source=command.source,
+            source_ref=command.source_ref,
+            component=command.component,
+            requirement_refs=command.requirement_refs,
+            owner_id=command.owner_id,
             initial_state=command.initial_state,
+            preconditions=command.preconditions,
+            data_bindings=command.data_bindings,
+            steps=command.steps,
             expected_outcome=command.expected_outcome,
             security_policies=command.security_policies,
+            artifact_requirements=command.artifact_requirements,
+            postconditions=command.postconditions,
+            estimated_duration_seconds=command.estimated_duration_seconds,
+            timeout_seconds=command.timeout_seconds,
+            retry_count=command.retry_count,
+            custom_fields=command.custom_fields,
+            created_by=actor.user_id,
             tags=command.tags,
             scenario=command.scenario,
             priority=command.priority,
@@ -303,15 +414,34 @@ class UpdateTestCaseHandler:
             raise DatasetVersionNotEditableError(version.version_id)
         dataset = await _required_dataset(self._datasets, version.dataset_id)
         await self._project_access.ensure_editor(actor, dataset.project_id)
+        if command.owner_id is not None:
+            await self._project_access.ensure_user_member(command.owner_id, dataset.project_id)
         case.update(
             name=command.name,
             input=command.input,
             execution_mode=command.execution_mode,
             assertions=command.assertions,
             scorers=command.scorers,
+            objective=command.objective,
+            template=command.template,
+            case_type=command.case_type,
+            automation_status=command.automation_status,
+            source_ref=command.source_ref,
+            component=command.component,
+            requirement_refs=command.requirement_refs,
+            owner_id=command.owner_id,
             initial_state=command.initial_state,
+            preconditions=command.preconditions,
+            data_bindings=command.data_bindings,
+            steps=command.steps,
             expected_outcome=command.expected_outcome,
             security_policies=command.security_policies,
+            artifact_requirements=command.artifact_requirements,
+            postconditions=command.postconditions,
+            estimated_duration_seconds=command.estimated_duration_seconds,
+            timeout_seconds=command.timeout_seconds,
+            retry_count=command.retry_count,
+            custom_fields=command.custom_fields,
             tags=command.tags,
             scenario=command.scenario,
             priority=command.priority,
@@ -320,6 +450,10 @@ class UpdateTestCaseHandler:
             test_group=command.test_group,
             sort_order=command.sort_order,
         )
+        for field_name in _NULLABLE_TEST_CASE_FIELDS & command.provided_fields:
+            if getattr(command, field_name) is None:
+                setattr(case, field_name, None)
+        case.updated_by = actor.user_id
         await self._cases.save(case)
         return case
 
@@ -358,6 +492,100 @@ class DeleteTestCaseHandler:
             object_type="test_case",
             object_id=case.case_id.value,
             changes={},
+        )
+
+
+class MarkTestCaseReadyHandler:
+    """校验并把草稿用例标记为可进入正式计划。"""
+
+    def __init__(
+        self,
+        *,
+        datasets: DatasetRepository,
+        versions: DatasetVersionRepository,
+        cases: TestCaseRepository,
+        project_access: ProjectAccessPort,
+        audit: AuditWriter | None = None,
+    ) -> None:
+        self._datasets = datasets
+        self._versions = versions
+        self._cases = cases
+        self._project_access = project_access
+        self._audit = audit
+
+    async def execute(self, actor: User, command: MarkTestCaseReadyCommand) -> TestCase:
+        case = await _required_case(self._cases, command.case_id)
+        version = await _required_version(self._versions, case.dataset_version_id)
+        if not version.is_editable:
+            raise DatasetVersionNotEditableError(version.version_id)
+        dataset = await _required_dataset(self._datasets, version.dataset_id)
+        await self._project_access.ensure_editor(actor, dataset.project_id)
+        case.mark_ready()
+        case.updated_by = actor.user_id
+        await self._cases.save(case)
+        await _record(
+            self._audit,
+            actor=actor,
+            action="datasets.test_case.ready",
+            project_id=dataset.project_id,
+            object_type="test_case",
+            object_id=case.case_id.value,
+            changes={"case_status": {"after": "ready"}},
+        )
+        return case
+
+
+class DuplicateTestCaseHandler:
+    """复制完整专业用例，并生成新的草稿编号与审计信息。"""
+
+    def __init__(
+        self,
+        *,
+        cases: TestCaseRepository,
+        add_case: AddTestCaseHandler,
+    ) -> None:
+        self._cases = cases
+        self._add_case = add_case
+
+    async def execute(self, actor: User, command: DuplicateTestCaseCommand) -> TestCase:
+        source = await _required_case(self._cases, command.case_id)
+        return await self._add_case.execute(
+            actor,
+            AddTestCaseCommand(
+                dataset_version_id=source.dataset_version_id,
+                name=f"{source.name}（副本）",
+                objective=source.objective,
+                template=source.template,
+                case_type=source.case_type,
+                automation_status=source.automation_status,
+                source=TestCaseSource.MANUAL,
+                source_ref=f"duplicate:{source.case_id.value}",
+                component=source.component,
+                requirement_refs=deepcopy(source.requirement_refs),
+                owner_id=source.owner_id,
+                preconditions=deepcopy(source.preconditions),
+                input=deepcopy(source.input),
+                data_bindings=deepcopy(source.data_bindings),
+                steps=deepcopy(source.steps),
+                execution_mode=source.execution_mode,
+                assertions=deepcopy(source.assertions),
+                scorers=deepcopy(source.scorers),
+                initial_state=deepcopy(source.initial_state),
+                expected_outcome=deepcopy(source.expected_outcome),
+                security_policies=deepcopy(source.security_policies),
+                artifact_requirements=deepcopy(source.artifact_requirements),
+                postconditions=deepcopy(source.postconditions),
+                estimated_duration_seconds=source.estimated_duration_seconds,
+                timeout_seconds=source.timeout_seconds,
+                retry_count=source.retry_count,
+                custom_fields=deepcopy(source.custom_fields),
+                tags=deepcopy(source.tags),
+                scenario=source.scenario,
+                priority=source.priority,
+                risk_level=source.risk_level,
+                difficulty=source.difficulty,
+                test_group=source.test_group,
+            ),
         )
 
 

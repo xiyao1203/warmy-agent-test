@@ -40,6 +40,7 @@ from agenttest.modules.agents.domain.entities import (
 from agenttest.modules.identity.public import InvalidSessionError, User
 from agenttest.modules.projects.public import ProjectId, ProjectNotFoundError
 from agenttest.shared.api.problem_details import ProblemDetails
+from agenttest.shared.application.core_summaries import CoreSummaryReader
 from agenttest.shared.application.uow import UnitOfWorkFactory, null_uow_factory
 
 CSRF_COOKIE_NAME = "agenttest_csrf"
@@ -146,6 +147,7 @@ class AgentApiDependencies:
     uow_factory: UnitOfWorkFactory = null_uow_factory
     connection_validator: ConnectionValidator | None = None
     publication_validator: PublicationValidator | None = None
+    summaries: CoreSummaryReader | None = None
 
 
 def create_agent_router(
@@ -230,8 +232,19 @@ def create_agent_router(
             )
         except ProjectNotFoundError:
             return asset_not_found()
+        summaries = (
+            await dependencies.summaries.agents(
+                project_id,
+                [item.agent_id.value for item in items],
+            )
+            if dependencies.summaries
+            else {}
+        )
         return AgentListResponse(
-            items=[AgentResponse.from_domain(item) for item in items],
+            items=[
+                AgentResponse.from_domain(item, summaries.get(item.agent_id.value))
+                for item in items
+            ],
             next_cursor=next_cursor,
         )
 

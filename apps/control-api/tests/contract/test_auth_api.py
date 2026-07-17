@@ -1,12 +1,13 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from agenttest.bootstrap.app import create_app
 from agenttest.bootstrap.settings import Settings
 from agenttest.modules.identity.api.router import AuthApiDependencies
 from agenttest.modules.identity.application.commands.login import (
     InvalidCredentialsError,
+    LoginCommand,
     LoginResult,
 )
 from agenttest.modules.identity.application.queries.current_user import InvalidSessionError
@@ -27,8 +28,10 @@ def create_user() -> User:
 @dataclass
 class StubLogin:
     result: LoginResult | None = None
+    commands: list[LoginCommand] = field(default_factory=list)
 
-    async def execute(self, _command: object) -> LoginResult:
+    async def execute(self, command: LoginCommand) -> LoginResult:
+        self.commands.append(command)
         if self.result is None:
             raise InvalidCredentialsError
         return self.result
@@ -113,6 +116,7 @@ def test_login_sets_secure_session_and_csrf_cookies() -> None:
                 internal_api_token="test-production-internal-token",
                 session_cookie_secure=True,
                 model_credential_key="a2tra2tra2tra2tra2tra2tra2tra2tra2tra2tra2s=",
+                login_throttle_pepper="test-production-login-throttle-pepper",
             ),
             auth_dependencies=auth_dependencies(
                 login=StubLogin(
@@ -164,6 +168,69 @@ def test_invalid_login_uses_problem_details_without_account_disclosure() -> None
     assert response.status_code == 401
     assert response.headers["content-type"].startswith("application/problem+json")
     assert response.json()["detail"] == "Invalid email or password"
+
+
+def test_login_ignores_forwarded_address_without_trusted_proxy() -> None:
+    login = StubLogin()
+    client = TestClient(
+        create_app(auth_dependencies=auth_dependencies(login=login)),
+        base_url="https://testserver",
+        client=("198.51.100.4", 50000),
+    )
+
+    response = client.post(
+        "/api/v1/auth/login",
+        headers={"X-Forwarded-For": "203.0.113.9"},
+        json={"email": "unknown@example.com", "password": "wrong"},
+    )
+
+    assert response.status_code == 401
+    assert len(login.commands) == 1
+    assert login.commands[0].source_ip == "198.51.100.4"
+
+
+def test_login_uses_forwarded_address_only_for_trusted_proxy() -> None:
+    login = StubLogin()
+    client = TestClient(
+        create_app(
+            settings=Settings(trusted_proxy_cidrs=("10.0.0.0/8",)),
+            auth_dependencies=auth_dependencies(login=login),
+        ),
+        base_url="https://testserver",
+        client=("10.1.2.3", 50000),
+    )
+
+    response = client.post(
+        "/api/v1/auth/login",
+        headers={"X-Forwarded-For": "203.0.113.9, 10.1.2.3"},
+        json={"email": "unknown@example.com", "password": "wrong"},
+    )
+
+    assert response.status_code == 401
+    assert login.commands[0].source_ip == "203.0.113.9"
+
+
+def test_repeated_and_blocked_login_errors_are_indistinguishable() -> None:
+    login = StubLogin()
+    client = TestClient(
+        create_app(auth_dependencies=auth_dependencies(login=login)),
+        base_url="https://testserver",
+        client=("198.51.100.4", 50000),
+    )
+
+    responses = [
+        client.post(
+            "/api/v1/auth/login",
+            json={"email": "unknown@example.com", "password": "wrong"},
+        )
+        for _ in range(9)
+    ]
+
+    signatures = {
+        (response.status_code, response.json()["title"], response.json()["detail"])
+        for response in responses
+    }
+    assert signatures == {(401, "Authentication failed", "Invalid email or password")}
 
 
 def test_me_requires_a_valid_session() -> None:

@@ -29,6 +29,7 @@ import {
 } from "@/components/ui/dialog";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Input } from "@/components/ui/input";
+import { ResourceReferenceLink } from "@/components/ui/resource-reference-link";
 import {
   Table,
   TableBody,
@@ -127,9 +128,9 @@ export function AgentList({
           <Table className="w-full table-fixed">
             <TableHeader className="bg-[var(--canvas-soft)]">
               <TableRow>
-                <TableHead className="w-[28%]">智能体信息</TableHead>
-                <TableHead className="w-[14%]">接入类型</TableHead>
-                <TableHead className="w-[32%]">闭环状态</TableHead>
+                <TableHead className="w-[25%]">智能体信息</TableHead>
+                <TableHead className="w-[21%]">接入与模型</TableHead>
+                <TableHead className="w-[31%]">版本与质量</TableHead>
                 <TableHead className="w-[13%]">更新时间</TableHead>
                 <TableHead className={tableActionHeadClass}>操作</TableHead>
               </TableRow>
@@ -152,10 +153,13 @@ export function AgentList({
                         <TruncatedText className="mt-0.5 text-xs text-[var(--muted)]">
                           {agent.description || "暂无描述"}
                         </TruncatedText>
+                        <TruncatedText className="mt-0.5 font-mono text-[11px] text-[var(--muted)]">
+                          {agent.id}
+                        </TruncatedText>
                       </div>
                     </div>
                   </TableCell>
-                  <TableCell className="text-center">
+                  <TableCell className="text-left text-xs leading-5">
                     <Badge
                       tone={
                         agent.agent_type === "canvas" ? "accent" : "neutral"
@@ -163,6 +167,14 @@ export function AgentList({
                     >
                       {typeLabels[agent.agent_type]}
                     </Badge>
+                    <p className="mt-1 text-[var(--muted)]">
+                      协议 {agent.protocol || "暂无数据"} · 模型{" "}
+                      {agent.model || "暂无数据"}
+                    </p>
+                    <p className="text-[var(--muted)]">
+                      工具 {agent.tool_count ?? 0} · 凭证绑定{" "}
+                      {agent.credential_binding_count ?? 0}
+                    </p>
                   </TableCell>
                   <TableCell>
                     <div className="mx-auto w-fit max-w-full">
@@ -225,6 +237,9 @@ function AgentLifecycleSummary({ agent }: { agent: AgentResponse }) {
 
   return (
     <div className="space-y-2">
+      <div className="text-xs">
+        <ResourceReferenceLink reference={agent.current_version} />
+      </div>
       <div className="flex flex-wrap gap-1.5">
         <Badge tone={hasCurrent ? "success" : "warning"}>
           {hasCurrent ? "已发布当前版本" : "待接入"}
@@ -236,6 +251,13 @@ function AgentLifecycleSummary({ agent }: { agent: AgentResponse }) {
           {hasBaseline ? "基线版本已设置" : "未设置基线"}
         </Badge>
       </div>
+      <p className="text-xs text-[var(--muted)]">
+        连接 {agent.connection_status || "未验证"} · 最近运行{" "}
+        {agent.last_run_status || "暂无数据"} · 通过率{" "}
+        {agent.pass_rate == null
+          ? "暂无数据"
+          : `${(agent.pass_rate * 100).toFixed(1)}%`}
+      </p>
       <p
         className={`text-xs font-medium ${
           hasCurrent && hasBaseline

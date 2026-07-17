@@ -9,7 +9,12 @@ from uuid import UUID
 from agenttest.modules.datasets.application.commands import AddTestCaseCommand
 from agenttest.modules.datasets.domain.entities import DatasetVersionId, TestCase, TestCaseId
 from agenttest.modules.datasets.domain.repositories import TestCaseRepository
-from agenttest.modules.datasets.domain.value_objects import Priority, RiskLevel
+from agenttest.modules.datasets.domain.value_objects import (
+    Priority,
+    RiskLevel,
+    TestCaseSource,
+    TestCaseType,
+)
 from agenttest.modules.identity.public import User
 from agenttest.modules.projects.public import ProjectId
 from agenttest.modules.runs.public import Run, RunCase, RunCaseStatus, RunId
@@ -89,18 +94,42 @@ class GenerateCasesFromFailedRunHandler:
             source = await self._cases.get_by_id(TestCaseId(failed_case.test_case_id))
             if source is None:
                 raise ValueError("Source test case no longer exists")
+            assertions = (
+                failed_case.assertion_snapshot
+                or source.assertions
+                or [{"type": "execution_status", "value": "passed"}]
+            )
+            diagnosis = failed_case.error_message or failed_case.error_type or failed_case.name
             created = await self._add_case.execute(
                 actor,
                 AddTestCaseCommand(
                     dataset_version_id=version_id,
                     name=f"回归：{failed_case.name}",
+                    objective=f"回归失败：{diagnosis}",
+                    template=source.template,
+                    case_type=TestCaseType.REGRESSION,
+                    automation_status=source.automation_status,
+                    source=TestCaseSource.RUN_REGRESSION,
+                    source_ref=str(run_id.value),
+                    component=source.component,
+                    requirement_refs=source.requirement_refs,
+                    owner_id=source.owner_id,
+                    preconditions=source.preconditions,
                     input=failed_case.input_snapshot,
+                    data_bindings=source.data_bindings,
+                    steps=source.steps,
                     execution_mode=source.execution_mode,
-                    assertions=failed_case.assertion_snapshot,
+                    assertions=assertions,
                     scorers=source.scorers,
                     initial_state=source.initial_state,
                     expected_outcome=source.expected_outcome,
                     security_policies=source.security_policies,
+                    artifact_requirements=source.artifact_requirements,
+                    postconditions=source.postconditions,
+                    estimated_duration_seconds=source.estimated_duration_seconds,
+                    timeout_seconds=source.timeout_seconds,
+                    retry_count=source.retry_count,
+                    custom_fields=source.custom_fields,
                     tags=[
                         *source.tags,
                         f"generated-from-run:{run_id.value}",

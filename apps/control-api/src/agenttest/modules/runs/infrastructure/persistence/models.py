@@ -19,6 +19,7 @@ from sqlalchemy.orm import Mapped, mapped_column
 from agenttest.shared.infrastructure.database import Base
 
 RUN_STATUSES = "'queued', 'running', 'passed', 'failed', 'error', 'cancelled'"
+RUN_TYPES = "'plan', 'case_trial'"
 
 
 class RunModel(Base):
@@ -31,7 +32,30 @@ class RunModel(Base):
             name="uq_runs_project_idempotency_key",
         ),
         CheckConstraint(f"status IN ({RUN_STATUSES})", name="ck_runs_status"),
+        CheckConstraint(f"run_type IN ({RUN_TYPES})", name="ck_runs_type"),
+        CheckConstraint(
+            "(run_type = 'plan' AND test_plan_version_id IS NOT NULL "
+            "AND source_test_case_id IS NULL) OR "
+            "(run_type = 'case_trial' AND test_plan_version_id IS NULL "
+            "AND source_test_case_id IS NOT NULL)",
+            name="ck_runs_source_by_type",
+        ),
         Index("ix_runs_project_status_created", "project_id", "status", "created_at"),
+        Index("ix_runs_project_created_latest", "project_id", "created_at", "id"),
+        Index(
+            "ix_runs_project_agent_created",
+            "project_id",
+            "agent_version_id",
+            "created_at",
+            "id",
+        ),
+        Index(
+            "ix_runs_project_plan_created",
+            "project_id",
+            "test_plan_version_id",
+            "created_at",
+            "id",
+        ),
     )
 
     id: Mapped[UUID] = mapped_column(primary_key=True)
@@ -39,9 +63,9 @@ class RunModel(Base):
         ForeignKey("projects.id", ondelete="CASCADE"),
         nullable=False,
     )
-    test_plan_version_id: Mapped[UUID] = mapped_column(
+    test_plan_version_id: Mapped[UUID | None] = mapped_column(
         ForeignKey("test_plan_versions.id"),
-        nullable=False,
+        nullable=True,
     )
     agent_version_id: Mapped[UUID] = mapped_column(
         ForeignKey("agent_versions.id"),
@@ -52,6 +76,12 @@ class RunModel(Base):
         nullable=False,
     )
     idempotency_key: Mapped[str] = mapped_column(String(200), nullable=False)
+    run_type: Mapped[str] = mapped_column(
+        String(32), nullable=False, default="plan", server_default="plan"
+    )
+    source_test_case_id: Mapped[UUID | None] = mapped_column(
+        ForeignKey("test_cases.id"), nullable=True
+    )
     status: Mapped[str] = mapped_column(String(32), nullable=False)
     config_snapshot: Mapped[dict] = mapped_column(JSON, nullable=False)
     plugin_snapshot: Mapped[dict] = mapped_column(JSON, nullable=False)
@@ -89,6 +119,7 @@ class RunCaseModel(Base):
     status: Mapped[str] = mapped_column(String(32), nullable=False)
     input_snapshot: Mapped[dict] = mapped_column(JSON, nullable=False)
     assertion_snapshot: Mapped[list] = mapped_column(JSON, nullable=False)
+    case_spec_snapshot: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
     output: Mapped[dict | None] = mapped_column(JSON)
     trace: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
     error_type: Mapped[str | None] = mapped_column(String(64))

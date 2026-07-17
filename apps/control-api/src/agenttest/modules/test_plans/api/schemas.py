@@ -10,6 +10,7 @@ from agenttest.modules.test_plans.domain.value_objects import (
     TestPlanConfig,
     VersionStatus,
 )
+from agenttest.shared.application.core_summaries import TestPlanSummaryMetrics
 
 
 class CreateTestPlanRequest(BaseModel):
@@ -66,7 +67,7 @@ class UpdateTestPlanVersionRequest(BaseModel):
     environment_template_id: UUID | None = None
 
 
-class TestPlanResponse(BaseModel):
+class TestPlanResponse(TestPlanSummaryMetrics):
     id: UUID
     project_id: UUID
     name: str
@@ -77,7 +78,11 @@ class TestPlanResponse(BaseModel):
     updated_at: datetime
 
     @classmethod
-    def from_domain(cls, plan: TestPlan) -> "TestPlanResponse":
+    def from_domain(
+        cls,
+        plan: TestPlan,
+        summary: TestPlanSummaryMetrics | None = None,
+    ) -> "TestPlanResponse":
         return cls(
             id=plan.test_plan_id.value,
             project_id=plan.project_id.value,
@@ -87,6 +92,7 @@ class TestPlanResponse(BaseModel):
             updated_by=plan.updated_by.value,
             created_at=plan.created_at,
             updated_at=plan.updated_at,
+            **(summary.model_dump() if summary else {}),
         )
 
 

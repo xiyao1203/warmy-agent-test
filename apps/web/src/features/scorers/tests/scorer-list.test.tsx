@@ -22,11 +22,21 @@ const scorer: ScorerItem = {
   id: "scorer-1",
   latest_published_version_id: "scorer-version-2",
   latest_published_version_number: 2,
+  latest_version: {
+    href: "/projects/project-1/scorers",
+    id: "scorer-1",
+    name: "事实评分",
+    resource_type: "scorer",
+    status: "published",
+    version: 2,
+  },
+  last_calibrated_at: "2026-07-15T10:00:00Z",
   name: "事实评分",
   project_id: "project-1",
   scorer_type: "rule",
   threshold: 0.8,
   updated_at: "2026-07-01T10:00:00Z",
+  usage_count: 24,
   weight: 1,
 };
 
@@ -44,7 +54,7 @@ describe("ScorerList", () => {
 
     render(<ScorerList projectId="project-1" />);
 
-    expect(await screen.findByText("事实评分")).toBeVisible();
+    expect((await screen.findAllByText("事实评分")).length).toBeGreaterThan(0);
     expect(
       screen.getByText(/测试计划选择后，运行结果会自动产出评分/),
     ).toBeVisible();
@@ -60,6 +70,10 @@ describe("ScorerList", () => {
       "/projects/project-1/experiments",
     );
     expect(screen.getByText("可用于计划 v2")).toBeVisible();
+    expect(
+      screen.getByRole("link", { name: /事实评分.*v2.*published/ }),
+    ).toHaveAttribute("href", "/projects/project-1/scorers");
+    expect(screen.getByText("引用次数 24")).toBeVisible();
     expect(screen.getByRole("link", { name: "配置计划" })).toHaveAttribute(
       "href",
       "/projects/project-1/test-plans",

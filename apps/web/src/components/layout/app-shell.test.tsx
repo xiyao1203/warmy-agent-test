@@ -1,9 +1,11 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import { projectFixture } from "@/test/fixtures";
+
 import { AppShell, initialSidebarCollapsed } from "./app-shell";
 
-const project = { archived: false, id: "project-1", name: "项目 A" };
+const project = projectFixture();
 
 describe("AppShell", () => {
   beforeEach(() => {

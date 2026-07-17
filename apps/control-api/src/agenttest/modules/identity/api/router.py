@@ -7,6 +7,7 @@ from fastapi import APIRouter, Header, Request, Response
 from fastapi.responses import JSONResponse
 
 from agenttest.bootstrap.settings import Settings
+from agenttest.modules.identity.api.client_ip import resolve_client_ip
 from agenttest.modules.identity.api.schemas import (
     ChangePasswordRequest,
     LoginRequest,
@@ -90,11 +91,25 @@ def create_auth_router(
     router = APIRouter(prefix="/auth", tags=["identity"])
 
     @router.post("/login", response_model=UserResponse)
-    async def login(payload: LoginRequest, response: Response) -> UserResponse | JSONResponse:
+    async def login(
+        payload: LoginRequest,
+        response: Response,
+        request: Request,
+    ) -> UserResponse | JSONResponse:
+        direct_peer = request.client.host if request.client is not None else "0.0.0.0"
+        source_ip = resolve_client_ip(
+            direct_peer,
+            request.headers.get("X-Forwarded-For"),
+            settings.trusted_proxy_networks,
+        )
         try:
             async with dependencies.uow_factory():
                 result = await dependencies.login.execute(
-                    LoginCommand(email=Email(payload.email), password=payload.password)
+                    LoginCommand(
+                        email=Email(payload.email),
+                        password=payload.password,
+                        source_ip=source_ip,
+                    )
                 )
         except (InvalidCredentialsError, ValueError):
             return problem_response(

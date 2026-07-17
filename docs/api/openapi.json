@@ -262,6 +262,17 @@
             ],
             "title": "Baseline Version Id"
           },
+          "connection_status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Connection Status"
+          },
           "created_at": {
             "format": "date-time",
             "title": "Created At",
@@ -271,6 +282,21 @@
             "format": "uuid",
             "title": "Created By",
             "type": "string"
+          },
+          "credential_binding_count": {
+            "default": 0,
+            "title": "Credential Binding Count",
+            "type": "integer"
+          },
+          "current_version": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ResourceReference"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "current_version_id": {
             "anyOf": [
@@ -300,14 +326,63 @@
             "title": "Id",
             "type": "string"
           },
+          "last_run_status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Run Status"
+          },
+          "model": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Model"
+          },
           "name": {
             "title": "Name",
             "type": "string"
+          },
+          "pass_rate": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pass Rate"
           },
           "project_id": {
             "format": "uuid",
             "title": "Project Id",
             "type": "string"
+          },
+          "protocol": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Protocol"
+          },
+          "tool_count": {
+            "default": 0,
+            "title": "Tool Count",
+            "type": "integer"
           },
           "updated_at": {
             "format": "date-time",
@@ -318,6 +393,17 @@
             "format": "uuid",
             "title": "Updated By",
             "type": "string"
+          },
+          "version_status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Version Status"
           }
         },
         "required": [
@@ -563,6 +649,48 @@
         "title": "ApplyRunResultRequest",
         "type": "object"
       },
+      "ArtifactKind": {
+        "description": "专业用例可以要求采集的标准证据类型。",
+        "enum": [
+          "response",
+          "screenshot",
+          "trace",
+          "canvas_snapshot",
+          "file"
+        ],
+        "title": "ArtifactKind",
+        "type": "string"
+      },
+      "ArtifactRequirementV1": {
+        "additionalProperties": false,
+        "properties": {
+          "kind": {
+            "$ref": "#/components/schemas/ArtifactKind"
+          },
+          "label": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Label"
+          },
+          "required": {
+            "default": true,
+            "title": "Required",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "kind"
+        ],
+        "title": "ArtifactRequirementV1",
+        "type": "object"
+      },
       "AuditEntryResponse": {
         "properties": {
           "action": {
@@ -684,6 +812,16 @@
         "title": "AutoEnqueueRequest",
         "type": "object"
       },
+      "AutomationStatus": {
+        "description": "用例自动化成熟度。",
+        "enum": [
+          "manual",
+          "candidate",
+          "automated"
+        ],
+        "title": "AutomationStatus",
+        "type": "string"
+      },
       "BatchConfirmationDecision": {
         "properties": {
           "approved": {
@@ -706,6 +844,52 @@
           "approved"
         ],
         "title": "BatchConfirmationDecision",
+        "type": "object"
+      },
+      "BrowserOperationV1": {
+        "additionalProperties": false,
+        "description": "Deterministic browser instruction kept separate from the human test step.",
+        "properties": {
+          "action": {
+            "enum": [
+              "goto",
+              "click",
+              "fill",
+              "wait",
+              "screenshot"
+            ],
+            "title": "Action",
+            "type": "string"
+          },
+          "target": {
+            "anyOf": [
+              {
+                "maxLength": 2000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Target"
+          },
+          "value": {
+            "anyOf": [
+              {
+                "maxLength": 10000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Value"
+          }
+        },
+        "required": [
+          "action"
+        ],
+        "title": "BrowserOperationV1",
         "type": "object"
       },
       "CalibrationResponse": {
@@ -799,6 +983,77 @@
           "updated_at"
         ],
         "title": "CalibrationResponse",
+        "type": "object"
+      },
+      "CaseTrialRunResponse": {
+        "properties": {
+          "agent_version_id": {
+            "format": "uuid",
+            "title": "Agent Version Id",
+            "type": "string"
+          },
+          "created": {
+            "title": "Created",
+            "type": "boolean"
+          },
+          "dataset_version_id": {
+            "format": "uuid",
+            "title": "Dataset Version Id",
+            "type": "string"
+          },
+          "href": {
+            "title": "Href",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "project_id": {
+            "format": "uuid",
+            "title": "Project Id",
+            "type": "string"
+          },
+          "run_type": {
+            "const": "case_trial",
+            "title": "Run Type",
+            "type": "string"
+          },
+          "source_test_case_id": {
+            "format": "uuid",
+            "title": "Source Test Case Id",
+            "type": "string"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "workflow_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Workflow Id"
+          }
+        },
+        "required": [
+          "id",
+          "project_id",
+          "run_type",
+          "source_test_case_id",
+          "agent_version_id",
+          "dataset_version_id",
+          "status",
+          "workflow_id",
+          "created",
+          "href"
+        ],
+        "title": "CaseTrialRunResponse",
         "type": "object"
       },
       "ChangePasswordRequest": {
@@ -1012,6 +1267,26 @@
           "name"
         ],
         "title": "CreateBrowserProfileRequest",
+        "type": "object"
+      },
+      "CreateCaseTrialRunRequest": {
+        "properties": {
+          "agent_version_id": {
+            "format": "uuid",
+            "title": "Agent Version Id",
+            "type": "string"
+          },
+          "environment_template_id": {
+            "format": "uuid",
+            "title": "Environment Template Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "agent_version_id",
+          "environment_template_id"
+        ],
+        "title": "CreateCaseTrialRunRequest",
         "type": "object"
       },
       "CreateCredentialBindingRequest": {
@@ -1332,6 +1607,43 @@
       "CreateProjectRequest": {
         "additionalProperties": false,
         "properties": {
+          "description": {
+            "anyOf": [
+              {
+                "maxLength": 2000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "key": {
+            "anyOf": [
+              {
+                "maxLength": 12,
+                "minLength": 2,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Key"
+          },
+          "lead_user_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lead User Id"
+          },
           "name": {
             "maxLength": 200,
             "minLength": 1,
@@ -1431,12 +1743,53 @@
       },
       "CreateTestCaseRequest": {
         "properties": {
+          "artifact_requirements": {
+            "items": {
+              "$ref": "#/components/schemas/ArtifactRequirementV1"
+            },
+            "maxItems": 20,
+            "title": "Artifact Requirements",
+            "type": "array"
+          },
           "assertions": {
             "items": {
               "additionalProperties": true,
               "type": "object"
             },
             "title": "Assertions",
+            "type": "array"
+          },
+          "automation_status": {
+            "$ref": "#/components/schemas/AutomationStatus",
+            "default": "candidate"
+          },
+          "case_type": {
+            "$ref": "#/components/schemas/TestCaseType",
+            "default": "functional"
+          },
+          "component": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Component"
+          },
+          "custom_fields": {
+            "additionalProperties": true,
+            "title": "Custom Fields",
+            "type": "object"
+          },
+          "data_bindings": {
+            "items": {
+              "$ref": "#/components/schemas/DataBindingV1"
+            },
+            "maxItems": 100,
+            "title": "Data Bindings",
             "type": "array"
           },
           "difficulty": {
@@ -1449,6 +1802,19 @@
               }
             ],
             "title": "Difficulty"
+          },
+          "estimated_duration_seconds": {
+            "anyOf": [
+              {
+                "maximum": 86400.0,
+                "minimum": 1.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Estimated Duration Seconds"
           },
           "execution_mode": {
             "$ref": "#/components/schemas/ExecutionMode"
@@ -1483,10 +1849,51 @@
             "type": "object"
           },
           "name": {
-            "maxLength": 200,
+            "maxLength": 500,
             "minLength": 1,
             "title": "Name",
             "type": "string"
+          },
+          "objective": {
+            "anyOf": [
+              {
+                "maxLength": 4000,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Objective"
+          },
+          "owner_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Owner Id"
+          },
+          "postconditions": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 100,
+            "title": "Postconditions",
+            "type": "array"
+          },
+          "preconditions": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 100,
+            "title": "Preconditions",
+            "type": "array"
           },
           "priority": {
             "anyOf": [
@@ -1497,6 +1904,21 @@
                 "type": "null"
               }
             ]
+          },
+          "requirement_refs": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 50,
+            "title": "Requirement Refs",
+            "type": "array"
+          },
+          "retry_count": {
+            "default": 0,
+            "maximum": 10.0,
+            "minimum": 0.0,
+            "title": "Retry Count",
+            "type": "integer"
           },
           "risk_level": {
             "anyOf": [
@@ -1535,12 +1957,36 @@
             "title": "Security Policies",
             "type": "array"
           },
+          "source_ref": {
+            "anyOf": [
+              {
+                "maxLength": 500,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Ref"
+          },
+          "steps": {
+            "items": {
+              "$ref": "#/components/schemas/TestStepV1"
+            },
+            "maxItems": 200,
+            "title": "Steps",
+            "type": "array"
+          },
           "tags": {
             "items": {
               "type": "string"
             },
             "title": "Tags",
             "type": "array"
+          },
+          "template": {
+            "$ref": "#/components/schemas/TestCaseTemplate",
+            "default": "ai_eval"
           },
           "test_group": {
             "anyOf": [
@@ -1551,6 +1997,19 @@
                 "type": "null"
               }
             ]
+          },
+          "timeout_seconds": {
+            "anyOf": [
+              {
+                "maximum": 86400.0,
+                "minimum": 1.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Timeout Seconds"
           }
         },
         "required": [
@@ -1669,6 +2128,92 @@
         "title": "CreateUserRequest",
         "type": "object"
       },
+      "DataBindingSource": {
+        "description": "测试数据的受控来源。",
+        "enum": [
+          "literal",
+          "environment",
+          "credential",
+          "fixture",
+          "generated"
+        ],
+        "title": "DataBindingSource",
+        "type": "string"
+      },
+      "DataBindingV1": {
+        "additionalProperties": false,
+        "properties": {
+          "description": {
+            "anyOf": [
+              {
+                "maxLength": 1000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "name": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+          },
+          "reference": {
+            "anyOf": [
+              {
+                "maxLength": 500,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reference"
+          },
+          "sensitive": {
+            "default": false,
+            "title": "Sensitive",
+            "type": "boolean"
+          },
+          "source": {
+            "$ref": "#/components/schemas/DataBindingSource",
+            "default": "literal"
+          },
+          "value": {
+            "anyOf": [
+              {},
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Value"
+          },
+          "value_type": {
+            "$ref": "#/components/schemas/DataValueType",
+            "default": "string"
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "title": "DataBindingV1",
+        "type": "object"
+      },
+      "DataValueType": {
+        "description": "表单和执行器共同使用的数据值类型。",
+        "enum": [
+          "string",
+          "number",
+          "boolean",
+          "json"
+        ],
+        "title": "DataValueType",
+        "type": "string"
+      },
       "DatasetListResponse": {
         "properties": {
           "items": {
@@ -1698,6 +2243,26 @@
       },
       "DatasetResponse": {
         "properties": {
+          "api_count": {
+            "default": 0,
+            "title": "Api Count",
+            "type": "integer"
+          },
+          "browser_count": {
+            "default": 0,
+            "title": "Browser Count",
+            "type": "integer"
+          },
+          "case_count": {
+            "default": 0,
+            "title": "Case Count",
+            "type": "integer"
+          },
+          "codex_explore_count": {
+            "default": 0,
+            "title": "Codex Explore Count",
+            "type": "integer"
+          },
           "created_at": {
             "format": "date-time",
             "title": "Created At",
@@ -1724,14 +2289,55 @@
             "title": "Id",
             "type": "string"
           },
+          "latest_version": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ResourceReference"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "name": {
             "title": "Name",
             "type": "string"
+          },
+          "priority_coverage": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "title": "Priority Coverage",
+            "type": "object"
           },
           "project_id": {
             "format": "uuid",
             "title": "Project Id",
             "type": "string"
+          },
+          "published_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Published At"
+          },
+          "ready_count": {
+            "default": 0,
+            "title": "Ready Count",
+            "type": "integer"
+          },
+          "source_distribution": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "title": "Source Distribution",
+            "type": "object"
           },
           "updated_at": {
             "format": "date-time",
@@ -1742,6 +2348,17 @@
             "format": "uuid",
             "title": "Updated By",
             "type": "string"
+          },
+          "version_status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Version Status"
           }
         },
         "required": [
@@ -1981,6 +2598,16 @@
       },
       "EnvironmentTemplateResponse": {
         "properties": {
+          "browser_profile_ref": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ResourceReference"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "config": {
             "additionalProperties": true,
             "title": "Config",
@@ -1995,6 +2622,21 @@
             "format": "uuid",
             "title": "Created By",
             "type": "string"
+          },
+          "credential_binding_count": {
+            "default": 0,
+            "title": "Credential Binding Count",
+            "type": "integer"
+          },
+          "current_version": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ResourceReference"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "description": {
             "anyOf": [
@@ -2012,6 +2654,30 @@
             "title": "Id",
             "type": "string"
           },
+          "last_run_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Run At"
+          },
+          "last_validated_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Validated At"
+          },
           "name": {
             "title": "Name",
             "type": "string"
@@ -2028,6 +2694,28 @@
             "format": "date-time",
             "title": "Updated At",
             "type": "string"
+          },
+          "validation_status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Validation Status"
+          },
+          "version_status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Version Status"
           }
         },
         "required": [
@@ -2253,6 +2941,162 @@
         "title": "ExemptRequest",
         "type": "object"
       },
+      "ExperimentListResponse": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ExperimentSummaryResponse"
+            },
+            "title": "Items",
+            "type": "array"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "ExperimentListResponse",
+        "type": "object"
+      },
+      "ExperimentSummaryResponse": {
+        "properties": {
+          "baseline_run_ref": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ResourceReference"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "candidate_run_ref": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ResourceReference"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "case_count": {
+            "default": 0,
+            "title": "Case Count",
+            "type": "integer"
+          },
+          "cost_delta": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cost Delta"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "improved_count": {
+            "default": 0,
+            "title": "Improved Count",
+            "type": "integer"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "pass_rate_delta": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pass Rate Delta"
+          },
+          "project_id": {
+            "format": "uuid",
+            "title": "Project Id",
+            "type": "string"
+          },
+          "regressed_count": {
+            "default": 0,
+            "title": "Regressed Count",
+            "type": "integer"
+          },
+          "result_json": {
+            "additionalProperties": true,
+            "title": "Result Json",
+            "type": "object"
+          },
+          "run_a_id": {
+            "format": "uuid",
+            "title": "Run A Id",
+            "type": "string"
+          },
+          "run_b_id": {
+            "format": "uuid",
+            "title": "Run B Id",
+            "type": "string"
+          },
+          "score_delta": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Score Delta"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "project_id",
+          "name",
+          "run_a_id",
+          "run_b_id",
+          "status",
+          "result_json",
+          "description",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "ExperimentSummaryResponse",
+        "type": "object"
+      },
       "ExportTestCasesResponse": {
         "properties": {
           "content": {
@@ -2345,6 +3189,142 @@
         ],
         "title": "FeedbackType",
         "type": "string"
+      },
+      "GateListResponse": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/GateSummaryResponse"
+            },
+            "title": "Items",
+            "type": "array"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "GateListResponse",
+        "type": "object"
+      },
+      "GateSummaryResponse": {
+        "properties": {
+          "blocking_count": {
+            "default": 0,
+            "title": "Blocking Count",
+            "type": "integer"
+          },
+          "cost_limit": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cost Limit"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "critical_cases": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Critical Cases",
+            "type": "array"
+          },
+          "enabled": {
+            "title": "Enabled",
+            "type": "boolean"
+          },
+          "evaluated_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Evaluated At"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "last_decision": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Decision"
+          },
+          "last_run_ref": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ResourceReference"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "project_id": {
+            "format": "uuid",
+            "title": "Project Id",
+            "type": "string"
+          },
+          "rule_summary": {
+            "default": "",
+            "title": "Rule Summary",
+            "type": "string"
+          },
+          "scope": {
+            "default": "project",
+            "title": "Scope",
+            "type": "string"
+          },
+          "security_threshold": {
+            "title": "Security Threshold",
+            "type": "number"
+          },
+          "success_rate_threshold": {
+            "title": "Success Rate Threshold",
+            "type": "number"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "project_id",
+          "name",
+          "success_rate_threshold",
+          "critical_cases",
+          "cost_limit",
+          "security_threshold",
+          "enabled",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "GateSummaryResponse",
+        "type": "object"
       },
       "HTTPValidationError": {
         "properties": {
@@ -2906,24 +3886,155 @@
       },
       "ProjectResponse": {
         "properties": {
+          "active_environment_count": {
+            "default": 0,
+            "title": "Active Environment Count",
+            "type": "integer"
+          },
+          "agent_count": {
+            "default": 0,
+            "title": "Agent Count",
+            "type": "integer"
+          },
           "archived": {
             "title": "Archived",
             "type": "boolean"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "created_by": {
+            "format": "uuid",
+            "title": "Created By",
+            "type": "string"
+          },
+          "dataset_count": {
+            "default": 0,
+            "title": "Dataset Count",
+            "type": "integer"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
           },
           "id": {
             "format": "uuid",
             "title": "Id",
             "type": "string"
           },
+          "key": {
+            "title": "Key",
+            "type": "string"
+          },
+          "last_run": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ResourceReference"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "last_run_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Run At"
+          },
+          "last_run_status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Run Status"
+          },
+          "lead_user_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lead User Id"
+          },
+          "member_count": {
+            "default": 0,
+            "title": "Member Count",
+            "type": "integer"
+          },
           "name": {
             "title": "Name",
+            "type": "string"
+          },
+          "open_review_count": {
+            "default": 0,
+            "title": "Open Review Count",
+            "type": "integer"
+          },
+          "status": {
+            "enum": [
+              "active",
+              "archived"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "test_case_count": {
+            "default": 0,
+            "title": "Test Case Count",
+            "type": "integer"
+          },
+          "test_plan_count": {
+            "default": 0,
+            "title": "Test Plan Count",
+            "type": "integer"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          },
+          "updated_by": {
+            "format": "uuid",
+            "title": "Updated By",
             "type": "string"
           }
         },
         "required": [
           "id",
+          "key",
           "name",
-          "archived"
+          "description",
+          "lead_user_id",
+          "status",
+          "archived",
+          "created_by",
+          "updated_by",
+          "created_at",
+          "updated_at"
         ],
         "title": "ProjectResponse",
         "type": "object"
@@ -3130,16 +4241,44 @@
       "RenameProjectRequest": {
         "additionalProperties": false,
         "properties": {
+          "description": {
+            "anyOf": [
+              {
+                "maxLength": 2000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "lead_user_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lead User Id"
+          },
           "name": {
-            "maxLength": 200,
-            "minLength": 1,
-            "title": "Name",
-            "type": "string"
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
           }
         },
-        "required": [
-          "name"
-        ],
         "title": "RenameProjectRequest",
         "type": "object"
       },
@@ -3157,6 +4296,281 @@
           "new_password"
         ],
         "title": "ResetPasswordRequest",
+        "type": "object"
+      },
+      "ResourceReference": {
+        "description": "An internal reference whose href is created only from an allowlisted type.",
+        "properties": {
+          "href": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Href"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "key": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Key"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "resource_type": {
+            "$ref": "#/components/schemas/ResourceType"
+          },
+          "status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Status"
+          },
+          "version": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Version"
+          }
+        },
+        "required": [
+          "resource_type",
+          "id",
+          "name",
+          "href"
+        ],
+        "title": "ResourceReference",
+        "type": "object"
+      },
+      "ResourceType": {
+        "enum": [
+          "user",
+          "project",
+          "agent",
+          "agent_version",
+          "dataset",
+          "dataset_version",
+          "test_case",
+          "test_plan",
+          "test_plan_version",
+          "run",
+          "environment",
+          "environment_version",
+          "scorer",
+          "experiment",
+          "security_scan",
+          "security_profile",
+          "review",
+          "release_gate"
+        ],
+        "title": "ResourceType",
+        "type": "string"
+      },
+      "ReviewListResponse": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ReviewSummaryResponse"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "total"
+        ],
+        "title": "ReviewListResponse",
+        "type": "object"
+      },
+      "ReviewSummaryResponse": {
+        "properties": {
+          "age_seconds": {
+            "default": 0,
+            "title": "Age Seconds",
+            "type": "integer"
+          },
+          "assignee_ref": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ResourceReference"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "case_ref": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ResourceReference"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "confidence": {
+            "title": "Confidence",
+            "type": "number"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "enqueue_reason": {
+            "default": "low_confidence",
+            "title": "Enqueue Reason",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "opinion": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Opinion"
+          },
+          "priority": {
+            "default": 0,
+            "title": "Priority",
+            "type": "integer"
+          },
+          "project_id": {
+            "format": "uuid",
+            "title": "Project Id",
+            "type": "string"
+          },
+          "reviewed_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reviewed At"
+          },
+          "reviewer_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reviewer Id"
+          },
+          "rubric_scores": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "type": "number"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rubric Scores"
+          },
+          "run_case_id": {
+            "format": "uuid",
+            "title": "Run Case Id",
+            "type": "string"
+          },
+          "run_ref": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ResourceReference"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "score": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Score"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "project_id",
+          "run_case_id",
+          "status",
+          "confidence",
+          "reviewer_id",
+          "score",
+          "opinion",
+          "rubric_scores",
+          "created_at",
+          "updated_at",
+          "reviewed_at"
+        ],
+        "title": "ReviewSummaryResponse",
         "type": "object"
       },
       "RiskLevel": {
@@ -3188,6 +4602,11 @@
       },
       "RunCaseResponse": {
         "properties": {
+          "case_spec_snapshot": {
+            "additionalProperties": true,
+            "title": "Case Spec Snapshot",
+            "type": "object"
+          },
           "duration_ms": {
             "anyOf": [
               {
@@ -3293,7 +4712,8 @@
           "evidence",
           "quality_summary",
           "security_summary",
-          "outcomes"
+          "outcomes",
+          "case_spec_snapshot"
         ],
         "title": "RunCaseResponse",
         "type": "object"
@@ -3316,6 +4736,16 @@
       },
       "RunResponse": {
         "properties": {
+          "agent_ref": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ResourceReference"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "cancelled_cases": {
             "title": "Cancelled Cases",
             "type": "integer"
@@ -3332,10 +4762,52 @@
             ],
             "title": "Completed At"
           },
+          "cost": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cost"
+          },
           "created_at": {
             "format": "date-time",
             "title": "Created At",
             "type": "string"
+          },
+          "created_by_ref": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ResourceReference"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "dataset_ref": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ResourceReference"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "duration_ms": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Duration Ms"
           },
           "error_cases": {
             "title": "Error Cases",
@@ -3354,10 +4826,55 @@
             "title": "Passed Cases",
             "type": "integer"
           },
+          "plan_ref": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ResourceReference"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "progress": {
+            "default": 0.0,
+            "title": "Progress",
+            "type": "number"
+          },
           "project_id": {
             "format": "uuid",
             "title": "Project Id",
             "type": "string"
+          },
+          "run_number": {
+            "title": "Run Number",
+            "type": "string"
+          },
+          "run_type": {
+            "title": "Run Type",
+            "type": "string"
+          },
+          "source_case_ref": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ResourceReference"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "source_test_case_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Test Case Id"
           },
           "started_at": {
             "anyOf": [
@@ -3376,13 +4893,39 @@
             "type": "string"
           },
           "test_plan_version_id": {
-            "format": "uuid",
-            "title": "Test Plan Version Id",
-            "type": "string"
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Test Plan Version Id"
+          },
+          "token_usage": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "type": "integer"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Token Usage"
           },
           "total_cases": {
             "title": "Total Cases",
             "type": "integer"
+          },
+          "trigger_type": {
+            "default": "manual",
+            "title": "Trigger Type",
+            "type": "string"
           },
           "workflow_id": {
             "anyOf": [
@@ -3397,9 +4940,12 @@
           }
         },
         "required": [
+          "run_number",
           "id",
           "project_id",
           "test_plan_version_id",
+          "run_type",
+          "source_test_case_id",
           "status",
           "total_cases",
           "passed_cases",
@@ -3450,6 +4996,181 @@
           "score"
         ],
         "title": "ScoreReviewRequest",
+        "type": "object"
+      },
+      "ScorerListResponse": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ScorerSummaryResponse"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "total"
+        ],
+        "title": "ScorerListResponse",
+        "type": "object"
+      },
+      "ScorerSummaryResponse": {
+        "properties": {
+          "config_json": {
+            "additionalProperties": true,
+            "title": "Config Json",
+            "type": "object"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "enabled": {
+            "title": "Enabled",
+            "type": "boolean"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "last_calibrated_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Calibrated At"
+          },
+          "latest_published_version_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Latest Published Version Id"
+          },
+          "latest_published_version_number": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Latest Published Version Number"
+          },
+          "latest_version": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ResourceReference"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "project_id": {
+            "format": "uuid",
+            "title": "Project Id",
+            "type": "string"
+          },
+          "scorer_type": {
+            "title": "Scorer Type",
+            "type": "string"
+          },
+          "threshold": {
+            "title": "Threshold",
+            "type": "number"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          },
+          "usage_count": {
+            "default": 0,
+            "title": "Usage Count",
+            "type": "integer"
+          },
+          "version_status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Version Status"
+          },
+          "weight": {
+            "title": "Weight",
+            "type": "number"
+          }
+        },
+        "required": [
+          "id",
+          "project_id",
+          "name",
+          "scorer_type",
+          "weight",
+          "threshold",
+          "config_json",
+          "description",
+          "enabled",
+          "latest_published_version_id",
+          "latest_published_version_number",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "ScorerSummaryResponse",
+        "type": "object"
+      },
+      "SecurityScanListResponse": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/SecurityScanSummaryResponse"
+            },
+            "title": "Items",
+            "type": "array"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "SecurityScanListResponse",
         "type": "object"
       },
       "SecurityScanRequest": {
@@ -3509,6 +5230,201 @@
           "agent_version_id"
         ],
         "title": "SecurityScanRequest",
+        "type": "object"
+      },
+      "SecurityScanSummaryResponse": {
+        "properties": {
+          "agent_ref": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ResourceReference"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "agent_version_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Agent Version Id"
+          },
+          "completed_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Completed At"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "critical_count": {
+            "default": 0,
+            "title": "Critical Count",
+            "type": "integer"
+          },
+          "duration_ms": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Duration Ms"
+          },
+          "environment_version_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Environment Version Id"
+          },
+          "findings": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Findings",
+            "type": "array"
+          },
+          "high_count": {
+            "default": 0,
+            "title": "High Count",
+            "type": "integer"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "low_count": {
+            "default": 0,
+            "title": "Low Count",
+            "type": "integer"
+          },
+          "medium_count": {
+            "default": 0,
+            "title": "Medium Count",
+            "type": "integer"
+          },
+          "profile_ref": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ResourceReference"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "project_id": {
+            "format": "uuid",
+            "title": "Project Id",
+            "type": "string"
+          },
+          "run_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Run Id"
+          },
+          "run_ref": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ResourceReference"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "scan_type": {
+            "title": "Scan Type",
+            "type": "string"
+          },
+          "security_profile_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Security Profile Id"
+          },
+          "started_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Started At"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "summary": {
+            "additionalProperties": true,
+            "title": "Summary",
+            "type": "object"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "project_id",
+          "status",
+          "scan_type",
+          "run_id",
+          "agent_version_id",
+          "environment_version_id",
+          "security_profile_id",
+          "findings",
+          "summary",
+          "created_at",
+          "updated_at",
+          "completed_at"
+        ],
+        "title": "SecurityScanSummaryResponse",
         "type": "object"
       },
       "SendTargetMessageRequest": {
@@ -3601,6 +5517,14 @@
       },
       "TestCaseResponse": {
         "properties": {
+          "artifact_requirements": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Artifact Requirements",
+            "type": "array"
+          },
           "assertions": {
             "items": {
               "additionalProperties": true,
@@ -3608,6 +5532,37 @@
             },
             "title": "Assertions",
             "type": "array"
+          },
+          "automation_status": {
+            "$ref": "#/components/schemas/AutomationStatus"
+          },
+          "case_key": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Case Key"
+          },
+          "case_status": {
+            "$ref": "#/components/schemas/TestCaseStatus"
+          },
+          "case_type": {
+            "$ref": "#/components/schemas/TestCaseType"
+          },
+          "component": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Component"
           },
           "created_at": {
             "anyOf": [
@@ -3620,6 +5575,31 @@
               }
             ],
             "title": "Created At"
+          },
+          "created_by": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created By"
+          },
+          "custom_fields": {
+            "additionalProperties": true,
+            "title": "Custom Fields",
+            "type": "object"
+          },
+          "data_bindings": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Data Bindings",
+            "type": "array"
           },
           "dataset_version_id": {
             "format": "uuid",
@@ -3636,6 +5616,17 @@
               }
             ],
             "title": "Difficulty"
+          },
+          "estimated_duration_seconds": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Estimated Duration Seconds"
           },
           "execution_mode": {
             "$ref": "#/components/schemas/ExecutionMode"
@@ -3678,6 +5669,36 @@
             "title": "Name",
             "type": "string"
           },
+          "objective": {
+            "title": "Objective",
+            "type": "string"
+          },
+          "owner_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Owner Id"
+          },
+          "postconditions": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Postconditions",
+            "type": "array"
+          },
+          "preconditions": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Preconditions",
+            "type": "array"
+          },
           "priority": {
             "anyOf": [
               {
@@ -3687,6 +5708,17 @@
                 "type": "null"
               }
             ]
+          },
+          "requirement_refs": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Requirement Refs",
+            "type": "array"
+          },
+          "retry_count": {
+            "title": "Retry Count",
+            "type": "integer"
           },
           "risk_level": {
             "anyOf": [
@@ -3729,12 +5761,36 @@
             "title": "Sort Order",
             "type": "integer"
           },
+          "source": {
+            "$ref": "#/components/schemas/TestCaseSource"
+          },
+          "source_ref": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Ref"
+          },
+          "steps": {
+            "items": {
+              "$ref": "#/components/schemas/TestStepV1"
+            },
+            "title": "Steps",
+            "type": "array"
+          },
           "tags": {
             "items": {
               "type": "string"
             },
             "title": "Tags",
             "type": "array"
+          },
+          "template": {
+            "$ref": "#/components/schemas/TestCaseTemplate"
           },
           "test_group": {
             "anyOf": [
@@ -3745,6 +5801,17 @@
                 "type": "null"
               }
             ]
+          },
+          "timeout_seconds": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Timeout Seconds"
           },
           "updated_at": {
             "anyOf": [
@@ -3757,19 +5824,51 @@
               }
             ],
             "title": "Updated At"
+          },
+          "updated_by": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Updated By"
           }
         },
         "required": [
           "id",
           "dataset_version_id",
+          "case_key",
           "name",
+          "objective",
+          "case_status",
+          "template",
+          "case_type",
+          "automation_status",
+          "source",
+          "source_ref",
+          "component",
+          "requirement_refs",
+          "owner_id",
+          "preconditions",
           "input",
+          "data_bindings",
+          "steps",
           "execution_mode",
           "assertions",
           "scorers",
           "initial_state",
           "expected_outcome",
           "security_policies",
+          "artifact_requirements",
+          "postconditions",
+          "estimated_duration_seconds",
+          "timeout_seconds",
+          "retry_count",
+          "custom_fields",
           "tags",
           "scenario",
           "priority",
@@ -3777,10 +5876,113 @@
           "difficulty",
           "test_group",
           "sort_order",
+          "created_by",
+          "updated_by",
           "created_at",
           "updated_at"
         ],
         "title": "TestCaseResponse",
+        "type": "object"
+      },
+      "TestCaseSource": {
+        "description": "用例来源，用于审计和列表筛选。",
+        "enum": [
+          "manual",
+          "agent_generated",
+          "imported",
+          "run_regression"
+        ],
+        "title": "TestCaseSource",
+        "type": "string"
+      },
+      "TestCaseStatus": {
+        "description": "用例评审状态；与数据集版本的发布状态相互独立。",
+        "enum": [
+          "draft",
+          "ready",
+          "deprecated"
+        ],
+        "title": "TestCaseStatus",
+        "type": "string"
+      },
+      "TestCaseTemplate": {
+        "description": "专业测试用例模板。",
+        "enum": [
+          "step_by_step",
+          "text",
+          "bdd",
+          "ai_eval"
+        ],
+        "title": "TestCaseTemplate",
+        "type": "string"
+      },
+      "TestCaseType": {
+        "description": "测试用例覆盖的质量类型。",
+        "enum": [
+          "functional",
+          "regression",
+          "smoke",
+          "integration",
+          "e2e",
+          "security",
+          "performance",
+          "usability",
+          "exploratory"
+        ],
+        "title": "TestCaseType",
+        "type": "string"
+      },
+      "TestCaseValidationIssue": {
+        "properties": {
+          "code": {
+            "title": "Code",
+            "type": "string"
+          },
+          "field": {
+            "title": "Field",
+            "type": "string"
+          },
+          "message": {
+            "title": "Message",
+            "type": "string"
+          },
+          "severity": {
+            "default": "error",
+            "enum": [
+              "error",
+              "warning"
+            ],
+            "title": "Severity",
+            "type": "string"
+          }
+        },
+        "required": [
+          "field",
+          "code",
+          "message"
+        ],
+        "title": "TestCaseValidationIssue",
+        "type": "object"
+      },
+      "TestCaseValidationResponse": {
+        "properties": {
+          "issues": {
+            "items": {
+              "$ref": "#/components/schemas/TestCaseValidationIssue"
+            },
+            "title": "Issues",
+            "type": "array"
+          },
+          "ready": {
+            "title": "Ready",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "ready",
+          "issues"
+        ],
+        "title": "TestCaseValidationResponse",
         "type": "object"
       },
       "TestGroup": {
@@ -3969,6 +6171,26 @@
       },
       "TestPlanResponse": {
         "properties": {
+          "agent_ref": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ResourceReference"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "case_count": {
+            "default": 0,
+            "title": "Case Count",
+            "type": "integer"
+          },
+          "concurrency": {
+            "default": 1,
+            "title": "Concurrency",
+            "type": "integer"
+          },
           "created_at": {
             "format": "date-time",
             "title": "Created At",
@@ -3978,6 +6200,16 @@
             "format": "uuid",
             "title": "Created By",
             "type": "string"
+          },
+          "dataset_ref": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ResourceReference"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "description": {
             "anyOf": [
@@ -3990,19 +6222,87 @@
             ],
             "title": "Description"
           },
+          "environment_ref": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ResourceReference"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "id": {
             "format": "uuid",
             "title": "Id",
             "type": "string"
           },
+          "last_run_status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Run Status"
+          },
+          "latest_version": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ResourceReference"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "name": {
             "title": "Name",
             "type": "string"
+          },
+          "pass_rate": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pass Rate"
           },
           "project_id": {
             "format": "uuid",
             "title": "Project Id",
             "type": "string"
+          },
+          "repeat_count": {
+            "default": 1,
+            "title": "Repeat Count",
+            "type": "integer"
+          },
+          "retry_count": {
+            "default": 0,
+            "title": "Retry Count",
+            "type": "integer"
+          },
+          "scorer_count": {
+            "default": 0,
+            "title": "Scorer Count",
+            "type": "integer"
+          },
+          "timeout_seconds": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Timeout Seconds"
           },
           "updated_at": {
             "format": "date-time",
@@ -4013,6 +6313,17 @@
             "format": "uuid",
             "title": "Updated By",
             "type": "string"
+          },
+          "version_status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Version Status"
           }
         },
         "required": [
@@ -4147,6 +6458,67 @@
           "published_at"
         ],
         "title": "TestPlanVersionResponse",
+        "type": "object"
+      },
+      "TestStepV1": {
+        "additionalProperties": false,
+        "properties": {
+          "action": {
+            "maxLength": 4000,
+            "minLength": 1,
+            "title": "Action",
+            "type": "string"
+          },
+          "artifact_requirements": {
+            "items": {
+              "$ref": "#/components/schemas/ArtifactRequirementV1"
+            },
+            "maxItems": 20,
+            "title": "Artifact Requirements",
+            "type": "array"
+          },
+          "assertions": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "maxItems": 50,
+            "title": "Assertions",
+            "type": "array"
+          },
+          "expected_result": {
+            "maxLength": 4000,
+            "minLength": 1,
+            "title": "Expected Result",
+            "type": "string"
+          },
+          "operation": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/BrowserOperationV1"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "step_no": {
+            "minimum": 1.0,
+            "title": "Step No",
+            "type": "integer"
+          },
+          "test_data": {
+            "additionalProperties": true,
+            "title": "Test Data",
+            "type": "object"
+          }
+        },
+        "required": [
+          "step_no",
+          "action",
+          "expected_result"
+        ],
+        "title": "TestStepV1",
         "type": "object"
       },
       "TextJudgeRequest": {
@@ -4840,6 +7212,21 @@
       },
       "UpdateTestCaseRequest": {
         "properties": {
+          "artifact_requirements": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/ArtifactRequirementV1"
+                },
+                "maxItems": 20,
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Artifact Requirements"
+          },
           "assertions": {
             "anyOf": [
               {
@@ -4855,6 +7242,65 @@
             ],
             "title": "Assertions"
           },
+          "automation_status": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AutomationStatus"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "case_type": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/TestCaseType"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "component": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Component"
+          },
+          "custom_fields": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Custom Fields"
+          },
+          "data_bindings": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/DataBindingV1"
+                },
+                "maxItems": 100,
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Data Bindings"
+          },
           "difficulty": {
             "anyOf": [
               {
@@ -4865,6 +7311,19 @@
               }
             ],
             "title": "Difficulty"
+          },
+          "estimated_duration_seconds": {
+            "anyOf": [
+              {
+                "maximum": 86400.0,
+                "minimum": 1.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Estimated Duration Seconds"
           },
           "execution_mode": {
             "anyOf": [
@@ -4915,7 +7374,7 @@
           "name": {
             "anyOf": [
               {
-                "maxLength": 200,
+                "maxLength": 500,
                 "minLength": 1,
                 "type": "string"
               },
@@ -4924,6 +7383,61 @@
               }
             ],
             "title": "Name"
+          },
+          "objective": {
+            "anyOf": [
+              {
+                "maxLength": 4000,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Objective"
+          },
+          "owner_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Owner Id"
+          },
+          "postconditions": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "maxItems": 100,
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Postconditions"
+          },
+          "preconditions": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "maxItems": 100,
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Preconditions"
           },
           "priority": {
             "anyOf": [
@@ -4934,6 +7448,34 @@
                 "type": "null"
               }
             ]
+          },
+          "requirement_refs": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "maxItems": 50,
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Requirement Refs"
+          },
+          "retry_count": {
+            "anyOf": [
+              {
+                "maximum": 10.0,
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Retry Count"
           },
           "risk_level": {
             "anyOf": [
@@ -4998,6 +7540,33 @@
             ],
             "title": "Sort Order"
           },
+          "source_ref": {
+            "anyOf": [
+              {
+                "maxLength": 500,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Ref"
+          },
+          "steps": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/TestStepV1"
+                },
+                "maxItems": 200,
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Steps"
+          },
           "tags": {
             "anyOf": [
               {
@@ -5012,6 +7581,16 @@
             ],
             "title": "Tags"
           },
+          "template": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/TestCaseTemplate"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "test_group": {
             "anyOf": [
               {
@@ -5021,6 +7600,19 @@
                 "type": "null"
               }
             ]
+          },
+          "timeout_seconds": {
+            "anyOf": [
+              {
+                "maximum": 86400.0,
+                "minimum": 1.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Timeout Seconds"
           }
         },
         "title": "UpdateTestCaseRequest",
@@ -9131,6 +11723,372 @@
         ]
       }
     },
+    "/api/v1/projects/{project_id}/datasets/{dataset_id}/versions/{version_id}/cases/{case_id}/duplicate": {
+      "post": {
+        "operationId": "duplicate_case_api_v1_projects__project_id__datasets__dataset_id__versions__version_id__cases__case_id__duplicate_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Project Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "dataset_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Dataset Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "version_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Version Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "case_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Case Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "x-csrf-token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Csrf-Token"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TestCaseResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Duplicate Case",
+        "tags": [
+          "datasets"
+        ]
+      }
+    },
+    "/api/v1/projects/{project_id}/datasets/{dataset_id}/versions/{version_id}/cases/{case_id}/mark-ready": {
+      "post": {
+        "operationId": "mark_case_ready_api_v1_projects__project_id__datasets__dataset_id__versions__version_id__cases__case_id__mark_ready_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Project Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "dataset_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Dataset Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "version_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Version Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "case_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Case Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "x-csrf-token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Csrf-Token"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TestCaseResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Mark Case Ready",
+        "tags": [
+          "datasets"
+        ]
+      }
+    },
+    "/api/v1/projects/{project_id}/datasets/{dataset_id}/versions/{version_id}/cases/{case_id}/trial-runs": {
+      "post": {
+        "operationId": "create_case_trial_run_api_v1_projects__project_id__datasets__dataset_id__versions__version_id__cases__case_id__trial_runs_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Project Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "dataset_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Dataset Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "version_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Version Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "case_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Case Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Idempotency-Key"
+            }
+          },
+          {
+            "in": "header",
+            "name": "x-csrf-token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Csrf-Token"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateCaseTrialRunRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CaseTrialRunResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Create Case Trial Run",
+        "tags": [
+          "datasets"
+        ]
+      }
+    },
+    "/api/v1/projects/{project_id}/datasets/{dataset_id}/versions/{version_id}/cases/{case_id}/validate": {
+      "post": {
+        "operationId": "validate_case_api_v1_projects__project_id__datasets__dataset_id__versions__version_id__cases__case_id__validate_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Project Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "dataset_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Dataset Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "version_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Version Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "case_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Case Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TestCaseValidationResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Validate Case",
+        "tags": [
+          "datasets"
+        ]
+      }
+    },
     "/api/v1/projects/{project_id}/datasets/{dataset_id}/versions/{version_id}/export": {
       "get": {
         "operationId": "export_cases_api_v1_projects__project_id__datasets__dataset_id__versions__version_id__export_get",
@@ -10624,7 +13582,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/ExperimentListResponse"
+                }
               }
             },
             "description": "Successful Response"
@@ -10925,7 +13885,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/GateListResponse"
+                }
               }
             },
             "description": "Successful Response"
@@ -12271,7 +15233,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/ReviewListResponse"
+                }
               }
             },
             "description": "Successful Response"
@@ -13701,7 +16665,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/ScorerListResponse"
+                }
               }
             },
             "description": "Successful Response"
@@ -14185,7 +17151,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/SecurityScanListResponse"
+                }
               }
             },
             "description": "Successful Response"

@@ -1,16 +1,18 @@
 from datetime import UTC, datetime
-from types import SimpleNamespace
 from uuid import UUID, uuid4
 
+from agenttest.bootstrap.settings import Settings
 from agenttest.modules.browser_profiles.api.router import (
     BrowserProfileApiDependencies,
     create_browser_profile_router,
 )
 from agenttest.modules.browser_profiles.application.auth_state import BrowserAuthStateService
+from agenttest.modules.browser_profiles.application.service import BrowserProfileService
 from agenttest.modules.browser_profiles.domain.entities import BrowserProfile
 from agenttest.modules.browser_profiles.infrastructure.auth_state_cipher import (
     BrowserAuthStateCipher,
 )
+from agenttest.modules.identity.public import Email, SystemRole, User, UserId
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
@@ -89,26 +91,43 @@ def existing_profile(project_id: UUID) -> BrowserProfile:
     return item
 
 
+class FakeProjectAccess:
+    def __init__(self, allow: bool) -> None:
+        self.allow = allow
+
+    async def ensure_member(self, _actor, _project_id) -> None:
+        if not self.allow:
+            raise PermissionError
+
+    async def ensure_editor(self, _actor, _project_id) -> None:
+        if not self.allow:
+            raise PermissionError
+
+
 def client(repository: FakeRepository, runtime: FakeRuntime, *, allow: bool = True) -> TestClient:
     app = FastAPI()
+    user = User.create(
+        user_id=UserId.new(),
+        email=Email("browser-profile@example.com"),
+        display_name="Browser Profile",
+        role=SystemRole.DEVELOPER,
+    )
 
     async def actor_for(_request):
-        return SimpleNamespace(user_id=SimpleNamespace(value=uuid4()))
-
-    async def check_project(_actor, _project_id: UUID, _write: bool) -> None:
-        if not allow:
-            raise PermissionError
+        return user
 
     app.include_router(
         create_browser_profile_router(
-            settings=SimpleNamespace(session_cookie_name="session"),
-            actor_for=actor_for,
-            check_project=check_project,
-            dependencies=BrowserProfileApiDependencies(
-                repository=repository,
-                runtime=runtime,
-                auth_state=BrowserAuthStateService(BrowserAuthStateCipher(b"z" * 32)),
-            ),
+            BrowserProfileApiDependencies(
+                service=BrowserProfileService(
+                    repository=repository,
+                    runtime=runtime,
+                    auth_state=BrowserAuthStateService(BrowserAuthStateCipher(b"z" * 32)),
+                    project_access=FakeProjectAccess(allow),
+                ),
+                actor_for=actor_for,
+                settings=Settings(session_cookie_name="session"),
+            )
         )
     )
     result = TestClient(app)

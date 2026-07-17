@@ -11,8 +11,8 @@ import {
 } from "@/components/uiverse";
 import { DropdownSelect } from "@/components/ui/dropdown-select";
 
-import { listAgents, listAgentVersions } from "@/features/agents/api";
-import { listEnvironmentTemplates } from "@/features/environments/api";
+import { listAgents, listAgentVersions } from "@/features/agents";
+import { listEnvironmentTemplates } from "@/features/environments";
 
 import {
   createTargetChat,

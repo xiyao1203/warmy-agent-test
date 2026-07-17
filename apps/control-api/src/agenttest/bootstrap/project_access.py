@@ -1,6 +1,6 @@
 """Adapters that expose project authorization to M2 application modules."""
 
-from agenttest.modules.identity.public import SystemRole, User
+from agenttest.modules.identity.public import SystemRole, User, UserId
 from agenttest.modules.projects.domain.entities import ProjectMemberRole
 from agenttest.modules.projects.domain.policies import ProjectNotFoundError
 from agenttest.modules.projects.domain.repositories import ProjectRepository
@@ -33,3 +33,8 @@ class ProjectAccessAdapter:
             raise ProjectNotFoundError
         if role not in {ProjectMemberRole.DEVELOPER, ProjectMemberRole.TESTER}:
             raise PermissionError("Project editor access is required")
+
+    async def ensure_user_member(self, user_id: UserId, project_id: ProjectId) -> None:
+        project = await self._projects.get_by_id(project_id)
+        if project is None or project.member_role(user_id) is None:
+            raise ValueError("owner_id must reference a member of the same project")

@@ -6,12 +6,27 @@ import { DatasetList } from "../dataset-list";
 import { TestCaseEditor } from "../test-case-editor";
 
 const dataset = {
+  api_count: 12,
+  browser_count: 5,
+  case_count: 20,
+  codex_explore_count: 3,
   created_at: "2026-06-25T10:00:00Z",
   created_by: "user-1",
   description: "Agent 对话回归集",
   id: "dataset-1",
+  latest_version: {
+    href: "/projects/project-1/datasets/dataset-1",
+    id: "dataset-version-3",
+    name: "对话回归",
+    resource_type: "dataset_version" as const,
+    status: "published",
+    version: 3,
+  },
   name: "对话回归",
   project_id: "project-1",
+  priority_coverage: { P0: 4, P1: 16 },
+  ready_count: 18,
+  source_distribution: { agent_generated: 8, manual: 12 },
   updated_at: "2026-06-25T10:00:00Z",
   updated_by: "user-1",
 };
@@ -28,8 +43,17 @@ const draftVersion = {
 };
 
 const testCase = {
+  artifact_requirements: [],
   assertions: [{ type: "contains", value: "hello" }],
+  automation_status: "automated" as const,
+  case_key: "DEMO-TC-000001",
+  case_status: "ready" as const,
+  case_type: "smoke" as const,
+  component: "对话",
   created_at: "2026-06-25T10:00:00Z",
+  created_by: "user-1",
+  custom_fields: {},
+  data_bindings: [],
   dataset_version_id: draftVersion.id,
   difficulty: null,
   execution_mode: "api" as const,
@@ -38,15 +62,28 @@ const testCase = {
   initial_state: null,
   input: { message: "hi" },
   name: "基础问候",
+  objective: "验证基础问候",
+  owner_id: null,
+  postconditions: [],
+  preconditions: [],
   priority: "P0" as const,
   risk_level: "low" as const,
   scenario: null,
   scorers: [],
   security_policies: [],
   sort_order: 1,
+  source: "manual" as const,
+  source_ref: null,
+  steps: [],
   tags: ["smoke"],
+  template: "ai_eval" as const,
   test_group: "test" as const,
+  timeout_seconds: null,
+  estimated_duration_seconds: null,
+  retry_count: 0,
+  requirement_refs: [],
   updated_at: "2026-06-25T10:00:00Z",
+  updated_by: "user-1",
 };
 
 describe("DatasetList", () => {
@@ -67,14 +104,28 @@ describe("DatasetList", () => {
         projectId="project-1"
       />,
     );
-    expect(screen.getByText("对话回归")).toBeVisible();
+    expect(screen.getAllByText("对话回归").length).toBeGreaterThan(0);
     expect(screen.getByText("Agent 对话回归集")).toBeVisible();
     expect(
       screen.getByRole("columnheader", { name: "用例集信息" }),
-    ).toHaveClass("w-[54%]");
+    ).toHaveClass("w-[25%]");
     expect(screen.getByRole("columnheader", { name: "更新时间" })).toHaveClass(
-      "w-[20%]",
+      "w-[12%]",
     );
+    expect(
+      screen.getByRole("columnheader", { name: "最新版本" }),
+    ).toBeVisible();
+    expect(
+      screen.getByRole("columnheader", { name: "用例覆盖" }),
+    ).toBeVisible();
+    expect(screen.getByText(/用例 20 · 就绪 18/)).toBeVisible();
+    expect(screen.getByText(/优先级：P0 4 · P1 16/)).toBeVisible();
+    expect(
+      screen.getByText(/来源：agent_generated 8 · manual 12/),
+    ).toBeVisible();
+    expect(
+      screen.getByRole("link", { name: /对话回归.*v3.*published/ }),
+    ).toHaveAttribute("href", "/projects/project-1/datasets/dataset-1");
     expect(screen.getByRole("table")).toHaveClass("w-full", "table-fixed");
     expect(screen.getByRole("group", { name: "对话回归 操作" })).toHaveClass(
       "whitespace-nowrap",
@@ -145,8 +196,10 @@ describe("DatasetDetail", () => {
     expect(screen.getByText(dataset.name)).toBeVisible();
     expect(screen.getByText("基础问候")).toBeVisible();
     expect(screen.getByText("API")).toBeVisible();
-    expect(screen.getByRole("columnheader", { name: "断言" })).toBeVisible();
-    expect(screen.getByText("1 条")).toBeVisible();
+    expect(
+      screen.getByRole("columnheader", { name: "步骤 / 断言" }),
+    ).toBeVisible();
+    expect(screen.getByText("1 条断言")).toBeVisible();
     expect(screen.getByRole("button", { name: "编辑基础问候" })).toHaveClass(
       "whitespace-nowrap",
     );
@@ -161,11 +214,13 @@ describe("DatasetDetail", () => {
     fireEvent.click(screen.getAllByRole("button", { name: "关闭" })[1]);
 
     fireEvent.click(screen.getByRole("button", { name: "新增用例" }));
-    expect(screen.getByRole("button", { name: "预期与断言" })).toBeVisible();
+    expect(
+      screen.getByRole("button", { name: "断言、评分与安全" }),
+    ).toBeVisible();
     fireEvent.change(screen.getByLabelText("用例名称"), {
       target: { value: "新增问候" },
     });
-    fireEvent.click(screen.getByRole("button", { name: "保存用例" }));
+    fireEvent.click(screen.getByRole("button", { name: "保存草稿" }));
 
     await waitFor(() => expect(onCreateCase).toHaveBeenCalledTimes(1));
     expect(onCreateCase).toHaveBeenCalledWith(
@@ -176,7 +231,7 @@ describe("DatasetDetail", () => {
     fireEvent.change(screen.getByLabelText("用例名称"), {
       target: { value: "基础问候更新" },
     });
-    fireEvent.click(screen.getByRole("button", { name: "保存用例" }));
+    fireEvent.click(screen.getByRole("button", { name: "保存草稿" }));
 
     await waitFor(() => expect(onUpdateCase).toHaveBeenCalledTimes(1));
     expect(onUpdateCase).toHaveBeenCalledWith(
@@ -221,9 +276,6 @@ describe("TestCaseEditor", () => {
     fireEvent.change(screen.getByLabelText("用例名称"), {
       target: { value: "权限回归" },
     });
-    fireEvent.change(screen.getByLabelText("执行模式"), {
-      target: { value: "codex_explore" },
-    });
     fireEvent.change(screen.getByLabelText("优先级"), {
       target: { value: "P1" },
     });
@@ -233,7 +285,9 @@ describe("TestCaseEditor", () => {
     fireEvent.change(screen.getByLabelText("测试分组"), {
       target: { value: "validation" },
     });
-    expect(screen.getByRole("button", { name: "预期与断言" })).toBeVisible();
+    expect(
+      screen.getByRole("button", { name: "断言、评分与安全" }),
+    ).toBeVisible();
     fireEvent.click(screen.getByRole("button", { name: "输入数据" }));
     expect(screen.queryByLabelText("输入 JSON")).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "添加输入字段" }));
@@ -243,7 +297,7 @@ describe("TestCaseEditor", () => {
     fireEvent.change(screen.getByLabelText("输入数据字段值"), {
       target: { value: "你好" },
     });
-    fireEvent.click(screen.getByRole("button", { name: "预期与断言" }));
+    fireEvent.click(screen.getByRole("button", { name: "断言、评分与安全" }));
     fireEvent.click(screen.getByRole("button", { name: "添加断言" }));
     fireEvent.change(screen.getByLabelText("断言字段"), {
       target: { value: "output.text" },
@@ -251,7 +305,6 @@ describe("TestCaseEditor", () => {
     fireEvent.change(screen.getByLabelText("断言期望值"), {
       target: { value: "你好" },
     });
-    fireEvent.click(screen.getByRole("button", { name: "评分与安全" }));
     expect(screen.queryByLabelText("评分器配置")).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "添加评分器" }));
     fireEvent.change(screen.getByLabelText("评分器名称"), {
@@ -261,7 +314,11 @@ describe("TestCaseEditor", () => {
     fireEvent.change(screen.getByLabelText("安全策略类型"), {
       target: { value: "pii_redaction" },
     });
-    fireEvent.click(screen.getByRole("button", { name: "保存用例" }));
+    fireEvent.click(screen.getByRole("button", { name: "收尾与执行" }));
+    fireEvent.change(screen.getByLabelText("执行模式"), {
+      target: { value: "codex_explore" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "保存草稿" }));
 
     await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
     expect(onSubmit).toHaveBeenCalledWith(

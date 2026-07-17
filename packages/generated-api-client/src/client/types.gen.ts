@@ -127,6 +127,10 @@ export type AgentResponse = {
    */
   baseline_version_id?: string | null;
   /**
+   * Connection Status
+   */
+  connection_status?: string | null;
+  /**
    * Created At
    */
   created_at: string;
@@ -134,6 +138,11 @@ export type AgentResponse = {
    * Created By
    */
   created_by: string;
+  /**
+   * Credential Binding Count
+   */
+  credential_binding_count?: number;
+  current_version?: ResourceReference | null;
   /**
    * Current Version Id
    */
@@ -147,13 +156,33 @@ export type AgentResponse = {
    */
   id: string;
   /**
+   * Last Run Status
+   */
+  last_run_status?: string | null;
+  /**
+   * Model
+   */
+  model?: string | null;
+  /**
    * Name
    */
   name: string;
   /**
+   * Pass Rate
+   */
+  pass_rate?: number | null;
+  /**
    * Project Id
    */
   project_id: string;
+  /**
+   * Protocol
+   */
+  protocol?: string | null;
+  /**
+   * Tool Count
+   */
+  tool_count?: number;
   /**
    * Updated At
    */
@@ -162,6 +191,10 @@ export type AgentResponse = {
    * Updated By
    */
   updated_by: string;
+  /**
+   * Version Status
+   */
+  version_status?: string | null;
 };
 
 /**
@@ -314,6 +347,33 @@ export type ApplyRunResultRequest = {
 };
 
 /**
+ * ArtifactKind
+ *
+ * 专业用例可以要求采集的标准证据类型。
+ */
+export type ArtifactKind =
+  | "response"
+  | "screenshot"
+  | "trace"
+  | "canvas_snapshot"
+  | "file";
+
+/**
+ * ArtifactRequirementV1
+ */
+export type ArtifactRequirementV1 = {
+  kind: ArtifactKind;
+  /**
+   * Label
+   */
+  label?: string | null;
+  /**
+   * Required
+   */
+  required?: boolean;
+};
+
+/**
  * AuditEntryResponse
  */
 export type AuditEntryResponse = {
@@ -382,6 +442,13 @@ export type AutoEnqueueRequest = {
 };
 
 /**
+ * AutomationStatus
+ *
+ * 用例自动化成熟度。
+ */
+export type AutomationStatus = "manual" | "candidate" | "automated";
+
+/**
  * BatchConfirmationDecision
  */
 export type BatchConfirmationDecision = {
@@ -393,6 +460,26 @@ export type BatchConfirmationDecision = {
    * Confirmation Ids
    */
   confirmation_ids: Array<string>;
+};
+
+/**
+ * BrowserOperationV1
+ *
+ * Deterministic browser instruction kept separate from the human test step.
+ */
+export type BrowserOperationV1 = {
+  /**
+   * Action
+   */
+  action: "goto" | "click" | "fill" | "wait" | "screenshot";
+  /**
+   * Target
+   */
+  target?: string | null;
+  /**
+   * Value
+   */
+  value?: string | null;
 };
 
 /**
@@ -439,6 +526,52 @@ export type CalibrationResponse = {
    * Updated At
    */
   updated_at: string | null;
+};
+
+/**
+ * CaseTrialRunResponse
+ */
+export type CaseTrialRunResponse = {
+  /**
+   * Agent Version Id
+   */
+  agent_version_id: string;
+  /**
+   * Created
+   */
+  created: boolean;
+  /**
+   * Dataset Version Id
+   */
+  dataset_version_id: string;
+  /**
+   * Href
+   */
+  href: string;
+  /**
+   * Id
+   */
+  id: string;
+  /**
+   * Project Id
+   */
+  project_id: string;
+  /**
+   * Run Type
+   */
+  run_type: "case_trial";
+  /**
+   * Source Test Case Id
+   */
+  source_test_case_id: string;
+  /**
+   * Status
+   */
+  status: string;
+  /**
+   * Workflow Id
+   */
+  workflow_id: string | null;
 };
 
 /**
@@ -577,6 +710,20 @@ export type CreateBrowserProfileRequest = {
    * Target Domain
    */
   target_domain?: string;
+};
+
+/**
+ * CreateCaseTrialRunRequest
+ */
+export type CreateCaseTrialRunRequest = {
+  /**
+   * Agent Version Id
+   */
+  agent_version_id: string;
+  /**
+   * Environment Template Id
+   */
+  environment_template_id: string;
 };
 
 /**
@@ -786,6 +933,18 @@ export type CreatePolicyRequest = {
  */
 export type CreateProjectRequest = {
   /**
+   * Description
+   */
+  description?: string | null;
+  /**
+   * Key
+   */
+  key?: string | null;
+  /**
+   * Lead User Id
+   */
+  lead_user_id?: string | null;
+  /**
    * Name
    */
   name: string;
@@ -852,15 +1011,39 @@ export type CreateTargetChatRequest = {
  */
 export type CreateTestCaseRequest = {
   /**
+   * Artifact Requirements
+   */
+  artifact_requirements?: Array<ArtifactRequirementV1>;
+  /**
    * Assertions
    */
   assertions?: Array<{
     [key: string]: unknown;
   }>;
+  automation_status?: AutomationStatus;
+  case_type?: TestCaseType;
+  /**
+   * Component
+   */
+  component?: string | null;
+  /**
+   * Custom Fields
+   */
+  custom_fields?: {
+    [key: string]: unknown;
+  };
+  /**
+   * Data Bindings
+   */
+  data_bindings?: Array<DataBindingV1>;
   /**
    * Difficulty
    */
   difficulty?: string | null;
+  /**
+   * Estimated Duration Seconds
+   */
+  estimated_duration_seconds?: number | null;
   execution_mode: ExecutionMode;
   /**
    * Expected Outcome
@@ -884,7 +1067,31 @@ export type CreateTestCaseRequest = {
    * Name
    */
   name: string;
+  /**
+   * Objective
+   */
+  objective?: string | null;
+  /**
+   * Owner Id
+   */
+  owner_id?: string | null;
+  /**
+   * Postconditions
+   */
+  postconditions?: Array<string>;
+  /**
+   * Preconditions
+   */
+  preconditions?: Array<string>;
   priority?: Priority | null;
+  /**
+   * Requirement Refs
+   */
+  requirement_refs?: Array<string>;
+  /**
+   * Retry Count
+   */
+  retry_count?: number;
   risk_level?: RiskLevel | null;
   /**
    * Scenario
@@ -903,10 +1110,23 @@ export type CreateTestCaseRequest = {
     [key: string]: unknown;
   }>;
   /**
+   * Source Ref
+   */
+  source_ref?: string | null;
+  /**
+   * Steps
+   */
+  steps?: Array<TestStepV1>;
+  /**
    * Tags
    */
   tags?: Array<string>;
+  template?: TestCaseTemplate;
   test_group?: TestGroup | null;
+  /**
+   * Timeout Seconds
+   */
+  timeout_seconds?: number | null;
 };
 
 /**
@@ -962,6 +1182,53 @@ export type CreateUserRequest = {
 };
 
 /**
+ * DataBindingSource
+ *
+ * 测试数据的受控来源。
+ */
+export type DataBindingSource =
+  | "literal"
+  | "environment"
+  | "credential"
+  | "fixture"
+  | "generated";
+
+/**
+ * DataBindingV1
+ */
+export type DataBindingV1 = {
+  /**
+   * Description
+   */
+  description?: string | null;
+  /**
+   * Name
+   */
+  name: string;
+  /**
+   * Reference
+   */
+  reference?: string | null;
+  /**
+   * Sensitive
+   */
+  sensitive?: boolean;
+  source?: DataBindingSource;
+  /**
+   * Value
+   */
+  value?: unknown | null;
+  value_type?: DataValueType;
+};
+
+/**
+ * DataValueType
+ *
+ * 表单和执行器共同使用的数据值类型。
+ */
+export type DataValueType = "string" | "number" | "boolean" | "json";
+
+/**
  * DatasetListResponse
  */
 export type DatasetListResponse = {
@@ -980,6 +1247,22 @@ export type DatasetListResponse = {
  */
 export type DatasetResponse = {
   /**
+   * Api Count
+   */
+  api_count?: number;
+  /**
+   * Browser Count
+   */
+  browser_count?: number;
+  /**
+   * Case Count
+   */
+  case_count?: number;
+  /**
+   * Codex Explore Count
+   */
+  codex_explore_count?: number;
+  /**
    * Created At
    */
   created_at: string;
@@ -995,14 +1278,35 @@ export type DatasetResponse = {
    * Id
    */
   id: string;
+  latest_version?: ResourceReference | null;
   /**
    * Name
    */
   name: string;
   /**
+   * Priority Coverage
+   */
+  priority_coverage?: {
+    [key: string]: number;
+  };
+  /**
    * Project Id
    */
   project_id: string;
+  /**
+   * Published At
+   */
+  published_at?: string | null;
+  /**
+   * Ready Count
+   */
+  ready_count?: number;
+  /**
+   * Source Distribution
+   */
+  source_distribution?: {
+    [key: string]: number;
+  };
   /**
    * Updated At
    */
@@ -1011,6 +1315,10 @@ export type DatasetResponse = {
    * Updated By
    */
   updated_by: string;
+  /**
+   * Version Status
+   */
+  version_status?: string | null;
 };
 
 /**
@@ -1152,6 +1460,7 @@ export type EnvironmentTemplateListResponse = {
  * EnvironmentTemplateResponse
  */
 export type EnvironmentTemplateResponse = {
+  browser_profile_ref?: ResourceReference | null;
   /**
    * Config
    */
@@ -1167,6 +1476,11 @@ export type EnvironmentTemplateResponse = {
    */
   created_by: string;
   /**
+   * Credential Binding Count
+   */
+  credential_binding_count?: number;
+  current_version?: ResourceReference | null;
+  /**
    * Description
    */
   description: string | null;
@@ -1174,6 +1488,14 @@ export type EnvironmentTemplateResponse = {
    * Id
    */
   id: string;
+  /**
+   * Last Run At
+   */
+  last_run_at?: string | null;
+  /**
+   * Last Validated At
+   */
+  last_validated_at?: string | null;
   /**
    * Name
    */
@@ -1187,6 +1509,14 @@ export type EnvironmentTemplateResponse = {
    * Updated At
    */
   updated_at: string;
+  /**
+   * Validation Status
+   */
+  validation_status?: string | null;
+  /**
+   * Version Status
+   */
+  version_status?: string | null;
 };
 
 /**
@@ -1321,6 +1651,90 @@ export type ExemptRequest = {
 };
 
 /**
+ * ExperimentListResponse
+ */
+export type ExperimentListResponse = {
+  /**
+   * Items
+   */
+  items: Array<ExperimentSummaryResponse>;
+};
+
+/**
+ * ExperimentSummaryResponse
+ */
+export type ExperimentSummaryResponse = {
+  baseline_run_ref?: ResourceReference | null;
+  candidate_run_ref?: ResourceReference | null;
+  /**
+   * Case Count
+   */
+  case_count?: number;
+  /**
+   * Cost Delta
+   */
+  cost_delta?: number | null;
+  /**
+   * Created At
+   */
+  created_at: string;
+  /**
+   * Description
+   */
+  description: string | null;
+  /**
+   * Id
+   */
+  id: string;
+  /**
+   * Improved Count
+   */
+  improved_count?: number;
+  /**
+   * Name
+   */
+  name: string;
+  /**
+   * Pass Rate Delta
+   */
+  pass_rate_delta?: number | null;
+  /**
+   * Project Id
+   */
+  project_id: string;
+  /**
+   * Regressed Count
+   */
+  regressed_count?: number;
+  /**
+   * Result Json
+   */
+  result_json: {
+    [key: string]: unknown;
+  };
+  /**
+   * Run A Id
+   */
+  run_a_id: string;
+  /**
+   * Run B Id
+   */
+  run_b_id: string;
+  /**
+   * Score Delta
+   */
+  score_delta?: number | null;
+  /**
+   * Status
+   */
+  status: string;
+  /**
+   * Updated At
+   */
+  updated_at: string;
+};
+
+/**
  * ExportTestCasesResponse
  */
 export type ExportTestCasesResponse = {
@@ -1373,6 +1787,83 @@ export type FeedbackResponse = {
  * 反馈类型枚举。
  */
 export type FeedbackType = "bug" | "feature" | "ux" | "other";
+
+/**
+ * GateListResponse
+ */
+export type GateListResponse = {
+  /**
+   * Items
+   */
+  items: Array<GateSummaryResponse>;
+};
+
+/**
+ * GateSummaryResponse
+ */
+export type GateSummaryResponse = {
+  /**
+   * Blocking Count
+   */
+  blocking_count?: number;
+  /**
+   * Cost Limit
+   */
+  cost_limit: number | null;
+  /**
+   * Created At
+   */
+  created_at: string;
+  /**
+   * Critical Cases
+   */
+  critical_cases: Array<string>;
+  /**
+   * Enabled
+   */
+  enabled: boolean;
+  /**
+   * Evaluated At
+   */
+  evaluated_at?: string | null;
+  /**
+   * Id
+   */
+  id: string;
+  /**
+   * Last Decision
+   */
+  last_decision?: string | null;
+  last_run_ref?: ResourceReference | null;
+  /**
+   * Name
+   */
+  name: string;
+  /**
+   * Project Id
+   */
+  project_id: string;
+  /**
+   * Rule Summary
+   */
+  rule_summary?: string;
+  /**
+   * Scope
+   */
+  scope?: string;
+  /**
+   * Security Threshold
+   */
+  security_threshold: number;
+  /**
+   * Success Rate Threshold
+   */
+  success_rate_threshold: number;
+  /**
+   * Updated At
+   */
+  updated_at: string;
+};
 
 /**
  * HTTPValidationError
@@ -1752,17 +2243,86 @@ export type ProjectMembersResponse = {
  */
 export type ProjectResponse = {
   /**
+   * Active Environment Count
+   */
+  active_environment_count?: number;
+  /**
+   * Agent Count
+   */
+  agent_count?: number;
+  /**
    * Archived
    */
   archived: boolean;
+  /**
+   * Created At
+   */
+  created_at: string;
+  /**
+   * Created By
+   */
+  created_by: string;
+  /**
+   * Dataset Count
+   */
+  dataset_count?: number;
+  /**
+   * Description
+   */
+  description: string | null;
   /**
    * Id
    */
   id: string;
   /**
+   * Key
+   */
+  key: string;
+  last_run?: ResourceReference | null;
+  /**
+   * Last Run At
+   */
+  last_run_at?: string | null;
+  /**
+   * Last Run Status
+   */
+  last_run_status?: string | null;
+  /**
+   * Lead User Id
+   */
+  lead_user_id: string | null;
+  /**
+   * Member Count
+   */
+  member_count?: number;
+  /**
    * Name
    */
   name: string;
+  /**
+   * Open Review Count
+   */
+  open_review_count?: number;
+  /**
+   * Status
+   */
+  status: "active" | "archived";
+  /**
+   * Test Case Count
+   */
+  test_case_count?: number;
+  /**
+   * Test Plan Count
+   */
+  test_plan_count?: number;
+  /**
+   * Updated At
+   */
+  updated_at: string;
+  /**
+   * Updated By
+   */
+  updated_by: string;
 };
 
 /**
@@ -1896,9 +2456,17 @@ export type RegressionCandidateResponse = {
  */
 export type RenameProjectRequest = {
   /**
+   * Description
+   */
+  description?: string | null;
+  /**
+   * Lead User Id
+   */
+  lead_user_id?: string | null;
+  /**
    * Name
    */
-  name: string;
+  name?: string | null;
 };
 
 /**
@@ -1909,6 +2477,147 @@ export type ResetPasswordRequest = {
    * New Password
    */
   new_password: string;
+};
+
+/**
+ * ResourceReference
+ *
+ * An internal reference whose href is created only from an allowlisted type.
+ */
+export type ResourceReference = {
+  /**
+   * Href
+   */
+  href: string | null;
+  /**
+   * Id
+   */
+  id: string;
+  /**
+   * Key
+   */
+  key?: string | null;
+  /**
+   * Name
+   */
+  name: string;
+  resource_type: ResourceType;
+  /**
+   * Status
+   */
+  status?: string | null;
+  /**
+   * Version
+   */
+  version?: number | string | null;
+};
+
+/**
+ * ResourceType
+ */
+export type ResourceType =
+  | "user"
+  | "project"
+  | "agent"
+  | "agent_version"
+  | "dataset"
+  | "dataset_version"
+  | "test_case"
+  | "test_plan"
+  | "test_plan_version"
+  | "run"
+  | "environment"
+  | "environment_version"
+  | "scorer"
+  | "experiment"
+  | "security_scan"
+  | "security_profile"
+  | "review"
+  | "release_gate";
+
+/**
+ * ReviewListResponse
+ */
+export type ReviewListResponse = {
+  /**
+   * Items
+   */
+  items: Array<ReviewSummaryResponse>;
+  /**
+   * Total
+   */
+  total: number;
+};
+
+/**
+ * ReviewSummaryResponse
+ */
+export type ReviewSummaryResponse = {
+  /**
+   * Age Seconds
+   */
+  age_seconds?: number;
+  assignee_ref?: ResourceReference | null;
+  case_ref?: ResourceReference | null;
+  /**
+   * Confidence
+   */
+  confidence: number;
+  /**
+   * Created At
+   */
+  created_at: string;
+  /**
+   * Enqueue Reason
+   */
+  enqueue_reason?: string;
+  /**
+   * Id
+   */
+  id: string;
+  /**
+   * Opinion
+   */
+  opinion: string | null;
+  /**
+   * Priority
+   */
+  priority?: number;
+  /**
+   * Project Id
+   */
+  project_id: string;
+  /**
+   * Reviewed At
+   */
+  reviewed_at: string | null;
+  /**
+   * Reviewer Id
+   */
+  reviewer_id: string | null;
+  /**
+   * Rubric Scores
+   */
+  rubric_scores: {
+    [key: string]: number;
+  } | null;
+  /**
+   * Run Case Id
+   */
+  run_case_id: string;
+  run_ref?: ResourceReference | null;
+  /**
+   * Score
+   */
+  score: number | null;
+  /**
+   * Status
+   */
+  status: string;
+  /**
+   * Updated At
+   */
+  updated_at: string;
 };
 
 /**
@@ -1932,6 +2641,12 @@ export type RunCaseListResponse = {
  * RunCaseResponse
  */
 export type RunCaseResponse = {
+  /**
+   * Case Spec Snapshot
+   */
+  case_spec_snapshot: {
+    [key: string]: unknown;
+  };
   /**
    * Duration Ms
    */
@@ -2012,6 +2727,7 @@ export type RunListResponse = {
  * RunResponse
  */
 export type RunResponse = {
+  agent_ref?: ResourceReference | null;
   /**
    * Cancelled Cases
    */
@@ -2021,9 +2737,19 @@ export type RunResponse = {
    */
   completed_at: string | null;
   /**
+   * Cost
+   */
+  cost?: number | null;
+  /**
    * Created At
    */
   created_at: string;
+  created_by_ref?: ResourceReference | null;
+  dataset_ref?: ResourceReference | null;
+  /**
+   * Duration Ms
+   */
+  duration_ms?: number | null;
   /**
    * Error Cases
    */
@@ -2040,10 +2766,28 @@ export type RunResponse = {
    * Passed Cases
    */
   passed_cases: number;
+  plan_ref?: ResourceReference | null;
+  /**
+   * Progress
+   */
+  progress?: number;
   /**
    * Project Id
    */
   project_id: string;
+  /**
+   * Run Number
+   */
+  run_number: string;
+  /**
+   * Run Type
+   */
+  run_type: string;
+  source_case_ref?: ResourceReference | null;
+  /**
+   * Source Test Case Id
+   */
+  source_test_case_id: string | null;
   /**
    * Started At
    */
@@ -2055,11 +2799,21 @@ export type RunResponse = {
   /**
    * Test Plan Version Id
    */
-  test_plan_version_id: string;
+  test_plan_version_id: string | null;
+  /**
+   * Token Usage
+   */
+  token_usage?: {
+    [key: string]: number;
+  } | null;
   /**
    * Total Cases
    */
   total_cases: number;
+  /**
+   * Trigger Type
+   */
+  trigger_type?: string;
   /**
    * Workflow Id
    */
@@ -2087,6 +2841,103 @@ export type ScoreReviewRequest = {
 };
 
 /**
+ * ScorerListResponse
+ */
+export type ScorerListResponse = {
+  /**
+   * Items
+   */
+  items: Array<ScorerSummaryResponse>;
+  /**
+   * Total
+   */
+  total: number;
+};
+
+/**
+ * ScorerSummaryResponse
+ */
+export type ScorerSummaryResponse = {
+  /**
+   * Config Json
+   */
+  config_json: {
+    [key: string]: unknown;
+  };
+  /**
+   * Created At
+   */
+  created_at: string;
+  /**
+   * Description
+   */
+  description: string | null;
+  /**
+   * Enabled
+   */
+  enabled: boolean;
+  /**
+   * Id
+   */
+  id: string;
+  /**
+   * Last Calibrated At
+   */
+  last_calibrated_at?: string | null;
+  /**
+   * Latest Published Version Id
+   */
+  latest_published_version_id: string | null;
+  /**
+   * Latest Published Version Number
+   */
+  latest_published_version_number: number | null;
+  latest_version?: ResourceReference | null;
+  /**
+   * Name
+   */
+  name: string;
+  /**
+   * Project Id
+   */
+  project_id: string;
+  /**
+   * Scorer Type
+   */
+  scorer_type: string;
+  /**
+   * Threshold
+   */
+  threshold: number;
+  /**
+   * Updated At
+   */
+  updated_at: string;
+  /**
+   * Usage Count
+   */
+  usage_count?: number;
+  /**
+   * Version Status
+   */
+  version_status?: string | null;
+  /**
+   * Weight
+   */
+  weight: number;
+};
+
+/**
+ * SecurityScanListResponse
+ */
+export type SecurityScanListResponse = {
+  /**
+   * Items
+   */
+  items: Array<SecurityScanSummaryResponse>;
+};
+
+/**
  * SecurityScanRequest
  */
 export type SecurityScanRequest = {
@@ -2110,6 +2961,95 @@ export type SecurityScanRequest = {
    * Security Profile Id
    */
   security_profile_id?: string | null;
+};
+
+/**
+ * SecurityScanSummaryResponse
+ */
+export type SecurityScanSummaryResponse = {
+  agent_ref?: ResourceReference | null;
+  /**
+   * Agent Version Id
+   */
+  agent_version_id: string | null;
+  /**
+   * Completed At
+   */
+  completed_at: string | null;
+  /**
+   * Created At
+   */
+  created_at: string;
+  /**
+   * Critical Count
+   */
+  critical_count?: number;
+  /**
+   * Duration Ms
+   */
+  duration_ms?: number | null;
+  /**
+   * Environment Version Id
+   */
+  environment_version_id: string | null;
+  /**
+   * Findings
+   */
+  findings: Array<{
+    [key: string]: unknown;
+  }>;
+  /**
+   * High Count
+   */
+  high_count?: number;
+  /**
+   * Id
+   */
+  id: string;
+  /**
+   * Low Count
+   */
+  low_count?: number;
+  /**
+   * Medium Count
+   */
+  medium_count?: number;
+  profile_ref?: ResourceReference | null;
+  /**
+   * Project Id
+   */
+  project_id: string;
+  /**
+   * Run Id
+   */
+  run_id: string | null;
+  run_ref?: ResourceReference | null;
+  /**
+   * Scan Type
+   */
+  scan_type: string;
+  /**
+   * Security Profile Id
+   */
+  security_profile_id: string | null;
+  /**
+   * Started At
+   */
+  started_at?: string | null;
+  /**
+   * Status
+   */
+  status: string;
+  /**
+   * Summary
+   */
+  summary: {
+    [key: string]: unknown;
+  };
+  /**
+   * Updated At
+   */
+  updated_at: string;
 };
 
 /**
@@ -2180,15 +3120,48 @@ export type TestCaseListResponse = {
  */
 export type TestCaseResponse = {
   /**
+   * Artifact Requirements
+   */
+  artifact_requirements: Array<{
+    [key: string]: unknown;
+  }>;
+  /**
    * Assertions
    */
   assertions: Array<{
     [key: string]: unknown;
   }>;
+  automation_status: AutomationStatus;
+  /**
+   * Case Key
+   */
+  case_key: string | null;
+  case_status: TestCaseStatus;
+  case_type: TestCaseType;
+  /**
+   * Component
+   */
+  component: string | null;
   /**
    * Created At
    */
   created_at: string | null;
+  /**
+   * Created By
+   */
+  created_by: string | null;
+  /**
+   * Custom Fields
+   */
+  custom_fields: {
+    [key: string]: unknown;
+  };
+  /**
+   * Data Bindings
+   */
+  data_bindings: Array<{
+    [key: string]: unknown;
+  }>;
   /**
    * Dataset Version Id
    */
@@ -2197,6 +3170,10 @@ export type TestCaseResponse = {
    * Difficulty
    */
   difficulty: string | null;
+  /**
+   * Estimated Duration Seconds
+   */
+  estimated_duration_seconds: number | null;
   execution_mode: ExecutionMode;
   /**
    * Expected Outcome
@@ -2224,7 +3201,31 @@ export type TestCaseResponse = {
    * Name
    */
   name: string;
+  /**
+   * Objective
+   */
+  objective: string;
+  /**
+   * Owner Id
+   */
+  owner_id: string | null;
+  /**
+   * Postconditions
+   */
+  postconditions: Array<string>;
+  /**
+   * Preconditions
+   */
+  preconditions: Array<string>;
   priority: Priority | null;
+  /**
+   * Requirement Refs
+   */
+  requirement_refs: Array<string>;
+  /**
+   * Retry Count
+   */
+  retry_count: number;
   risk_level: RiskLevel | null;
   /**
    * Scenario
@@ -2246,15 +3247,110 @@ export type TestCaseResponse = {
    * Sort Order
    */
   sort_order: number;
+  source: TestCaseSource;
+  /**
+   * Source Ref
+   */
+  source_ref: string | null;
+  /**
+   * Steps
+   */
+  steps: Array<TestStepV1>;
   /**
    * Tags
    */
   tags: Array<string>;
+  template: TestCaseTemplate;
   test_group: TestGroup | null;
+  /**
+   * Timeout Seconds
+   */
+  timeout_seconds: number | null;
   /**
    * Updated At
    */
   updated_at: string | null;
+  /**
+   * Updated By
+   */
+  updated_by: string | null;
+};
+
+/**
+ * TestCaseSource
+ *
+ * 用例来源，用于审计和列表筛选。
+ */
+export type TestCaseSource =
+  | "manual"
+  | "agent_generated"
+  | "imported"
+  | "run_regression";
+
+/**
+ * TestCaseStatus
+ *
+ * 用例评审状态；与数据集版本的发布状态相互独立。
+ */
+export type TestCaseStatus = "draft" | "ready" | "deprecated";
+
+/**
+ * TestCaseTemplate
+ *
+ * 专业测试用例模板。
+ */
+export type TestCaseTemplate = "step_by_step" | "text" | "bdd" | "ai_eval";
+
+/**
+ * TestCaseType
+ *
+ * 测试用例覆盖的质量类型。
+ */
+export type TestCaseType =
+  | "functional"
+  | "regression"
+  | "smoke"
+  | "integration"
+  | "e2e"
+  | "security"
+  | "performance"
+  | "usability"
+  | "exploratory";
+
+/**
+ * TestCaseValidationIssue
+ */
+export type TestCaseValidationIssue = {
+  /**
+   * Code
+   */
+  code: string;
+  /**
+   * Field
+   */
+  field: string;
+  /**
+   * Message
+   */
+  message: string;
+  /**
+   * Severity
+   */
+  severity?: "error" | "warning";
+};
+
+/**
+ * TestCaseValidationResponse
+ */
+export type TestCaseValidationResponse = {
+  /**
+   * Issues
+   */
+  issues: Array<TestCaseValidationIssue>;
+  /**
+   * Ready
+   */
+  ready: boolean;
 };
 
 /**
@@ -2370,6 +3466,15 @@ export type TestPlanListResponse = {
  * TestPlanResponse
  */
 export type TestPlanResponse = {
+  agent_ref?: ResourceReference | null;
+  /**
+   * Case Count
+   */
+  case_count?: number;
+  /**
+   * Concurrency
+   */
+  concurrency?: number;
   /**
    * Created At
    */
@@ -2378,22 +3483,49 @@ export type TestPlanResponse = {
    * Created By
    */
   created_by: string;
+  dataset_ref?: ResourceReference | null;
   /**
    * Description
    */
   description: string | null;
+  environment_ref?: ResourceReference | null;
   /**
    * Id
    */
   id: string;
   /**
+   * Last Run Status
+   */
+  last_run_status?: string | null;
+  latest_version?: ResourceReference | null;
+  /**
    * Name
    */
   name: string;
   /**
+   * Pass Rate
+   */
+  pass_rate?: number | null;
+  /**
    * Project Id
    */
   project_id: string;
+  /**
+   * Repeat Count
+   */
+  repeat_count?: number;
+  /**
+   * Retry Count
+   */
+  retry_count?: number;
+  /**
+   * Scorer Count
+   */
+  scorer_count?: number;
+  /**
+   * Timeout Seconds
+   */
+  timeout_seconds?: number | null;
   /**
    * Updated At
    */
@@ -2402,6 +3534,10 @@ export type TestPlanResponse = {
    * Updated By
    */
   updated_by: string;
+  /**
+   * Version Status
+   */
+  version_status?: string | null;
 };
 
 /**
@@ -2465,6 +3601,41 @@ export type TestPlanVersionResponse = {
    * Version Number
    */
   version_number: number;
+};
+
+/**
+ * TestStepV1
+ */
+export type TestStepV1 = {
+  /**
+   * Action
+   */
+  action: string;
+  /**
+   * Artifact Requirements
+   */
+  artifact_requirements?: Array<ArtifactRequirementV1>;
+  /**
+   * Assertions
+   */
+  assertions?: Array<{
+    [key: string]: unknown;
+  }>;
+  /**
+   * Expected Result
+   */
+  expected_result: string;
+  operation?: BrowserOperationV1 | null;
+  /**
+   * Step No
+   */
+  step_no: number;
+  /**
+   * Test Data
+   */
+  test_data?: {
+    [key: string]: unknown;
+  };
 };
 
 /**
@@ -2806,15 +3977,39 @@ export type UpdateSettingsRequest = {
  */
 export type UpdateTestCaseRequest = {
   /**
+   * Artifact Requirements
+   */
+  artifact_requirements?: Array<ArtifactRequirementV1> | null;
+  /**
    * Assertions
    */
   assertions?: Array<{
     [key: string]: unknown;
   }> | null;
+  automation_status?: AutomationStatus | null;
+  case_type?: TestCaseType | null;
+  /**
+   * Component
+   */
+  component?: string | null;
+  /**
+   * Custom Fields
+   */
+  custom_fields?: {
+    [key: string]: unknown;
+  } | null;
+  /**
+   * Data Bindings
+   */
+  data_bindings?: Array<DataBindingV1> | null;
   /**
    * Difficulty
    */
   difficulty?: string | null;
+  /**
+   * Estimated Duration Seconds
+   */
+  estimated_duration_seconds?: number | null;
   execution_mode?: ExecutionMode | null;
   /**
    * Expected Outcome
@@ -2838,7 +4033,31 @@ export type UpdateTestCaseRequest = {
    * Name
    */
   name?: string | null;
+  /**
+   * Objective
+   */
+  objective?: string | null;
+  /**
+   * Owner Id
+   */
+  owner_id?: string | null;
+  /**
+   * Postconditions
+   */
+  postconditions?: Array<string> | null;
+  /**
+   * Preconditions
+   */
+  preconditions?: Array<string> | null;
   priority?: Priority | null;
+  /**
+   * Requirement Refs
+   */
+  requirement_refs?: Array<string> | null;
+  /**
+   * Retry Count
+   */
+  retry_count?: number | null;
   risk_level?: RiskLevel | null;
   /**
    * Scenario
@@ -2861,10 +4080,23 @@ export type UpdateTestCaseRequest = {
    */
   sort_order?: number | null;
   /**
+   * Source Ref
+   */
+  source_ref?: string | null;
+  /**
+   * Steps
+   */
+  steps?: Array<TestStepV1> | null;
+  /**
    * Tags
    */
   tags?: Array<string> | null;
+  template?: TestCaseTemplate | null;
   test_group?: TestGroup | null;
+  /**
+   * Timeout Seconds
+   */
+  timeout_seconds?: number | null;
 };
 
 /**
@@ -5404,6 +6636,216 @@ export type UpdateCaseApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdCa
 export type UpdateCaseApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdCasesCaseIdPatchResponse =
   UpdateCaseApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdCasesCaseIdPatchResponses[keyof UpdateCaseApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdCasesCaseIdPatchResponses];
 
+export type DuplicateCaseApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdCasesCaseIdDuplicatePostData =
+  {
+    body?: never;
+    headers?: {
+      /**
+       * X-Csrf-Token
+       */
+      "x-csrf-token"?: string | null;
+    };
+    path: {
+      /**
+       * Project Id
+       */
+      project_id: string;
+      /**
+       * Dataset Id
+       */
+      dataset_id: string;
+      /**
+       * Version Id
+       */
+      version_id: string;
+      /**
+       * Case Id
+       */
+      case_id: string;
+    };
+    query?: never;
+    url: "/api/v1/projects/{project_id}/datasets/{dataset_id}/versions/{version_id}/cases/{case_id}/duplicate";
+  };
+
+export type DuplicateCaseApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdCasesCaseIdDuplicatePostErrors =
+  {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+  };
+
+export type DuplicateCaseApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdCasesCaseIdDuplicatePostError =
+  DuplicateCaseApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdCasesCaseIdDuplicatePostErrors[keyof DuplicateCaseApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdCasesCaseIdDuplicatePostErrors];
+
+export type DuplicateCaseApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdCasesCaseIdDuplicatePostResponses =
+  {
+    /**
+     * Successful Response
+     */
+    201: TestCaseResponse;
+  };
+
+export type DuplicateCaseApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdCasesCaseIdDuplicatePostResponse =
+  DuplicateCaseApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdCasesCaseIdDuplicatePostResponses[keyof DuplicateCaseApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdCasesCaseIdDuplicatePostResponses];
+
+export type MarkCaseReadyApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdCasesCaseIdMarkReadyPostData =
+  {
+    body?: never;
+    headers?: {
+      /**
+       * X-Csrf-Token
+       */
+      "x-csrf-token"?: string | null;
+    };
+    path: {
+      /**
+       * Project Id
+       */
+      project_id: string;
+      /**
+       * Dataset Id
+       */
+      dataset_id: string;
+      /**
+       * Version Id
+       */
+      version_id: string;
+      /**
+       * Case Id
+       */
+      case_id: string;
+    };
+    query?: never;
+    url: "/api/v1/projects/{project_id}/datasets/{dataset_id}/versions/{version_id}/cases/{case_id}/mark-ready";
+  };
+
+export type MarkCaseReadyApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdCasesCaseIdMarkReadyPostErrors =
+  {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+  };
+
+export type MarkCaseReadyApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdCasesCaseIdMarkReadyPostError =
+  MarkCaseReadyApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdCasesCaseIdMarkReadyPostErrors[keyof MarkCaseReadyApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdCasesCaseIdMarkReadyPostErrors];
+
+export type MarkCaseReadyApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdCasesCaseIdMarkReadyPostResponses =
+  {
+    /**
+     * Successful Response
+     */
+    200: TestCaseResponse;
+  };
+
+export type MarkCaseReadyApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdCasesCaseIdMarkReadyPostResponse =
+  MarkCaseReadyApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdCasesCaseIdMarkReadyPostResponses[keyof MarkCaseReadyApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdCasesCaseIdMarkReadyPostResponses];
+
+export type CreateCaseTrialRunApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdCasesCaseIdTrialRunsPostData =
+  {
+    body: CreateCaseTrialRunRequest;
+    headers?: {
+      /**
+       * Idempotency-Key
+       */
+      "Idempotency-Key"?: string | null;
+      /**
+       * X-Csrf-Token
+       */
+      "x-csrf-token"?: string | null;
+    };
+    path: {
+      /**
+       * Project Id
+       */
+      project_id: string;
+      /**
+       * Dataset Id
+       */
+      dataset_id: string;
+      /**
+       * Version Id
+       */
+      version_id: string;
+      /**
+       * Case Id
+       */
+      case_id: string;
+    };
+    query?: never;
+    url: "/api/v1/projects/{project_id}/datasets/{dataset_id}/versions/{version_id}/cases/{case_id}/trial-runs";
+  };
+
+export type CreateCaseTrialRunApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdCasesCaseIdTrialRunsPostErrors =
+  {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+  };
+
+export type CreateCaseTrialRunApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdCasesCaseIdTrialRunsPostError =
+  CreateCaseTrialRunApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdCasesCaseIdTrialRunsPostErrors[keyof CreateCaseTrialRunApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdCasesCaseIdTrialRunsPostErrors];
+
+export type CreateCaseTrialRunApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdCasesCaseIdTrialRunsPostResponses =
+  {
+    /**
+     * Successful Response
+     */
+    201: CaseTrialRunResponse;
+  };
+
+export type CreateCaseTrialRunApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdCasesCaseIdTrialRunsPostResponse =
+  CreateCaseTrialRunApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdCasesCaseIdTrialRunsPostResponses[keyof CreateCaseTrialRunApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdCasesCaseIdTrialRunsPostResponses];
+
+export type ValidateCaseApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdCasesCaseIdValidatePostData =
+  {
+    body?: never;
+    path: {
+      /**
+       * Project Id
+       */
+      project_id: string;
+      /**
+       * Dataset Id
+       */
+      dataset_id: string;
+      /**
+       * Version Id
+       */
+      version_id: string;
+      /**
+       * Case Id
+       */
+      case_id: string;
+    };
+    query?: never;
+    url: "/api/v1/projects/{project_id}/datasets/{dataset_id}/versions/{version_id}/cases/{case_id}/validate";
+  };
+
+export type ValidateCaseApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdCasesCaseIdValidatePostErrors =
+  {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+  };
+
+export type ValidateCaseApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdCasesCaseIdValidatePostError =
+  ValidateCaseApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdCasesCaseIdValidatePostErrors[keyof ValidateCaseApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdCasesCaseIdValidatePostErrors];
+
+export type ValidateCaseApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdCasesCaseIdValidatePostResponses =
+  {
+    /**
+     * Successful Response
+     */
+    200: TestCaseValidationResponse;
+  };
+
+export type ValidateCaseApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdCasesCaseIdValidatePostResponse =
+  ValidateCaseApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdCasesCaseIdValidatePostResponses[keyof ValidateCaseApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdCasesCaseIdValidatePostResponses];
+
 export type ExportCasesApiV1ProjectsProjectIdDatasetsDatasetIdVersionsVersionIdExportGetData =
   {
     body?: never;
@@ -6346,8 +7788,11 @@ export type ListExperimentsApiV1ProjectsProjectIdExperimentsGetResponses = {
   /**
    * Successful Response
    */
-  200: unknown;
+  200: ExperimentListResponse;
 };
+
+export type ListExperimentsApiV1ProjectsProjectIdExperimentsGetResponse =
+  ListExperimentsApiV1ProjectsProjectIdExperimentsGetResponses[keyof ListExperimentsApiV1ProjectsProjectIdExperimentsGetResponses];
 
 export type CreateExperimentApiV1ProjectsProjectIdExperimentsPostData = {
   body: CreateExperimentRequest;
@@ -6528,8 +7973,11 @@ export type ListGatesApiV1ProjectsProjectIdGatesGetResponses = {
   /**
    * Successful Response
    */
-  200: unknown;
+  200: GateListResponse;
 };
+
+export type ListGatesApiV1ProjectsProjectIdGatesGetResponse =
+  ListGatesApiV1ProjectsProjectIdGatesGetResponses[keyof ListGatesApiV1ProjectsProjectIdGatesGetResponses];
 
 export type CreateGateApiV1ProjectsProjectIdGatesPostData = {
   body: CreateGateRequest;
@@ -7333,8 +8781,11 @@ export type ListReviewsApiV1ProjectsProjectIdReviewsGetResponses = {
   /**
    * Successful Response
    */
-  200: unknown;
+  200: ReviewListResponse;
 };
+
+export type ListReviewsApiV1ProjectsProjectIdReviewsGetResponse =
+  ListReviewsApiV1ProjectsProjectIdReviewsGetResponses[keyof ListReviewsApiV1ProjectsProjectIdReviewsGetResponses];
 
 export type AutoEnqueueApiV1ProjectsProjectIdReviewsAutoEnqueuePostData = {
   body: AutoEnqueueRequest;
@@ -8207,8 +9658,11 @@ export type ListScorersApiV1ProjectsProjectIdScorersGetResponses = {
   /**
    * Successful Response
    */
-  200: unknown;
+  200: ScorerListResponse;
 };
+
+export type ListScorersApiV1ProjectsProjectIdScorersGetResponse =
+  ListScorersApiV1ProjectsProjectIdScorersGetResponses[keyof ListScorersApiV1ProjectsProjectIdScorersGetResponses];
 
 export type CreateScorerApiV1ProjectsProjectIdScorersPostData = {
   body: CreateScorerRequest;
@@ -8491,8 +9945,11 @@ export type ListScansApiV1ProjectsProjectIdSecurityScansGetResponses = {
   /**
    * Successful Response
    */
-  200: unknown;
+  200: SecurityScanListResponse;
 };
+
+export type ListScansApiV1ProjectsProjectIdSecurityScansGetResponse =
+  ListScansApiV1ProjectsProjectIdSecurityScansGetResponses[keyof ListScansApiV1ProjectsProjectIdSecurityScansGetResponses];
 
 export type TriggerScanApiV1ProjectsProjectIdSecurityScansPostData = {
   body: SecurityScanRequest;

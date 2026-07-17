@@ -4,9 +4,11 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from typing import Literal, Protocol
+from uuid import UUID
 
 from pydantic import BaseModel, Field
 
+from agenttest.modules.datasets.public import PlatformTestCaseV1
 from agenttest.modules.test_agent.application.registry import (
     Capability,
     CapabilityRegistry,
@@ -28,25 +30,29 @@ class NamedResourceInput(BaseModel):
     config: dict[str, object] = Field(default_factory=dict)
 
 
-class TestCaseDraftInput(BaseModel):
-    name: str = Field(min_length=1, max_length=200)
-    input: dict[str, object]
-    execution_mode: Literal["api", "browser", "codex_explore"] = Field(default="api")
-    assertions: list[dict[str, object]] = Field(default_factory=list)
-    scorers: list[dict[str, object]] = Field(default_factory=list)
-    initial_state: dict[str, object] | None = None
-    expected_outcome: dict[str, object] | None = None
-    security_policies: list[dict[str, object]] = Field(default_factory=list)
-    tags: list[str] = Field(default_factory=list)
-    scenario: str | None = None
-    priority: Literal["P0", "P1", "P2", "P3"] | None = None
-    risk_level: Literal["critical", "high", "medium", "low"] | None = None
-    difficulty: str | None = None
-    test_group: Literal["train", "validation", "test"] | None = None
-
-
 class DatasetWithCasesInput(NamedResourceInput):
-    cases: list[TestCaseDraftInput] = Field(min_length=1, max_length=500)
+    cases: list[PlatformTestCaseV1] = Field(min_length=1, max_length=500)
+
+
+class TestCaseCollectionInput(BaseModel):
+    dataset_version_id: UUID
+
+
+class TestCaseResourceInput(BaseModel):
+    case_id: UUID
+
+
+class TestCaseCreateInput(TestCaseCollectionInput):
+    case: PlatformTestCaseV1
+
+
+class TestCaseUpdateInput(TestCaseResourceInput):
+    case: PlatformTestCaseV1
+
+
+class TestCaseTrialRunInput(TestCaseResourceInput):
+    agent_version_id: UUID
+    environment_template_id: UUID
 
 
 class TestPlanVersionInput(NamedResourceInput):
@@ -175,6 +181,24 @@ def capability_specs() -> list[CapabilitySpec]:
         CapabilitySpec("credentials.list", "environment", RiskLevel.READ, QueryInput),
         CapabilitySpec("credentials.validate", "environment", RiskLevel.HIGH_IMPACT, ResourceInput),
         CapabilitySpec("datasets.list", "test_data", RiskLevel.READ, QueryInput),
+        CapabilitySpec("test_cases.list", "test_data", RiskLevel.READ, TestCaseCollectionInput),
+        CapabilitySpec("test_cases.get", "test_data", RiskLevel.READ, TestCaseResourceInput),
+        CapabilitySpec(
+            "test_cases.create", "test_data", RiskLevel.DRAFT_WRITE, TestCaseCreateInput
+        ),
+        CapabilitySpec(
+            "test_cases.update", "test_data", RiskLevel.DRAFT_WRITE, TestCaseUpdateInput
+        ),
+        CapabilitySpec("test_cases.validate", "test_data", RiskLevel.READ, TestCaseResourceInput),
+        CapabilitySpec(
+            "test_cases.mark_ready", "test_data", RiskLevel.DRAFT_WRITE, TestCaseResourceInput
+        ),
+        CapabilitySpec(
+            "test_cases.trial_run",
+            "test_data",
+            RiskLevel.HIGH_IMPACT,
+            TestCaseTrialRunInput,
+        ),
         CapabilitySpec(
             "datasets.create_with_cases",
             "test_data",

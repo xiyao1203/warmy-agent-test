@@ -1,7 +1,9 @@
-"""发布门禁 CRUD + 评估 API 路由。"""
+"""Release-gate HTTP adapter."""
 
 from __future__ import annotations
 
+from dataclasses import dataclass
+from datetime import datetime
 from typing import Protocol
 from uuid import UUID
 
@@ -9,17 +11,18 @@ from fastapi import APIRouter, Header, Request
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
-from agenttest.modules.gates.application.evaluate import GateEvidence, evaluate_evidence
-from agenttest.modules.gates.domain.entities import (
-    ReleaseGate,
-    ReleaseGateId,
+from agenttest.bootstrap.settings import Settings
+from agenttest.modules.gates.application.service import (
+    GateEvidenceNotFound,
+    GateNotFound,
+    GateService,
+    GateValidationError,
 )
-from agenttest.modules.gates.infrastructure.persistence.repositories import (
-    SqlAlchemyReleaseGateRepository,
-)
-from agenttest.modules.identity.public import InvalidSessionError
+from agenttest.modules.gates.domain.entities import ReleaseGate
+from agenttest.modules.identity.public import InvalidSessionError, User
 from agenttest.modules.projects.public import ProjectNotFoundError
 from agenttest.shared.api.auth_guard import require_actor, require_writer
+from agenttest.shared.application.core_summaries import CoreSummaryReader, GateSummaryMetrics
 
 
 class CreateGateRequest(BaseModel):
@@ -39,56 +42,66 @@ class ExemptRequest(BaseModel):
     reason: str
 
 
-class GateEvidencePort(Protocol):
-    async def load(self, project_id: UUID, run_id: UUID) -> GateEvidence | None: ...
-
-    async def record(
-        self,
-        *,
-        project_id: UUID,
-        gate_id: UUID,
-        actor_id: UUID,
-        evidence: GateEvidence,
-        passed: bool,
-        failures: list[str],
-        experiment_id: UUID | None,
-    ) -> UUID: ...
+class GateSummaryResponse(GateSummaryMetrics):
+    id: UUID
+    project_id: UUID
+    name: str
+    success_rate_threshold: float
+    critical_cases: list[str]
+    cost_limit: float | None
+    security_threshold: float
+    enabled: bool
+    created_at: datetime
+    updated_at: datetime
 
 
-def create_gate_router(
-    *,
-    session_factory,
-    actor_for,
-    check_project,
-    settings,
-    evidence_reader: GateEvidencePort,
-) -> APIRouter:
-    router = APIRouter(
-        prefix="/projects/{project_id}/gates",
-        tags=["release-gates"],
-    )
+class GateListResponse(BaseModel):
+    items: list[GateSummaryResponse]
 
-    repo = SqlAlchemyReleaseGateRepository(session_factory)
 
-    @router.get("")
+class ActorResolver(Protocol):
+    async def __call__(self, request: Request) -> User | None: ...
+
+
+@dataclass(frozen=True, slots=True)
+class GateApiDependencies:
+    service: GateService
+    actor_for: ActorResolver
+    settings: Settings
+    summaries: CoreSummaryReader | None = None
+
+
+def create_gate_router(dependencies: GateApiDependencies) -> APIRouter:
+    router = APIRouter(prefix="/projects/{project_id}/gates", tags=["release-gates"])
+
+    @router.get("", response_model=GateListResponse)
     async def list_gates(request: Request, project_id: UUID):
-        actor = await require_actor(request, actor_for, settings)
+        actor = await require_actor(request, dependencies.actor_for, dependencies.settings)
         if isinstance(actor, JSONResponse):
             return actor
         try:
-            await check_project(project_id)
-        except ProjectNotFoundError:
-            return JSONResponse(
-                status_code=404,
-                content={"detail": "项目不存在"},
+            gates = await dependencies.service.list_gates(actor, project_id)
+        except Exception as error:
+            response = _access_error(error)
+            if response is not None:
+                return response
+            raise
+        summaries = (
+            await dependencies.summaries.gates(
+                project_id,
+                [gate.gate_id.value for gate in gates],
             )
-        except InvalidSessionError:
-            return JSONResponse(
-                status_code=401,
-                content={"detail": "认证失败"},
-            )
-        gates = await repo.list_by_project(project_id)
-        return {"items": [_gate_to_dict(g) for g in gates]}
+            if dependencies.summaries
+            else {}
+        )
+        return {
+            "items": [
+                {**_gate_to_dict(gate), **summaries[gate.gate_id.value].model_dump()}
+                if gate.gate_id.value in summaries
+                else _gate_to_dict(gate)
+                for gate in gates
+            ]
+        }
 
     @router.post("")
     async def create_gate(
@@ -98,57 +111,43 @@ def create_gate_router(
         x_csrf_token: str | None = Header(default=None),
     ):
         actor = await require_writer(
-            request,
-            actor_for,
-            settings,
-            x_csrf_token,
+            request, dependencies.actor_for, dependencies.settings, x_csrf_token
         )
         if isinstance(actor, JSONResponse):
             return actor
         try:
-            await check_project(project_id)
-        except ProjectNotFoundError:
-            return JSONResponse(
-                status_code=404,
-                content={"detail": "项目不存在"},
-            )
-        except InvalidSessionError:
-            return JSONResponse(
-                status_code=401,
-                content={"detail": "认证失败"},
-            )
-        try:
-            gate = ReleaseGate.create(
-                project_id=project_id,
+            gate = await dependencies.service.create(
+                actor,
+                project_id,
                 name=body.name,
                 success_rate_threshold=body.success_rate_threshold,
                 critical_cases=body.critical_cases,
                 cost_limit=body.cost_limit,
                 security_threshold=body.security_threshold,
             )
-        except ValueError as e:
-            return JSONResponse(status_code=422, content={"detail": str(e)})
-        await repo.add(gate)
+        except GateValidationError as error:
+            return JSONResponse(status_code=422, content={"detail": str(error)})
+        except Exception as error:
+            response = _access_error(error)
+            if response is not None:
+                return response
+            raise
         return _gate_to_dict(gate)
 
     @router.get("/{gate_id}")
-    async def get_gate(
-        request: Request,
-        project_id: UUID,
-        gate_id: UUID,
-    ):
-        actor = await require_actor(request, actor_for, settings)
+    async def get_gate(request: Request, project_id: UUID, gate_id: UUID):
+        actor = await require_actor(request, dependencies.actor_for, dependencies.settings)
         if isinstance(actor, JSONResponse):
             return actor
-        gate = await repo.get_by_id_and_project(
-            ReleaseGateId(gate_id),
-            project_id,
-        )
-        if gate is None:
-            return JSONResponse(
-                status_code=404,
-                content={"detail": "门禁不存在"},
-            )
+        try:
+            gate = await dependencies.service.get(actor, project_id, gate_id)
+        except GateNotFound:
+            return JSONResponse(status_code=404, content={"detail": "门禁不存在"})
+        except Exception as error:
+            response = _access_error(error)
+            if response is not None:
+                return response
+            raise
         return _gate_to_dict(gate)
 
     @router.post("/{gate_id}/evaluate")
@@ -161,40 +160,33 @@ def create_gate_router(
     ):
         """评估门禁是否通过。"""
         actor = await require_writer(
-            request,
-            actor_for,
-            settings,
-            x_csrf_token,
+            request, dependencies.actor_for, dependencies.settings, x_csrf_token
         )
         if isinstance(actor, JSONResponse):
             return actor
-        gate = await repo.get_by_id_and_project(
-            ReleaseGateId(gate_id),
-            project_id,
-        )
-        if gate is None:
-            return JSONResponse(
-                status_code=404,
-                content={"detail": "门禁不存在"},
+        try:
+            evaluated = await dependencies.service.evaluate(
+                actor,
+                project_id,
+                gate_id,
+                run_id=body.run_id,
+                experiment_id=body.experiment_id,
             )
-        evidence = await evidence_reader.load(project_id, body.run_id)
-        if evidence is None:
+        except GateNotFound:
+            return JSONResponse(status_code=404, content={"detail": "门禁不存在"})
+        except GateEvidenceNotFound:
             return JSONResponse(status_code=404, content={"detail": "执行记录不存在"})
-        result = evaluate_evidence(gate, evidence)
-        decision_id = await evidence_reader.record(
-            project_id=project_id,
-            gate_id=gate_id,
-            actor_id=actor.user_id.value,
-            evidence=evidence,
-            passed=result.passed,
-            failures=result.failures,
-            experiment_id=body.experiment_id,
-        )
+        except Exception as error:
+            response = _access_error(error)
+            if response is not None:
+                return response
+            raise
+        evidence = evaluated.evidence
         return {
             "gate_id": str(gate_id),
-            "decision_id": str(decision_id),
+            "decision_id": str(evaluated.decision_id),
             "run_id": str(body.run_id),
-            "result": result.to_dict(),
+            "result": evaluated.result.to_dict(),
             "facts": {
                 "pass_rate": evidence.pass_rate,
                 "critical_passed": evidence.critical_passed,
@@ -214,24 +206,19 @@ def create_gate_router(
     ):
         """临时豁免门禁（记录审计日志）。"""
         actor = await require_writer(
-            request,
-            actor_for,
-            settings,
-            x_csrf_token,
+            request, dependencies.actor_for, dependencies.settings, x_csrf_token
         )
         if isinstance(actor, JSONResponse):
             return actor
-        gate = await repo.get_by_id_and_project(
-            ReleaseGateId(gate_id),
-            project_id,
-        )
-        if gate is None:
-            return JSONResponse(
-                status_code=404,
-                content={"detail": "门禁不存在"},
-            )
-        gate.toggle()
-        await repo.save(gate)
+        try:
+            await dependencies.service.exempt(actor, project_id, gate_id)
+        except GateNotFound:
+            return JSONResponse(status_code=404, content={"detail": "门禁不存在"})
+        except Exception as error:
+            response = _access_error(error)
+            if response is not None:
+                return response
+            raise
         return {
             "gate_id": str(gate_id),
             "exempted": True,
@@ -247,38 +234,44 @@ def create_gate_router(
         x_csrf_token: str | None = Header(default=None),
     ):
         actor = await require_writer(
-            request,
-            actor_for,
-            settings,
-            x_csrf_token,
+            request, dependencies.actor_for, dependencies.settings, x_csrf_token
         )
         if isinstance(actor, JSONResponse):
             return actor
-        gate = await repo.get_by_id_and_project(
-            ReleaseGateId(gate_id),
-            project_id,
-        )
-        if gate is None:
-            return JSONResponse(
-                status_code=404,
-                content={"detail": "门禁不存在"},
-            )
-        await repo.delete(ReleaseGateId(gate_id))
+        try:
+            await dependencies.service.delete(actor, project_id, gate_id)
+        except GateNotFound:
+            return JSONResponse(status_code=404, content={"detail": "门禁不存在"})
+        except Exception as error:
+            response = _access_error(error)
+            if response is not None:
+                return response
+            raise
         return {"status": "deleted", "gate_id": str(gate_id)}
 
     return router
 
 
-def _gate_to_dict(g: ReleaseGate) -> dict[str, object]:
+def _access_error(error: Exception) -> JSONResponse | None:
+    if isinstance(error, InvalidSessionError):
+        return JSONResponse(status_code=401, content={"detail": "认证失败"})
+    if isinstance(error, PermissionError):
+        return JSONResponse(status_code=403, content={"detail": "Forbidden"})
+    if isinstance(error, ProjectNotFoundError):
+        return JSONResponse(status_code=404, content={"detail": "项目不存在"})
+    return None
+
+
+def _gate_to_dict(gate: ReleaseGate) -> dict[str, object]:
     return {
-        "id": str(g.gate_id.value),
-        "project_id": str(g.project_id),
-        "name": g.name,
-        "success_rate_threshold": g.success_rate_threshold,
-        "critical_cases": g.critical_cases,
-        "cost_limit": g.cost_limit,
-        "security_threshold": g.security_threshold,
-        "enabled": g.enabled,
-        "created_at": g.created_at.isoformat(),
-        "updated_at": g.updated_at.isoformat(),
+        "id": str(gate.gate_id.value),
+        "project_id": str(gate.project_id),
+        "name": gate.name,
+        "success_rate_threshold": gate.success_rate_threshold,
+        "critical_cases": gate.critical_cases,
+        "cost_limit": gate.cost_limit,
+        "security_threshold": gate.security_threshold,
+        "enabled": gate.enabled,
+        "created_at": gate.created_at.isoformat(),
+        "updated_at": gate.updated_at.isoformat(),
     }

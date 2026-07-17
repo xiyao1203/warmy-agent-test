@@ -4,8 +4,8 @@ import { useQuery } from "@tanstack/react-query";
 
 import { listAgentVersions, listAgents } from "@/features/agents";
 import { listDatasets, listDatasetVersions } from "@/features/datasets";
-import { listScorers } from "@/features/scorers/api";
-import { listGates, listGateRuns } from "@/features/gates/api";
+import { listGates, listGateRuns } from "@/features/gates";
+import { listScorers } from "@/features/scorers";
 
 import {
   createTestPlanVersion,

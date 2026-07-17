@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/dialog";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Input } from "@/components/ui/input";
+import { ResourceReferenceLink } from "@/components/ui/resource-reference-link";
 import {
   Table,
   TableBody,
@@ -89,8 +90,10 @@ export function DatasetList({
           <Table className="w-full table-fixed">
             <TableHeader className="bg-[var(--canvas-soft)]">
               <TableRow>
-                <TableHead className="w-[54%]">用例集信息</TableHead>
-                <TableHead className="w-[20%]">更新时间</TableHead>
+                <TableHead className="w-[25%]">用例集信息</TableHead>
+                <TableHead className="w-[18%]">最新版本</TableHead>
+                <TableHead className="w-[34%]">用例覆盖</TableHead>
+                <TableHead className="w-[12%]">更新时间</TableHead>
                 <TableHead className={tableActionHeadClass}>操作</TableHead>
               </TableRow>
             </TableHeader>
@@ -114,6 +117,31 @@ export function DatasetList({
                         </TruncatedText>
                       </div>
                     </div>
+                  </TableCell>
+                  <TableCell className="text-left text-xs">
+                    <ResourceReferenceLink reference={dataset.latest_version} />
+                    <p className="mt-1 text-[var(--muted)]">
+                      发布于{" "}
+                      {dataset.published_at
+                        ? new Date(dataset.published_at).toLocaleDateString(
+                            "zh-CN",
+                          )
+                        : "暂无数据"}
+                    </p>
+                  </TableCell>
+                  <TableCell className="text-left text-xs leading-5 text-[var(--muted)]">
+                    <p>
+                      用例 {dataset.case_count ?? 0} · 就绪{" "}
+                      {dataset.ready_count ?? 0} · API {dataset.api_count ?? 0}{" "}
+                      · 浏览器 {dataset.browser_count ?? 0} · Codex{" "}
+                      {dataset.codex_explore_count ?? 0}
+                    </p>
+                    <p>
+                      优先级：{formatDistribution(dataset.priority_coverage)}
+                    </p>
+                    <p>
+                      来源：{formatDistribution(dataset.source_distribution)}
+                    </p>
                   </TableCell>
                   <TableCell className="whitespace-nowrap text-center text-sm text-[var(--muted)]">
                     {new Date(dataset.updated_at).toLocaleDateString("zh-CN")}
@@ -146,6 +174,13 @@ export function DatasetList({
       </section>
     </div>
   );
+}
+
+function formatDistribution(values?: Record<string, number>) {
+  const entries = Object.entries(values ?? {});
+  return entries.length
+    ? entries.map(([key, value]) => `${key} ${value}`).join(" · ")
+    : "暂无数据";
 }
 
 function CreateDatasetDialog({

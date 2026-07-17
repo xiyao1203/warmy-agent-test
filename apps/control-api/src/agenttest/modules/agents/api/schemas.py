@@ -13,6 +13,7 @@ from agenttest.modules.agents.domain.value_objects import (
     AgentType,
     VersionStatus,
 )
+from agenttest.shared.application.core_summaries import AgentSummaryMetrics
 
 
 def _default_request_template() -> dict[str, object]:
@@ -66,7 +67,7 @@ class UpdateAgentVersionRequest(BaseModel):
     config: AgentConfigRequest
 
 
-class AgentResponse(BaseModel):
+class AgentResponse(AgentSummaryMetrics):
     id: UUID
     project_id: UUID
     name: str
@@ -80,7 +81,11 @@ class AgentResponse(BaseModel):
     baseline_version_id: UUID | None = None
 
     @classmethod
-    def from_domain(cls, agent: Agent) -> "AgentResponse":
+    def from_domain(
+        cls,
+        agent: Agent,
+        summary: AgentSummaryMetrics | None = None,
+    ) -> "AgentResponse":
         return cls(
             id=agent.agent_id.value,
             project_id=agent.project_id.value,
@@ -95,6 +100,7 @@ class AgentResponse(BaseModel):
             baseline_version_id=(
                 agent.baseline_version_id.value if agent.baseline_version_id else None
             ),
+            **(summary.model_dump() if summary else {}),
         )
 
 

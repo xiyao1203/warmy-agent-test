@@ -167,9 +167,11 @@ def _make_read_tool(
 
     tool_fn.__name__ = cap_name.replace(".", "_")
     tool_fn.__qualname__ = f"read_{cap_name.replace('.', '_')}"
+    tool_name = cap_name.replace(".", "_")
 
     function_schema = FunctionSchema(
         function=tool_fn,
+        name=tool_name,
         description=description,
         validator=SchemaValidator(schema=core_schema.any_schema()),
         json_schema=json_schema,
@@ -180,7 +182,7 @@ def _make_read_tool(
     return Tool(
         tool_fn,
         takes_ctx=True,
-        name=cap_name.replace(".", "_"),
+        name=tool_name,
         description=description,
         prepare=tool_prepare_read_only,
         function_schema=function_schema,

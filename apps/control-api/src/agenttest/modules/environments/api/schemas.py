@@ -8,6 +8,7 @@ from pydantic import BaseModel, Field
 from agenttest.modules.environments.api.credential_mask import mask_credentials
 from agenttest.modules.environments.domain.entities import EnvironmentTemplate
 from agenttest.modules.environments.domain.value_objects import TemplateType
+from agenttest.shared.application.core_summaries import EnvironmentSummaryMetrics
 
 
 class CreateEnvironmentTemplateRequest(BaseModel):
@@ -23,7 +24,7 @@ class UpdateEnvironmentTemplateRequest(BaseModel):
     description: str | None = None
 
 
-class EnvironmentTemplateResponse(BaseModel):
+class EnvironmentTemplateResponse(EnvironmentSummaryMetrics):
     id: UUID
     project_id: UUID
     name: str
@@ -38,6 +39,7 @@ class EnvironmentTemplateResponse(BaseModel):
     def from_domain(
         cls,
         template: EnvironmentTemplate,
+        summary: EnvironmentSummaryMetrics | None = None,
     ) -> "EnvironmentTemplateResponse":
         return cls(
             id=template.template_id.value,
@@ -49,6 +51,7 @@ class EnvironmentTemplateResponse(BaseModel):
             created_by=template.created_by.value,
             created_at=template.created_at,
             updated_at=template.updated_at,
+            **(summary.model_dump() if summary else {}),
         )
 
 

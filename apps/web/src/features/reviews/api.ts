@@ -2,20 +2,7 @@ import { CONTROL_API_URL as API_BASE } from "@/lib/api/base-url";
 import { csrfHeaders } from "@/lib/api/csrf";
 import { responseProblem } from "@/lib/api/problem";
 
-export type ReviewTask = {
-  id: string;
-  project_id: string;
-  run_case_id: string;
-  status: string;
-  confidence: number;
-  reviewer_id: string | null;
-  score: number | null;
-  opinion: string | null;
-  rubric_scores: Record<string, number> | null;
-  created_at: string;
-  updated_at: string;
-  reviewed_at: string | null;
-};
+export type ReviewTask = ReviewSummaryResponse;
 
 export async function listReviews(projectId: string, status?: string) {
   const params = new URLSearchParams({ limit: "100" });
@@ -84,3 +71,4 @@ export async function skipReview(projectId: string, taskId: string) {
   if (!res.ok) throw await responseProblem(res, "跳过审核任务失败");
   return res.json() as Promise<ReviewTask>;
 }
+import type { ReviewSummaryResponse } from "@warmy/generated-api-client";

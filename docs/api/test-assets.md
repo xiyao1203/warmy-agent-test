@@ -7,7 +7,7 @@ EnvironmentTemplate API。完整契约以 `docs/api/openapi.json` 为准。
 
 | 项目 | 规则 |
 |---|---|
-| Base URL | `http://localhost:8000/api/v1` |
+| Base URL | `http://localhost:8181/api/v1` |
 | 认证 | 服务端 Session Cookie `agenttest_session` |
 | 写操作 | 同时提交 Cookie `agenttest_csrf` 与 Header `X-CSRF-Token` |
 | 项目隔离 | 非项目成员访问项目资源统一返回 404 |
@@ -50,12 +50,17 @@ GET    /projects/{project_id}/datasets/{dataset_id}/versions/{version_id}/cases
 POST   /projects/{project_id}/datasets/{dataset_id}/versions/{version_id}/cases
 PATCH  /projects/{project_id}/datasets/{dataset_id}/versions/{version_id}/cases/{case_id}
 DELETE /projects/{project_id}/datasets/{dataset_id}/versions/{version_id}/cases/{case_id}
+POST   /projects/{project_id}/datasets/{dataset_id}/versions/{version_id}/cases/{case_id}/validate
+POST   /projects/{project_id}/datasets/{dataset_id}/versions/{version_id}/cases/{case_id}/mark-ready
+POST   /projects/{project_id}/datasets/{dataset_id}/versions/{version_id}/cases/{case_id}/trial-runs
+POST   /projects/{project_id}/datasets/{dataset_id}/versions/{version_id}/imports/preview
 POST   /projects/{project_id}/datasets/{dataset_id}/versions/{version_id}/import
 GET    /projects/{project_id}/datasets/{dataset_id}/versions/{version_id}/export
 ```
 
-TestCase 支持 `api` 和 `browser` 执行模式，并可配置断言、评分器、初始状态、
-期望结果、安全策略、标签和风险等级。已发布的数据集版本只读。
+TestCase 使用 `PlatformTestCaseV1`：除名称和输入外，还包含目标、模板/类型/状态/来源、组件/需求/负责人、前置与后置条件、初始状态/数据绑定、有序步骤及逐步测试数据和预期、整体断言/评分/安全/证据，以及超时/重试/扩展字段。支持 `api`、`browser` 和 `codex_explore`，已发布的数据集版本只读。确定性 `browser` 步骤将人工可读 `action` 与机器 `operation` 分开；`operation.action` 只允许 `goto`、`click`、`fill`、`wait`、`screenshot`，就绪浏览器用例的每一步都必须提供该结构。
+
+`PATCH` 把显式字段（包括 `null`）合并到已存用例后校验完整契约，不能把就绪用例改成无判定规则或空步骤。`validate` 返回可定位字段的专业校验问题；通过后可 `mark-ready`。`trial-runs` 请求选择已发布 Agent 版本和环境模板并提供 `Idempotency-Key`，创建 `run_type=case_trial` 的单用例 Run，RunCase 固化递归脱敏的专业用例快照且关联来源用例。同一幂等键只在项目、用例快照、Agent 版本和环境完全一致时复用，否则返回冲突；正式计划 Run 同样只在项目和测试计划版本完全一致时复用。同项目的数据库唯一键竞态通过保存点回滚失败写入并回读唯一胜出 Run，不会污染 API 外层事务或产生重复 Run。
 
 导入支持 `json`、`jsonl`、`csv`，请求体包含 `format` 和 `content`。导入采用
 全有或全无语义，失败响应中的 `errors` 提供行号和原因。导出通过 `format`

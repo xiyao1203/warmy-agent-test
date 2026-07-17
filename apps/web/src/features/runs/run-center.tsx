@@ -22,6 +22,7 @@ import { Button } from "@/components/ui/button";
 import { DropdownSelect } from "@/components/ui/dropdown-select";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Input } from "@/components/ui/input";
+import { ResourceReferenceLink } from "@/components/ui/resource-reference-link";
 import { problemMessage } from "@/lib/api/problem";
 import {
   Table,
@@ -61,7 +62,7 @@ export function RunCenter({
   const filteredRuns = runs.filter((run) => {
     const matchesStatus = statusFilter === "all" || run.status === statusFilter;
     const haystack =
-      `${run.id} ${run.workflow_id ?? ""} ${run.status}`.toLowerCase();
+      `${run.id} ${run.run_number} ${run.workflow_id ?? ""} ${run.status}`.toLowerCase();
     return matchesStatus && haystack.includes(query.trim().toLowerCase());
   });
   if (loading) return <StatusPanel title="正在加载运行中心…" />;
@@ -243,10 +244,11 @@ export function RunCenter({
           <Table className="w-full table-fixed">
             <TableHeader className="bg-[var(--canvas-soft)]">
               <TableRow>
-                <TableHead className="w-[34%]">运行</TableHead>
-                <TableHead className="w-[14%]">状态</TableHead>
-                <TableHead className="w-[14%]">进度</TableHead>
-                <TableHead className="w-[26%]">创建时间</TableHead>
+                <TableHead className="w-[18%]">运行</TableHead>
+                <TableHead className="w-[28%]">执行资产</TableHead>
+                <TableHead className="w-[10%]">状态</TableHead>
+                <TableHead className="w-[16%]">进度与结果</TableHead>
+                <TableHead className="w-[20%]">资源消耗</TableHead>
                 <TableHead className="w-20">操作</TableHead>
               </TableRow>
             </TableHeader>
@@ -264,9 +266,9 @@ export function RunCenter({
                       <div>
                         <TruncatedText
                           className="font-medium"
-                          value={`Run ${run.id}`}
+                          value={run.run_number}
                         >
-                          Run {run.id.slice(0, 8)}
+                          {run.run_number}
                         </TruncatedText>
                         <TruncatedText className="mt-0.5 text-xs text-[var(--muted)]">
                           Workflow {run.workflow_id ?? "待启动"}
@@ -274,18 +276,64 @@ export function RunCenter({
                       </div>
                     </div>
                   </TableCell>
+                  <TableCell className="space-y-1 text-left text-xs">
+                    <p>
+                      计划：
+                      <ResourceReferenceLink reference={run.plan_ref} />
+                    </p>
+                    <p>
+                      Agent：
+                      <ResourceReferenceLink reference={run.agent_ref} />
+                    </p>
+                    <p>
+                      用例集：
+                      <ResourceReferenceLink reference={run.dataset_ref} />
+                    </p>
+                    {run.source_case_ref ? (
+                      <p>
+                        来源用例：
+                        <ResourceReferenceLink
+                          reference={run.source_case_ref}
+                        />
+                      </p>
+                    ) : null}
+                  </TableCell>
                   <TableCell>
                     <StatusBadge status={run.status} />
                   </TableCell>
-                  <TableCell className="text-sm">
-                    {run.passed_cases +
-                      run.failed_cases +
-                      run.error_cases +
-                      run.cancelled_cases}{" "}
-                    / {run.total_cases}
+                  <TableCell className="text-left text-xs leading-5 text-[var(--muted)]">
+                    <p>
+                      {Math.round((run.progress ?? 0) * 100)}% ·{" "}
+                      {run.passed_cases +
+                        run.failed_cases +
+                        run.error_cases +
+                        run.cancelled_cases}{" "}
+                      / {run.total_cases}
+                    </p>
+                    <p>
+                      通过 {run.passed_cases} · 失败 {run.failed_cases} · 错误{" "}
+                      {run.error_cases}
+                    </p>
+                    <p>触发方式 {run.trigger_type || "manual"}</p>
                   </TableCell>
-                  <TableCell className="text-sm text-[var(--muted)]">
-                    {new Date(run.created_at).toLocaleString("zh-CN")}
+                  <TableCell className="text-left text-xs leading-5 text-[var(--muted)]">
+                    <p>
+                      耗时{" "}
+                      {run.duration_ms == null
+                        ? "暂无数据"
+                        : `${run.duration_ms} ms`}{" "}
+                      · Token {run.token_usage?.total ?? "暂无数据"}
+                    </p>
+                    <p>
+                      成本 {run.cost == null ? "暂无数据" : run.cost.toFixed(4)}
+                    </p>
+                    <p>
+                      <ResourceReferenceLink
+                        emptyLabel="创建者暂无数据"
+                        reference={run.created_by_ref}
+                      />
+                    </p>
+                    <p>{new Date(run.created_at).toLocaleString("zh-CN")}</p>
                   </TableCell>
                   <TableCell>
                     <TableActionButton

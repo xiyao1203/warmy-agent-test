@@ -71,6 +71,10 @@ def make_run() -> tuple[Run, list[RunCase]]:
         name="hello",
         input_snapshot={"message": "hello"},
         assertion_snapshot=[{"type": "contains", "value": "hello"}],
+        case_spec_snapshot={
+            "schema_version": "test-case/v1",
+            "preconditions": ["使用测试账号登录"],
+        },
     )
     return run, [case]
 
@@ -125,6 +129,10 @@ async def test_temporal_orchestrator_starts_run_workflow_with_snapshot_payload()
             "input": {"message": "hello"},
             "assertions": [{"type": "contains", "value": "hello"}],
             "execution_mode": "api",
+            "case_spec": {
+                "schema_version": "test-case/v1",
+                "preconditions": ["使用测试账号登录"],
+            },
         }
     ]
     assert payload["callback"] == {

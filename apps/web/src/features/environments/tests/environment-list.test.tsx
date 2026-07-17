@@ -25,16 +25,35 @@ const credential: CredentialBinding = {
 };
 
 const environment = {
+  browser_profile_ref: {
+    href: "/projects/project-1/environments",
+    id: "browser-profile-1",
+    name: "Chrome 预发登录态",
+    resource_type: "environment" as const,
+    status: "ready",
+  },
   config: {},
   created_at: "2026-06-25T10:00:00Z",
   created_by: "user-1",
+  credential_binding_count: 2,
+  current_version: {
+    href: "/projects/project-1/environments",
+    id: "environment-version-3",
+    name: "Staging 环境",
+    resource_type: "environment_version" as const,
+    status: "published",
+    version: 3,
+  },
   description: "浏览器测试默认环境",
   id: "environment-1",
   name: "Staging 环境",
   project_id: "project-1",
+  last_run_at: "2026-07-16T08:00:00Z",
+  last_validated_at: "2026-07-16T07:00:00Z",
   template_type: "blank" as const,
   updated_at: "2026-06-25T10:00:00Z",
   updated_by: "user-1",
+  validation_status: "ready",
 };
 
 describe("EnvironmentList", () => {
@@ -70,7 +89,20 @@ describe("EnvironmentList", () => {
     expect(
       screen.getByRole("columnheader", { name: "环境信息" }),
     ).toBeVisible();
-    expect(screen.getByRole("columnheader", { name: "下一步" })).toBeVisible();
+    expect(
+      screen.getByRole("columnheader", { name: "绑定与验证" }),
+    ).toBeVisible();
+    expect(
+      screen.getByRole("columnheader", { name: "最近使用" }),
+    ).toBeVisible();
+    expect(screen.getByRole("columnheader", { name: "操作" })).toBeVisible();
+    expect(
+      screen.getByRole("link", { name: /Staging 环境.*v3.*published/ }),
+    ).toHaveAttribute("href", "/projects/project-1/environments");
+    expect(screen.getByText("凭证绑定 2")).toBeVisible();
+    expect(
+      screen.getByRole("link", { name: /Chrome 预发登录态/ }),
+    ).toHaveAttribute("href", "/projects/project-1/environments");
     expect(screen.getByRole("button", { name: "配置环境" })).toBeVisible();
     expect(screen.queryByRole("button", { name: "创建环境模板" })).toBeNull();
     expect(screen.queryByRole("button", { name: "建版" })).toBeNull();

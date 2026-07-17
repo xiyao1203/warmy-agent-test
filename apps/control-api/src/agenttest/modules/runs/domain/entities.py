@@ -7,7 +7,7 @@ from uuid import UUID, uuid4
 from agenttest.modules.identity.public import UserId
 from agenttest.modules.projects.public import ProjectId
 from agenttest.modules.runs.domain.outcomes import RunCaseOutcomes
-from agenttest.modules.runs.domain.value_objects import RunCaseStatus, RunStatus
+from agenttest.modules.runs.domain.value_objects import RunCaseStatus, RunStatus, RunType
 from agenttest.modules.test_plans.public import TestPlanVersionId
 
 
@@ -33,7 +33,7 @@ class RunCaseId:
 class Run:
     run_id: RunId
     project_id: ProjectId
-    test_plan_version_id: TestPlanVersionId
+    test_plan_version_id: TestPlanVersionId | None
     agent_version_id: UUID
     dataset_version_id: UUID
     idempotency_key: str
@@ -51,6 +51,8 @@ class Run:
     error_cases: int = 0
     cancelled_cases: int = 0
     workflow_id: str | None = None
+    run_type: RunType = RunType.PLAN
+    source_test_case_id: UUID | None = None
 
     @classmethod
     def create(
@@ -89,6 +91,45 @@ class Run:
             status=RunStatus.QUEUED,
             created_at=now,
             updated_at=now,
+            run_type=RunType.PLAN,
+        )
+
+    @classmethod
+    def create_case_trial(
+        cls,
+        *,
+        run_id: RunId,
+        project_id: ProjectId,
+        source_test_case_id: UUID,
+        agent_version_id: UUID,
+        dataset_version_id: UUID,
+        idempotency_key: str,
+        created_by: UserId,
+        config_snapshot: dict[str, object],
+        plugin_snapshot: dict[str, object],
+    ) -> Run:
+        normalized_key = idempotency_key.strip()
+        if not normalized_key:
+            raise ValueError("idempotency_key is required")
+        if not config_snapshot or not plugin_snapshot:
+            raise ValueError("reproducible config and plugin snapshots are required")
+        now = datetime.now(UTC)
+        return cls(
+            run_id=run_id,
+            project_id=project_id,
+            test_plan_version_id=None,
+            agent_version_id=agent_version_id,
+            dataset_version_id=dataset_version_id,
+            idempotency_key=normalized_key,
+            created_by=created_by,
+            config_snapshot=dict(config_snapshot),
+            plugin_snapshot=dict(plugin_snapshot),
+            total_cases=1,
+            status=RunStatus.QUEUED,
+            created_at=now,
+            updated_at=now,
+            run_type=RunType.CASE_TRIAL,
+            source_test_case_id=source_test_case_id,
         )
 
     def start(self, workflow_id: str | None = None) -> None:
@@ -145,6 +186,7 @@ class RunCase:
     name: str
     input_snapshot: dict[str, object]
     assertion_snapshot: list[dict[str, object]]
+    case_spec_snapshot: dict[str, object] = field(default_factory=dict)
     execution_mode: str = "api"
     status: RunCaseStatus = RunCaseStatus.QUEUED
     created_at: datetime = field(default_factory=lambda: datetime.now(UTC))
@@ -171,6 +213,7 @@ class RunCase:
         name: str,
         input_snapshot: dict[str, object],
         assertion_snapshot: list[dict[str, object]],
+        case_spec_snapshot: dict[str, object] | None = None,
         execution_mode: str = "api",
     ) -> RunCase:
         if not name.strip():
@@ -183,6 +226,7 @@ class RunCase:
             name=name.strip(),
             input_snapshot=dict(input_snapshot),
             assertion_snapshot=list(assertion_snapshot),
+            case_spec_snapshot=dict(case_spec_snapshot or {}),
             execution_mode=execution_mode,
             status=RunCaseStatus.QUEUED,
             created_at=now,

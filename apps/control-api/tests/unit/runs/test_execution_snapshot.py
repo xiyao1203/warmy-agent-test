@@ -6,6 +6,7 @@ from agenttest.modules.environments.domain.runtime import EnvironmentRuntimeSnap
 from agenttest.modules.runs.application.execution_snapshot import (
     CaseExecutionSnapshot,
     EvaluationPolicySnapshot,
+    PlatformTestCaseSnapshotV1,
     RunExecutionSnapshot,
 )
 from pydantic import ValidationError
@@ -61,4 +62,34 @@ def test_run_snapshot_rejects_empty_cases() -> None:
     payload["cases"] = []
 
     with pytest.raises(ValidationError):
+        RunExecutionSnapshot.model_validate(payload)
+
+
+def test_professional_case_snapshot_rejects_embedded_credential_value() -> None:
+    payload = {
+        "schema_version": "platform-test-case/v1",
+        "case_key": "PAY-TC-000001",
+        "objective": "验证隐私保护",
+        "input": {"message": "hello"},
+        "data_bindings": [
+            {
+                "name": "token",
+                "source": "credential",
+                "reference": "credential://user-a",
+                "value": "plain-secret",
+            }
+        ],
+        "execution_mode": "api",
+    }
+
+    with pytest.raises(ValidationError, match="must not contain values"):
+        PlatformTestCaseSnapshotV1.model_validate(payload)
+
+
+def test_case_trial_snapshot_requires_source_case() -> None:
+    payload = make_snapshot().model_dump(mode="json")
+    payload["run_type"] = "case_trial"
+    payload["test_plan_version_id"] = None
+
+    with pytest.raises(ValidationError, match="source_test_case_id"):
         RunExecutionSnapshot.model_validate(payload)

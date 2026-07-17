@@ -14,15 +14,37 @@ const api = vi.hoisted(() => ({
 vi.mock("../api", () => api);
 
 const task: ReviewTask = {
+  age_seconds: 7200,
+  assignee_ref: {
+    href: null,
+    id: "user-2",
+    name: "高级测试工程师",
+    resource_type: "user",
+  },
+  case_ref: {
+    href: "/projects/project-1/datasets",
+    id: "test-case-1",
+    key: "PAY-TC-001",
+    name: "支付异常恢复",
+    resource_type: "test_case",
+  },
   confidence: 0.42,
   created_at: "2026-07-04T10:00:00Z",
   id: "review-1",
+  enqueue_reason: "low_confidence",
   opinion: null,
   project_id: "project-1",
+  priority: 58,
   reviewer_id: null,
   reviewed_at: null,
   rubric_scores: null,
   run_case_id: "case-1234567890",
+  run_ref: {
+    href: "/projects/project-1/runs/run-1",
+    id: "run-1",
+    name: "RUN-0001",
+    resource_type: "run",
+  },
   score: null,
   status: "pending",
   updated_at: "2026-07-04T10:00:00Z",
@@ -42,6 +64,7 @@ describe("ReviewWorkbench", () => {
     render(<ReviewWorkbench projectId="project-1" />);
 
     expect(await screen.findByText("case-1234567")).toBeVisible();
+    expect(screen.getByText(/优先级 58 · 等待 2 小时/)).toBeVisible();
     expect(screen.getByText(/低置信、高风险或评分冲突/)).toBeVisible();
     expect(
       screen.getByRole("link", { name: /1. 运行产生任务/ }),
@@ -54,6 +77,14 @@ describe("ReviewWorkbench", () => {
     ).toHaveAttribute("href", "/projects/project-1/gates");
 
     fireEvent.click(screen.getByText("case-1234567"));
+    expect(screen.getByRole("link", { name: /RUN-0001/ })).toHaveAttribute(
+      "href",
+      "/projects/project-1/runs/run-1",
+    );
+    expect(screen.getByRole("link", { name: /支付异常恢复/ })).toHaveAttribute(
+      "href",
+      "/projects/project-1/datasets",
+    );
     expect(
       screen.getByText(/先回到运行中心核对输入、输出、Trace/),
     ).toBeVisible();

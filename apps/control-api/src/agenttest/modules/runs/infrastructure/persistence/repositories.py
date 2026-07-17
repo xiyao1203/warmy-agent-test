@@ -4,14 +4,16 @@ from datetime import UTC, datetime
 from uuid import UUID, uuid4
 
 from sqlalchemy import select, update
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from agenttest.modules.evaluations.public import CaseScoreInput, build_evaluation_summary
 from agenttest.modules.identity.public import UserId
 from agenttest.modules.projects.public import ProjectId
+from agenttest.modules.runs.application.ports import RunIdempotencyKeyExists
 from agenttest.modules.runs.domain.entities import Run, RunCase, RunCaseId, RunId
 from agenttest.modules.runs.domain.outcomes import RunCaseOutcomes
-from agenttest.modules.runs.domain.value_objects import RunCaseStatus, RunStatus
+from agenttest.modules.runs.domain.value_objects import RunCaseStatus, RunStatus, RunType
 from agenttest.modules.runs.infrastructure.persistence.models import (
     RunCaseModel,
     RunEvaluationModel,
@@ -65,10 +67,20 @@ class SqlAlchemyRunRepository:
         return [_to_run(model) for model in models]
 
     async def add(self, run: Run, cases: list[RunCase]) -> None:
-        async with transaction_scope(self._session_factory) as session:
-            session.add(_run_model(run))
-            await session.flush()
-            session.add_all([_case_model(case) for case in cases])
+        try:
+            async with transaction_scope(self._session_factory) as session:
+                # The API already owns an outer unit of work. Keep the insert in a
+                # savepoint so an idempotency-key race does not poison that outer
+                # transaction before the handler can read the committed winner.
+                async with session.begin_nested():
+                    session.add(_run_model(run))
+                    await session.flush()
+                    session.add_all([_case_model(case) for case in cases])
+                    await session.flush()
+        except IntegrityError as error:
+            if _is_idempotency_key_conflict(error):
+                raise RunIdempotencyKeyExists from error
+            raise
 
     async def save(self, run: Run) -> None:
         async with transaction_scope(self._session_factory) as session:
@@ -277,14 +289,31 @@ class SqlAlchemyRunRepository:
         return [_to_case(model) for model in models]
 
 
+def _is_idempotency_key_conflict(error: IntegrityError) -> bool:
+    diagnostic = getattr(error.orig, "diag", None)
+    constraint_name = getattr(diagnostic, "constraint_name", None)
+    if constraint_name == "uq_runs_project_idempotency_key":
+        return True
+    message = str(error.orig).lower()
+    if "uq_runs_project_idempotency_key" in message:
+        return True
+    return (
+        "runs.project_id" in message and "runs.idempotency_key" in message and "unique" in message
+    )
+
+
 def _run_model(run: Run) -> RunModel:
     return RunModel(
         id=run.run_id.value,
         project_id=run.project_id.value,
-        test_plan_version_id=run.test_plan_version_id.value,
+        test_plan_version_id=(
+            run.test_plan_version_id.value if run.test_plan_version_id is not None else None
+        ),
         agent_version_id=run.agent_version_id,
         dataset_version_id=run.dataset_version_id,
         idempotency_key=run.idempotency_key,
+        run_type=run.run_type.value,
+        source_test_case_id=run.source_test_case_id,
         status=run.status.value,
         config_snapshot=run.config_snapshot,
         plugin_snapshot=run.plugin_snapshot,
@@ -312,6 +341,7 @@ def _case_model(case: RunCase) -> RunCaseModel:
         status=case.status.value,
         input_snapshot=case.input_snapshot,
         assertion_snapshot=case.assertion_snapshot,
+        case_spec_snapshot=case.case_spec_snapshot,
         output=case.output,
         trace=case.trace,
         error_type=case.error_type,
@@ -332,7 +362,9 @@ def _to_run(model: RunModel) -> Run:
     return Run(
         run_id=RunId(model.id),
         project_id=ProjectId(model.project_id),
-        test_plan_version_id=TestPlanVersionId(model.test_plan_version_id),
+        test_plan_version_id=(
+            TestPlanVersionId(model.test_plan_version_id) if model.test_plan_version_id else None
+        ),
         agent_version_id=model.agent_version_id,
         dataset_version_id=model.dataset_version_id,
         idempotency_key=model.idempotency_key,
@@ -350,6 +382,8 @@ def _to_run(model: RunModel) -> Run:
         error_cases=model.error_cases,
         cancelled_cases=model.cancelled_cases,
         workflow_id=model.workflow_id,
+        run_type=RunType(model.run_type),
+        source_test_case_id=model.source_test_case_id,
     )
 
 
@@ -361,6 +395,7 @@ def _to_case(model: RunCaseModel) -> RunCase:
         name=model.name,
         input_snapshot=dict(model.input_snapshot),
         assertion_snapshot=list(model.assertion_snapshot),
+        case_spec_snapshot=dict(model.case_spec_snapshot or {}),
         execution_mode=str(model.execution_mode or "api"),
         status=RunCaseStatus(model.status),
         created_at=model.created_at,

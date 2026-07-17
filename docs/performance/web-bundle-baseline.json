@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "source": "TASK-20260716-001 production build after professional test management and decision-ready core lists",
+  "routes": {
+    "/login": {
+      "gzipBytes": 425472,
+      "rawBytes": 1476525
+    },
+    "/projects": {
+      "gzipBytes": 434977,
+      "rawBytes": 1510761
+    },
+    "/projects/[projectId]/runs": {
+      "gzipBytes": 448090,
+      "rawBytes": 1557400
+    },
+    "/projects/[projectId]/test-agent": {
+      "gzipBytes": 467434,
+      "rawBytes": 1625923
+    }
+  }
+}

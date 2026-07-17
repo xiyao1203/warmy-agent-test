@@ -1,4 +1,5 @@
 from functools import lru_cache
+from ipaddress import IPv4Network, IPv6Network, ip_network
 from pathlib import Path
 from typing import Any, cast
 
@@ -35,6 +36,13 @@ class Settings(BaseSettings):
     session_ttl_seconds: int = Field(default=28800, ge=300, le=604800)
     control_api_base_url: str = "http://localhost:8181"
     internal_api_token: str = Field(default="local-internal-token", min_length=16)
+    login_throttle_window_seconds: int = Field(default=900, gt=0)
+    login_throttle_max_failures: int = Field(default=8, gt=0)
+    login_throttle_block_seconds: int = Field(default=1800, gt=0)
+    login_throttle_pepper: str | None = Field(default=None, min_length=16)
+    trusted_proxy_cidrs: tuple[str, ...] = ()
+    artifact_user_upload_max_bytes: int = Field(default=67_108_864, gt=0)
+    artifact_internal_upload_max_bytes: int = Field(default=268_435_456, gt=0)
     temporal_address: str | None = None
     temporal_namespace: str = "default"
     temporal_task_queue: str = "agenttest-api-runner"
@@ -54,8 +62,13 @@ class Settings(BaseSettings):
             if host.strip()
         )
 
+    @property
+    def trusted_proxy_networks(self) -> tuple[IPv4Network | IPv6Network, ...]:
+        return tuple(ip_network(value, strict=False) for value in self.trusted_proxy_cidrs)
+
     @model_validator(mode="after")
     def reject_unsafe_non_local_defaults(self) -> "Settings":
+        _ = self.trusted_proxy_networks
         if self.environment not in {"local", "test"} and self.mission_local_host_allowlist:
             raise ValueError("local mission target allowlist is restricted to local/test")
         if self.environment not in {"local", "test"}:
@@ -65,6 +78,8 @@ class Settings(BaseSettings):
                 raise ValueError("Secure session cookies are required outside local/test")
             if not self.model_credential_key:
                 raise ValueError("AGENTTEST_MODEL_CREDENTIAL_KEY is required outside local/test")
+            if not self.login_throttle_pepper:
+                raise ValueError("AGENTTEST_LOGIN_THROTTLE_PEPPER is required outside local/test")
         return self
 
 

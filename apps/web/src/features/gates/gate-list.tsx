@@ -18,6 +18,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { DropdownSelect } from "@/components/ui/dropdown-select";
 import { ListCard, ListCardMeta } from "@/components/ui/list-card";
+import { ResourceReferenceLink } from "@/components/ui/resource-reference-link";
 import {
   Dialog,
   DialogContent,
@@ -303,19 +304,37 @@ function GateCard({
           <Badge tone="warning">已禁用</Badge>
         )
       }
-      description={`通过率 ≥ ${(gate.success_rate_threshold * 100).toFixed(0)}%`}
+      description={
+        gate.rule_summary ||
+        `通过率 ≥ ${(gate.success_rate_threshold * 100).toFixed(0)}%`
+      }
       footer={
         <>
           <ListCardMeta
             items={[
+              `作用域 ${gate.scope || "project"}`,
               `安全评分 ≥ ${gate.security_threshold.toFixed(1)}`,
               gate.cost_limit != null ? `成本 ≤ ${gate.cost_limit}` : undefined,
               gate.critical_cases.length > 0
                 ? `关键用例 ${gate.critical_cases.length} 个`
                 : undefined,
               "待人工审核必须清零",
+              `最近决策 ${gate.last_decision || "暂无数据"}`,
+              `阻塞项 ${gate.blocking_count ?? 0}`,
             ]}
           />
+          <div className="mt-3 flex flex-wrap items-center gap-4 text-xs text-[var(--muted)]">
+            <span>
+              证据运行：
+              <ResourceReferenceLink reference={gate.last_run_ref} />
+            </span>
+            <span>
+              评估时间{" "}
+              {gate.evaluated_at
+                ? new Date(gate.evaluated_at).toLocaleString("zh-CN")
+                : "暂无数据"}
+            </span>
+          </div>
           <div className="mt-3 flex flex-wrap gap-3 text-xs">
             <Link
               className="font-medium text-[var(--primary)] hover:underline"

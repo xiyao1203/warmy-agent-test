@@ -1,11 +1,34 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
+import { projectFixture } from "@/test/fixtures";
+
 import { ProjectListScreen } from "../project-list-screen";
 
 const projects = [
-  { archived: false, id: "project-1", name: "项目 A" },
-  { archived: true, id: "project-2", name: "项目 B" },
+  projectFixture({
+    agent_count: 2,
+    dataset_count: 3,
+    last_run: {
+      href: "/projects/project-1/runs/run-42",
+      id: "run-42",
+      name: "RUN-0042",
+      resource_type: "run",
+      status: "passed",
+    },
+    last_run_at: "2026-07-16T08:00:00Z",
+    member_count: 4,
+    open_review_count: 1,
+    test_case_count: 48,
+    test_plan_count: 5,
+  }),
+  projectFixture({
+    archived: true,
+    id: "project-2",
+    key: "PRJ002",
+    name: "项目 B",
+    status: "archived",
+  }),
 ];
 
 function renderProjectListScreen() {
@@ -34,11 +57,19 @@ describe("ProjectListScreen", () => {
     expect(screen.getByRole("columnheader", { name: "项目" })).toBeVisible();
     expect(screen.getByRole("columnheader", { name: "状态" })).toBeVisible();
     expect(
-      screen.getByRole("columnheader", { name: "默认入口" }),
+      screen.getByRole("columnheader", { name: "资产概览" }),
+    ).toBeVisible();
+    expect(
+      screen.getByRole("columnheader", { name: "最近运行" }),
     ).toBeVisible();
     expect(screen.getByText("项目 A")).toBeVisible();
     expect(screen.getByText("项目 B")).toBeVisible();
     expect(screen.getAllByText("已归档").length).toBeGreaterThan(0);
+    expect(screen.getByText(/成员 4 · Agent 2 · 用例集 3/)).toBeVisible();
+    expect(screen.getByRole("link", { name: /RUN-0042/ })).toHaveAttribute(
+      "href",
+      "/projects/project-1/runs/run-42",
+    );
     expect(screen.getByTestId("project-summary-total")).toHaveAttribute(
       "data-font-role",
       "display-number",
@@ -145,7 +176,7 @@ describe("ProjectListScreen", () => {
     const longName = "这是一个非常长的项目名称用于验证省略和完整文本提示";
     render(
       <ProjectListScreen
-        projects={[{ archived: false, id: "project-long-id", name: longName }]}
+        projects={[projectFixture({ id: "project-long-id", name: longName })]}
         {...handlers}
       />,
     );

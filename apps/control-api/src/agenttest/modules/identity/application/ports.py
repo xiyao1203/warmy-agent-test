@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from typing import Protocol
 from uuid import UUID, uuid4
 
@@ -51,6 +51,41 @@ class PasswordHasher(Protocol):
     def hash(self, password: str) -> str: ...
 
     def verify(self, password_hash: str, password: str) -> bool: ...
+
+
+@dataclass(frozen=True, slots=True)
+class LoginThrottleEntry:
+    key_hash: str
+    failure_count: int
+    window_started_at: datetime
+    blocked_until: datetime | None
+    updated_at: datetime
+
+
+class LoginThrottleRepository(Protocol):
+    async def get(self, key_hash: str) -> LoginThrottleEntry | None: ...
+
+    async def record_failure(
+        self,
+        key_hash: str,
+        *,
+        now: datetime,
+        window: timedelta,
+        max_failures: int,
+        blocked_for: timedelta,
+    ) -> LoginThrottleEntry: ...
+
+    async def clear(self, key_hashes: tuple[str, ...]) -> None: ...
+
+    async def delete_expired(self, cutoff: datetime, *, limit: int = 100) -> int: ...
+
+
+class LoginThrottlePort(Protocol):
+    async def is_blocked(self, email: str, source_ip: str) -> bool: ...
+
+    async def record_failure(self, email: str, source_ip: str) -> bool: ...
+
+    async def clear_success(self, email: str, source_ip: str) -> None: ...
 
 
 class UserAdminRepository(UserReader, Protocol):

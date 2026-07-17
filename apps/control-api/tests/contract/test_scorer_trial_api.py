@@ -15,7 +15,11 @@ from uuid import uuid4
 from agenttest.bootstrap.settings import Settings
 from agenttest.modules.identity.public import Email, SystemRole, User, UserId
 from agenttest.modules.projects.public import ProjectId, ProjectNotFoundError
-from agenttest.modules.scorers.api.router import create_scorer_router
+from agenttest.modules.scorers.api.router import (
+    ScorerApiDependencies,
+    create_scorer_router,
+)
+from agenttest.modules.scorers.application.service import ScorerService
 from agenttest.modules.scorers.domain.entities import Scorer, ScorerId
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
@@ -55,11 +59,6 @@ class InMemScorerRepo:
         return sum(1 for s in self.items.values() if s.project_id == _pid)
 
 
-class StubSessionFactory:
-    def __call__(self):
-        raise AssertionError("session_factory should not be called when repo is injected")
-
-
 class StubActorFor:
     def __init__(self, actor: User) -> None:
         self.actor = actor
@@ -68,12 +67,16 @@ class StubActorFor:
         return self.actor
 
 
-class StubCheckProject:
+class StubProjectAccess:
     def __init__(self, pid: ProjectId) -> None:
         self.project_id = pid
 
-    async def __call__(self, project_id) -> None:
-        if project_id != self.project_id.value:
+    async def ensure_member(self, _actor: User, project_id: ProjectId) -> None:
+        if project_id != self.project_id:
+            raise ProjectNotFoundError
+
+    async def ensure_editor(self, _actor: User, project_id: ProjectId) -> None:
+        if project_id != self.project_id:
             raise ProjectNotFoundError
 
 
@@ -98,17 +101,18 @@ def client(
     project_id = pid or ProjectId(uuid4())
     scorer_repo = repo or InMemScorerRepo()
 
-    def session_factory():
-        return StubSessionFactory()
-
     app = FastAPI()
     app.include_router(
         create_scorer_router(
-            session_factory=session_factory,
-            actor_for=StubActorFor(actor),
-            check_project=StubCheckProject(project_id),
-            settings=Settings(),
-            repo=scorer_repo,
+            ScorerApiDependencies(
+                service=ScorerService(
+                    scorers=scorer_repo,
+                    project_access=StubProjectAccess(project_id),
+                    publish_versions=False,
+                ),
+                actor_for=StubActorFor(actor),
+                settings=Settings(),
+            )
         ),
         prefix="/api/v1",
     )

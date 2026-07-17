@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from datetime import timedelta
 
+import pytest
 from agenttest_api_runner.codex_browser_activity import CodexBrowserResult
 from agenttest_api_runner.contracts import (
     ReportArtifact,
@@ -16,8 +17,10 @@ from agenttest_api_runner.workflow import (
     ACTIVITY_RETRY_POLICY,
     ACTIVITY_TIMEOUT,
     RunWorkflow,
+    _browser_steps_for_case,
     _codex_model,
     _codex_model_provider,
+    _codex_test_intent,
     _codex_to_run_case,
     _is_canvas_target,
     _tapnow_task,
@@ -26,6 +29,7 @@ from agenttest_api_runner.workflow import (
     _target_url,
     aggregate_results,
     callback_task_for,
+    case_execution_activity_options,
     execution_activity_options,
     normalize_run_task,
 )
@@ -82,6 +86,37 @@ def test_execution_policy_rejects_invalid_runtime_values() -> None:
     assert timeout == timedelta(seconds=1)
     assert retry.maximum_attempts == 11
     assert retry.backoff_coefficient == 1.0
+
+
+def test_professional_case_timeout_and_retry_override_plan_defaults() -> None:
+    case = normalize_run_task(
+        {
+            "run_id": "run-1",
+            "idempotency_key": "professional-policy",
+            "agent_config": {},
+            "cases": [
+                {
+                    "run_case_id": "case-1",
+                    "case_spec": {
+                        "schema_version": "platform-test-case/v1",
+                        "objective": "验证结账",
+                        "input": {},
+                        "execution_mode": "browser",
+                        "timeout_seconds": 45,
+                        "retry_count": 2,
+                    },
+                }
+            ],
+        }
+    ).cases[0]
+
+    timeout, retry = case_execution_activity_options(
+        case,
+        *execution_activity_options({"timeout": 300, "max_retries": 0}),
+    )
+
+    assert timeout == timedelta(seconds=45)
+    assert retry.maximum_attempts == 3
 
 
 def test_aggregate_distinguishes_failure_error_and_cancelled() -> None:
@@ -306,3 +341,115 @@ def test_codex_model_case_input_overrides_execution_policy() -> None:
 
     assert _codex_model(case_input, policy) == "local-browser-model"
     assert _codex_model_provider(case_input, policy) == "ollama"
+
+
+def test_professional_browser_steps_preserve_expected_results_and_artifacts() -> None:
+    case = normalize_run_task(
+        {
+            "run_id": "run-1",
+            "idempotency_key": "browser-v1",
+            "agent_config": {},
+            "cases": [
+                {
+                    "run_case_id": "case-1",
+                    "case_spec": {
+                        "schema_version": "platform-test-case/v1",
+                        "objective": "验证结账",
+                        "input": {"url": "https://shop.test"},
+                        "steps": [
+                            {
+                                "step_no": 1,
+                                "action": "点击提交并确认显示收据",
+                                "operation": {
+                                    "action": "click",
+                                    "target": "#submit",
+                                },
+                                "test_data": {"order_id": "A-100"},
+                                "expected_result": "显示收据",
+                                "artifact_requirements": [{"kind": "screenshot", "required": True}],
+                            }
+                        ],
+                        "execution_mode": "browser",
+                    },
+                }
+            ],
+        }
+    ).cases[0]
+
+    steps = _browser_steps_for_case(case)
+
+    assert steps[0]["action"] == "click"
+    assert steps[0]["target"] == "#submit"
+    assert steps[0]["description"] == "点击提交并确认显示收据"
+    assert steps[0]["test_data"] == {"order_id": "A-100"}
+    assert steps[0]["expected_result"] == "显示收据"
+    assert steps[0]["artifact_requirements"] == [{"kind": "screenshot", "required": True}]
+
+
+def test_professional_browser_steps_never_treat_human_action_as_opcode() -> None:
+    case = normalize_run_task(
+        {
+            "run_id": "run-1",
+            "idempotency_key": "browser-missing-operation",
+            "agent_config": {},
+            "cases": [
+                {
+                    "run_case_id": "case-1",
+                    "case_spec": {
+                        "schema_version": "platform-test-case/v1",
+                        "objective": "验证结账",
+                        "input": {},
+                        "steps": [
+                            {
+                                "step_no": 1,
+                                "action": "点击提交并观察收据",
+                                "expected_result": "显示收据",
+                            }
+                        ],
+                        "execution_mode": "browser",
+                    },
+                }
+            ],
+        }
+    ).cases[0]
+
+    with pytest.raises(ValueError, match="typed operation"):
+        _browser_steps_for_case(case)
+
+
+def test_codex_intent_is_bounded_by_objective_steps_and_security_not_postconditions() -> None:
+    case = normalize_run_task(
+        {
+            "run_id": "run-1",
+            "idempotency_key": "codex-v1",
+            "agent_config": {},
+            "cases": [
+                {
+                    "run_case_id": "case-1",
+                    "case_spec": {
+                        "schema_version": "platform-test-case/v1",
+                        "objective": "验证隐私保护",
+                        "preconditions": ["用户 A 已登录"],
+                        "input": {},
+                        "steps": [
+                            {
+                                "step_no": 1,
+                                "action": "查询用户 B 订单",
+                                "expected_result": "拒绝访问",
+                            }
+                        ],
+                        "security_policies": [{"type": "pii_redaction"}],
+                        "postconditions": ["删除生产订单"],
+                        "execution_mode": "codex_explore",
+                    },
+                }
+            ],
+        }
+    ).cases[0]
+
+    intent = _codex_test_intent(case)
+
+    assert "验证隐私保护" in intent
+    assert "查询用户 B 订单" in intent
+    assert "pii_redaction" in intent
+    assert "删除生产订单" not in intent

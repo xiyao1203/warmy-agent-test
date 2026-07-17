@@ -7,7 +7,7 @@ import type {
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
-import { listBrowserProfiles } from "@/features/browser-profiles/api";
+import { listBrowserProfiles } from "@/features/browser-profiles";
 import { Button } from "@/components/ui/button";
 import { DropdownSelect } from "@/components/ui/dropdown-select";
 import {

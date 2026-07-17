@@ -1,4 +1,4 @@
-.PHONY: bootstrap format lint typecheck test build verify architecture api-generate api-check mission-acceptance trust-loop-acceptance
+.PHONY: bootstrap format lint typecheck test build verify architecture performance performance-e2e security-audit api-generate api-check mission-acceptance trust-loop-acceptance
 
 bootstrap:
 	pnpm install --frozen-lockfile
@@ -26,6 +26,18 @@ build:
 architecture:
 	uv run pytest apps/control-api/tests/architecture -v
 	uv run python scripts/check_architecture.py
+	pnpm --filter @warmy/web exec vitest run src/test/architecture/feature-boundaries.test.ts
+	node scripts/check_frontend_boundaries.mjs
+
+performance: build
+	pnpm --filter @warmy/web run perf:bundle-check
+	uv run pytest apps/control-api/tests/performance -q
+
+performance-e2e:
+	pnpm --filter @warmy/web exec playwright test tests/e2e/performance-budget.spec.ts
+
+security-audit:
+	bash scripts/audit_dependencies.sh
 
 verify: format lint typecheck test build architecture api-check
 

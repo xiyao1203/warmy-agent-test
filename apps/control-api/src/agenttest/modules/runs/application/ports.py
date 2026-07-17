@@ -16,6 +16,7 @@ class RunDefinitionCase:
     name: str
     input_snapshot: dict[str, object]
     assertion_snapshot: list[dict[str, object]]
+    case_spec_snapshot: dict[str, object] | None = None
     execution_mode: str = "api"
 
 
@@ -92,3 +93,11 @@ class RunOrchestrator(Protocol):
 
 class RunRuntimeUnavailableError(RuntimeError):
     """The configured execution runtime cannot accept Run workflows."""
+
+
+class RunIdempotencyKeyExists(RuntimeError):
+    """A concurrent writer already persisted the project-scoped Run key."""
+
+
+class RunIdempotencyConflict(ValueError):
+    """The project-scoped idempotency key belongs to a different request."""

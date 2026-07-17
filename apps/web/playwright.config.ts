@@ -10,9 +10,9 @@ export default defineConfig({
     viewport: { width: 1280, height: 720 },
   },
   webServer: {
-    command: "cd ../.. && bash start.sh",
+    command: "cd ../.. && bash scripts/start_e2e_server.sh",
     port: 5175,
-    reuseExistingServer: true,
-    timeout: 60000,
+    reuseExistingServer: false,
+    timeout: 120000,
   },
 });

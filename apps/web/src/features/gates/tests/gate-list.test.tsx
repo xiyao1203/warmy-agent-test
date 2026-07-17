@@ -15,13 +15,25 @@ const api = vi.hoisted(() => ({
 vi.mock("../api", () => api);
 
 const gate: GateItem = {
+  blocking_count: 2,
   cost_limit: 100,
   created_at: "2026-07-04T10:00:00Z",
   critical_cases: ["case-1"],
   enabled: true,
   id: "gate-1",
+  evaluated_at: "2026-07-16T09:00:00Z",
+  last_decision: "failed",
+  last_run_ref: {
+    href: "/projects/project-1/runs/run-previous",
+    id: "run-previous",
+    name: "RUN-PREVIOUS",
+    resource_type: "run",
+    status: "failed",
+  },
   name: "生产发布门禁",
   project_id: "project-1",
+  rule_summary: "通过率≥90%，安全分≥80%，关键用例 1 个，成本≤100",
+  scope: "project",
   security_threshold: 0.8,
   success_rate_threshold: 0.9,
   updated_at: "2026-07-04T10:00:00Z",
@@ -53,6 +65,13 @@ describe("GateList", () => {
     render(<GateList projectId="project-1" />);
 
     expect(await screen.findByText("生产发布门禁")).toBeVisible();
+    expect(screen.getByText(gate.rule_summary!)).toBeVisible();
+    expect(screen.getByText("最近决策 failed")).toBeVisible();
+    expect(screen.getByText("阻塞项 2")).toBeVisible();
+    expect(screen.getByRole("link", { name: /RUN-PREVIOUS/ })).toHaveAttribute(
+      "href",
+      "/projects/project-1/runs/run-previous",
+    );
     expect(screen.getByText(/真实运行结果做发布判断/)).toBeVisible();
     expect(
       screen.getByRole("link", { name: /1. 配置测试计划/ }),

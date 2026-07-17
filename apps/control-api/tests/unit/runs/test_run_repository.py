@@ -12,7 +12,9 @@ from agenttest.modules.runs.infrastructure.persistence import repositories
 from agenttest.modules.runs.infrastructure.persistence.repositories import (
     SqlAlchemyRunRepository,
 )
+from agenttest.modules.runs.public import RunIdempotencyKeyExists
 from agenttest.modules.test_plans.public import TestPlanVersionId
+from sqlalchemy.exc import IntegrityError
 
 
 def make_run() -> Run:
@@ -47,8 +49,15 @@ async def test_repository_flushes_parent_run_before_adding_cases(monkeypatch: py
     events: list[str] = []
     session = Mock()
     session.add = Mock(side_effect=lambda _model: events.append("add_run"))
-    session.flush = AsyncMock(side_effect=lambda: events.append("flush_run"))
+    session.flush = AsyncMock(side_effect=lambda: events.append("flush"))
     session.add_all = Mock(side_effect=lambda _models: events.append("add_cases"))
+
+    @asynccontextmanager
+    async def nested_transaction():
+        events.append("savepoint")
+        yield
+
+    session.begin_nested = Mock(side_effect=nested_transaction)
 
     @asynccontextmanager
     async def fake_transaction_scope(_session_factory):
@@ -60,4 +69,33 @@ async def test_repository_flushes_parent_run_before_adding_cases(monkeypatch: py
 
     await repository.add(run, [make_case(run)])
 
-    assert events == ["add_run", "flush_run", "add_cases"]
+    assert events == ["savepoint", "add_run", "flush", "add_cases", "flush"]
+
+
+@pytest.mark.asyncio
+async def test_repository_translates_only_run_idempotency_unique_conflict(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    original = Mock()
+    original.diag.constraint_name = "uq_runs_project_idempotency_key"
+    session = Mock()
+    session.add = Mock()
+    session.flush = AsyncMock(
+        side_effect=IntegrityError("insert", {}, original),
+    )
+
+    @asynccontextmanager
+    async def nested_transaction():
+        yield
+
+    session.begin_nested = Mock(side_effect=nested_transaction)
+
+    @asynccontextmanager
+    async def fake_transaction_scope(_session_factory):
+        yield session
+
+    monkeypatch.setattr(repositories, "transaction_scope", fake_transaction_scope)
+    run = make_run()
+
+    with pytest.raises(RunIdempotencyKeyExists):
+        await SqlAlchemyRunRepository(Mock()).add(run, [make_case(run)])

@@ -128,10 +128,10 @@ TEST_DATA_PROMPT = (
     "你是 AgentTest 平台的测试数据管理专家，"
     "负责帮助用户创建、管理和生成测试数据集与用例。\n\n"
     "## 工作流程\n"
-    "1. 了解测试场景和用例需求\n"
-    "2. 创建数据集并添加用例\n"
-    "3. 或从已注册 Agent 自动生成用例\n"
-    "4. 发布数据集版本\n\n"
+    "1. 了解测试目标、前置条件、输入数据和验收依据\n"
+    "2. 按平台专业格式生成有序操作步骤、逐步测试数据和预期结果\n"
+    "3. 保存草稿后校验；用户可在平台表单继续人工编辑\n"
+    "4. 就绪后可单用例试运行、加入计划或发布数据集版本\n\n"
     + _COMMON_BEHAVIOR
     + "\n\n"
     + _capabilities_block(
@@ -139,6 +139,13 @@ TEST_DATA_PROMPT = (
             ("datasets.list", "浏览数据集列表"),
             ("datasets.create_with_cases", "创建数据集并附带测试用例"),
             ("datasets.auto_generate_cases", "基于 Agent 版本自动生成用例"),
+            ("test_cases.list", "浏览版本内的专业测试用例"),
+            ("test_cases.get", "读取完整测试用例"),
+            ("test_cases.create", "按平台格式新增用例草稿"),
+            ("test_cases.update", "编辑用例全部专业字段"),
+            ("test_cases.validate", "校验步骤、数据和执行判定是否完整"),
+            ("test_cases.mark_ready", "把已通过校验的用例标记为就绪"),
+            ("test_cases.trial_run", "对单条用例发起真实试运行（需确认）"),
             ("datasets.publish_version", "发布数据集版本（不可逆）"),
         ]
     )

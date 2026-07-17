@@ -11,6 +11,8 @@ from fastapi.responses import JSONResponse, Response
 
 from agenttest.bootstrap.settings import Settings
 from agenttest.modules.datasets.api.schemas import (
+    CaseTrialRunResponse,
+    CreateCaseTrialRunRequest,
     CreateDatasetRequest,
     CreateTestCaseRequest,
     DatasetListResponse,
@@ -23,22 +25,28 @@ from agenttest.modules.datasets.api.schemas import (
     ImportTestCasesResponse,
     TestCaseListResponse,
     TestCaseResponse,
+    TestCaseValidationIssue,
+    TestCaseValidationResponse,
     UpdateDatasetRequest,
     UpdateTestCaseRequest,
 )
 from agenttest.modules.datasets.application.commands import (
     AddTestCaseCommand,
+    CreateCaseTrialRunCommand,
     CreateDatasetCommand,
     CreateDatasetVersionCommand,
     DatasetNotFoundError,
     DatasetVersionNotEditableError,
     DatasetVersionNotFoundError,
     DeleteTestCaseCommand,
+    DuplicateTestCaseCommand,
+    MarkTestCaseReadyCommand,
     PublishDatasetVersionCommand,
     TestCaseNotFoundError,
     UpdateDatasetCommand,
     UpdateTestCaseCommand,
 )
+from agenttest.modules.datasets.application.contracts import PlatformTestCaseV1
 from agenttest.modules.datasets.application.generate_from_run import (
     GenerateFromRunCommand,
     GenerateFromRunResult,
@@ -47,6 +55,7 @@ from agenttest.modules.datasets.application.generate_from_run import (
 from agenttest.modules.datasets.application.import_export import (
     ImportError as DatasetImportError,
 )
+from agenttest.modules.datasets.application.trial_runs import CreateCaseTrialRunResult
 from agenttest.modules.datasets.domain.entities import (
     Dataset,
     DatasetId,
@@ -55,9 +64,11 @@ from agenttest.modules.datasets.domain.entities import (
     TestCase,
     TestCaseId,
 )
-from agenttest.modules.identity.public import InvalidSessionError, User
+from agenttest.modules.identity.public import InvalidSessionError, User, UserId
 from agenttest.modules.projects.public import ProjectId, ProjectNotFoundError
+from agenttest.modules.runs.public import RunIdempotencyConflict, RunRuntimeUnavailableError
 from agenttest.shared.api.problem_details import ProblemDetails
+from agenttest.shared.application.core_summaries import CoreSummaryReader
 from agenttest.shared.application.uow import UnitOfWorkFactory, null_uow_factory
 
 CSRF_COOKIE_NAME = "agenttest_csrf"
@@ -150,6 +161,30 @@ class DeleteCaseExecutor(Protocol):
     async def execute(self, actor: User, command: DeleteTestCaseCommand) -> None: ...
 
 
+class MarkCaseReadyExecutor(Protocol):
+    async def execute(
+        self,
+        actor: User,
+        command: MarkTestCaseReadyCommand,
+    ) -> TestCase: ...
+
+
+class DuplicateCaseExecutor(Protocol):
+    async def execute(
+        self,
+        actor: User,
+        command: DuplicateTestCaseCommand,
+    ) -> TestCase: ...
+
+
+class CreateCaseTrialRunExecutor(Protocol):
+    async def execute(
+        self,
+        actor: User,
+        command: CreateCaseTrialRunCommand,
+    ) -> CreateCaseTrialRunResult: ...
+
+
 class ImportExportExecutor(Protocol):
     async def preview_test_cases(
         self,
@@ -203,10 +238,14 @@ class DatasetApiDependencies:
     add_case: AddCaseExecutor
     update_case: UpdateCaseExecutor
     delete_case: DeleteCaseExecutor
+    mark_case_ready: MarkCaseReadyExecutor
+    duplicate_case: DuplicateCaseExecutor
+    trial_run: CreateCaseTrialRunExecutor
     publish_version: PublishVersionExecutor
     import_export: ImportExportExecutor
     generate_from_run: GenerateFromRunExecutor
     uow_factory: UnitOfWorkFactory = null_uow_factory
+    summaries: CoreSummaryReader | None = None
 
 
 def create_dataset_router(
@@ -298,8 +337,19 @@ def create_dataset_router(
             )
         except ProjectNotFoundError:
             return asset_not_found()
+        summaries = (
+            await dependencies.summaries.datasets(
+                project_id,
+                [item.dataset_id.value for item in items],
+            )
+            if dependencies.summaries
+            else {}
+        )
         return DatasetListResponse(
-            items=[DatasetResponse.from_domain(item) for item in items],
+            items=[
+                DatasetResponse.from_domain(item, summaries.get(item.dataset_id.value))
+                for item in items
+            ],
             next_cursor=next_cursor,
         )
 
@@ -533,11 +583,14 @@ def create_dataset_router(
         try:
             await project_version(actor, project_id, dataset_id, version_id)
             async with dependencies.uow_factory():
+                fields = payload.model_dump()
+                if payload.owner_id is not None:
+                    fields["owner_id"] = UserId(payload.owner_id)
                 case = await dependencies.add_case.execute(
                     actor,
                     AddTestCaseCommand(
                         dataset_version_id=DatasetVersionId(version_id),
-                        **payload.model_dump(),
+                        **fields,
                     ),
                 )
         except (
@@ -571,13 +624,21 @@ def create_dataset_router(
         if isinstance(actor, JSONResponse):
             return actor
         try:
-            await project_case(actor, project_id, dataset_id, version_id, case_id)
+            stored_case = await project_case(actor, project_id, dataset_id, version_id, case_id)
             async with dependencies.uow_factory():
+                provided_fields = frozenset(payload.model_fields_set)
+                patch_fields = payload.model_dump(exclude_unset=True)
+                sort_order = patch_fields.pop("sort_order", None)
+                merged = PlatformTestCaseV1.from_domain(stored_case).model_dump()
+                merged.update(patch_fields)
+                contract = PlatformTestCaseV1.model_validate(merged)
                 case = await dependencies.update_case.execute(
                     actor,
-                    UpdateTestCaseCommand(
-                        case_id=TestCaseId(case_id),
-                        **payload.model_dump(),
+                    _test_case_update_command(
+                        TestCaseId(case_id),
+                        contract,
+                        provided_fields,
+                        sort_order,
                     ),
                 )
         except (
@@ -594,6 +655,184 @@ def create_dataset_router(
         except ValueError as error:
             return invalid_request(str(error))
         return TestCaseResponse.from_domain(case)
+
+    @router.post(
+        "/{dataset_id}/versions/{version_id}/cases/{case_id}/validate",
+        response_model=TestCaseValidationResponse,
+    )
+    async def validate_case(
+        request: Request,
+        project_id: UUID,
+        dataset_id: UUID,
+        version_id: UUID,
+        case_id: UUID,
+    ) -> TestCaseValidationResponse | JSONResponse:
+        actor = await actor_for(request)
+        if isinstance(actor, JSONResponse):
+            return actor
+        try:
+            case = await project_case(actor, project_id, dataset_id, version_id, case_id)
+        except (
+            DatasetNotFoundError,
+            DatasetVersionNotFoundError,
+            TestCaseNotFoundError,
+            ProjectNotFoundError,
+        ):
+            return asset_not_found()
+        issues = [
+            TestCaseValidationIssue(field=field, code=code, message=message)
+            for field, code, message in case.readiness_issues()
+        ]
+        return TestCaseValidationResponse(ready=not issues, issues=issues)
+
+    @router.post(
+        "/{dataset_id}/versions/{version_id}/cases/{case_id}/mark-ready",
+        response_model=TestCaseResponse,
+    )
+    async def mark_case_ready(
+        request: Request,
+        project_id: UUID,
+        dataset_id: UUID,
+        version_id: UUID,
+        case_id: UUID,
+        x_csrf_token: str | None = Header(default=None),
+    ) -> TestCaseResponse | JSONResponse:
+        actor = await writer(request, x_csrf_token)
+        if isinstance(actor, JSONResponse):
+            return actor
+        try:
+            await project_case(actor, project_id, dataset_id, version_id, case_id)
+            async with dependencies.uow_factory():
+                case = await dependencies.mark_case_ready.execute(
+                    actor,
+                    MarkTestCaseReadyCommand(case_id=TestCaseId(case_id)),
+                )
+        except (
+            DatasetNotFoundError,
+            DatasetVersionNotFoundError,
+            TestCaseNotFoundError,
+            ProjectNotFoundError,
+        ):
+            return asset_not_found()
+        except PermissionError:
+            return permission_denied()
+        except DatasetVersionNotEditableError as error:
+            return conflict(str(error))
+        except ValueError as error:
+            return invalid_request(str(error))
+        return TestCaseResponse.from_domain(case)
+
+    @router.post(
+        "/{dataset_id}/versions/{version_id}/cases/{case_id}/duplicate",
+        response_model=TestCaseResponse,
+        status_code=201,
+    )
+    async def duplicate_case(
+        request: Request,
+        project_id: UUID,
+        dataset_id: UUID,
+        version_id: UUID,
+        case_id: UUID,
+        x_csrf_token: str | None = Header(default=None),
+    ) -> TestCaseResponse | JSONResponse:
+        actor = await writer(request, x_csrf_token)
+        if isinstance(actor, JSONResponse):
+            return actor
+        try:
+            await project_case(actor, project_id, dataset_id, version_id, case_id)
+            async with dependencies.uow_factory():
+                case = await dependencies.duplicate_case.execute(
+                    actor,
+                    DuplicateTestCaseCommand(case_id=TestCaseId(case_id)),
+                )
+        except (
+            DatasetNotFoundError,
+            DatasetVersionNotFoundError,
+            TestCaseNotFoundError,
+            ProjectNotFoundError,
+        ):
+            return asset_not_found()
+        except PermissionError:
+            return permission_denied()
+        except DatasetVersionNotEditableError as error:
+            return conflict(str(error))
+        except ValueError as error:
+            return invalid_request(str(error))
+        return TestCaseResponse.from_domain(case)
+
+    @router.post(
+        "/{dataset_id}/versions/{version_id}/cases/{case_id}/trial-runs",
+        response_model=CaseTrialRunResponse,
+        status_code=201,
+    )
+    async def create_case_trial_run(
+        request: Request,
+        response: Response,
+        project_id: UUID,
+        dataset_id: UUID,
+        version_id: UUID,
+        case_id: UUID,
+        payload: CreateCaseTrialRunRequest,
+        idempotency_key: str | None = Header(default=None, alias="Idempotency-Key"),
+        x_csrf_token: str | None = Header(default=None),
+    ) -> CaseTrialRunResponse | JSONResponse:
+        actor = await writer(request, x_csrf_token)
+        if isinstance(actor, JSONResponse):
+            return actor
+        if not idempotency_key:
+            return invalid_request("Idempotency-Key is required")
+        try:
+            await project_case(actor, project_id, dataset_id, version_id, case_id)
+            async with dependencies.uow_factory():
+                result = await dependencies.trial_run.execute(
+                    actor,
+                    CreateCaseTrialRunCommand(
+                        project_id=ProjectId(project_id),
+                        case_id=TestCaseId(case_id),
+                        agent_version_id=payload.agent_version_id,
+                        environment_template_id=payload.environment_template_id,
+                        idempotency_key=idempotency_key,
+                    ),
+                )
+        except (
+            DatasetNotFoundError,
+            DatasetVersionNotFoundError,
+            TestCaseNotFoundError,
+            ProjectNotFoundError,
+            LookupError,
+        ):
+            return asset_not_found()
+        except PermissionError:
+            return permission_denied()
+        except RunRuntimeUnavailableError as error:
+            return JSONResponse(
+                ProblemDetails(
+                    type="about:blank",
+                    title="Run runtime unavailable",
+                    status=503,
+                    detail=str(error),
+                ).model_dump(),
+                status_code=503,
+            )
+        except RunIdempotencyConflict as error:
+            return conflict(str(error))
+        except ValueError as error:
+            return invalid_request(str(error))
+        if not result.created:
+            response.status_code = 200
+        run = result.run
+        return CaseTrialRunResponse(
+            id=run.run_id.value,
+            project_id=run.project_id.value,
+            run_type="case_trial",
+            source_test_case_id=case_id,
+            agent_version_id=run.agent_version_id,
+            dataset_version_id=run.dataset_version_id,
+            status=run.status.value,
+            workflow_id=run.workflow_id,
+            created=result.created,
+            href=f"/projects/{project_id}/runs/{run.run_id.value}",
+        )
 
     @router.delete(
         "/{dataset_id}/versions/{version_id}/cases/{case_id}",
@@ -839,6 +1078,61 @@ def create_dataset_router(
 
 def authentication_required() -> JSONResponse:
     return problem_response(401, "Authentication required", "A valid session is required")
+
+
+def _test_case_update_command(
+    case_id: TestCaseId,
+    contract: PlatformTestCaseV1,
+    provided_fields: frozenset[str],
+    sort_order: int | None,
+) -> UpdateTestCaseCommand:
+    has = provided_fields.__contains__
+    return UpdateTestCaseCommand(
+        case_id=case_id,
+        name=contract.name if has("name") else None,
+        input=contract.input if has("input") else None,
+        execution_mode=contract.execution_mode if has("execution_mode") else None,
+        assertions=contract.assertions if has("assertions") else None,
+        scorers=contract.scorers if has("scorers") else None,
+        objective=contract.objective if has("objective") else None,
+        template=contract.template if has("template") else None,
+        case_type=contract.case_type if has("case_type") else None,
+        automation_status=(contract.automation_status if has("automation_status") else None),
+        source_ref=contract.source_ref if has("source_ref") else None,
+        component=contract.component if has("component") else None,
+        requirement_refs=(contract.requirement_refs if has("requirement_refs") else None),
+        owner_id=(UserId(contract.owner_id) if has("owner_id") and contract.owner_id else None),
+        initial_state=contract.initial_state if has("initial_state") else None,
+        preconditions=contract.preconditions if has("preconditions") else None,
+        data_bindings=(
+            [item.model_dump(mode="json") for item in contract.data_bindings]
+            if has("data_bindings")
+            else None
+        ),
+        steps=([item.model_dump(mode="json") for item in contract.steps] if has("steps") else None),
+        expected_outcome=(contract.expected_outcome if has("expected_outcome") else None),
+        security_policies=(contract.security_policies if has("security_policies") else None),
+        artifact_requirements=(
+            [item.model_dump(mode="json") for item in contract.artifact_requirements]
+            if has("artifact_requirements")
+            else None
+        ),
+        postconditions=contract.postconditions if has("postconditions") else None,
+        estimated_duration_seconds=(
+            contract.estimated_duration_seconds if has("estimated_duration_seconds") else None
+        ),
+        timeout_seconds=contract.timeout_seconds if has("timeout_seconds") else None,
+        retry_count=contract.retry_count if has("retry_count") else None,
+        custom_fields=contract.custom_fields if has("custom_fields") else None,
+        tags=contract.tags if has("tags") else None,
+        scenario=contract.scenario if has("scenario") else None,
+        priority=contract.priority if has("priority") else None,
+        risk_level=contract.risk_level if has("risk_level") else None,
+        difficulty=contract.difficulty if has("difficulty") else None,
+        test_group=contract.test_group if has("test_group") else None,
+        sort_order=sort_order,
+        provided_fields=provided_fields,
+    )
 
 
 def csrf_failed() -> JSONResponse:

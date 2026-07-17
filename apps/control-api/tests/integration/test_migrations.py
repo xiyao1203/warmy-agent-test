@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+import sqlite3
 from asyncio import run
 from datetime import UTC, datetime
 from io import StringIO
@@ -85,6 +86,11 @@ def test_initial_migration_generates_expected_postgresql_schema() -> None:
     assert "ix_mission_events_project_mission_sequence" in sql
     assert "alter table audit.audit_logs set schema public" in sql
     assert "add column session_id varchar(255)" in sql
+    assert "fk_artifacts_project_run" in sql
+    assert "login_throttles" in sql
+    assert "ix_login_throttles_updated_at" in sql
+    assert "project_sequences" in sql
+    assert "uq_test_cases_case_key" in sql
 
 
 def test_empty_sqlite_database_upgrades_to_head(tmp_path: Path) -> None:
@@ -93,7 +99,35 @@ def test_empty_sqlite_database_upgrades_to_head(tmp_path: Path) -> None:
 
     command.upgrade(config, "head")
 
-    assert run(current_sqlite_revision(database_url)) == "0024"
+    assert run(current_sqlite_revision(database_url)) == "0027"
+
+
+def test_login_throttle_migration_is_private_indexed_and_reversible(tmp_path: Path) -> None:
+    database_path = tmp_path / "login-throttle.db"
+    database_url = f"sqlite+aiosqlite:///{database_path}"
+    config = alembic_config(database_url=database_url)
+
+    command.upgrade(config, "0025")
+    command.upgrade(config, "0026")
+
+    with sqlite3.connect(database_path) as connection:
+        columns = {row[1] for row in connection.execute("PRAGMA table_info(login_throttles)")}
+        indexes = {row[1] for row in connection.execute("PRAGMA index_list(login_throttles)")}
+    assert columns == {
+        "key_hash",
+        "failure_count",
+        "window_started_at",
+        "blocked_until",
+        "updated_at",
+    }
+    assert "ix_login_throttles_updated_at" in indexes
+
+    command.downgrade(config, "0025")
+    with sqlite3.connect(database_path) as connection:
+        table = connection.execute(
+            "SELECT name FROM sqlite_master WHERE name = 'login_throttles'"
+        ).fetchone()
+    assert table is None
 
 
 def test_sqlite_backfills_existing_scorer_versions(tmp_path: Path) -> None:
@@ -119,11 +153,11 @@ def test_empty_database_upgrade_and_revision_cycle() -> None:
     config = alembic_config(database_url=database_url)
 
     command.upgrade(config, "head")
-    assert run(current_revision(database_url)) == "0024"
+    assert run(current_revision(database_url)) == "0027"
 
     command.downgrade(config, "base")
     command.upgrade(config, "head")
-    assert run(current_revision(database_url)) == "0024"
+    assert run(current_revision(database_url)) == "0027"
 
 
 async def current_revision(database_url: str) -> str:

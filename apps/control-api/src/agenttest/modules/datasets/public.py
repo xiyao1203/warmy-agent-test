@@ -7,9 +7,20 @@ from __future__ import annotations
 
 from agenttest.modules.datasets.application.commands import (
     AddTestCaseCommand,
+    CreateCaseTrialRunCommand,
     CreateDatasetCommand,
     CreateDatasetVersionCommand,
+    MarkTestCaseReadyCommand,
     PublishDatasetVersionCommand,
+    UpdateTestCaseCommand,
+)
+from agenttest.modules.datasets.application.contracts import (
+    ArtifactRequirementV1,
+    BrowserOperationV1,
+    DataBindingV1,
+    PlatformTestCaseV1,
+    TestStepV1,
+    build_case_spec_snapshot,
 )
 from agenttest.modules.datasets.domain.entities import (
     Dataset,
@@ -20,30 +31,55 @@ from agenttest.modules.datasets.domain.entities import (
     TestCaseId,
 )
 from agenttest.modules.datasets.domain.value_objects import (
+    ArtifactKind,
+    AutomationStatus,
+    DataBindingSource,
+    DataValueType,
     ExecutionMode,
     Priority,
     RiskLevel,
+    TestCaseSource,
+    TestCaseStatus,
+    TestCaseTemplate,
+    TestCaseType,
     TestGroup,
     VersionStatus,
 )
 
 __all__ = [
+    "ArtifactKind",
+    "ArtifactRequirementV1",
+    "AutomationStatus",
+    "BrowserOperationV1",
+    "DataBindingSource",
+    "DataBindingV1",
+    "DataValueType",
     "Dataset",
     "AddTestCaseCommand",
     "CreateDatasetCommand",
     "CreateDatasetVersionCommand",
+    "CreateCaseTrialRunCommand",
     "DatasetId",
     "DatasetVersion",
     "DatasetVersionId",
     "DatasetVersionRef",
     "ExecutionMode",
     "Priority",
+    "PlatformTestCaseV1",
+    "MarkTestCaseReadyCommand",
     "PublishDatasetVersionCommand",
     "RiskLevel",
     "TestCase",
     "TestCaseId",
+    "TestCaseSource",
+    "TestCaseStatus",
+    "TestCaseTemplate",
+    "TestCaseType",
     "TestGroup",
+    "TestStepV1",
     "VersionStatus",
+    "UpdateTestCaseCommand",
+    "build_case_spec_snapshot",
 ]
 
 

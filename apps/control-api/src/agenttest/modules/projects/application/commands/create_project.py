@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 
 from agenttest.modules.audit.public import AuditWriter
-from agenttest.modules.identity.public import SystemRole, User
+from agenttest.modules.identity.public import SystemRole, User, UserId
 from agenttest.modules.projects.domain.entities import Project, ProjectId
 from agenttest.modules.projects.domain.policies import ProjectAccessDeniedError
 from agenttest.modules.projects.domain.repositories import ProjectRepository
@@ -10,6 +10,9 @@ from agenttest.modules.projects.domain.repositories import ProjectRepository
 @dataclass(frozen=True, slots=True)
 class CreateProjectCommand:
     name: str
+    key: str | None = None
+    description: str | None = None
+    lead_user_id: UserId | None = None
 
 
 class CreateProjectHandler:
@@ -28,6 +31,9 @@ class CreateProjectHandler:
         project = Project.create(
             project_id=ProjectId.new(),
             name=command.name,
+            key=command.key,
+            description=command.description,
+            lead_user_id=command.lead_user_id,
             created_by=actor.user_id,
         )
         await self._projects.add(project)

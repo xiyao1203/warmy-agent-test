@@ -6,7 +6,7 @@
 
 ## 当前状态
 
-项目处于 M2 测试资产阶段，已完成 Agent、Dataset、TestCase、TestPlan 和 EnvironmentTemplate 的领域模型、API 和前端管理界面。
+平台 M0-M6 能力已完成，当前处于对话式真实测试任务编排与可信 Run 闭环阶段。Agent、测试资产、Temporal 执行、证据采集、评测、安全扫描、人工审核和发布门禁均已有本地生产同构验证；真实外部目标验收仍以获准账号、登录态和额度为前提。
 
 当前工作见：
 
@@ -113,6 +113,8 @@ API Runner 消费 `agenttest-api-runner` 任务队列，执行真实 Agent HTTP 
 - 安全扫描调用已安装的 Promptfoo，可通过 `AGENTTEST_PROMPTFOO_BIN` 指定可执行文件。扫描目标必须由用户提交，默认拒绝本机和私网地址；仅在受控内网部署中显式设置 `AGENTTEST_SECURITY_SCAN_ALLOW_PRIVATE_NETWORK=true`。
 - Compose 文件中的默认账号仅用于本地开发。非本地环境必须设置独立的数据库、对象存储、内部 API Token 和会话配置，禁止沿用仓库默认值。
 - Agent 测试和模型评分只使用项目级模型配置及加密凭证；未配置可用模型时会明确失败，不生成模拟结果。
+- Artifact 用户上传默认限制为 64 MiB，内部 Worker 上传默认限制为 256 MiB，可分别用 `AGENTTEST_ARTIFACT_USER_UPLOAD_MAX_BYTES` 和 `AGENTTEST_ARTIFACT_INTERNAL_UPLOAD_MAX_BYTES` 调整；服务端始终流式计算大小与 SHA-256，超限返回 413 并清理临时对象。
+- 登录失败默认在 15 分钟窗口内累计 8 次后封禁 30 分钟。非本地环境必须设置独立的 `AGENTTEST_LOGIN_THROTTLE_PEPPER`；只有 `AGENTTEST_TRUSTED_PROXY_CIDRS` 明确列出的直连代理才允许提供 `X-Forwarded-For`，不得把该配置设为不受控客户端网段。
 
 ### 8. 启动前端
 
@@ -135,6 +137,16 @@ make verify
 ```
 
 包含：格式检查、Lint、类型检查、单元/集成/契约测试、前端构建、架构边界检查和 OpenAPI 漂移检查。
+
+### 性能与供应链门禁
+
+```bash
+make performance       # 生产构建、路由 Bundle/Gzip 与后端 SQL 查询预算
+make performance-e2e   # 需运行服务和 E2E 登录配置的导航耗时采样
+make security-audit    # Node/Python 生产依赖漏洞审计
+```
+
+性能基线位于 `docs/performance/`；依赖例外、可达性约束和复核时间记录在 `docs/security/dependency-audit.md`。
 
 ### OpenAPI 生成与漂移检查
 

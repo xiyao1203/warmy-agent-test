@@ -2,25 +2,12 @@ import { CONTROL_API_URL as API_BASE } from "@/lib/api/base-url";
 import { csrfHeaders } from "@/lib/api/csrf";
 import { responseProblem } from "@/lib/api/problem";
 
-export type ExperimentItem = {
-  id: string;
-  project_id: string;
-  name: string;
-  run_a_id: string;
-  run_b_id: string;
-  status: string;
-  result_json: Record<string, unknown>;
-  description: string | null;
-  created_at: string;
-  updated_at: string;
-};
+export type ExperimentItem = ExperimentSummaryResponse;
 
-export type ExperimentRun = {
-  id: string;
-  status: string;
-  created_at: string;
-  test_plan_version_id: string;
-};
+export type ExperimentRun = Pick<
+  RunResponse,
+  "created_at" | "id" | "status" | "test_plan_version_id"
+>;
 
 export async function listExperimentRuns(projectId: string) {
   const response = await fetch(
@@ -90,3 +77,7 @@ export async function runExperiment(projectId: string, experimentId: string) {
   if (!res.ok) throw await responseProblem(res, "运行实验失败");
   return res.json() as Promise<ExperimentItem>;
 }
+import type {
+  ExperimentSummaryResponse,
+  RunResponse,
+} from "@warmy/generated-api-client";
