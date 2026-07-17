@@ -62,27 +62,36 @@ Infrastructure ──implements──> Application/Domain Port
 
 ## 5. 模块迁移设计
 
-### 5.1 Feedback
+### 5.1 Domain 运行时契约
+
+审计增强后确认 Agent Invocation、Environment Runtime Snapshot 和 Scorer Config 位于 Domain，但使用 Pydantic 完成边界解析。这些对象属于运行时/Application 输入契约，不是领域实体或值对象：
+
+- `InvocationProtocol` 等纯领域枚举保留在 Domain；`AgentInvocationConfig` 和兼容旧配置的解析器迁入 Agents Application。
+- `EnvironmentRuntimeSnapshot` 迁入 Environments Application。
+- Scorer 的 Pydantic 配置模型和解析器迁入 Scorers Application。
+- 各模块 `public.py` 继续导出同名对象，运行时类型、验证、`model_dump` 结果和调用方行为保持不变。
+
+### 5.2 Feedback
 
 - 将 `FeedbackType` 移到 Domain value object，API Schema 仅引用该类型。
 - 在 Application 定义 `FeedbackRepository` Port。
 - `CreateFeedbackHandler` 只依赖 Port 和 Domain，不认识 SQLAlchemy 或 Pydantic Schema。
 - SQLAlchemy Repository 实现 Port；Router 和响应契约保持不变。
 
-### 5.2 User Settings
+### 5.3 User Settings
 
 - 在 Application 定义 `UserSettingsRepository` Port。
 - Query/Command Handler 只依赖 Port。
 - SQLAlchemy Repository 实现 Port；默认值、更新语义和 API响应保持不变。
 
-### 5.3 Reports
+### 5.4 Reports
 
 - Application 定义结构化 `RunReport`/`RunCaseReport` DTO 与报告 Renderer Port，避免散布 `dict[str, Any]`。
 - JSON、JUnit 和 HTML 生成器作为 Infrastructure Renderer，实现相同 Port。
 - Application Export Service 根据受控格式选择 Renderer；API 只处理认证、错误映射、Content-Type 与 Response。
 - 输出内容、下载格式、状态码和媒体类型保持兼容；生成时间继续由 Renderer 负责。
 
-### 5.4 自动架构门禁
+### 5.5 自动架构门禁
 
 - 扩展 `scripts/check_architecture.py` 检测同模块和跨模块的反向层依赖。
 - 增加 Application 禁止框架/Infrastructure/API 的测试。
@@ -106,7 +115,7 @@ HTTP 请求仍由 Router 完成认证、CSRF、Pydantic 校验和 Problem Detail
 4. 运行后端、前端、Worker、插件和 OpenAPI 全量门禁。
 5. 使用真实 PostgreSQL 覆盖迁移、项目隔离、约束和 Repository 集成；本任务预期 Schema 零变化。
 6. 完整 Playwright 验证关键用户旅程没有回归。
-7. 最终独立复审重点检查隐藏行为变化、边界遗漏和门禁误报。
+7. 最终复审重点检查隐藏行为变化、绝对/相对导入的边界遗漏和门禁误报。
 
 ## 8. 完成标准
 

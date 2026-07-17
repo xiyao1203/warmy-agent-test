@@ -1,8 +1,8 @@
 from uuid import uuid4
 
 import pytest
-from agenttest.modules.agents.domain.invocation import AgentInvocationConfig
-from agenttest.modules.environments.domain.runtime import EnvironmentRuntimeSnapshot
+from agenttest.modules.agents.public import AgentInvocationConfig
+from agenttest.modules.environments.public import EnvironmentRuntimeSnapshot
 from agenttest.modules.runs.application.execution_snapshot import (
     CaseExecutionSnapshot,
     EvaluationPolicySnapshot,

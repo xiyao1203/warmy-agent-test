@@ -10,17 +10,17 @@ from agenttest.modules.agents.application.commands import (
     CreateAgentVersionCommand,
     PublishAgentVersionCommand,
 )
+from agenttest.modules.agents.application.invocation import (
+    AgentInvocationConfig,
+    invocation_from_stored_config,
+)
 from agenttest.modules.agents.domain.entities import (
     Agent,
     AgentId,
     AgentVersion,
     AgentVersionId,
 )
-from agenttest.modules.agents.domain.invocation import (
-    AgentInvocationConfig,
-    InvocationProtocol,
-    invocation_from_stored_config,
-)
+from agenttest.modules.agents.domain.invocation import InvocationProtocol
 from agenttest.modules.agents.domain.value_objects import (
     AgentConfig,
     AgentType,

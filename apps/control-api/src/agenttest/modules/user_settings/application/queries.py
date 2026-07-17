@@ -4,16 +4,14 @@ from __future__ import annotations
 
 from uuid import UUID
 
+from agenttest.modules.user_settings.application.ports import UserSettingsRepository
 from agenttest.modules.user_settings.domain.entities import UserSettings
-from agenttest.modules.user_settings.infrastructure.persistence.repositories import (
-    SqlAlchemyUserSettingsRepository,
-)
 
 
 class GetUserSettingsHandler:
     """获取用户设置处理器。"""
 
-    def __init__(self, repository: SqlAlchemyUserSettingsRepository) -> None:
+    def __init__(self, repository: UserSettingsRepository) -> None:
         self._repository = repository
 
     async def execute(self, user_id: str) -> UserSettings | None:

@@ -52,7 +52,8 @@ Infrastructure → 实现 Domain 或 Application 定义的接口
 ```
 
 - Domain 不依赖 FastAPI、SQLAlchemy、Temporal、Redis 和第三方 SDK。
-- Application 不直接执行 SQL，不直接调用外部厂商 SDK。
+- Domain 不得反向导入同模块的 Application、API 或 Infrastructure；边界校验模型位于 Application，领域层不使用 Pydantic。
+- Application 不直接执行 SQL，不直接调用外部厂商 SDK，也不得导入同模块的 API 或 Infrastructure；外部能力通过 Port 注入。
 - API 层不写业务规则。
 - ORM 实体不直接作为 API 响应。
 - 模块之间通过公开 Application 接口或领域事件协作。
@@ -481,6 +482,8 @@ modules/runs/
 
 模块公开能力仅从 `public.py` 暴露。禁止跨模块直接导入对方的 ORM、Repository 或内部 Handler。
 
+纯领域算法或只包含公开 Domain/Application 契约的 Facade 可以保留单文件布局；架构正确性以依赖方向和公开契约为准，不以强制创建空目录为准。
+
 控制面装配遵循以下边界：
 
 - `bootstrap/app.py` 只创建 FastAPI/Middleware、兼容测试覆盖并依次调用模块 Registrar；不得承载业务查询、事务或持久化操作。
@@ -761,6 +764,7 @@ Python Worker 使用对应的 `src/<package>` 和 `tests` 结构。
 - 任务载荷只传 ID 和短期授权，不传大量业务快照。
 - Worker 从控制面受控接口获取任务上下文。
 - Worker 不持有业务数据库账号，不直接写入 PostgreSQL。
+- Worker 与插件源码由架构扫描器禁止导入 Control API 内部模块以及 SQLAlchemy、psycopg、asyncpg 等业务数据库驱动。
 - 结构化结果通过 Temporal 返回或提交到受认证的内部结果接口。
 - 每个 Activity 设置 Start-to-Close Timeout 和 Retry Policy。
 - 非幂等动作必须使用业务幂等键。
@@ -1028,6 +1032,7 @@ HTTP Request
 - Repository：使用真实 PostgreSQL 测试。
 - API：认证、授权、Schema 和错误契约。
 - Architecture Test：禁止反向依赖和跨模块内部导入。
+- Architecture Source Scan：同时检查同模块 Domain/Application 反向依赖，以及 Worker/插件越过控制面或数据库边界的导入。
 - Migration Test：空库升级和旧版本升级。
 
 ### 15.3 前端测试

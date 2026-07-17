@@ -5,6 +5,7 @@ from uuid import uuid4
 import pytest
 from agenttest.modules.identity.public import Email, SystemRole, User, UserId
 from agenttest.modules.projects.public import ProjectId
+from agenttest.modules.reports.application.export import ReportExportService
 from agenttest.modules.reports.application.service import ReportService
 from agenttest.modules.runs.domain.entities import Run, RunCase, RunCaseId, RunId
 from agenttest.modules.runs.domain.value_objects import RunCaseStatus
@@ -34,6 +35,20 @@ class StubRuns:
         if self.run.project_id == project_id and self.run.run_id == run_id:
             return self.cases
         return []
+
+
+class StubRenderer:
+    """记录结构化报告输入的格式渲染器。"""
+
+    format = "json"
+    media_type = "application/json"
+
+    def __init__(self) -> None:
+        self.report = None
+
+    def generate(self, report):
+        self.report = report
+        return '{"rendered":true}'
 
 
 def make_report_state() -> tuple[User, Run, list[RunCase]]:
@@ -95,3 +110,20 @@ async def test_build_report_uses_project_scoped_run_and_cases() -> None:
             "error": "real timeout",
         }
     ]
+
+
+@pytest.mark.asyncio
+async def test_export_service_selects_allowlisted_renderer() -> None:
+    actor, run, cases = make_report_state()
+    renderer = StubRenderer()
+    exporter = ReportExportService(
+        reports=ReportService(runs=StubRuns(run, cases), project_access=StubAccess()),
+        renderers=[renderer],
+    )
+
+    exported = await exporter.export(actor, run.project_id, run.run_id, "json")
+
+    assert exported.content == '{"rendered":true}'
+    assert exported.media_type == "application/json"
+    assert renderer.report is not None
+    assert renderer.report["project_id"] == str(run.project_id.value)

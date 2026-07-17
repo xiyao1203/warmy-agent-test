@@ -1,9 +1,10 @@
 from __future__ import annotations
 
-from typing import Any, Protocol
+from typing import Protocol
 
 from agenttest.modules.identity.public import User
 from agenttest.modules.projects.public import ProjectId
+from agenttest.modules.reports.application.contracts import RunCaseReport, RunReport
 from agenttest.modules.runs.public import Run, RunCase, RunId
 
 
@@ -40,7 +41,7 @@ class ReportService:
         actor: User,
         project_id: ProjectId,
         run_id: RunId,
-    ) -> dict[str, Any]:
+    ) -> RunReport:
         await self._project_access.ensure_member(actor, project_id)
         run = await self._runs.get_by_id(project_id, run_id)
         if run is None:
@@ -66,7 +67,7 @@ class ReportService:
         }
 
 
-def _case_data(case: RunCase) -> dict[str, object]:
+def _case_data(case: RunCase) -> RunCaseReport:
     return {
         "case_id": str(case.run_case_id.value),
         "name": case.name,

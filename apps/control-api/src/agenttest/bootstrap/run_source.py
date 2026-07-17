@@ -6,11 +6,11 @@ from uuid import UUID
 from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
-from agenttest.modules.agents.domain.invocation import invocation_from_stored_config
 from agenttest.modules.agents.infrastructure.persistence.models import (
     AgentModel,
     AgentVersionModel,
 )
+from agenttest.modules.agents.public import invocation_from_stored_config
 from agenttest.modules.browser_profiles.domain.entities import BrowserProfile
 from agenttest.modules.browser_profiles.infrastructure.models import BrowserProfileModel
 from agenttest.modules.datasets.application.trial_runs import (

@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from datetime import UTC, datetime
 from uuid import UUID, uuid4
 
-from agenttest.modules.feedback.api.schemas import FeedbackType
+from agenttest.modules.feedback.domain.value_objects import FeedbackType
 
 
 @dataclass(slots=True)

@@ -2,7 +2,7 @@ from uuid import uuid4
 
 import pytest
 from agenttest.modules.agents.api.schemas import AgentConfigRequest
-from agenttest.modules.agents.domain.invocation import (
+from agenttest.modules.agents.public import (
     AgentInvocationConfig,
     InvocationProtocol,
     invocation_from_stored_config,
