@@ -1,3 +1,4 @@
+import ast
 import sys
 from pathlib import Path
 
@@ -12,10 +13,37 @@ def write_module(root: Path, relative_path: str, source: str) -> None:
     path.write_text(source, encoding="utf-8")
 
 
+def find_importers(source_root: Path, module_name: str) -> list[str]:
+    importers: list[str] = []
+    for path in sorted(source_root.rglob("*.py")):
+        relative_path = path.relative_to(source_root)
+        tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+        imports = architecture.imported_modules(
+            tree,
+            architecture.package_name_for(relative_path),
+        )
+        imports_legacy_symbol = any(
+            isinstance(node, ast.ImportFrom)
+            and node.module == "agenttest.bootstrap"
+            and any(alias.name == "wiring" for alias in node.names)
+            for node in ast.walk(tree)
+        )
+        if module_name in imports or imports_legacy_symbol:
+            importers.append(relative_path.as_posix())
+    return importers
+
+
 def test_current_control_api_respects_module_boundaries() -> None:
     source_root = Path("apps/control-api/src")
 
     assert find_violations(source_root) == []
+
+
+def test_legacy_wiring_is_not_a_runtime_dependency() -> None:
+    source_root = Path("apps/control-api/src/agenttest")
+
+    assert find_importers(source_root, "agenttest.bootstrap.wiring") == []
+    assert not (source_root / "bootstrap/wiring.py").exists()
 
 
 def test_domain_cannot_import_frameworks(tmp_path: Path) -> None:

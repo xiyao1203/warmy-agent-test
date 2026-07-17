@@ -50,10 +50,7 @@ class AutoCollector:
         Returns:
             True 表示需要收集到审核队列。
         """
-        confidence: float = result.get("confidence", 1.0)  # type: ignore[assignment]
-        is_high_risk: bool = result.get("is_high_risk", False)  # type: ignore[assignment]
-        has_security_findings: bool = result.get("has_security_findings", False)  # type: ignore[assignment]
-        scores: dict[str, float] = result.get("scores", {})  # type: ignore[assignment]
+        confidence, is_high_risk, has_security_findings, scores = _parse_review_result(result)
 
         # 1. 低置信度
         if confidence < self._criteria.confidence_threshold:
@@ -82,9 +79,7 @@ class AutoCollector:
         Returns:
             优先级数值。
         """
-        confidence: float = result.get("confidence", 1.0)  # type: ignore[assignment]
-        has_security_findings: bool = result.get("has_security_findings", False)  # type: ignore[assignment]
-        is_high_risk: bool = result.get("is_high_risk", False)  # type: ignore[assignment]
+        confidence, is_high_risk, has_security_findings, _ = _parse_review_result(result)
 
         # 基础优先级：置信度越低，优先级越高
         base_priority = int((1.0 - confidence) * 100)
@@ -116,3 +111,30 @@ class AutoCollector:
         max_score = max(values)
         min_score = min(values)
         return (max_score - min_score) > self._criteria.score_conflict_threshold
+
+
+def _parse_review_result(
+    result: dict[str, object],
+) -> tuple[float, bool, bool, dict[str, float]]:
+    confidence_raw = result.get("confidence", 1.0)
+    high_risk_raw = result.get("is_high_risk", False)
+    security_raw = result.get("has_security_findings", False)
+    scores_raw = result.get("scores", {})
+    if isinstance(confidence_raw, bool) or not isinstance(confidence_raw, (int, float)):
+        raise ValueError("Invalid review result confidence")
+    if not isinstance(high_risk_raw, bool):
+        raise ValueError("Invalid review result is_high_risk")
+    if not isinstance(security_raw, bool):
+        raise ValueError("Invalid review result has_security_findings")
+    if not isinstance(scores_raw, dict):
+        raise ValueError("Invalid review result scores")
+    scores: dict[str, float] = {}
+    for name, score in scores_raw.items():
+        if (
+            not isinstance(name, str)
+            or isinstance(score, bool)
+            or not isinstance(score, (int, float))
+        ):
+            raise ValueError("Invalid review result scores")
+        scores[name] = float(score)
+    return float(confidence_raw), high_risk_raw, security_raw, scores

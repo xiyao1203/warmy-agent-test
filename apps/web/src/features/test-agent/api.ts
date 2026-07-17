@@ -1,3 +1,6 @@
+import { archiveSessionApiV1ProjectsProjectIdTestAgentSessionsSessionIdDelete } from "@warmy/generated-api-client";
+
+import { apiClient } from "@/lib/api/client";
 import { CONTROL_API_URL as API_BASE } from "@/lib/api/base-url";
 import { csrfHeaders } from "@/lib/api/csrf";
 import { responseProblem } from "@/lib/api/problem";
@@ -117,6 +120,7 @@ export class TestAgentApiError extends Error {
 }
 
 async function request<T>(url: string, init?: RequestInit): Promise<T> {
+  // raw-fetch-allowed: compatibility adapter also serves the undocumented edit-message endpoint
   const response = await fetch(url, { credentials: "include", ...init });
   if (!response.ok) {
     const problem = await responseProblem(response, "测试 Agent 调用失败");
@@ -130,6 +134,7 @@ async function requestWithAbort<T>(
   init?: RequestInit & { signal?: AbortSignal },
 ): Promise<T> {
   const { signal, ...rest } = init ?? {};
+  // raw-fetch-allowed: abortable compatibility adapter also serves edit-message
   const response = await fetch(url, {
     credentials: "include",
     ...rest,
@@ -190,12 +195,15 @@ export function resumeMission(projectId: string, missionId: string) {
   );
 }
 
-export function deleteSession(projectId: string, sessionId: string) {
-  return fetch(`${base(projectId)}/sessions/${sessionId}`, {
-    method: "DELETE",
-    credentials: "include",
-    headers: csrfHeaders() as Record<string, string>,
-  });
+export async function deleteSession(projectId: string, sessionId: string) {
+  const { response } =
+    await archiveSessionApiV1ProjectsProjectIdTestAgentSessionsSessionIdDelete({
+      client: apiClient,
+      headers: csrfHeaders(),
+      path: { project_id: projectId, session_id: sessionId },
+      throwOnError: true,
+    });
+  return response;
 }
 
 export function sendChatMessage(

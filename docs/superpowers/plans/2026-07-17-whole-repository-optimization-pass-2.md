@@ -17,7 +17,7 @@
 - Verify: `docs/api/openapi.json`
 - Verify: `packages/generated-api-client/src/client`
 
-- [ ] **Step 1: Record the branch, commit, and file hotspot baseline**
+- [x] **Step 1: Record the branch, commit, and file hotspot baseline**
 
 Run:
 
@@ -30,13 +30,13 @@ rg --files apps/web/src -g '*.ts' -g '*.tsx' | xargs wc -l | sort -nr | head -20
 
 Expected: branch is `codex/whole-repository-optimization-pass-2`; only plan/task documentation is changed; the known 2301/1333/1249/1113-line hotspots are present.
 
-- [ ] **Step 2: Run the pre-change quality baseline**
+- [x] **Step 2: Run the pre-change quality baseline**
 
 Run: `make verify`
 
 Expected: format, lint, TypeScript/mypy, Web/Python tests, build, architecture and API generation pass with zero tracked OpenAPI/client drift.
 
-- [ ] **Step 3: Run pre-change performance and browser baselines**
+- [x] **Step 3: Run pre-change performance and browser baselines**
 
 Run:
 
@@ -47,11 +47,11 @@ pnpm --filter @warmy/web e2e
 
 Expected: four route budgets and backend query budgets pass; complete Playwright passes with only the explicitly credential-gated performance scenario allowed to skip.
 
-- [ ] **Step 4: Record exact counts and measured hotspot sizes**
+- [x] **Step 4: Record exact counts and measured hotspot sizes**
 
 Add the commands, counts, skips and file sizes to `TASK-20260717-003` in the progress ledger. Do not infer performance improvements from line count.
 
-- [ ] **Step 5: Commit the baseline record**
+- [x] **Step 5: Commit the baseline record**
 
 ```bash
 git add docs/开发进度与变更记录.md docs/当前任务.md docs/superpowers/plans/2026-07-17-whole-repository-optimization-pass-2.md
@@ -70,7 +70,7 @@ git commit -m "docs: plan repository optimization pass two"
 - Modify: `apps/control-api/tests/architecture/test_module_boundaries.py`
 - Modify: `apps/control-api/tests/unit/bootstrap/test_composition.py`
 
-- [ ] **Step 1: Add failing architecture tests for one composition root**
+- [x] **Step 1: Add failing architecture tests for one composition root**
 
 Add assertions equivalent to:
 
@@ -84,7 +84,7 @@ def test_legacy_wiring_is_not_a_runtime_dependency() -> None:
 
 Add a source compilation test importing `agenttest.bootstrap.model_registry` and asserting `Base.metadata.tables` contains representative Identity, Project, Run and Audit tables.
 
-- [ ] **Step 2: Run the new tests and observe RED**
+- [x] **Step 2: Run the new tests and observe RED**
 
 Run:
 
@@ -94,13 +94,13 @@ uv run pytest apps/control-api/tests/architecture/test_module_boundaries.py apps
 
 Expected: failure because `context.py` imports the legacy module and `wiring.py` still exists.
 
-- [ ] **Step 3: Extract the Identity provider**
+- [x] **Step 3: Extract the Identity provider**
 
 Move the complete current `build_auth_dependencies(settings)` implementation from `bootstrap/wiring.py:627-667` into `bootstrap/providers/identity.py` without changing its repositories, Argon2 hasher, login throttle policy, cookie/CSRF settings or returned `AuthApiDependencies` fields.
 
 Update `context.py` to import this provider at module scope; preserve `AppOverrides` and `BootstrapContext` signatures.
 
-- [ ] **Step 4: Add explicit ORM model registration**
+- [x] **Step 4: Add explicit ORM model registration**
 
 Create `bootstrap/model_registry.py` with explicit imports of each module's persistence `models` module and a public function:
 
@@ -112,7 +112,7 @@ def register_models() -> MetaData:
 
 The module may import for registration only; it must not create engines, sessions, repositories, or business objects. Replace the performance test's `import agenttest.bootstrap.wiring` side effect with `register_models()`.
 
-- [ ] **Step 5: Delete the legacy wiring and verify GREEN**
+- [x] **Step 5: Delete the legacy wiring and verify GREEN**
 
 Delete `bootstrap/wiring.py`, then run:
 
@@ -123,7 +123,7 @@ uv run mypy apps/control-api/src
 
 Expected: all pass; no API registration, override or metadata table is lost.
 
-- [ ] **Step 6: Commit the composition cleanup**
+- [x] **Step 6: Commit the composition cleanup**
 
 ```bash
 git add apps/control-api/src/agenttest/bootstrap apps/control-api/tests
@@ -143,7 +143,7 @@ git commit -m "refactor(api): remove duplicate bootstrap wiring"
 - Modify: `apps/control-api/tests/performance/test_query_bounds.py`
 - Create: `apps/control-api/tests/unit/bootstrap/test_core_summary_reader.py`
 
-- [ ] **Step 1: Add Facade compatibility and empty-input tests**
+- [x] **Step 1: Add Facade compatibility and empty-input tests**
 
 Test that the stable import and every Protocol method remain available:
 
@@ -159,13 +159,13 @@ async def test_summary_reader_skips_database_for_empty_ids() -> None:
     assert await reader.gates(uuid4(), []) == {}
 ```
 
-- [ ] **Step 2: Run focused tests and observe RED for empty input where applicable**
+- [x] **Step 2: Run focused tests and observe RED for empty input where applicable**
 
 Run: `uv run pytest apps/control-api/tests/unit/bootstrap/test_core_summary_reader.py -q`
 
 Expected: new package imports are missing and any method that opens a session before checking IDs fails.
 
-- [ ] **Step 3: Move query groups without changing SQL**
+- [x] **Step 3: Move query groups without changing SQL**
 
 Move methods as complete units:
 
@@ -176,11 +176,11 @@ Move methods as complete units:
 
 Each group accepts the same `async_sessionmaker`. Do not rewrite joins, order clauses, window functions or result projection while moving them.
 
-- [ ] **Step 4: Implement the stable Facade**
+- [x] **Step 4: Implement the stable Facade**
 
 `reader.py` constructs the three query groups once and delegates all eleven Protocol methods. `__init__.py` re-exports only `SqlAlchemyCoreSummaryReader`, preserving every existing import path.
 
-- [ ] **Step 5: Verify query-count and behavior compatibility**
+- [x] **Step 5: Verify query-count and behavior compatibility**
 
 Run:
 
@@ -191,7 +191,7 @@ uv run pytest apps/control-api/tests/contract/test_projects_api.py apps/control-
 
 Expected: query counts do not increase and list response summaries stay identical.
 
-- [ ] **Step 6: Commit the query split**
+- [x] **Step 6: Commit the query split**
 
 ```bash
 git add apps/control-api/src/agenttest/bootstrap/core_summaries apps/control-api/tests
@@ -211,11 +211,11 @@ git commit -m "refactor(api): split core summary queries"
 - Modify: `apps/control-api/tests/unit/test_agent/test_platform_list_summaries.py`
 - Modify: `apps/control-api/tests/unit/test_agent/test_platform_project_scope.py`
 
-- [ ] **Step 1: Freeze the capability contract before moving code**
+- [x] **Step 1: Freeze the capability contract before moving code**
 
 Add a parameterized test that records every supported capability name, its owning group and required context project ID. Assert representative results for Agent, Dataset/Test Case, Run, Scorer, Review and Gate still return the same `resource_ref` keys and relation values.
 
-- [ ] **Step 2: Run the focused catalog and behavior tests as the baseline**
+- [x] **Step 2: Run the focused catalog and behavior tests as the baseline**
 
 Run:
 
@@ -225,19 +225,19 @@ uv run pytest apps/control-api/tests/unit/test_agent/test_platform_capability_ca
 
 Expected: existing tests pass; the new ownership assertion fails because one class still owns every capability.
 
-- [ ] **Step 3: Extract pure projections**
+- [x] **Step 3: Extract pure projections**
 
 Move `_artifact`, `_created`, `_resource_ref`, `_summary_item`, resource DTO projections, JSON schema inference and serialization helpers into `platform_projection.py`. Keep function signatures and returned dictionaries exact.
 
-- [ ] **Step 4: Extract capability groups**
+- [x] **Step 4: Extract capability groups**
 
 Implement `PlatformAssetCapabilities`, `PlatformExecutionCapabilities` and `PlatformQualityCapabilities`, each with the same asynchronous `execute(capability, context, values)` call shape currently used by `HandlerPlatformGateway.execute`. Assets own Agent/Environment/Dataset/Test Case/Test Plan/Credential operations; Execution owns Run, endpoint analysis and report generation; Quality owns Scorer/Experiment/Security/Review/Gate. Existing project-scoped repository calls and command DTO construction move unchanged.
 
-- [ ] **Step 5: Reduce the Facade to routing**
+- [x] **Step 5: Reduce the Facade to routing**
 
 `HandlerPlatformGateway.execute` validates the capability name, selects exactly one group and returns its result. Unknown capabilities preserve the current classified error. Mission delegation remains in the existing Mission gateway.
 
-- [ ] **Step 6: Verify all Test Agent behavior and architecture**
+- [x] **Step 6: Verify all Test Agent behavior and architecture**
 
 Run:
 
@@ -248,7 +248,7 @@ make architecture
 
 Expected: capability count, schemas, resource references, error types and project isolation remain unchanged.
 
-- [ ] **Step 7: Commit the capability split**
+- [x] **Step 7: Commit the capability split**
 
 ```bash
 git add apps/control-api/src/agenttest/modules/test_agent/adapters apps/control-api/tests/unit/test_agent
@@ -264,11 +264,11 @@ git commit -m "refactor(test-agent): split platform capabilities"
 - Create: `apps/control-api/tests/unit/shared/test_typed_payloads.py`
 - Modify: `apps/control-api/tests/architecture/test_module_boundaries.py`
 
-- [ ] **Step 1: Add failure-closed payload parsing tests**
+- [x] **Step 1: Add failure-closed payload parsing tests**
 
 Cover wrong types for confidence, scores, retry policy, scorer IDs and run-case IDs. Assertions must require a classified `ValueError`/validation error rather than coercing invalid containers or silently using defaults.
 
-- [ ] **Step 2: Add a production suppression budget test**
+- [x] **Step 2: Add a production suppression budget test**
 
 Scan production Python sources and allow only exact optional-dependency reasons:
 
@@ -279,17 +279,17 @@ assert business_type_ignore_codes(source_root) <= ALLOWED
 
 The test must report file/line/code without printing runtime secrets.
 
-- [ ] **Step 3: Run tests and observe RED**
+- [x] **Step 3: Run tests and observe RED**
 
 Run: `uv run pytest apps/control-api/tests/unit/shared/test_typed_payloads.py apps/control-api/tests/architecture/test_module_boundaries.py -q`
 
 Expected: invalid payload tests or suppression budget fail on current `arg-type/assignment/misc` ignores.
 
-- [ ] **Step 4: Introduce typed parsers at each boundary**
+- [x] **Step 4: Introduce typed parsers at each boundary**
 
 Use `isinstance` narrowing and small functions returning `UUID | None`, `float`, `dict[str, object]`, or validated DTOs. Do not change valid serialized payloads or Domain method signatures.
 
-- [ ] **Step 5: Verify focused behavior and mypy**
+- [x] **Step 5: Verify focused behavior and mypy**
 
 Run:
 
@@ -300,7 +300,7 @@ uv run mypy apps/control-api/src
 
 Expected: valid payload behavior passes, invalid input fails closed, and no business conversion `type: ignore` remains in touched modules.
 
-- [ ] **Step 6: Commit the typed boundaries**
+- [x] **Step 6: Commit the typed boundaries**
 
 ```bash
 git add apps/control-api/src apps/control-api/tests
@@ -315,17 +315,17 @@ git commit -m "refactor(api): type dynamic payload boundaries"
 - Create: `apps/web/src/test/architecture/generated-client-usage.test.ts`
 - Modify: relevant Feature API tests
 
-- [ ] **Step 1: Add an architecture test for raw Control API fetches**
+- [x] **Step 1: Add an architecture test for raw Control API fetches**
 
 Scan production Feature sources. Allow raw Control API `fetch` only in files/functions registered for SSE, upload/download streams or third-party navigation. The initial test must list each violating JSON endpoint and fail.
 
-- [ ] **Step 2: Run the test and observe RED**
+- [x] **Step 2: Run the test and observe RED**
 
 Run: `pnpm --filter @warmy/web exec vitest run src/test/architecture/generated-client-usage.test.ts`
 
 Expected: violations include Browser Profiles and remaining Agent/Dataset/Scorer/Review/Gate JSON mutations.
 
-- [ ] **Step 3: Migrate each JSON endpoint to its generated SDK function**
+- [x] **Step 3: Migrate each JSON endpoint to its generated SDK function**
 
 Use this exact pattern:
 
@@ -343,11 +343,11 @@ return data;
 
 Accept optional `signal?: AbortSignal` on list/detail functions used by Query. Replace handwritten response types with generated exports. Keep `runEventsUrl`, Artifact download URLs and upload streaming only where generated SDK cannot preserve the existing semantics.
 
-- [ ] **Step 4: Normalize generated and raw Problem Details**
+- [x] **Step 4: Normalize generated and raw Problem Details**
 
 Extend `problemKind/problemMessage` only as required to read generated client errors; preserve existing Chinese fallbacks. Add tests for 401/403/404/409/422 and non-JSON proxy responses.
 
-- [ ] **Step 5: Verify APIs and zero schema drift**
+- [x] **Step 5: Verify APIs and zero schema drift**
 
 Run:
 
@@ -359,7 +359,7 @@ make api-check
 
 Expected: all Web tests/typecheck pass and OpenAPI/generated output has no diff.
 
-- [ ] **Step 6: Commit generated-client convergence**
+- [x] **Step 6: Commit generated-client convergence**
 
 ```bash
 git add apps/web/src packages/generated-api-client docs/api/openapi.json
@@ -387,7 +387,7 @@ git commit -m "refactor(web): standardize generated api usage"
 - Modify: `apps/web/src/components/layout/app-shell.tsx`
 - Modify/Create: associated Vitest component/model tests
 
-- [ ] **Step 1: Add Query key and cancellation tests**
+- [x] **Step 1: Add Query key and cancellation tests**
 
 Assert resource hierarchy and reuse:
 
@@ -400,17 +400,17 @@ expect(datasetQueries.cases(projectId, datasetId, versionId).queryKey).toEqual([
 
 Call a Query Function with an aborted signal and assert the SDK receives that signal. Add a mutation test proving only the owning resource prefix is invalidated.
 
-- [ ] **Step 2: Run Query tests and observe RED**
+- [x] **Step 2: Run Query tests and observe RED**
 
 Run: `pnpm --filter @warmy/web exec vitest run src/features/**/tests/*quer*.test.ts`
 
 Expected: factories do not exist and current purpose-suffixed keys do not match.
 
-- [ ] **Step 3: Implement Feature-owned Query factories**
+- [x] **Step 3: Implement Feature-owned Query factories**
 
 Each `queries.ts` exports stable key factories and `queryOptions`; Screen components import them from the Feature public export. Replace direct resource Query literals. Mutations use `useMutation` plus precise invalidation or `setQueryData`; retain explicit `refetch` only for operations that must return newly created version data synchronously.
 
-- [ ] **Step 4: Extract pure models and controlled sections from UI hotspots**
+- [x] **Step 4: Extract pure models and controlled sections from UI hotspots**
 
 Move existing functions/components without changing markup or class names:
 
@@ -422,11 +422,11 @@ Move existing functions/components without changing markup or class names:
 
 Container components retain state ownership until a behavior test proves a Hook extraction is safe.
 
-- [ ] **Step 5: Add behavior-preservation tests for extracted models/components**
+- [x] **Step 5: Add behavior-preservation tests for extracted models/components**
 
 Cover Chat task-state projection and relative dates, Agent relationship empty/content states, Test Case numeric conversion, Test Plan field validation, command keyboard navigation and mobile navigation focus. Reuse existing accessible labels and test IDs; do not add test-only production branches.
 
-- [ ] **Step 6: Verify Web behavior and bundle budgets**
+- [x] **Step 6: Verify Web behavior and bundle budgets**
 
 Run:
 
@@ -441,7 +441,7 @@ pnpm --filter @warmy/web run perf:bundle-check
 
 Expected: no visual/token/route change, all tests pass, and no bundle threshold increases.
 
-- [ ] **Step 7: Commit Query and component ownership**
+- [x] **Step 7: Commit Query and component ownership**
 
 ```bash
 git add apps/web/src
@@ -456,17 +456,17 @@ git commit -m "refactor(web): centralize query and ui ownership"
 - Create: `scripts/tests/test_start_e2e_server.sh`
 - Modify: `apps/web/playwright.config.test.ts`
 
-- [ ] **Step 1: Add a failing isolated-distDir test**
+- [x] **Step 1: Add a failing isolated-distDir test**
 
 The shell test creates a fake repository Web directory containing a locked `.next` and stubs `pnpm`/`uv`. It asserts both build and start receive the same `AGENTTEST_NEXT_DIST_DIR` beneath the Runtime Directory and that the directory is absent after exit.
 
-- [ ] **Step 2: Run the script test and observe RED**
+- [x] **Step 2: Run the script test and observe RED**
 
 Run: `bash scripts/tests/test_start_e2e_server.sh`
 
 Expected: failure because Next always uses `apps/web/.next`.
 
-- [ ] **Step 3: Make distDir configurable only for test orchestration**
+- [x] **Step 3: Make distDir configurable only for test orchestration**
 
 Use:
 
@@ -488,7 +488,7 @@ const nextConfig: NextConfig = {
 
 Set `AGENTTEST_NEXT_DIST_DIR="$RUNTIME_DIR/next"` for both `pnpm build` and `next start`. Keep the existing cleanup trap and port checks; cleanup must preserve the original exit status.
 
-- [ ] **Step 4: Verify script, config, and complete Playwright**
+- [x] **Step 4: Verify script, config, and complete Playwright**
 
 Run:
 
@@ -500,7 +500,7 @@ pnpm --filter @warmy/web e2e
 
 Expected: a pre-existing `.next/lock` does not affect startup; complete browser tests pass with only the credential-gated performance scenario allowed to skip.
 
-- [ ] **Step 5: Commit E2E isolation**
+- [x] **Step 5: Commit E2E isolation**
 
 ```bash
 git add apps/web/next.config.ts apps/web/playwright.config.test.ts scripts/start_e2e_server.sh scripts/tests/test_start_e2e_server.sh

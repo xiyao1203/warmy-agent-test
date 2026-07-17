@@ -44,6 +44,11 @@ import {
 import type { AgentEvent, ChatMessage, ChatResponse } from "./api";
 import { createGenerationStreamController } from "./chat-effects";
 import { useChatReducer } from "./chat-reducer";
+import {
+  buildTaskStates,
+  formatRelativeDate,
+  getTimeGapMinutes,
+} from "./chat-workspace-model";
 import { ConfirmationCard } from "./confirmation-card";
 import { ConversationTimeline } from "./chat-timeline";
 import { ContextPanel } from "./context-panel";
@@ -1157,93 +1162,4 @@ function LoadingBar() {
       </div>
     </div>
   );
-}
-
-// ── Helpers ─────────────────────────────────────────────────────
-
-function buildTaskStates(events: AgentEvent[]): TaskState[] {
-  const groups = new Map<
-    string,
-    { delegated: AgentEvent | null; latest: AgentEvent }
-  >();
-  const order: string[] = [];
-  for (const event of events) {
-    if (
-      ![
-        "agent.delegated",
-        "agent.progress",
-        "agent.completed",
-        "agent.failed",
-      ].includes(event.type)
-    )
-      continue;
-    const tid = String(event.payload.task_id ?? "");
-    if (!tid) continue;
-    if (!groups.has(tid)) order.push(tid);
-    const existing = groups.get(tid);
-    if (!existing) {
-      groups.set(tid, { delegated: null, latest: event });
-    } else {
-      existing.latest = event;
-    }
-    if (event.type === "agent.delegated") {
-      groups.get(tid)!.delegated = event;
-    }
-  }
-  return order.map((tid) => {
-    const group = groups.get(tid)!;
-    const statusMap: Record<string, TaskState["status"]> = {
-      "agent.delegated": "delegated",
-      "agent.progress": "running",
-      "agent.completed": "completed",
-      "agent.failed": "failed",
-    };
-    return {
-      taskId: tid,
-      childAgent: group.delegated
-        ? String(group.delegated.payload.child_agent ?? "")
-        : String(group.latest.payload.child_agent ?? ""),
-      capability: group.delegated
-        ? String(group.delegated.payload.capability ?? "")
-        : String(group.latest.payload.capability ?? ""),
-      inputSummary: group.delegated
-        ? String(group.delegated.payload.input_summary ?? "")
-        : "",
-      status: statusMap[group.latest.type] ?? "delegated",
-      output:
-        group.latest.type === "agent.completed"
-          ? ((group.latest.payload.output as Record<string, unknown> | null) ??
-            null)
-          : null,
-      errorDetail:
-        group.latest.type === "agent.failed"
-          ? String(group.latest.payload.detail ?? null)
-          : null,
-    };
-  });
-}
-
-function getTimeGapMinutes(a: string, b: string): number {
-  const ta = new Date(a).getTime();
-  const tb = new Date(b).getTime();
-  if (Number.isNaN(ta) || Number.isNaN(tb)) return 0;
-  return Math.abs(tb - ta) / 60_000;
-}
-
-function formatRelativeDate(iso: string): string {
-  const date = new Date(iso);
-  if (Number.isNaN(date.getTime())) return "";
-  const diffMin = Math.floor((Date.now() - date.getTime()) / 60_000);
-  if (diffMin < 1) return "刚刚";
-  if (diffMin < 60) return `${diffMin} 分钟前`;
-  const diffHr = Math.floor(diffMin / 60);
-  if (diffHr < 24) return `${diffHr} 小时前`;
-  const diffDay = Math.floor(diffHr / 24);
-  if (diffDay < 7) return `${diffDay} 天前`;
-  return date.toLocaleDateString("zh-CN", {
-    month: "numeric",
-    day: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
 }

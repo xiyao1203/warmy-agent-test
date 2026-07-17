@@ -1,6 +1,14 @@
-import { CONTROL_API_URL as API_BASE } from "@/lib/api/base-url";
+import {
+  getScanApiV1ProjectsProjectIdSecurityScansScanIdGet,
+  listAgentsApiV1ProjectsProjectIdAgentsGet,
+  listScansApiV1ProjectsProjectIdSecurityScansGet,
+  listVersionsApiV1ProjectsProjectIdAgentsAgentIdVersionsGet,
+  triggerScanApiV1ProjectsProjectIdSecurityScansPost,
+  type SecurityScanSummaryResponse,
+} from "@warmy/generated-api-client";
+
+import { apiClient } from "@/lib/api/client";
 import { csrfHeaders } from "@/lib/api/csrf";
-import { responseProblem } from "@/lib/api/problem";
 
 export type Finding = {
   category: string;
@@ -19,82 +27,66 @@ export type SecurityScanItem = Omit<
   findings: Finding[];
   summary: Record<string, number>;
 };
+export type SecurityTarget = { id: string; label: string };
 
-export type SecurityTarget = {
-  id: string;
-  label: string;
-};
-
-export async function listScans(projectId: string) {
-  const res = await fetch(
-    `${API_BASE}/api/v1/projects/${projectId}/security/scans?limit=50`,
-    { credentials: "include" },
-  );
-  if (!res.ok) throw await responseProblem(res, "加载安全扫描失败");
-  const data = await res.json();
+export async function listScans(projectId: string, signal?: AbortSignal) {
+  const { data } = await listScansApiV1ProjectsProjectIdSecurityScansGet({
+    client: apiClient,
+    path: { project_id: projectId },
+    query: { limit: 50 },
+    signal,
+    throwOnError: true,
+  });
   return data.items as SecurityScanItem[];
 }
 
 export async function triggerScan(projectId: string, agentVersionId: string) {
-  const res = await fetch(
-    `${API_BASE}/api/v1/projects/${projectId}/security/scans`,
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        ...(csrfHeaders() as Record<string, string>),
-      },
-      credentials: "include",
-      body: JSON.stringify({
-        agent_version_id: agentVersionId,
-        scan_type: "full",
-      }),
-    },
-  );
-  if (!res.ok) throw await responseProblem(res, "安全扫描启动失败");
-  return res.json() as Promise<SecurityScanItem>;
+  const { data } = await triggerScanApiV1ProjectsProjectIdSecurityScansPost({
+    body: { agent_version_id: agentVersionId, scan_type: "full" },
+    client: apiClient,
+    headers: csrfHeaders(),
+    path: { project_id: projectId },
+    throwOnError: true,
+  });
+  return data as SecurityScanItem;
 }
 
-export async function listSecurityTargets(projectId: string) {
-  const agentsResponse = await fetch(
-    `${API_BASE}/api/v1/projects/${projectId}/agents?limit=100`,
-    { credentials: "include" },
-  );
-  if (!agentsResponse.ok)
-    throw await responseProblem(agentsResponse, "加载 Agent 失败");
-  const agents = (await agentsResponse.json()).items as Array<{
-    id: string;
-    name: string;
-  }>;
+export async function listSecurityTargets(
+  projectId: string,
+  signal?: AbortSignal,
+) {
+  const { data: agents } = await listAgentsApiV1ProjectsProjectIdAgentsGet({
+    client: apiClient,
+    path: { project_id: projectId },
+    query: { limit: 100 },
+    signal,
+    throwOnError: true,
+  });
   const targets = await Promise.all(
-    agents.map(async (agent) => {
-      const response = await fetch(
-        `${API_BASE}/api/v1/projects/${projectId}/agents/${agent.id}/versions`,
-        { credentials: "include" },
-      );
-      if (!response.ok) return [];
-      const versions = (await response.json()).items as Array<{
-        id: string;
-        version_number: number;
-        status: string;
-      }>;
-      return versions
+    agents.items.map(async (agent) => {
+      const { data } =
+        await listVersionsApiV1ProjectsProjectIdAgentsAgentIdVersionsGet({
+          client: apiClient,
+          path: { agent_id: agent.id, project_id: projectId },
+          signal,
+          throwOnError: true,
+        });
+      return data.items
         .filter((version) => version.status === "published")
         .map((version) => ({
           id: version.id,
-          label: `${agent.name} · v${version.version_number}`,
+          label: agent.name + " · v" + version.version_number,
         }));
     }),
   );
-  return targets.flat() as SecurityTarget[];
+  return targets.flat();
 }
 
 export async function getScan(projectId: string, scanId: string) {
-  const res = await fetch(
-    `${API_BASE}/api/v1/projects/${projectId}/security/scans/${scanId}`,
-    { credentials: "include" },
-  );
-  if (!res.ok) throw await responseProblem(res, "加载安全扫描详情失败");
-  return res.json() as Promise<SecurityScanItem>;
+  const { data } = await getScanApiV1ProjectsProjectIdSecurityScansScanIdGet({
+    client: apiClient,
+    path: { project_id: projectId, scan_id: scanId },
+    throwOnError: true,
+  });
+  return data as SecurityScanItem;
 }
-import type { SecurityScanSummaryResponse } from "@warmy/generated-api-client";

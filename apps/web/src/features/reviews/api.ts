@@ -1,44 +1,51 @@
-import { CONTROL_API_URL as API_BASE } from "@/lib/api/base-url";
+import {
+  listReviewsApiV1ProjectsProjectIdReviewsGet,
+  rejectReviewApiV1ProjectsProjectIdReviewsTaskIdRejectPost,
+  scoreReviewApiV1ProjectsProjectIdReviewsTaskIdScorePost,
+  skipReviewApiV1ProjectsProjectIdReviewsTaskIdSkipPost,
+  type ReviewSummaryResponse,
+  type ScoreReviewRequest,
+} from "@warmy/generated-api-client";
+
+import { apiClient } from "@/lib/api/client";
 import { csrfHeaders } from "@/lib/api/csrf";
-import { responseProblem } from "@/lib/api/problem";
 
 export type ReviewTask = ReviewSummaryResponse;
 
-export async function listReviews(projectId: string, status?: string) {
-  const params = new URLSearchParams({ limit: "100" });
-  if (status) params.set("status", status);
-  const res = await fetch(
-    `${API_BASE}/api/v1/projects/${projectId}/reviews?${params}`,
-    { credentials: "include" },
-  );
-  if (!res.ok) throw await responseProblem(res, "加载审核任务失败");
-  const data = await res.json();
-  return data.items as ReviewTask[];
+const reviewPath = (projectId: string, taskId: string) => ({
+  project_id: projectId,
+  task_id: taskId,
+});
+
+export async function listReviews(
+  projectId: string,
+  status?: string,
+  signal?: AbortSignal,
+) {
+  const { data } = await listReviewsApiV1ProjectsProjectIdReviewsGet({
+    client: apiClient,
+    path: { project_id: projectId },
+    query: { limit: 100, status },
+    signal,
+    throwOnError: true,
+  });
+  return data.items;
 }
 
 export async function scoreReview(
   projectId: string,
   taskId: string,
-  payload: {
-    score: number;
-    opinion?: string;
-    rubric_scores?: Record<string, number>;
-  },
+  payload: ScoreReviewRequest,
 ) {
-  const res = await fetch(
-    `${API_BASE}/api/v1/projects/${projectId}/reviews/${taskId}/score`,
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        ...(csrfHeaders() as Record<string, string>),
-      },
-      credentials: "include",
-      body: JSON.stringify(payload),
-    },
-  );
-  if (!res.ok) throw await responseProblem(res, "提交审核评分失败");
-  return res.json() as Promise<ReviewTask>;
+  const { data } =
+    await scoreReviewApiV1ProjectsProjectIdReviewsTaskIdScorePost({
+      body: payload,
+      client: apiClient,
+      headers: csrfHeaders(),
+      path: reviewPath(projectId, taskId),
+      throwOnError: true,
+    });
+  return data as ReviewTask;
 }
 
 export async function rejectReview(
@@ -46,29 +53,23 @@ export async function rejectReview(
   taskId: string,
   opinion?: string,
 ) {
-  const params = opinion ? `?opinion=${encodeURIComponent(opinion)}` : "";
-  const res = await fetch(
-    `${API_BASE}/api/v1/projects/${projectId}/reviews/${taskId}/reject${params}`,
-    {
-      method: "POST",
-      headers: csrfHeaders() as Record<string, string>,
-      credentials: "include",
-    },
-  );
-  if (!res.ok) throw await responseProblem(res, "拒绝审核任务失败");
-  return res.json() as Promise<ReviewTask>;
+  const { data } =
+    await rejectReviewApiV1ProjectsProjectIdReviewsTaskIdRejectPost({
+      client: apiClient,
+      headers: csrfHeaders(),
+      path: reviewPath(projectId, taskId),
+      query: { opinion },
+      throwOnError: true,
+    });
+  return data as ReviewTask;
 }
 
 export async function skipReview(projectId: string, taskId: string) {
-  const res = await fetch(
-    `${API_BASE}/api/v1/projects/${projectId}/reviews/${taskId}/skip`,
-    {
-      method: "POST",
-      headers: csrfHeaders() as Record<string, string>,
-      credentials: "include",
-    },
-  );
-  if (!res.ok) throw await responseProblem(res, "跳过审核任务失败");
-  return res.json() as Promise<ReviewTask>;
+  const { data } = await skipReviewApiV1ProjectsProjectIdReviewsTaskIdSkipPost({
+    client: apiClient,
+    headers: csrfHeaders(),
+    path: reviewPath(projectId, taskId),
+    throwOnError: true,
+  });
+  return data as ReviewTask;
 }
-import type { ReviewSummaryResponse } from "@warmy/generated-api-client";

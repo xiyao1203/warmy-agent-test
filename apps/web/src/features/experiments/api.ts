@@ -1,83 +1,81 @@
-import { CONTROL_API_URL as API_BASE } from "@/lib/api/base-url";
+import {
+  createExperimentApiV1ProjectsProjectIdExperimentsPost,
+  getExperimentApiV1ProjectsProjectIdExperimentsExperimentIdGet,
+  listExperimentsApiV1ProjectsProjectIdExperimentsGet,
+  listRunsApiV1ProjectsProjectIdRunsGet,
+  runExperimentApiV1ProjectsProjectIdExperimentsExperimentIdRunPost,
+  type CreateExperimentRequest,
+  type ExperimentSummaryResponse,
+  type RunResponse,
+} from "@warmy/generated-api-client";
+
+import { apiClient } from "@/lib/api/client";
 import { csrfHeaders } from "@/lib/api/csrf";
-import { responseProblem } from "@/lib/api/problem";
 
 export type ExperimentItem = ExperimentSummaryResponse;
-
 export type ExperimentRun = Pick<
   RunResponse,
   "created_at" | "id" | "status" | "test_plan_version_id"
 >;
 
-export async function listExperimentRuns(projectId: string) {
-  const response = await fetch(
-    `${API_BASE}/api/v1/projects/${projectId}/runs?limit=100`,
-    { credentials: "include" },
-  );
-  if (!response.ok) throw await responseProblem(response, "加载执行记录失败");
-  const data = await response.json();
-  return (data.items as ExperimentRun[]).filter((run) =>
+export async function listExperimentRuns(
+  projectId: string,
+  signal?: AbortSignal,
+) {
+  const { data } = await listRunsApiV1ProjectsProjectIdRunsGet({
+    client: apiClient,
+    path: { project_id: projectId },
+    query: { limit: 100 },
+    signal,
+    throwOnError: true,
+  });
+  return data.items.filter((run) =>
     ["passed", "failed", "error"].includes(run.status),
-  );
+  ) as ExperimentRun[];
 }
 
-export async function listExperiments(projectId: string) {
-  const res = await fetch(
-    `${API_BASE}/api/v1/projects/${projectId}/experiments?limit=100`,
-    { credentials: "include" },
-  );
-  if (!res.ok) throw await responseProblem(res, "加载实验失败");
-  const data = await res.json();
-  return data.items as ExperimentItem[];
+export async function listExperiments(projectId: string, signal?: AbortSignal) {
+  const { data } = await listExperimentsApiV1ProjectsProjectIdExperimentsGet({
+    client: apiClient,
+    path: { project_id: projectId },
+    query: { limit: 100, offset: 0 },
+    signal,
+    throwOnError: true,
+  });
+  return data.items;
 }
 
 export async function createExperiment(
   projectId: string,
-  payload: {
-    name: string;
-    run_a_id: string;
-    run_b_id: string;
-    description?: string | null;
-  },
+  payload: CreateExperimentRequest,
 ) {
-  const res = await fetch(
-    `${API_BASE}/api/v1/projects/${projectId}/experiments`,
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        ...(csrfHeaders() as Record<string, string>),
-      },
-      credentials: "include",
-      body: JSON.stringify(payload),
-    },
-  );
-  if (!res.ok) throw await responseProblem(res, "创建实验失败");
-  return res.json() as Promise<ExperimentItem>;
+  const { data } = await createExperimentApiV1ProjectsProjectIdExperimentsPost({
+    body: payload,
+    client: apiClient,
+    headers: csrfHeaders(),
+    path: { project_id: projectId },
+    throwOnError: true,
+  });
+  return data as ExperimentItem;
 }
 
 export async function getExperiment(projectId: string, experimentId: string) {
-  const res = await fetch(
-    `${API_BASE}/api/v1/projects/${projectId}/experiments/${experimentId}`,
-    { credentials: "include" },
-  );
-  if (!res.ok) throw await responseProblem(res, "加载实验详情失败");
-  return res.json() as Promise<ExperimentItem>;
+  const { data } =
+    await getExperimentApiV1ProjectsProjectIdExperimentsExperimentIdGet({
+      client: apiClient,
+      path: { experiment_id: experimentId, project_id: projectId },
+      throwOnError: true,
+    });
+  return data as ExperimentItem;
 }
 
 export async function runExperiment(projectId: string, experimentId: string) {
-  const res = await fetch(
-    `${API_BASE}/api/v1/projects/${projectId}/experiments/${experimentId}/run`,
-    {
-      method: "POST",
-      headers: csrfHeaders() as Record<string, string>,
-      credentials: "include",
-    },
-  );
-  if (!res.ok) throw await responseProblem(res, "运行实验失败");
-  return res.json() as Promise<ExperimentItem>;
+  const { data } =
+    await runExperimentApiV1ProjectsProjectIdExperimentsExperimentIdRunPost({
+      client: apiClient,
+      headers: csrfHeaders(),
+      path: { experiment_id: experimentId, project_id: projectId },
+      throwOnError: true,
+    });
+  return data as ExperimentItem;
 }
-import type {
-  ExperimentSummaryResponse,
-  RunResponse,
-} from "@warmy/generated-api-client";

@@ -7,6 +7,7 @@ import {
   getTrustLoopApiV1ProjectsProjectIdRunsRunIdTrustLoopGet,
   listCasesApiV1ProjectsProjectIdRunsRunIdCasesGet,
   listDiagnosticsApiV1ProjectsProjectIdRunsRunIdDiagnosticsGet,
+  listArtifactsApiV1ProjectsProjectIdRunsRunIdArtifactsGet,
   listRegressionsApiV1ProjectsProjectIdRunsRunIdRegressionsGet,
   listRunsApiV1ProjectsProjectIdRunsGet,
   listPlansApiV1ProjectsProjectIdTestPlansGet,
@@ -25,11 +26,12 @@ import { CONTROL_API_URL } from "@/lib/api/base-url";
 import { csrfHeaders } from "@/lib/api/csrf";
 import { responseProblem } from "@/lib/api/problem";
 
-export async function listRuns(projectId: string) {
+export async function listRuns(projectId: string, signal?: AbortSignal) {
   const { data } = await listRunsApiV1ProjectsProjectIdRunsGet({
     client: apiClient,
     path: { project_id: projectId },
     query: { limit: 100 },
+    signal,
     throwOnError: true,
   });
   return data.items;
@@ -49,19 +51,29 @@ export async function createRun(projectId: string, testPlanVersionId: string) {
   return data;
 }
 
-export async function getRun(projectId: string, runId: string) {
+export async function getRun(
+  projectId: string,
+  runId: string,
+  signal?: AbortSignal,
+) {
   const { data } = await getRunApiV1ProjectsProjectIdRunsRunIdGet({
     client: apiClient,
     path: { project_id: projectId, run_id: runId },
+    signal,
     throwOnError: true,
   });
   return data;
 }
 
-export async function listRunCases(projectId: string, runId: string) {
+export async function listRunCases(
+  projectId: string,
+  runId: string,
+  signal?: AbortSignal,
+) {
   const { data } = await listCasesApiV1ProjectsProjectIdRunsRunIdCasesGet({
     client: apiClient,
     path: { project_id: projectId, run_id: runId },
+    signal,
     throwOnError: true,
   });
   return data.items;
@@ -175,11 +187,15 @@ export interface ArtifactItem {
 export async function listArtifacts(
   projectId: string,
   runId: string,
+  signal?: AbortSignal,
 ): Promise<ArtifactItem[]> {
-  const url = `${CONTROL_API_URL}/api/v1/projects/${projectId}/runs/${runId}/artifacts`;
-  const res = await fetch(url, { credentials: "include" });
-  if (!res.ok) throw await responseProblem(res, "加载运行产物失败");
-  const data = await res.json();
+  const { data } =
+    await listArtifactsApiV1ProjectsProjectIdRunsRunIdArtifactsGet({
+      client: apiClient,
+      path: { project_id: projectId, run_id: runId },
+      signal,
+      throwOnError: true,
+    });
   return (data as { items?: ArtifactItem[] }).items ?? [];
 }
 
@@ -198,6 +214,7 @@ export async function uploadArtifact(
   const form = new FormData();
   form.append("file", file);
   const url = `${CONTROL_API_URL}/api/v1/projects/${projectId}/runs/${runId}/artifacts`;
+  // raw-fetch-allowed: multipart upload stream is absent from the generated contract
   const res = await fetch(url, {
     body: form,
     credentials: "include",

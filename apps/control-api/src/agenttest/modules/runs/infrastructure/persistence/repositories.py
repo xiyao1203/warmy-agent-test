@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime
+from math import isfinite
 from uuid import UUID, uuid4
 
 from sqlalchemy import select, update
@@ -22,6 +23,40 @@ from agenttest.modules.runs.infrastructure.persistence.models import (
 )
 from agenttest.modules.test_plans.public import TestPlanVersionId
 from agenttest.shared.infrastructure.database import session_scope, transaction_scope
+
+
+def _parse_float(value: object, *, field: str, default: float) -> float:
+    if value is None:
+        return default
+    if isinstance(value, bool) or not isinstance(value, (str, int, float)):
+        raise ValueError(f"Invalid {field}")
+    try:
+        parsed = float(value)
+    except ValueError as error:
+        raise ValueError(f"Invalid {field}") from error
+    if not isfinite(parsed):
+        raise ValueError(f"Invalid {field}")
+    return parsed
+
+
+def _parse_required_uuid(value: object, *, field: str) -> UUID:
+    parsed = _parse_optional_uuid(value, field=field)
+    if parsed is None:
+        raise ValueError(f"Invalid {field}")
+    return parsed
+
+
+def _parse_optional_uuid(value: object, *, field: str) -> UUID | None:
+    if value is None or value == "":
+        return None
+    if isinstance(value, UUID):
+        return value
+    if not isinstance(value, str):
+        raise ValueError(f"Invalid {field}")
+    try:
+        return UUID(value)
+    except ValueError as error:
+        raise ValueError(f"Invalid {field}") from error
 
 
 class SqlAlchemyRunRepository:
@@ -162,10 +197,8 @@ class SqlAlchemyRunRepository:
                 passed_count = sum(1 for s in all_scores if s.get("passed"))
                 total = len(all_scores)
                 if total:
-                    # mypy narrows dict values as object; float coercion is safe here
                     score_sum: float = sum(
-                        float(s.get("score", 0) or 0)  # type: ignore[arg-type,misc]
-                        for s in all_scores
+                        _parse_float(s.get("score"), field="score", default=0.0) for s in all_scores
                     )
                     aggregate = score_sum / total
                 else:
@@ -198,18 +231,17 @@ class SqlAlchemyRunRepository:
                             id=uuid4(),
                             project_id=run.project_id.value,
                             evaluation_id=evaluation_id,
-                            run_case_id=UUID(str(s["run_case_id"]))  # type: ignore[arg-type]
-                            if isinstance(s["run_case_id"], str)
-                            else UUID(str(s["run_case_id"])),  # type: ignore[arg-type]
-                            scorer_version_id=(
-                                UUID(s["scorer_version_id"])  # type: ignore[arg-type]
-                                if isinstance(s.get("scorer_version_id"), str)
-                                and s.get("scorer_version_id")
-                                else None
+                            run_case_id=_parse_required_uuid(
+                                s.get("run_case_id"), field="run_case_id"
                             ),
-                            score=float(s.get("score", 0) or 0),  # type: ignore[arg-type]
+                            scorer_version_id=_parse_optional_uuid(
+                                s.get("scorer_version_id"), field="scorer_version_id"
+                            ),
+                            score=_parse_float(s.get("score"), field="score", default=0.0),
                             passed=bool(s.get("passed", False)),
-                            confidence=float(s.get("confidence", 1.0) or 1.0),  # type: ignore[arg-type]
+                            confidence=_parse_float(
+                                s.get("confidence"), field="confidence", default=1.0
+                            ),
                             explanation=str(s.get("explanation", "")),
                             metadata_json={"scorer_type": s.get("scorer_type", "")},
                             created_at=now,

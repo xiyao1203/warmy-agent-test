@@ -2,21 +2,13 @@
 
 import { useQuery } from "@tanstack/react-query";
 
-import { listAgentVersions, listAgents } from "@/features/agents";
-import { listDatasets, listDatasetVersions } from "@/features/datasets";
-import { listGates, listGateRuns } from "@/features/gates";
-import { listScorers } from "@/features/scorers";
-
 import {
   createTestPlanVersion,
-  getTestPlan,
-  listEnvironmentTemplates,
-  listTestPlanVersions,
   publishTestPlanVersion,
   updateTestPlanVersion,
 } from "./api";
 import { TestPlanDetail } from "./test-plan-detail";
-import type { VersionAssetOption } from "./test-plan-version-dialog";
+import { testPlanQueries } from "./queries";
 
 export function TestPlanDetailScreen({
   planId,
@@ -25,18 +17,9 @@ export function TestPlanDetailScreen({
   planId: string;
   projectId: string;
 }) {
-  const planQuery = useQuery({
-    queryFn: () => getTestPlan(projectId, planId),
-    queryKey: ["test-plan", projectId, planId],
-  });
-  const versionsQuery = useQuery({
-    queryFn: () => listTestPlanVersions(projectId, planId),
-    queryKey: ["test-plan-versions", projectId, planId],
-  });
-  const assetsQuery = useQuery({
-    queryFn: () => loadAssetOptions(projectId),
-    queryKey: ["test-plan-assets", projectId],
-  });
+  const planQuery = useQuery(testPlanQueries.detail(projectId, planId));
+  const versionsQuery = useQuery(testPlanQueries.versions(projectId, planId));
+  const assetsQuery = useQuery(testPlanQueries.assets(projectId));
   if (planQuery.isPending || versionsQuery.isPending || assetsQuery.isPending) {
     return (
       <div className="grid min-h-[calc(100vh-3rem)] place-items-center text-sm">
@@ -82,64 +65,4 @@ export function TestPlanDetailScreen({
       versions={versionsQuery.data}
     />
   );
-}
-
-async function loadAssetOptions(projectId: string): Promise<{
-  agentVersions: VersionAssetOption[];
-  datasetVersions: VersionAssetOption[];
-  environments: VersionAssetOption[];
-  gates: VersionAssetOption[];
-  runs: VersionAssetOption[];
-  scorers: VersionAssetOption[];
-}> {
-  const [agentPage, datasetPage, environments, scorers, gates, runs] =
-    await Promise.all([
-      listAgents(projectId),
-      listDatasets(projectId),
-      listEnvironmentTemplates(projectId),
-      listScorers(projectId),
-      listGates(projectId),
-      listGateRuns(projectId),
-    ]);
-  const agentVersions = (
-    await Promise.all(
-      agentPage.items.map(async (agent) =>
-        (await listAgentVersions(projectId, agent.id)).map((version) => ({
-          id: version.id,
-          label: `${agent.name} v${version.version_number}`,
-          status: version.status,
-        })),
-      ),
-    )
-  ).flat();
-  const datasetVersions = (
-    await Promise.all(
-      datasetPage.items.map(async (dataset) =>
-        (await listDatasetVersions(projectId, dataset.id)).map((version) => ({
-          id: version.id,
-          label: `${dataset.name} v${version.version_number}`,
-          status: version.status,
-        })),
-      ),
-    )
-  ).flat();
-  return {
-    agentVersions,
-    datasetVersions,
-    environments: environments.map((template) => ({
-      id: template.id,
-      label: template.name,
-    })),
-    scorers: scorers
-      .filter((scorer) => scorer.enabled && scorer.latest_published_version_id)
-      .map((scorer) => ({
-        id: String(scorer.latest_published_version_id),
-        label: `${scorer.name} v${scorer.latest_published_version_number ?? 1}`,
-      })),
-    gates: gates.map((gate) => ({ id: gate.id, label: gate.name })),
-    runs: runs.map((run) => ({
-      id: run.id,
-      label: `${run.status} · ${new Date(run.created_at).toLocaleString("zh-CN")}`,
-    })),
-  };
 }

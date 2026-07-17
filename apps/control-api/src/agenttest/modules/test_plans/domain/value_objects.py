@@ -94,8 +94,8 @@ class TestPlanConfig:
     def from_dict(cls, data: dict[str, object]) -> TestPlanConfig:
         """从字典反序列化（如从 JSONB 列读取）。"""
         cost_budget_raw = data.get("cost_budget")
-        retry_policy_raw = data.get("retry_policy") or {}
-        scorers_raw = data.get("scorers") or []
+        retry_policy = _object_mapping(data, "retry_policy")
+        scorers = _object_mapping_list(data, "scorers")
         abr_raw = data.get("api_browser_ratio", 0)
         rpc_raw = data.get("runs_per_case", 1)
         conc_raw = data.get("concurrency", 1)
@@ -103,29 +103,25 @@ class TestPlanConfig:
         mr_raw = data.get("max_retries", 0)
         pt_raw = data.get("pass_threshold", 1.0)
         br_raw = data.get("baseline_run_id")
-        rg_raw = data.get("release_gate") or {}
-        scorer_ids_raw = data.get("scorer_ids") or []
-        security_profile_ids_raw = data.get("security_profile_ids") or []
+        release_gate = _object_mapping(data, "release_gate")
+        scorer_ids = _string_list(data, "scorer_ids")
+        security_profile_ids = _string_list(data, "security_profile_ids")
         return cls(
             api_browser_ratio=float(abr_raw) if isinstance(abr_raw, (int, float, str)) else 0.0,
             runs_per_case=int(rpc_raw) if isinstance(rpc_raw, (int, float, str)) else 1,
             concurrency=int(conc_raw) if isinstance(conc_raw, (int, float, str)) else 1,
             timeout=int(to_raw) if isinstance(to_raw, (int, float, str)) else 300,
             max_retries=int(mr_raw) if isinstance(mr_raw, (int, float, str)) else 0,
-            retry_policy=(dict(retry_policy_raw) if isinstance(retry_policy_raw, dict) else {}),  # type: ignore[arg-type]
-            scorers=(list(scorers_raw) if isinstance(scorers_raw, list) else []),  # type: ignore[arg-type]
+            retry_policy=retry_policy,
+            scorers=scorers,
             pass_threshold=float(pt_raw) if isinstance(pt_raw, (int, float, str)) else 1.0,
             cost_budget=(
                 float(cost_budget_raw) if isinstance(cost_budget_raw, (int, float)) else None
             ),
             baseline_run_id=str(br_raw) if isinstance(br_raw, str) else None,
-            release_gate=(dict(rg_raw) if isinstance(rg_raw, dict) else {}),  # type: ignore[arg-type]
-            scorer_ids=[str(item) for item in scorer_ids_raw]
-            if isinstance(scorer_ids_raw, list)
-            else [],
-            security_profile_ids=[str(item) for item in security_profile_ids_raw]
-            if isinstance(security_profile_ids_raw, list)
-            else [],
+            release_gate=release_gate,
+            scorer_ids=scorer_ids,
+            security_profile_ids=security_profile_ids,
             review_policy_id=str(data["review_policy_id"])
             if data.get("review_policy_id")
             else None,
@@ -148,3 +144,35 @@ class TestPlanConfig:
             "baseline_run_id": self.baseline_run_id,
             "release_gate": self.release_gate,
         }
+
+
+def _object_mapping(data: dict[str, object], field_name: str) -> dict[str, object]:
+    value = data.get(field_name)
+    if value is None:
+        return {}
+    if not isinstance(value, dict) or any(not isinstance(key, str) for key in value):
+        raise ValueError(f"Invalid test plan config {field_name}")
+    return dict(value)
+
+
+def _object_mapping_list(data: dict[str, object], field_name: str) -> list[dict[str, object]]:
+    value = data.get(field_name)
+    if value is None:
+        return []
+    if not isinstance(value, list):
+        raise ValueError(f"Invalid test plan config {field_name}")
+    result: list[dict[str, object]] = []
+    for item in value:
+        if not isinstance(item, dict) or any(not isinstance(key, str) for key in item):
+            raise ValueError(f"Invalid test plan config {field_name}")
+        result.append(dict(item))
+    return result
+
+
+def _string_list(data: dict[str, object], field_name: str) -> list[str]:
+    value = data.get(field_name)
+    if value is None:
+        return []
+    if not isinstance(value, list):
+        raise ValueError(f"Invalid test plan config {field_name}")
+    return [str(item) for item in value]

@@ -24,3 +24,4 @@ export { ExportButton } from "./export-button";
 export { ImportDialog } from "./import-dialog";
 export { TestCaseEditor } from "./test-case-editor";
 export { TestCaseTrialRun } from "./test-case-trial-run";
+export { datasetQueries, invalidateDatasetList } from "./queries";

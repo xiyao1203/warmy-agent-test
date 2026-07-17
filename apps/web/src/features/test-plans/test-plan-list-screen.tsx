@@ -1,19 +1,18 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 
 import { problemKind } from "@/lib/api/problem";
 
-import { createTestPlan, deleteTestPlan, listTestPlans } from "./api";
+import { createTestPlan, deleteTestPlan } from "./api";
 import { TestPlanList } from "./test-plan-list";
+import { invalidateTestPlanList, testPlanQueries } from "./queries";
 
 export function TestPlanListScreen({ projectId }: { projectId: string }) {
   const router = useRouter();
-  const plansQuery = useQuery({
-    queryFn: () => listTestPlans(projectId),
-    queryKey: ["test-plans", projectId],
-  });
+  const queryClient = useQueryClient();
+  const plansQuery = useQuery(testPlanQueries.list(projectId));
   if (plansQuery.isPending) {
     return <TestPlanList loading projectId={projectId} />;
   }
@@ -34,14 +33,14 @@ export function TestPlanListScreen({ projectId }: { projectId: string }) {
     <TestPlanList
       onCreate={async (payload) => {
         const plan = await createTestPlan(projectId, payload);
-        await plansQuery.refetch();
+        await invalidateTestPlanList(queryClient, projectId);
         if (plan?.id) {
           router.push(`/projects/${projectId}/test-plans/${plan.id}`);
         }
       }}
       onDelete={async (planId) => {
         await deleteTestPlan(projectId, planId);
-        await plansQuery.refetch();
+        await invalidateTestPlanList(queryClient, projectId);
       }}
       plans={plansQuery.data.items}
       projectId={projectId}

@@ -1,95 +1,78 @@
-import { CONTROL_API_URL as API_BASE } from "@/lib/api/base-url";
+import {
+  createGateApiV1ProjectsProjectIdGatesPost,
+  deleteGateApiV1ProjectsProjectIdGatesGateIdDelete,
+  evaluateGateApiV1ProjectsProjectIdGatesGateIdEvaluatePost,
+  listGatesApiV1ProjectsProjectIdGatesGet,
+  listRunsApiV1ProjectsProjectIdRunsGet,
+  type CreateGateRequest,
+  type EvaluateGateRequest,
+  type GateSummaryResponse,
+  type RunResponse,
+} from "@warmy/generated-api-client";
+
+import { apiClient } from "@/lib/api/client";
 import { csrfHeaders } from "@/lib/api/csrf";
-import { responseProblem } from "@/lib/api/problem";
 
 export type GateItem = GateSummaryResponse;
-
-export type GateResult = {
-  passed: boolean;
-  failures: string[];
-};
-
+export type GateResult = { passed: boolean; failures: string[] };
 export type GateRun = Pick<RunResponse, "created_at" | "id" | "status">;
 
-export async function listGates(projectId: string) {
-  const res = await fetch(
-    `${API_BASE}/api/v1/projects/${projectId}/gates?limit=50`,
-    { credentials: "include" },
-  );
-  if (!res.ok) throw await responseProblem(res, "加载门禁失败");
-  const data = await res.json();
-  return data.items as GateItem[];
+export async function listGates(projectId: string, signal?: AbortSignal) {
+  const { data } = await listGatesApiV1ProjectsProjectIdGatesGet({
+    client: apiClient,
+    path: { project_id: projectId },
+    signal,
+    throwOnError: true,
+  });
+  return data.items;
 }
 
 export async function createGate(
   projectId: string,
-  payload: {
-    name: string;
-    success_rate_threshold?: number;
-    critical_cases?: string[];
-    cost_limit?: number | null;
-    security_threshold?: number;
-  },
+  payload: CreateGateRequest,
 ) {
-  const res = await fetch(`${API_BASE}/api/v1/projects/${projectId}/gates`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      ...(csrfHeaders() as Record<string, string>),
-    },
-    credentials: "include",
-    body: JSON.stringify(payload),
+  const { data } = await createGateApiV1ProjectsProjectIdGatesPost({
+    body: payload,
+    client: apiClient,
+    headers: csrfHeaders(),
+    path: { project_id: projectId },
+    throwOnError: true,
   });
-  if (!res.ok) throw await responseProblem(res, "创建门禁失败");
-  return res.json() as Promise<GateItem>;
+  return data as GateItem;
 }
 
 export async function evaluateGate(
   projectId: string,
   gateId: string,
-  payload: {
-    run_id: string;
-    experiment_id?: string | null;
-  },
+  payload: EvaluateGateRequest,
 ) {
-  const res = await fetch(
-    `${API_BASE}/api/v1/projects/${projectId}/gates/${gateId}/evaluate`,
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        ...(csrfHeaders() as Record<string, string>),
-      },
-      credentials: "include",
-      body: JSON.stringify(payload),
-    },
-  );
-  if (!res.ok) throw await responseProblem(res, "评估门禁失败");
-  return res.json() as Promise<{ gate_id: string; result: GateResult }>;
+  const { data } =
+    await evaluateGateApiV1ProjectsProjectIdGatesGateIdEvaluatePost({
+      body: payload,
+      client: apiClient,
+      headers: csrfHeaders(),
+      path: { gate_id: gateId, project_id: projectId },
+      throwOnError: true,
+    });
+  return data as { gate_id: string; result: GateResult };
 }
 
-export async function listGateRuns(projectId: string) {
-  const res = await fetch(
-    `${API_BASE}/api/v1/projects/${projectId}/runs?limit=50`,
-    { credentials: "include" },
-  );
-  if (!res.ok) throw await responseProblem(res, "加载执行记录失败");
-  const data = await res.json();
+export async function listGateRuns(projectId: string, signal?: AbortSignal) {
+  const { data } = await listRunsApiV1ProjectsProjectIdRunsGet({
+    client: apiClient,
+    path: { project_id: projectId },
+    query: { limit: 50 },
+    signal,
+    throwOnError: true,
+  });
   return data.items as GateRun[];
 }
 
 export async function deleteGate(projectId: string, gateId: string) {
-  const res = await fetch(
-    `${API_BASE}/api/v1/projects/${projectId}/gates/${gateId}`,
-    {
-      method: "DELETE",
-      headers: csrfHeaders() as Record<string, string>,
-      credentials: "include",
-    },
-  );
-  if (!res.ok) throw await responseProblem(res, "删除门禁失败");
+  await deleteGateApiV1ProjectsProjectIdGatesGateIdDelete({
+    client: apiClient,
+    headers: csrfHeaders(),
+    path: { gate_id: gateId, project_id: projectId },
+    throwOnError: true,
+  });
 }
-import type {
-  GateSummaryResponse,
-  RunResponse,
-} from "@warmy/generated-api-client";

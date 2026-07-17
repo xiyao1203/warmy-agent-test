@@ -24,3 +24,11 @@ def test_each_module_exposes_one_register_function() -> None:
     for name in EXPECTED_MODULES:
         module = import_module(f"agenttest.bootstrap.modules.{name}")
         assert callable(module.register)
+
+
+def test_model_registry_loads_complete_control_api_metadata() -> None:
+    registry = import_module("agenttest.bootstrap.model_registry")
+
+    metadata = registry.register_models()
+
+    assert {"users", "projects", "runs", "audit_logs"} <= set(metadata.tables)

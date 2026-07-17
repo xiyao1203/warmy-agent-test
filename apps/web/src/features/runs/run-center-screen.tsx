@@ -1,24 +1,19 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 
 import { problemKind } from "@/lib/api/problem";
 
-import { createRun, listPublishedPlanVersions, listRuns } from "./api";
+import { createRun } from "./api";
 import { RunCenter } from "./run-center";
+import { invalidateRunList, runQueries } from "./queries";
 
 export function RunCenterScreen({ projectId }: { projectId: string }) {
   const router = useRouter();
-  const runsQuery = useQuery({
-    queryFn: () => listRuns(projectId),
-    queryKey: ["runs", projectId],
-    refetchInterval: 5000,
-  });
-  const versionsQuery = useQuery({
-    queryFn: () => listPublishedPlanVersions(projectId),
-    queryKey: ["runs", projectId, "published-plan-versions"],
-  });
+  const queryClient = useQueryClient();
+  const runsQuery = useQuery(runQueries.list(projectId));
+  const versionsQuery = useQuery(runQueries.publishedPlanVersions(projectId));
   if (runsQuery.isPending || versionsQuery.isPending) {
     return <RunCenter loading projectId={projectId} />;
   }
@@ -40,7 +35,7 @@ export function RunCenterScreen({ projectId }: { projectId: string }) {
     <RunCenter
       onCreate={async (versionId) => {
         const run = await createRun(projectId, versionId);
-        await runsQuery.refetch();
+        await invalidateRunList(queryClient, projectId);
         if (run?.id) {
           router.push(`/projects/${projectId}/runs/${run.id}`);
         }

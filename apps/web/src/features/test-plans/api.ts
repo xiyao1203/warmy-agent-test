@@ -1,6 +1,8 @@
 import {
   createPlanApiV1ProjectsProjectIdTestPlansPost,
   createVersionApiV1ProjectsProjectIdTestPlansPlanIdVersionsPost,
+  deleteTestPlanApiV1ProjectsProjectIdTestPlansPlanIdDelete,
+  dryRunApiV1ProjectsProjectIdTestPlansPlanIdVersionsVersionIdDryRunPost,
   getPlanApiV1ProjectsProjectIdTestPlansPlanIdGet,
   listPlansApiV1ProjectsProjectIdTestPlansGet,
   listTemplatesApiV1ProjectsProjectIdEnvironmentTemplatesGet,
@@ -13,36 +15,37 @@ import {
 } from "@warmy/generated-api-client";
 
 import { apiClient } from "@/lib/api/client";
-import { CONTROL_API_URL as API_BASE } from "@/lib/api/base-url";
 import { csrfHeaders } from "@/lib/api/csrf";
-import { responseProblem } from "@/lib/api/problem";
 
-export async function listTestPlans(projectId: string) {
+export async function listTestPlans(projectId: string, signal?: AbortSignal) {
   const { data } = await listPlansApiV1ProjectsProjectIdTestPlansGet({
     client: apiClient,
     path: { project_id: projectId },
     query: { limit: 100 },
+    signal,
     throwOnError: true,
   });
   return data;
 }
 
 export async function deleteTestPlan(projectId: string, planId: string) {
-  const response = await fetch(
-    `${API_BASE}/api/v1/projects/${projectId}/test-plans/${planId}`,
-    {
-      method: "DELETE",
-      headers: csrfHeaders() as Record<string, string>,
-      credentials: "include",
-    },
-  );
-  if (!response.ok) throw await responseProblem(response, "删除测试计划失败");
+  await deleteTestPlanApiV1ProjectsProjectIdTestPlansPlanIdDelete({
+    client: apiClient,
+    headers: csrfHeaders(),
+    path: { plan_id: planId, project_id: projectId },
+    throwOnError: true,
+  });
 }
 
-export async function getTestPlan(projectId: string, planId: string) {
+export async function getTestPlan(
+  projectId: string,
+  planId: string,
+  signal?: AbortSignal,
+) {
   const { data } = await getPlanApiV1ProjectsProjectIdTestPlansPlanIdGet({
     client: apiClient,
     path: { plan_id: planId, project_id: projectId },
+    signal,
     throwOnError: true,
   });
   return data;
@@ -62,11 +65,16 @@ export async function createTestPlan(
   return data;
 }
 
-export async function listTestPlanVersions(projectId: string, planId: string) {
+export async function listTestPlanVersions(
+  projectId: string,
+  planId: string,
+  signal?: AbortSignal,
+) {
   const { data } =
     await listVersionsApiV1ProjectsProjectIdTestPlansPlanIdVersionsGet({
       client: apiClient,
       path: { plan_id: planId, project_id: projectId },
+      signal,
       throwOnError: true,
     });
   return data.items;
@@ -132,12 +140,16 @@ export async function publishTestPlanVersion(
   return data;
 }
 
-export async function listEnvironmentTemplates(projectId: string) {
+export async function listEnvironmentTemplates(
+  projectId: string,
+  signal?: AbortSignal,
+) {
   const { data } =
     await listTemplatesApiV1ProjectsProjectIdEnvironmentTemplatesGet({
       client: apiClient,
       path: { project_id: projectId },
       query: { limit: 100 },
+      signal,
       throwOnError: true,
     });
   return data.items;
@@ -148,14 +160,18 @@ export async function dryRunTestPlanVersion(
   planId: string,
   versionId: string,
 ) {
-  const res = await fetch(
-    `${API_BASE}/api/v1/projects/${projectId}/test-plans/${planId}/versions/${versionId}/dry-run`,
-    {
-      method: "POST",
-      headers: csrfHeaders() as Record<string, string>,
-      credentials: "include",
-    },
-  );
-  if (!res.ok) throw await responseProblem(res, "测试计划试运行失败");
-  return res.json();
+  const { data } =
+    await dryRunApiV1ProjectsProjectIdTestPlansPlanIdVersionsVersionIdDryRunPost(
+      {
+        client: apiClient,
+        headers: csrfHeaders(),
+        path: {
+          plan_id: planId,
+          project_id: projectId,
+          version_id: versionId,
+        },
+        throwOnError: true,
+      },
+    );
+  return data as Record<string, unknown>;
 }

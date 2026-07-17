@@ -1,8 +1,18 @@
-import { CONTROL_API_URL } from "@/lib/api/base-url";
-import { csrfHeaders } from "@/lib/api/csrf";
-import { responseProblem } from "@/lib/api/problem";
+import {
+  completeLoginApiV1ProjectsProjectIdBrowserProfilesProfileIdLoginCompletePost,
+  createProfileApiV1ProjectsProjectIdBrowserProfilesPost,
+  deleteProfileApiV1ProjectsProjectIdBrowserProfilesProfileIdDelete,
+  listProfilesApiV1ProjectsProjectIdBrowserProfilesGet,
+  startProfileApiV1ProjectsProjectIdBrowserProfilesProfileIdStartPost,
+  stopProfileApiV1ProjectsProjectIdBrowserProfilesProfileIdStopPost,
+  updateProfileApiV1ProjectsProjectIdBrowserProfilesProfileIdPatch,
+  verifyProfileApiV1ProjectsProjectIdBrowserProfilesProfileIdVerifyPost,
+  type CreateBrowserProfileRequest,
+  type UpdateBrowserProfileRequest,
+} from "@warmy/generated-api-client";
 
-// ── 类型 ─────────────────────────────────────────────────
+import { apiClient } from "@/lib/api/client";
+import { csrfHeaders } from "@/lib/api/csrf";
 
 export type BrowserProfile = {
   profile_id: string;
@@ -19,76 +29,66 @@ export type BrowserProfile = {
   last_verified_at: string | null;
 };
 
-// ── API ──────────────────────────────────────────────────
+const profilePath = (projectId: string, profileId: string) => ({
+  profile_id: profileId,
+  project_id: projectId,
+});
 
 export async function listBrowserProfiles(
   projectId: string,
+  signal?: AbortSignal,
 ): Promise<BrowserProfile[]> {
-  const response = await fetch(
-    `${CONTROL_API_URL}/api/v1/projects/${projectId}/browser-profiles`,
-    { credentials: "include" },
-  );
-  if (!response.ok) throw await responseProblem(response, "加载浏览器实例失败");
-  const data = await response.json();
-  return (data.items ?? []) as BrowserProfile[];
+  const { data } = await listProfilesApiV1ProjectsProjectIdBrowserProfilesGet({
+    client: apiClient,
+    path: { project_id: projectId },
+    signal,
+    throwOnError: true,
+  });
+  return (data as { items?: BrowserProfile[] }).items ?? [];
 }
 
 export async function createBrowserProfile(
   projectId: string,
-  payload: { name: string; target_domain?: string },
+  payload: CreateBrowserProfileRequest,
 ): Promise<BrowserProfile> {
-  const response = await fetch(
-    `${CONTROL_API_URL}/api/v1/projects/${projectId}/browser-profiles`,
+  const { data } = await createProfileApiV1ProjectsProjectIdBrowserProfilesPost(
     {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        ...(csrfHeaders() as Record<string, string>),
-      },
-      credentials: "include",
-      body: JSON.stringify(payload),
+      body: payload,
+      client: apiClient,
+      headers: csrfHeaders(),
+      path: { project_id: projectId },
+      throwOnError: true,
     },
   );
-  if (!response.ok) throw await responseProblem(response, "创建浏览器实例失败");
-  return response.json() as Promise<BrowserProfile>;
+  return data as BrowserProfile;
 }
 
 export async function updateBrowserProfile(
   projectId: string,
   profileId: string,
-  payload: { name?: string; target_domain?: string },
+  payload: UpdateBrowserProfileRequest,
 ): Promise<BrowserProfile> {
-  const response = await fetch(
-    `${CONTROL_API_URL}/api/v1/projects/${projectId}/browser-profiles/${profileId}`,
-    {
-      method: "PATCH",
-      headers: {
-        "Content-Type": "application/json",
-        ...(csrfHeaders() as Record<string, string>),
-      },
-      credentials: "include",
-      body: JSON.stringify(payload),
-    },
-  );
-  if (!response.ok) throw await responseProblem(response, "更新浏览器实例失败");
-  return response.json() as Promise<BrowserProfile>;
+  const { data } =
+    await updateProfileApiV1ProjectsProjectIdBrowserProfilesProfileIdPatch({
+      body: payload,
+      client: apiClient,
+      headers: csrfHeaders(),
+      path: profilePath(projectId, profileId),
+      throwOnError: true,
+    });
+  return data as BrowserProfile;
 }
 
 export async function deleteBrowserProfile(
   projectId: string,
   profileId: string,
 ): Promise<void> {
-  const response = await fetch(
-    `${CONTROL_API_URL}/api/v1/projects/${projectId}/browser-profiles/${profileId}`,
-    {
-      method: "DELETE",
-      headers: {
-        ...(csrfHeaders() as Record<string, string>),
-      },
-      credentials: "include",
-    },
-  );
-  if (!response.ok) throw await responseProblem(response, "删除浏览器实例失败");
+  await deleteProfileApiV1ProjectsProjectIdBrowserProfilesProfileIdDelete({
+    client: apiClient,
+    headers: csrfHeaders(),
+    path: profilePath(projectId, profileId),
+    throwOnError: true,
+  });
 }
 
 export async function startBrowserProfile(
@@ -96,20 +96,15 @@ export async function startBrowserProfile(
   profileId: string,
   payload: { login_url?: string },
 ): Promise<BrowserProfile> {
-  const response = await fetch(
-    `${CONTROL_API_URL}/api/v1/projects/${projectId}/browser-profiles/${profileId}/start`,
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        ...(csrfHeaders() as Record<string, string>),
-      },
-      credentials: "include",
-      body: JSON.stringify({ login_url: payload.login_url ?? "" }),
-    },
-  );
-  if (!response.ok) throw await responseProblem(response, "启动浏览器失败");
-  return response.json() as Promise<BrowserProfile>;
+  const { data } =
+    await startProfileApiV1ProjectsProjectIdBrowserProfilesProfileIdStartPost({
+      body: { login_url: payload.login_url ?? "" },
+      client: apiClient,
+      headers: csrfHeaders(),
+      path: profilePath(projectId, profileId),
+      throwOnError: true,
+    });
+  return data as BrowserProfile;
 }
 
 export async function completeBrowserProfileLogin(
@@ -117,54 +112,45 @@ export async function completeBrowserProfileLogin(
   profileId: string,
   payload: { stop_after_save?: boolean } = {},
 ): Promise<BrowserProfile> {
-  const response = await fetch(
-    `${CONTROL_API_URL}/api/v1/projects/${projectId}/browser-profiles/${profileId}/login-complete`,
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        ...(csrfHeaders() as Record<string, string>),
+  const { data } =
+    await completeLoginApiV1ProjectsProjectIdBrowserProfilesProfileIdLoginCompletePost(
+      {
+        body: { stop_after_save: Boolean(payload.stop_after_save) },
+        client: apiClient,
+        headers: csrfHeaders(),
+        path: profilePath(projectId, profileId),
+        throwOnError: true,
       },
-      credentials: "include",
-      body: JSON.stringify({
-        stop_after_save: Boolean(payload.stop_after_save),
-      }),
-    },
-  );
-  if (!response.ok) throw await responseProblem(response, "保存登录状态失败");
-  return response.json() as Promise<BrowserProfile>;
+    );
+  return data as BrowserProfile;
 }
 
 export async function stopBrowserProfile(
   projectId: string,
   profileId: string,
 ): Promise<BrowserProfile> {
-  const response = await fetch(
-    `${CONTROL_API_URL}/api/v1/projects/${projectId}/browser-profiles/${profileId}/stop`,
-    {
-      method: "POST",
-      headers: {
-        ...(csrfHeaders() as Record<string, string>),
-      },
-      credentials: "include",
-    },
-  );
-  if (!response.ok) throw await responseProblem(response, "停止浏览器失败");
-  return response.json() as Promise<BrowserProfile>;
+  const { data } =
+    await stopProfileApiV1ProjectsProjectIdBrowserProfilesProfileIdStopPost({
+      client: apiClient,
+      headers: csrfHeaders(),
+      path: profilePath(projectId, profileId),
+      throwOnError: true,
+    });
+  return data as BrowserProfile;
 }
 
 export async function verifyBrowserProfile(
   projectId: string,
   profileId: string,
 ): Promise<BrowserProfile> {
-  const response = await fetch(
-    `${CONTROL_API_URL}/api/v1/projects/${projectId}/browser-profiles/${profileId}/verify`,
-    {
-      method: "POST",
-      headers: { ...(csrfHeaders() as Record<string, string>) },
-      credentials: "include",
-    },
-  );
-  if (!response.ok) throw await responseProblem(response, "验证登录状态失败");
-  return response.json() as Promise<BrowserProfile>;
+  const { data } =
+    await verifyProfileApiV1ProjectsProjectIdBrowserProfilesProfileIdVerifyPost(
+      {
+        client: apiClient,
+        headers: csrfHeaders(),
+        path: profilePath(projectId, profileId),
+        throwOnError: true,
+      },
+    );
+  return data as BrowserProfile;
 }

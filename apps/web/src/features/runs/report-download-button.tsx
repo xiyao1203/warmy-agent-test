@@ -48,6 +48,7 @@ export function ReportDownloadButton({
   const handleDownload = async (format: ReportFormat) => {
     setDownloading(format);
     try {
+      // raw-fetch-allowed: streamed report download preserves response headers and Blob body
       const response = await fetch(
         `${CONTROL_API_URL}/api/v1/projects/${projectId}/runs/${runId}/export?format=${format}`,
         {

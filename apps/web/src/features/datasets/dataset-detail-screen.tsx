@@ -2,17 +2,14 @@
 
 import { useQuery } from "@tanstack/react-query";
 
-import { listAgents } from "@/features/agents";
-import { listEnvironmentTemplates } from "@/features/environments";
+import { agentQueries } from "@/features/agents";
+import { environmentQueries } from "@/features/environments";
 
 import {
   createDatasetVersion,
   createTestCaseTrialRun,
   createTestCase,
   deleteTestCase,
-  getDataset,
-  listDatasetVersions,
-  listTestCases,
   importTestCases,
   markTestCaseReady,
   previewTestCaseImport,
@@ -20,6 +17,7 @@ import {
   validateTestCase,
 } from "./api";
 import { DatasetDetail } from "./dataset-detail";
+import { datasetQueries } from "./queries";
 
 export function DatasetDetailScreen({
   datasetId,
@@ -28,33 +26,20 @@ export function DatasetDetailScreen({
   datasetId: string;
   projectId: string;
 }) {
-  const datasetQuery = useQuery({
-    queryFn: () => getDataset(projectId, datasetId),
-    queryKey: ["dataset", projectId, datasetId],
-  });
+  const datasetQuery = useQuery(datasetQueries.detail(projectId, datasetId));
 
-  const versionsQuery = useQuery({
-    queryFn: () => listDatasetVersions(projectId, datasetId),
-    queryKey: ["dataset-versions", projectId, datasetId],
-  });
+  const versionsQuery = useQuery(datasetQueries.versions(projectId, datasetId));
 
   const latestVersion = versionsQuery.data?.[0];
 
   const casesQuery = useQuery({
+    ...datasetQueries.cases(projectId, datasetId, latestVersion?.id ?? ""),
     enabled: !!latestVersion,
-    queryFn: () => listTestCases(projectId, datasetId, latestVersion!.id),
-    queryKey: ["test-cases", projectId, datasetId, latestVersion?.id],
   });
 
-  const agentsQuery = useQuery({
-    queryFn: () => listAgents(projectId),
-    queryKey: ["agents", projectId, "test-case-trial"],
-  });
+  const agentsQuery = useQuery(agentQueries.list(projectId));
 
-  const environmentsQuery = useQuery({
-    queryFn: () => listEnvironmentTemplates(projectId),
-    queryKey: ["environments", projectId, "test-case-trial"],
-  });
+  const environmentsQuery = useQuery(environmentQueries.list(projectId));
 
   async function ensureEditableVersion() {
     if (latestVersion && latestVersion.status !== "published") {
