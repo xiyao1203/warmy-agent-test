@@ -60,6 +60,7 @@ fi
 
 (
     cd "$ROOT_DIR/apps/web"
+    export AGENTTEST_NEXT_DIST_DIR="$RUNTIME_DIR/next"
     NEXT_PUBLIC_CONTROL_API_URL="http://127.0.0.1:8181" \
         pnpm build
     NEXT_PUBLIC_CONTROL_API_URL="http://127.0.0.1:8181" \

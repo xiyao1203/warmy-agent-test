@@ -456,17 +456,17 @@ git commit -m "refactor(web): centralize query and ui ownership"
 - Create: `scripts/tests/test_start_e2e_server.sh`
 - Modify: `apps/web/playwright.config.test.ts`
 
-- [ ] **Step 1: Add a failing isolated-distDir test**
+- [x] **Step 1: Add a failing isolated-distDir test**
 
 The shell test creates a fake repository Web directory containing a locked `.next` and stubs `pnpm`/`uv`. It asserts both build and start receive the same `AGENTTEST_NEXT_DIST_DIR` beneath the Runtime Directory and that the directory is absent after exit.
 
-- [ ] **Step 2: Run the script test and observe RED**
+- [x] **Step 2: Run the script test and observe RED**
 
 Run: `bash scripts/tests/test_start_e2e_server.sh`
 
 Expected: failure because Next always uses `apps/web/.next`.
 
-- [ ] **Step 3: Make distDir configurable only for test orchestration**
+- [x] **Step 3: Make distDir configurable only for test orchestration**
 
 Use:
 
@@ -488,7 +488,7 @@ const nextConfig: NextConfig = {
 
 Set `AGENTTEST_NEXT_DIST_DIR="$RUNTIME_DIR/next"` for both `pnpm build` and `next start`. Keep the existing cleanup trap and port checks; cleanup must preserve the original exit status.
 
-- [ ] **Step 4: Verify script, config, and complete Playwright**
+- [x] **Step 4: Verify script, config, and complete Playwright**
 
 Run:
 
@@ -500,7 +500,7 @@ pnpm --filter @warmy/web e2e
 
 Expected: a pre-existing `.next/lock` does not affect startup; complete browser tests pass with only the credential-gated performance scenario allowed to skip.
 
-- [ ] **Step 5: Commit E2E isolation**
+- [x] **Step 5: Commit E2E isolation**
 
 ```bash
 git add apps/web/next.config.ts apps/web/playwright.config.test.ts scripts/start_e2e_server.sh scripts/tests/test_start_e2e_server.sh
