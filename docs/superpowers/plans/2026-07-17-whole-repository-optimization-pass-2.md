@@ -211,11 +211,11 @@ git commit -m "refactor(api): split core summary queries"
 - Modify: `apps/control-api/tests/unit/test_agent/test_platform_list_summaries.py`
 - Modify: `apps/control-api/tests/unit/test_agent/test_platform_project_scope.py`
 
-- [ ] **Step 1: Freeze the capability contract before moving code**
+- [x] **Step 1: Freeze the capability contract before moving code**
 
 Add a parameterized test that records every supported capability name, its owning group and required context project ID. Assert representative results for Agent, Dataset/Test Case, Run, Scorer, Review and Gate still return the same `resource_ref` keys and relation values.
 
-- [ ] **Step 2: Run the focused catalog and behavior tests as the baseline**
+- [x] **Step 2: Run the focused catalog and behavior tests as the baseline**
 
 Run:
 
@@ -225,19 +225,19 @@ uv run pytest apps/control-api/tests/unit/test_agent/test_platform_capability_ca
 
 Expected: existing tests pass; the new ownership assertion fails because one class still owns every capability.
 
-- [ ] **Step 3: Extract pure projections**
+- [x] **Step 3: Extract pure projections**
 
 Move `_artifact`, `_created`, `_resource_ref`, `_summary_item`, resource DTO projections, JSON schema inference and serialization helpers into `platform_projection.py`. Keep function signatures and returned dictionaries exact.
 
-- [ ] **Step 4: Extract capability groups**
+- [x] **Step 4: Extract capability groups**
 
 Implement `PlatformAssetCapabilities`, `PlatformExecutionCapabilities` and `PlatformQualityCapabilities`, each with the same asynchronous `execute(capability, context, values)` call shape currently used by `HandlerPlatformGateway.execute`. Assets own Agent/Environment/Dataset/Test Case/Test Plan/Credential operations; Execution owns Run, endpoint analysis and report generation; Quality owns Scorer/Experiment/Security/Review/Gate. Existing project-scoped repository calls and command DTO construction move unchanged.
 
-- [ ] **Step 5: Reduce the Facade to routing**
+- [x] **Step 5: Reduce the Facade to routing**
 
 `HandlerPlatformGateway.execute` validates the capability name, selects exactly one group and returns its result. Unknown capabilities preserve the current classified error. Mission delegation remains in the existing Mission gateway.
 
-- [ ] **Step 6: Verify all Test Agent behavior and architecture**
+- [x] **Step 6: Verify all Test Agent behavior and architecture**
 
 Run:
 
@@ -248,7 +248,7 @@ make architecture
 
 Expected: capability count, schemas, resource references, error types and project isolation remain unchanged.
 
-- [ ] **Step 7: Commit the capability split**
+- [x] **Step 7: Commit the capability split**
 
 ```bash
 git add apps/control-api/src/agenttest/modules/test_agent/adapters apps/control-api/tests/unit/test_agent

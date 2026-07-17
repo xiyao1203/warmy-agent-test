@@ -1,6 +1,6 @@
 import pytest
 from agenttest.modules.datasets.public import DatasetVersionId
-from agenttest.modules.test_agent.adapters.platform import _test_case_command_from_raw
+from agenttest.modules.test_agent.adapters.platform_projection import _test_case_command_from_raw
 from agenttest.modules.test_agent.application.platform_catalog import DatasetWithCasesInput
 from pydantic import ValidationError
 
