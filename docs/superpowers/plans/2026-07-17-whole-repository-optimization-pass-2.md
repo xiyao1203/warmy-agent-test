@@ -143,7 +143,7 @@ git commit -m "refactor(api): remove duplicate bootstrap wiring"
 - Modify: `apps/control-api/tests/performance/test_query_bounds.py`
 - Create: `apps/control-api/tests/unit/bootstrap/test_core_summary_reader.py`
 
-- [ ] **Step 1: Add Facade compatibility and empty-input tests**
+- [x] **Step 1: Add Facade compatibility and empty-input tests**
 
 Test that the stable import and every Protocol method remain available:
 
@@ -159,13 +159,13 @@ async def test_summary_reader_skips_database_for_empty_ids() -> None:
     assert await reader.gates(uuid4(), []) == {}
 ```
 
-- [ ] **Step 2: Run focused tests and observe RED for empty input where applicable**
+- [x] **Step 2: Run focused tests and observe RED for empty input where applicable**
 
 Run: `uv run pytest apps/control-api/tests/unit/bootstrap/test_core_summary_reader.py -q`
 
 Expected: new package imports are missing and any method that opens a session before checking IDs fails.
 
-- [ ] **Step 3: Move query groups without changing SQL**
+- [x] **Step 3: Move query groups without changing SQL**
 
 Move methods as complete units:
 
@@ -176,11 +176,11 @@ Move methods as complete units:
 
 Each group accepts the same `async_sessionmaker`. Do not rewrite joins, order clauses, window functions or result projection while moving them.
 
-- [ ] **Step 4: Implement the stable Facade**
+- [x] **Step 4: Implement the stable Facade**
 
 `reader.py` constructs the three query groups once and delegates all eleven Protocol methods. `__init__.py` re-exports only `SqlAlchemyCoreSummaryReader`, preserving every existing import path.
 
-- [ ] **Step 5: Verify query-count and behavior compatibility**
+- [x] **Step 5: Verify query-count and behavior compatibility**
 
 Run:
 
@@ -191,7 +191,7 @@ uv run pytest apps/control-api/tests/contract/test_projects_api.py apps/control-
 
 Expected: query counts do not increase and list response summaries stay identical.
 
-- [ ] **Step 6: Commit the query split**
+- [x] **Step 6: Commit the query split**
 
 ```bash
 git add apps/control-api/src/agenttest/bootstrap/core_summaries apps/control-api/tests
