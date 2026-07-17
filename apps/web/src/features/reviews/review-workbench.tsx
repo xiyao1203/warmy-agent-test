@@ -133,7 +133,7 @@ export function ReviewWorkbench({ projectId }: { projectId: string }) {
   const pendingCount = tasks.filter((t) => t.status === "pending").length;
 
   return (
-    <div className="min-w-0 px-6 py-6">
+    <div className="workspace-page">
       <header className="flex items-center justify-between gap-4 border-b border-[var(--hairline)] pb-5">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">人工审核</h1>

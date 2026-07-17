@@ -122,7 +122,7 @@ export function AgentDetail({
 
   if (loading) {
     return (
-      <div className="min-w-0 px-6 py-6">
+      <div className="workspace-page">
         <Skeleton className="mb-2 h-8 w-48" />
         <Skeleton className="mb-6 h-4 w-64" />
         <div className="flex gap-2">
@@ -139,7 +139,7 @@ export function AgentDetail({
   const latestPublished = publishedVersions[0];
 
   return (
-    <div className="min-w-0 px-6 py-6">
+    <div className="workspace-page">
       <Link
         className="inline-flex items-center gap-1.5 text-sm text-[var(--muted)] hover:text-[var(--ink)]"
         href={`/projects/${agent.project_id}/agents`}

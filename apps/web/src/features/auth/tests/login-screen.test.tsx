@@ -62,19 +62,17 @@ describe("LoginScreen", () => {
     const brand = screen.getByTestId("landing-brand");
     const brandMark = brand.querySelector("[data-brand-mark]");
 
-    expect(brandMark).toHaveAttribute("data-brand-mark", "agent-test-3d");
+    expect(brandMark).toHaveAttribute("data-brand-mark", "agent-test-glyph");
     expect(brandMark).toHaveAttribute(
       "data-brand-mark-source",
-      "iconfont-cn-3d-inspired",
+      "warmy-product-system",
     );
     expect(screen.getByText("Agent 发布前的测试证据层")).toBeVisible();
     expect(screen.getByText("Release readiness")).toBeVisible();
     expect(screen.getByText("发布前证据链")).toBeVisible();
     expect(screen.queryByText("PROJECT")).not.toBeInTheDocument();
     expect(screen.getByText(/把 AI Agent 的每次变更/)).toBeVisible();
-    expect(
-      screen.getByRole("button", { name: /切换到(暗色|亮色)模式/ }),
-    ).toBeVisible();
+    expect(screen.getByRole("button", { name: "外观设置" })).toBeVisible();
     expect(
       screen.queryByRole("navigation", { name: "产品导航" }),
     ).not.toBeInTheDocument();

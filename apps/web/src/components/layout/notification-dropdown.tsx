@@ -1,62 +1,46 @@
 "use client";
 
+import * as DropdownMenuPrimitive from "@radix-ui/react-dropdown-menu";
 import { Bell, Settings } from "lucide-react";
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
 
 export function NotificationDropdown() {
-  const [open, setOpen] = useState(false);
-  const dropdownRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (
-        dropdownRef.current &&
-        !dropdownRef.current.contains(event.target as Node)
-      ) {
-        setOpen(false);
-      }
-    }
-
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
-
   return (
-    <div className="relative" ref={dropdownRef}>
-      <button
-        aria-expanded={open}
-        aria-haspopup="true"
-        aria-label="通知"
-        className="flex h-8 shrink-0 items-center justify-center rounded-[var(--radius-md)] px-2 text-[var(--muted)] transition-colors hover:bg-[var(--canvas-soft)] hover:text-[var(--ink)]"
-        onClick={() => setOpen(!open)}
-        type="button"
-      >
-        <Bell className="size-4" />
-      </button>
-
-      {open && (
-        <div
-          className="absolute right-0 top-full z-50 mt-1 min-w-[20rem] rounded-[var(--radius-lg)] border border-[var(--hairline)] bg-[var(--surface)]"
-          role="menu"
+    <DropdownMenuPrimitive.Root>
+      <DropdownMenuPrimitive.Trigger asChild>
+        <button aria-label="通知" className="app-icon-button" type="button">
+          <Bell aria-hidden="true" className="size-4" />
+        </button>
+      </DropdownMenuPrimitive.Trigger>
+      <DropdownMenuPrimitive.Portal>
+        <DropdownMenuPrimitive.Content
+          align="end"
+          aria-label="通知中心"
+          className="app-menu w-72"
+          sideOffset={7}
         >
-          <div className="border-b border-[var(--hairline)] px-4 py-3">
-            <h3 className="font-semibold">通知中心</h3>
-          </div>
-          <div className="p-8 text-center">
-            <Bell className="mx-auto size-8 text-[var(--muted)]" />
+          <DropdownMenuPrimitive.Label className="border-b border-[var(--hairline)] px-3 py-2.5 text-sm font-semibold">
+            通知中心
+          </DropdownMenuPrimitive.Label>
+          <div className="px-4 py-7 text-center">
+            <Bell
+              aria-hidden="true"
+              className="mx-auto size-7 text-[var(--muted)]"
+            />
             <p className="mt-3 text-sm text-[var(--muted)]">暂无新通知</p>
+          </div>
+          <DropdownMenuPrimitive.Separator className="h-px bg-[var(--hairline)]" />
+          <DropdownMenuPrimitive.Item asChild>
             <Link
-              className="mt-3 inline-flex items-center gap-2 text-sm text-[var(--primary)] hover:underline"
+              className="app-menu-item justify-center text-[var(--primary)]"
               href="/account?section=notifications"
-              onClick={() => setOpen(false)}
             >
-              <Settings className="size-3.5" />
+              <Settings aria-hidden="true" className="size-3.5" />
               通知偏好设置
             </Link>
-          </div>
-        </div>
-      )}
-    </div>
+          </DropdownMenuPrimitive.Item>
+        </DropdownMenuPrimitive.Content>
+      </DropdownMenuPrimitive.Portal>
+    </DropdownMenuPrimitive.Root>
   );
 }

@@ -99,7 +99,7 @@ describe("ProjectListScreen", () => {
     );
   });
 
-  it("uses iconfont-inspired 3D illustration and motion for the empty state", () => {
+  it("uses the restrained product glyph for the empty state", () => {
     const handlers = renderProjectListScreen();
     render(<ProjectListScreen projects={[]} {...handlers} />);
 
@@ -107,17 +107,13 @@ describe("ProjectListScreen", () => {
 
     expect(visual).toHaveAttribute(
       "data-visual-source",
-      "iconfont-cn-3d-inspired",
+      "warmy-product-system",
     );
-    expect(visual).toHaveAttribute(
-      "data-motion-source",
-      "iconfont-cn-lottie-inspired",
-    );
-    expect(visual).toHaveAttribute("data-visual-kind", "project-empty-3d");
+    expect(visual).toHaveAttribute("data-visual-kind", "project-empty-glyph");
     expect(screen.getByText("暂无项目")).toBeVisible();
   });
 
-  it("uses an iconfont-inspired motion cue while projects are loading", () => {
+  it("uses the shared loading cue while projects are loading", () => {
     const handlers = renderProjectListScreen();
     render(<ProjectListScreen loading projects={[]} {...handlers} />);
 
@@ -125,7 +121,7 @@ describe("ProjectListScreen", () => {
 
     expect(loader).toHaveAttribute(
       "data-motion-source",
-      "iconfont-cn-lottie-inspired",
+      "warmy-product-system",
     );
     expect(loader).toHaveTextContent("正在加载项目");
   });

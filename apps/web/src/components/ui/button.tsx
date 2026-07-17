@@ -23,19 +23,14 @@ export function Button({
     ghost:
       "border-transparent bg-transparent text-[var(--muted)] hover:bg-[var(--canvas-soft)] hover:text-[var(--ink)]",
     primary:
-      "border-transparent bg-[var(--primary)] text-white hover:bg-[var(--primary-active)] active:scale-[0.97]",
+      "border-[var(--primary)] bg-[var(--primary)] text-[var(--on-primary)] hover:border-[var(--primary-active)] hover:bg-[var(--primary-active)]",
     secondary:
       "border-[var(--hairline-strong)] bg-[var(--surface)] text-[var(--ink)] hover:bg-[var(--canvas-soft)]",
   };
 
-  const shape =
-    variant === "primary"
-      ? "rounded-[var(--radius-pill)] px-5"
-      : "rounded-[var(--radius-sm)] px-4";
-
   return (
     <Component
-      className={`inline-flex h-9 items-center justify-center gap-1.5 border text-sm font-medium transition-all disabled:cursor-not-allowed disabled:opacity-50 ${shape} ${variants[variant]} ${className}`}
+      className={`inline-flex h-9 items-center justify-center gap-1.5 whitespace-nowrap rounded-[var(--radius-md)] border px-3.5 text-sm font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${variants[variant]} ${className}`}
       {...props}
       disabled={loading || props.disabled}
     >

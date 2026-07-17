@@ -69,7 +69,7 @@ export function ModelConfigList(props: Props) {
 
   if (props.loading) {
     return (
-      <div className="min-w-0 px-6 py-6">
+      <div className="workspace-page">
         <header className="border-b border-[var(--hairline)] pb-5">
           <Skeleton className="h-6 w-28" />
           <Skeleton className="mt-2 h-4 w-72" />
@@ -107,7 +107,7 @@ export function ModelConfigList(props: Props) {
   }
 
   return (
-    <div className="min-w-0 px-6 py-6">
+    <div className="workspace-page">
       <header className="flex flex-wrap items-start justify-between gap-4 border-b border-[var(--hairline)] pb-5">
         <div>
           <h1 className="text-xl font-semibold tracking-tight">模型配置</h1>
@@ -290,7 +290,7 @@ export function ModelConfigList(props: Props) {
             确定要删除模型「{deleteTarget?.name}」吗？此操作不可撤销。
           </DialogDescription>
           {deleteError ? (
-            <p className="mt-3 rounded-[var(--radius-md)] border border-red-200 bg-red-50 p-3 text-sm text-red-700 dark:border-red-800 dark:bg-red-950 dark:text-red-400">
+            <p className="mt-3 rounded-[var(--radius-md)] border border-[var(--danger)] bg-[var(--danger-subtle)] p-3 text-sm text-[var(--danger)]">
               {deleteError}
             </p>
           ) : null}

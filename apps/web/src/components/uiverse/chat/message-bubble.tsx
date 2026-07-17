@@ -94,7 +94,7 @@ export function MessageBubble({
       <div
         className={`flex size-7 shrink-0 items-center justify-center rounded-full ${
           isUser
-            ? "bg-[var(--primary)] text-white"
+            ? "bg-[var(--primary)] text-[var(--on-primary)]"
             : "border border-[var(--hairline)] bg-white text-[var(--ink)]"
         }`}
       >
@@ -113,7 +113,7 @@ export function MessageBubble({
         <div
           className={`group/bubble relative text-[0.9375rem] leading-7 ${
             isUser
-              ? "rounded-2xl rounded-br-md bg-[var(--primary)] px-4 py-2.5 text-white"
+              ? "rounded-[var(--radius-lg)] rounded-br-[var(--radius-sm)] bg-[var(--primary)] px-4 py-2.5 text-[var(--on-primary)]"
               : "text-[var(--ink)]"
           }`}
         >
@@ -128,7 +128,7 @@ export function MessageBubble({
                   className="w-full resize-none rounded-xl border border-[var(--hairline)] bg-white/90 px-3 py-2 text-sm text-[var(--ink)] outline-none focus:border-[var(--primary)] min-h-[2.5rem]"
                   rows={2}
                 />
-                <div className="flex items-center justify-end gap-1 text-[0.7rem] text-white/60">
+                <div className="flex items-center justify-end gap-1 text-[0.7rem] text-[var(--on-primary)] opacity-60">
                   <span>Enter 提交 · Esc 取消</span>
                   <button
                     onClick={handleEditSubmit}

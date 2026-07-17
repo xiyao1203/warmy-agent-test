@@ -27,7 +27,7 @@ export function ProgressBar({
       )}
       <div className="h-2 w-full overflow-hidden rounded-full bg-[var(--canvas-soft)]">
         <div
-          className="h-full rounded-full bg-gradient-to-r from-[var(--primary)] to-[var(--primary-active)] transition-all duration-500 ease-out"
+          className="h-full rounded-full bg-[var(--primary)] transition-all duration-500 ease-out"
           style={{ width: `${percentage}%` }}
         />
       </div>

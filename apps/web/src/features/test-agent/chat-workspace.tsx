@@ -665,7 +665,7 @@ export function ChatWorkspace({ projectId }: { projectId: string }) {
               <div className="absolute bottom-20 left-1/2 z-10 -translate-x-1/2">
                 <button
                   aria-label="滚动到底部"
-                  className="rounded-full border border-[var(--hairline)] bg-[var(--surface)] p-2 text-[var(--muted)] shadow-md transition-all hover:bg-[var(--canvas-soft)] hover:text-[var(--ink)] hover:shadow-lg"
+                  className="rounded-[var(--radius-md)] border border-[var(--hairline)] bg-[var(--surface)] p-2 text-[var(--muted)] transition-colors hover:bg-[var(--canvas-soft)] hover:text-[var(--ink)]"
                   onClick={() => {
                     scrollRef.current?.scrollTo({
                       top: scrollRef.current.scrollHeight,
@@ -748,7 +748,7 @@ export function ChatWorkspace({ projectId }: { projectId: string }) {
                 </p>
               ) : null}
               <div className="mx-auto max-w-3xl">
-                <div className="relative rounded-[1.4rem] border border-[var(--hairline-strong)] bg-[var(--surface)] shadow-[0_8px_28px_rgba(0,0,0,0.06)] transition-[border-color,box-shadow] focus-within:border-[var(--primary)] focus-within:shadow-[0_10px_34px_rgba(0,0,0,0.1)]">
+                <div className="relative rounded-[var(--radius-lg)] border border-[var(--hairline-strong)] bg-[var(--surface)] shadow-[var(--shadow-overlay)] transition-[border-color,box-shadow] focus-within:border-[var(--primary)]">
                   <textarea
                     aria-label="对话输入"
                     className="block max-h-48 min-h-12 w-full resize-none bg-transparent px-4 py-3 pr-12 text-[0.9375rem] leading-6 text-[var(--ink)] placeholder:text-[var(--muted)] focus:outline-none disabled:opacity-50"

@@ -288,7 +288,7 @@ export function TestCaseEditor({
             <button
               className={`rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
                 activeSection === section.key
-                  ? "bg-[var(--primary)] text-white"
+                  ? "bg-[var(--primary)] text-[var(--on-primary)]"
                   : "text-[var(--muted)] hover:bg-[var(--canvas-soft)]"
               }`}
               key={section.key}

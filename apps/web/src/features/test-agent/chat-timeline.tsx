@@ -45,7 +45,7 @@ export function ConversationTimeline({
               key={item.id}
             >
               {item.role === "user" ? (
-                <div className="max-w-[80%] rounded-3xl bg-[var(--canvas-soft)] px-4 py-2.5 text-[0.9375rem] leading-6 text-[var(--ink)]">
+                <div className="max-w-[80%] rounded-[var(--radius-lg)] bg-[var(--primary-subtle)] px-4 py-2.5 text-sm leading-6 text-[var(--ink)]">
                   {item.content}
                 </div>
               ) : (

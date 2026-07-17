@@ -82,7 +82,7 @@ export function RunCenter({
     }
   }
   return (
-    <div className="min-w-0 bg-[var(--canvas)] px-6 py-6">
+    <div className="workspace-page bg-[var(--canvas)]">
       <header className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <p className="text-xs font-medium text-[var(--body)]">测试执行</p>

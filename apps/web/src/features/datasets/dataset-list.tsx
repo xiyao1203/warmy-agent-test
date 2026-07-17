@@ -35,6 +35,7 @@ import {
 } from "@/components/ui/table-actions";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { Skeleton, Tooltip } from "@/components/uiverse";
+import { useCreateIntent } from "@/lib/use-create-intent";
 
 export function DatasetList({
   datasets = [],
@@ -66,7 +67,7 @@ export function DatasetList({
   }
 
   return (
-    <div className="min-w-0 px-6 py-6">
+    <div className="workspace-page">
       <header className="flex items-start justify-between gap-4 border-b border-[var(--hairline)] pb-5">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">测试用例</h1>
@@ -188,7 +189,7 @@ function CreateDatasetDialog({
 }: {
   onCreate: (payload: CreateDatasetRequest) => Promise<unknown>;
 }) {
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useCreateIntent("dataset");
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [error, setError] = useState("");
@@ -335,7 +336,7 @@ function StatusPanel({ title }: { title: string }) {
 
 function DatasetListSkeleton() {
   return (
-    <div className="min-w-0 px-6 py-6">
+    <div className="workspace-page">
       {/* Header skeleton */}
       <header className="flex items-start justify-between gap-4 border-b border-[var(--hairline)] pb-5">
         <div>

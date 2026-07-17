@@ -16,34 +16,34 @@ type StatusIndicatorProps = HTMLAttributes<HTMLDivElement> & {
 
 const statusConfig = {
   error: {
-    bg: "bg-red-500",
+    bg: "bg-[var(--danger)]",
     pulse: "animate-pulse",
-    text: "text-red-600 dark:text-red-400",
+    text: "text-[var(--danger)]",
   },
   info: {
-    bg: "bg-blue-500",
+    bg: "bg-[var(--info)]",
     pulse: "",
-    text: "text-blue-600 dark:text-blue-400",
+    text: "text-[var(--info)]",
   },
   offline: {
-    bg: "bg-gray-400",
+    bg: "bg-[var(--muted)]",
     pulse: "",
-    text: "text-gray-600 dark:text-gray-400",
+    text: "text-[var(--muted)]",
   },
   running: {
-    bg: "bg-emerald-500",
+    bg: "bg-[var(--success)]",
     pulse: "animate-pulse",
-    text: "text-emerald-600 dark:text-emerald-400",
+    text: "text-[var(--success)]",
   },
   success: {
-    bg: "bg-emerald-500",
+    bg: "bg-[var(--success)]",
     pulse: "",
-    text: "text-emerald-600 dark:text-emerald-400",
+    text: "text-[var(--success)]",
   },
   warning: {
-    bg: "bg-amber-500",
+    bg: "bg-[var(--warning)]",
     pulse: "animate-pulse",
-    text: "text-amber-600 dark:text-amber-400",
+    text: "text-[var(--warning)]",
   },
 };
 

@@ -21,7 +21,7 @@ export function ListCard({
 }: ListCardProps) {
   return (
     <li
-      className={`group rounded-[var(--radius-lg)] border border-[var(--hairline)] bg-[var(--surface)] px-5 py-4 transition-colors hover:bg-[var(--canvas-soft)] ${className}`}
+      className={`group rounded-[var(--radius-md)] border border-[var(--hairline)] bg-[var(--surface)] px-4 py-3 transition-colors hover:border-[var(--hairline-strong)] hover:bg-[var(--canvas-soft)] ${className}`}
       {...props}
     >
       <div className="flex items-center justify-between gap-4">

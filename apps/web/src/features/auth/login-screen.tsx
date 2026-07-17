@@ -108,7 +108,7 @@ export function LoginScreen({ returnTo }: { returnTo?: string }) {
 
   return (
     <main className="min-h-screen bg-[var(--canvas)] text-[var(--ink)]">
-      <header className="sticky top-0 z-40 border-b border-[var(--hairline)] bg-[var(--canvas)] backdrop-blur-xl">
+      <header className="sticky top-0 z-40 border-b border-[var(--hairline)] bg-[var(--surface)]/95 backdrop-blur-lg">
         <div className="mx-auto flex h-14 max-w-7xl items-center justify-between px-5 sm:px-8">
           <div className="flex min-w-0 items-center gap-8">
             <div
@@ -125,7 +125,7 @@ export function LoginScreen({ returnTo }: { returnTo?: string }) {
           <div className="flex items-center gap-2">
             <ThemeToggle className="size-9 text-[var(--muted)] hover:bg-[var(--canvas-soft)] hover:text-[var(--ink)]" />
             <button
-              className="inline-flex h-9 items-center justify-center rounded-[var(--radius-pill)] bg-[var(--primary)] px-5 text-sm font-medium text-white transition-all hover:bg-[var(--primary-active)] active:scale-95 disabled:cursor-not-allowed disabled:opacity-60"
+              className="inline-flex h-9 items-center justify-center rounded-[var(--radius-md)] bg-[var(--primary)] px-4 text-sm font-medium text-[var(--on-primary)] transition-colors hover:bg-[var(--primary-active)] disabled:cursor-not-allowed disabled:opacity-60"
               disabled={entryResolving}
               onClick={openWorkspaceEntry}
               type="button"
@@ -137,7 +137,7 @@ export function LoginScreen({ returnTo }: { returnTo?: string }) {
       </header>
 
       <section className="border-b border-[var(--hairline)] bg-[var(--canvas)]">
-        <div className="mx-auto grid min-h-[calc(100vh-3.5rem)] max-w-7xl items-center gap-12 px-5 py-14 sm:px-8 lg:grid-cols-[0.9fr_1.1fr] lg:py-20">
+        <div className="mx-auto grid min-h-[calc(100vh-3.5rem)] max-w-7xl items-center gap-12 px-5 py-14 sm:px-8 lg:grid-cols-[0.9fr_1.1fr] lg:py-16">
           <div className="max-w-2xl">
             <p className="inline-flex items-center gap-2 rounded-[var(--radius-pill)] border border-[var(--hairline)] bg-[var(--surface)] px-3 py-1.5 text-xs text-[var(--body)]">
               <Sparkles
@@ -146,7 +146,7 @@ export function LoginScreen({ returnTo }: { returnTo?: string }) {
               />
               Agent 发布前的测试证据层
             </p>
-            <h1 className="mt-6 text-[42px] font-semibold leading-[1.05] tracking-normal sm:text-[64px]">
+            <h1 className="mt-6 text-[40px] font-semibold leading-[1.08] tracking-[-0.035em] sm:text-[58px]">
               把 AI Agent 的每次变更，变成可发布的证据。
             </h1>
             <p className="mt-6 max-w-xl text-[17px] leading-7 text-[var(--body)]">
@@ -155,7 +155,7 @@ export function LoginScreen({ returnTo }: { returnTo?: string }) {
             </p>
             <div className="mt-8 flex flex-wrap items-center gap-3">
               <button
-                className="inline-flex h-11 items-center justify-center rounded-[var(--radius-pill)] bg-[var(--primary)] px-6 text-[15px] font-medium text-white transition-all hover:bg-[var(--primary-active)] active:scale-95 disabled:cursor-not-allowed disabled:opacity-60"
+                className="inline-flex h-10 items-center justify-center rounded-[var(--radius-md)] bg-[var(--primary)] px-5 text-sm font-medium text-[var(--on-primary)] transition-colors hover:bg-[var(--primary-active)] disabled:cursor-not-allowed disabled:opacity-60"
                 disabled={entryResolving}
                 onClick={openWorkspaceEntry}
                 type="button"
@@ -163,7 +163,7 @@ export function LoginScreen({ returnTo }: { returnTo?: string }) {
                 进入工作台
               </button>
               <button
-                className="inline-flex h-11 items-center gap-2 rounded-[var(--radius-pill)] border border-[var(--hairline-strong)] bg-[var(--surface)] px-5 text-[15px] text-[var(--ink)] transition-colors hover:bg-[var(--canvas-soft)] disabled:cursor-not-allowed disabled:opacity-60"
+                className="inline-flex h-10 items-center gap-2 rounded-[var(--radius-md)] border border-[var(--hairline-strong)] bg-[var(--surface)] px-4 text-sm text-[var(--ink)] transition-colors hover:bg-[var(--canvas-soft)] disabled:cursor-not-allowed disabled:opacity-60"
                 disabled={entryResolving}
                 onClick={openWorkspaceEntry}
                 type="button"
@@ -250,7 +250,7 @@ function EvidenceMap() {
   return (
     <div
       aria-label="测试发布闭环"
-      className="rounded-[var(--radius-lg)] border border-[var(--hairline)] bg-[var(--surface)] p-5"
+      className="rounded-[var(--radius-lg)] border border-[var(--hairline)] bg-[var(--surface)] p-5 shadow-[var(--shadow-product)]"
     >
       <div className="flex flex-wrap items-start justify-between gap-4 border-b border-[var(--hairline)] pb-5">
         <div>

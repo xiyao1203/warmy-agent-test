@@ -5,10 +5,7 @@ type SkeletonProps = HTMLAttributes<HTMLDivElement>;
 export function Skeleton({ className = "", ...props }: SkeletonProps) {
   return (
     <div
-      className={`animate-pulse rounded-[var(--radius-md)] bg-gradient-to-r from-[var(--canvas-soft)] via-[var(--hairline)] to-[var(--canvas-soft)] bg-[length:200%_100%] ${className}`}
-      style={{
-        animation: "skeleton-loading 1.5s ease-in-out infinite",
-      }}
+      className={`animate-pulse rounded-[var(--radius-md)] bg-[var(--canvas-soft)] ${className}`}
       {...props}
     />
   );

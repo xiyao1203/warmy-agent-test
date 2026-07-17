@@ -78,7 +78,7 @@ export function TestPlanDetail({
     }
   }
   return (
-    <div className="min-w-0 px-6 py-6">
+    <div className="workspace-page">
       <Link
         className="inline-flex items-center gap-1.5 text-sm text-[var(--muted)] hover:text-[var(--ink)]"
         href={`/projects/${plan.project_id}/test-plans`}

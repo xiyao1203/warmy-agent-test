@@ -368,8 +368,8 @@ function PreviewResult({
     <div
       className={`rounded-[var(--radius-lg)] border p-4 ${
         hasErrors
-          ? "border-[var(--danger)]/30 bg-red-50"
-          : "border-[var(--success)]/30 bg-green-50"
+          ? "border-[var(--danger)] bg-[var(--danger-subtle)]"
+          : "border-[var(--success)] bg-[var(--success-subtle)]"
       }`}
     >
       <div className="flex items-center gap-2">
@@ -391,13 +391,13 @@ function PreviewResult({
           <ul className="space-y-1">
             {errorGroups.slice(0, 20).map((item, index) => (
               <li
-                className="rounded border border-red-200 bg-white px-2 py-1.5 text-xs"
+                className="rounded border border-[var(--danger)] bg-[var(--surface)] px-2 py-1.5 text-xs"
                 key={`${item.line}-${item.field}-${index}`}
               >
                 <span className="font-mono text-[var(--muted)]">
                   第 {item.line} 行 · {item.field}
                 </span>
-                <span className="ml-1.5 rounded bg-red-100 px-1 font-mono text-[10px] text-red-700">
+                <span className="ml-1.5 rounded bg-[var(--danger-subtle)] px-1 font-mono text-[10px] text-[var(--danger)]">
                   {item.code}
                 </span>
                 <p className="mt-0.5 text-[var(--danger)]">{item.message}</p>

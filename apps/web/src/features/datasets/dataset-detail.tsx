@@ -179,7 +179,7 @@ export function DatasetDetail({
 
   if (loading) {
     return (
-      <div className="min-w-0 px-6 py-6">
+      <div className="workspace-page">
         <Skeleton className="mb-2 h-4 w-24" />
         <Skeleton className="mb-1 h-8 w-48" />
         <Skeleton className="mb-6 h-4 w-64" />
@@ -190,7 +190,7 @@ export function DatasetDetail({
   }
 
   return (
-    <div className="min-w-0 px-6 py-6">
+    <div className="workspace-page">
       <Link
         className="inline-flex items-center gap-1.5 text-sm text-[var(--muted)] hover:text-[var(--ink)]"
         href={`/projects/${projectId}/datasets`}

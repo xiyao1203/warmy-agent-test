@@ -21,9 +21,25 @@ export default function RootLayout({
             __html: `
               (function(){
                 try {
-                  var t=localStorage.getItem('theme');
-                  if (t==='dark') document.documentElement.classList.add('dark');
-                  else if (t==='light') document.documentElement.classList.add('light');
+                  var p=localStorage.getItem('theme');
+                  if(p!=='dark'&&p!=='light'&&p!=='system') p='system';
+                  var m=window.matchMedia('(prefers-color-scheme: dark)');
+                  var apply=function(){
+                    var current=localStorage.getItem('theme');
+                    if(current!=='dark'&&current!=='light'&&current!=='system') current='system';
+                    var t=current==='system'?(m.matches?'dark':'light'):current;
+                    var r=document.documentElement;
+                    r.classList.remove('dark','light');
+                    r.classList.add(t);
+                    r.dataset.theme=t;
+                    r.dataset.themePreference=current;
+                    r.style.colorScheme=t;
+                  };
+                  apply();
+                  m.addEventListener('change',function(){
+                    var current=localStorage.getItem('theme');
+                    if(current===null||current==='system') apply();
+                  });
                 } catch(e){}
               })();
             `,
