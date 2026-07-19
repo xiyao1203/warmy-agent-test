@@ -26,6 +26,7 @@ from agenttest.modules.agents.domain.repositories import (
 )
 from agenttest.modules.identity.public import User
 from agenttest.modules.projects.public import ProjectId
+from agenttest.shared.application.pagination import PageRequest, PageResult
 
 
 class ListAgentsHandler:
@@ -54,6 +55,19 @@ class ListAgentsHandler:
             limit=limit,
             cursor=cursor,
         )
+
+    async def count(self, actor: User, project_id: ProjectId) -> int:
+        await self._project_access.ensure_member(actor, project_id)
+        return await self._agents.count_by_project(project_id)
+
+    async def execute_page(
+        self,
+        actor: User,
+        project_id: ProjectId,
+        page_request: PageRequest,
+    ) -> PageResult[Agent]:
+        await self._project_access.ensure_member(actor, project_id)
+        return await self._agents.list_page_by_project(project_id, page_request)
 
 
 class GetAgentHandler:
