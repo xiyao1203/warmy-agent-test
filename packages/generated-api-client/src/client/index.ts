@@ -827,6 +827,8 @@ export type {
   ListProfilesApiV1ProjectsProjectIdBrowserProfilesGetErrors,
   ListProfilesApiV1ProjectsProjectIdBrowserProfilesGetResponses,
   ListProjectsApiV1ProjectsGetData,
+  ListProjectsApiV1ProjectsGetError,
+  ListProjectsApiV1ProjectsGetErrors,
   ListProjectsApiV1ProjectsGetResponse,
   ListProjectsApiV1ProjectsGetResponses,
   ListRegressionsApiV1ProjectsProjectIdRunsRunIdRegressionsGetData,

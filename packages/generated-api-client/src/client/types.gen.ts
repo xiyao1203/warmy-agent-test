@@ -2240,6 +2240,22 @@ export type ProjectListResponse = {
    * Items
    */
   items: Array<ProjectResponse>;
+  /**
+   * Page
+   */
+  page: number | null;
+  /**
+   * Page Size
+   */
+  page_size: number;
+  /**
+   * Total
+   */
+  total: number;
+  /**
+   * Total Pages
+   */
+  total_pages: number;
 };
 
 /**
@@ -4841,9 +4857,28 @@ export type ExecuteStageApiV1InternalProjectsProjectIdTestMissionsMissionIdRevis
 export type ListProjectsApiV1ProjectsGetData = {
   body?: never;
   path?: never;
-  query?: never;
+  query?: {
+    /**
+     * Page
+     */
+    page?: number | null;
+    /**
+     * Page Size
+     */
+    page_size?: number | null;
+  };
   url: "/api/v1/projects";
 };
+
+export type ListProjectsApiV1ProjectsGetErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type ListProjectsApiV1ProjectsGetError =
+  ListProjectsApiV1ProjectsGetErrors[keyof ListProjectsApiV1ProjectsGetErrors];
 
 export type ListProjectsApiV1ProjectsGetResponses = {
   /**

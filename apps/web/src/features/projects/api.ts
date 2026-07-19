@@ -20,6 +20,15 @@ export async function listProjects() {
   return data.items;
 }
 
+export async function listProjectPage(page = 1, pageSize = 10) {
+  const { data } = await listProjectsApiV1ProjectsGet({
+    client: apiClient,
+    query: { page, page_size: pageSize },
+    throwOnError: true,
+  });
+  return data;
+}
+
 export async function createProject(payload: CreateProjectRequest) {
   const { data } = await createProjectApiV1ProjectsPost({
     body: payload,

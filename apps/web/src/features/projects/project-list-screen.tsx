@@ -27,6 +27,8 @@ import {
 } from "@/components/ui/dialog";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Input } from "@/components/ui/input";
+import { ListToolbar } from "@/components/ui/list-toolbar";
+import { ResourcePagination } from "@/components/ui/resource-pagination";
 import { ResourceReferenceLink } from "@/components/ui/resource-reference-link";
 import {
   Table,
@@ -48,6 +50,7 @@ import {
   ProjectEmptyVisual,
   ProjectLoadingMotion,
 } from "@/components/visuals/project-state-visuals";
+import type { PageSize } from "@/lib/pagination";
 
 type ProjectListScreenProps = {
   error?: "service";
@@ -55,11 +58,17 @@ type ProjectListScreenProps = {
   onArchive: (projectId: string) => Promise<unknown>;
   onCreate: (payload: CreateProjectRequest) => Promise<unknown>;
   onOpen: (projectId: string) => void;
+  onPageChange?: (page: number) => void;
+  onPageSizeChange?: (pageSize: PageSize) => void;
   onRename: (
     projectId: string,
     payload: RenameProjectRequest,
   ) => Promise<unknown>;
+  page?: number;
+  pageSize?: PageSize;
   projects: ProjectResponse[];
+  total?: number;
+  totalPages?: number;
 };
 
 type ProjectStatusFilter = "active" | "all" | "archived";
@@ -70,8 +79,14 @@ export function ProjectListScreen({
   onArchive,
   onCreate,
   onOpen,
+  onPageChange = () => undefined,
+  onPageSizeChange = () => undefined,
   onRename,
+  page = 1,
+  pageSize = 10,
   projects,
+  total = projects.length,
+  totalPages = projects.length > 0 ? 1 : 0,
 }: ProjectListScreenProps) {
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState<ProjectStatusFilter>("all");
@@ -156,19 +171,16 @@ export function ProjectListScreen({
       </header>
 
       <section className="grid grid-cols-3 border-b border-[var(--hairline)] py-4 text-sm max-[760px]:grid-cols-1 max-[760px]:gap-4">
-        <Summary id="total" label="全部项目" value={projects.length} />
-        <Summary id="active" label="运行中" value={activeCount} />
+        <Summary id="total" label="全部项目" value={total} />
+        <Summary id="active" label="当前页运行中" value={activeCount} />
         <Summary
           id="archived"
-          label="已归档"
+          label="当前页已归档"
           value={projects.length - activeCount}
         />
       </section>
 
-      <div
-        className="flex items-center gap-3 py-4 max-[760px]:flex-col max-[760px]:items-stretch"
-        data-testid="project-filter-bar"
-      >
+      <ListToolbar className="border-t-0" data-testid="project-filter-bar">
         <label className="relative min-w-0 flex-1 max-[760px]:w-full">
           <span className="sr-only">搜索项目</span>
           <Search
@@ -194,7 +206,7 @@ export function ProjectListScreen({
           <option value="active">运行中</option>
           <option value="archived">已归档</option>
         </DropdownSelect>
-      </div>
+      </ListToolbar>
 
       {formError ? (
         <p className="mb-3 text-sm text-[var(--danger)]" role="alert">
@@ -347,6 +359,14 @@ export function ProjectListScreen({
               </TableBody>
             </Table>
           )}
+          <ResourcePagination
+            onPageChange={onPageChange}
+            onPageSizeChange={onPageSizeChange}
+            page={page}
+            pageSize={pageSize}
+            total={total}
+            totalPages={totalPages}
+          />
         </section>
       ) : null}
       <Dialog

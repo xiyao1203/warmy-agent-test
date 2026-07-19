@@ -367,6 +367,7 @@ import type {
   ListProfilesApiV1ProjectsProjectIdBrowserProfilesGetErrors,
   ListProfilesApiV1ProjectsProjectIdBrowserProfilesGetResponses,
   ListProjectsApiV1ProjectsGetData,
+  ListProjectsApiV1ProjectsGetErrors,
   ListProjectsApiV1ProjectsGetResponses,
   ListRegressionsApiV1ProjectsProjectIdRunsRunIdRegressionsGetData,
   ListRegressionsApiV1ProjectsProjectIdRunsRunIdRegressionsGetErrors,
@@ -907,12 +908,12 @@ export const listProjectsApiV1ProjectsGet = <
   options?: Options<ListProjectsApiV1ProjectsGetData, ThrowOnError>,
 ): RequestResult<
   ListProjectsApiV1ProjectsGetResponses,
-  unknown,
+  ListProjectsApiV1ProjectsGetErrors,
   ThrowOnError
 > =>
   (options?.client ?? client).get<
     ListProjectsApiV1ProjectsGetResponses,
-    unknown,
+    ListProjectsApiV1ProjectsGetErrors,
     ThrowOnError
   >({ url: "/api/v1/projects", ...options });
 

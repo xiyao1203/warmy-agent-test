@@ -13,6 +13,7 @@ from agenttest.modules.projects.infrastructure.persistence.models import (
     ProjectMemberModel,
     ProjectModel,
 )
+from agenttest.shared.application.pagination import PageRequest, PageResult
 from agenttest.shared.infrastructure.database import session_scope, transaction_scope
 
 
@@ -65,6 +66,54 @@ class SqlAlchemyProjectRepository:
         for member in member_models:
             members_by_project.setdefault(member.project_id, []).append(member)
         return [_to_project(model, members_by_project.get(model.id, [])) for model in models]
+
+    async def list_page_for_user(
+        self,
+        user_id: UserId | None,
+        page_request: PageRequest,
+    ) -> PageResult[Project]:
+        statement = select(ProjectModel)
+        count_statement = select(func.count(ProjectModel.id.distinct()))
+        if user_id is not None:
+            membership = ProjectMemberModel.project_id == ProjectModel.id
+            statement = statement.join(ProjectMemberModel, membership).where(
+                ProjectMemberModel.user_id == user_id.value
+            )
+            count_statement = count_statement.join(ProjectMemberModel, membership).where(
+                ProjectMemberModel.user_id == user_id.value
+            )
+        statement = (
+            statement.distinct()
+            .order_by(ProjectModel.created_at.desc(), ProjectModel.id.desc())
+            .offset(page_request.offset)
+            .limit(page_request.page_size)
+        )
+        async with session_scope(self._session_factory) as session:
+            models = list((await session.scalars(statement)).all())
+            total = int(await session.scalar(count_statement) or 0)
+            project_ids = [model.id for model in models]
+            member_models = (
+                list(
+                    (
+                        await session.scalars(
+                            select(ProjectMemberModel).where(
+                                ProjectMemberModel.project_id.in_(project_ids)
+                            )
+                        )
+                    ).all()
+                )
+                if project_ids
+                else []
+            )
+        members_by_project: dict[UUID, list[ProjectMemberModel]] = {}
+        for member in member_models:
+            members_by_project.setdefault(member.project_id, []).append(member)
+        return PageResult(
+            items=[_to_project(model, members_by_project.get(model.id, [])) for model in models],
+            total=total,
+            page=page_request.page,
+            page_size=page_request.page_size,
+        )
 
     async def add(self, project: Project) -> None:
         async with transaction_scope(self._session_factory) as session:
