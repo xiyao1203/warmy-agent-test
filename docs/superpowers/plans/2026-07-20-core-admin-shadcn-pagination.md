@@ -71,7 +71,7 @@ uv run pytest apps/control-api/tests/architecture apps/control-api/tests/contrac
 
 Expected: clean worktree and all selected baseline tests pass.
 
-- [ ] **Step 3: Commit the implementation plan**
+- [x] **Step 3: Commit the implementation plan**
 
 ```bash
 git add docs/superpowers/plans/2026-07-20-core-admin-shadcn-pagination.md docs/当前任务.md docs/开发进度与变更记录.md
@@ -88,7 +88,7 @@ git commit -m "docs: plan core admin pagination"
 - Modify: `apps/control-api/src/agenttest/shared/api/__init__.py`
 - Test: `apps/control-api/tests/unit/shared/test_pagination.py`
 
-- [ ] **Step 1: Write failing value and parser tests**
+- [x] **Step 1: Write failing value and parser tests**
 
 ```python
 def test_page_request_converts_to_offset() -> None:
@@ -101,7 +101,7 @@ def test_optional_page_mode_preserves_legacy_calls() -> None:
     assert resolve_page_request(page=2, page_size=None) == PageRequest(page=2, page_size=10)
 ```
 
-- [ ] **Step 2: Run the tests and confirm the missing-module failure**
+- [x] **Step 2: Run the tests and confirm the missing-module failure**
 
 ```bash
 uv run pytest apps/control-api/tests/unit/shared/test_pagination.py -q
@@ -109,7 +109,7 @@ uv run pytest apps/control-api/tests/unit/shared/test_pagination.py -q
 
 Expected: FAIL because shared pagination modules do not exist.
 
-- [ ] **Step 3: Implement immutable application values and response metadata**
+- [x] **Step 3: Implement immutable application values and response metadata**
 
 ```python
 @dataclass(frozen=True, slots=True)
@@ -136,7 +136,7 @@ class PageResult(Generic[T]):
 
 `resolve_page_request` returns `None` only when both optional parameters are absent and raises FastAPI validation errors for page `< 1` or page sizes outside `{10, 20, 50}`.
 
-- [ ] **Step 4: Run tests and type checks**
+- [x] **Step 4: Run tests and type checks**
 
 ```bash
 uv run pytest apps/control-api/tests/unit/shared/test_pagination.py -q
