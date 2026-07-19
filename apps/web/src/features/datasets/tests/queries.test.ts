@@ -7,6 +7,8 @@ describe("dataset queries", () => {
     expect(datasetQueries.list("project-1").queryKey).toEqual([
       "datasets",
       "project-1",
+      1,
+      10,
     ]);
     expect(
       datasetQueries.cases("project-1", "dataset-1", "version-1").queryKey,

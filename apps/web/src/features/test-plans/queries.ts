@@ -5,10 +5,10 @@ import { loadTestPlanAssetOptions } from "./asset-options";
 
 export const testPlanQueries = {
   all: ["test-plans"] as const,
-  list(projectId: string) {
+  list(projectId: string, page = 1, pageSize = 10) {
     return queryOptions({
-      queryFn: ({ signal }) => listTestPlans(projectId, signal),
-      queryKey: ["test-plans", projectId] as const,
+      queryFn: ({ signal }) => listTestPlans(projectId, signal, page, pageSize),
+      queryKey: ["test-plans", projectId, page, pageSize] as const,
     });
   },
   detail(projectId: string, planId: string) {
@@ -33,6 +33,6 @@ export const testPlanQueries = {
 
 export function invalidateTestPlanList(client: QueryClient, projectId: string) {
   return client.invalidateQueries({
-    queryKey: testPlanQueries.list(projectId).queryKey,
+    queryKey: ["test-plans", projectId],
   });
 }

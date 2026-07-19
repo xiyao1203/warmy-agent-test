@@ -4,6 +4,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 
 import { problemKind } from "@/lib/api/problem";
+import { usePaginationState } from "@/lib/use-pagination-state";
 
 import { createTestPlan, deleteTestPlan } from "./api";
 import { TestPlanList } from "./test-plan-list";
@@ -12,7 +13,10 @@ import { invalidateTestPlanList, testPlanQueries } from "./queries";
 export function TestPlanListScreen({ projectId }: { projectId: string }) {
   const router = useRouter();
   const queryClient = useQueryClient();
-  const plansQuery = useQuery(testPlanQueries.list(projectId));
+  const pagination = usePaginationState();
+  const plansQuery = useQuery(
+    testPlanQueries.list(projectId, pagination.page, pagination.pageSize),
+  );
   if (plansQuery.isPending) {
     return <TestPlanList loading projectId={projectId} />;
   }
@@ -42,8 +46,14 @@ export function TestPlanListScreen({ projectId }: { projectId: string }) {
         await deleteTestPlan(projectId, planId);
         await invalidateTestPlanList(queryClient, projectId);
       }}
+      onPageChange={pagination.setPage}
+      onPageSizeChange={pagination.setPageSize}
+      page={plansQuery.data.page ?? pagination.page}
+      pageSize={pagination.pageSize}
       plans={plansQuery.data.items}
       projectId={projectId}
+      total={plansQuery.data.total}
+      totalPages={plansQuery.data.total_pages}
     />
   );
 }

@@ -9,10 +9,10 @@ import {
 
 export const agentQueries = {
   all: ["agents"] as const,
-  list(projectId: string) {
+  list(projectId: string, page = 1, pageSize = 10) {
     return queryOptions({
-      queryFn: ({ signal }) => listAgents(projectId, signal),
-      queryKey: ["agents", projectId] as const,
+      queryFn: ({ signal }) => listAgents(projectId, signal, page, pageSize),
+      queryKey: ["agents", projectId, page, pageSize] as const,
     });
   },
   detail(projectId: string, agentId: string) {
@@ -38,6 +38,6 @@ export const agentQueries = {
 
 export function invalidateAgentList(client: QueryClient, projectId: string) {
   return client.invalidateQueries({
-    queryKey: agentQueries.list(projectId).queryKey,
+    queryKey: ["agents", projectId],
   });
 }

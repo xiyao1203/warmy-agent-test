@@ -30,6 +30,7 @@ import {
 import { EmptyState } from "@/components/ui/empty-state";
 import { Input } from "@/components/ui/input";
 import { ResourceReferenceLink } from "@/components/ui/resource-reference-link";
+import { ResourcePagination } from "@/components/ui/resource-pagination";
 import {
   Table,
   TableBody,
@@ -48,6 +49,7 @@ import {
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { Skeleton, Tooltip } from "@/components/uiverse";
 import { useCreateIntent } from "@/lib/use-create-intent";
+import type { PageSize } from "@/lib/pagination";
 
 type AgentListProps = {
   agents?: AgentResponse[];
@@ -55,8 +57,14 @@ type AgentListProps = {
   loading?: boolean;
   onCreate?: (payload: CreateAgentRequest) => Promise<unknown>;
   onDelete?: (agentId: string) => Promise<unknown>;
+  onPageChange?: (page: number) => void;
+  onPageSizeChange?: (pageSize: PageSize) => void;
   onRetry?: () => void;
+  page?: number;
+  pageSize?: PageSize;
   projectId: string;
+  total?: number;
+  totalPages?: number;
 };
 
 const typeLabels: Record<AgentType, string> = {
@@ -70,8 +78,14 @@ export function AgentList({
   loading = false,
   onCreate = async () => undefined,
   onDelete,
+  onPageChange = () => undefined,
+  onPageSizeChange = () => undefined,
   onRetry,
+  page = 1,
+  pageSize = 10,
   projectId,
+  total = agents.length,
+  totalPages = agents.length ? 1 : 0,
 }: AgentListProps) {
   if (loading)
     return (
@@ -214,6 +228,14 @@ export function AgentList({
             </TableBody>
           </Table>
         )}
+        <ResourcePagination
+          onPageChange={onPageChange}
+          onPageSizeChange={onPageSizeChange}
+          page={page}
+          pageSize={pageSize}
+          total={total}
+          totalPages={totalPages}
+        />
       </section>
     </div>
   );

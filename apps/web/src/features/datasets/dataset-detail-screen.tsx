@@ -174,7 +174,7 @@ export function DatasetDetailScreen({
           ? [{ id: agent.current_version_id, name: agent.name }]
           : [],
       )}
-      trialEnvironments={(environmentsQuery.data ?? []).map((environment) => ({
+      trialEnvironments={(environmentsQuery.data?.items ?? []).map((environment) => ({
         id: environment.id,
         name: environment.name,
       }))}

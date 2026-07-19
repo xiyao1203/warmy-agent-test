@@ -19,6 +19,7 @@ import {
 import { EmptyState } from "@/components/ui/empty-state";
 import { Input } from "@/components/ui/input";
 import { ResourceReferenceLink } from "@/components/ui/resource-reference-link";
+import { ResourcePagination } from "@/components/ui/resource-pagination";
 import {
   Table,
   TableBody,
@@ -37,6 +38,7 @@ import {
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { Skeleton, Tooltip } from "@/components/uiverse";
 import { useCreateIntent } from "@/lib/use-create-intent";
+import type { PageSize } from "@/lib/pagination";
 
 export function DatasetList({
   datasets = [],
@@ -44,14 +46,26 @@ export function DatasetList({
   loading = false,
   onCreate = async () => undefined,
   onDelete,
+  onPageChange = () => undefined,
+  onPageSizeChange = () => undefined,
+  page = 1,
+  pageSize = 10,
   projectId,
+  total = datasets.length,
+  totalPages = datasets.length ? 1 : 0,
 }: {
   datasets?: DatasetResponse[];
   error?: "not-found" | "service";
   loading?: boolean;
   onCreate?: (payload: CreateDatasetRequest) => Promise<unknown>;
   onDelete?: (datasetId: string) => Promise<unknown>;
+  onPageChange?: (page: number) => void;
+  onPageSizeChange?: (pageSize: PageSize) => void;
+  page?: number;
+  pageSize?: PageSize;
   projectId: string;
+  total?: number;
+  totalPages?: number;
 }) {
   if (loading)
     return (
@@ -181,6 +195,14 @@ export function DatasetList({
             </TableBody>
           </Table>
         )}
+        <ResourcePagination
+          onPageChange={onPageChange}
+          onPageSizeChange={onPageSizeChange}
+          page={page}
+          pageSize={pageSize}
+          total={total}
+          totalPages={totalPages}
+        />
       </section>
     </div>
   );

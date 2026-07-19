@@ -58,15 +58,25 @@ export async function listEnvironmentTemplates(
   projectId: string,
   signal?: AbortSignal,
 ) {
+  const data = await listEnvironmentTemplatePage(projectId, signal, 1, 50);
+  return data.items;
+}
+
+export async function listEnvironmentTemplatePage(
+  projectId: string,
+  signal?: AbortSignal,
+  page = 1,
+  pageSize = 10,
+) {
   const { data } =
     await listTemplatesApiV1ProjectsProjectIdEnvironmentTemplatesGet({
       client: apiClient,
       path: { project_id: projectId },
-      query: { limit: 100 },
+      query: { page, page_size: pageSize },
       signal,
       throwOnError: true,
     });
-  return data.items;
+  return data;
 }
 
 export async function getEnvironmentTemplate(

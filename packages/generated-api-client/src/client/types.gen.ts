@@ -115,6 +115,22 @@ export type AgentListResponse = {
    * Next Cursor
    */
   next_cursor?: string | null;
+  /**
+   * Page
+   */
+  page: number | null;
+  /**
+   * Page Size
+   */
+  page_size: number;
+  /**
+   * Total
+   */
+  total: number;
+  /**
+   * Total Pages
+   */
+  total_pages: number;
 };
 
 /**
@@ -1240,6 +1256,22 @@ export type DatasetListResponse = {
    * Next Cursor
    */
   next_cursor?: string | null;
+  /**
+   * Page
+   */
+  page: number | null;
+  /**
+   * Page Size
+   */
+  page_size: number;
+  /**
+   * Total
+   */
+  total: number;
+  /**
+   * Total Pages
+   */
+  total_pages: number;
 };
 
 /**
@@ -1454,6 +1486,22 @@ export type EnvironmentTemplateListResponse = {
    * Next Cursor
    */
   next_cursor?: string | null;
+  /**
+   * Page
+   */
+  page: number | null;
+  /**
+   * Page Size
+   */
+  page_size: number;
+  /**
+   * Total
+   */
+  total: number;
+  /**
+   * Total Pages
+   */
+  total_pages: number;
 };
 
 /**
@@ -3460,6 +3508,22 @@ export type TestPlanListResponse = {
    * Next Cursor
    */
   next_cursor?: string | null;
+  /**
+   * Page
+   */
+  page: number | null;
+  /**
+   * Page Size
+   */
+  page_size: number;
+  /**
+   * Total
+   */
+  total: number;
+  /**
+   * Total Pages
+   */
+  total_pages: number;
 };
 
 /**
@@ -4175,6 +4239,22 @@ export type UserPageResponse = {
    * Next Cursor
    */
   next_cursor: string | null;
+  /**
+   * Page
+   */
+  page: number | null;
+  /**
+   * Page Size
+   */
+  page_size: number;
+  /**
+   * Total
+   */
+  total: number;
+  /**
+   * Total Pages
+   */
+  total_pages: number;
 };
 
 /**
@@ -4895,6 +4975,14 @@ export type ListAgentsApiV1ProjectsProjectIdAgentsGetData = {
      * Cursor
      */
     cursor?: string | null;
+    /**
+     * Page
+     */
+    page?: number | null;
+    /**
+     * Page Size
+     */
+    page_size?: number | null;
   };
   url: "/api/v1/projects/{project_id}/agents";
 };
@@ -6118,6 +6206,14 @@ export type ListDatasetsApiV1ProjectsProjectIdDatasetsGetData = {
      * Cursor
      */
     cursor?: string | null;
+    /**
+     * Page
+     */
+    page?: number | null;
+    /**
+     * Page Size
+     */
+    page_size?: number | null;
   };
   url: "/api/v1/projects/{project_id}/datasets";
 };
@@ -7164,6 +7260,14 @@ export type ListTemplatesApiV1ProjectsProjectIdEnvironmentTemplatesGetData = {
      * Cursor
      */
     cursor?: string | null;
+    /**
+     * Page
+     */
+    page?: number | null;
+    /**
+     * Page Size
+     */
+    page_size?: number | null;
   };
   url: "/api/v1/projects/{project_id}/environment-templates";
 };
@@ -11060,6 +11164,14 @@ export type ListPlansApiV1ProjectsProjectIdTestPlansGetData = {
      * Cursor
      */
     cursor?: string | null;
+    /**
+     * Page
+     */
+    page?: number | null;
+    /**
+     * Page Size
+     */
+    page_size?: number | null;
   };
   url: "/api/v1/projects/{project_id}/test-plans";
 };
@@ -11597,6 +11709,14 @@ export type ListUsersApiV1SystemUsersGetData = {
      * Limit
      */
     limit?: number;
+    /**
+     * Page
+     */
+    page?: number | null;
+    /**
+     * Page Size
+     */
+    page_size?: number | null;
   };
   url: "/api/v1/system/users";
 };

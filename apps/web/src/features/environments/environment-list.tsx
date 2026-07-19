@@ -20,6 +20,7 @@ import { useEffect, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ResourceReferenceLink } from "@/components/ui/resource-reference-link";
+import { ResourcePagination } from "@/components/ui/resource-pagination";
 import {
   Table,
   TableBody,
@@ -36,6 +37,7 @@ import {
   tableActionHeadClass,
 } from "@/components/ui/table-actions";
 import { TruncatedText } from "@/components/ui/truncated-text";
+import type { PageSize } from "@/lib/pagination";
 
 import type { CredentialBinding } from "./api";
 import {
@@ -68,7 +70,13 @@ export type EnvironmentListProps = {
     templateId: string,
     versionId: string,
   ) => Promise<EnvironmentVersionResponse>;
+  onPageChange?: (page: number) => void;
+  onPageSizeChange?: (pageSize: PageSize) => void;
+  page?: number;
+  pageSize?: PageSize;
   projectId: string;
+  total?: number;
+  totalPages?: number;
 };
 
 const typeLabels: Record<string, string> = {
@@ -84,8 +92,14 @@ export function EnvironmentList({
   onCreateVersion,
   onDelete,
   onPublishVersion,
+  onPageChange = () => undefined,
+  onPageSizeChange = () => undefined,
+  page = 1,
+  pageSize = 10,
   onUpdateVersion,
   projectId,
+  total = environments.length,
+  totalPages = environments.length ? 1 : 0,
 }: EnvironmentListProps) {
   const [credentials, setCredentials] = useState<CredentialBinding[]>([]);
   useEffect(() => {
@@ -194,6 +208,14 @@ export function EnvironmentList({
             </TableBody>
           </Table>
         )}
+        <ResourcePagination
+          onPageChange={onPageChange}
+          onPageSizeChange={onPageSizeChange}
+          page={page}
+          pageSize={pageSize}
+          total={total}
+          totalPages={totalPages}
+        />
       </section>
       <CredentialSection
         credentials={credentials}

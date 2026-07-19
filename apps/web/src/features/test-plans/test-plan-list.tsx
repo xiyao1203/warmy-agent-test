@@ -26,6 +26,7 @@ import {
 import { EmptyState } from "@/components/ui/empty-state";
 import { Input } from "@/components/ui/input";
 import { ResourceReferenceLink } from "@/components/ui/resource-reference-link";
+import { ResourcePagination } from "@/components/ui/resource-pagination";
 import {
   Table,
   TableBody,
@@ -44,21 +45,34 @@ import {
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { Tooltip } from "@/components/uiverse";
 import { useCreateIntent } from "@/lib/use-create-intent";
+import type { PageSize } from "@/lib/pagination";
 
 export function TestPlanList({
   error,
   loading = false,
   onCreate = async () => undefined,
   onDelete,
+  onPageChange = () => undefined,
+  onPageSizeChange = () => undefined,
+  page = 1,
+  pageSize = 10,
   plans = [],
   projectId,
+  total = plans.length,
+  totalPages = plans.length ? 1 : 0,
 }: {
   error?: "not-found" | "service";
   loading?: boolean;
   onCreate?: (payload: CreateTestPlanRequest) => Promise<unknown>;
   onDelete?: (planId: string) => Promise<unknown>;
+  onPageChange?: (page: number) => void;
+  onPageSizeChange?: (pageSize: PageSize) => void;
+  page?: number;
+  pageSize?: PageSize;
   plans?: TestPlanResponse[];
   projectId: string;
+  total?: number;
+  totalPages?: number;
 }) {
   if (loading) return <StatusPanel title="正在加载测试计划…" />;
   if (error === "not-found") {
@@ -251,6 +265,14 @@ export function TestPlanList({
             </TableBody>
           </Table>
         )}
+        <ResourcePagination
+          onPageChange={onPageChange}
+          onPageSizeChange={onPageSizeChange}
+          page={page}
+          pageSize={pageSize}
+          total={total}
+          totalPages={totalPages}
+        />
       </section>
     </div>
   );
