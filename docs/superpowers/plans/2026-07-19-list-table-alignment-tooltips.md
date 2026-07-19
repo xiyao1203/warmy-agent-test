@@ -156,6 +156,7 @@ git commit -m "test(web): cover adaptive list layouts"
 
 **Files:**
 - Modify: `apps/web/next-env.d.ts`
+- Modify: `apps/web/tsconfig.json`
 - Modify: `docs/design.md`
 - Modify: `docs/当前任务.md`
 - Modify: `docs/开发进度与变更记录.md`
@@ -163,7 +164,7 @@ git commit -m "test(web): cover adaptive list layouts"
 
 - [ ] **Step 1: Repair the tracked generated Next type reference**
 
-Replace the accidentally committed machine-specific temporary path with the repository-relative production type reference and prove no `/var/folders` path remains in tracked Web configuration.
+Replace the accidentally committed machine-specific temporary paths in `next-env.d.ts` and `tsconfig.json` with repository-relative Next type references and prove no `/var/folders` path remains in tracked Web configuration.
 
 - [ ] **Step 2: Run all Web gates**
 
