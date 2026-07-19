@@ -79,6 +79,15 @@ describe("ScorerList", () => {
       "/projects/project-1/test-plans",
     );
     expect(screen.getByRole("button", { name: "设置事实评分" })).toBeVisible();
+    expect(
+      document.querySelector('[role="tooltip"][data-tooltip="禁用"]'),
+    ).toBeInTheDocument();
+    expect(
+      document.querySelector('[role="tooltip"][data-tooltip="设置"]'),
+    ).toBeInTheDocument();
+    expect(
+      document.querySelector('[role="tooltip"][data-tooltip="删除"]'),
+    ).toBeInTheDocument();
   });
 
   it("guides empty state to create scorer and configure plans", async () => {

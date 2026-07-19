@@ -35,6 +35,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
+  TableValue,
 } from "@/components/ui/table";
 import {
   TableActions,
@@ -216,13 +217,15 @@ export function ProjectListScreen({
               title="没有匹配的项目"
             />
           ) : (
-            <Table className="w-full table-fixed max-[640px]:block">
+            <Table className="w-full max-[640px]:block">
               <TableHeader className="bg-[var(--canvas-soft)] max-[640px]:hidden">
                 <TableRow>
-                  <TableHead className="w-[26%]">项目</TableHead>
-                  <TableHead className="w-[12%]">状态</TableHead>
-                  <TableHead className="w-[31%]">资产概览</TableHead>
-                  <TableHead className="w-[19%]">最近运行</TableHead>
+                  <TableHead className="min-w-60">项目</TableHead>
+                  <TableHead className="whitespace-nowrap">状态</TableHead>
+                  <TableHead className="min-w-52">资产概览</TableHead>
+                  <TableHead className="min-w-44 whitespace-nowrap">
+                    最近运行
+                  </TableHead>
                   <TableHead className={tableActionHeadClass}>操作</TableHead>
                 </TableRow>
               </TableHeader>
@@ -237,7 +240,7 @@ export function ProjectListScreen({
                       key={project.id}
                     >
                       <TableCell className="max-[640px]:col-span-2 max-[640px]:block max-[640px]:h-auto max-[640px]:p-0 max-[640px]:pb-1">
-                        <div className="mx-auto flex w-fit max-w-full min-w-0 items-center gap-3 text-left max-[640px]:mx-0 max-[640px]:w-full">
+                        <div className="mx-auto flex w-full max-w-80 min-w-0 items-center gap-3 text-left max-[640px]:mx-0 max-[640px]:max-w-full">
                           <span className="grid size-8 shrink-0 place-items-center rounded-[var(--radius-md)] bg-[var(--canvas-soft)] text-[var(--primary)]">
                             <FolderKanban
                               aria-hidden="true"
@@ -275,7 +278,7 @@ export function ProjectListScreen({
                         <span className="hidden self-center text-left max-[640px]:block">
                           资产概览
                         </span>
-                        <div className="text-left">
+                        <TableValue>
                           <p>
                             成员 {project.member_count ?? 0} · Agent{" "}
                             {project.agent_count ?? 0} · 用例集{" "}
@@ -287,13 +290,13 @@ export function ProjectListScreen({
                             {project.active_environment_count ?? 0}
                           </p>
                           <p>待审核 {project.open_review_count ?? 0}</p>
-                        </div>
+                        </TableValue>
                       </TableCell>
                       <TableCell className="text-left text-xs max-[640px]:contents">
                         <span className="hidden self-center text-left text-[var(--muted)] max-[640px]:block">
                           最近运行
                         </span>
-                        <div className="space-y-1">
+                        <TableValue className="space-y-1">
                           <ResourceReferenceLink reference={project.last_run} />
                           <p className="text-[var(--muted)]">
                             {project.last_run_at
@@ -302,7 +305,7 @@ export function ProjectListScreen({
                                 )
                               : "尚未执行"}
                           </p>
-                        </div>
+                        </TableValue>
                       </TableCell>
                       <TableCell
                         className={`${tableActionCellClass} max-[640px]:contents`}
@@ -312,22 +315,25 @@ export function ProjectListScreen({
                         </span>
                         <TableActions label={project.name}>
                           <TableActionButton
+                            accessibleLabel={`进入${project.name} 测试 Agent`}
                             disabled={project.archived}
-                            label={`进入${project.name} 测试 Agent`}
+                            label="进入"
                             onClick={() => onOpen(project.id)}
                           >
                             <PlayCircle aria-hidden="true" />
                           </TableActionButton>
                           <TableActionButton
+                            accessibleLabel={`编辑${project.name}`}
                             disabled={project.archived}
-                            label={`编辑${project.name}`}
+                            label="编辑"
                             onClick={() => startRename(project)}
                           >
                             <Edit3 aria-hidden="true" />
                           </TableActionButton>
                           <TableActionButton
+                            accessibleLabel={`归档${project.name}`}
                             disabled={project.archived || archivePending}
-                            label={`归档${project.name}`}
+                            label="归档"
                             onClick={() => submitArchive(project)}
                             tone="danger"
                           >

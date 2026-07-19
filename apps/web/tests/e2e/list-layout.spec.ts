@@ -1,7 +1,9 @@
 import { expect, test, type Page } from "@playwright/test";
+import type { Locator } from "@playwright/test";
 
 const longName =
   "Mission Acceptance 超长项目名称用于验证列表一屏显示、文本完整提示能力以及极端用户输入不会撑破操作列的稳定布局";
+const resourceProjectId = "project-0-with-a-long-stable-identifier";
 
 async function mockProjectList(page: Page) {
   await page.route("**/api/v1/auth/me", async (route) => {
@@ -90,6 +92,314 @@ async function mockProjectList(page: Page) {
   });
 }
 
+async function mockResourceLists(page: Page) {
+  await mockProjectList(page);
+  await page.route(
+    `**/api/v1/projects/${resourceProjectId}/**`,
+    async (route) => {
+      const path = new URL(route.request().url()).pathname;
+
+      if (path === `/api/v1/projects/${resourceProjectId}/agents`) {
+        await route.fulfill({
+          contentType: "application/json",
+          json: {
+            items: [
+              {
+                agent_type: "generic_http",
+                baseline_version_id: "agent-version-2",
+                connection_status: "ready",
+                created_at: "2026-07-16T00:00:00Z",
+                created_by: "admin-1",
+                credential_binding_count: 2,
+                current_version: {
+                  href: `/projects/${resourceProjectId}/agents/agent-1`,
+                  id: "agent-version-2",
+                  name: "客服测试 Agent",
+                  resource_type: "agent_version",
+                  status: "published",
+                  version: 2,
+                },
+                current_version_id: "agent-version-2",
+                description: "覆盖多轮客服问答与工具调用的自动化测试 Agent",
+                id: "agent-1",
+                last_run_status: "passed",
+                model: "glm-4.5",
+                name: "客服测试 Agent",
+                pass_rate: 0.96,
+                project_id: resourceProjectId,
+                protocol: "responses",
+                tool_count: 4,
+                updated_at: "2026-07-16T08:30:00Z",
+                updated_by: "admin-1",
+              },
+            ],
+            next_cursor: null,
+          },
+        });
+        return;
+      }
+
+      if (path === `/api/v1/projects/${resourceProjectId}/datasets`) {
+        await route.fulfill({
+          contentType: "application/json",
+          json: {
+            items: [
+              {
+                api_count: 12,
+                browser_count: 5,
+                case_count: 20,
+                codex_explore_count: 3,
+                created_at: "2026-07-16T00:00:00Z",
+                created_by: "admin-1",
+                description: "Agent 对话回归集",
+                id: "dataset-1",
+                latest_version: {
+                  href: `/projects/${resourceProjectId}/datasets/dataset-1`,
+                  id: "dataset-version-3",
+                  name: "对话回归",
+                  resource_type: "dataset_version",
+                  status: "published",
+                  version: 3,
+                },
+                name: "对话回归",
+                priority_coverage: { P0: 4, P1: 16 },
+                project_id: resourceProjectId,
+                ready_count: 18,
+                source_distribution: { agent_generated: 8, manual: 12 },
+                updated_at: "2026-07-16T08:30:00Z",
+                updated_by: "admin-1",
+              },
+            ],
+            next_cursor: null,
+          },
+        });
+        return;
+      }
+
+      if (path === `/api/v1/projects/${resourceProjectId}/test-plans`) {
+        await route.fulfill({
+          contentType: "application/json",
+          json: {
+            items: [
+              {
+                agent_ref: {
+                  href: `/projects/${resourceProjectId}/agents/agent-1`,
+                  id: "agent-version-2",
+                  name: "客服测试 Agent",
+                  resource_type: "agent_version",
+                  version: 2,
+                },
+                case_count: 48,
+                concurrency: 4,
+                created_at: "2026-07-16T00:00:00Z",
+                created_by: "admin-1",
+                dataset_ref: {
+                  href: `/projects/${resourceProjectId}/datasets/dataset-1`,
+                  id: "dataset-version-3",
+                  name: "对话回归",
+                  resource_type: "dataset_version",
+                  version: 3,
+                },
+                description: "覆盖发布门禁的核心回归计划",
+                environment_ref: {
+                  href: `/projects/${resourceProjectId}/environments`,
+                  id: "environment-1",
+                  name: "预发环境",
+                  resource_type: "environment",
+                },
+                id: "plan-1",
+                last_run_status: "passed",
+                latest_version: {
+                  href: `/projects/${resourceProjectId}/test-plans/plan-1`,
+                  id: "plan-version-4",
+                  name: "回归计划",
+                  resource_type: "test_plan_version",
+                  status: "published",
+                  version: 4,
+                },
+                name: "回归计划",
+                pass_rate: 0.96,
+                project_id: resourceProjectId,
+                repeat_count: 2,
+                retry_count: 1,
+                scorer_count: 3,
+                timeout_seconds: 120,
+                updated_at: "2026-07-16T08:30:00Z",
+                updated_by: "admin-1",
+              },
+            ],
+            next_cursor: null,
+          },
+        });
+        return;
+      }
+
+      if (
+        path ===
+        `/api/v1/projects/${resourceProjectId}/test-plans/plan-1/versions`
+      ) {
+        await route.fulfill({
+          contentType: "application/json",
+          json: {
+            items: [
+              {
+                created_at: "2026-07-16T00:00:00Z",
+                created_by: "admin-1",
+                id: "plan-version-4",
+                published_at: "2026-07-16T01:00:00Z",
+                status: "published",
+                test_plan_id: "plan-1",
+                updated_at: "2026-07-16T01:00:00Z",
+                version_number: 4,
+              },
+            ],
+          },
+        });
+        return;
+      }
+
+      if (path === `/api/v1/projects/${resourceProjectId}/runs`) {
+        await route.fulfill({
+          contentType: "application/json",
+          json: {
+            items: [
+              {
+                agent_ref: {
+                  href: `/projects/${resourceProjectId}/agents/agent-1`,
+                  id: "agent-version-2",
+                  name: "客服测试 Agent",
+                  resource_type: "agent_version",
+                  version: 2,
+                },
+                cancelled_cases: 0,
+                completed_at: "2026-07-16T08:31:00Z",
+                cost: 0.0245,
+                created_at: "2026-07-16T08:30:00Z",
+                created_by_ref: {
+                  id: "admin-1",
+                  name: "Admin",
+                  resource_type: "user",
+                },
+                dataset_ref: {
+                  href: `/projects/${resourceProjectId}/datasets/dataset-1`,
+                  id: "dataset-version-3",
+                  name: "对话回归",
+                  resource_type: "dataset_version",
+                  version: 3,
+                },
+                duration_ms: 5600,
+                error_cases: 0,
+                failed_cases: 0,
+                id: "run-1",
+                passed_cases: 48,
+                plan_ref: {
+                  href: `/projects/${resourceProjectId}/test-plans/plan-1`,
+                  id: "plan-version-4",
+                  name: "回归计划",
+                  resource_type: "test_plan_version",
+                  version: 4,
+                },
+                progress: 1,
+                project_id: resourceProjectId,
+                run_number: "RUN-9001",
+                run_type: "plan",
+                source_test_case_id: null,
+                started_at: "2026-07-16T08:30:01Z",
+                status: "passed",
+                test_plan_version_id: "plan-version-4",
+                token_usage: { total: 2048 },
+                total_cases: 48,
+                trigger_type: "manual",
+                workflow_id: "workflow-run-9001",
+              },
+            ],
+            next_cursor: null,
+          },
+        });
+        return;
+      }
+
+      await route.continue();
+    },
+  );
+}
+
+async function assertAdaptiveResourceTable(
+  page: Page,
+  options: {
+    actionName: string;
+    heading: string;
+    path: string;
+    rowText: string;
+    tooltip: string;
+  },
+) {
+  await page.goto(options.path);
+  await expect(
+    page.getByRole("heading", { name: options.heading }),
+  ).toBeVisible();
+
+  const table = page.getByRole("table");
+  const row = table.getByRole("row").filter({ hasText: options.rowText });
+  await expect(row).toBeVisible();
+
+  await assertRowCenterAlignment(row);
+
+  const actionGroup = row.getByRole("group");
+  const actionGeometry = await actionGroup.evaluate((element) => {
+    const rect = element.getBoundingClientRect();
+    return {
+      display: getComputedStyle(element).display,
+      height: rect.height,
+      right: rect.right,
+      whiteSpace: getComputedStyle(element).whiteSpace,
+    };
+  });
+  expect(actionGeometry).toMatchObject({
+    display: "inline-flex",
+    whiteSpace: "nowrap",
+  });
+  expect(actionGeometry.height).toBeLessThanOrEqual(36);
+  expect(actionGeometry.right).toBeLessThanOrEqual(page.viewportSize()!.width);
+
+  await row.getByRole("link", { name: options.actionName }).hover();
+  const tooltip = row.locator(
+    `[role="tooltip"][data-tooltip="${options.tooltip}"]`,
+  );
+  await expect(tooltip).toHaveCSS("opacity", "1");
+  const tooltipBox = await tooltip.boundingBox();
+  expect(tooltipBox).not.toBeNull();
+  expect(tooltipBox!.height).toBeLessThanOrEqual(30);
+  await assertNoHorizontalOverflow(page);
+}
+
+async function assertRowCenterAlignment(row: Locator) {
+  const alignment = await row.evaluate((rowElement) => {
+    const headers = Array.from(
+      rowElement.closest("table")?.querySelectorAll("thead th") ?? [],
+    );
+    const cells = Array.from(rowElement.querySelectorAll("td"));
+    return cells.map((cell, index) => {
+      const header = headers[index];
+      const content =
+        Array.from(cell.children).find((element) => {
+          const rect = element.getBoundingClientRect();
+          return rect.width > 0 && rect.height > 0;
+        }) ?? cell;
+      const headerRect = header.getBoundingClientRect();
+      const contentRect = content.getBoundingClientRect();
+      return Math.abs(
+        headerRect.left +
+          headerRect.width / 2 -
+          (contentRect.left + contentRect.width / 2),
+      );
+    });
+  });
+  expect(alignment.length).toBeGreaterThan(0);
+  for (const centerDelta of alignment)
+    expect(centerDelta).toBeLessThanOrEqual(4);
+}
+
 async function assertNoHorizontalOverflow(page: Page) {
   const measurements = await page.evaluate(() => ({
     bodyClientWidth: document.body.clientWidth,
@@ -121,6 +431,7 @@ for (const width of [1280, 1440, 1920]) {
     await assertNoHorizontalOverflow(page);
 
     const firstRow = page.getByRole("row").filter({ hasText: `${longName} 1` });
+    await assertRowCenterAlignment(firstRow);
     const actionGroup = firstRow.getByRole("group");
     const actionBox = await actionGroup.boundingBox();
     expect(actionBox).not.toBeNull();
@@ -162,6 +473,57 @@ for (const width of [1280, 1440, 1920]) {
       await page.screenshot({
         fullPage: true,
         path: testInfo.outputPath("project-list-1440.png"),
+      });
+    }
+  });
+}
+
+const adaptiveResourcePages = [
+  {
+    actionName: "管理客服测试 Agent",
+    heading: "Agent 与版本",
+    path: `/projects/${resourceProjectId}/agents`,
+    rowText: "客服测试 Agent",
+    tooltip: "管理",
+  },
+  {
+    actionName: "管理对话回归用例",
+    heading: "测试用例",
+    path: `/projects/${resourceProjectId}/datasets`,
+    rowText: "对话回归",
+    tooltip: "管理",
+  },
+  {
+    actionName: "配置回归计划",
+    heading: "测试计划",
+    path: `/projects/${resourceProjectId}/test-plans`,
+    rowText: "回归计划",
+    tooltip: "配置",
+  },
+  {
+    actionName: "查看运行 run-1 结果",
+    heading: "运行中心",
+    path: `/projects/${resourceProjectId}/runs`,
+    rowText: "RUN-9001",
+    tooltip: "查看",
+  },
+] as const;
+
+for (const width of [1280, 1440, 1920]) {
+  test(`core resource tables stay centered and actionable at ${width}px`, async ({
+    page,
+  }, testInfo) => {
+    await page.setViewportSize({ height: 900, width });
+    await mockResourceLists(page);
+
+    for (const resourcePage of adaptiveResourcePages) {
+      await assertAdaptiveResourceTable(page, resourcePage);
+    }
+
+    if (width === 1440) {
+      await page.screenshot({
+        fullPage: true,
+        path: testInfo.outputPath("run-list-1440.png"),
       });
     }
   });

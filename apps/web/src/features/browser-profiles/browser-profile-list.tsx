@@ -38,10 +38,15 @@ import {
   TableHead,
   TableHeader,
   TableRow,
+  TableValue,
 } from "@/components/ui/table";
-import { Skeleton } from "@/components/uiverse";
-import { TableActionButton } from "@/components/ui/table-actions";
+import {
+  TableActions,
+  TableActionButton,
+  tableActionHeadClass,
+} from "@/components/ui/table-actions";
 import { TruncatedText } from "@/components/ui/truncated-text";
+import { Skeleton, Tooltip } from "@/components/uiverse";
 
 import type { BrowserProfile } from "./api";
 
@@ -425,31 +430,31 @@ export function BrowserProfileList({
         />
       ) : (
         <section className="overflow-hidden rounded-[var(--radius-lg)] border border-[var(--hairline)] bg-[var(--surface)]">
-          <Table className="w-full table-fixed">
+          <Table className="w-full">
             <TableHeader className="bg-[var(--canvas-soft)]">
               <TableRow>
-                <TableHead className="w-[28%]">实例</TableHead>
-                <TableHead className="w-[20%]">目标域名</TableHead>
-                <TableHead className="w-[10%]">状态</TableHead>
-                <TableHead className="w-[13%]">登录态</TableHead>
-                <TableHead className="w-[15%]">最近验证</TableHead>
-                <TableHead className="w-[14%] whitespace-nowrap">
-                  操作
+                <TableHead className="min-w-52">实例</TableHead>
+                <TableHead className="min-w-44">目标域名</TableHead>
+                <TableHead className="whitespace-nowrap">状态</TableHead>
+                <TableHead className="whitespace-nowrap">登录态</TableHead>
+                <TableHead className="min-w-40 whitespace-nowrap">
+                  最近验证
                 </TableHead>
+                <TableHead className={tableActionHeadClass}>操作</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {profiles.map((profile) => (
                 <TableRow key={profile.profile_id}>
                   <TableCell className="min-w-0">
-                    <div className="mx-auto min-w-0 max-w-full text-center">
+                    <TableValue className="min-w-0">
                       <TruncatedText className="font-medium">
                         {profile.name}
                       </TruncatedText>
                       <p className="mt-0.5 truncate text-xs text-[var(--muted)]">
                         计划选择后自动复用
                       </p>
-                    </div>
+                    </TableValue>
                   </TableCell>
                   <TableCell className="text-[var(--muted)]">
                     {profile.target_domain ? (
@@ -477,24 +482,26 @@ export function BrowserProfileList({
                       : "-"}
                   </TableCell>
                   <TableCell>
-                    <div className="mx-auto flex w-fit max-w-full flex-nowrap items-center justify-center gap-2">
+                    <TableActions label={profile.name}>
                       {profile.status === "running" ? (
                         <>
                           <TableActionButton
+                            accessibleLabel={`完成${profile.name}登录`}
                             disabled={
                               busyProfileId === profile.profile_id ||
                               !onCompleteLogin
                             }
-                            label={`完成${profile.name}登录`}
+                            label="完成登录"
                             onClick={() => void handleCompleteLogin(profile)}
                           >
                             <UserCheck aria-hidden="true" />
                           </TableActionButton>
                           <TableActionButton
+                            accessibleLabel={`停止浏览器 ${profile.name}`}
                             disabled={
                               busyProfileId === profile.profile_id || !onStop
                             }
-                            label={`停止浏览器 ${profile.name}`}
+                            label="停止"
                             onClick={() => void handleStop(profile)}
                           >
                             <Square aria-hidden="true" />
@@ -503,21 +510,23 @@ export function BrowserProfileList({
                       ) : (
                         <>
                           <TableActionButton
+                            accessibleLabel={`启动${profile.name}并登录`}
                             disabled={
                               busyProfileId === profile.profile_id || !onStart
                             }
-                            label={`启动${profile.name}并登录`}
+                            label="启动"
                             onClick={() => void handleStart(profile)}
                           >
                             <PlayCircle aria-hidden="true" />
                           </TableActionButton>
                           {profile.auth_state_status === "ready" ? (
                             <TableActionButton
+                              accessibleLabel={`验证${profile.name}登录态`}
                               disabled={
                                 busyProfileId === profile.profile_id ||
                                 !onVerify
                               }
-                              label={`验证${profile.name}登录态`}
+                              label="验证"
                               onClick={() => void handleVerify(profile)}
                             >
                               <ShieldCheck aria-hidden="true" />
@@ -526,15 +535,20 @@ export function BrowserProfileList({
                         </>
                       )}
                       <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button
-                            aria-label={`管理${profile.name}`}
-                            className="h-8 w-8 shrink-0 px-0"
-                            variant="ghost"
-                          >
-                            <MoreHorizontal className="size-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
+                        <Tooltip content="管理" side="top">
+                          <DropdownMenuTrigger asChild>
+                            <Button
+                              aria-label={`管理${profile.name}`}
+                              className="h-8 w-8 shrink-0 px-0"
+                              variant="ghost"
+                            >
+                              <MoreHorizontal
+                                aria-hidden="true"
+                                className="size-4"
+                              />
+                            </Button>
+                          </DropdownMenuTrigger>
+                        </Tooltip>
                         <DropdownMenuContent align="end">
                           <DropdownMenuItem asChild>
                             <Link href={`/projects/${projectId}/test-plans`}>
@@ -554,7 +568,7 @@ export function BrowserProfileList({
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
-                    </div>
+                    </TableActions>
                   </TableCell>
                 </TableRow>
               ))}

@@ -4,8 +4,13 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 RUNTIME_DIR="$(mktemp -d "${TMPDIR:-/tmp}/agenttest-e2e.XXXXXX")"
 WEB_RUNTIME_DIR="$RUNTIME_DIR/web"
+API_PORT="${E2E_API_PORT:-8181}"
+WEB_PORT="${E2E_WEB_PORT:-5175}"
 BACKEND_PID=""
 FRONTEND_PID=""
+
+export AGENTTEST_CONTROL_API_BASE_URL="http://127.0.0.1:$API_PORT"
+export AGENTTEST_WEB_ORIGIN="http://localhost:$WEB_PORT"
 
 cleanup() {
     local status=$?
@@ -27,7 +32,7 @@ trap cleanup EXIT
 trap 'exit 130' INT
 trap 'exit 143' TERM
 
-for port in 5175 8181; do
+for port in "$WEB_PORT" "$API_PORT"; do
     if lsof -nP -iTCP:"$port" -sTCP:LISTEN >/dev/null 2>&1; then
         echo "E2E port $port is already in use" >&2
         exit 1
@@ -45,21 +50,24 @@ cp \
     "$ROOT_DIR/apps/web/postcss.config.mjs" \
     "$ROOT_DIR/apps/web/tsconfig.json" \
     "$WEB_RUNTIME_DIR/"
-cp -R "$ROOT_DIR/apps/web/public" "$ROOT_DIR/apps/web/src" "$WEB_RUNTIME_DIR/"
+cp -R "$ROOT_DIR/apps/web/src" "$WEB_RUNTIME_DIR/"
+if [[ -d "$ROOT_DIR/apps/web/public" ]]; then
+    cp -R "$ROOT_DIR/apps/web/public" "$WEB_RUNTIME_DIR/"
+fi
 ln -s "$ROOT_DIR/apps/web/node_modules" "$WEB_RUNTIME_DIR/node_modules"
 
 (
     cd "$ROOT_DIR/apps/control-api"
     exec uv run uvicorn agenttest.main:app \
         --host 127.0.0.1 \
-        --port 8181 \
+        --port "$API_PORT" \
         --log-level warning
 ) &
 BACKEND_PID=$!
 
 backend_ready=false
 for _attempt in {1..120}; do
-    if curl --fail --silent "http://127.0.0.1:8181/api/v1/health" >/dev/null; then
+    if curl --fail --silent "http://127.0.0.1:$API_PORT/api/v1/health" >/dev/null; then
         backend_ready=true
         break
     fi
@@ -72,11 +80,10 @@ fi
 
 (
     cd "$WEB_RUNTIME_DIR"
-    export AGENTTEST_NEXT_DIST_DIR="../next"
-    NEXT_PUBLIC_CONTROL_API_URL="http://127.0.0.1:8181" \
-        pnpm build
-    NEXT_PUBLIC_CONTROL_API_URL="http://127.0.0.1:8181" \
-        exec pnpm exec next start --port 5175 --hostname 127.0.0.1
+    NEXT_PUBLIC_CONTROL_API_URL="http://127.0.0.1:$API_PORT" \
+        pnpm exec next build --webpack
+    NEXT_PUBLIC_CONTROL_API_URL="http://127.0.0.1:$API_PORT" \
+        exec pnpm exec next start --port "$WEB_PORT" --hostname 127.0.0.1
 ) &
 FRONTEND_PID=$!
 

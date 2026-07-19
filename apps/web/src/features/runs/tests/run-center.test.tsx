@@ -152,6 +152,12 @@ describe("RunCenter", () => {
     expect(
       screen.getByRole("link", { name: "查看运行 run-2 结果" }),
     ).toHaveAttribute("href", "/projects/project-1/runs/run-2");
+    expect(screen.getByRole("group", { name: "RUN-0002 操作" })).toHaveClass(
+      "whitespace-nowrap",
+    );
+    expect(
+      document.querySelector('[role="tooltip"][data-tooltip="查看"]'),
+    ).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "启动测试执行" }));
 
     await waitFor(() => expect(onCreate).toHaveBeenCalledWith("version-1"));

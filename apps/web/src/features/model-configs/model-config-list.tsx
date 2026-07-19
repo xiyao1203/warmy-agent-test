@@ -28,10 +28,23 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+  TableValue,
+} from "@/components/ui/table";
+import {
+  TableActionButton,
+  TableActions,
+  tableActionHeadClass,
+} from "@/components/ui/table-actions";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { Skeleton } from "@/components/uiverse";
 import { problemMessage } from "@/lib/api/problem";
-import { TableActionButton, TableActions } from "@/components/ui/table-actions";
-import { TruncatedText } from "@/components/ui/truncated-text";
 
 type Props = {
   defaults: ModelDefaultResponse[];
@@ -188,39 +201,39 @@ export function ModelConfigList(props: Props) {
           </div>
         ) : (
           <div className="overflow-hidden">
-            <table className="w-full table-fixed text-sm">
-              <thead className="border-b border-[var(--hairline)] bg-[var(--canvas-soft)] text-center text-xs text-[var(--muted)]">
-                <tr>
-                  <th className="w-[27%] px-4 py-2.5">模型</th>
-                  <th className="w-[35%] px-4 py-2.5">服务与凭证</th>
-                  <th className="w-[23%] px-4 py-2.5">能力</th>
-                  <th className="w-[15%] px-4 py-2.5">操作</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-[var(--hairline)]">
+            <Table className="text-sm">
+              <TableHeader className="border-b border-[var(--hairline)] bg-[var(--canvas-soft)] text-xs text-[var(--muted)]">
+                <TableRow>
+                  <TableHead className="min-w-48">模型</TableHead>
+                  <TableHead className="min-w-64">服务与凭证</TableHead>
+                  <TableHead className="min-w-40">能力</TableHead>
+                  <TableHead className={tableActionHeadClass}>操作</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody className="divide-y divide-[var(--hairline)]">
                 {props.models.map((model) => (
-                  <tr key={model.id}>
-                    <td className="px-4 py-3 text-center align-middle">
-                      <div className="mx-auto w-fit max-w-full text-left">
+                  <TableRow key={model.id}>
+                    <TableCell>
+                      <TableValue>
                         <TruncatedText className="font-medium">
                           {model.name}
                         </TruncatedText>
                         <TruncatedText className="mt-0.5 font-mono text-xs text-[var(--muted)]">
                           {model.model_name}
                         </TruncatedText>
-                      </div>
-                    </td>
-                    <td className="px-4 py-3 text-center align-middle">
-                      <div className="mx-auto w-fit max-w-full text-left">
+                      </TableValue>
+                    </TableCell>
+                    <TableCell>
+                      <TableValue>
                         <TruncatedText className="text-xs">
                           {model.base_url}
                         </TruncatedText>
                         <TruncatedText className="mt-1 font-mono text-xs text-[var(--muted)]">
                           {model.api_key_hint}
                         </TruncatedText>
-                      </div>
-                    </td>
-                    <td className="px-4 py-3 text-center align-middle">
+                      </TableValue>
+                    </TableCell>
+                    <TableCell>
                       <div className="flex flex-wrap justify-center gap-1.5">
                         <Badge>文本</Badge>
                         {model.supports_vision ? (
@@ -235,35 +248,38 @@ export function ModelConfigList(props: Props) {
                           {connection[model.id]}
                         </p>
                       ) : null}
-                    </td>
-                    <td className="px-4 py-3 text-center align-middle">
+                    </TableCell>
+                    <TableCell>
                       <TableActions label={model.name}>
                         <TableActionButton
+                          accessibleLabel={`测试 ${model.name} 连接`}
                           disabled={busy === `test:${model.id}`}
-                          label={`测试 ${model.name} 连接`}
+                          label="测试连接"
                           onClick={() => void testConnection(model.id)}
                         >
                           <Wifi aria-hidden="true" />
                         </TableActionButton>
                         <TableActionButton
-                          label={`编辑 ${model.name}`}
+                          accessibleLabel={`编辑 ${model.name}`}
+                          label="编辑"
                           onClick={() => setEditing(model)}
                         >
                           <Settings2 aria-hidden="true" />
                         </TableActionButton>
                         <TableActionButton
-                          label={`删除 ${model.name}`}
+                          accessibleLabel={`删除 ${model.name}`}
+                          label="删除"
                           onClick={() => setDeleteTarget(model)}
                           tone="danger"
                         >
                           <Trash2 aria-hidden="true" />
                         </TableActionButton>
                       </TableActions>
-                    </td>
-                  </tr>
+                    </TableCell>
+                  </TableRow>
                 ))}
-              </tbody>
-            </table>
+              </TableBody>
+            </Table>
           </div>
         )}
       </section>

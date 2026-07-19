@@ -15,12 +15,16 @@ const positionClasses = {
 
 export function Tooltip({ children, content, side = "bottom" }: TooltipProps) {
   const stringContent = typeof content === "string" ? content : undefined;
+  const whitespaceClass =
+    stringContent && Array.from(stringContent.trim()).length <= 6
+      ? "whitespace-nowrap"
+      : "whitespace-normal";
 
   return (
     <div className="group relative inline-flex min-w-0 max-w-full">
       {children}
       <div
-        className={`pointer-events-none absolute z-50 max-w-[min(18rem,calc(100vw-1rem))] whitespace-normal rounded-[var(--radius-md)] border border-[var(--hairline)] bg-[var(--surface)] px-2 py-1 text-xs text-[var(--ink)] opacity-0 shadow-md transition-opacity after:content-[attr(data-tooltip)] group-hover:opacity-100 group-focus-within:opacity-100 max-sm:hidden ${positionClasses[side]}`}
+        className={`pointer-events-none absolute z-50 max-w-[min(18rem,calc(100vw-1rem))] ${whitespaceClass} rounded-[var(--radius-md)] border border-[var(--hairline)] bg-[var(--surface)] px-2 py-1 text-xs text-[var(--ink)] opacity-0 shadow-md transition-opacity after:content-[attr(data-tooltip)] group-hover:opacity-100 group-focus-within:opacity-100 max-sm:hidden ${positionClasses[side]}`}
         data-tooltip={stringContent}
         role="tooltip"
       >

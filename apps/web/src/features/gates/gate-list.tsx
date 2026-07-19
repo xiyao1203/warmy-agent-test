@@ -286,13 +286,17 @@ function GateCard({
           >
             评估运行结果
           </Button>
-          <Tooltip content="删除门禁">
+          <Tooltip content="删除" side="top">
             <Button
               aria-label={`删除门禁 ${gate.name}`}
+              className="size-8 shrink-0 px-0"
               onClick={onDelete}
               variant="ghost"
             >
-              <Trash2 className="size-4 text-[var(--danger)]" />
+              <Trash2
+                aria-hidden="true"
+                className="size-4 text-[var(--danger)]"
+              />
             </Button>
           </Tooltip>
         </>

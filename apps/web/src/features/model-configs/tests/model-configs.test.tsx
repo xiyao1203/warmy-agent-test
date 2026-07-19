@@ -41,11 +41,13 @@ describe("ModelConfigList", () => {
     expect(screen.getByText("...cret")).toBeVisible();
     expect(screen.getByText("测试 Agent 对话")).toBeVisible();
     expect(screen.queryByText("sk-production-secret")).not.toBeInTheDocument();
-    expect(screen.getByText("模型").closest("th")).toHaveClass("w-[27%]");
-    expect(screen.getByText("服务与凭证").closest("th")).toHaveClass("w-[35%]");
-    expect(screen.getByText("能力").closest("th")).toHaveClass("w-[23%]");
-    expect(screen.getByText("操作").closest("th")).toHaveClass("w-[15%]");
-    expect(screen.getByRole("table")).toHaveClass("w-full", "table-fixed");
+    expect(screen.getByText("模型").closest("th")).toHaveClass("min-w-48");
+    expect(screen.getByText("服务与凭证").closest("th")).toHaveClass(
+      "min-w-64",
+    );
+    expect(screen.getByText("能力").closest("th")).toHaveClass("min-w-40");
+    expect(screen.getByText("操作").closest("th")).toHaveClass("w-px");
+    expect(screen.getByRole("table")).toHaveClass("w-full", "table-auto");
     for (const label of ["测试 主模型 连接", "编辑 主模型", "删除 主模型"]) {
       const action = screen.getByRole("button", { name: label });
       expect(action).toHaveClass("size-8", "p-0");

@@ -26,6 +26,7 @@ import {
 } from "@/components/ui/dialog";
 
 import { Skeleton } from "@/components/uiverse";
+import { Tooltip } from "@/components/uiverse";
 import type { ScorerItem } from "./api";
 import { deleteScorer, listScorers, updateScorer } from "./api";
 import { ScorerEditorDialog } from "./scorer-editor";
@@ -227,43 +228,52 @@ export function ScorerList({ projectId }: { projectId: string }) {
                     配置计划
                   </Link>
                 </Button>
-                <Button
-                  aria-label={s.enabled ? `禁用${s.name}` : `启用${s.name}`}
-                  onClick={() => handleToggle(s)}
-                  variant="ghost"
-                >
-                  {s.enabled ? (
-                    <ToggleRight
+                <Tooltip content={s.enabled ? "禁用" : "启用"} side="top">
+                  <Button
+                    aria-label={s.enabled ? `禁用${s.name}` : `启用${s.name}`}
+                    className="size-8 shrink-0 px-0"
+                    onClick={() => handleToggle(s)}
+                    variant="ghost"
+                  >
+                    {s.enabled ? (
+                      <ToggleRight
+                        aria-hidden="true"
+                        className="size-4 text-[var(--success)]"
+                      />
+                    ) : (
+                      <ToggleLeft
+                        aria-hidden="true"
+                        className="size-4 text-[var(--muted)]"
+                      />
+                    )}
+                  </Button>
+                </Tooltip>
+                <Tooltip content="设置" side="top">
+                  <Button
+                    aria-label={`设置${s.name}`}
+                    className="size-8 shrink-0 px-0"
+                    onClick={() => {
+                      setEditItem(s);
+                      setEditorOpen(true);
+                    }}
+                    variant="ghost"
+                  >
+                    <Pencil aria-hidden="true" className="size-4" />
+                  </Button>
+                </Tooltip>
+                <Tooltip content="删除" side="top">
+                  <Button
+                    aria-label={`删除${s.name}`}
+                    className="size-8 shrink-0 px-0"
+                    onClick={() => setDeleteTarget(s)}
+                    variant="ghost"
+                  >
+                    <Trash2
                       aria-hidden="true"
-                      className="size-4 text-[var(--success)]"
+                      className="size-4 text-[var(--danger)]"
                     />
-                  ) : (
-                    <ToggleLeft
-                      aria-hidden="true"
-                      className="size-4 text-[var(--muted)]"
-                    />
-                  )}
-                </Button>
-                <Button
-                  aria-label={`设置${s.name}`}
-                  onClick={() => {
-                    setEditItem(s);
-                    setEditorOpen(true);
-                  }}
-                  variant="ghost"
-                >
-                  <Pencil aria-hidden="true" className="size-4" />
-                </Button>
-                <Button
-                  aria-label={`删除${s.name}`}
-                  onClick={() => setDeleteTarget(s)}
-                  variant="ghost"
-                >
-                  <Trash2
-                    aria-hidden="true"
-                    className="size-4 text-[var(--danger)]"
-                  />
-                </Button>
+                  </Button>
+                </Tooltip>
               </div>
             </li>
           ))}

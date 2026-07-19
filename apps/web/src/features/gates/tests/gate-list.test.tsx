@@ -94,6 +94,9 @@ describe("GateList", () => {
       "href",
       "/projects/project-1/experiments",
     );
+    expect(
+      document.querySelector('[role="tooltip"][data-tooltip="删除"]'),
+    ).toBeInTheDocument();
 
     fireEvent.change(screen.getByLabelText("选择执行记录"), {
       target: { value: "run-1" },

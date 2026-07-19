@@ -117,7 +117,8 @@ describe("TestPlanList", () => {
     );
     expect(screen.getAllByText("回归计划").length).toBeGreaterThan(0);
     expect(screen.getByRole("columnheader", { name: "计划信息" })).toHaveClass(
-      "w-[20%]",
+      "min-w-52",
+      "text-center",
     );
     expect(
       screen.getByRole("columnheader", { name: "资产绑定" }),
@@ -129,7 +130,7 @@ describe("TestPlanList", () => {
       screen.getByRole("columnheader", { name: "版本与结果" }),
     ).toBeVisible();
     expect(screen.getByRole("columnheader", { name: "下一步" })).toHaveClass(
-      "w-[13%]",
+      "w-px",
       "whitespace-nowrap",
     );
     expect(screen.getByText(/用例 48 · 重复 2 · 并发 4/)).toBeVisible();
@@ -138,7 +139,7 @@ describe("TestPlanList", () => {
     expect(
       screen.getByRole("link", { name: /客服 Agent.*v2/ }),
     ).toHaveAttribute("href", "/projects/project-1/agents/agent-1");
-    expect(screen.getByRole("table")).toHaveClass("w-full", "table-fixed");
+    expect(screen.getByRole("table")).toHaveClass("w-full", "table-auto");
     expect(screen.getByRole("group", { name: "回归计划 操作" })).toHaveClass(
       "whitespace-nowrap",
     );

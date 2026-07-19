@@ -1,6 +1,6 @@
 # List Table Alignment And Action Tooltips Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** Make every resource list allocate columns from field content, center values beneath their headers, and expose a concise hover/focus name for every icon action.
 
@@ -13,21 +13,22 @@
 ### Task 1: Establish shared adaptive table and action contracts
 
 **Files:**
+
 - Modify: `apps/web/src/components/ui/table.tsx`
 - Modify: `apps/web/src/components/ui/table.test.tsx`
 - Modify: `apps/web/src/components/ui/table-actions.tsx`
 - Modify: `apps/web/src/components/ui/table-actions.test.tsx`
 - Create: `apps/web/src/test/architecture/list-table-contract.test.ts`
 
-- [ ] **Step 1: Add failing shared component tests**
+- [x] **Step 1: Add failing shared component tests**
 
 Assert that `Table` uses `table-auto`, `TableHead` and `TableCell` use `text-center`, and the new `TableValue` centers a left-aligned rich content block. Assert `TableActionButton label="编辑" accessibleLabel="编辑项目 A"` renders Tooltip “编辑” and an accessible button name “编辑项目 A”.
 
-- [ ] **Step 2: Add a failing resource-list architecture test**
+- [x] **Step 2: Add a failing resource-list architecture test**
 
 Scan the explicit resource-list manifest and fail on `table-fixed`, `w-[NN%]`, raw icon-only action buttons, or long resource interpolation in `TableActionButton.label`. The manifest covers projects, agents, datasets, dataset detail, test plans, runs, environments, browser profiles, model configs, test accounts, users and project overview.
 
-- [ ] **Step 3: Run the tests and confirm RED**
+- [x] **Step 3: Run the tests and confirm RED**
 
 Run:
 
@@ -37,13 +38,21 @@ pnpm --filter @warmy/web exec vitest run src/components/ui/table.test.tsx src/co
 
 Expected: failures show fixed layout, left-aligned defaults, missing `TableValue`, and the old single-name action API.
 
-- [ ] **Step 4: Implement the shared primitives**
+- [x] **Step 4: Implement the shared primitives**
 
 Change the stable APIs to:
 
 ```tsx
-export function TableValue({ className = "", ...props }: HTMLAttributes<HTMLDivElement>) {
-  return <div className={`mx-auto w-fit max-w-full text-left ${className}`} {...props} />;
+export function TableValue({
+  className = "",
+  ...props
+}: HTMLAttributes<HTMLDivElement>) {
+  return (
+    <div
+      className={`mx-auto w-fit max-w-full text-left ${className}`}
+      {...props}
+    />
+  );
 }
 
 type TableActionButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
@@ -57,7 +66,7 @@ type TableActionButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
 
 `label` owns only the concise Tooltip; `aria-label` uses `accessibleLabel ?? label`. Keep stable 32px icon dimensions, dangerous tone and `asChild` behavior.
 
-- [ ] **Step 5: Verify GREEN and commit**
+- [x] **Step 5: Verify GREEN and commit**
 
 Run the Task 1 command, then:
 
@@ -69,6 +78,7 @@ git commit -m "refactor(web): standardize adaptive list primitives"
 ### Task 2: Migrate every table-backed resource list
 
 **Files:**
+
 - Modify: `apps/web/src/features/projects/project-list-screen.tsx`
 - Modify: `apps/web/src/features/projects/project-overview.tsx`
 - Modify: `apps/web/src/features/agents/agent-list.tsx`
@@ -83,19 +93,19 @@ git commit -m "refactor(web): standardize adaptive list primitives"
 - Modify: `apps/web/src/features/users/user-management.tsx`
 - Modify: associated existing `*.test.tsx` files
 
-- [ ] **Step 1: Convert fixed percentage columns to semantic columns**
+- [x] **Step 1: Convert fixed percentage columns to semantic columns**
 
 Remove `table-fixed` and every percentage width. Use `min-w-*` for name/summary columns, `whitespace-nowrap` for status/date columns, and `tableActionHeadClass` for actions. Keep the existing mobile project-row transformation unchanged.
 
-- [ ] **Step 2: Align values beneath headers**
+- [x] **Step 2: Align values beneath headers**
 
 Use `TableValue` for all multi-line name, description, asset, execution and quality blocks. Short values remain directly centered. Do not center the text inside a multi-line block; center the block itself.
 
-- [ ] **Step 3: Normalize all table actions**
+- [x] **Step 3: Normalize all table actions**
 
 Use concise labels (`进入`, `编辑`, `归档`, `管理`, `删除`, `查看`, `校验`, `发布`, `启用`, `停用`) and resource-specific `accessibleLabel`. Wrap delete Dialog triggers in the shared Tooltip without changing confirmation behavior.
 
-- [ ] **Step 4: Run list component regressions**
+- [x] **Step 4: Run list component regressions**
 
 Run:
 
@@ -115,7 +125,7 @@ pnpm --filter @warmy/web exec vitest run \
 
 Expected: CRUD callbacks, links, confirmation dialogs, permission states and existing field content remain unchanged.
 
-- [ ] **Step 5: Run the architecture contract and commit**
+- [x] **Step 5: Run the architecture contract and commit**
 
 ```bash
 pnpm --filter @warmy/web exec vitest run src/test/architecture/list-table-contract.test.ts
@@ -126,25 +136,26 @@ git commit -m "refactor(web): align resource list columns"
 ### Task 3: Complete card-list tooltips and browser layout coverage
 
 **Files:**
+
 - Modify: `apps/web/src/features/scorers/scorer-list.tsx`
 - Modify: `apps/web/src/features/gates/gate-list.tsx`
 - Modify: `apps/web/src/features/test-agent/session-list.tsx`
 - Modify: any remaining resource-list file reported by the architecture scan
 - Modify: `apps/web/tests/e2e/list-layout.spec.ts`
 
-- [ ] **Step 1: Add missing card/row action Tooltip tests**
+- [x] **Step 1: Add missing card/row action Tooltip tests**
 
 Extend existing component tests to assert visible Tooltip data for delete/manage actions while preserving complete `aria-label` values.
 
-- [ ] **Step 2: Migrate remaining resource actions**
+- [x] **Step 2: Migrate remaining resource actions**
 
 Wrap raw icon-only resource actions in `TableActionButton` or `Tooltip`. Do not change form-row editors, chat composer actions, Trace controls or full text command buttons.
 
-- [ ] **Step 3: Add multi-viewport Playwright assertions**
+- [x] **Step 3: Add multi-viewport Playwright assertions**
 
 For project, Agent, dataset, test-plan and run tables at 1280, 1440 and 1920, compare the horizontal center of each visible header with its matching cell content block, allow a small rendering tolerance, and assert the action group stays one horizontal row. Hover the first action and assert its short Tooltip is visible and not vertically wrapped. Retain the existing 390px no-page-overflow assertion.
 
-- [ ] **Step 4: Run focused browser tests and commit**
+- [x] **Step 4: Run focused browser tests and commit**
 
 ```bash
 pnpm --filter @warmy/web exec playwright test tests/e2e/list-layout.spec.ts
@@ -155,6 +166,7 @@ git commit -m "test(web): cover adaptive list layouts"
 ### Task 4: Verify, document and finish the branch
 
 **Files:**
+
 - Modify: `apps/web/next-env.d.ts`
 - Modify: `apps/web/tsconfig.json`
 - Modify: `docs/design.md`
@@ -162,11 +174,11 @@ git commit -m "test(web): cover adaptive list layouts"
 - Modify: `docs/开发进度与变更记录.md`
 - Modify: this plan
 
-- [ ] **Step 1: Repair the tracked generated Next type reference**
+- [x] **Step 1: Repair the tracked generated Next type reference**
 
 Replace the accidentally committed machine-specific temporary paths in `next-env.d.ts` and `tsconfig.json` with repository-relative Next type references and prove no `/var/folders` path remains in tracked Web configuration.
 
-- [ ] **Step 2: Run all Web gates**
+- [x] **Step 2: Run all Web gates**
 
 ```bash
 pnpm --filter @warmy/web format
@@ -180,7 +192,7 @@ pnpm --filter @warmy/web e2e
 
 Expected: all Web tests and 4 bundle budgets pass; only the credential-conditioned performance scenario may skip.
 
-- [ ] **Step 3: Verify scope and implementation contracts**
+- [x] **Step 3: Verify scope and implementation contracts**
 
 ```bash
 git diff --check
@@ -191,11 +203,11 @@ git diff --exit-code -- docs/api/openapi.json packages/generated-api-client/src/
 
 Expected: both scans are empty and API/generated client files are unchanged.
 
-- [ ] **Step 4: Update design and task records**
+- [x] **Step 4: Update design and task records**
 
 Record actual files, exact Vitest/Playwright counts, viewport coverage, build and bundle results. Move `TASK-20260719-001` to completed and set `docs/当前任务.md` to no active task.
 
-- [ ] **Step 5: Final review and commit**
+- [x] **Step 5: Final review and commit**
 
 Review for broken Dialog triggers, lost accessible names, disabled/loading regressions, overflowing long values, mobile page overflow and unrelated product changes, then run the final focused tests again.
 

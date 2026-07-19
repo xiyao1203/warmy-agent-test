@@ -27,9 +27,14 @@ import {
   TableHead,
   TableHeader,
   TableRow,
+  TableValue,
 } from "@/components/ui/table";
 import { Skeleton } from "@/components/uiverse";
-import { TableActionButton } from "@/components/ui/table-actions";
+import {
+  TableActions,
+  TableActionButton,
+  tableActionHeadClass,
+} from "@/components/ui/table-actions";
 import { TruncatedText } from "@/components/ui/truncated-text";
 
 import type { CredentialBinding } from "./api";
@@ -160,15 +165,17 @@ export function EnvironmentList({
             title="暂无环境模板"
           />
         ) : (
-          <Table className="w-full table-fixed">
+          <Table className="w-full">
             <TableHeader className="bg-[var(--canvas-soft)]">
               <TableRow>
-                <TableHead className="w-[22%]">环境信息</TableHead>
-                <TableHead className="w-[10%]">类型</TableHead>
-                <TableHead className="w-[20%]">当前版本</TableHead>
-                <TableHead className="w-[25%]">绑定与验证</TableHead>
-                <TableHead className="w-[13%]">最近使用</TableHead>
-                <TableHead className="w-[10%]">操作</TableHead>
+                <TableHead className="min-w-52">环境信息</TableHead>
+                <TableHead className="whitespace-nowrap">类型</TableHead>
+                <TableHead className="min-w-40">当前版本</TableHead>
+                <TableHead className="min-w-56">绑定与验证</TableHead>
+                <TableHead className="min-w-40 whitespace-nowrap">
+                  最近使用
+                </TableHead>
+                <TableHead className={tableActionHeadClass}>操作</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -269,9 +276,9 @@ function TemplateRow({
           </Badge>
         </TableCell>
         <TableCell className="text-center">
-          <div className="text-left text-xs">
+          <TableValue className="text-xs">
             <ResourceReferenceLink reference={template.current_version} />
-          </div>
+          </TableValue>
           <button
             className="mt-1 text-xs font-medium text-[var(--primary)] hover:underline"
             onClick={handleToggleVersions}
@@ -280,31 +287,35 @@ function TemplateRow({
             {versionsLoaded ? `${versions.length} 个版本` : "查看版本"}
           </button>
         </TableCell>
-        <TableCell className="text-left text-xs leading-5 text-[var(--muted)]">
-          <p>凭证绑定 {template.credential_binding_count ?? 0}</p>
-          <p>
-            浏览器：
-            <ResourceReferenceLink reference={template.browser_profile_ref} />
-          </p>
-          <p>验证 {template.validation_status || "未验证"}</p>
-          <p>
-            {template.last_validated_at
-              ? new Date(template.last_validated_at).toLocaleString("zh-CN")
-              : "尚未验证"}
-          </p>
+        <TableCell>
+          <TableValue className="text-xs leading-5 text-[var(--muted)]">
+            <p>凭证绑定 {template.credential_binding_count ?? 0}</p>
+            <p>
+              浏览器：
+              <ResourceReferenceLink reference={template.browser_profile_ref} />
+            </p>
+            <p>验证 {template.validation_status || "未验证"}</p>
+            <p>
+              {template.last_validated_at
+                ? new Date(template.last_validated_at).toLocaleString("zh-CN")
+                : "尚未验证"}
+            </p>
+          </TableValue>
         </TableCell>
-        <TableCell className="text-left text-xs leading-5 text-[var(--muted)]">
-          <p>
-            {template.last_run_at
-              ? new Date(template.last_run_at).toLocaleString("zh-CN")
-              : "尚未执行"}
-          </p>
-          <p>
-            更新 {new Date(template.updated_at).toLocaleDateString("zh-CN")}
-          </p>
+        <TableCell>
+          <TableValue className="text-xs leading-5 text-[var(--muted)]">
+            <p>
+              {template.last_run_at
+                ? new Date(template.last_run_at).toLocaleString("zh-CN")
+                : "尚未执行"}
+            </p>
+            <p>
+              更新 {new Date(template.updated_at).toLocaleDateString("zh-CN")}
+            </p>
+          </TableValue>
         </TableCell>
         <TableCell className="text-center">
-          <div className="flex items-center justify-center gap-1">
+          <TableActions label={template.name}>
             {onCreateVersion ? (
               <EnvironmentVersionDialog
                 credentials={credentials}
@@ -318,14 +329,15 @@ function TemplateRow({
             ) : null}
             {onDelete ? (
               <TableActionButton
-                label={`删除${template.name}`}
+                accessibleLabel={`删除环境 ${template.name}`}
+                label="删除"
                 onClick={() => onDelete(template.id)}
                 tone="danger"
               >
                 <Trash2 aria-hidden="true" />
               </TableActionButton>
             ) : null}
-          </div>
+          </TableActions>
         </TableCell>
       </TableRow>
 

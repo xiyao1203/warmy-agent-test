@@ -114,9 +114,10 @@ describe("DatasetList", () => {
     expect(screen.getByText("Agent 对话回归集")).toBeVisible();
     expect(
       screen.getByRole("columnheader", { name: "用例集信息" }),
-    ).toHaveClass("w-[25%]");
+    ).toHaveClass("min-w-60", "text-center");
     expect(screen.getByRole("columnheader", { name: "更新时间" })).toHaveClass(
-      "w-[12%]",
+      "whitespace-nowrap",
+      "text-center",
     );
     expect(
       screen.getByRole("columnheader", { name: "最新版本" }),
@@ -132,7 +133,7 @@ describe("DatasetList", () => {
     expect(
       screen.getByRole("link", { name: /对话回归.*v3.*published/ }),
     ).toHaveAttribute("href", "/projects/project-1/datasets/dataset-1");
-    expect(screen.getByRole("table")).toHaveClass("w-full", "table-fixed");
+    expect(screen.getByRole("table")).toHaveClass("w-full", "table-auto");
     expect(screen.getByRole("group", { name: "对话回归 操作" })).toHaveClass(
       "whitespace-nowrap",
     );
@@ -210,6 +211,12 @@ describe("DatasetDetail", () => {
       "whitespace-nowrap",
     );
     expect(screen.getByRole("button", { name: "删除基础问候" })).toBeVisible();
+    expect(
+      document.querySelector('[role="tooltip"][data-tooltip="全选"]'),
+    ).toBeInTheDocument();
+    expect(
+      document.querySelector('[role="tooltip"][data-tooltip="选中"]'),
+    ).toBeInTheDocument();
     expect(
       screen.getByRole("link", { name: "用这些用例创建测试计划" }),
     ).toHaveAttribute("href", "/projects/project-1/test-plans");

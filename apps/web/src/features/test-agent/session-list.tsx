@@ -11,6 +11,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { Tooltip } from "@/components/uiverse";
 
 import type { SessionSummary } from "./api";
 
@@ -123,18 +124,21 @@ export function SessionList({
               </button>
 
               {/* Delete button */}
-              <button
-                aria-label={`删除 ${item.title}`}
-                className="absolute right-1 top-1/2 flex size-8 -translate-y-1/2 items-center justify-center rounded-lg text-[var(--muted)] opacity-0 transition-colors hover:bg-[var(--canvas-soft)] hover:text-[var(--danger)] focus:opacity-100 group-hover:opacity-100 max-[760px]:opacity-100"
-                onClick={(event) => {
-                  event.stopPropagation();
-                  setConfirming(item.session_id);
-                }}
-                title="删除会话"
-                type="button"
-              >
-                <Trash2 aria-hidden="true" className="size-3.5" />
-              </button>
+              <span className="absolute right-1 top-1/2 -translate-y-1/2">
+                <Tooltip content="删除" side="top">
+                  <button
+                    aria-label={`删除 ${item.title}`}
+                    className="flex size-8 items-center justify-center rounded-lg text-[var(--muted)] opacity-0 transition-colors hover:bg-[var(--canvas-soft)] hover:text-[var(--danger)] focus:opacity-100 group-hover:opacity-100 max-[760px]:opacity-100"
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      setConfirming(item.session_id);
+                    }}
+                    type="button"
+                  >
+                    <Trash2 aria-hidden="true" className="size-3.5" />
+                  </button>
+                </Tooltip>
+              </span>
             </div>
           );
         })}

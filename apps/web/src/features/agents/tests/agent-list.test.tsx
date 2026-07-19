@@ -71,17 +71,18 @@ describe("AgentList", () => {
     expect(screen.getByText("下一步：创建连接版本")).toBeVisible();
     expect(
       screen.getByRole("columnheader", { name: "智能体信息" }),
-    ).toHaveClass("w-[25%]");
+    ).toHaveClass("min-w-60", "text-center");
     expect(
       screen.getByRole("columnheader", { name: "接入与模型" }),
-    ).toHaveClass("w-[21%]");
+    ).toHaveClass("min-w-48", "text-center");
     expect(
       screen.getByRole("columnheader", { name: "版本与质量" }),
-    ).toHaveClass("w-[31%]");
+    ).toHaveClass("min-w-72", "text-center");
     expect(screen.getByRole("columnheader", { name: "更新时间" })).toHaveClass(
-      "w-[13%]",
+      "whitespace-nowrap",
+      "text-center",
     );
-    expect(screen.getByRole("table")).toHaveClass("w-full", "table-fixed");
+    expect(screen.getByRole("table")).toHaveClass("w-full", "table-auto");
     expect(screen.getByText(/工具 0 · 凭证绑定 0/)).toBeVisible();
     expect(screen.getAllByText("暂无数据").length).toBeGreaterThan(0);
     const actions = screen.getByRole("group", { name: "客服 Agent 操作" });

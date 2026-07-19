@@ -114,10 +114,12 @@ export function TestAccountList({
           <Table>
             <TableHeader className="bg-[var(--canvas-soft)]">
               <TableRow>
-                <TableHead>账号信息</TableHead>
-                <TableHead className="w-32">类型</TableHead>
-                <TableHead className="w-40">凭证（掩码）</TableHead>
-                <TableHead className="w-24">状态</TableHead>
+                <TableHead className="min-w-52">账号信息</TableHead>
+                <TableHead className="whitespace-nowrap">类型</TableHead>
+                <TableHead className="min-w-40 whitespace-nowrap">
+                  凭证（掩码）
+                </TableHead>
+                <TableHead className="whitespace-nowrap">状态</TableHead>
                 <TableHead className={tableActionHeadClass}>操作</TableHead>
               </TableRow>
             </TableHeader>
@@ -161,25 +163,30 @@ export function TestAccountList({
                     <TableActions label={account.name}>
                       {onToggleEnabled && (
                         <TableActionButton
-                          label={`${account.enabled ? "禁用" : "启用"}${account.name}`}
+                          accessibleLabel={`${account.enabled ? "禁用" : "启用"}测试账号 ${account.name}`}
+                          label={account.enabled ? "禁用" : "启用"}
                           onClick={() =>
                             onToggleEnabled(account.id, !account.enabled)
                           }
                         >
                           {account.enabled ? (
-                            <EyeOff className="size-4" />
+                            <EyeOff aria-hidden="true" className="size-4" />
                           ) : (
-                            <Eye className="size-4" />
+                            <Eye aria-hidden="true" className="size-4" />
                           )}
                         </TableActionButton>
                       )}
                       {onDelete && (
                         <TableActionButton
-                          label={`删除${account.name}`}
+                          accessibleLabel={`删除测试账号 ${account.name}`}
+                          label="删除"
                           onClick={() => onDelete(account.id)}
                           tone="danger"
                         >
-                          <Trash2 className="size-4 text-[var(--danger)]" />
+                          <Trash2
+                            aria-hidden="true"
+                            className="size-4 text-[var(--danger)]"
+                          />
                         </TableActionButton>
                       )}
                     </TableActions>

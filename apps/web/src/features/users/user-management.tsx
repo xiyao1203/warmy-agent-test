@@ -21,8 +21,12 @@ import {
   TableHead,
   TableHeader,
   TableRow,
+  TableValue,
 } from "@/components/ui/table";
-import { TableActionButton } from "@/components/ui/table-actions";
+import {
+  TableActionButton,
+  tableActionHeadClass,
+} from "@/components/ui/table-actions";
 import { TruncatedText } from "@/components/ui/truncated-text";
 
 import { UserDrawer } from "./user-drawer";
@@ -203,11 +207,11 @@ export function UserManagement({
           <Table>
             <TableHeader className="bg-[var(--canvas-soft)]">
               <TableRow>
-                <TableHead>用户</TableHead>
-                <TableHead>系统角色</TableHead>
-                <TableHead>状态</TableHead>
-                <TableHead>登录策略</TableHead>
-                <TableHead className="w-20">操作</TableHead>
+                <TableHead className="min-w-56">用户</TableHead>
+                <TableHead className="whitespace-nowrap">系统角色</TableHead>
+                <TableHead className="whitespace-nowrap">状态</TableHead>
+                <TableHead className="whitespace-nowrap">登录策略</TableHead>
+                <TableHead className={tableActionHeadClass}>操作</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -217,12 +221,14 @@ export function UserManagement({
                   key={user.id}
                 >
                   <TableCell>
-                    <TruncatedText className="font-medium">
-                      {user.display_name}
-                    </TruncatedText>
-                    <TruncatedText className="mt-0.5 text-xs text-[var(--muted)]">
-                      {user.email}
-                    </TruncatedText>
+                    <TableValue>
+                      <TruncatedText className="font-medium">
+                        {user.display_name}
+                      </TruncatedText>
+                      <TruncatedText className="mt-0.5 text-xs text-[var(--muted)]">
+                        {user.email}
+                      </TruncatedText>
+                    </TableValue>
                   </TableCell>
                   <TableCell>
                     <Badge
@@ -247,7 +253,8 @@ export function UserManagement({
                   </TableCell>
                   <TableCell>
                     <TableActionButton
-                      label={`查看${user.display_name}`}
+                      accessibleLabel={`查看${user.display_name}`}
+                      label="查看"
                       onClick={() => setSelectedUser(user)}
                     >
                       <Eye aria-hidden="true" />

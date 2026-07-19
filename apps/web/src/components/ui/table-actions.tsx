@@ -3,7 +3,8 @@ import type { ButtonHTMLAttributes, ReactNode } from "react";
 import { Button } from "./button";
 import { Tooltip } from "../uiverse/feedback/tooltip";
 
-export const tableActionHeadClass = "w-28 whitespace-nowrap text-center";
+export const tableActionHeadClass =
+  "w-px min-w-20 whitespace-nowrap text-center";
 
 export const tableActionCellClass = "whitespace-nowrap text-center";
 
@@ -26,6 +27,7 @@ export function TableActions({
 }
 
 type TableActionButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
+  accessibleLabel?: string;
   asChild?: boolean;
   children: ReactNode;
   label: string;
@@ -34,6 +36,7 @@ type TableActionButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
 
 export function TableActionButton({
   children,
+  accessibleLabel,
   asChild = false,
   className = "",
   label,
@@ -44,7 +47,7 @@ export function TableActionButton({
   return (
     <Tooltip content={label} side="top">
       <Button
-        aria-label={label}
+        aria-label={accessibleLabel ?? label}
         asChild={asChild}
         className={`table-action-button size-8 shrink-0 p-0 ${className}`}
         type={asChild ? undefined : type}

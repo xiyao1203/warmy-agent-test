@@ -31,8 +31,14 @@ import {
   TableHead,
   TableHeader,
   TableRow,
+  TableValue,
 } from "@/components/ui/table";
-import { TableActionButton } from "@/components/ui/table-actions";
+import {
+  TableActions,
+  TableActionButton,
+  tableActionCellClass,
+  tableActionHeadClass,
+} from "@/components/ui/table-actions";
 import { TruncatedText } from "@/components/ui/truncated-text";
 
 type PlanVersionOption = { id: string; label: string };
@@ -241,15 +247,15 @@ export function RunCenter({
             title={runs.length ? "没有匹配的运行" : "暂无运行记录"}
           />
         ) : (
-          <Table className="w-full table-fixed">
+          <Table className="w-full">
             <TableHeader className="bg-[var(--canvas-soft)]">
               <TableRow>
-                <TableHead className="w-[18%]">运行</TableHead>
-                <TableHead className="w-[28%]">执行资产</TableHead>
-                <TableHead className="w-[10%]">状态</TableHead>
-                <TableHead className="w-[16%]">进度与结果</TableHead>
-                <TableHead className="w-[20%]">资源消耗</TableHead>
-                <TableHead className="w-20">操作</TableHead>
+                <TableHead className="min-w-48">运行</TableHead>
+                <TableHead className="min-w-60">执行资产</TableHead>
+                <TableHead className="whitespace-nowrap">状态</TableHead>
+                <TableHead className="min-w-48">进度与结果</TableHead>
+                <TableHead className="min-w-48">资源消耗</TableHead>
+                <TableHead className={tableActionHeadClass}>操作</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -276,74 +282,84 @@ export function RunCenter({
                       </div>
                     </div>
                   </TableCell>
-                  <TableCell className="space-y-1 text-left text-xs">
-                    <p>
-                      计划：
-                      <ResourceReferenceLink reference={run.plan_ref} />
-                    </p>
-                    <p>
-                      Agent：
-                      <ResourceReferenceLink reference={run.agent_ref} />
-                    </p>
-                    <p>
-                      用例集：
-                      <ResourceReferenceLink reference={run.dataset_ref} />
-                    </p>
-                    {run.source_case_ref ? (
+                  <TableCell>
+                    <TableValue className="space-y-1 text-xs">
                       <p>
-                        来源用例：
-                        <ResourceReferenceLink
-                          reference={run.source_case_ref}
-                        />
+                        计划：
+                        <ResourceReferenceLink reference={run.plan_ref} />
                       </p>
-                    ) : null}
+                      <p>
+                        Agent：
+                        <ResourceReferenceLink reference={run.agent_ref} />
+                      </p>
+                      <p>
+                        用例集：
+                        <ResourceReferenceLink reference={run.dataset_ref} />
+                      </p>
+                      {run.source_case_ref ? (
+                        <p>
+                          来源用例：
+                          <ResourceReferenceLink
+                            reference={run.source_case_ref}
+                          />
+                        </p>
+                      ) : null}
+                    </TableValue>
                   </TableCell>
                   <TableCell>
                     <StatusBadge status={run.status} />
                   </TableCell>
-                  <TableCell className="text-left text-xs leading-5 text-[var(--muted)]">
-                    <p>
-                      {Math.round((run.progress ?? 0) * 100)}% ·{" "}
-                      {run.passed_cases +
-                        run.failed_cases +
-                        run.error_cases +
-                        run.cancelled_cases}{" "}
-                      / {run.total_cases}
-                    </p>
-                    <p>
-                      通过 {run.passed_cases} · 失败 {run.failed_cases} · 错误{" "}
-                      {run.error_cases}
-                    </p>
-                    <p>触发方式 {run.trigger_type || "manual"}</p>
-                  </TableCell>
-                  <TableCell className="text-left text-xs leading-5 text-[var(--muted)]">
-                    <p>
-                      耗时{" "}
-                      {run.duration_ms == null
-                        ? "暂无数据"
-                        : `${run.duration_ms} ms`}{" "}
-                      · Token {run.token_usage?.total ?? "暂无数据"}
-                    </p>
-                    <p>
-                      成本 {run.cost == null ? "暂无数据" : run.cost.toFixed(4)}
-                    </p>
-                    <p>
-                      <ResourceReferenceLink
-                        emptyLabel="创建者暂无数据"
-                        reference={run.created_by_ref}
-                      />
-                    </p>
-                    <p>{new Date(run.created_at).toLocaleString("zh-CN")}</p>
+                  <TableCell>
+                    <TableValue className="text-xs leading-5 text-[var(--muted)]">
+                      <p>
+                        {Math.round((run.progress ?? 0) * 100)}% ·{" "}
+                        {run.passed_cases +
+                          run.failed_cases +
+                          run.error_cases +
+                          run.cancelled_cases}{" "}
+                        / {run.total_cases}
+                      </p>
+                      <p>
+                        通过 {run.passed_cases} · 失败 {run.failed_cases} · 错误{" "}
+                        {run.error_cases}
+                      </p>
+                      <p>触发方式 {run.trigger_type || "manual"}</p>
+                    </TableValue>
                   </TableCell>
                   <TableCell>
-                    <TableActionButton
-                      asChild
-                      label={`查看运行 ${run.id} 结果`}
-                    >
-                      <Link href={`/projects/${projectId}/runs/${run.id}`}>
-                        <Eye aria-hidden="true" />
-                      </Link>
-                    </TableActionButton>
+                    <TableValue className="text-xs leading-5 text-[var(--muted)]">
+                      <p>
+                        耗时{" "}
+                        {run.duration_ms == null
+                          ? "暂无数据"
+                          : `${run.duration_ms} ms`}{" "}
+                        · Token {run.token_usage?.total ?? "暂无数据"}
+                      </p>
+                      <p>
+                        成本{" "}
+                        {run.cost == null ? "暂无数据" : run.cost.toFixed(4)}
+                      </p>
+                      <p>
+                        <ResourceReferenceLink
+                          emptyLabel="创建者暂无数据"
+                          reference={run.created_by_ref}
+                        />
+                      </p>
+                      <p>{new Date(run.created_at).toLocaleString("zh-CN")}</p>
+                    </TableValue>
+                  </TableCell>
+                  <TableCell className={tableActionCellClass}>
+                    <TableActions label={run.run_number}>
+                      <TableActionButton
+                        accessibleLabel={`查看运行 ${run.id} 结果`}
+                        asChild
+                        label="查看"
+                      >
+                        <Link href={`/projects/${projectId}/runs/${run.id}`}>
+                          <Eye aria-hidden="true" />
+                        </Link>
+                      </TableActionButton>
+                    </TableActions>
                   </TableCell>
                 </TableRow>
               ))}
