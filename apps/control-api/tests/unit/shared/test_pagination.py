@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pytest
 from agenttest.shared.api.pagination import resolve_page_request
-from agenttest.shared.application.pagination import PageRequest, PageResult
+from agenttest.shared.application.pagination import PageRequest, PageResult, paginate_items
 from fastapi import HTTPException
 
 
@@ -36,6 +36,14 @@ def test_empty_page_result_has_zero_pages() -> None:
     result: PageResult[str] = PageResult(items=[], total=0, page=1, page_size=10)
 
     assert result.total_pages == 0
+
+
+def test_paginate_items_returns_requested_slice_and_total() -> None:
+    result = paginate_items(list(range(12)), PageRequest(page=2, page_size=10))
+
+    assert result.items == [10, 11]
+    assert result.total == 12
+    assert result.total_pages == 2
 
 
 def test_optional_page_mode_preserves_legacy_calls() -> None:

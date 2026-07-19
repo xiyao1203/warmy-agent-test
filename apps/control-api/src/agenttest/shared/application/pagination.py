@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections.abc import Sequence
 from dataclasses import dataclass
 from math import ceil
 
@@ -37,3 +38,13 @@ class PageResult[T]:
     @property
     def total_pages(self) -> int:
         return ceil(self.total / self.page_size) if self.total else 0
+
+
+def paginate_items[T](items: Sequence[T], page_request: PageRequest) -> PageResult[T]:
+    start = page_request.offset
+    return PageResult(
+        items=list(items[start : start + page_request.page_size]),
+        total=len(items),
+        page=page_request.page,
+        page_size=page_request.page_size,
+    )
