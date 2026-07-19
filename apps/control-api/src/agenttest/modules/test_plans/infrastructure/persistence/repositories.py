@@ -29,6 +29,7 @@ from agenttest.modules.test_plans.infrastructure.persistence.models import (
     TestPlanModel,
     TestPlanVersionModel,
 )
+from agenttest.shared.application.pagination import PageRequest, PageResult
 from agenttest.shared.infrastructure.database import session_scope, transaction_scope
 
 
@@ -66,6 +67,42 @@ class SqlAlchemyTestPlanRepository:
             models = models[:limit]
         next_cursor = _encode_cursor(models[-1].created_at) if has_more and models else None
         return [_to_plan(m) for m in models], next_cursor
+
+    async def count_by_project(self, project_id: ProjectId) -> int:
+        statement = (
+            select(func.count())
+            .select_from(TestPlanModel)
+            .where(TestPlanModel.project_id == project_id.value)
+        )
+        async with session_scope(self._session_factory) as session:
+            return int(await session.scalar(statement) or 0)
+
+    async def list_page_by_project(
+        self,
+        project_id: ProjectId,
+        page_request: PageRequest,
+    ) -> PageResult[TestPlan]:
+        statement = (
+            select(TestPlanModel)
+            .where(TestPlanModel.project_id == project_id.value)
+            .order_by(TestPlanModel.created_at.desc(), TestPlanModel.id.desc())
+            .offset(page_request.offset)
+            .limit(page_request.page_size)
+        )
+        count_statement = (
+            select(func.count())
+            .select_from(TestPlanModel)
+            .where(TestPlanModel.project_id == project_id.value)
+        )
+        async with session_scope(self._session_factory) as session:
+            models = list((await session.scalars(statement)).all())
+            total = int(await session.scalar(count_statement) or 0)
+        return PageResult(
+            items=[_to_plan(model) for model in models],
+            total=total,
+            page=page_request.page,
+            page_size=page_request.page_size,
+        )
 
     async def add(self, plan: TestPlan) -> None:
         async with transaction_scope(self._session_factory) as session:

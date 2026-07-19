@@ -224,7 +224,7 @@ Legacy cursor/offset responses expose `page: null`, a real filtered `total`, the
 - [ ] **Step 5: Run module tests, project-isolation tests, and mypy**
 
 ```bash
-uv run pytest apps/control-api/tests/contract/test_core_list_pagination_api.py apps/control-api/tests/contract/test_agents_api.py apps/control-api/tests/contract/test_datasets_api.py apps/control-api/tests/contract/test_test_plans_api.py apps/control-api/tests/contract/test_environments_api.py apps/control-api/tests/contract/test_user_admin_api.py apps/control-api/tests/integration/test_project_isolation.py -q
+uv run pytest apps/control-api/tests/contract/test_core_list_pagination_api.py apps/control-api/tests/contract/test_agents_api.py apps/control-api/tests/contract/test_datasets_api.py apps/control-api/tests/contract/test_test_plans_api.py apps/control-api/tests/contract/test_environments_api.py apps/control-api/tests/contract/test_user_admin_api.py apps/control-api/tests/integration/projects/test_project_isolation.py -q
 uv run mypy apps/control-api/src/agenttest/modules/agents apps/control-api/src/agenttest/modules/datasets apps/control-api/src/agenttest/modules/test_plans apps/control-api/src/agenttest/modules/environments apps/control-api/src/agenttest/modules/identity
 ```
 

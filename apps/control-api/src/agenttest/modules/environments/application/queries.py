@@ -13,6 +13,7 @@ from agenttest.modules.environments.domain.repositories import (
 )
 from agenttest.modules.identity.public import User
 from agenttest.modules.projects.public import ProjectId
+from agenttest.shared.application.pagination import PageRequest, PageResult
 
 
 class ListEnvironmentTemplatesHandler:
@@ -37,6 +38,19 @@ class ListEnvironmentTemplatesHandler:
     ) -> tuple[list[EnvironmentTemplate], str | None]:
         await self._project_access.ensure_member(actor, project_id)
         return await self._templates.list_by_project(project_id, limit=limit, cursor=cursor)
+
+    async def count(self, actor: User, project_id: ProjectId) -> int:
+        await self._project_access.ensure_member(actor, project_id)
+        return await self._templates.count_by_project(project_id)
+
+    async def execute_page(
+        self,
+        actor: User,
+        project_id: ProjectId,
+        page_request: PageRequest,
+    ) -> PageResult[EnvironmentTemplate]:
+        await self._project_access.ensure_member(actor, project_id)
+        return await self._templates.list_page_by_project(project_id, page_request)
 
 
 class GetEnvironmentTemplateHandler:

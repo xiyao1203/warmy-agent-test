@@ -21,6 +21,7 @@ from agenttest.modules.identity.infrastructure.persistence.models import (
     UserModel,
     UserSessionModel,
 )
+from agenttest.shared.application.pagination import PageRequest, PageResult
 from agenttest.shared.infrastructure.database import session_scope, transaction_scope
 
 
@@ -114,6 +115,27 @@ class SqlAlchemyUserRepository:
         items = [user for model in page_models if (user := _to_user(model)) is not None]
         next_cursor = page_models[-1].id if has_more and page_models else None
         return items, next_cursor
+
+    async def count_all(self) -> int:
+        async with session_scope(self._session_factory) as session:
+            return int(await session.scalar(select(func.count()).select_from(UserModel)) or 0)
+
+    async def list_numbered_page(self, page_request: PageRequest) -> PageResult[User]:
+        statement = (
+            select(UserModel)
+            .order_by(UserModel.id)
+            .offset(page_request.offset)
+            .limit(page_request.page_size)
+        )
+        async with session_scope(self._session_factory) as session:
+            models = list((await session.scalars(statement)).all())
+            total = int(await session.scalar(select(func.count()).select_from(UserModel)) or 0)
+        return PageResult(
+            items=[user for model in models if (user := _to_user(model)) is not None],
+            total=total,
+            page=page_request.page,
+            page_size=page_request.page_size,
+        )
 
 
 class SqlAlchemyCredentialRepository:

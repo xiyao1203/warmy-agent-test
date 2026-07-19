@@ -17,6 +17,7 @@ from agenttest.modules.datasets.domain.entities import (
     TestCaseId,
 )
 from agenttest.modules.projects.public import ProjectId
+from agenttest.shared.application.pagination import PageRequest, PageResult
 
 
 class DatasetRepository(Protocol):
@@ -31,6 +32,14 @@ class DatasetRepository(Protocol):
         limit: int = 50,
         cursor: str | None = None,
     ) -> tuple[list[Dataset], str | None]: ...
+
+    async def count_by_project(self, project_id: ProjectId) -> int: ...
+
+    async def list_page_by_project(
+        self,
+        project_id: ProjectId,
+        page_request: PageRequest,
+    ) -> PageResult[Dataset]: ...
 
     async def add(self, dataset: Dataset) -> None: ...
 

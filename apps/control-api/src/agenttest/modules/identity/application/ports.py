@@ -5,6 +5,7 @@ from uuid import UUID, uuid4
 
 from agenttest.modules.identity.domain.entities import User
 from agenttest.modules.identity.domain.value_objects import Email, UserId
+from agenttest.shared.application.pagination import PageRequest, PageResult
 
 
 @dataclass(frozen=True, slots=True)
@@ -105,6 +106,10 @@ class UserAdminRepository(UserReader, Protocol):
         cursor: UUID | None,
         limit: int,
     ) -> tuple[list[User], UUID | None]: ...
+
+    async def count_all(self) -> int: ...
+
+    async def list_numbered_page(self, page_request: PageRequest) -> PageResult[User]: ...
 
 
 class CredentialWriter(Protocol):

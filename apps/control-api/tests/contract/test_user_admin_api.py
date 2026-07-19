@@ -14,6 +14,7 @@ from agenttest.modules.identity.application.errors import PermissionDeniedError
 from agenttest.modules.identity.application.queries.list_users import UserPage
 from agenttest.modules.identity.domain.entities import User
 from agenttest.modules.identity.domain.value_objects import Email, SystemRole, UserId
+from agenttest.shared.application.pagination import PageRequest
 from fastapi.testclient import TestClient
 
 
@@ -51,12 +52,30 @@ def auth_dependencies(actor: User) -> AuthApiDependencies:
 
 @dataclass
 class StubListUsers:
-    page: UserPage
+    users: list[User]
 
     async def execute(self, actor: User, cursor: UUID | None, limit: int) -> UserPage:
         if actor.role is not SystemRole.SUPER_ADMIN:
             raise PermissionDeniedError
-        return self.page
+        return UserPage(
+            items=self.users[:limit],
+            next_cursor=None,
+            total=len(self.users),
+            page=None,
+            page_size=limit,
+        )
+
+    async def execute_page(self, actor: User, page_request: PageRequest) -> UserPage:
+        if actor.role is not SystemRole.SUPER_ADMIN:
+            raise PermissionDeniedError
+        start = page_request.offset
+        return UserPage(
+            items=self.users[start : start + page_request.page_size],
+            next_cursor=None,
+            total=len(self.users),
+            page=page_request.page,
+            page_size=page_request.page_size,
+        )
 
 
 class StubCreateUser:
@@ -104,7 +123,7 @@ class StubDeleteUser:
 
 def admin_dependencies(users: list[User]) -> AdminApiDependencies:
     return AdminApiDependencies(
-        list_users=StubListUsers(UserPage(items=users, next_cursor=None)),
+        list_users=StubListUsers(users),
         get_user=StubGetUser(users[0]),
         create_user=StubCreateUser(),
         update_user=StubUpdateUser(),
@@ -199,3 +218,26 @@ def test_super_admin_can_create_update_and_manage_user_status() -> None:
     assert disabled.status_code == 200
     assert enabled.status_code == 200
     assert deleted.status_code == 204
+
+
+def test_user_list_supports_numbered_page_mode() -> None:
+    actor = create_user(SystemRole.SUPER_ADMIN, "admin@example.com")
+    users = [
+        create_user(SystemRole.DEVELOPER, f"user-{index:02d}@example.com") for index in range(12)
+    ]
+
+    response = client_for(actor, users).get(
+        "/api/v1/system/users",
+        params={"page": 2, "page_size": 10},
+    )
+
+    assert response.status_code == 200
+    assert len(response.json()["items"]) == 2
+    assert response.json() | {"items": []} == {
+        "items": [],
+        "next_cursor": None,
+        "total": 12,
+        "page": 2,
+        "page_size": 10,
+        "total_pages": 2,
+    }

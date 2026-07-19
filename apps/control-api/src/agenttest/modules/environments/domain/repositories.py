@@ -9,6 +9,7 @@ from agenttest.modules.environments.domain.entities import (
     EnvironmentTemplateId,
 )
 from agenttest.modules.projects.public import ProjectId
+from agenttest.shared.application.pagination import PageRequest, PageResult
 
 
 class EnvironmentTemplateRepository(Protocol):
@@ -23,6 +24,14 @@ class EnvironmentTemplateRepository(Protocol):
         limit: int = 50,
         cursor: str | None = None,
     ) -> tuple[list[EnvironmentTemplate], str | None]: ...
+
+    async def count_by_project(self, project_id: ProjectId) -> int: ...
+
+    async def list_page_by_project(
+        self,
+        project_id: ProjectId,
+        page_request: PageRequest,
+    ) -> PageResult[EnvironmentTemplate]: ...
 
     async def add(self, template: EnvironmentTemplate) -> None: ...
 
