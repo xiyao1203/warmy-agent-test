@@ -15,11 +15,11 @@
 **Files:**
 - Modify: `apps/web/src/components/ui/resource-pagination.test.tsx`
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Add assertions that `共 42 条` belongs to `data-pagination-total`, while the `每页条数` combobox, `第 2 / 5 页`, and pagination navigation all belong to `data-pagination-controls`.
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `pnpm --filter @warmy/web exec vitest run src/components/ui/resource-pagination.test.tsx`
 
@@ -30,11 +30,11 @@ Expected: FAIL because the two layout groups do not exist and the Select is stil
 **Files:**
 - Modify: `apps/web/src/components/ui/resource-pagination.tsx`
 
-- [ ] **Step 1: Write minimal implementation**
+- [x] **Step 1: Write minimal implementation**
 
 Render the total as `data-pagination-total` and wrap the Select, page summary, and Pagination in `className="ml-auto flex flex-wrap items-center justify-end gap-3"` with `data-pagination-controls`.
 
-- [ ] **Step 2: Run focused tests**
+- [x] **Step 2: Run focused tests**
 
 Run: `pnpm --filter @warmy/web exec vitest run src/components/ui/resource-pagination.test.tsx src/lib/pagination.test.ts src/lib/use-pagination-state.test.tsx`
 
@@ -45,11 +45,11 @@ Expected: all tests PASS.
 **Files:**
 - Modify: `apps/web/tests/e2e/core-pagination.spec.ts`
 
-- [ ] **Step 1: Add geometry assertions**
+- [x] **Step 1: Add geometry assertions**
 
 Assert at desktop width that `data-pagination-controls` is to the right of `data-pagination-total` and aligned with the footer right edge. At 390px assert the controls do not exceed the viewport and retain `justify-content: flex-end`.
 
-- [ ] **Step 2: Run critical E2E**
+- [x] **Step 2: Run critical E2E**
 
 Run: `E2E_API_PORT=8290 E2E_WEB_PORT=5283 pnpm --filter @warmy/web exec playwright test tests/e2e/core-pagination.spec.ts`
 
@@ -61,14 +61,14 @@ Expected: pagination test PASS with no horizontal overflow.
 - Modify: `docs/当前任务.md`
 - Modify: `docs/开发进度与变更记录.md`
 
-- [ ] **Step 1: Run Web gates**
+- [x] **Step 1: Run Web gates**
 
 Run `format`, `lint`, `typecheck`, relevant Vitest, Playwright, and `build`; all commands must exit 0.
 
-- [ ] **Step 2: Update task records**
+- [x] **Step 2: Update task records**
 
 Move `TASK-20260720-003` to completed with exact verification evidence and restore `docs/当前任务.md` to no active task.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 Commit the focused implementation and documentation on `codex/pagination-footer-right-alignment`.
