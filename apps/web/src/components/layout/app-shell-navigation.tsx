@@ -16,8 +16,8 @@ import {
   Settings2,
   ShieldCheck,
   SlidersHorizontal,
-  Sparkles,
   Users,
+  Workflow,
   X,
   type LucideIcon,
 } from "lucide-react";
@@ -54,7 +54,7 @@ export function projectNavigation(projectId: string): NavigationGroup[] {
       items: [
         {
           href: projectWorkspacePath(projectId),
-          icon: Sparkles,
+          icon: Workflow,
           label: "测试 Agent",
         },
         {
