@@ -549,7 +549,7 @@ for (const width of [1280, 1440, 1920]) {
   });
 }
 
-test("workspace shell supports grouped navigation, command search, and three-state themes", async ({
+test("workspace shell supports grouped navigation, command search, and two-state themes", async ({
   page,
 }, testInfo) => {
   await page.setViewportSize({ height: 900, width: 1440 });
@@ -589,10 +589,20 @@ test("workspace shell supports grouped navigation, command search, and three-sta
   });
 
   await page.getByRole("button", { name: "外观设置" }).click();
-  await page.getByRole("menuitemradio", { name: "跟随系统" }).click();
+  const themeMenu = page.getByRole("menu").filter({
+    has: page.getByRole("menuitemradio", { name: "浅色" }),
+  });
+  await themeMenu.screenshot({
+    path: testInfo.outputPath("theme-menu-two-state-1440.png"),
+  });
+  await expect(
+    page.getByRole("menuitemradio", { name: "跟随系统" }),
+  ).toHaveCount(0);
+  await page.getByRole("menuitemradio", { name: "浅色" }).click();
+  await expect(page.locator("html")).toHaveClass(/light/);
   await expect(page.locator("html")).toHaveAttribute(
     "data-theme-preference",
-    "system",
+    "light",
   );
 
   const helpButton = page.getByRole("button", { name: "帮助中心" });
@@ -603,7 +613,7 @@ test("workspace shell supports grouped navigation, command search, and three-sta
   await expect(helpButton).toBeFocused();
 });
 
-test("theme hydration, reload, and system changes remain stable on every route", async ({
+test("theme hydration, reload, and legacy migration remain stable on every route", async ({
   page,
 }) => {
   const hydrationErrors: string[] = [];
@@ -634,15 +644,22 @@ test("theme hydration, reload, and system changes remain stable on every route",
   await expect(page.locator("html")).toHaveClass(/dark/);
   expect(hydrationErrors).toEqual([]);
 
-  await page.evaluate(() => localStorage.setItem("theme", "system"));
-  await page.emulateMedia({ colorScheme: "light" });
-  await page.goto("/docs");
-  await expect(page.locator("html")).toHaveClass(/light/);
   await page.emulateMedia({ colorScheme: "dark" });
+  await page.evaluate(() => localStorage.setItem("theme", "system"));
+  await page.goto("/docs");
   await expect(page.locator("html")).toHaveClass(/dark/);
   await expect(page.locator("html")).toHaveAttribute(
     "data-theme-preference",
-    "system",
+    "dark",
+  );
+  await expect
+    .poll(() => page.evaluate(() => localStorage.getItem("theme")))
+    .toBe("dark");
+  await page.emulateMedia({ colorScheme: "light" });
+  await expect(page.locator("html")).toHaveClass(/dark/);
+  await expect(page.locator("html")).toHaveAttribute(
+    "data-theme-preference",
+    "dark",
   );
   expect(hydrationErrors).toEqual([]);
 });

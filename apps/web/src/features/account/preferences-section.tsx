@@ -2,17 +2,29 @@
 
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Monitor, Sun, Moon, Save, RotateCcw } from "lucide-react";
+import { Moon, RotateCcw, Save, Sun } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 
 import { getUserSettings, updateUserSettings } from "./api";
 
 const themes = [
-  { id: "system", label: "跟随系统", icon: Monitor },
   { id: "light", label: "浅色", icon: Sun },
   { id: "dark", label: "深色", icon: Moon },
 ] as const;
+
+type ExplicitTheme = (typeof themes)[number]["id"];
+
+function normalizeTheme(theme: string | null | undefined): ExplicitTheme {
+  if (theme === "dark" || theme === "light") return theme;
+  if (
+    typeof document !== "undefined" &&
+    document.documentElement.classList.contains("dark")
+  ) {
+    return "dark";
+  }
+  return "light";
+}
 
 const languages = [
   { id: "zh-CN", label: "简体中文" },
@@ -26,13 +38,11 @@ export function PreferencesSection() {
     queryFn: getUserSettings,
   });
 
-  const [themeDraft, setThemeDraft] = useState<
-    "system" | "light" | "dark" | null
-  >(null);
+  const [themeDraft, setThemeDraft] = useState<ExplicitTheme | null>(null);
   const [languageDraft, setLanguageDraft] = useState<"zh-CN" | "en" | null>(
     null,
   );
-  const theme = themeDraft ?? settings?.theme ?? "system";
+  const theme = themeDraft ?? normalizeTheme(settings?.theme);
   const language = languageDraft ?? settings?.language ?? "zh-CN";
   const hasChanges = themeDraft !== null || languageDraft !== null;
 
@@ -45,7 +55,7 @@ export function PreferencesSection() {
     },
   });
 
-  function handleThemeChange(newTheme: "system" | "light" | "dark") {
+  function handleThemeChange(newTheme: ExplicitTheme) {
     setThemeDraft(newTheme);
   }
 
@@ -83,7 +93,7 @@ export function PreferencesSection() {
             选择平台界面的显示方式。
           </p>
         </div>
-        <div className="grid gap-2 sm:grid-cols-3">
+        <div className="grid grid-cols-2 gap-2">
           {themes.map(({ id, label, icon: Icon }) => (
             <button
               aria-pressed={theme === id}

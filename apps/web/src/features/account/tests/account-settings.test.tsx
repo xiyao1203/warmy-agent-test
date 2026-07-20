@@ -36,6 +36,7 @@ function renderWithQueryClient(ui: React.ReactElement) {
 
 describe("account settings sections", () => {
   beforeEach(() => {
+    document.documentElement.classList.remove("dark", "light");
     vi.mocked(getUserSettings).mockReset();
     vi.mocked(getUserSettings).mockResolvedValue(settings);
   });
@@ -47,10 +48,32 @@ describe("account settings sections", () => {
       "aria-pressed",
       "true",
     );
+    expect(screen.getByRole("button", { name: "浅色" })).toBeVisible();
+    expect(
+      screen.queryByRole("button", { name: "跟随系统" }),
+    ).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "English" })).toHaveAttribute(
       "aria-pressed",
       "true",
     );
+  });
+
+  it("maps a legacy system preference to the resolved root theme", async () => {
+    document.documentElement.classList.add("dark");
+    vi.mocked(getUserSettings).mockResolvedValue({
+      ...settings,
+      theme: "system",
+    });
+
+    renderWithQueryClient(<PreferencesSection />);
+
+    expect(await screen.findByRole("button", { name: "深色" })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+    expect(
+      screen.queryByRole("button", { name: "跟随系统" }),
+    ).not.toBeInTheDocument();
   });
 
   it("preserves accessible notification switch states", async () => {
