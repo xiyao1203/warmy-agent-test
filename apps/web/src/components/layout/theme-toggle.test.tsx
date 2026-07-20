@@ -10,28 +10,31 @@ describe("ThemeToggle", () => {
     document.documentElement.style.colorScheme = "";
   });
 
-  it("offers only light and dark choices and persists the preference", () => {
+  it("toggles immediately without opening a theme menu", async () => {
+    localStorage.setItem("theme", "light");
     render(<ThemeToggle />);
-    fireEvent.pointerDown(screen.getByRole("button", { name: "外观设置" }), {
-      button: 0,
-      ctrlKey: false,
-    });
 
-    expect(
-      screen.getByRole("menuitemradio", { name: "浅色" }),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByRole("menuitemradio", { name: "深色" }),
-    ).toBeInTheDocument();
-    expect(screen.getAllByRole("menuitemradio")).toHaveLength(2);
-    expect(
-      screen.queryByRole("menuitemradio", { name: "跟随系统" }),
-    ).not.toBeInTheDocument();
+    const lightButton = screen.getByRole("button", { name: "切换至深色" });
+    expect(lightButton.querySelector(".lucide-sun")).toBeInTheDocument();
+    expect(lightButton.querySelector(".theme-toggle-icon")).toBeInTheDocument();
+    expect(screen.getByRole("tooltip")).toHaveAttribute(
+      "data-tooltip",
+      "切换至深色",
+    );
 
-    fireEvent.click(screen.getByRole("menuitemradio", { name: "深色" }));
-    expect(localStorage.getItem("theme")).toBe("dark");
+    fireEvent.click(lightButton);
+
+    await waitFor(() => expect(localStorage.getItem("theme")).toBe("dark"));
+    const darkButton = screen.getByRole("button", { name: "切换至浅色" });
+    expect(darkButton.querySelector(".lucide-moon")).toBeInTheDocument();
     expect(document.documentElement).toHaveClass("dark");
     expect(document.documentElement.style.colorScheme).toBe("dark");
+    expect(screen.getByRole("tooltip")).toHaveAttribute(
+      "data-tooltip",
+      "切换至浅色",
+    );
+    expect(screen.queryByRole("menu")).not.toBeInTheDocument();
+    expect(screen.queryByRole("menuitemradio")).not.toBeInTheDocument();
   });
 
   it("migrates a legacy system preference once without subscribing to changes", async () => {

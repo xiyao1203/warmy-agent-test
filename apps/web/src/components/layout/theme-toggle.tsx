@@ -1,8 +1,9 @@
 "use client";
 
-import * as DropdownMenuPrimitive from "@radix-ui/react-dropdown-menu";
-import { Check, Moon, Sun } from "lucide-react";
-import { useEffect, useMemo, useSyncExternalStore } from "react";
+import { Moon, Sun } from "lucide-react";
+import { useEffect, useSyncExternalStore } from "react";
+
+import { Tooltip } from "@/components/uiverse";
 
 type ThemePreference = "dark" | "light";
 
@@ -42,25 +43,16 @@ export function applyThemePreference(preference: ThemePreference) {
   root.style.colorScheme = preference;
 }
 
-const options: Array<{
-  icon: typeof Sun;
-  label: string;
-  value: ThemePreference;
-}> = [
-  { icon: Sun, label: "浅色", value: "light" },
-  { icon: Moon, label: "深色", value: "dark" },
-];
-
 export function ThemeToggle({ className = "" }: { className?: string }) {
   const preference = useSyncExternalStore<ThemePreference>(
     subscribeToPreference,
     getStoredPreference,
     () => "light",
   );
-  const ActiveIcon = useMemo(
-    () => options.find((option) => option.value === preference)?.icon ?? Sun,
-    [preference],
-  );
+  const nextPreference: ThemePreference =
+    preference === "light" ? "dark" : "light";
+  const actionLabel = nextPreference === "dark" ? "切换至深色" : "切换至浅色";
+  const ActiveIcon = preference === "dark" ? Moon : Sun;
 
   useEffect(() => {
     if (!isThemePreference(localStorage.getItem(STORAGE_KEY))) {
@@ -76,53 +68,20 @@ export function ThemeToggle({ className = "" }: { className?: string }) {
   }
 
   return (
-    <DropdownMenuPrimitive.Root>
-      <DropdownMenuPrimitive.Trigger asChild>
-        <button
-          aria-label="外观设置"
-          className={`app-icon-button ${className}`}
-          title="外观设置"
-          type="button"
-        >
-          <ActiveIcon aria-hidden="true" className="size-4" />
-        </button>
-      </DropdownMenuPrimitive.Trigger>
-      <DropdownMenuPrimitive.Portal>
-        <DropdownMenuPrimitive.Content
-          align="end"
-          aria-label="主题"
-          className="app-menu w-40"
-          sideOffset={7}
-        >
-          <DropdownMenuPrimitive.Label className="px-2 py-1.5 text-xs font-medium text-[var(--muted)]">
-            界面外观
-          </DropdownMenuPrimitive.Label>
-          <DropdownMenuPrimitive.RadioGroup
-            onValueChange={(value) => {
-              if (isThemePreference(value)) selectTheme(value);
-            }}
-            value={preference}
-          >
-            {options.map((option) => {
-              const Icon = option.icon;
-              return (
-                <DropdownMenuPrimitive.RadioItem
-                  aria-label={option.label}
-                  className="app-menu-item"
-                  key={option.value}
-                  value={option.value}
-                >
-                  <Icon aria-hidden="true" className="size-4" />
-                  <span className="flex-1">{option.label}</span>
-                  <DropdownMenuPrimitive.ItemIndicator>
-                    <Check aria-hidden="true" className="size-4" />
-                  </DropdownMenuPrimitive.ItemIndicator>
-                </DropdownMenuPrimitive.RadioItem>
-              );
-            })}
-          </DropdownMenuPrimitive.RadioGroup>
-        </DropdownMenuPrimitive.Content>
-      </DropdownMenuPrimitive.Portal>
-    </DropdownMenuPrimitive.Root>
+    <Tooltip content={actionLabel} side="bottom">
+      <button
+        aria-label={actionLabel}
+        className={`app-icon-button ${className}`}
+        onClick={() => selectTheme(nextPreference)}
+        title={actionLabel}
+        type="button"
+      >
+        <ActiveIcon
+          aria-hidden="true"
+          className="theme-toggle-icon size-4"
+          key={preference}
+        />
+      </button>
+    </Tooltip>
   );
 }

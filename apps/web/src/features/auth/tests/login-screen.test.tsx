@@ -79,7 +79,9 @@ describe("LoginScreen", () => {
     ).not.toBeInTheDocument();
     expect(screen.queryByText("PROJECT")).not.toBeInTheDocument();
     expect(screen.getByText(/持续验证 Agent 的能力、质量与安全/)).toBeVisible();
-    expect(screen.getByRole("button", { name: "外观设置" })).toBeVisible();
+    expect(
+      screen.getByRole("button", { name: /切换至(深色|浅色)/ }),
+    ).toBeVisible();
     expect(
       screen.queryByRole("navigation", { name: "产品导航" }),
     ).not.toBeInTheDocument();

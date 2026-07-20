@@ -347,6 +347,22 @@ samp {
   color: var(--ink);
 }
 
+@keyframes theme-toggle-icon-enter {
+  from {
+    opacity: 0;
+    transform: rotate(-18deg) scale(0.72);
+  }
+  to {
+    opacity: 1;
+    transform: rotate(0) scale(1);
+  }
+}
+
+.theme-toggle-icon {
+  animation: theme-toggle-icon-enter var(--motion-fast) ease-out both;
+  transform-origin: center;
+}
+
 .app-search-trigger,
 .app-create-button,
 .app-status-indicator {
@@ -1086,7 +1102,8 @@ textarea[data-focus-owner="composer"]:focus-visible {
   .animate-slideIn,
   .app-overlay,
   .chat-scroll,
-  .brand-mark-glyph {
+  .brand-mark-glyph,
+  .theme-toggle-icon {
     animation: none !important;
     scroll-behavior: auto !important;
   }

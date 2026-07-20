@@ -16,7 +16,7 @@
 - Modify: `apps/web/src/components/layout/theme-toggle.test.tsx`
 - Modify: `apps/web/src/components/layout/theme-toggle.tsx`
 
-- [ ] **Step 1: Replace the menu test with a failing direct-toggle test**
+- [x] **Step 1: Replace the menu test with a failing direct-toggle test**
 
 Set `localStorage.theme` to `light`, render `ThemeToggle`, and require one button named `切换至深色`. Assert its Sun icon and Tooltip, click once, then require `dark`, a Moon icon, the new name `切换至浅色`, and no `menu` or `menuitemradio` roles.
 
@@ -43,7 +43,7 @@ it("toggles immediately without opening a theme menu", async () => {
 });
 ```
 
-- [ ] **Step 2: Run the focused test and verify RED**
+- [x] **Step 2: Run the focused test and verify RED**
 
 Run:
 
@@ -53,7 +53,7 @@ pnpm --filter @warmy/web exec vitest run src/components/layout/theme-toggle.test
 
 Expected: FAIL because the existing button is named `外观设置` and opens a menu instead of toggling directly.
 
-- [ ] **Step 3: Implement the minimal direct-toggle button**
+- [x] **Step 3: Implement the minimal direct-toggle button**
 
 Remove Radix Dropdown, `Check`, the option list, and `useMemo`. Import the shared Tooltip and derive the current icon, next theme, and action label directly.
 
@@ -90,7 +90,7 @@ return (
 
 Keep `getStoredPreference`, `subscribeToPreference`, `applyThemePreference`, the migration effect, and `selectTheme` behavior unchanged.
 
-- [ ] **Step 4: Run the focused test and verify GREEN**
+- [x] **Step 4: Run the focused test and verify GREEN**
 
 Run the same focused Vitest command. Expected: both direct-toggle and legacy migration tests pass.
 
@@ -100,7 +100,7 @@ Run the same focused Vitest command. Expected: both direct-toggle and legacy mig
 - Modify: `apps/web/src/app/globals.css`
 - Modify: `apps/web/src/components/layout/theme-toggle.test.tsx`
 
-- [ ] **Step 1: Add a focused style assertion**
+- [x] **Step 1: Add a focused style assertion**
 
 Assert the rendered icon has the stable `theme-toggle-icon` class so the animation contract cannot silently disappear.
 
@@ -108,11 +108,11 @@ Assert the rendered icon has the stable `theme-toggle-icon` class so the animati
 expect(lightButton.querySelector(".theme-toggle-icon")).toBeInTheDocument();
 ```
 
-- [ ] **Step 2: Verify RED before adding the style hook**
+- [x] **Step 2: Verify RED before adding the style hook**
 
 Run the focused component test and expect failure because the current icon has no `theme-toggle-icon` class.
 
-- [ ] **Step 3: Add the style hook and token-based icon entry animation**
+- [x] **Step 3: Add the style hook and token-based icon entry animation**
 
 Change the icon class to `theme-toggle-icon size-4`, then add next to `.app-icon-button`:
 
@@ -136,7 +136,7 @@ Change the icon class to `theme-toggle-icon size-4`, then add next to `.app-icon
 
 Add `.theme-toggle-icon` to the existing reduced-motion block that disables animation.
 
-- [ ] **Step 4: Verify component tests remain GREEN**
+- [x] **Step 4: Verify component tests remain GREEN**
 
 Run the focused component test and expect all tests to pass.
 
@@ -145,7 +145,7 @@ Run the focused component test and expect all tests to pass.
 **Files:**
 - Modify: `apps/web/tests/e2e/list-layout.spec.ts`
 
-- [ ] **Step 1: Rewrite the workbench theme assertions**
+- [x] **Step 1: Rewrite the workbench theme assertions**
 
 Replace menu clicks with the direct action button:
 
@@ -166,7 +166,7 @@ await expect(page.locator("html")).toHaveClass(/light/);
 
 Keep the existing dark-workspace screenshot and remove the obsolete theme-menu screenshot.
 
-- [ ] **Step 2: Run critical Playwright**
+- [x] **Step 2: Run critical Playwright**
 
 Run:
 
@@ -183,19 +183,19 @@ Expected: 2 passed, with no menu interaction and no Hydration errors.
 - Modify: `docs/当前任务.md`
 - Modify: `docs/开发进度与变更记录.md`
 
-- [ ] **Step 1: Run complete Web gates**
+- [x] **Step 1: Run complete Web gates**
 
 Run format, lint, typecheck, all Vitest, critical Playwright, production build, and `git diff --check`. Every command must exit 0.
 
-- [ ] **Step 2: Perform visual verification**
+- [x] **Step 2: Perform visual verification**
 
 Capture the header in light and dark states at 1440px. Verify that one click changes theme, no menu appears, the current icon changes, the Tooltip names the target action, and controls do not shift or overlap.
 
-- [ ] **Step 3: Update task records**
+- [x] **Step 3: Update task records**
 
 Mark every plan checkbox complete, move `TASK-20260720-005` from current to completed, record exact files and command results, and restore `docs/当前任务.md` to no active task.
 
-- [ ] **Step 4: Commit the implementation**
+- [x] **Step 4: Commit the implementation**
 
 ```bash
 git add apps/web/src/components/layout/theme-toggle.tsx \

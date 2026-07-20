@@ -553,6 +553,7 @@ test("workspace shell supports grouped navigation, command search, and two-state
   page,
 }, testInfo) => {
   await page.setViewportSize({ height: 900, width: 1440 });
+  await page.addInitScript(() => localStorage.setItem("theme", "light"));
   await mockProjectList(page);
   await page.goto("/projects");
 
@@ -572,8 +573,15 @@ test("workspace shell supports grouped navigation, command search, and two-state
   );
   await page.goto("/projects");
 
-  await page.getByRole("button", { name: "外观设置" }).click();
-  await page.getByRole("menuitemradio", { name: "深色" }).click();
+  const darkToggle = page.getByRole("button", { name: "切换至深色" });
+  await darkToggle.hover();
+  await expect(
+    page.locator('[role="tooltip"][data-tooltip="切换至深色"]'),
+  ).toBeVisible();
+  await page.locator("header.app-topbar").screenshot({
+    path: testInfo.outputPath("theme-toggle-light-header-1440.png"),
+  });
+  await darkToggle.click();
   await expect(page.locator("html")).toHaveClass(/dark/);
   await expect(page.locator("html")).toHaveAttribute(
     "data-theme-preference",
@@ -587,18 +595,12 @@ test("workspace shell supports grouped navigation, command search, and two-state
     fullPage: true,
     path: testInfo.outputPath("workspace-shell-dark-1440.png"),
   });
+  await page.locator("header.app-topbar").screenshot({
+    path: testInfo.outputPath("theme-toggle-dark-header-1440.png"),
+  });
 
-  await page.getByRole("button", { name: "外观设置" }).click();
-  const themeMenu = page.getByRole("menu").filter({
-    has: page.getByRole("menuitemradio", { name: "浅色" }),
-  });
-  await themeMenu.screenshot({
-    path: testInfo.outputPath("theme-menu-two-state-1440.png"),
-  });
-  await expect(
-    page.getByRole("menuitemradio", { name: "跟随系统" }),
-  ).toHaveCount(0);
-  await page.getByRole("menuitemradio", { name: "浅色" }).click();
+  await expect(page.getByRole("menuitemradio")).toHaveCount(0);
+  await page.getByRole("button", { name: "切换至浅色" }).click();
   await expect(page.locator("html")).toHaveClass(/light/);
   await expect(page.locator("html")).toHaveAttribute(
     "data-theme-preference",
