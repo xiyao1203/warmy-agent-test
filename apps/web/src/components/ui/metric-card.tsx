@@ -69,9 +69,9 @@ export function MetricCard({
 
   return (
     <article
-      aria-disabled={disabled || undefined}
       aria-label={label}
       className={cn("precision-metric-card", className)}
+      data-disabled={disabled || undefined}
       data-interactive={interactive}
       data-state={state}
       data-tone={tone}

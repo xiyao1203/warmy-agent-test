@@ -67,7 +67,7 @@ describe("MetricCard", () => {
     );
 
     const card = screen.getByRole("article", { name: "暂无数据" });
-    expect(card).toHaveAttribute("aria-disabled", "true");
+    expect(card).toHaveAttribute("data-disabled", "true");
     expect(card).toHaveAttribute("data-interactive", "false");
   });
 

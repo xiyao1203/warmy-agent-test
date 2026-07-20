@@ -4,15 +4,12 @@ import type { ComponentProps } from "react";
 
 import { Button } from "@/components/ui/button";
 
-type PulseButtonProps = ComponentProps<typeof Button> & {
-  pulse?: boolean;
-};
+type PulseButtonProps = ComponentProps<typeof Button>;
 
 export function PulseButton({
   children,
   className = "",
   loading = false,
-  pulse: _pulse = false,
   ...props
 }: PulseButtonProps) {
   return (

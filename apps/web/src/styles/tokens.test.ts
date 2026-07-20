@@ -8,6 +8,10 @@ describe("GLM workspace design tokens", () => {
     resolve(process.cwd(), "src/styles/tokens.css"),
     "utf8",
   );
+  const globalStyles = readFileSync(
+    resolve(process.cwd(), "src/app/globals.css"),
+    "utf8",
+  );
 
   it("defines coral product accents and precision workspace density tokens", () => {
     expect(tokens).toContain("--primary: #e94b43");
@@ -32,5 +36,14 @@ describe("GLM workspace design tokens", () => {
     expect(tokens).toMatch(/\.dark\s*\{/);
     expect(tokens).toContain("--canvas: #111113");
     expect(tokens).toContain("--primary: #ff6b61");
+  });
+
+  it("does not duplicate the dialog centering translation in keyframes", () => {
+    const dialogKeyframes = globalStyles.match(
+      /@keyframes precision-dialog-in\s*\{[\s\S]*?\n\}/,
+    );
+
+    expect(dialogKeyframes?.[0]).toBeDefined();
+    expect(dialogKeyframes?.[0]).not.toContain("translate(-50%");
   });
 });

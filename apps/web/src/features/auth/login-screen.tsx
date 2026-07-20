@@ -8,10 +8,8 @@ import {
   CheckCircle2,
   CircleAlert,
   Clock3,
-  Database,
   Gauge,
   GitCompareArrows,
-  PlayCircle,
   ShieldCheck,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -306,7 +304,9 @@ function ProductEvidence() {
               100 条用例 · API 与浏览器混合执行 · 基线 v4.0
             </p>
           </div>
-          <span className="text-xs text-[var(--muted)]">刚刚同步</span>
+          <span className="hidden text-xs text-[var(--muted)] sm:inline">
+            刚刚同步
+          </span>
         </div>
 
         <MetricGrid className="mt-4">
