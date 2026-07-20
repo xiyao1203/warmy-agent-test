@@ -549,10 +549,11 @@ for (const width of [1280, 1440, 1920]) {
   });
 }
 
-test("workspace shell supports grouped navigation, command search, and three-state themes", async ({
+test("workspace shell supports grouped navigation, command search, and two-state themes", async ({
   page,
 }, testInfo) => {
   await page.setViewportSize({ height: 900, width: 1440 });
+  await page.addInitScript(() => localStorage.setItem("theme", "light"));
   await mockProjectList(page);
   await page.goto("/projects");
 
@@ -572,13 +573,34 @@ test("workspace shell supports grouped navigation, command search, and three-sta
   );
   await page.goto("/projects");
 
-  await page.getByRole("button", { name: "外观设置" }).click();
-  await page.getByRole("menuitemradio", { name: "深色" }).click();
+  const darkToggle = page.getByRole("button", { name: "切换至深色" });
+  await darkToggle.hover();
+  await expect(
+    page.locator('[role="tooltip"][data-tooltip="切换至深色"]'),
+  ).toBeVisible();
+  await page.locator("header.app-topbar").screenshot({
+    path: testInfo.outputPath("theme-toggle-light-header-1440.png"),
+  });
+  await darkToggle.click();
   await expect(page.locator("html")).toHaveClass(/dark/);
   await expect(page.locator("html")).toHaveAttribute(
     "data-theme-preference",
     "dark",
   );
+  const lightToggle = page.getByRole("button", { name: "切换至浅色" });
+  const lightTooltip = page.locator(
+    '[role="tooltip"][data-tooltip="切换至浅色"]',
+  );
+  await expect(lightToggle).toBeFocused();
+  await expect(lightTooltip).toHaveCSS("opacity", "0");
+  await page.mouse.move(10, 400);
+  await expect(lightTooltip).toHaveCSS("opacity", "0");
+  await page.keyboard.press("Tab");
+  await page.keyboard.press("Shift+Tab");
+  await expect(lightToggle).toBeFocused();
+  await expect(lightTooltip).toHaveCSS("opacity", "1");
+  await page.keyboard.press("Tab");
+  await expect(lightTooltip).toHaveCSS("opacity", "0");
   await expect(page.getByRole("button", { name: "全部状态" })).toHaveCSS(
     "background-color",
     "rgb(31, 31, 34)",
@@ -587,12 +609,16 @@ test("workspace shell supports grouped navigation, command search, and three-sta
     fullPage: true,
     path: testInfo.outputPath("workspace-shell-dark-1440.png"),
   });
+  await page.locator("header.app-topbar").screenshot({
+    path: testInfo.outputPath("theme-toggle-dark-header-1440.png"),
+  });
 
-  await page.getByRole("button", { name: "外观设置" }).click();
-  await page.getByRole("menuitemradio", { name: "跟随系统" }).click();
+  await expect(page.getByRole("menuitemradio")).toHaveCount(0);
+  await lightToggle.click();
+  await expect(page.locator("html")).toHaveClass(/light/);
   await expect(page.locator("html")).toHaveAttribute(
     "data-theme-preference",
-    "system",
+    "light",
   );
 
   const helpButton = page.getByRole("button", { name: "帮助中心" });
@@ -603,7 +629,76 @@ test("workspace shell supports grouped navigation, command search, and three-sta
   await expect(helpButton).toBeFocused();
 });
 
-test("theme hydration, reload, and system changes remain stable on every route", async ({
+test("chromatic sidebar keeps active color and collapsed hover text", async ({
+  page,
+}, testInfo) => {
+  await page.setViewportSize({ height: 900, width: 1440 });
+  await page.addInitScript(() => {
+    localStorage.setItem("sidebar-collapsed", "false");
+    localStorage.setItem("theme", "light");
+  });
+  await mockResourceLists(page);
+  await page.goto(`/projects/${resourceProjectId}/datasets`);
+
+  const datasetLink = page.getByRole("link", { name: "测试用例" });
+  await expect(datasetLink).toHaveAttribute("aria-current", "page");
+  await expect(datasetLink).toHaveAttribute("data-navigation-tone", "indigo");
+  await expect(
+    datasetLink.locator('[data-navigation-icon="chromatic-signal"]'),
+  ).toBeVisible();
+  await expect(datasetLink.locator("[data-navigation-signal]")).toBeVisible();
+  await page.locator("aside.app-sidebar").screenshot({
+    path: testInfo.outputPath("chromatic-sidebar-light-expanded.png"),
+  });
+
+  await page.getByRole("button", { name: "收起侧边栏" }).click();
+  await expect(page.locator("aside.app-sidebar")).toHaveAttribute(
+    "data-collapsed",
+    "true",
+  );
+  await datasetLink.hover();
+  await expect(
+    page.locator('[role="tooltip"][data-tooltip="测试用例"]'),
+  ).toBeVisible();
+  await page.locator("aside.app-sidebar").screenshot({
+    path: testInfo.outputPath("chromatic-sidebar-light-collapsed.png"),
+  });
+
+  await page.getByRole("button", { name: "切换至深色" }).click();
+  await expect(page.locator("html")).toHaveClass(/dark/);
+  await page.mouse.move(900, 500);
+  await page.locator("aside.app-sidebar").screenshot({
+    path: testInfo.outputPath("chromatic-sidebar-dark-collapsed.png"),
+  });
+
+  await page.getByRole("button", { name: "展开侧边栏" }).click();
+  await expect(page.locator("aside.app-sidebar")).toHaveAttribute(
+    "data-collapsed",
+    "false",
+  );
+
+  await page.setViewportSize({ height: 844, width: 390 });
+  await page.getByRole("button", { name: "打开导航" }).click();
+  const mobileNavigation = page.getByRole("dialog", { name: "项目导航" });
+  await expect(
+    mobileNavigation
+      .getByRole("link", { name: "测试用例" })
+      .locator('[data-navigation-icon="chromatic-signal"]'),
+  ).toBeVisible();
+  await mobileNavigation.screenshot({
+    path: testInfo.outputPath("chromatic-sidebar-mobile-dark.png"),
+  });
+  await mobileNavigation.getByRole("button", { name: "关闭导航" }).click();
+
+  await page.getByRole("button", { name: "切换至浅色" }).click();
+  await page.getByRole("button", { name: "打开导航" }).click();
+  await mobileNavigation.screenshot({
+    path: testInfo.outputPath("chromatic-sidebar-mobile-light.png"),
+  });
+  await expect(page.locator("html")).toHaveClass(/light/);
+});
+
+test("theme hydration, reload, and legacy migration remain stable on every route", async ({
   page,
 }) => {
   const hydrationErrors: string[] = [];
@@ -634,15 +729,22 @@ test("theme hydration, reload, and system changes remain stable on every route",
   await expect(page.locator("html")).toHaveClass(/dark/);
   expect(hydrationErrors).toEqual([]);
 
-  await page.evaluate(() => localStorage.setItem("theme", "system"));
-  await page.emulateMedia({ colorScheme: "light" });
-  await page.goto("/docs");
-  await expect(page.locator("html")).toHaveClass(/light/);
   await page.emulateMedia({ colorScheme: "dark" });
+  await page.evaluate(() => localStorage.setItem("theme", "system"));
+  await page.goto("/docs");
   await expect(page.locator("html")).toHaveClass(/dark/);
   await expect(page.locator("html")).toHaveAttribute(
     "data-theme-preference",
-    "system",
+    "dark",
+  );
+  await expect
+    .poll(() => page.evaluate(() => localStorage.getItem("theme")))
+    .toBe("dark");
+  await page.emulateMedia({ colorScheme: "light" });
+  await expect(page.locator("html")).toHaveClass(/dark/);
+  await expect(page.locator("html")).toHaveAttribute(
+    "data-theme-preference",
+    "dark",
   );
   expect(hydrationErrors).toEqual([]);
 });

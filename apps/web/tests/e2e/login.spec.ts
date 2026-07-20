@@ -82,6 +82,47 @@ test.describe("项目导航", () => {
     await expect(page.getByRole("button", { name: "登录" })).toBeVisible();
   });
 
+  test("pending session keeps landing entry copy stable", async ({
+    page,
+  }, testInfo) => {
+    let releaseSession!: () => void;
+    const sessionGate = new Promise<void>((resolve) => {
+      releaseSession = resolve;
+    });
+    await page.setViewportSize({ height: 900, width: 1440 });
+    await page.route("**/api/v1/auth/me", async (route) => {
+      await sessionGate;
+      await route.fulfill({
+        contentType: "application/json",
+        json: { detail: "Not authenticated" },
+        status: 401,
+      });
+    });
+
+    await page.goto("/login");
+
+    const headerEntry = page.getByRole("button", {
+      exact: true,
+      name: "登录",
+    });
+    const heroEntry = page.getByRole("button", { name: "登录并开始" });
+    await expect(page.getByText("正在检查")).toHaveCount(0);
+    await expect(headerEntry).toBeDisabled();
+    await expect(headerEntry).toHaveAttribute("aria-busy", "true");
+    await expect(heroEntry).toBeDisabled();
+    await expect(heroEntry).toHaveAttribute("aria-busy", "true");
+    await page.screenshot({
+      path: testInfo.outputPath("landing-pending-session-1440.png"),
+    });
+
+    releaseSession();
+    await expect(headerEntry).toBeEnabled();
+    await expect(headerEntry).toHaveAttribute("aria-busy", "false");
+    await expect(heroEntry).toBeEnabled();
+    await expect(heroEntry).toHaveAttribute("aria-busy", "false");
+    await expect(page.getByText("正在检查")).toHaveCount(0);
+  });
+
   test("登录成功停留落地页，用户确认后再进入工作台", async ({ page }) => {
     await mockSuccessfulLogin(page);
     await page.goto("/login");

@@ -79,7 +79,9 @@ describe("LoginScreen", () => {
     ).not.toBeInTheDocument();
     expect(screen.queryByText("PROJECT")).not.toBeInTheDocument();
     expect(screen.getByText(/持续验证 Agent 的能力、质量与安全/)).toBeVisible();
-    expect(screen.getByRole("button", { name: "外观设置" })).toBeVisible();
+    expect(
+      screen.getByRole("button", { name: /切换至(深色|浅色)/ }),
+    ).toBeVisible();
     expect(
       screen.queryByRole("navigation", { name: "产品导航" }),
     ).not.toBeInTheDocument();
@@ -91,7 +93,9 @@ describe("LoginScreen", () => {
       screen.queryByRole("button", { name: "搜索" }),
     ).not.toBeInTheDocument();
 
-    fireEvent.click(await screen.findByRole("button", { name: "登录" }));
+    const loginButton = await screen.findByRole("button", { name: "登录" });
+    await waitFor(() => expect(loginButton).toBeEnabled());
+    fireEvent.click(loginButton);
 
     expect(screen.getByRole("dialog")).toBeVisible();
     expect(screen.getByText("登录测试工作台")).toBeVisible();
@@ -168,19 +172,17 @@ describe("LoginScreen", () => {
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   });
 
-  it("does not show login while the existing session check is still pending", () => {
+  it("keeps entry copy stable while the session check is pending", () => {
     getCurrentUserMock.mockReturnValue(new Promise(() => undefined));
 
     renderWithQueryClient(<LoginScreen />);
 
-    expect(
-      screen.queryByRole("button", { name: "登录" }),
-    ).not.toBeInTheDocument();
-    expect(screen.getAllByRole("button", { name: "正在检查" })).toEqual(
-      expect.arrayContaining([expect.any(HTMLButtonElement)]),
-    );
-    for (const button of screen.getAllByRole("button", { name: "正在检查" })) {
+    expect(screen.queryByText("正在检查")).not.toBeInTheDocument();
+    const headerEntry = screen.getByRole("button", { name: "登录" });
+    const heroEntry = screen.getByRole("button", { name: "登录并开始" });
+    for (const button of [headerEntry, heroEntry]) {
       expect(button).toBeDisabled();
+      expect(button).toHaveAttribute("aria-busy", "true");
     }
   });
 });

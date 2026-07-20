@@ -11,8 +11,10 @@ describe("TruncatedText", () => {
     const trigger = screen.getByLabelText(value);
     expect(trigger).toHaveClass("truncate");
     expect(trigger).toHaveAttribute("tabindex", "0");
+    expect(trigger.parentElement).toHaveClass("app-tooltip-trigger");
     expect(screen.getByRole("tooltip")).toHaveAttribute("data-tooltip", value);
-    expect(screen.getByRole("tooltip")).toHaveClass(
+    expect(screen.getByRole("tooltip")).toHaveClass("app-tooltip-content");
+    expect(screen.getByRole("tooltip")).not.toHaveClass(
       "group-focus-within:opacity-100",
     );
   });

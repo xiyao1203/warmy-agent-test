@@ -21,25 +21,17 @@ export default function RootLayout({
             __html: `
               (function(){
                 try {
-                  var p=localStorage.getItem('theme');
-                  if(p!=='dark'&&p!=='light'&&p!=='system') p='system';
-                  var m=window.matchMedia('(prefers-color-scheme: dark)');
-                  var apply=function(){
-                    var current=localStorage.getItem('theme');
-                    if(current!=='dark'&&current!=='light'&&current!=='system') current='system';
-                    var t=current==='system'?(m.matches?'dark':'light'):current;
-                    var r=document.documentElement;
-                    r.classList.remove('dark','light');
-                    r.classList.add(t);
-                    r.dataset.theme=t;
-                    r.dataset.themePreference=current;
-                    r.style.colorScheme=t;
-                  };
-                  apply();
-                  m.addEventListener('change',function(){
-                    var current=localStorage.getItem('theme');
-                    if(current===null||current==='system') apply();
-                  });
+                  var stored=localStorage.getItem('theme');
+                  var theme=stored==='dark'||stored==='light'
+                    ? stored
+                    : (window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');
+                  if(stored!==theme) localStorage.setItem('theme',theme);
+                  var root=document.documentElement;
+                  root.classList.remove('dark','light');
+                  root.classList.add(theme);
+                  root.dataset.theme=theme;
+                  root.dataset.themePreference=theme;
+                  root.style.colorScheme=theme;
                 } catch(e){}
               })();
             `,

@@ -22,7 +22,7 @@ Warmy Agent Test 是面向专业测试团队的高密度工作台。平台采用
 - 成功、警告、失败、信息使用语义 Token，并同时提供图标或文字。
 - 页面分区优先使用留白和分隔线；卡片仅用于重复资源、指标、模态和真实工具表面。
 - 阴影只用于 Hover 抬升、Dropdown、Popover、Dialog、Drawer 和 Toast。
-- 浅色、深色和跟随系统三种主题保持等价功能与可读性。
+- 浅色和深色两种主题保持等价功能与可读性；主题只由用户显式切换。
 
 ### 排版与密度
 
@@ -118,6 +118,6 @@ Warmy Agent Test 是面向专业测试团队的高密度工作台。平台采用
 
 1. Prettier、ESLint、TypeScript 和 Vitest。
 2. 关键 Playwright 流程、Next.js 构建、架构门禁和 Bundle Budget。
-3. 390px、1280px、1440px、1920px，以及浅色、深色和跟随系统。
+3. 390px、1280px、1440px、1920px，以及浅色和深色。
 4. 键盘焦点、对比度、抽屉、对话框、菜单碰撞和 Reduced Motion。
 5. 路由、权限、API 契约、分页和专业测试字段无回归。

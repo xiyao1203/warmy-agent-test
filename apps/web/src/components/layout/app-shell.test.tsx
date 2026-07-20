@@ -65,7 +65,7 @@ describe("AppShell", () => {
     expect(screen.queryByText("用户与权限")).not.toBeInTheDocument();
   });
 
-  it("uses monochrome navigation icons owned by the current text color", () => {
+  it("uses the typed chromatic-signal icon system across navigation", () => {
     render(
       <AppShell
         currentProjectId={project.id}
@@ -77,11 +77,32 @@ describe("AppShell", () => {
       </AppShell>,
     );
 
-    const icon = screen
-      .getByRole("link", { name: "测试用例" })
-      .querySelector("[data-navigation-icon]");
-    expect(icon).toHaveAttribute("data-navigation-icon", "monochrome");
-    expect(icon).toHaveClass("text-current");
+    const navigation = screen.getByRole("navigation", { name: "项目导航" });
+    const links = within(navigation).getAllByRole("link");
+    const supportedTones = new Set([
+      "amber",
+      "blue",
+      "coral",
+      "indigo",
+      "mint",
+    ]);
+
+    for (const link of links) {
+      expect(supportedTones).toContain(
+        link.getAttribute("data-navigation-tone"),
+      );
+      expect(
+        link.querySelector('[data-navigation-icon="chromatic-signal"]'),
+      ).toBeInTheDocument();
+    }
+
+    const datasetLink = screen.getByRole("link", { name: "测试用例" });
+    expect(datasetLink).toHaveAttribute("data-navigation-tone", "indigo");
+    const icon = datasetLink.querySelector(
+      '[data-navigation-icon="chromatic-signal"]',
+    );
+    expect(icon?.querySelector("svg")).toBeInTheDocument();
+    expect(icon?.querySelector("[data-navigation-signal]")).toBeInTheDocument();
   });
 
   it("keeps a compact pure-navigation sidebar with shared collapsed tooltips", () => {
