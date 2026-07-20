@@ -84,6 +84,35 @@ describe("AppShell", () => {
     expect(icon).toHaveClass("text-current");
   });
 
+  it("keeps a compact pure-navigation sidebar with shared collapsed tooltips", () => {
+    render(
+      <AppShell
+        currentProjectId={project.id}
+        onProjectSelect={vi.fn()}
+        projects={[project]}
+        user={developer}
+      >
+        Content
+      </AppShell>,
+    );
+
+    const navigation = screen.getByRole("navigation", { name: "项目导航" });
+    expect(navigation).not.toHaveTextContent(/通过率|运行数量|统计/);
+    expect(
+      navigation.querySelector("[data-navigation-icon-carrier]"),
+    ).toHaveClass("app-nav-icon");
+
+    fireEvent.click(screen.getByRole("button", { name: "收起侧边栏" }));
+
+    const collapsedLink = screen.getByRole("link", { name: "测试用例" });
+    expect(collapsedLink).not.toHaveAttribute("title");
+    expect(
+      screen
+        .getAllByRole("tooltip")
+        .some((tooltip) => tooltip.getAttribute("data-tooltip") === "测试用例"),
+    ).toBe(true);
+  });
+
   it("opens the global command palette with Cmd/Ctrl+K and filters routes", () => {
     render(
       <AppShell

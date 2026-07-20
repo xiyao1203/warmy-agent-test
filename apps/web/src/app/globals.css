@@ -160,8 +160,9 @@ samp {
 }
 
 .app-nav-link {
+  position: relative;
   display: flex;
-  height: 2rem;
+  height: var(--navigation-row-height);
   align-items: center;
   justify-content: flex-start;
   gap: 0.625rem;
@@ -192,6 +193,41 @@ samp {
   background: var(--primary-subtle);
   color: var(--primary);
   font-weight: 600;
+}
+
+.app-nav-link[data-active="true"]::before {
+  position: absolute;
+  inset: 0.5rem auto 0.5rem -0.5rem;
+  width: 2px;
+  border-radius: 0 2px 2px 0;
+  background: var(--primary);
+  content: "";
+}
+
+.app-nav-icon {
+  display: grid;
+  width: var(--icon-carrier-size);
+  height: var(--icon-carrier-size);
+  flex: 0 0 auto;
+  place-items: center;
+  transition:
+    color var(--motion-standard) ease,
+    transform var(--motion-standard) ease;
+}
+
+.app-nav-icon svg {
+  width: var(--icon-optical-size);
+  height: var(--icon-optical-size);
+  stroke-width: 1.75;
+}
+
+.app-nav-link:hover .app-nav-icon,
+.app-nav-link:focus-visible .app-nav-icon {
+  transform: translateX(1px);
+}
+
+[data-collapsed="true"] .app-nav-link[data-active="true"]::before {
+  inset-block: 0.5rem;
 }
 
 .precision-list-card {
