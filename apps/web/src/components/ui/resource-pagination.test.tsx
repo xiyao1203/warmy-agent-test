@@ -7,7 +7,7 @@ describe("ResourcePagination", () => {
   it("renders standard navigation and changes page", () => {
     const onPageChange = vi.fn();
 
-    render(
+    const { container } = render(
       <ResourcePagination
         onPageChange={onPageChange}
         onPageSizeChange={vi.fn()}
@@ -20,6 +20,17 @@ describe("ResourcePagination", () => {
 
     expect(screen.getByText("共 42 条")).toBeInTheDocument();
     expect(screen.getByText("第 2 / 5 页")).toBeInTheDocument();
+    const totalGroup = container.querySelector("[data-pagination-total]");
+    const controls = container.querySelector("[data-pagination-controls]");
+    expect(totalGroup).toHaveTextContent("共 42 条");
+    expect(controls).toContainElement(
+      screen.getByRole("combobox", { name: "每页条数" }),
+    );
+    expect(controls).toContainElement(screen.getByText("第 2 / 5 页"));
+    expect(controls).toContainElement(
+      screen.getByRole("navigation", { name: "分页" }),
+    );
+    expect(controls).not.toContainElement(screen.getByText("共 42 条"));
     fireEvent.click(screen.getByRole("button", { name: "下一页" }));
     expect(onPageChange).toHaveBeenCalledWith(3);
   });

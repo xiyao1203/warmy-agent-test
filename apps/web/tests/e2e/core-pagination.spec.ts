@@ -43,7 +43,8 @@ function project(index: number) {
 
 test("project list keeps standard pagination in the URL and compact viewport", async ({
   page,
-}) => {
+}, testInfo) => {
+  await page.setViewportSize({ height: 900, width: 1440 });
   await mockSession(page);
   const allProjects = Array.from({ length: 21 }, (_, index) =>
     project(index + 1),
@@ -71,6 +72,33 @@ test("project list keeps standard pagination in the URL and compact viewport", a
   await expect(page.getByText("共 21 条")).toBeVisible();
   await expect(page.getByText("第 1 / 3 页")).toBeVisible();
 
+  const controls = page.locator("[data-pagination-controls]");
+  const paginationFooter = controls.locator("..");
+  const desktopGeometry = await controls.evaluate((element) => {
+    const footer = element.parentElement!;
+    const total = footer.querySelector("[data-pagination-total]")!;
+    const controlsRect = element.getBoundingClientRect();
+    const footerRect = footer.getBoundingClientRect();
+    const totalRect = total.getBoundingClientRect();
+    return {
+      controlsLeft: controlsRect.left,
+      justifyContent: getComputedStyle(element).justifyContent,
+      rightInset:
+        footerRect.right -
+        Number.parseFloat(getComputedStyle(footer).paddingRight) -
+        controlsRect.right,
+      totalRight: totalRect.right,
+    };
+  });
+  expect(desktopGeometry.justifyContent).toBe("flex-end");
+  expect(desktopGeometry.controlsLeft).toBeGreaterThanOrEqual(
+    desktopGeometry.totalRight,
+  );
+  expect(Math.abs(desktopGeometry.rightInset)).toBeLessThanOrEqual(1);
+  await paginationFooter.screenshot({
+    path: testInfo.outputPath("pagination-footer-1440.png"),
+  });
+
   await page.getByRole("button", { name: "下一页" }).click();
   await expect(page).toHaveURL(/page=2/);
   await expect(page.getByLabel("分页验收项目 11").first()).toBeVisible();
@@ -81,10 +109,27 @@ test("project list keeps standard pagination in the URL and compact viewport", a
   await expect(page.getByText("第 1 / 2 页")).toBeVisible();
 
   await page.setViewportSize({ height: 844, width: 390 });
+  const mobileGeometry = await controls.evaluate((element) => {
+    const rect = element.getBoundingClientRect();
+    return {
+      clientWidth: element.clientWidth,
+      justifyContent: getComputedStyle(element).justifyContent,
+      right: rect.right,
+      scrollWidth: element.scrollWidth,
+    };
+  });
+  expect(mobileGeometry.justifyContent).toBe("flex-end");
+  expect(mobileGeometry.scrollWidth).toBeLessThanOrEqual(
+    mobileGeometry.clientWidth,
+  );
+  expect(mobileGeometry.right).toBeLessThanOrEqual(390);
   const overflow = await page.evaluate(
     () =>
       document.documentElement.scrollWidth -
       document.documentElement.clientWidth,
   );
   expect(overflow).toBeLessThanOrEqual(1);
+  await paginationFooter.screenshot({
+    path: testInfo.outputPath("pagination-footer-390.png"),
+  });
 });

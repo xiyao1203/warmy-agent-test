@@ -37,11 +37,16 @@ export function ResourcePagination({
   const currentPage = empty ? 0 : Math.min(page, totalPages);
   return (
     <div className="flex min-h-14 flex-wrap items-center justify-between gap-3 border-t border-[var(--hairline)] px-4 py-2.5 text-xs text-[var(--muted)]">
-      <div className="flex items-center gap-3">
-        <span>共 {total} 条</span>
+      <span className="shrink-0" data-pagination-total>
+        共 {total} 条
+      </span>
+      <div
+        className="ml-auto flex min-w-0 flex-1 flex-wrap items-center justify-end gap-x-3 gap-y-2"
+        data-pagination-controls
+      >
         <Select
           aria-label="每页条数"
-          className="w-28"
+          className="w-28 shrink-0"
           onChange={(event) =>
             onPageSizeChange(Number(event.target.value) as PageSize)
           }
@@ -53,12 +58,10 @@ export function ResourcePagination({
             </option>
           ))}
         </Select>
-      </div>
-      <div className="flex items-center gap-3">
-        <span>
+        <span className="shrink-0 whitespace-nowrap">
           第 {currentPage} / {totalPages} 页
         </span>
-        <Pagination>
+        <Pagination className="shrink-0">
           <PaginationButton
             aria-label="首页"
             disabled={empty || currentPage <= 1}
