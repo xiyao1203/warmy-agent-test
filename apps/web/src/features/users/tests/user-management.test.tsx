@@ -101,6 +101,22 @@ describe("UserManagement", () => {
   it("renders dense rows and opens a protected detail drawer", async () => {
     render(<UserManagement currentUser={currentUser} users={users} />);
 
+    expect(screen.getByRole("article", { name: "全部用户" })).toHaveAttribute(
+      "data-tone",
+      "accent",
+    );
+    expect(screen.getByRole("article", { name: "活跃" })).toHaveAttribute(
+      "data-tone",
+      "success",
+    );
+    expect(screen.getByRole("article", { name: "已禁用" })).toHaveAttribute(
+      "data-tone",
+      "danger",
+    );
+    expect(screen.getByRole("article", { name: "需改密" })).toHaveAttribute(
+      "data-tone",
+      "warning",
+    );
     expect(screen.getByText("dev@example.com")).toBeVisible();
     expect(screen.getAllByText("开发").length).toBeGreaterThan(0);
     expect(screen.getAllByText("已禁用").length).toBeGreaterThan(0);

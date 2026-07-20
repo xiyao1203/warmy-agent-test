@@ -16,13 +16,14 @@ import {
   Settings2,
   ShieldCheck,
   SlidersHorizontal,
-  Sparkles,
   Users,
+  Workflow,
   X,
   type LucideIcon,
 } from "lucide-react";
 import Link from "next/link";
 
+import { Tooltip } from "@/components/uiverse";
 import { projectOverviewPath, projectWorkspacePath } from "@/lib/routes";
 
 export type NavigationItem = {
@@ -53,7 +54,7 @@ export function projectNavigation(projectId: string): NavigationGroup[] {
       items: [
         {
           href: projectWorkspacePath(projectId),
-          icon: Sparkles,
+          icon: Workflow,
           label: "测试 Agent",
         },
         {
@@ -211,7 +212,7 @@ function NavigationLink({
 }) {
   const active = isRouteActive(pathname, item);
   const Icon = item.icon;
-  return (
+  const link = (
     <Link
       aria-current={active ? "page" : undefined}
       aria-label={item.label}
@@ -219,15 +220,28 @@ function NavigationLink({
       data-active={active}
       href={item.href}
       onClick={onNavigate}
-      title={collapsed ? item.label : undefined}
     >
-      <Icon
-        aria-hidden="true"
-        className="size-4 shrink-0 text-current"
-        data-navigation-icon="monochrome"
-      />
+      <span className="app-nav-icon" data-navigation-icon-carrier>
+        <Icon
+          aria-hidden="true"
+          className="shrink-0 text-current"
+          data-navigation-icon="monochrome"
+        />
+      </span>
       {!collapsed ? <span className="truncate">{item.label}</span> : null}
     </Link>
+  );
+
+  if (!collapsed) return link;
+
+  return (
+    <Tooltip
+      className="w-full justify-center"
+      content={item.label}
+      side="right"
+    >
+      {link}
+    </Tooltip>
   );
 }
 

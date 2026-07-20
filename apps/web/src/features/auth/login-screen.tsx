@@ -1,16 +1,17 @@
 "use client";
 
+import { useQuery } from "@tanstack/react-query";
 import {
+  Activity,
   ArrowRight,
   Bot,
   CheckCircle2,
-  Database,
-  FlaskConical,
-  PlayCircle,
+  CircleAlert,
+  Clock3,
+  Gauge,
+  GitCompareArrows,
   ShieldCheck,
-  Sparkles,
 } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { useState, type ReactNode } from "react";
 
@@ -22,6 +23,7 @@ import {
   DialogDescription,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { MetricCard, MetricGrid } from "@/components/ui/metric-card";
 import { listProjects } from "@/features/projects";
 
 import { getCurrentUser } from "./api";
@@ -31,30 +33,45 @@ import {
 } from "./login-destination";
 import { LoginForm } from "./login-form";
 
-const EVIDENCE_STEPS = [
+const RUN_ROWS = [
+  {
+    agent: "Customer Support Agent v2.8",
+    progress: "68 / 100",
+    run: "Run #1842",
+    state: "运行中",
+    tone: "info",
+  },
+  {
+    agent: "Canvas Agent v4.1",
+    progress: "98.2% 通过",
+    run: "Run #1841",
+    state: "已完成",
+    tone: "success",
+  },
+  {
+    agent: "Browser Agent v1.6",
+    progress: "3 个执行错误",
+    run: "Run #1840",
+    state: "需处理",
+    tone: "danger",
+  },
+] as const;
+
+const CAPABILITIES = [
   {
     icon: <Bot aria-hidden="true" />,
-    label: "测试 Agent",
-    text: "把需求生成可编辑用例",
-    state: "已同步",
+    label: "测试资产",
+    text: "对话生成的用例、计划和评分规则保持结构化、可编辑、可追溯。",
   },
   {
-    icon: <Database aria-hidden="true" />,
-    label: "用例库",
-    text: "断言、输入和评分保持一致",
-    state: "128 条",
-  },
-  {
-    icon: <PlayCircle aria-hidden="true" />,
-    label: "运行中心",
-    text: "API 与浏览器执行沉淀证据",
-    state: "运行中",
+    icon: <Activity aria-hidden="true" />,
+    label: "真实执行",
+    text: "API 与浏览器运行持续采集 Trace、截图、产物、成本和状态变化。",
   },
   {
     icon: <ShieldCheck aria-hidden="true" />,
-    label: "发布门禁",
-    text: "审核、安全与质量结论可追溯",
-    state: "风险低",
+    label: "质量门禁",
+    text: "自动评分、安全测试和人工审核共同形成可解释的发布结论。",
   },
 ] as const;
 
@@ -86,9 +103,19 @@ export function LoginScreen({ returnTo }: { returnTo?: string }) {
     : null;
   const effectiveEntryPath = workspaceEntryPath ?? sessionEntryPath;
   const sessionChecking = sessionQuery.isPending;
-  const hasWorkspaceEntry =
-    sessionChecking || Boolean(workspaceEntryPath) || sessionQuery.isSuccess;
-  const entryResolving = hasWorkspaceEntry && !effectiveEntryPath;
+  const authenticated = Boolean(workspaceEntryPath) || sessionQuery.isSuccess;
+  const entryResolving =
+    sessionChecking || (authenticated && !effectiveEntryPath);
+  const headerEntryLabel = sessionChecking
+    ? "正在检查"
+    : authenticated
+      ? "工作台"
+      : "登录";
+  const heroEntryLabel = sessionChecking
+    ? "正在检查"
+    : authenticated
+      ? "进入工作台"
+      : "登录并开始";
 
   function handleSuccess(path: string) {
     setWorkspaceEntryPath(path);
@@ -96,9 +123,7 @@ export function LoginScreen({ returnTo }: { returnTo?: string }) {
   }
 
   function openWorkspaceEntry() {
-    if (entryResolving) {
-      return;
-    }
+    if (entryResolving) return;
     if (effectiveEntryPath) {
       router.push(effectiveEntryPath);
       return;
@@ -108,127 +133,133 @@ export function LoginScreen({ returnTo }: { returnTo?: string }) {
 
   return (
     <main className="min-h-screen bg-[var(--canvas)] text-[var(--ink)]">
-      <header className="sticky top-0 z-40 border-b border-[var(--hairline)] bg-[var(--surface)]/95 backdrop-blur-lg">
+      <header className="sticky top-0 z-40 border-b border-[var(--hairline)] bg-[var(--surface)]">
         <div className="mx-auto flex h-14 max-w-7xl items-center justify-between px-5 sm:px-8">
-          <div className="flex min-w-0 items-center gap-8">
-            <div
-              className="flex min-w-0 items-center gap-3"
-              data-testid="landing-brand"
-            >
-              <BrandMark />
-              <span className="font-display truncate text-sm font-semibold">
-                Warmy Agent Test
-              </span>
-            </div>
+          <div
+            className="flex min-w-0 items-center gap-3"
+            data-testid="landing-brand"
+          >
+            <BrandMark />
+            <span className="font-display truncate text-sm font-semibold">
+              Warmy Agent Test
+            </span>
           </div>
-
           <div className="flex items-center gap-2">
             <ThemeToggle className="size-9 text-[var(--muted)] hover:bg-[var(--canvas-soft)] hover:text-[var(--ink)]" />
             <button
-              className="inline-flex h-9 items-center justify-center rounded-[var(--radius-md)] bg-[var(--primary)] px-4 text-sm font-medium text-[var(--on-primary)] transition-colors hover:bg-[var(--primary-active)] disabled:cursor-not-allowed disabled:opacity-60"
+              className="inline-flex h-9 items-center justify-center rounded-[var(--radius-md)] bg-[var(--primary)] px-4 text-sm font-medium text-[var(--on-primary)] transition-[background,transform] duration-[var(--motion-fast)] hover:bg-[var(--primary-active)] active:translate-y-px disabled:cursor-not-allowed disabled:translate-y-0 disabled:opacity-60"
               disabled={entryResolving}
               onClick={openWorkspaceEntry}
               type="button"
             >
-              {hasWorkspaceEntry ? "工作台" : "登录"}
+              {headerEntryLabel}
             </button>
           </div>
         </div>
       </header>
 
-      <section className="border-b border-[var(--hairline)] bg-[var(--canvas)]">
-        <div className="mx-auto grid min-h-[calc(100vh-3.5rem)] max-w-7xl items-center gap-12 px-5 py-14 sm:px-8 lg:grid-cols-[0.9fr_1.1fr] lg:py-16">
-          <div className="max-w-2xl">
-            <p className="inline-flex items-center gap-2 rounded-[var(--radius-pill)] border border-[var(--hairline)] bg-[var(--surface)] px-3 py-1.5 text-xs text-[var(--body)]">
-              <Sparkles
-                aria-hidden="true"
-                className="size-3.5 text-[var(--primary)]"
-              />
-              Agent 发布前的测试证据层
+      <section className="border-b border-[var(--hairline)]">
+        <div className="mx-auto flex min-h-[calc(92svh-3.5rem)] max-w-7xl flex-col justify-center px-5 pb-12 pt-14 sm:px-8 sm:pt-16">
+          <div className="mx-auto max-w-4xl text-center">
+            <p className="text-sm font-medium text-[var(--primary)]">
+              Agent testing and release evidence
             </p>
-            <h1 className="mt-6 text-[40px] font-semibold leading-[1.08] tracking-[-0.035em] sm:text-[58px]">
-              把 AI Agent 的每次变更，变成可发布的证据。
+            <h1 className="mt-4 text-[42px] font-semibold leading-[1.05] sm:text-[58px]">
+              Warmy Agent Test
             </h1>
-            <p className="mt-6 max-w-xl text-[17px] leading-7 text-[var(--body)]">
-              从测试 Agent
-              生成用例，到浏览器执行、评分、安全测试和人工审核，所有结果沉淀到同一条发布链路里。
+            <p className="mx-auto mt-6 max-w-2xl text-base leading-7 text-[var(--body)] sm:text-[17px]">
+              持续验证 Agent
+              的能力、质量与安全，把每次执行沉淀为可复现、可审核、可放行的测试证据。
             </p>
-            <div className="mt-8 flex flex-wrap items-center gap-3">
+            <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
               <button
-                className="inline-flex h-10 items-center justify-center rounded-[var(--radius-md)] bg-[var(--primary)] px-5 text-sm font-medium text-[var(--on-primary)] transition-colors hover:bg-[var(--primary-active)] disabled:cursor-not-allowed disabled:opacity-60"
+                className="inline-flex h-10 items-center justify-center rounded-[var(--radius-md)] bg-[var(--primary)] px-5 text-sm font-medium text-[var(--on-primary)] transition-[background,transform] duration-[var(--motion-fast)] hover:bg-[var(--primary-active)] active:translate-y-px disabled:cursor-not-allowed disabled:translate-y-0 disabled:opacity-60"
                 disabled={entryResolving}
                 onClick={openWorkspaceEntry}
                 type="button"
               >
-                进入工作台
+                {heroEntryLabel}
               </button>
-              <button
-                className="inline-flex h-10 items-center gap-2 rounded-[var(--radius-md)] border border-[var(--hairline-strong)] bg-[var(--surface)] px-4 text-sm text-[var(--ink)] transition-colors hover:bg-[var(--canvas-soft)] disabled:cursor-not-allowed disabled:opacity-60"
-                disabled={entryResolving}
-                onClick={openWorkspaceEntry}
-                type="button"
+              <a
+                className="inline-flex h-10 items-center gap-2 rounded-[var(--radius-md)] border border-[var(--hairline-strong)] bg-[var(--surface)] px-4 text-sm text-[var(--ink)] transition-[background,border-color,transform] duration-[var(--motion-fast)] hover:bg-[var(--canvas-soft)] active:translate-y-px"
+                href="#product-evidence"
               >
-                查看闭环路径
+                查看运行证据
                 <ArrowRight aria-hidden="true" className="size-4" />
-              </button>
-            </div>
-            <div className="mt-10 grid gap-3 sm:grid-cols-3">
-              <ProofMetric label="生成测试资产" value="Agent" />
-              <ProofMetric label="运行与证据" value="Trace" />
-              <ProofMetric label="发布前把关" value="Gate" />
+              </a>
             </div>
           </div>
 
-          <EvidenceMap />
+          <div className="mt-12 sm:mt-14">
+            <ProductEvidence />
+          </div>
         </div>
       </section>
 
-      <section className="bg-[var(--canvas)] px-5 py-16 text-[var(--ink)] sm:px-8">
-        <div className="mx-auto max-w-7xl">
+      <section className="border-b border-[var(--hairline)] bg-[var(--surface)]">
+        <div className="mx-auto max-w-7xl px-5 py-16 sm:px-8">
           <div className="max-w-2xl">
             <p className="text-sm font-medium text-[var(--primary)]">
-              End-to-end workflow
+              一条连续的质量链路
             </p>
-            <h2 className="mt-3 text-[34px] font-semibold leading-tight tracking-normal">
-              从生成、执行到放行，减少用户理解成本。
+            <h2 className="mt-3 text-[30px] font-semibold leading-tight">
+              从测试资产到发布结论，每一步都有证据。
             </h2>
           </div>
-          <div className="mt-8 grid gap-4 lg:grid-cols-4">
-            <WorkflowCard
-              icon={<Bot aria-hidden="true" />}
-              label="测试 Agent"
-              text="对话生成用例，人工确认后同步到用例库。"
-            />
-            <WorkflowCard
-              icon={<PlayCircle aria-hidden="true" />}
-              label="运行中心"
-              text="绑定版本后启动执行，进度、截图和 Trace 聚合展示。"
-            />
-            <WorkflowCard
-              icon={<FlaskConical aria-hidden="true" />}
-              label="评分与安全"
-              text="评分器、安全策略和失败证据统一进入结果。"
-            />
-            <WorkflowCard
-              icon={<ShieldCheck aria-hidden="true" />}
-              label="发布门禁"
-              text="人工审核通过后，形成可追溯的发布结论。"
-            />
+          <div className="mt-9 grid border-y border-[var(--hairline)] md:grid-cols-3">
+            {CAPABILITIES.map((capability) => (
+              <Capability key={capability.label} {...capability} />
+            ))}
           </div>
         </div>
       </section>
 
-      <footer className="border-t border-[var(--hairline)] bg-[var(--canvas-soft)] px-5 py-8 text-center text-xs text-[var(--muted)]">
-        内部账号访问。管理员创建用户后即可进入测试 Agent 工作流。
+      <section className="bg-[var(--canvas-soft)]">
+        <div className="mx-auto max-w-7xl px-5 py-16 sm:px-8">
+          <div className="grid gap-8 lg:grid-cols-[0.72fr_1.28fr] lg:items-start">
+            <div>
+              <p className="text-sm font-medium text-[var(--primary)]">
+                Release confidence
+              </p>
+              <h2 className="mt-3 text-[30px] font-semibold leading-tight">
+                看清退化、风险与阻塞，再决定是否发布。
+              </h2>
+              <p className="mt-4 text-sm leading-6 text-[var(--muted)]">
+                运行结果关联具体版本、用例、Trace、评分和审核意见，失败可以直接进入回归闭环。
+              </p>
+            </div>
+            <div className="border-l border-[var(--hairline)] lg:pl-8">
+              <EvidenceLine
+                icon={<GitCompareArrows aria-hidden="true" />}
+                label="版本对比"
+                text="3 个关键用例出现退化，已定位到工具调用顺序。"
+              />
+              <EvidenceLine
+                icon={<Gauge aria-hidden="true" />}
+                label="评分与安全"
+                text="质量评分 0.92，安全检查无高危发现。"
+              />
+              <EvidenceLine
+                icon={<ShieldCheck aria-hidden="true" />}
+                label="发布门禁"
+                text="关键阈值已满足，等待 1 项人工审核结论。"
+              />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <footer className="border-t border-[var(--hairline)] bg-[var(--surface)] px-5 py-8 text-center text-xs text-[var(--muted)]">
+        使用组织账号登录。账号与项目权限由超级管理员统一管理。
       </footer>
 
       <Dialog onOpenChange={setLoginOpen} open={loginOpen}>
         <DialogContent className="w-[min(27rem,calc(100vw-2rem))] p-6">
-          <DialogTitle className="text-[28px] font-semibold leading-tight tracking-normal">
+          <DialogTitle className="text-[28px] font-semibold leading-tight">
             登录测试工作台
           </DialogTitle>
           <DialogDescription>
-            使用组织账号继续，登录后进入测试 Agent 工作流。
+            使用组织账号继续，登录后可选择进入已授权的项目工作台。
           </DialogDescription>
           <div className="mt-6">
             <LoginForm onSuccess={handleSuccess} returnTo={returnTo} />
@@ -246,94 +277,137 @@ export function LoginScreen({ returnTo }: { returnTo?: string }) {
   );
 }
 
-function EvidenceMap() {
+function ProductEvidence() {
   return (
-    <div
-      aria-label="测试发布闭环"
-      className="rounded-[var(--radius-lg)] border border-[var(--hairline)] bg-[var(--surface)] p-5 shadow-[var(--shadow-product)]"
+    <section
+      aria-label="真实运行证据"
+      className="overflow-hidden border-y border-[var(--hairline)] bg-[var(--surface)] shadow-[var(--shadow-product)]"
+      id="product-evidence"
     >
-      <div className="flex flex-wrap items-start justify-between gap-4 border-b border-[var(--hairline)] pb-5">
-        <div>
-          <p className="text-sm font-semibold text-[var(--primary)]">
-            Release readiness
-          </p>
-          <h2 className="mt-2 text-[28px] font-semibold leading-tight tracking-normal">
-            发布前证据链
-          </h2>
-          <p className="mt-2 max-w-lg text-sm leading-6 text-[var(--muted)]">
-            不展示桌面壳，只展示用户真正要理解的 Web
-            平台链路：资产、执行、评估、审核和门禁。
-          </p>
+      <div className="flex min-h-11 items-center justify-between gap-4 border-b border-[var(--hairline)] px-4">
+        <div className="flex items-center gap-2 text-xs text-[var(--muted)]">
+          <span>测试执行</span>
+          <span>/</span>
+          <strong className="text-[var(--ink)]">运行中心</strong>
         </div>
-        <span className="rounded-[var(--radius-pill)] bg-[var(--success-subtle)] px-3 py-1.5 text-xs font-medium text-[var(--success)]">
-          发布风险低
+        <span className="inline-flex items-center gap-1.5 text-xs text-[var(--success)]">
+          <span className="size-1.5 rounded-full bg-[var(--success)]" />
+          数据已更新
         </span>
       </div>
 
-      <div className="mt-5 grid gap-3 sm:grid-cols-2">
-        {EVIDENCE_STEPS.map((step, index) => (
-          <EvidenceStep key={step.label} order={index + 1} {...step} />
-        ))}
-      </div>
+      <div className="p-4 sm:p-5">
+        <div className="flex items-end justify-between gap-4">
+          <div>
+            <h2 className="text-lg font-semibold">发布候选 v4.1 回归</h2>
+            <p className="mt-1 text-xs text-[var(--muted)]">
+              100 条用例 · API 与浏览器混合执行 · 基线 v4.0
+            </p>
+          </div>
+          <span className="hidden text-xs text-[var(--muted)] sm:inline">
+            刚刚同步
+          </span>
+        </div>
 
-      <div className="mt-5 grid gap-3 border-t border-[var(--hairline)] pt-5 sm:grid-cols-3">
-        <ReleaseStat label="已同步用例" value="128" />
-        <ReleaseStat label="通过率" value="96%" />
-        <ReleaseStat label="待人工确认" value="5" />
+        <MetricGrid className="mt-4">
+          <MetricCard
+            change="+42"
+            icon={<Activity aria-hidden="true" />}
+            label="全部运行"
+            state="updated"
+            tone="accent"
+            value="1,284"
+          />
+          <MetricCard
+            change="实时"
+            icon={<Clock3 aria-hidden="true" />}
+            label="运行中"
+            state="running"
+            tone="info"
+            value="12"
+          />
+          <MetricCard
+            change="+1.8%"
+            icon={<CheckCircle2 aria-hidden="true" />}
+            label="通过率"
+            state="updated"
+            tone="success"
+            value="96.4%"
+          />
+          <MetricCard
+            change="3 新增"
+            icon={<CircleAlert aria-hidden="true" />}
+            label="异常运行"
+            state="warning"
+            tone="danger"
+            value="8"
+          />
+        </MetricGrid>
+
+        <div className="mt-4 grid border-t border-[var(--hairline)] lg:grid-cols-[1.3fr_0.7fr]">
+          <div className="min-w-0 pt-3 lg:pr-5">
+            <div className="grid grid-cols-[0.65fr_1fr_0.55fr_0.55fr] gap-3 border-b border-[var(--hairline)] px-2 pb-2 text-xs text-[var(--muted)] max-sm:grid-cols-[0.75fr_1fr_0.65fr]">
+              <span>运行</span>
+              <span>Agent</span>
+              <span>状态</span>
+              <span className="max-sm:hidden">结果</span>
+            </div>
+            {RUN_ROWS.map((run) => (
+              <RunRow key={run.run} {...run} />
+            ))}
+          </div>
+
+          <aside className="border-t border-[var(--hairline)] pt-4 lg:border-l lg:border-t-0 lg:pl-5 lg:pt-3">
+            <p className="text-xs font-semibold text-[var(--ink)]">当前证据</p>
+            <EvidenceCheck label="Trace 完整" value="100%" />
+            <EvidenceCheck label="安全发现" value="0 高危" />
+            <EvidenceCheck label="人工审核" value="1 待处理" />
+            <EvidenceCheck label="发布门禁" value="条件通过" />
+          </aside>
+        </div>
       </div>
-    </div>
+    </section>
   );
 }
 
-function ProofMetric({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="rounded-[var(--radius-lg)] border border-[var(--hairline)] bg-[var(--surface)] px-4 py-3">
-      <p className="text-sm font-semibold">{value}</p>
-      <p className="mt-1 text-xs text-[var(--muted)]">{label}</p>
-    </div>
-  );
-}
-
-function EvidenceStep({
-  icon,
-  label,
-  order,
+function RunRow({
+  agent,
+  progress,
+  run,
   state,
-  text,
-}: {
-  icon: ReactNode;
-  label: string;
-  order: number;
-  state: string;
-  text: string;
-}) {
+  tone,
+}: (typeof RUN_ROWS)[number]) {
   return (
-    <div className="min-h-32 rounded-[var(--radius-lg)] border border-[var(--hairline)] bg-[var(--canvas-soft)] p-4">
-      <div className="flex items-center justify-between gap-3">
-        <span className="grid size-9 place-items-center rounded-[var(--radius-md)] bg-[var(--primary-subtle)] text-[var(--primary)] [&_svg]:size-4">
-          {icon}
-        </span>
-        <span className="rounded-[var(--radius-pill)] bg-[var(--surface)] px-2.5 py-1 text-xs text-[var(--muted)]">
-          {state}
-        </span>
-      </div>
-      <p className="mt-4 text-xs font-medium text-[var(--primary)]">0{order}</p>
-      <h3 className="mt-1 text-[17px] font-semibold">{label}</h3>
-      <p className="mt-2 text-sm leading-6 text-[var(--muted)]">{text}</p>
+    <div className="grid min-h-11 grid-cols-[0.65fr_1fr_0.55fr_0.55fr] items-center gap-3 border-b border-[var(--hairline-soft)] px-2 text-xs last:border-b-0 max-sm:grid-cols-[0.75fr_1fr_0.65fr]">
+      <strong className="font-medium">{run}</strong>
+      <span className="truncate text-[var(--muted)]">{agent}</span>
+      <span className="inline-flex items-center gap-1.5">
+        <span
+          className={`size-1.5 rounded-full ${
+            tone === "success"
+              ? "bg-[var(--success)]"
+              : tone === "danger"
+                ? "bg-[var(--danger)]"
+                : "bg-[var(--info)]"
+          }`}
+        />
+        {state}
+      </span>
+      <span className="text-[var(--muted)] max-sm:hidden">{progress}</span>
     </div>
   );
 }
 
-function ReleaseStat({ label, value }: { label: string; value: string }) {
+function EvidenceCheck({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-[var(--radius-md)] bg-[var(--canvas-soft)] px-4 py-3">
-      <p className="text-[26px] font-semibold leading-none">{value}</p>
-      <p className="mt-2 text-xs text-[var(--muted)]">{label}</p>
+    <div className="flex items-center justify-between gap-4 border-b border-[var(--hairline-soft)] py-2.5 text-xs last:border-b-0">
+      <span className="text-[var(--muted)]">{label}</span>
+      <strong className="font-medium">{value}</strong>
     </div>
   );
 }
 
-function WorkflowCard({
+function Capability({
   icon,
   label,
   text,
@@ -343,12 +417,34 @@ function WorkflowCard({
   text: string;
 }) {
   return (
-    <article className="rounded-[var(--radius-lg)] border border-[var(--hairline)] bg-[var(--surface)] p-5">
-      <span className="grid size-10 place-items-center rounded-[var(--radius-md)] bg-[var(--primary-subtle)] text-[var(--primary)] [&_svg]:size-4">
+    <article className="border-b border-[var(--hairline)] py-6 md:border-b-0 md:border-r md:px-6 md:first:pl-0 md:last:border-r-0 md:last:pr-0">
+      <span className="grid size-6 place-items-center text-[var(--primary)] [&_svg]:size-[var(--icon-optical-size)]">
         {icon}
       </span>
-      <h3 className="mt-5 text-[17px] font-semibold">{label}</h3>
+      <h3 className="mt-4 text-base font-semibold">{label}</h3>
       <p className="mt-2 text-sm leading-6 text-[var(--muted)]">{text}</p>
     </article>
+  );
+}
+
+function EvidenceLine({
+  icon,
+  label,
+  text,
+}: {
+  icon: ReactNode;
+  label: string;
+  text: string;
+}) {
+  return (
+    <div className="flex gap-4 border-b border-[var(--hairline)] py-4 first:pt-0 last:border-b-0 last:pb-0">
+      <span className="grid size-7 shrink-0 place-items-center text-[var(--primary)] [&_svg]:size-[var(--icon-optical-size)]">
+        {icon}
+      </span>
+      <div>
+        <h3 className="text-sm font-semibold">{label}</h3>
+        <p className="mt-1 text-sm leading-6 text-[var(--muted)]">{text}</p>
+      </div>
+    </div>
   );
 }

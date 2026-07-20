@@ -150,9 +150,16 @@ describe("RunCenter", () => {
       />,
     );
 
-    expect(screen.getByText("总运行")).toBeVisible();
+    expect(screen.getByRole("article", { name: "总运行" })).toHaveAttribute(
+      "data-tone",
+      "accent",
+    );
     expect(screen.getByText("2")).toBeVisible();
     expect(screen.getAllByText("运行中").length).toBeGreaterThan(0);
+    expect(screen.getByRole("article", { name: "运行中" })).toHaveAttribute(
+      "data-state",
+      "running",
+    );
     expect(screen.getByText("通过率")).toBeVisible();
     expect(screen.getByText(/1 \/ 3/)).toBeVisible();
     expect(screen.getAllByRole("link", { name: /回归计划.*v4/ })).toHaveLength(
@@ -221,6 +228,7 @@ describe("RunCenter", () => {
         "运行服务暂不可用：请确认 Temporal 和 API Runner 已启动后重试。",
       ),
     ).toBeVisible();
+    expect(screen.getByRole("alert")).toHaveAttribute("data-tone", "danger");
   });
 
   it("navigates to the created run after starting execution", async () => {

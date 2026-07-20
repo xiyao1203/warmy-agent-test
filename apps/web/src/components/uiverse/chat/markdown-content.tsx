@@ -6,7 +6,7 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeHighlight from "rehype-highlight";
 
-import { Check, Copy, Play, Sparkles } from "lucide-react";
+import { BookOpenText, Check, Copy, Play } from "lucide-react";
 
 type MarkdownContentProps = {
   content: string;
@@ -133,7 +133,7 @@ function CodeBlockWithCopy({
             onClick={() => dispatchCodeAction("explain")}
             type="button"
           >
-            <Sparkles className="size-3" />
+            <BookOpenText className="size-3" />
             <span className="hidden sm:inline">解释</span>
           </button>
         </div>

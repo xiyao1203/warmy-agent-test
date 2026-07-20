@@ -55,7 +55,7 @@ export default function TutorialsPage() {
         </p>
         <h1 className="mt-2 text-2xl font-semibold tracking-tight">产品教程</h1>
         <p className="mt-2 text-sm leading-6 text-[var(--muted)]">
-          按工作流程阅读平台核心能力。当前提供图文指南，不展示尚未接入的视频播放入口。
+          按工作流程阅读平台核心能力，快速完成配置、执行和结果分析。
         </p>
       </header>
 

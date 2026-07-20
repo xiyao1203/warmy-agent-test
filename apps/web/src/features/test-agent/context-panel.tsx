@@ -12,10 +12,10 @@ import {
   Loader2,
   MessageSquareText,
   PlayCircle,
+  Route,
   Scale,
   Shield,
   ShieldCheck,
-  Sparkles,
   XCircle,
 } from "lucide-react";
 import Link from "next/link";
@@ -42,7 +42,7 @@ const typeMeta: Record<
   },
   test_mission: {
     label: "全链路测试任务",
-    icon: Sparkles,
+    icon: Route,
     route: "test-agent",
   },
   run: { label: "运行记录", icon: PlayCircle, route: "runs" },
@@ -68,7 +68,7 @@ const agentIcons: Record<string, typeof Bot> = {
   review_gate: ShieldCheck,
   experiment: FlaskConical,
   environment: Shield,
-  mission: Sparkles,
+  mission: Route,
 };
 
 function artifactHref(projectId: string, artifact: ArtifactLink) {
@@ -189,7 +189,7 @@ export function ContextPanel({
             {artifacts.map((artifact) => {
               const meta = typeMeta[artifact.type] ?? {
                 label: artifact.type,
-                icon: Sparkles,
+                icon: Route,
               };
               const Icon = meta.icon;
               return (

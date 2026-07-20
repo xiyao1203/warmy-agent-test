@@ -50,12 +50,19 @@ describe("ProjectOverview", () => {
     expect(screen.getByText("2 Agents")).toBeVisible();
     expect(screen.getByText("3 数据集")).toBeVisible();
     expect(screen.getByText("1 测试计划")).toBeVisible();
+    expect(screen.getByRole("article", { name: "项目状态" })).toHaveAttribute(
+      "data-tone",
+      "warning",
+    );
+    expect(screen.getByRole("article", { name: "项目成员" })).toHaveAttribute(
+      "data-tone",
+      "info",
+    );
     expect(screen.getByText("查看运行中心")).toBeVisible();
     expect(
-      screen.getByText(
-        "当前概览页只展示项目摘要；完整运行记录、进度与结果在运行中心统一查看。",
-      ),
-    ).toBeVisible();
+      screen.queryByText(/当前概览页只展示项目摘要/),
+    ).not.toBeInTheDocument();
+    expect(screen.getByText("查看执行进度、结果和 Trace 证据。")).toBeVisible();
     expect(screen.getByRole("link", { name: "去运行中心" })).toHaveAttribute(
       "href",
       "/projects/project-1/runs",

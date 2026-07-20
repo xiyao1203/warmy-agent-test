@@ -3,11 +3,13 @@
 import type { HTMLAttributes, ReactNode } from "react";
 
 type ListCardProps = HTMLAttributes<HTMLLIElement> & {
-  title: string;
-  description?: string;
-  badge?: ReactNode;
   actions?: ReactNode;
+  badge?: ReactNode;
+  description?: string;
   footer?: ReactNode;
+  icon?: ReactNode;
+  title: string;
+  tone?: "accent" | "danger" | "info" | "neutral" | "success" | "warning";
 };
 
 export function ListCard({
@@ -16,30 +18,41 @@ export function ListCard({
   className = "",
   description,
   footer,
+  icon,
   title,
+  tone = "neutral",
   ...props
 }: ListCardProps) {
   return (
     <li
-      className={`group rounded-[var(--radius-md)] border border-[var(--hairline)] bg-[var(--surface)] px-4 py-3 transition-colors hover:border-[var(--hairline-strong)] hover:bg-[var(--canvas-soft)] ${className}`}
+      className={`precision-list-card group rounded-[var(--radius-md)] border border-[var(--hairline)] bg-[var(--surface)] px-4 py-3 transition-[background,border-color,box-shadow,transform] duration-[var(--motion-fast)] hover:border-[var(--hairline-strong)] hover:bg-[var(--canvas-soft)] focus-within:border-[var(--hairline-strong)] ${className}`}
+      data-tone={tone}
       {...props}
     >
       <div className="flex items-center justify-between gap-4">
-        <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-2">
-            <h3 className="truncate text-sm font-semibold text-[var(--ink)]">
-              {title}
-            </h3>
-            {badge}
-          </div>
-          {description ? (
-            <p className="mt-1 truncate text-xs text-[var(--muted)]">
-              {description}
-            </p>
+        <div className="flex min-w-0 flex-1 items-center gap-3">
+          {icon ? (
+            <span className="precision-list-card-icon">{icon}</span>
           ) : null}
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-2">
+              <h3 className="truncate text-sm font-semibold text-[var(--ink)]">
+                {title}
+              </h3>
+              {badge}
+            </div>
+            {description ? (
+              <p className="mt-1 truncate text-xs text-[var(--muted)]">
+                {description}
+              </p>
+            ) : null}
+          </div>
         </div>
         {actions ? (
-          <div className="flex shrink-0 items-center gap-1.5 opacity-0 transition-opacity group-hover:opacity-100">
+          <div
+            className="flex min-h-8 shrink-0 items-center gap-1.5 opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100"
+            data-testid="list-card-actions"
+          >
             {actions}
           </div>
         ) : null}

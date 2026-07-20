@@ -17,18 +17,20 @@ export function HoverCard({
 }: HoverCardProps) {
   return (
     <div
-      className={`group relative overflow-hidden rounded-[var(--radius)] border border-[var(--hairline)] bg-[var(--surface)] p-6 transition-colors duration-300 hover:border-[var(--primary)] ${className}`}
+      className={`group relative overflow-hidden rounded-[var(--radius-md)] border border-[var(--hairline)] bg-[var(--surface-raised)] p-4 shadow-[var(--shadow-overlay)] transition-[border-color,box-shadow,transform] duration-[var(--motion-fast)] hover:border-[var(--hairline-strong)] ${className}`}
       {...props}
     >
       <div className="relative">
         {icon && (
-          <div className="mb-4 inline-flex rounded-lg bg-[var(--primary-subtle)] p-2.5 text-[var(--primary)]">
+          <div className="mb-3 inline-flex size-6 items-center justify-center text-[var(--muted)] [&_svg]:size-[var(--icon-optical-size)]">
             {icon}
           </div>
         )}
         <h3 className="text-sm font-medium text-[var(--muted)]">{title}</h3>
         {value !== undefined && (
-          <p className="mt-2 text-3xl font-bold text-[var(--ink)]">{value}</p>
+          <p className="mt-2 text-xl font-semibold text-[var(--ink)]">
+            {value}
+          </p>
         )}
         {description && (
           <p className="mt-2 text-sm text-[var(--muted)]">{description}</p>

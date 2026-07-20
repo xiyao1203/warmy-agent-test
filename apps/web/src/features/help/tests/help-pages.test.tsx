@@ -46,6 +46,14 @@ describe("help content pages", () => {
     ).not.toBeInTheDocument();
     expect(screen.getAllByText("阅读指南")).toHaveLength(6);
     expect(screen.queryByText("🎬")).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(/尚未接入的视频播放入口/),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.getByText(
+        "按工作流程阅读平台核心能力，快速完成配置、执行和结果分析。",
+      ),
+    ).toBeVisible();
   });
 
   it("renders the test-case guide as one article hierarchy", () => {

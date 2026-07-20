@@ -26,7 +26,9 @@ describe("Dialog", () => {
     const trigger = screen.getByRole("button", { name: "创建用户" });
     fireEvent.click(trigger);
 
-    expect(await screen.findByRole("dialog")).toBeInTheDocument();
+    expect(await screen.findByRole("dialog")).toHaveClass(
+      "precision-dialog-content",
+    );
     expect(screen.getByRole("textbox", { name: "邮箱" })).toHaveFocus();
 
     fireEvent.click(screen.getByRole("button", { name: "取消" }));

@@ -58,7 +58,9 @@ describe("LoginScreen", () => {
   it("renders the product landing page and opens login dialog", async () => {
     renderWithQueryClient(<LoginScreen />);
 
-    expect(screen.getAllByText("Warmy Agent Test").length).toBeGreaterThan(0);
+    expect(
+      screen.getByRole("heading", { level: 1, name: "Warmy Agent Test" }),
+    ).toBeVisible();
     const brand = screen.getByTestId("landing-brand");
     const brandMark = brand.querySelector("[data-brand-mark]");
 
@@ -67,11 +69,16 @@ describe("LoginScreen", () => {
       "data-brand-mark-source",
       "warmy-product-system",
     );
-    expect(screen.getByText("Agent 发布前的测试证据层")).toBeVisible();
-    expect(screen.getByText("Release readiness")).toBeVisible();
-    expect(screen.getByText("发布前证据链")).toBeVisible();
+    expect(screen.getByRole("link", { name: "查看运行证据" })).toHaveAttribute(
+      "href",
+      "#product-evidence",
+    );
+    expect(screen.getByRole("region", { name: "真实运行证据" })).toBeVisible();
+    expect(
+      screen.queryByText(/不展示桌面壳|减少用户理解成本/),
+    ).not.toBeInTheDocument();
     expect(screen.queryByText("PROJECT")).not.toBeInTheDocument();
-    expect(screen.getByText(/把 AI Agent 的每次变更/)).toBeVisible();
+    expect(screen.getByText(/持续验证 Agent 的能力、质量与安全/)).toBeVisible();
     expect(screen.getByRole("button", { name: "外观设置" })).toBeVisible();
     expect(
       screen.queryByRole("navigation", { name: "产品导航" }),
@@ -108,9 +115,9 @@ describe("LoginScreen", () => {
     renderWithQueryClient(<LoginScreen />);
 
     await waitFor(() =>
-      expect(screen.getByRole("button", { name: "进入工作台" })).toBeEnabled(),
+      expect(screen.getByRole("button", { name: "登录并开始" })).toBeEnabled(),
     );
-    fireEvent.click(screen.getByRole("button", { name: "进入工作台" }));
+    fireEvent.click(screen.getByRole("button", { name: "登录并开始" }));
 
     const dialog = screen.getByRole("dialog");
     fireEvent.change(within(dialog).getByLabelText("邮箱"), {
@@ -126,7 +133,9 @@ describe("LoginScreen", () => {
     );
     expect(router.replace).not.toHaveBeenCalled();
     expect(router.push).not.toHaveBeenCalled();
-    expect(screen.getByText(/把 AI Agent 的每次变更/)).toBeVisible();
+    expect(
+      screen.getByRole("heading", { level: 1, name: "Warmy Agent Test" }),
+    ).toBeVisible();
 
     fireEvent.click(screen.getByRole("button", { name: "进入工作台" }));
 
@@ -167,6 +176,11 @@ describe("LoginScreen", () => {
     expect(
       screen.queryByRole("button", { name: "登录" }),
     ).not.toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "工作台" })).toBeDisabled();
+    expect(screen.getAllByRole("button", { name: "正在检查" })).toEqual(
+      expect.arrayContaining([expect.any(HTMLButtonElement)]),
+    );
+    for (const button of screen.getAllByRole("button", { name: "正在检查" })) {
+      expect(button).toBeDisabled();
+    }
   });
 });

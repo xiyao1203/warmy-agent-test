@@ -42,6 +42,12 @@ const paginatedManagementLists = [
   "features/gates/gate-list.tsx",
 ] as const;
 
+const internalCopySurfaces = [
+  "features/auth/login-screen.tsx",
+  "features/projects/project-overview.tsx",
+  "app/(help)/docs/tutorials/page.tsx",
+] as const;
+
 function source(relativePath: string) {
   return readFileSync(resolve(process.cwd(), "src", relativePath), "utf8");
 }
@@ -184,5 +190,53 @@ describe("resource list table contract", () => {
     );
 
     expect(violations).toEqual([]);
+  });
+
+  it("keeps internal design rationale out of product copy", () => {
+    const prohibited = [
+      "不展示桌面壳",
+      "减少用户理解成本",
+      "当前概览页只展示",
+      "尚未接入的视频播放入口",
+    ];
+    const violations = internalCopySurfaces.flatMap((file) =>
+      prohibited
+        .filter((phrase) => source(file).includes(phrase))
+        .map((phrase) => `${file}: ${phrase}`),
+    );
+
+    expect(violations).toEqual([]);
+  });
+
+  it("keeps the legacy stat card on the shared metric implementation", () => {
+    const contents = source("components/uiverse/cards/stat-card.tsx");
+
+    expect(contents).toContain("MetricCard");
+    expect(contents).not.toContain("bg-[var(--primary-subtle)]");
+  });
+
+  it("keeps decorative AI effects out of visible product surfaces", () => {
+    const semanticIconSurfaces = [
+      "components/layout/app-shell-navigation.tsx",
+      "components/uiverse/chat/markdown-content.tsx",
+      "features/test-agent/context-panel.tsx",
+    ];
+    const iconViolations = semanticIconSurfaces.filter((file) =>
+      source(file).includes("Sparkles"),
+    );
+    const login = source("features/auth/login-form.tsx");
+    const glassCard = source("components/uiverse/cards/glass-card.tsx");
+    const opaqueChrome = [
+      "app/(account)/account/page.tsx",
+      "features/help/help-shell.tsx",
+    ];
+
+    expect(iconViolations).toEqual([]);
+    expect(login).not.toContain("PulseButton");
+    expect(login).not.toContain("radius-pill");
+    expect(glassCard).not.toMatch(/backdrop-blur|bg-white\//);
+    expect(
+      opaqueChrome.filter((file) => source(file).includes("backdrop-blur")),
+    ).toEqual([]);
   });
 });

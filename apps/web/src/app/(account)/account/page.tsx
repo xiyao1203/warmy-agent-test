@@ -34,7 +34,7 @@ export default async function AccountPage({
 
   return (
     <div className="min-h-screen bg-[var(--canvas)]">
-      <header className="sticky top-0 z-50 border-b border-[var(--hairline)] bg-[var(--surface)]/80 backdrop-blur-sm">
+      <header className="sticky top-0 z-50 border-b border-[var(--hairline)] bg-[var(--surface)]">
         <div className="mx-auto flex h-14 max-w-[1040px] items-center justify-between px-4 sm:px-6">
           <Link
             className="flex items-center gap-2 text-sm font-semibold transition-colors hover:text-[var(--primary)]"
