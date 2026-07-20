@@ -7,8 +7,24 @@ import type { ComponentProps } from "react";
 export const Drawer = DialogPrimitive.Root;
 export const DrawerTrigger = DialogPrimitive.Trigger;
 export const DrawerClose = DialogPrimitive.Close;
-export const DrawerTitle = DialogPrimitive.Title;
-export const DrawerDescription = DialogPrimitive.Description;
+export const DrawerTitle = ({
+  className = "",
+  ...props
+}: ComponentProps<typeof DialogPrimitive.Title>) => (
+  <DialogPrimitive.Title
+    className={`text-lg font-semibold text-[var(--ink)] ${className}`}
+    {...props}
+  />
+);
+export const DrawerDescription = ({
+  className = "",
+  ...props
+}: ComponentProps<typeof DialogPrimitive.Description>) => (
+  <DialogPrimitive.Description
+    className={`mt-1 text-sm leading-5 text-[var(--muted)] ${className}`}
+    {...props}
+  />
+);
 
 export function DrawerContent({
   children,
@@ -17,9 +33,9 @@ export function DrawerContent({
 }: ComponentProps<typeof DialogPrimitive.Content>) {
   return (
     <DialogPrimitive.Portal>
-      <DialogPrimitive.Overlay className="fixed inset-0 z-40 bg-[var(--overlay)]" />
+      <DialogPrimitive.Overlay className="precision-overlay fixed inset-0 z-40 bg-[var(--overlay)]" />
       <DialogPrimitive.Content
-        className={`fixed inset-y-0 right-0 z-50 w-[min(30rem,calc(100vw-2rem))] border-l border-[var(--hairline)] bg-[var(--surface-raised)] p-5 shadow-[var(--shadow-overlay)] focus:outline-none ${className}`}
+        className={`precision-drawer-content fixed inset-y-0 right-0 z-50 w-[min(30rem,calc(100vw-2rem))] border-l border-[var(--hairline)] bg-[var(--surface-raised)] p-5 shadow-[var(--shadow-overlay)] focus:outline-none ${className}`}
         {...props}
       >
         {children}

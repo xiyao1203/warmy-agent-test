@@ -194,6 +194,73 @@ samp {
   font-weight: 600;
 }
 
+.precision-list-card {
+  --list-tone: var(--muted);
+  position: relative;
+  overflow: hidden;
+}
+
+.precision-list-card[data-tone="accent"] {
+  --list-tone: var(--primary);
+}
+
+.precision-list-card[data-tone="danger"] {
+  --list-tone: var(--danger);
+}
+
+.precision-list-card[data-tone="info"] {
+  --list-tone: var(--info);
+}
+
+.precision-list-card[data-tone="success"] {
+  --list-tone: var(--success);
+}
+
+.precision-list-card[data-tone="warning"] {
+  --list-tone: var(--warning);
+}
+
+.precision-list-card::before {
+  position: absolute;
+  inset: 0.75rem auto 0.75rem 0;
+  width: 2px;
+  border-radius: 0 2px 2px 0;
+  background: var(--list-tone);
+  content: "";
+  transform: scaleY(0.45);
+  transform-origin: top;
+  transition: transform var(--motion-standard) ease;
+}
+
+.precision-list-card:hover::before,
+.precision-list-card:focus-within::before {
+  transform: scaleY(1);
+}
+
+.precision-list-card-icon {
+  display: grid;
+  width: var(--icon-carrier-size);
+  height: var(--icon-carrier-size);
+  flex: 0 0 auto;
+  place-items: center;
+  color: var(--muted);
+  transition:
+    color var(--motion-standard) ease,
+    transform var(--motion-standard) ease;
+}
+
+.precision-list-card-icon svg {
+  width: var(--icon-optical-size);
+  height: var(--icon-optical-size);
+  stroke-width: 1.75;
+}
+
+.precision-list-card:hover .precision-list-card-icon,
+.precision-list-card:focus-within .precision-list-card-icon {
+  color: var(--list-tone);
+  transform: translateX(2px);
+}
+
 .app-main {
   min-width: 0;
   flex: 1;
@@ -318,6 +385,23 @@ kbd {
   box-shadow: var(--shadow-overlay);
 }
 
+.precision-menu-content[data-state="open"] {
+  animation: precision-menu-in var(--motion-standard) ease both;
+  transform-origin: var(--radix-dropdown-menu-content-transform-origin);
+}
+
+.precision-overlay[data-state="open"] {
+  animation: fadeIn var(--motion-fast) ease both;
+}
+
+.precision-dialog-content[data-state="open"] {
+  animation: precision-dialog-in var(--motion-dialog) ease both;
+}
+
+.precision-drawer-content[data-state="open"] {
+  animation: precision-drawer-in var(--motion-drawer) ease both;
+}
+
 .app-menu-item,
 .app-command-item {
   display: flex;
@@ -416,6 +500,19 @@ kbd {
   .app-search-trigger > span,
   .app-search-trigger kbd {
     display: none;
+  }
+
+  .precision-drawer-content {
+    inset: auto 0 0;
+    width: 100%;
+    max-height: calc(100dvh - 2rem);
+    overflow-y: auto;
+    border-top: 1px solid var(--hairline);
+    border-left: 0;
+  }
+
+  .precision-drawer-content[data-state="open"] {
+    animation-name: fadeIn;
   }
 }
 
@@ -937,6 +1034,16 @@ textarea[data-focus-owner="composer"]:focus-visible {
   .precision-metric-action,
   .precision-skeleton-icon,
   .precision-skeleton-line {
+    animation: none !important;
+    transition: none !important;
+  }
+
+  .precision-menu-content,
+  .precision-overlay,
+  .precision-dialog-content,
+  .precision-drawer-content,
+  .precision-list-card::before,
+  .precision-list-card-icon {
     animation: none !important;
     transition: none !important;
   }

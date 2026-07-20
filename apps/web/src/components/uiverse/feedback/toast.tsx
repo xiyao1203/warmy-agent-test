@@ -14,28 +14,24 @@ type ToastProps = {
 
 const typeConfig = {
   error: {
-    bg: "bg-[var(--danger-subtle)]",
     border: "border-[var(--danger)]",
     icon: XCircle,
     iconColor: "text-[var(--danger)]",
     textColor: "text-[var(--danger)]",
   },
   info: {
-    bg: "bg-[var(--info-subtle)]",
     border: "border-[var(--info)]",
     icon: Info,
     iconColor: "text-[var(--info)]",
     textColor: "text-[var(--info)]",
   },
   success: {
-    bg: "bg-[var(--success-subtle)]",
     border: "border-[var(--success)]",
     icon: CheckCircle,
     iconColor: "text-[var(--success)]",
     textColor: "text-[var(--success)]",
   },
   warning: {
-    bg: "bg-[var(--warning-subtle)]",
     border: "border-[var(--warning)]",
     icon: AlertCircle,
     iconColor: "text-[var(--warning)]",
@@ -59,7 +55,7 @@ export function Toast({
 
   return (
     <div
-      className={`flex items-center gap-3 rounded-[var(--radius-md)] border p-4 shadow-[var(--shadow-overlay)] ${config.bg} ${config.border}`}
+      className={`flex items-center gap-3 rounded-[var(--radius-md)] border border-l-2 bg-[var(--surface-raised)] p-4 shadow-[var(--shadow-overlay)] ${config.border}`}
     >
       <Icon className={`size-5 shrink-0 ${config.iconColor}`} />
       <p className={`text-sm font-medium ${config.textColor}`}>{message}</p>

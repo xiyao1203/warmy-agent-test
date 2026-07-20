@@ -16,6 +16,7 @@ describe("DropdownSelect", () => {
 
     fireEvent.pointerDown(screen.getByRole("button", { name: "状态：全部" }));
     expect(screen.getByRole("menu")).toHaveAttribute("data-side", "bottom");
+    expect(screen.getByRole("menu")).toHaveClass("precision-menu-content");
     fireEvent.click(screen.getByRole("menuitem", { name: "运行中" }));
 
     expect(onChange).toHaveBeenCalledWith(

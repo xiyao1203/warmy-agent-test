@@ -78,8 +78,9 @@ export function DropdownSelect({
         <DropdownMenuPrimitive.Portal>
           <DropdownMenuPrimitive.Content
             align="start"
-            avoidCollisions={false}
-            className="z-50 max-h-72 min-w-[var(--radix-dropdown-menu-trigger-width)] overflow-y-auto rounded-[var(--radius-lg)] border border-[var(--hairline)] bg-[var(--surface-raised)] p-1 shadow-[var(--shadow-overlay)]"
+            avoidCollisions
+            className="precision-menu-content z-50 max-h-72 min-w-[var(--radix-dropdown-menu-trigger-width)] overflow-y-auto rounded-[var(--radius-lg)] border border-[var(--hairline)] bg-[var(--surface-raised)] p-1 shadow-[var(--shadow-overlay)]"
+            collisionPadding={8}
             side="bottom"
             sideOffset={6}
           >
