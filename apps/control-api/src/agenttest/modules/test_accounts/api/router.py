@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from typing import Protocol
 from uuid import UUID
 
-from fastapi import APIRouter, Header, Request
+from fastapi import APIRouter, Header, Query, Request
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
@@ -20,6 +20,8 @@ from agenttest.modules.test_accounts.application.service import (
 )
 from agenttest.modules.test_accounts.domain.entities import TestAccount
 from agenttest.shared.api.auth_guard import require_actor, require_writer
+from agenttest.shared.api.pagination import resolve_page_request
+from agenttest.shared.application.pagination import paginate_items
 
 
 class CreateAccountRequest(BaseModel):
@@ -53,7 +55,12 @@ def create_test_account_router(dependencies: TestAccountApiDependencies) -> APIR
     router = APIRouter(prefix="/projects/{project_id}/test-accounts", tags=["test-accounts"])
 
     @router.get("")
-    async def list_accounts(request: Request, project_id: UUID):
+    async def list_accounts(
+        request: Request,
+        project_id: UUID,
+        page: int | None = Query(default=None),
+        page_size: int | None = Query(default=None),
+    ):
         actor = await require_actor(request, dependencies.actor_for, dependencies.settings)
         if isinstance(actor, JSONResponse):
             return actor
@@ -64,7 +71,24 @@ def create_test_account_router(dependencies: TestAccountApiDependencies) -> APIR
             if response is not None:
                 return response
             raise
-        return {"items": [_to_dict(account) for account in accounts]}
+        page_request = resolve_page_request(page=page, page_size=page_size)
+        if page_request:
+            result = paginate_items(accounts, page_request)
+            accounts = result.items
+            metadata: dict[str, int | None] = {
+                "total": result.total,
+                "page": result.page,
+                "page_size": result.page_size,
+                "total_pages": result.total_pages,
+            }
+        else:
+            metadata = {
+                "total": len(accounts),
+                "page": None,
+                "page_size": 50,
+                "total_pages": 1 if accounts else 0,
+            }
+        return {"items": [_to_dict(account) for account in accounts], **metadata}
 
     @router.post("")
     async def create_account(

@@ -17,6 +17,29 @@ const resourceLists = [
   "features/model-configs/model-config-list.tsx",
   "features/test-accounts/test-account-list.tsx",
   "features/users/user-management.tsx",
+  "features/scorers/scorer-list.tsx",
+  "features/experiments/experiment-list.tsx",
+  "features/reviews/review-workbench.tsx",
+  "features/security/security-scan.tsx",
+  "features/gates/gate-list.tsx",
+] as const;
+
+const paginatedManagementLists = [
+  "features/projects/project-list-screen.tsx",
+  "features/agents/agent-list.tsx",
+  "features/datasets/dataset-list.tsx",
+  "features/test-plans/test-plan-list.tsx",
+  "features/runs/run-center.tsx",
+  "features/environments/environment-list.tsx",
+  "features/browser-profiles/browser-profile-list.tsx",
+  "features/model-configs/model-config-list.tsx",
+  "features/test-accounts/test-account-list.tsx",
+  "features/users/user-management.tsx",
+  "features/scorers/scorer-list.tsx",
+  "features/experiments/experiment-list.tsx",
+  "features/reviews/review-workbench.tsx",
+  "features/security/security-scan.tsx",
+  "features/gates/gate-list.tsx",
 ] as const;
 
 function source(relativePath: string) {
@@ -106,6 +129,14 @@ function findRawIconOnlyTableButtons(file: string, contents: string) {
 }
 
 describe("resource list table contract", () => {
+  it("uses the shared standard pagination on every management list", () => {
+    const violations = paginatedManagementLists
+      .filter((file) => !source(file).includes("ResourcePagination"))
+      .map((file) => `${file}: missing shared pagination`);
+
+    expect(violations).toEqual([]);
+  });
+
   it("detects unwrapped shared icon buttons as contract violations", () => {
     expect(
       findRawIconOnlyTableButtons(

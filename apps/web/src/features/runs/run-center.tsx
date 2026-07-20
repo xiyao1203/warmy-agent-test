@@ -22,6 +22,7 @@ import { Button } from "@/components/ui/button";
 import { DropdownSelect } from "@/components/ui/dropdown-select";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Input } from "@/components/ui/input";
+import { ResourcePagination } from "@/components/ui/resource-pagination";
 import { ResourceReferenceLink } from "@/components/ui/resource-reference-link";
 import { problemMessage } from "@/lib/api/problem";
 import {
@@ -40,6 +41,7 @@ import {
   tableActionHeadClass,
 } from "@/components/ui/table-actions";
 import { TruncatedText } from "@/components/ui/truncated-text";
+import type { PageSize } from "@/lib/pagination";
 
 type PlanVersionOption = { id: string; label: string };
 type CreatedRun = { id?: string } | void;
@@ -48,16 +50,28 @@ export function RunCenter({
   error,
   loading = false,
   onCreate = async () => undefined,
+  onPageChange = () => undefined,
+  onPageSizeChange = () => undefined,
+  page = 1,
+  pageSize = 10,
   planVersions = [],
   projectId,
   runs = [],
+  total = runs.length,
+  totalPages = runs.length > 0 ? 1 : 0,
 }: {
   error?: "not-found" | "service";
   loading?: boolean;
   onCreate?: (testPlanVersionId: string) => Promise<CreatedRun>;
+  onPageChange?: (page: number) => void;
+  onPageSizeChange?: (pageSize: PageSize) => void;
+  page?: number;
+  pageSize?: PageSize;
   planVersions?: PlanVersionOption[];
   projectId: string;
   runs?: RunResponse[];
+  total?: number;
+  totalPages?: number;
 }) {
   const [versionId, setVersionId] = useState(planVersions[0]?.id ?? "");
   const [query, setQuery] = useState("");
@@ -155,7 +169,7 @@ export function RunCenter({
         <SummaryCard
           icon={<Activity aria-hidden="true" className="size-4" />}
           label="总运行"
-          value={String(summary.total)}
+          value={String(total)}
         />
         <SummaryCard
           icon={<Timer aria-hidden="true" className="size-4" />}
@@ -366,6 +380,14 @@ export function RunCenter({
             </TableBody>
           </Table>
         )}
+        <ResourcePagination
+          onPageChange={onPageChange}
+          onPageSizeChange={onPageSizeChange}
+          page={page}
+          pageSize={pageSize}
+          total={total}
+          totalPages={totalPages}
+        />
       </section>
     </div>
   );

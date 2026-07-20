@@ -7,13 +7,15 @@ from dataclasses import asdict
 from typing import Protocol
 from uuid import UUID
 
-from fastapi import APIRouter, Header, Request
+from fastapi import APIRouter, Header, Query, Request
 from fastapi.responses import JSONResponse, Response
 
 from agenttest.bootstrap.settings import Settings
 from agenttest.modules.identity.public import InvalidSessionError, User
 from agenttest.modules.projects.public import ProjectId, ProjectNotFoundError
+from agenttest.shared.api.pagination import resolve_page_request
 from agenttest.shared.api.problem_details import ProblemDetails
+from agenttest.shared.application.pagination import paginate_items
 
 from ..application.ports import (
     InvocationMessage,
@@ -89,7 +91,12 @@ def create_model_config_router(
         return actor
 
     @router.get("/model-configs", response_model=ModelConfigListResponse)
-    async def list_configs(request: Request, project_id: UUID):
+    async def list_configs(
+        request: Request,
+        project_id: UUID,
+        page: int | None = Query(default=None),
+        page_size: int | None = Query(default=None),
+    ):
         actor = await actor_for(request)
         if isinstance(actor, JSONResponse):
             return actor
@@ -97,7 +104,26 @@ def create_model_config_router(
             items = await service.list_configs(actor, ProjectId(project_id))
         except ProjectNotFoundError:
             return problem(404, "Asset not found", "Project was not found")
-        return ModelConfigListResponse(items=[ModelConfigResponse.from_domain(x) for x in items])
+        page_request = resolve_page_request(page=page, page_size=page_size)
+        if page_request:
+            result = paginate_items(items, page_request)
+            items = result.items
+            total = result.total
+            response_page = result.page
+            response_page_size = result.page_size
+            total_pages = result.total_pages
+        else:
+            total = len(items)
+            response_page = None
+            response_page_size = 50
+            total_pages = 1 if items else 0
+        return ModelConfigListResponse(
+            items=[ModelConfigResponse.from_domain(x) for x in items],
+            total=total,
+            page=response_page,
+            page_size=response_page_size,
+            total_pages=total_pages,
+        )
 
     @router.post("/model-configs", response_model=ModelConfigResponse, status_code=201)
     async def create_config(

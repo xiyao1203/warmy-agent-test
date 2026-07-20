@@ -13,6 +13,7 @@ import {
 
 import { apiClient } from "@/lib/api/client";
 import { csrfHeaders } from "@/lib/api/csrf";
+import type { ResourcePage } from "@/lib/pagination";
 
 export type BrowserProfile = {
   profile_id: string;
@@ -44,7 +45,23 @@ export async function listBrowserProfiles(
     signal,
     throwOnError: true,
   });
-  return (data as { items?: BrowserProfile[] }).items ?? [];
+  return (data as ResourcePage<BrowserProfile>).items;
+}
+
+export async function listBrowserProfilePage(
+  projectId: string,
+  signal?: AbortSignal,
+  page = 1,
+  pageSize = 10,
+): Promise<ResourcePage<BrowserProfile>> {
+  const { data } = await listProfilesApiV1ProjectsProjectIdBrowserProfilesGet({
+    client: apiClient,
+    path: { project_id: projectId },
+    query: { page, page_size: pageSize },
+    signal,
+    throwOnError: true,
+  });
+  return data as ResourcePage<BrowserProfile>;
 }
 
 export async function createBrowserProfile(

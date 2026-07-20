@@ -31,6 +31,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Input } from "@/components/ui/input";
+import { ResourcePagination } from "@/components/ui/resource-pagination";
 import {
   Table,
   TableBody,
@@ -47,6 +48,7 @@ import {
 } from "@/components/ui/table-actions";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { Skeleton, Tooltip } from "@/components/uiverse";
+import type { PageSize } from "@/lib/pagination";
 
 import type { BrowserProfile } from "./api";
 
@@ -73,7 +75,13 @@ type BrowserProfileListProps = {
   ) => Promise<BrowserProfile>;
   onStop?: (profileId: string) => Promise<BrowserProfile>;
   onVerify?: (profileId: string) => Promise<BrowserProfile>;
+  onPageChange?: (page: number) => void;
+  onPageSizeChange?: (pageSize: PageSize) => void;
+  page?: number;
+  pageSize?: PageSize;
   projectId: string;
+  total?: number;
+  totalPages?: number;
 };
 
 function statusBadge(status: string) {
@@ -107,7 +115,13 @@ export function BrowserProfileList({
   onCompleteLogin,
   onStop,
   onVerify,
+  onPageChange = () => undefined,
+  onPageSizeChange = () => undefined,
+  page = 1,
+  pageSize = 10,
   projectId,
+  total = profiles.length,
+  totalPages = profiles.length ? 1 : 0,
 }: BrowserProfileListProps) {
   const [createOpen, setCreateOpen] = useState(false);
   const [createName, setCreateName] = useState("");
@@ -574,6 +588,14 @@ export function BrowserProfileList({
               ))}
             </TableBody>
           </Table>
+          <ResourcePagination
+            onPageChange={onPageChange}
+            onPageSizeChange={onPageSizeChange}
+            page={page}
+            pageSize={pageSize}
+            total={total}
+            totalPages={totalPages}
+          />
         </section>
       )}
 

@@ -29,15 +29,20 @@ export type SecurityScanItem = Omit<
 };
 export type SecurityTarget = { id: string; label: string };
 
-export async function listScans(projectId: string, signal?: AbortSignal) {
+export async function listScans(
+  projectId: string,
+  signal?: AbortSignal,
+  page = 1,
+  pageSize = 10,
+) {
   const { data } = await listScansApiV1ProjectsProjectIdSecurityScansGet({
     client: apiClient,
     path: { project_id: projectId },
-    query: { limit: 50 },
+    query: { page, page_size: pageSize },
     signal,
     throwOnError: true,
   });
-  return data.items as SecurityScanItem[];
+  return { ...data, items: data.items as SecurityScanItem[] };
 }
 
 export async function triggerScan(projectId: string, agentVersionId: string) {

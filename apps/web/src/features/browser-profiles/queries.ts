@@ -1,13 +1,14 @@
 import { queryOptions, type QueryClient } from "@tanstack/react-query";
 
-import { listBrowserProfiles } from "./api";
+import { listBrowserProfilePage } from "./api";
 
 export const browserProfileQueries = {
   all: ["browser-profiles"] as const,
-  list(projectId: string) {
+  list(projectId: string, page = 1, pageSize = 10) {
     return queryOptions({
-      queryFn: ({ signal }) => listBrowserProfiles(projectId, signal),
-      queryKey: ["browser-profiles", projectId] as const,
+      queryFn: ({ signal }) =>
+        listBrowserProfilePage(projectId, signal, page, pageSize),
+      queryKey: ["browser-profiles", projectId, page, pageSize] as const,
     });
   },
 };
@@ -17,6 +18,6 @@ export function invalidateBrowserProfileList(
   projectId: string,
 ) {
   return client.invalidateQueries({
-    queryKey: browserProfileQueries.list(projectId).queryKey,
+    queryKey: ["browser-profiles", projectId],
   });
 }

@@ -17,6 +17,7 @@ import { useCallback, useEffect, useState } from "react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { ResourcePagination } from "@/components/ui/resource-pagination";
 import { ResourceReferenceLink } from "@/components/ui/resource-reference-link";
 import {
   Dialog,
@@ -27,8 +28,10 @@ import {
 
 import { Skeleton } from "@/components/uiverse";
 import { Tooltip } from "@/components/uiverse";
+import { normalizeResourcePage } from "@/lib/pagination";
+import { usePaginationState } from "@/lib/use-pagination-state";
 import type { ScorerItem } from "./api";
-import { deleteScorer, listScorers, updateScorer } from "./api";
+import { deleteScorer, listScorerPage, updateScorer } from "./api";
 import { ScorerEditorDialog } from "./scorer-editor";
 
 const TYPE_LABELS: Record<string, string> = {
@@ -38,7 +41,10 @@ const TYPE_LABELS: Record<string, string> = {
 };
 
 export function ScorerList({ projectId }: { projectId: string }) {
+  const pagination = usePaginationState();
   const [scorers, setScorers] = useState<ScorerItem[]>([]);
+  const [total, setTotal] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [editorOpen, setEditorOpen] = useState(false);
@@ -49,19 +55,45 @@ export function ScorerList({ projectId }: { projectId: string }) {
   const reload = useCallback(async () => {
     setLoading(true);
     try {
-      setScorers(await listScorers(projectId));
+      const response = await listScorerPage(
+        projectId,
+        undefined,
+        pagination.page,
+        pagination.pageSize,
+      );
+      const page = normalizeResourcePage(
+        response,
+        pagination.page,
+        pagination.pageSize,
+      );
+      setScorers(page.items);
+      setTotal(page.total);
+      setTotalPages(page.total_pages);
     } catch {
       setError("加载评分器列表失败");
     } finally {
       setLoading(false);
     }
-  }, [projectId]);
+  }, [pagination.page, pagination.pageSize, projectId]);
 
   useEffect(() => {
     let active = true;
-    void listScorers(projectId)
-      .then((items) => {
-        if (active) setScorers(items);
+    void listScorerPage(
+      projectId,
+      undefined,
+      pagination.page,
+      pagination.pageSize,
+    )
+      .then((response) => {
+        if (!active) return;
+        const page = normalizeResourcePage(
+          response,
+          pagination.page,
+          pagination.pageSize,
+        );
+        setScorers(page.items);
+        setTotal(page.total);
+        setTotalPages(page.total_pages);
       })
       .catch(() => {
         if (active) setError("加载评分器列表失败");
@@ -72,7 +104,7 @@ export function ScorerList({ projectId }: { projectId: string }) {
     return () => {
       active = false;
     };
-  }, [projectId]);
+  }, [pagination.page, pagination.pageSize, projectId]);
 
   async function handleToggle(item: ScorerItem) {
     await updateScorer(projectId, item.id, { enabled: !item.enabled });
@@ -279,6 +311,17 @@ export function ScorerList({ projectId }: { projectId: string }) {
           ))}
         </ul>
       )}
+
+      <div className="mt-4 overflow-hidden rounded-[var(--radius-lg)] border border-[var(--hairline)] bg-[var(--surface)]">
+        <ResourcePagination
+          onPageChange={pagination.setPage}
+          onPageSizeChange={pagination.setPageSize}
+          page={pagination.page}
+          pageSize={pagination.pageSize}
+          total={total}
+          totalPages={totalPages}
+        />
+      </div>
 
       <ScorerEditorDialog
         onSaved={reload}

@@ -8,6 +8,7 @@ const api = vi.hoisted(() => ({
   createScorer: vi.fn(),
   deleteScorer: vi.fn(),
   listScorers: vi.fn(),
+  listScorerPage: vi.fn(),
   trialScorer: vi.fn(),
   updateScorer: vi.fn(),
 }));
@@ -45,12 +46,14 @@ describe("ScorerList", () => {
     api.createScorer.mockReset();
     api.deleteScorer.mockReset();
     api.listScorers.mockReset();
+    api.listScorerPage.mockReset();
     api.trialScorer.mockReset();
     api.updateScorer.mockReset();
   });
 
   it("shows the scorer workflow and plan links", async () => {
     api.listScorers.mockResolvedValue([scorer]);
+    api.listScorerPage.mockResolvedValue([scorer]);
 
     render(<ScorerList projectId="project-1" />);
 
@@ -92,6 +95,7 @@ describe("ScorerList", () => {
 
   it("guides empty state to create scorer and configure plans", async () => {
     api.listScorers.mockResolvedValue([]);
+    api.listScorerPage.mockResolvedValue([]);
 
     render(<ScorerList projectId="project-1" />);
 

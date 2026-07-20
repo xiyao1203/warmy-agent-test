@@ -11,10 +11,10 @@ import {
 
 export const runQueries = {
   all: ["runs"] as const,
-  list(projectId: string) {
+  list(projectId: string, page = 1, pageSize = 10) {
     return queryOptions({
-      queryFn: ({ signal }) => listRuns(projectId, signal),
-      queryKey: ["runs", projectId] as const,
+      queryFn: ({ signal }) => listRuns(projectId, signal, page, pageSize),
+      queryKey: ["runs", projectId, page, pageSize] as const,
       refetchInterval: 5000,
     });
   },
@@ -52,6 +52,6 @@ export const runQueries = {
 
 export function invalidateRunList(client: QueryClient, projectId: string) {
   return client.invalidateQueries({
-    queryKey: runQueries.list(projectId).queryKey,
+    queryKey: ["runs", projectId],
   });
 }

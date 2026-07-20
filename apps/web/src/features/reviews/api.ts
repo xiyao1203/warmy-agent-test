@@ -21,15 +21,17 @@ export async function listReviews(
   projectId: string,
   status?: string,
   signal?: AbortSignal,
+  page = 1,
+  pageSize = 10,
 ) {
   const { data } = await listReviewsApiV1ProjectsProjectIdReviewsGet({
     client: apiClient,
     path: { project_id: projectId },
-    query: { limit: 100, status },
+    query: { page, page_size: pageSize, status },
     signal,
     throwOnError: true,
   });
-  return data.items;
+  return data;
 }
 
 export async function scoreReview(

@@ -5,7 +5,7 @@ from datetime import datetime
 from typing import Protocol
 from uuid import UUID
 
-from fastapi import APIRouter, Header, Request
+from fastapi import APIRouter, Header, Query, Request
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
@@ -19,7 +19,9 @@ from agenttest.modules.experiments.domain.entities import Experiment
 from agenttest.modules.identity.public import InvalidSessionError, User
 from agenttest.modules.projects.public import ProjectNotFoundError
 from agenttest.shared.api.auth_guard import require_actor, require_writer
+from agenttest.shared.api.pagination import resolve_page_request
 from agenttest.shared.application.core_summaries import CoreSummaryReader, ExperimentSummaryMetrics
+from agenttest.shared.application.pagination import paginate_items
 
 
 class CreateExperimentRequest(BaseModel):
@@ -44,6 +46,10 @@ class ExperimentSummaryResponse(ExperimentSummaryMetrics):
 
 class ExperimentListResponse(BaseModel):
     items: list[ExperimentSummaryResponse]
+    total: int
+    page: int | None = None
+    page_size: int = 50
+    total_pages: int = 0
 
 
 class ActorResolver(Protocol):
@@ -67,12 +73,28 @@ def create_experiment_router(dependencies: ExperimentApiDependencies) -> APIRout
         project_id: UUID,
         limit: int = 50,
         offset: int = 0,
+        page: int | None = Query(default=None),
+        page_size: int | None = Query(default=None),
     ):
         actor = await require_actor(request, dependencies.actor_for, dependencies.settings)
         if isinstance(actor, JSONResponse):
             return actor
         try:
-            items = await dependencies.service.list(actor, project_id, limit, offset)
+            page_request = resolve_page_request(page=page, page_size=page_size)
+            if page_request:
+                all_items = await dependencies.service.list(actor, project_id, 10_000, 0)
+                result = paginate_items(all_items, page_request)
+                items = result.items
+                total = result.total
+                response_page = result.page
+                response_page_size = result.page_size
+                total_pages = result.total_pages
+            else:
+                items = await dependencies.service.list(actor, project_id, limit, offset)
+                total = len(items)
+                response_page = None
+                response_page_size = limit
+                total_pages = (total + limit - 1) // limit if total else 0
         except Exception as error:
             response = _access_error(error)
             if response is not None:
@@ -95,7 +117,11 @@ def create_experiment_router(dependencies: ExperimentApiDependencies) -> APIRout
                 if item.experiment_id.value in summaries
                 else _to_dict(item)
                 for item in items
-            ]
+            ],
+            "total": total,
+            "page": response_page,
+            "page_size": response_page_size,
+            "total_pages": total_pages,
         }
 
     @router.post("")

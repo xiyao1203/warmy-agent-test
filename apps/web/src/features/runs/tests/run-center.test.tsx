@@ -106,6 +106,28 @@ function renderWithQueryClient(children: ReactNode) {
 }
 
 describe("RunCenter", () => {
+  it("renders standard pagination for run history", () => {
+    const onPageChange = vi.fn();
+    const onPageSizeChange = vi.fn();
+    render(
+      <RunCenter
+        onPageChange={onPageChange}
+        onPageSizeChange={onPageSizeChange}
+        page={2}
+        pageSize={10}
+        projectId="project-1"
+        runs={[running]}
+        total={21}
+        totalPages={3}
+      />,
+    );
+
+    expect(screen.getByText("共 21 条")).toBeVisible();
+    expect(screen.getByText("第 2 / 3 页")).toBeVisible();
+    fireEvent.click(screen.getByRole("button", { name: "下一页" }));
+    expect(onPageChange).toHaveBeenCalledWith(3);
+  });
+
   it("creates a run from a published plan version and renders dashboard summary", async () => {
     const onCreate = vi.fn().mockResolvedValue(undefined);
     render(
@@ -202,7 +224,13 @@ describe("RunCenter", () => {
   });
 
   it("navigates to the created run after starting execution", async () => {
-    api.listRuns.mockResolvedValue([]);
+    api.listRuns.mockResolvedValue({
+      items: [],
+      page: 1,
+      page_size: 10,
+      total: 0,
+      total_pages: 0,
+    });
     api.listPublishedPlanVersions.mockResolvedValue([
       { id: "version-1", label: "客服回归 v2" },
     ]);

@@ -6,7 +6,7 @@ from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from uuid import UUID
 
-from fastapi import APIRouter, Header, Request
+from fastapi import APIRouter, Header, Query, Request
 from fastapi.responses import JSONResponse, Response
 from pydantic import BaseModel, Field
 
@@ -20,6 +20,8 @@ from agenttest.modules.browser_profiles.application.service import (
 )
 from agenttest.modules.identity.public import User
 from agenttest.modules.projects.public import ProjectNotFoundError
+from agenttest.shared.api.pagination import resolve_page_request
+from agenttest.shared.application.pagination import paginate_items
 
 
 @dataclass(frozen=True, slots=True)
@@ -67,7 +69,12 @@ def create_browser_profile_router(
         return resolved
 
     @router.get("/api/v1/projects/{project_id}/browser-profiles")
-    async def list_profiles(request: Request, project_id: UUID):
+    async def list_profiles(
+        request: Request,
+        project_id: UUID,
+        page: int | None = Query(default=None),
+        page_size: int | None = Query(default=None),
+    ):
         resolved = await actor(request, write=False)
         if isinstance(resolved, JSONResponse):
             return resolved
@@ -78,7 +85,24 @@ def create_browser_profile_router(
             if response is not None:
                 return response
             raise
-        return {"items": [item.to_public_dict() for item in items]}
+        page_request = resolve_page_request(page=page, page_size=page_size)
+        if page_request:
+            result = paginate_items(items, page_request)
+            items = result.items
+            metadata: dict[str, int | None] = {
+                "total": result.total,
+                "page": result.page,
+                "page_size": result.page_size,
+                "total_pages": result.total_pages,
+            }
+        else:
+            metadata = {
+                "total": len(items),
+                "page": None,
+                "page_size": 50,
+                "total_pages": 1 if items else 0,
+            }
+        return {"items": [item.to_public_dict() for item in items], **metadata}
 
     @router.post("/api/v1/projects/{project_id}/browser-profiles", status_code=201)
     async def create_profile(

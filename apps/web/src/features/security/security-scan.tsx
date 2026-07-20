@@ -19,6 +19,9 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { DropdownSelect } from "@/components/ui/dropdown-select";
 import { ResourceReferenceLink } from "@/components/ui/resource-reference-link";
+import { ResourcePagination } from "@/components/ui/resource-pagination";
+import { normalizeResourcePage } from "@/lib/pagination";
+import { usePaginationState } from "@/lib/use-pagination-state";
 import type { Finding, SecurityScanItem } from "./api";
 import type { SecurityTarget } from "./api";
 import { listScans, listSecurityTargets, triggerScan } from "./api";
@@ -42,7 +45,10 @@ const CATEGORY_LABELS: Record<string, string> = {
 };
 
 export function SecurityScanPage({ projectId }: { projectId: string }) {
+  const pagination = usePaginationState();
   const [scans, setScans] = useState<SecurityScanItem[]>([]);
+  const [total, setTotal] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
   const [loading, setLoading] = useState(true);
   const [triggering, setTriggering] = useState(false);
   const [agentVersionId, setAgentVersionId] = useState("");
@@ -54,9 +60,17 @@ export function SecurityScanPage({ projectId }: { projectId: string }) {
 
   useEffect(() => {
     let active = true;
-    void listScans(projectId)
-      .then((items) => {
-        if (active) setScans(items);
+    void listScans(projectId, undefined, pagination.page, pagination.pageSize)
+      .then((response) => {
+        if (!active) return;
+        const page = normalizeResourcePage(
+          response,
+          pagination.page,
+          pagination.pageSize,
+        );
+        setScans(page.items);
+        setTotal(page.total);
+        setTotalPages(page.total_pages);
       })
       .catch(() => undefined)
       .finally(() => {
@@ -65,7 +79,7 @@ export function SecurityScanPage({ projectId }: { projectId: string }) {
     return () => {
       active = false;
     };
-  }, [projectId]);
+  }, [pagination.page, pagination.pageSize, projectId]);
 
   useEffect(() => {
     void listSecurityTargets(projectId)
@@ -261,6 +275,16 @@ export function SecurityScanPage({ projectId }: { projectId: string }) {
               </li>
             ))
           )}
+          <li className="overflow-hidden rounded border border-[var(--hairline)] bg-[var(--surface)]">
+            <ResourcePagination
+              onPageChange={pagination.setPage}
+              onPageSizeChange={pagination.setPageSize}
+              page={pagination.page}
+              pageSize={pagination.pageSize}
+              total={total}
+              totalPages={totalPages}
+            />
+          </li>
         </ul>
 
         {/* 详情面板 */}

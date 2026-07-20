@@ -20,6 +20,9 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ResourceReferenceLink } from "@/components/ui/resource-reference-link";
+import { ResourcePagination } from "@/components/ui/resource-pagination";
+import { normalizeResourcePage } from "@/lib/pagination";
+import { usePaginationState } from "@/lib/use-pagination-state";
 
 import type { ReviewTask } from "./api";
 import { listReviews, scoreReview, rejectReview, skipReview } from "./api";
@@ -42,7 +45,10 @@ const STATUS_LABELS: Record<string, string> = {
 };
 
 export function ReviewWorkbench({ projectId }: { projectId: string }) {
+  const pagination = usePaginationState();
   const [tasks, setTasks] = useState<ReviewTask[]>([]);
+  const [total, setTotal] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState<ReviewTask | null>(null);
   const [filter, setFilter] = useState<string>("pending");
@@ -59,19 +65,47 @@ export function ReviewWorkbench({ projectId }: { projectId: string }) {
   const reload = useCallback(async () => {
     setLoading(true);
     try {
-      setTasks(await listReviews(projectId, filter || undefined));
+      const response = await listReviews(
+        projectId,
+        filter || undefined,
+        undefined,
+        pagination.page,
+        pagination.pageSize,
+      );
+      const page = normalizeResourcePage(
+        response,
+        pagination.page,
+        pagination.pageSize,
+      );
+      setTasks(page.items);
+      setTotal(page.total);
+      setTotalPages(page.total_pages);
     } catch {
       /* empty */
     } finally {
       setLoading(false);
     }
-  }, [projectId, filter]);
+  }, [filter, pagination.page, pagination.pageSize, projectId]);
 
   useEffect(() => {
     let active = true;
-    void listReviews(projectId, filter || undefined)
-      .then((items) => {
-        if (active) setTasks(items);
+    void listReviews(
+      projectId,
+      filter || undefined,
+      undefined,
+      pagination.page,
+      pagination.pageSize,
+    )
+      .then((response) => {
+        if (!active) return;
+        const page = normalizeResourcePage(
+          response,
+          pagination.page,
+          pagination.pageSize,
+        );
+        setTasks(page.items);
+        setTotal(page.total);
+        setTotalPages(page.total_pages);
       })
       .catch(() => undefined)
       .finally(() => {
@@ -80,7 +114,7 @@ export function ReviewWorkbench({ projectId }: { projectId: string }) {
     return () => {
       active = false;
     };
-  }, [filter, projectId]);
+  }, [filter, pagination.page, pagination.pageSize, projectId]);
 
   async function handleApprove() {
     if (!selected) return;
@@ -149,7 +183,10 @@ export function ReviewWorkbench({ projectId }: { projectId: string }) {
             (s) => (
               <Button
                 key={s}
-                onClick={() => setFilter(s)}
+                onClick={() => {
+                  setFilter(s);
+                  pagination.setPage(1);
+                }}
                 variant={filter === s ? "primary" : "ghost"}
               >
                 {s === ""
@@ -269,6 +306,16 @@ export function ReviewWorkbench({ projectId }: { projectId: string }) {
               </li>
             ))
           )}
+          <li className="overflow-hidden rounded border border-[var(--hairline)] bg-[var(--surface)]">
+            <ResourcePagination
+              onPageChange={pagination.setPage}
+              onPageSizeChange={pagination.setPageSize}
+              page={pagination.page}
+              pageSize={pagination.pageSize}
+              total={total}
+              totalPages={totalPages}
+            />
+          </li>
         </ul>
 
         {/* 详情 + 评分面板 */}

@@ -28,6 +28,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { ResourcePagination } from "@/components/ui/resource-pagination";
 import {
   Table,
   TableBody,
@@ -45,12 +46,19 @@ import {
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { Skeleton } from "@/components/uiverse";
 import { problemMessage } from "@/lib/api/problem";
+import type { PageSize } from "@/lib/pagination";
 
 type Props = {
   defaults: ModelDefaultResponse[];
   error?: string;
   loading?: boolean;
   models: ModelConfigResponse[];
+  onPageChange?: (page: number) => void;
+  onPageSizeChange?: (pageSize: PageSize) => void;
+  page?: number;
+  pageSize?: PageSize;
+  total?: number;
+  totalPages?: number;
   onCreate: (value: CreateModelConfigRequest) => Promise<void>;
   onDelete: (id: string) => Promise<void>;
   onSetDefault: (purpose: ModelPurpose, id: string) => Promise<void>;
@@ -282,6 +290,14 @@ export function ModelConfigList(props: Props) {
             </Table>
           </div>
         )}
+        <ResourcePagination
+          onPageChange={props.onPageChange ?? (() => undefined)}
+          onPageSizeChange={props.onPageSizeChange ?? (() => undefined)}
+          page={props.page ?? 1}
+          pageSize={props.pageSize ?? 10}
+          total={props.total ?? props.models.length}
+          totalPages={props.totalPages ?? (props.models.length ? 1 : 0)}
+        />
       </section>
 
       {editing !== undefined ? (

@@ -8,6 +8,8 @@ describe("run queries", () => {
     expect(runQueries.list("project-1").queryKey).toEqual([
       "runs",
       "project-1",
+      1,
+      10,
     ]);
     expect(runQueries.cases("project-1", "run-1").queryKey).toEqual([
       "runs",

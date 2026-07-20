@@ -16,6 +16,7 @@ import {
 import { EmptyState } from "@/components/ui/empty-state";
 import { Skeleton } from "@/components/uiverse";
 import { Input } from "@/components/ui/input";
+import { ResourcePagination } from "@/components/ui/resource-pagination";
 import {
   Table,
   TableBody,
@@ -30,6 +31,7 @@ import {
   tableActionHeadClass,
 } from "@/components/ui/table-actions";
 import { TruncatedText } from "@/components/ui/truncated-text";
+import { usePaginationState } from "@/lib/use-pagination-state";
 
 type TestAccount = {
   id: string;
@@ -71,6 +73,15 @@ export function TestAccountList({
   onDelete,
   onToggleEnabled,
 }: TestAccountListProps) {
+  const pagination = usePaginationState("test_accounts");
+  const totalPages = accounts.length
+    ? Math.ceil(accounts.length / pagination.pageSize)
+    : 0;
+  const pageStart = (pagination.page - 1) * pagination.pageSize;
+  const pagedAccounts = accounts.slice(
+    pageStart,
+    pageStart + pagination.pageSize,
+  );
   if (loading) {
     return (
       <div className="mt-6">
@@ -124,7 +135,7 @@ export function TestAccountList({
               </TableRow>
             </TableHeader>
             <TableBody>
-              {accounts.map((account) => (
+              {pagedAccounts.map((account) => (
                 <TableRow
                   className="transition-colors hover:bg-[var(--canvas-soft)]"
                   key={account.id}
@@ -196,6 +207,14 @@ export function TestAccountList({
             </TableBody>
           </Table>
         )}
+        <ResourcePagination
+          onPageChange={pagination.setPage}
+          onPageSizeChange={pagination.setPageSize}
+          page={pagination.page}
+          pageSize={pagination.pageSize}
+          total={accounts.length}
+          totalPages={totalPages}
+        />
       </section>
     </div>
   );

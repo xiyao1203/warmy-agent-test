@@ -14,13 +14,18 @@ import {
 import { apiClient } from "@/lib/api/client";
 import { csrfHeaders } from "@/lib/api/csrf";
 
-export async function listModelConfigs(projectId: string) {
+export async function listModelConfigs(
+  projectId: string,
+  page = 1,
+  pageSize = 10,
+) {
   const { data } = await listConfigsApiV1ProjectsProjectIdModelConfigsGet({
     client: apiClient,
     path: { project_id: projectId },
+    query: { page, page_size: pageSize },
     throwOnError: true,
   });
-  return data.items;
+  return data;
 }
 
 export async function listModelDefaults(projectId: string) {

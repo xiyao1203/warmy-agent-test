@@ -26,7 +26,10 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { ResourcePagination } from "@/components/ui/resource-pagination";
 import { Skeleton, Tooltip } from "@/components/uiverse";
+import { normalizeResourcePage } from "@/lib/pagination";
+import { usePaginationState } from "@/lib/use-pagination-state";
 
 import type { GateItem, GateResult, GateRun } from "./api";
 import {
@@ -34,11 +37,14 @@ import {
   deleteGate,
   evaluateGate,
   listGateRuns,
-  listGates,
+  listGatePage,
 } from "./api";
 
 export function GateList({ projectId }: { projectId: string }) {
+  const pagination = usePaginationState();
   const [gates, setGates] = useState<GateItem[]>([]);
+  const [total, setTotal] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
   const [loading, setLoading] = useState(true);
   const [runs, setRuns] = useState<GateRun[]>([]);
   const [deleteTarget, setDeleteTarget] = useState<GateItem | null>(null);
@@ -53,19 +59,45 @@ export function GateList({ projectId }: { projectId: string }) {
   const reload = useCallback(async () => {
     setLoading(true);
     try {
-      setGates(await listGates(projectId));
+      const response = await listGatePage(
+        projectId,
+        undefined,
+        pagination.page,
+        pagination.pageSize,
+      );
+      const page = normalizeResourcePage(
+        response,
+        pagination.page,
+        pagination.pageSize,
+      );
+      setGates(page.items);
+      setTotal(page.total);
+      setTotalPages(page.total_pages);
     } catch {
       /* empty */
     } finally {
       setLoading(false);
     }
-  }, [projectId]);
+  }, [pagination.page, pagination.pageSize, projectId]);
 
   useEffect(() => {
     let active = true;
-    void listGates(projectId)
-      .then((items) => {
-        if (active) setGates(items);
+    void listGatePage(
+      projectId,
+      undefined,
+      pagination.page,
+      pagination.pageSize,
+    )
+      .then((response) => {
+        if (!active) return;
+        const page = normalizeResourcePage(
+          response,
+          pagination.page,
+          pagination.pageSize,
+        );
+        setGates(page.items);
+        setTotal(page.total);
+        setTotalPages(page.total_pages);
       })
       .catch(() => undefined)
       .finally(() => {
@@ -74,7 +106,7 @@ export function GateList({ projectId }: { projectId: string }) {
     return () => {
       active = false;
     };
-  }, [projectId]);
+  }, [pagination.page, pagination.pageSize, projectId]);
 
   useEffect(() => {
     void listGateRuns(projectId)
@@ -208,6 +240,17 @@ export function GateList({ projectId }: { projectId: string }) {
           ))}
         </ul>
       )}
+
+      <div className="mt-4 overflow-hidden rounded-[var(--radius-lg)] border border-[var(--hairline)] bg-[var(--surface)]">
+        <ResourcePagination
+          onPageChange={pagination.setPage}
+          onPageSizeChange={pagination.setPageSize}
+          page={pagination.page}
+          pageSize={pagination.pageSize}
+          total={total}
+          totalPages={totalPages}
+        />
+      </div>
 
       <CreateGateDialog
         onCreated={reload}
