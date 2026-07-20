@@ -17,6 +17,11 @@ import type { ReactNode } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
+  MetricCard,
+  MetricCardSkeleton,
+  MetricGrid,
+} from "@/components/ui/metric-card";
+import {
   Table,
   TableBody,
   TableCell,
@@ -25,7 +30,6 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Skeleton, SkeletonText } from "@/components/uiverse";
-import { Tooltip } from "@/components/uiverse";
 import { TruncatedText } from "@/components/ui/truncated-text";
 
 type ProjectOverviewProps = {
@@ -113,33 +117,33 @@ export function ProjectOverview({
         </div>
       </header>
 
-      <section className="grid grid-cols-3 border-b border-[var(--hairline)] py-5 max-[900px]:grid-cols-1 max-[900px]:gap-4">
-        <Metric
+      <MetricGrid className="mt-5" columns={3}>
+        <MetricCard
           icon={<Folder className="size-4" />}
           label="项目状态"
-          tooltip="项目当前状态：活跃或已归档"
-        >
-          {project.archived ? "已归档" : "活跃"}
-        </Metric>
-        <Metric
+          state={project.archived ? "warning" : "updated"}
+          tone={project.archived ? "warning" : "success"}
+          value={project.archived ? "已归档" : "活跃"}
+        />
+        <MetricCard
           icon={<Users className="size-4" />}
           label="项目成员"
-          tooltip="项目成员数量和列表"
-        >
-          {members.length} 位成员
-        </Metric>
-        <Metric
+          tone="info"
+          value={`${members.length} 位成员`}
+        />
+        <MetricCard
           icon={<Archive className="size-4" />}
           label="测试资产"
-          tooltip="项目中的 Agents、数据集和测试计划数量"
-        >
-          <span className="flex flex-wrap gap-x-3 gap-y-1">
-            <span>{assetSummary.agents} Agents</span>
-            <span>{assetSummary.datasets} 数据集</span>
-            <span>{assetSummary.testPlans} 测试计划</span>
-          </span>
-        </Metric>
-      </section>
+          tone="accent"
+          value={
+            <span className="flex flex-wrap gap-x-3 gap-y-1 text-sm">
+              <span>{assetSummary.agents} Agents</span>
+              <span>{assetSummary.datasets} 数据集</span>
+              <span>{assetSummary.testPlans} 测试计划</span>
+            </span>
+          }
+        />
+      </MetricGrid>
 
       <div className="grid grid-cols-[minmax(0,1.6fr)_minmax(18rem,0.7fr)] items-stretch gap-5 py-6 max-[1000px]:grid-cols-1">
         <section className="overflow-hidden rounded-[var(--radius-md)] border border-[var(--hairline)] bg-[var(--surface)] shadow-sm shadow-black/[0.02]">
@@ -207,7 +211,7 @@ export function ProjectOverview({
                 </Link>
               </Button>
             }
-            description="当前概览页只展示项目摘要；完整运行记录、进度与结果在运行中心统一查看。"
+            description="查看执行进度、结果和 Trace 证据。"
             icon={<Activity className="size-5" />}
             title="查看运行中心"
           />
@@ -271,30 +275,6 @@ function CardEmptyState({
   );
 }
 
-function Metric({
-  children,
-  icon,
-  label,
-  tooltip,
-}: {
-  children: ReactNode;
-  icon: ReactNode;
-  label: string;
-  tooltip?: string;
-}) {
-  return (
-    <div className="flex items-start gap-3 border-r border-[var(--hairline)] px-5 first:pl-0 last:border-r-0 max-[900px]:border-r-0 max-[900px]:px-0">
-      <Tooltip content={tooltip || label}>
-        <span className="mt-0.5 text-[var(--muted)]">{icon}</span>
-      </Tooltip>
-      <div>
-        <p className="text-xs text-[var(--muted)]">{label}</p>
-        <p className="mt-1 text-sm font-medium">{children}</p>
-      </div>
-    </div>
-  );
-}
-
 function StatusPanel({
   description,
   title,
@@ -332,29 +312,11 @@ function LoadingSkeleton() {
       </div>
 
       {/* Metrics skeleton */}
-      <div className="grid grid-cols-3 border-b border-[var(--hairline)] py-5 max-[900px]:grid-cols-1 max-[900px]:gap-4">
-        <div className="flex items-start gap-3 border-r border-[var(--hairline)] px-5 first:pl-0 last:border-r-0 max-[900px]:border-r-0 max-[900px]:px-0">
-          <Skeleton className="size-4" />
-          <div>
-            <Skeleton className="h-3 w-12" />
-            <Skeleton className="mt-1 h-4 w-16" />
-          </div>
-        </div>
-        <div className="flex items-start gap-3 border-r border-[var(--hairline)] px-5 max-[900px]:border-r-0 max-[900px]:px-0">
-          <Skeleton className="size-4" />
-          <div>
-            <Skeleton className="h-3 w-12" />
-            <Skeleton className="mt-1 h-4 w-20" />
-          </div>
-        </div>
-        <div className="flex items-start gap-3 px-5 max-[900px]:px-0">
-          <Skeleton className="size-4" />
-          <div>
-            <Skeleton className="h-3 w-12" />
-            <Skeleton className="mt-1 h-4 w-40" />
-          </div>
-        </div>
-      </div>
+      <MetricGrid className="mt-5" columns={3}>
+        <MetricCardSkeleton label="正在加载项目状态" />
+        <MetricCardSkeleton label="正在加载项目成员" />
+        <MetricCardSkeleton label="正在加载测试资产" />
+      </MetricGrid>
 
       {/* Content skeleton */}
       <div className="grid grid-cols-[minmax(0,1.6fr)_minmax(18rem,0.7fr)] gap-6 py-6 max-[1000px]:grid-cols-1">

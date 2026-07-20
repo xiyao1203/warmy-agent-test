@@ -35,9 +35,16 @@ type MetricCardProps = Omit<HTMLAttributes<HTMLElement>, "title"> & {
 
 export function MetricGrid({
   className,
+  columns = 4,
   ...props
-}: HTMLAttributes<HTMLDivElement>) {
-  return <div className={cn("precision-metric-grid", className)} {...props} />;
+}: HTMLAttributes<HTMLDivElement> & { columns?: 3 | 4 }) {
+  return (
+    <div
+      className={cn("precision-metric-grid", className)}
+      data-columns={columns}
+      {...props}
+    />
+  );
 }
 
 export function MetricCard({

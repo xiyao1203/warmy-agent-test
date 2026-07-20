@@ -5,6 +5,7 @@ import {
   Activity,
   AlertTriangle,
   CheckCircle2,
+  ChevronRight,
   ClipboardCheck,
   Database,
   Play,
@@ -22,6 +23,8 @@ import { Button } from "@/components/ui/button";
 import { DropdownSelect } from "@/components/ui/dropdown-select";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Input } from "@/components/ui/input";
+import { InlineAlert } from "@/components/ui/inline-alert";
+import { MetricCard, MetricGrid } from "@/components/ui/metric-card";
 import { ResourcePagination } from "@/components/ui/resource-pagination";
 import { ResourceReferenceLink } from "@/components/ui/resource-reference-link";
 import { problemMessage } from "@/lib/api/problem";
@@ -161,32 +164,80 @@ export function RunCenter({
         />
       </section>
       {actionError ? (
-        <p className="mt-3 text-sm text-[var(--danger)]" role="alert">
+        <InlineAlert className="mt-3" title="无法启动测试执行" tone="danger">
           {actionError}
-        </p>
+        </InlineAlert>
       ) : null}
-      <section className="mt-5 grid grid-cols-4 gap-3 max-[1100px]:grid-cols-2 max-[700px]:grid-cols-1">
-        <SummaryCard
+      <MetricGrid className="mt-5">
+        <MetricCard
+          action={
+            <button
+              aria-label="查看全部运行"
+              onClick={() => setStatusFilter("all")}
+              type="button"
+            >
+              <ChevronRight aria-hidden="true" className="size-3.5" />
+            </button>
+          }
+          change="当前范围"
           icon={<Activity aria-hidden="true" className="size-4" />}
           label="总运行"
+          state="updated"
+          tone="accent"
           value={String(total)}
         />
-        <SummaryCard
+        <MetricCard
+          action={
+            <button
+              aria-label="筛选运行中"
+              onClick={() => setStatusFilter("running")}
+              type="button"
+            >
+              <ChevronRight aria-hidden="true" className="size-3.5" />
+            </button>
+          }
+          change="实时"
           icon={<Timer aria-hidden="true" className="size-4" />}
           label="运行中"
+          state="running"
+          tone="info"
           value={String(summary.active)}
         />
-        <SummaryCard
+        <MetricCard
+          action={
+            <button
+              aria-label="筛选已通过"
+              onClick={() => setStatusFilter("passed")}
+              type="button"
+            >
+              <ChevronRight aria-hidden="true" className="size-3.5" />
+            </button>
+          }
+          change="当前页"
           icon={<CheckCircle2 aria-hidden="true" className="size-4" />}
           label="通过率"
+          state="updated"
+          tone="success"
           value={`${summary.passRate}%`}
         />
-        <SummaryCard
+        <MetricCard
+          action={
+            <button
+              aria-label="筛选异常运行"
+              onClick={() => setStatusFilter("failed")}
+              type="button"
+            >
+              <ChevronRight aria-hidden="true" className="size-3.5" />
+            </button>
+          }
+          change="需处理"
           icon={<AlertTriangle aria-hidden="true" className="size-4" />}
           label="异常运行"
+          state="warning"
+          tone="danger"
           value={String(summary.unhealthy)}
         />
-      </section>
+      </MetricGrid>
       <section className="mt-5 overflow-hidden rounded-[var(--radius-lg)] border border-[var(--hairline)] bg-[var(--surface)]">
         <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--hairline)] px-4 py-3">
           <label className="relative min-w-[18rem] flex-1 text-sm">
@@ -487,30 +538,6 @@ function StatusPanel({ title }: { title: string }) {
         </p>
       </div>
     </div>
-  );
-}
-
-function SummaryCard({
-  icon,
-  label,
-  value,
-}: {
-  icon: ReactNode;
-  label: string;
-  value: string;
-}) {
-  return (
-    <article className="rounded-[var(--radius-lg)] border border-[var(--hairline)] bg-[var(--surface)] p-4">
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <p className="text-xs text-[var(--muted)]">{label}</p>
-          <p className="mt-2 text-2xl font-semibold tracking-tight">{value}</p>
-        </div>
-        <span className="grid size-9 place-items-center rounded-full bg-[var(--canvas-soft)] text-[var(--muted)]">
-          {icon}
-        </span>
-      </div>
-    </article>
   );
 }
 

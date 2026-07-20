@@ -7,7 +7,7 @@ import type {
   UserResponse,
   UserStatus,
 } from "@warmy/generated-api-client";
-import { Eye, Search } from "lucide-react";
+import { Eye, KeyRound, Search, UserCheck, Users, UserX } from "lucide-react";
 import { useMemo, useState } from "react";
 
 import { Badge } from "@/components/ui/badge";
@@ -142,17 +142,29 @@ export function UserManagement({
       </header>
 
       <SummaryStrip>
-        <SummaryItem label="全部用户" value={total} />
         <SummaryItem
+          icon={<Users aria-hidden="true" />}
+          label="全部用户"
+          state="updated"
+          tone="accent"
+          value={total}
+        />
+        <SummaryItem
+          icon={<UserCheck aria-hidden="true" />}
           label="活跃"
+          tone="success"
           value={users.filter((user) => user.status === "active").length}
         />
         <SummaryItem
+          icon={<UserX aria-hidden="true" />}
           label="已禁用"
+          tone="danger"
           value={users.filter((user) => user.status === "disabled").length}
         />
         <SummaryItem
+          icon={<KeyRound aria-hidden="true" />}
           label="需改密"
+          tone="warning"
           value={users.filter((user) => user.must_change_password).length}
         />
       </SummaryStrip>

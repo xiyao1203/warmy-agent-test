@@ -725,6 +725,10 @@ textarea[data-focus-owner="composer"]:focus-visible {
   gap: 0.5rem;
 }
 
+.precision-metric-grid[data-columns="3"] {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
 .precision-metric-card {
   --metric-tone: var(--primary);
   position: relative;
