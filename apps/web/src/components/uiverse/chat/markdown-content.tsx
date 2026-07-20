@@ -48,7 +48,7 @@ function CodeBlock({
 
   if (isInline) {
     return (
-      <code className={className} {...props}>
+      <code className={`text-code ${className ?? ""}`} {...props}>
         {children}
       </code>
     );
@@ -138,7 +138,10 @@ function CodeBlockWithCopy({
           </button>
         </div>
       </div>
-      <code className={`${className} block rounded-t-none`} {...props}>
+      <code
+        className={`text-code ${className} block rounded-t-none`}
+        {...props}
+      >
         {children}
       </code>
     </div>

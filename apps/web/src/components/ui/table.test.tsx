@@ -55,6 +55,30 @@ describe("Table", () => {
     expect(screen.getByRole("cell", { name: "值" })).toHaveClass("text-center");
   });
 
+  it("uses the shared table header and body typography roles", () => {
+    render(
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>模型</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          <TableRow>
+            <TableCell>gpt-5.5</TableCell>
+          </TableRow>
+        </TableBody>
+      </Table>,
+    );
+
+    expect(screen.getByRole("columnheader", { name: "模型" })).toHaveClass(
+      "text-table-head",
+    );
+    expect(screen.getByRole("cell", { name: "gpt-5.5" })).toHaveClass(
+      "text-table-cell",
+    );
+  });
+
   it("centers a rich value block while keeping its text readable", () => {
     render(
       <TableValue data-testid="table-value">

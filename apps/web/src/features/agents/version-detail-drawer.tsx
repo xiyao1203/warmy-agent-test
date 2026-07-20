@@ -284,7 +284,7 @@ function Field({
 
 function JsonBlock({ data }: { data: unknown }) {
   return (
-    <pre className="max-h-40 overflow-auto rounded border border-[var(--hairline)] bg-[var(--canvas-soft)] p-3 text-xs font-mono">
+    <pre className="text-code max-h-40 overflow-auto rounded border border-[var(--hairline)] bg-[var(--canvas-soft)] p-3">
       {JSON.stringify(data, null, 2)}
     </pre>
   );

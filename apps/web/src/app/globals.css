@@ -27,6 +27,8 @@ body {
 
 html {
   background: var(--canvas);
+  font-family: var(--font-sans, sans-serif);
+  font-variant-numeric: tabular-nums;
 }
 
 body {
@@ -50,14 +52,124 @@ body {
 /* Code surfaces */
 code,
 pre,
-kbd,
 samp {
   font-family: var(--font-code, "JetBrains Mono", "Fira Code", monospace);
+  font-variant-ligatures: none;
 }
 
 .font-display {
   font-family: var(--font-display, var(--font-sans));
   letter-spacing: 0;
+}
+
+/* Semantic typography roles */
+.text-page-title {
+  font-size: var(--text-page-title-size);
+  font-weight: var(--text-page-title-weight);
+  line-height: var(--text-page-title-line-height);
+  letter-spacing: var(--text-page-title-letter-spacing);
+}
+
+.text-section-title {
+  font-size: var(--text-section-title-size);
+  font-weight: var(--text-section-title-weight);
+  line-height: var(--text-section-title-line-height);
+  letter-spacing: var(--text-section-title-letter-spacing);
+}
+
+.text-card-title {
+  font-size: var(--text-card-title-size);
+  font-weight: var(--text-card-title-weight);
+  line-height: var(--text-card-title-line-height);
+  letter-spacing: var(--text-card-title-letter-spacing);
+}
+
+.text-body {
+  font-size: var(--text-body-size);
+  font-weight: var(--text-body-weight);
+  line-height: var(--text-body-line-height);
+  letter-spacing: var(--text-body-letter-spacing);
+}
+
+.text-secondary {
+  font-size: var(--text-secondary-size);
+  font-weight: var(--text-secondary-weight);
+  line-height: var(--text-secondary-line-height);
+  letter-spacing: var(--text-secondary-letter-spacing);
+}
+
+.text-caption {
+  font-size: var(--text-caption-size);
+  font-weight: var(--text-caption-weight);
+  line-height: var(--text-caption-line-height);
+  letter-spacing: var(--text-caption-letter-spacing);
+}
+
+.text-code {
+  font-family: var(--font-code);
+  font-size: var(--text-code-size);
+  font-weight: var(--text-code-weight);
+  font-variant-ligatures: none;
+  line-height: var(--text-code-line-height);
+  letter-spacing: var(--text-code-letter-spacing);
+}
+
+.text-button {
+  font-size: var(--text-body-size);
+  font-weight: 600;
+  line-height: var(--text-body-line-height);
+  letter-spacing: 0;
+}
+
+.text-badge {
+  font-size: var(--text-caption-size);
+  font-weight: var(--text-caption-weight);
+  line-height: var(--text-caption-line-height);
+  letter-spacing: var(--text-caption-letter-spacing);
+}
+
+.text-table-head {
+  font-size: var(--text-secondary-size);
+  font-weight: 500;
+  line-height: var(--text-secondary-line-height);
+  letter-spacing: 0;
+}
+
+.text-table-cell {
+  font-size: var(--text-body-size);
+  font-weight: var(--text-body-weight);
+  line-height: var(--text-body-line-height);
+  letter-spacing: var(--text-body-letter-spacing);
+}
+
+/* Compatibility scale for existing Tailwind typography utilities. */
+.text-xs {
+  font-size: var(--text-caption-size);
+  line-height: var(--text-caption-line-height);
+}
+
+.text-sm {
+  font-size: var(--text-body-size);
+  line-height: var(--text-body-line-height);
+}
+
+.text-base {
+  font-size: var(--text-card-title-size);
+  line-height: var(--text-card-title-line-height);
+}
+
+.text-lg {
+  font-size: var(--text-section-title-size);
+  line-height: var(--text-section-title-line-height);
+}
+
+.text-2xl {
+  font-size: var(--text-page-title-size);
+  line-height: var(--text-page-title-line-height);
+}
+
+.font-mono {
+  font-family: var(--font-code);
 }
 
 .brand-mark {
@@ -154,9 +266,10 @@ samp {
   margin: 0 0 0.25rem;
   padding: 0 0.625rem;
   color: var(--muted);
-  font-size: 0.6875rem;
-  font-weight: 600;
-  letter-spacing: 0.04em;
+  font-size: var(--text-caption-size);
+  font-weight: 500;
+  line-height: var(--text-caption-line-height);
+  letter-spacing: 0.02em;
 }
 
 .app-nav-link {
@@ -173,7 +286,10 @@ samp {
   padding: 0 0.625rem;
   color: var(--muted);
   font: inherit;
-  font-size: 0.8125rem;
+  font-size: var(--text-body-size);
+  font-weight: 400;
+  line-height: var(--text-body-line-height);
+  letter-spacing: 0;
   text-decoration: none;
   transition:
     background var(--motion-fast) ease,
@@ -406,14 +522,6 @@ samp {
   color: var(--ink);
 }
 
-.app-tooltip-trigger:has(:focus-visible) > .app-tooltip-content {
-  opacity: 1;
-}
-
-.app-tooltip-trigger:has(:focus:not(:focus-visible)) > .app-tooltip-content {
-  opacity: 0;
-}
-
 @keyframes theme-toggle-icon-enter {
   from {
     opacity: 0;
@@ -445,13 +553,13 @@ samp {
 .app-search-trigger {
   min-width: 9rem;
   justify-content: flex-start;
-  border: 1px solid var(--hairline);
-  background: var(--canvas-soft);
+  border: 0;
+  background: transparent;
   color: var(--muted);
 }
 
 .app-search-trigger:hover {
-  border-color: var(--hairline-strong);
+  background: var(--canvas-soft);
   color: var(--body);
 }
 
@@ -591,6 +699,18 @@ kbd {
   box-shadow: var(--shadow-overlay);
 }
 
+.app-command-search {
+  transition: background var(--motion-fast) ease;
+}
+
+.app-command-search:focus-within {
+  background: color-mix(in srgb, var(--primary) 4%, transparent);
+}
+
+.app-command-search:focus-within svg {
+  color: var(--body);
+}
+
 .app-command-item {
   min-height: 2.5rem;
 }
@@ -669,6 +789,14 @@ select:focus-visible {
   box-shadow: 0 0 0 2px var(--focus-ring-subtle);
   outline: 1px solid var(--focus-ring);
   outline-offset: 1px;
+}
+
+.app-command-search-input,
+.app-command-search-input:focus,
+.app-command-search-input:focus-visible {
+  border: 0;
+  box-shadow: none;
+  outline: none;
 }
 
 textarea[data-focus-owner="composer"]:focus-visible {

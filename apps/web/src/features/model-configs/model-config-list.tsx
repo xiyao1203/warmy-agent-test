@@ -131,7 +131,7 @@ export function ModelConfigList(props: Props) {
     <div className="workspace-page">
       <header className="flex flex-wrap items-start justify-between gap-4 border-b border-[var(--hairline)] pb-5">
         <div>
-          <h1 className="text-xl font-semibold tracking-tight">模型配置</h1>
+          <h1 className="text-page-title">模型配置</h1>
           <p className="mt-1 text-sm text-[var(--muted)]">
             项目成员共享这些模型；API Key 加密保存且不会回显。
           </p>

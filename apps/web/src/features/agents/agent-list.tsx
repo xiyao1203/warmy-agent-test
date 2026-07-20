@@ -105,9 +105,7 @@ export function AgentList({
     <div className="workspace-page">
       <header className="flex items-start justify-between gap-4 border-b border-[var(--hairline)] pb-5">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">
-            Agent 与版本
-          </h1>
+          <h1 className="text-page-title">Agent 与版本</h1>
           <p className="mt-2 text-sm text-[var(--muted)]">
             管理待测 Agent、连接配置和不可变发布版本。
           </p>

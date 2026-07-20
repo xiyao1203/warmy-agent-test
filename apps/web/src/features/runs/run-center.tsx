@@ -109,7 +109,7 @@ export function RunCenter({
       <header className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <p className="text-xs font-medium text-[var(--body)]">测试执行</p>
-          <h1 className="text-2xl font-semibold tracking-tight">运行中心</h1>
+          <h1 className="text-page-title">运行中心</h1>
           <p className="mt-2 text-sm text-[var(--muted)]">
             选择已发布测试计划版本启动真实执行，并查看进度、结果与 Trace。
           </p>

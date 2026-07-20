@@ -91,7 +91,7 @@ export function ConnectionTestPanel({
       <label className="block text-sm font-medium">
         探测输入（JSON）
         <textarea
-          className="mt-1.5 min-h-20 w-full rounded border border-[var(--hairline)] bg-[var(--surface)] p-3 font-mono text-xs"
+          className="text-code mt-1.5 min-h-20 w-full rounded border border-[var(--hairline)] bg-[var(--surface)] p-3"
           disabled={disabled ?? testing}
           onChange={(event) => setProbeInput(event.target.value)}
           value={probeInput}
@@ -122,7 +122,7 @@ export function ConnectionTestPanel({
           </div>
           <div>
             <span className="text-xs text-[var(--muted)]">响应预览</span>
-            <pre className="mt-1 max-h-40 overflow-auto rounded bg-[var(--surface)] p-2 font-mono text-xs">
+            <pre className="text-code mt-1 max-h-40 overflow-auto rounded bg-[var(--surface)] p-2">
               {JSON.stringify(result.response_preview, null, 2)}
             </pre>
           </div>

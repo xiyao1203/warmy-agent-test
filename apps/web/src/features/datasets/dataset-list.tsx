@@ -85,7 +85,7 @@ export function DatasetList({
     <div className="workspace-page">
       <header className="flex items-start justify-between gap-4 border-b border-[var(--hairline)] pb-5">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">测试用例</h1>
+          <h1 className="text-page-title">测试用例</h1>
           <p className="mt-2 text-sm text-[var(--muted)]">
             一个用例集包含多条用例，发布后可直接用于测试计划。
           </p>

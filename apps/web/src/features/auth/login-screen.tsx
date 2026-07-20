@@ -140,7 +140,7 @@ export function LoginScreen({ returnTo }: { returnTo?: string }) {
             <ThemeToggle className="size-9 text-[var(--muted)] hover:bg-[var(--canvas-soft)] hover:text-[var(--ink)]" />
             <button
               aria-busy={entryResolving}
-              className="inline-flex h-9 min-w-20 items-center justify-center rounded-[var(--radius-md)] bg-[var(--primary)] px-4 text-sm font-medium text-[var(--on-primary)] transition-[background,transform] duration-[var(--motion-fast)] hover:bg-[var(--primary-active)] active:translate-y-px disabled:cursor-not-allowed disabled:translate-y-0 disabled:opacity-60"
+              className="inline-flex h-9 min-w-20 items-center justify-center rounded-[var(--radius-md)] bg-[var(--primary)] px-4 text-sm font-semibold text-[var(--on-primary)] transition-[background,transform] duration-[var(--motion-fast)] hover:bg-[var(--primary-active)] active:translate-y-px disabled:cursor-not-allowed disabled:translate-y-0 disabled:opacity-60"
               disabled={entryResolving}
               onClick={openWorkspaceEntry}
               type="button"
@@ -167,7 +167,7 @@ export function LoginScreen({ returnTo }: { returnTo?: string }) {
             <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
               <button
                 aria-busy={entryResolving}
-                className="inline-flex h-10 items-center justify-center rounded-[var(--radius-md)] bg-[var(--primary)] px-5 text-sm font-medium text-[var(--on-primary)] transition-[background,transform] duration-[var(--motion-fast)] hover:bg-[var(--primary-active)] active:translate-y-px disabled:cursor-not-allowed disabled:translate-y-0 disabled:opacity-60"
+                className="inline-flex h-10 items-center justify-center rounded-[var(--radius-md)] bg-[var(--primary)] px-5 text-sm font-semibold text-[var(--on-primary)] transition-[background,transform] duration-[var(--motion-fast)] hover:bg-[var(--primary-active)] active:translate-y-px disabled:cursor-not-allowed disabled:translate-y-0 disabled:opacity-60"
                 disabled={entryResolving}
                 onClick={openWorkspaceEntry}
                 type="button"
@@ -175,7 +175,7 @@ export function LoginScreen({ returnTo }: { returnTo?: string }) {
                 {heroEntryLabel}
               </button>
               <a
-                className="inline-flex h-10 items-center gap-2 rounded-[var(--radius-md)] border border-[var(--hairline-strong)] bg-[var(--surface)] px-4 text-sm text-[var(--ink)] transition-[background,border-color,transform] duration-[var(--motion-fast)] hover:bg-[var(--canvas-soft)] active:translate-y-px"
+                className="inline-flex h-10 items-center gap-2 rounded-[var(--radius-md)] border border-[var(--hairline-strong)] bg-[var(--surface)] px-4 text-sm font-semibold text-[var(--ink)] transition-[background,border-color,transform] duration-[var(--motion-fast)] hover:bg-[var(--canvas-soft)] active:translate-y-px"
                 href="#product-evidence"
               >
                 查看运行证据

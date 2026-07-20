@@ -104,7 +104,7 @@ export function TestCaseStepEditor({
                 测试数据（JSON 对象）
                 <textarea
                   aria-label={`步骤 ${index + 1} 测试数据`}
-                  className="mt-1.5 min-h-20 w-full rounded-[var(--radius-md)] border border-[var(--hairline)] bg-[var(--surface)] p-3 font-mono text-xs"
+                  className="text-code mt-1.5 min-h-20 w-full rounded-[var(--radius-md)] border border-[var(--hairline)] bg-[var(--surface)] p-3"
                   onChange={(event) =>
                     update(row.id, { testData: event.target.value })
                   }

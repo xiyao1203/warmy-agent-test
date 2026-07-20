@@ -20,7 +20,7 @@ export function Badge({
 
   return (
     <span
-      className={`inline-flex items-center rounded-[var(--radius-pill)] px-2 py-0.5 text-[11px] font-medium tracking-[0.02em] ${tones[tone]} ${className}`}
+      className={`text-badge inline-flex items-center rounded-[var(--radius-pill)] px-2 py-0.5 ${tones[tone]} ${className}`}
       {...props}
     />
   );

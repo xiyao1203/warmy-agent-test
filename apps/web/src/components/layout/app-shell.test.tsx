@@ -146,8 +146,14 @@ describe("AppShell", () => {
       </AppShell>,
     );
 
+    expect(screen.getByRole("button", { name: "全局搜索" })).toHaveClass(
+      "app-search-trigger",
+    );
     fireEvent.keyDown(window, { key: "k", metaKey: true });
     const search = screen.getByRole("searchbox", { name: "全局搜索" });
+    expect(search).toHaveClass("app-command-search-input");
+    expect(search.parentElement).toHaveClass("app-command-search");
+    expect(search.parentElement).not.toHaveClass("border-b");
     expect(search).toHaveFocus();
     fireEvent.change(search, { target: { value: "安全" } });
     const dialog = screen.getByRole("dialog", { name: "全局搜索" });

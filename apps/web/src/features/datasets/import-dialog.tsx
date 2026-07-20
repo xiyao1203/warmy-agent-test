@@ -125,7 +125,7 @@ export function ImportDialog({
             导入内容
             <textarea
               aria-label="导入内容"
-              className="mt-1.5 min-h-48 w-full rounded-[var(--radius-md)] border border-[var(--hairline)] bg-[var(--surface)] px-3 py-2 font-mono text-xs"
+              className="text-code mt-1.5 min-h-48 w-full rounded-[var(--radius-md)] border border-[var(--hairline)] bg-[var(--surface)] px-3 py-2"
               onChange={(event) => setContent(event.target.value)}
               value={content}
             />
