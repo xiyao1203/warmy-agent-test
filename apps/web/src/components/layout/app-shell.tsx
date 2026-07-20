@@ -112,7 +112,13 @@ export function AppShell({
   );
   const items = useMemo(
     () => [
-      { exact: true, href: "/projects", icon: Blocks, label: "项目列表" },
+      {
+        exact: true,
+        href: "/projects",
+        icon: Blocks,
+        label: "项目列表",
+        tone: "coral" as const,
+      },
       ...groups.flatMap((group) => group.items),
       ...(canManageUsers(user)
         ? [
@@ -120,6 +126,7 @@ export function AppShell({
               href: "/system/users",
               icon: Users,
               label: "用户与权限",
+              tone: "indigo" as const,
             },
           ]
         : []),

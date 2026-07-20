@@ -52,6 +52,13 @@
   --info: #2468b4;
   --info-subtle: #eef5fd;
 
+  /* Chromatic signal navigation */
+  --navigation-coral: #df4b45;
+  --navigation-blue: #3978c7;
+  --navigation-mint: #21856d;
+  --navigation-amber: #a66a17;
+  --navigation-indigo: #665fc1;
+
   /* Interaction and layering */
   --focus-ring: #e94b43;
   --focus-ring-subtle: rgba(233, 75, 67, 0.22);
@@ -160,6 +167,12 @@
   --danger-subtle: rgba(244, 63, 94, 0.15);
   --info: #7ab7f7;
   --info-subtle: rgba(59, 130, 246, 0.15);
+
+  --navigation-coral: #ff766d;
+  --navigation-blue: #79b5f5;
+  --navigation-mint: #60c7a6;
+  --navigation-amber: #edb45a;
+  --navigation-indigo: #aaa3ff;
 
   --focus-ring: #ff6b61;
   --focus-ring-subtle: rgba(255, 107, 97, 0.28);

@@ -32,6 +32,22 @@ describe("GLM workspace design tokens", () => {
     expect(tokens).toContain("--motion-spatial: 280ms");
   });
 
+  it("defines theme-aware chromatic navigation tones and motion fallbacks", () => {
+    for (const tone of ["coral", "blue", "mint", "amber", "indigo"]) {
+      expect(
+        tokens.match(new RegExp(`--navigation-${tone}:`, "g")),
+      ).toHaveLength(2);
+      expect(globalStyles).toContain(
+        `.app-nav-link[data-navigation-tone="${tone}"]`,
+      );
+    }
+
+    expect(globalStyles).toContain("background: var(--navigation-tone)");
+    expect(globalStyles).toMatch(
+      /@media \(prefers-reduced-motion: reduce\)[\s\S]*?\.app-nav-icon[\s\S]*?transform: none/,
+    );
+  });
+
   it("defines a complete explicit dark theme", () => {
     expect(tokens).toMatch(/\.dark\s*\{/);
     expect(tokens).toContain("--canvas: #111113");

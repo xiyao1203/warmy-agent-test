@@ -629,6 +629,75 @@ test("workspace shell supports grouped navigation, command search, and two-state
   await expect(helpButton).toBeFocused();
 });
 
+test("chromatic sidebar keeps active color and collapsed hover text", async ({
+  page,
+}, testInfo) => {
+  await page.setViewportSize({ height: 900, width: 1440 });
+  await page.addInitScript(() => {
+    localStorage.setItem("sidebar-collapsed", "false");
+    localStorage.setItem("theme", "light");
+  });
+  await mockResourceLists(page);
+  await page.goto(`/projects/${resourceProjectId}/datasets`);
+
+  const datasetLink = page.getByRole("link", { name: "测试用例" });
+  await expect(datasetLink).toHaveAttribute("aria-current", "page");
+  await expect(datasetLink).toHaveAttribute("data-navigation-tone", "indigo");
+  await expect(
+    datasetLink.locator('[data-navigation-icon="chromatic-signal"]'),
+  ).toBeVisible();
+  await expect(datasetLink.locator("[data-navigation-signal]")).toBeVisible();
+  await page.locator("aside.app-sidebar").screenshot({
+    path: testInfo.outputPath("chromatic-sidebar-light-expanded.png"),
+  });
+
+  await page.getByRole("button", { name: "收起侧边栏" }).click();
+  await expect(page.locator("aside.app-sidebar")).toHaveAttribute(
+    "data-collapsed",
+    "true",
+  );
+  await datasetLink.hover();
+  await expect(
+    page.locator('[role="tooltip"][data-tooltip="测试用例"]'),
+  ).toBeVisible();
+  await page.locator("aside.app-sidebar").screenshot({
+    path: testInfo.outputPath("chromatic-sidebar-light-collapsed.png"),
+  });
+
+  await page.getByRole("button", { name: "切换至深色" }).click();
+  await expect(page.locator("html")).toHaveClass(/dark/);
+  await page.mouse.move(900, 500);
+  await page.locator("aside.app-sidebar").screenshot({
+    path: testInfo.outputPath("chromatic-sidebar-dark-collapsed.png"),
+  });
+
+  await page.getByRole("button", { name: "展开侧边栏" }).click();
+  await expect(page.locator("aside.app-sidebar")).toHaveAttribute(
+    "data-collapsed",
+    "false",
+  );
+
+  await page.setViewportSize({ height: 844, width: 390 });
+  await page.getByRole("button", { name: "打开导航" }).click();
+  const mobileNavigation = page.getByRole("dialog", { name: "项目导航" });
+  await expect(
+    mobileNavigation
+      .getByRole("link", { name: "测试用例" })
+      .locator('[data-navigation-icon="chromatic-signal"]'),
+  ).toBeVisible();
+  await mobileNavigation.screenshot({
+    path: testInfo.outputPath("chromatic-sidebar-mobile-dark.png"),
+  });
+  await mobileNavigation.getByRole("button", { name: "关闭导航" }).click();
+
+  await page.getByRole("button", { name: "切换至浅色" }).click();
+  await page.getByRole("button", { name: "打开导航" }).click();
+  await mobileNavigation.screenshot({
+    path: testInfo.outputPath("chromatic-sidebar-mobile-light.png"),
+  });
+  await expect(page.locator("html")).toHaveClass(/light/);
+});
+
 test("theme hydration, reload, and legacy migration remain stable on every route", async ({
   page,
 }) => {

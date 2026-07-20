@@ -3,9 +3,9 @@
 import * as DialogPrimitive from "@radix-ui/react-dialog";
 import {
   Activity,
+  BadgeCheck,
   Blocks,
   Bot,
-  Check,
   ClipboardCheck,
   Gauge,
   GitCompareArrows,
@@ -26,11 +26,17 @@ import Link from "next/link";
 import { Tooltip } from "@/components/uiverse";
 import { projectOverviewPath, projectWorkspacePath } from "@/lib/routes";
 
+import {
+  type NavigationTone,
+  SidebarNavigationIcon,
+} from "./sidebar-navigation-icon";
+
 export type NavigationItem = {
   exact?: boolean;
   href: string;
   icon: LucideIcon;
   label: string;
+  tone: NavigationTone;
 };
 
 export type NavigationGroup = {
@@ -56,27 +62,36 @@ export function projectNavigation(projectId: string): NavigationGroup[] {
           href: projectWorkspacePath(projectId),
           icon: Workflow,
           label: "测试 Agent",
+          tone: "coral",
         },
         {
           href: projectOverviewPath(projectId),
           icon: LayoutDashboard,
           label: "概览",
+          tone: "blue",
         },
       ],
     },
     {
       label: "测试资产",
       items: [
-        { href: `/projects/${projectId}/agents`, icon: Bot, label: "智能体" },
+        {
+          href: `/projects/${projectId}/agents`,
+          icon: Bot,
+          label: "智能体",
+          tone: "mint",
+        },
         {
           href: `/projects/${projectId}/datasets`,
           icon: ListChecks,
           label: "测试用例",
+          tone: "indigo",
         },
         {
           href: `/projects/${projectId}/test-plans`,
           icon: ClipboardCheck,
           label: "测试计划",
+          tone: "indigo",
         },
       ],
     },
@@ -87,16 +102,19 @@ export function projectNavigation(projectId: string): NavigationGroup[] {
           href: `/projects/${projectId}/runs`,
           icon: Activity,
           label: "测试执行",
+          tone: "mint",
         },
         {
           href: `/projects/${projectId}/environments`,
           icon: KeyRound,
           label: "环境与凭证",
+          tone: "amber",
         },
         {
           href: `/projects/${projectId}/browser-profiles`,
           icon: Monitor,
           label: "浏览器实例",
+          tone: "blue",
         },
       ],
     },
@@ -107,26 +125,31 @@ export function projectNavigation(projectId: string): NavigationGroup[] {
           href: `/projects/${projectId}/scorers`,
           icon: Gauge,
           label: "评分器",
+          tone: "indigo",
         },
         {
           href: `/projects/${projectId}/experiments`,
           icon: GitCompareArrows,
           label: "实验对比",
+          tone: "blue",
         },
         {
           href: `/projects/${projectId}/reviews`,
-          icon: Check,
+          icon: BadgeCheck,
           label: "人工审核",
+          tone: "coral",
         },
         {
           href: `/projects/${projectId}/security`,
           icon: ShieldCheck,
           label: "安全测试",
+          tone: "amber",
         },
         {
           href: `/projects/${projectId}/gates`,
           icon: SlidersHorizontal,
           label: "发布门禁",
+          tone: "mint",
         },
       ],
     },
@@ -137,6 +160,7 @@ export function projectNavigation(projectId: string): NavigationGroup[] {
           href: `/projects/${projectId}/models`,
           icon: Settings2,
           label: "模型配置",
+          tone: "indigo",
         },
       ],
     },
@@ -165,6 +189,7 @@ export function Navigation({
           href: "/projects",
           icon: Blocks,
           label: "项目列表",
+          tone: "coral",
         }}
         onNavigate={onNavigate}
         pathname={pathname}
@@ -189,7 +214,12 @@ export function Navigation({
         <div className="app-nav-group border-t border-[var(--hairline)] pt-2">
           <NavigationLink
             collapsed={collapsed}
-            item={{ href: "/system/users", icon: Users, label: "用户与权限" }}
+            item={{
+              href: "/system/users",
+              icon: Users,
+              label: "用户与权限",
+              tone: "indigo",
+            }}
             onNavigate={onNavigate}
             pathname={pathname}
           />
@@ -211,23 +241,17 @@ function NavigationLink({
   pathname: string;
 }) {
   const active = isRouteActive(pathname, item);
-  const Icon = item.icon;
   const link = (
     <Link
       aria-current={active ? "page" : undefined}
       aria-label={item.label}
       className="app-nav-link"
       data-active={active}
+      data-navigation-tone={item.tone}
       href={item.href}
       onClick={onNavigate}
     >
-      <span className="app-nav-icon" data-navigation-icon-carrier>
-        <Icon
-          aria-hidden="true"
-          className="shrink-0 text-current"
-          data-navigation-icon="monochrome"
-        />
-      </span>
+      <SidebarNavigationIcon icon={item.icon} tone={item.tone} />
       {!collapsed ? <span className="truncate">{item.label}</span> : null}
     </Link>
   );
