@@ -1,4 +1,8 @@
-import { queryOptions, type QueryClient } from "@tanstack/react-query";
+import {
+  keepPreviousData,
+  queryOptions,
+  type QueryClient,
+} from "@tanstack/react-query";
 
 import {
   getRun,
@@ -15,6 +19,7 @@ export const runQueries = {
     return queryOptions({
       queryFn: ({ signal }) => listRuns(projectId, signal, page, pageSize),
       queryKey: ["runs", projectId, page, pageSize] as const,
+      placeholderData: keepPreviousData,
       refetchInterval: 5000,
     });
   },

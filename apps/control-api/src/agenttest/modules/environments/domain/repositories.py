@@ -9,7 +9,7 @@ from agenttest.modules.environments.domain.entities import (
     EnvironmentTemplateId,
 )
 from agenttest.modules.projects.public import ProjectId
-from agenttest.shared.application.pagination import PageRequest, PageResult
+from agenttest.shared.pagination import PageRequest, PageResult
 
 
 class EnvironmentTemplateRepository(Protocol):

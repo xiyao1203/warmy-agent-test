@@ -19,7 +19,7 @@ async function mockProjectList(page: Page) {
       },
     });
   });
-  await page.route("**/api/v1/projects", async (route) => {
+  await page.route("**/api/v1/projects**", async (route) => {
     if (route.request().method() === "GET") {
       await route.fulfill({
         contentType: "application/json",
@@ -54,6 +54,10 @@ async function mockProjectList(page: Page) {
             updated_by: "admin-1",
           })),
           next_cursor: null,
+          page: 1,
+          page_size: 10,
+          total: 8,
+          total_pages: 1,
         },
       });
       return;
@@ -134,6 +138,10 @@ async function mockResourceLists(page: Page) {
               },
             ],
             next_cursor: null,
+            page: 1,
+            page_size: 10,
+            total: 1,
+            total_pages: 1,
           },
         });
         return;
@@ -171,6 +179,10 @@ async function mockResourceLists(page: Page) {
               },
             ],
             next_cursor: null,
+            page: 1,
+            page_size: 10,
+            total: 1,
+            total_pages: 1,
           },
         });
         return;
@@ -229,6 +241,10 @@ async function mockResourceLists(page: Page) {
               },
             ],
             next_cursor: null,
+            page: 1,
+            page_size: 10,
+            total: 1,
+            total_pages: 1,
           },
         });
         return;
@@ -314,6 +330,10 @@ async function mockResourceLists(page: Page) {
               },
             ],
             next_cursor: null,
+            page: 1,
+            page_size: 10,
+            total: 1,
+            total_pages: 1,
           },
         });
         return;
@@ -637,7 +657,14 @@ test("quick create opens and reopens the existing form from its target list", as
     async (route) => {
       await route.fulfill({
         contentType: "application/json",
-        json: { items: [], next_cursor: null },
+        json: {
+          items: [],
+          next_cursor: null,
+          page: 1,
+          page_size: 10,
+          total: 0,
+          total_pages: 0,
+        },
       });
     },
   );

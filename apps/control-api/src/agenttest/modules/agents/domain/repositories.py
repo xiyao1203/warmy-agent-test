@@ -15,7 +15,7 @@ from agenttest.modules.agents.domain.entities import (
     AgentVersionId,
 )
 from agenttest.modules.projects.public import ProjectId
-from agenttest.shared.application.pagination import PageRequest, PageResult
+from agenttest.shared.pagination import PageRequest, PageResult
 
 
 class AgentRepository(Protocol):

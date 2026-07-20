@@ -1,4 +1,8 @@
-import { queryOptions, type QueryClient } from "@tanstack/react-query";
+import {
+  keepPreviousData,
+  queryOptions,
+  type QueryClient,
+} from "@tanstack/react-query";
 
 import { listEnvironmentTemplatePage } from "./api";
 
@@ -9,6 +13,7 @@ export const environmentQueries = {
       queryFn: ({ signal }) =>
         listEnvironmentTemplatePage(projectId, signal, page, pageSize),
       queryKey: ["environments", projectId, page, pageSize] as const,
+      placeholderData: keepPreviousData,
     });
   },
 };

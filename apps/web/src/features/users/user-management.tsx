@@ -157,9 +157,7 @@ export function UserManagement({
         />
       </SummaryStrip>
 
-      <ListToolbar
-        data-testid="user-filter-bar"
-      >
+      <ListToolbar data-testid="user-filter-bar">
         <label className="relative min-w-0 flex-1 max-[760px]:w-full">
           <Search
             aria-hidden="true"

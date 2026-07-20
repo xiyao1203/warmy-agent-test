@@ -1,4 +1,8 @@
-import { queryOptions, type QueryClient } from "@tanstack/react-query";
+import {
+  keepPreviousData,
+  queryOptions,
+  type QueryClient,
+} from "@tanstack/react-query";
 
 import {
   getAgent,
@@ -13,6 +17,7 @@ export const agentQueries = {
     return queryOptions({
       queryFn: ({ signal }) => listAgents(projectId, signal, page, pageSize),
       queryKey: ["agents", projectId, page, pageSize] as const,
+      placeholderData: keepPreviousData,
     });
   },
   detail(projectId: string, agentId: string) {

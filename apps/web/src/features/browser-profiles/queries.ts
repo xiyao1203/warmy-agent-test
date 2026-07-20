@@ -1,4 +1,8 @@
-import { queryOptions, type QueryClient } from "@tanstack/react-query";
+import {
+  keepPreviousData,
+  queryOptions,
+  type QueryClient,
+} from "@tanstack/react-query";
 
 import { listBrowserProfilePage } from "./api";
 
@@ -9,6 +13,7 @@ export const browserProfileQueries = {
       queryFn: ({ signal }) =>
         listBrowserProfilePage(projectId, signal, page, pageSize),
       queryKey: ["browser-profiles", projectId, page, pageSize] as const,
+      placeholderData: keepPreviousData,
     });
   },
 };

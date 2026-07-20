@@ -1,4 +1,8 @@
-import { queryOptions, type QueryClient } from "@tanstack/react-query";
+import {
+  keepPreviousData,
+  queryOptions,
+  type QueryClient,
+} from "@tanstack/react-query";
 
 import {
   getDataset,
@@ -13,6 +17,7 @@ export const datasetQueries = {
     return queryOptions({
       queryFn: ({ signal }) => listDatasets(projectId, signal, page, pageSize),
       queryKey: ["datasets", projectId, page, pageSize] as const,
+      placeholderData: keepPreviousData,
     });
   },
   detail(projectId: string, datasetId: string) {

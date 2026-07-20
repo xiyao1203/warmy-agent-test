@@ -11,7 +11,7 @@ import {
 } from "@/components/uiverse";
 import { DropdownSelect } from "@/components/ui/dropdown-select";
 
-import { listAgents, listAgentVersions } from "@/features/agents";
+import { listAgentVersions, listAllAgents } from "@/features/agents";
 import { listEnvironmentTemplates } from "@/features/environments";
 
 import {
@@ -46,13 +46,12 @@ export function TargetChatScreen({ projectId }: { projectId: string }) {
     listTargetChats(projectId)
       .then(async (history) => {
         if (!alive) return;
-        const [agentPage, templates] = await Promise.all([
-          listAgents(projectId),
+        const [agents, templates] = await Promise.all([
+          listAllAgents(projectId),
           listEnvironmentTemplates(projectId),
         ]);
         if (!alive) return;
 
-        const agents = agentPage.items;
         const groups = await Promise.all(
           agents.map(async (agent) => ({
             agent,

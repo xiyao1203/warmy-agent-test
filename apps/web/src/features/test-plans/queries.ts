@@ -1,4 +1,8 @@
-import { queryOptions, type QueryClient } from "@tanstack/react-query";
+import {
+  keepPreviousData,
+  queryOptions,
+  type QueryClient,
+} from "@tanstack/react-query";
 
 import { getTestPlan, listTestPlans, listTestPlanVersions } from "./api";
 import { loadTestPlanAssetOptions } from "./asset-options";
@@ -9,6 +13,7 @@ export const testPlanQueries = {
     return queryOptions({
       queryFn: ({ signal }) => listTestPlans(projectId, signal, page, pageSize),
       queryKey: ["test-plans", projectId, page, pageSize] as const,
+      placeholderData: keepPreviousData,
     });
   },
   detail(projectId: string, planId: string) {

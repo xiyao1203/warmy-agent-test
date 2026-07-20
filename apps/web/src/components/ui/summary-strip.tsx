@@ -2,7 +2,10 @@ import type { HTMLAttributes, ReactNode } from "react";
 
 import { cn } from "@/lib/utils";
 
-export function SummaryStrip({ className, ...props }: HTMLAttributes<HTMLDivElement>) {
+export function SummaryStrip({
+  className,
+  ...props
+}: HTMLAttributes<HTMLDivElement>) {
   return (
     <div
       className={cn(
@@ -14,7 +17,13 @@ export function SummaryStrip({ className, ...props }: HTMLAttributes<HTMLDivElem
   );
 }
 
-export function SummaryItem({ label, value }: { label: string; value: ReactNode }) {
+export function SummaryItem({
+  label,
+  value,
+}: {
+  label: string;
+  value: ReactNode;
+}) {
   return (
     <div className="border-r border-[var(--hairline)] px-4 first:pl-0 last:border-r-0">
       <p className="text-xs text-[var(--muted)]">{label}</p>

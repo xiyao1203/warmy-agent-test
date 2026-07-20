@@ -2,7 +2,7 @@ from typing import Protocol
 
 from agenttest.modules.identity.public import UserId
 from agenttest.modules.projects.domain.entities import Project, ProjectId
-from agenttest.shared.application.pagination import PageRequest, PageResult
+from agenttest.shared.pagination import PageRequest, PageResult
 
 
 class ProjectRepository(Protocol):

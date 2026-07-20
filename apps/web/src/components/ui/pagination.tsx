@@ -2,7 +2,10 @@ import type { ButtonHTMLAttributes, HTMLAttributes } from "react";
 
 import { cn } from "@/lib/utils";
 
-export function Pagination({ className, ...props }: HTMLAttributes<HTMLElement>) {
+export function Pagination({
+  className,
+  ...props
+}: HTMLAttributes<HTMLElement>) {
   return (
     <nav
       aria-label="分页"

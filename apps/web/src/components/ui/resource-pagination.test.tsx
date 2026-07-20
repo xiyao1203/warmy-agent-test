@@ -3,7 +3,6 @@ import { describe, expect, it, vi } from "vitest";
 
 import { ResourcePagination } from "./resource-pagination";
 
-
 describe("ResourcePagination", () => {
   it("renders standard navigation and changes page", () => {
     const onPageChange = vi.fn();
@@ -40,11 +39,9 @@ describe("ResourcePagination", () => {
     );
 
     const select = screen.getByRole("combobox", { name: "每页条数" });
-    expect(screen.getAllByRole("option").map((option) => option.textContent)).toEqual([
-      "10 条/页",
-      "20 条/页",
-      "50 条/页",
-    ]);
+    expect(
+      screen.getAllByRole("option").map((option) => option.textContent),
+    ).toEqual(["10 条/页", "20 条/页", "50 条/页"]);
     fireEvent.change(select, { target: { value: "20" } });
     expect(onPageSizeChange).toHaveBeenCalledWith(20);
   });

@@ -14,7 +14,7 @@ from agenttest.modules.test_plans.domain.entities import (
     TestPlanVersion,
     TestPlanVersionId,
 )
-from agenttest.shared.application.pagination import PageRequest, PageResult
+from agenttest.shared.pagination import PageRequest, PageResult
 
 
 class TestPlanRepository(Protocol):

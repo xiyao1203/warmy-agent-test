@@ -1,6 +1,11 @@
 "use client";
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  keepPreviousData,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import type { RenameProjectRequest } from "@warmy/generated-api-client";
 
@@ -21,6 +26,7 @@ export default function ProjectsPage() {
   const projectsQuery = useQuery({
     queryFn: () => listProjectPage(pagination.page, pagination.pageSize),
     queryKey: ["projects", pagination.page, pagination.pageSize],
+    placeholderData: keepPreviousData,
   });
 
   const refreshProjects = () =>

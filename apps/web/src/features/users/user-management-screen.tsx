@@ -1,6 +1,6 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 
 import { getCurrentUser } from "@/features/auth";
 import { problemKind } from "@/lib/api/problem";
@@ -26,6 +26,7 @@ export function UserManagementScreen() {
     enabled: userQuery.data?.role === "super_admin",
     queryFn: () => listUsers(pagination.page, pagination.pageSize),
     queryKey: ["users", pagination.page, pagination.pageSize],
+    placeholderData: keepPreviousData,
   });
 
   if (userQuery.isPending) {

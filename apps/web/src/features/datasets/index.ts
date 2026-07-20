@@ -8,6 +8,7 @@ export {
   getDataset,
   importTestCases,
   listDatasets,
+  listAllDatasets,
   listDatasetVersions,
   listTestCases,
   markTestCaseReady,

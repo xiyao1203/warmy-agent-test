@@ -19,6 +19,7 @@ import {
 
 import { apiClient } from "@/lib/api/client";
 import { csrfHeaders } from "@/lib/api/csrf";
+import { collectAllPages } from "@/lib/pagination";
 
 export async function listAgents(
   projectId: string,
@@ -34,6 +35,12 @@ export async function listAgents(
     throwOnError: true,
   });
   return data;
+}
+
+export function listAllAgents(projectId: string, signal?: AbortSignal) {
+  return collectAllPages((page, pageSize) =>
+    listAgents(projectId, signal, page, pageSize),
+  );
 }
 
 export async function getAgent(

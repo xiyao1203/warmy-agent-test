@@ -1,6 +1,12 @@
 "use client";
 
-import { ChevronsLeft, ChevronsRight, ChevronLeft, ChevronRight } from "lucide-react";
+import {
+  ChevronsLeft,
+  ChevronsRight,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
+import { useEffect } from "react";
 
 import { PAGE_SIZES, type PageSize, visiblePages } from "@/lib/pagination";
 
@@ -24,6 +30,9 @@ export function ResourcePagination({
   total,
   totalPages,
 }: ResourcePaginationProps) {
+  useEffect(() => {
+    if (totalPages > 0 && page > totalPages) onPageChange(totalPages);
+  }, [onPageChange, page, totalPages]);
   const empty = totalPages === 0;
   const currentPage = empty ? 0 : Math.min(page, totalPages);
   return (
@@ -33,7 +42,9 @@ export function ResourcePagination({
         <Select
           aria-label="每页条数"
           className="w-28"
-          onChange={(event) => onPageSizeChange(Number(event.target.value) as PageSize)}
+          onChange={(event) =>
+            onPageSizeChange(Number(event.target.value) as PageSize)
+          }
           value={pageSize}
         >
           {PAGE_SIZES.map((size) => (
@@ -44,7 +55,9 @@ export function ResourcePagination({
         </Select>
       </div>
       <div className="flex items-center gap-3">
-        <span>第 {currentPage} / {totalPages} 页</span>
+        <span>
+          第 {currentPage} / {totalPages} 页
+        </span>
         <Pagination>
           <PaginationButton
             aria-label="首页"

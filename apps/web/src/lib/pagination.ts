@@ -46,6 +46,19 @@ export function normalizeResourcePage<T>(
   };
 }
 
+export async function collectAllPages<T>(
+  fetchPage: (page: number, pageSize: PageSize) => Promise<ResourcePage<T>>,
+): Promise<T[]> {
+  const first = await fetchPage(1, 50);
+  if (first.total_pages <= 1) return first.items;
+  const remaining = await Promise.all(
+    Array.from({ length: first.total_pages - 1 }, (_, index) =>
+      fetchPage(index + 2, 50),
+    ),
+  );
+  return [first, ...remaining].flatMap((page) => page.items);
+}
+
 export function isPageSize(value: number): value is PageSize {
   return PAGE_SIZES.includes(value as PageSize);
 }

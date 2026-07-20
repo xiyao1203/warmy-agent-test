@@ -145,7 +145,7 @@ uv run mypy apps/control-api/src/agenttest/shared
 
 Expected: all pass.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add apps/control-api/src/agenttest/shared apps/control-api/tests/unit/shared/test_pagination.py
@@ -163,7 +163,7 @@ git commit -m "feat(api): add shared pagination contract"
 - Modify: `apps/control-api/src/agenttest/modules/identity/{application/ports.py,application/queries/list_users.py,infrastructure/persistence/repositories.py,api/admin_router.py,api/schemas.py}`
 - Test: existing module unit/contract tests plus `apps/control-api/tests/contract/test_core_list_pagination_api.py`
 
-- [ ] **Step 1: Add failing page-mode API tests for agents, datasets, plans, environments, and users**
+- [x] **Step 1: Add failing page-mode API tests for agents, datasets, plans, environments, and users**
 
 ```python
 response = client.get(url, params={"page": 2, "page_size": 10}, headers=auth_headers)
@@ -176,7 +176,7 @@ assert response.json().get("next_cursor") is None
 
 Also assert legacy `limit/cursor` requests retain their previous item count and cursor behavior.
 
-- [ ] **Step 2: Run the contract tests and confirm metadata is absent**
+- [x] **Step 2: Run the contract tests and confirm metadata is absent**
 
 ```bash
 uv run pytest apps/control-api/tests/contract/test_core_list_pagination_api.py apps/control-api/tests/contract/test_agents_api.py apps/control-api/tests/contract/test_datasets_api.py apps/control-api/tests/contract/test_test_plans_api.py apps/control-api/tests/contract/test_environments_api.py apps/control-api/tests/contract/test_user_admin_api.py -q
@@ -184,7 +184,7 @@ uv run pytest apps/control-api/tests/contract/test_core_list_pagination_api.py a
 
 Expected: new page-mode assertions fail.
 
-- [ ] **Step 3: Add paged Repository and Application methods without removing legacy cursor methods**
+- [x] **Step 3: Add paged Repository and Application methods without removing legacy cursor methods**
 
 ```python
 async def list_page_by_project(
@@ -207,7 +207,7 @@ Use the same stable timestamp-plus-ID ordering and project filter in each module
 
 Every filter already visible in the migrated Web screens must be accepted by the matching page-mode endpoint and applied identically to the `items` and `count(*)` queries. This includes user search/role/status and the existing resource status/type/search filters. Agent versions, dataset versions/cases, test-plan versions, and environment versions are paged with the same values; their URL state uses list-specific namespaces in Task 8.
 
-- [ ] **Step 4: Translate optional page mode in each router**
+- [x] **Step 4: Translate optional page mode in each router**
 
 ```python
 page_request = resolve_page_request(page=page, page_size=page_size)
@@ -221,7 +221,7 @@ return AgentListResponse.from_legacy(items, next_cursor=next_cursor, total=total
 
 Legacy cursor/offset responses expose `page: null`, a real filtered `total`, the effective legacy limit as `page_size`, and a derived `total_pages`. Page mode always exposes a positive numeric page.
 
-- [ ] **Step 5: Run module tests, project-isolation tests, and mypy**
+- [x] **Step 5: Run module tests, project-isolation tests, and mypy**
 
 ```bash
 uv run pytest apps/control-api/tests/contract/test_core_list_pagination_api.py apps/control-api/tests/contract/test_agents_api.py apps/control-api/tests/contract/test_datasets_api.py apps/control-api/tests/contract/test_test_plans_api.py apps/control-api/tests/contract/test_environments_api.py apps/control-api/tests/contract/test_user_admin_api.py apps/control-api/tests/integration/projects/test_project_isolation.py -q
@@ -230,7 +230,7 @@ uv run mypy apps/control-api/src/agenttest/modules/agents apps/control-api/src/a
 
 Expected: pass with legacy tests unchanged.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add apps/control-api/src/agenttest/modules/{agents,datasets,test_plans,environments,identity} apps/control-api/tests
@@ -253,7 +253,7 @@ git commit -m "feat(api): paginate core asset lists"
 - Modify: `apps/control-api/src/agenttest/modules/gates/{application/service.py,infrastructure/persistence/repositories.py,api/router.py}`
 - Test matching contract/unit tests and `apps/control-api/tests/contract/test_core_list_pagination_api.py`.
 
-- [ ] **Step 1: Extend failing cross-module tests**
+- [x] **Step 1: Extend failing cross-module tests**
 
 For every listed collection endpoint, create at least 12 records, request page 2 with size 10, and assert two items, `total == 12`, `total_pages == 2`, stable non-overlapping IDs, and project isolation. Assert `page_size=25` returns 422.
 
@@ -264,7 +264,7 @@ assert payload["total_pages"] == 2
 assert client.get(url, params={"page": 1, "page_size": 25}, headers=headers).status_code == 422
 ```
 
-- [ ] **Step 2: Run the expanded tests and confirm failure**
+- [x] **Step 2: Run the expanded tests and confirm failure**
 
 ```bash
 uv run pytest apps/control-api/tests/contract/test_core_list_pagination_api.py -q
@@ -272,7 +272,7 @@ uv run pytest apps/control-api/tests/contract/test_core_list_pagination_api.py -
 
 Expected: modules without page metadata fail.
 
-- [ ] **Step 3: Implement offset/count page methods behind current services**
+- [x] **Step 3: Implement offset/count page methods behind current services**
 
 Use `PageRequest.offset`, filtered `count(*)`, stable ordering with an ID tie-breaker, and `PageResult`. Project membership checks remain before Repository access. Global project and model configuration lists retain their existing actor visibility filters.
 
@@ -289,7 +289,7 @@ return ListResponse(
 )
 ```
 
-- [ ] **Step 4: Run all affected contract, integration, and architecture tests**
+- [x] **Step 4: Run all affected contract, integration, and architecture tests**
 
 ```bash
 uv run pytest apps/control-api/tests/contract apps/control-api/tests/integration/test_project_isolation.py apps/control-api/tests/architecture -q
@@ -298,7 +298,7 @@ uv run mypy apps/control-api/src/agenttest/modules/{projects,runs,browser_profil
 
 Expected: pass.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add apps/control-api/src/agenttest/modules/{projects,runs,browser_profiles,model_configs,test_accounts,scorers,experiments,reviews,security,gates} apps/control-api/tests
@@ -313,7 +313,7 @@ git commit -m "feat(api): paginate execution and governance lists"
 - Modify generated: `packages/generated-api-client/src/client/**`
 - Test: `packages/generated-api-client/src/generated-client.test.ts`
 
-- [ ] **Step 1: Generate the contract and client**
+- [x] **Step 1: Generate the contract and client**
 
 ```bash
 make api-generate
@@ -321,7 +321,7 @@ make api-generate
 
 Expected: collection operation types expose optional `page`/`page_size` and response metadata.
 
-- [ ] **Step 2: Add generated-client type assertions**
+- [x] **Step 2: Add generated-client type assertions**
 
 ```ts
 expectTypeOf<UserPageResponse>().toMatchTypeOf<{
@@ -333,7 +333,7 @@ expectTypeOf<UserPageResponse>().toMatchTypeOf<{
 }>();
 ```
 
-- [ ] **Step 3: Verify deterministic generation**
+- [x] **Step 3: Verify deterministic generation**
 
 ```bash
 make api-check
@@ -342,7 +342,7 @@ pnpm --filter @warmy/generated-api-client test
 
 Expected: zero generation drift and tests pass.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add docs/api/openapi.json packages/generated-api-client
@@ -361,7 +361,7 @@ git commit -m "chore(api): generate pagination client"
 - Create: `apps/web/src/lib/use-pagination-state.test.tsx`
 - Modify: `apps/web/package.json`, `pnpm-lock.yaml`, `docs/design.md`
 
-- [ ] **Step 1: Write failing component and state tests**
+- [x] **Step 1: Write failing component and state tests**
 
 ```tsx
 render(
@@ -384,7 +384,7 @@ expect(onSize).toHaveBeenCalledWith(50);
 
 Test page-window ellipsis, disabled boundaries, 0/0 empty state, 390px compact controls, keyboard focus, and namespaced URL keys.
 
-- [ ] **Step 2: Run tests and confirm missing components**
+- [x] **Step 2: Run tests and confirm missing components**
 
 ```bash
 pnpm --filter @warmy/web exec vitest run src/components/ui/resource-pagination.test.tsx src/lib/use-pagination-state.test.tsx --maxWorkers=2
@@ -392,7 +392,7 @@ pnpm --filter @warmy/web exec vitest run src/components/ui/resource-pagination.t
 
 Expected: FAIL because components and hooks do not exist.
 
-- [ ] **Step 3: Add pinned Select dependency and local shadcn primitives**
+- [x] **Step 3: Add pinned Select dependency and local shadcn primitives**
 
 ```bash
 pnpm --filter @warmy/web add @radix-ui/react-select@2.3.2 --save-exact
@@ -400,7 +400,7 @@ pnpm --filter @warmy/web add @radix-ui/react-select@2.3.2 --save-exact
 
 `Card` exposes the standard composition. `ResourcePagination` is controlled and delegates page-window calculation to a pure `buildPageWindow(page, totalPages)` function. `usePaginationState` parses positive integer URL values, constrains page size to 10/20/50, uses `router.replace`, and resets page when filters change.
 
-- [ ] **Step 4: Run component tests, lint, and typecheck**
+- [x] **Step 4: Run component tests, lint, and typecheck**
 
 ```bash
 pnpm --filter @warmy/web exec vitest run src/components/ui src/lib/use-pagination-state.test.tsx --maxWorkers=4
@@ -410,7 +410,7 @@ pnpm --filter @warmy/web typecheck
 
 Expected: pass.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add apps/web/components.json apps/web/package.json pnpm-lock.yaml apps/web/src/components/ui apps/web/src/lib docs/design.md
@@ -425,7 +425,7 @@ git commit -m "feat(web): add shadcn list primitives"
 - Modify: `apps/web/src/features/users/**`
 - Test: existing project/user tests.
 
-- [ ] **Step 1: Write failing page-mode Query and UI tests**
+- [x] **Step 1: Write failing page-mode Query and UI tests**
 
 Assert API functions send `page` and `page_size`; query keys contain both; filters reset page; URL refresh restores page; summaries use server totals where provided; deleting the last item requests the previous valid page.
 
@@ -439,7 +439,7 @@ expect(mockListUsers).toHaveBeenCalledWith(
 );
 ```
 
-- [ ] **Step 2: Run the focused tests and confirm failure**
+- [x] **Step 2: Run the focused tests and confirm failure**
 
 ```bash
 pnpm --filter @warmy/web exec vitest run src/features/projects src/features/users --maxWorkers=4
@@ -447,11 +447,11 @@ pnpm --filter @warmy/web exec vitest run src/features/projects src/features/user
 
 Expected: new pagination assertions fail.
 
-- [ ] **Step 3: Implement the reference layout**
+- [x] **Step 3: Implement the reference layout**
 
 Compose `PageHeader`, `SummaryStrip`, `ListToolbar`, existing `Table`, and `ResourcePagination`. Keep feature-specific columns and CRUD dialogs. Send all visible search, role, status, and project filters to the page-mode endpoint so rows and totals describe the same filtered collection; do not filter only the current page.
 
-- [ ] **Step 4: Verify reference screens and responsive layout**
+- [x] **Step 4: Verify reference screens and responsive layout**
 
 ```bash
 pnpm --filter @warmy/web exec vitest run src/features/projects src/features/users --maxWorkers=4
@@ -460,7 +460,7 @@ pnpm --filter @warmy/web typecheck
 
 Expected: pass.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add apps/web/src/features/projects apps/web/src/features/users
@@ -474,11 +474,11 @@ git commit -m "feat(web): paginate project and user lists"
 - Modify: `apps/web/src/features/{agents,datasets,test-plans,runs,environments,browser-profiles,model-configs,test-accounts}/**`
 - Test: existing Feature tests.
 
-- [ ] **Step 1: Add failing pagination and shadcn composition tests**
+- [x] **Step 1: Add failing pagination and shadcn composition tests**
 
 For each list assert explicit page parameters, query-key isolation, standard pagination controls, page-size changes, loading retention, empty/error states, and unchanged action callbacks. Detail sublists use namespaced URL pagination keys.
 
-- [ ] **Step 2: Run the focused tests and confirm failure**
+- [x] **Step 2: Run the focused tests and confirm failure**
 
 ```bash
 pnpm --filter @warmy/web exec vitest run src/features/agents src/features/datasets src/features/test-plans src/features/runs src/features/environments src/features/browser-profiles src/features/model-configs src/features/test-accounts --maxWorkers=4
@@ -486,7 +486,7 @@ pnpm --filter @warmy/web exec vitest run src/features/agents src/features/datase
 
 Expected: new assertions fail.
 
-- [ ] **Step 3: Migrate APIs, queries, screens, and cards**
+- [x] **Step 3: Migrate APIs, queries, screens, and cards**
 
 ```ts
 export const resourceListQueryOptions = (
@@ -514,7 +514,7 @@ export const resourceListQueryOptions = (
 
 Preserve immutable-version actions, publish rules, credential handling, run state, and browser lifecycle behavior.
 
-- [ ] **Step 4: Run tests and typecheck**
+- [x] **Step 4: Run tests and typecheck**
 
 ```bash
 pnpm --filter @warmy/web exec vitest run src/features/agents src/features/datasets src/features/test-plans src/features/runs src/features/environments src/features/browser-profiles src/features/model-configs src/features/test-accounts --maxWorkers=4
@@ -523,7 +523,7 @@ pnpm --filter @warmy/web typecheck
 
 Expected: pass.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add apps/web/src/features/{agents,datasets,test-plans,runs,environments,browser-profiles,model-configs,test-accounts}
@@ -538,7 +538,7 @@ git commit -m "feat(web): paginate asset and execution lists"
 - Modify: `apps/web/src/test/architecture/list-table-contract.test.ts`
 - Create: `apps/web/src/test/architecture/pagination-contract.test.ts`
 
-- [ ] **Step 1: Add failing governance and architecture tests**
+- [x] **Step 1: Add failing governance and architecture tests**
 
 The AST test finds exported core list screens and requires `ResourcePagination` or an approved non-paginated exemption. It rejects local duplicated page-window functions and generated-client query calls that hard-code `limit: 100` for core list screens.
 
@@ -549,7 +549,7 @@ expect(
 ).toContain("shared pagination");
 ```
 
-- [ ] **Step 2: Run tests and confirm current violations**
+- [x] **Step 2: Run tests and confirm current violations**
 
 ```bash
 pnpm --filter @warmy/web exec vitest run src/features/scorers src/features/experiments src/features/reviews src/features/security src/features/gates src/test/architecture --maxWorkers=4
@@ -557,11 +557,11 @@ pnpm --filter @warmy/web exec vitest run src/features/scorers src/features/exper
 
 Expected: architecture and screen assertions fail before migration.
 
-- [ ] **Step 3: Migrate governance cards and list states**
+- [x] **Step 3: Migrate governance cards and list states**
 
 Use Card composition only for repeated business resources, keep page sections unframed, preserve evidence links and dangerous-operation confirmation, and attach `ResourcePagination` to every core collection.
 
-- [ ] **Step 4: Run focused and architecture tests**
+- [x] **Step 4: Run focused and architecture tests**
 
 ```bash
 pnpm --filter @warmy/web exec vitest run src/features/scorers src/features/experiments src/features/reviews src/features/security src/features/gates src/test/architecture --maxWorkers=4
@@ -571,7 +571,7 @@ pnpm --filter @warmy/web typecheck
 
 Expected: pass.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add apps/web/src/features/{scorers,experiments,reviews,security,gates} apps/web/src/test/architecture
@@ -588,7 +588,7 @@ git commit -m "feat(web): paginate governance lists"
 - Modify: `docs/开发进度与变更记录.md`
 - Modify: this plan checklist.
 
-- [ ] **Step 1: Add E2E scenarios**
+- [x] **Step 1: Add E2E scenarios**
 
 Seed at least 21 deterministic rows for representative users, projects, agents, datasets, plans, and runs. Verify page 1/2/3 boundaries, 10/20/50 selection, filter reset, URL refresh restoration, deletion fallback, loading retention, dark theme, and 390px compact pagination.
 
@@ -600,7 +600,7 @@ await expect(page).toHaveURL(/pageSize=20/);
 await expect(page.getByText("第 1 / 2 页")).toBeVisible();
 ```
 
-- [ ] **Step 2: Run critical E2E and inspect screenshots**
+- [x] **Step 2: Run critical E2E and inspect screenshots**
 
 ```bash
 E2E_WEB_PORT=5176 E2E_API_PORT=8182 pnpm --filter @warmy/web exec playwright test tests/e2e/core-pagination.spec.ts tests/e2e/list-layout.spec.ts
@@ -608,7 +608,7 @@ E2E_WEB_PORT=5176 E2E_API_PORT=8182 pnpm --filter @warmy/web exec playwright tes
 
 Expected: pass at desktop/mobile and light/dark viewports with no page-level horizontal overflow.
 
-- [ ] **Step 3: Run complete verification**
+- [x] **Step 3: Run complete verification**
 
 ```bash
 pnpm --filter @warmy/web format
@@ -628,15 +628,15 @@ git diff --check
 
 Expected: every command passes; credential-conditioned external tests may retain only their documented skips.
 
-- [ ] **Step 4: Update completion records**
+- [x] **Step 4: Update completion records**
 
 Move `TASK-20260720-001` to completed, record actual files/API/config changes, exact test counts, skips, residual risks, and next step. Set `docs/当前任务.md` to no active task.
 
-- [ ] **Step 5: Request final code review and address findings**
+- [x] **Step 5: Request final code review and address findings**
 
 Use `superpowers:requesting-code-review` with the base commit and current HEAD. Re-run affected verification after every accepted fix.
 
-- [ ] **Step 6: Commit the completed task**
+- [x] **Step 6: Commit the completed task**
 
 ```bash
 git add apps/web/tests/e2e docs

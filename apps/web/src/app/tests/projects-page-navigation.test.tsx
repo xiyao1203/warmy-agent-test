@@ -29,6 +29,7 @@ vi.mock("next/navigation", () => ({
 }));
 
 vi.mock("@tanstack/react-query", () => ({
+  keepPreviousData: (previousData: unknown) => previousData,
   useMutation,
   useQuery,
   useQueryClient,

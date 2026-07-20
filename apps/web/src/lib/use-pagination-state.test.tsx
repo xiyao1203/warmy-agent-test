@@ -3,10 +3,13 @@ import { beforeEach, describe, expect, it } from "vitest";
 
 import { usePaginationState } from "./use-pagination-state";
 
-
 describe("usePaginationState", () => {
   beforeEach(() => {
-    window.history.replaceState({}, "", "/projects?status=active&page=2&page_size=20");
+    window.history.replaceState(
+      {},
+      "",
+      "/projects?status=active&page=2&page_size=20",
+    );
   });
 
   it("reads and writes pagination while preserving filters", () => {
@@ -17,7 +20,9 @@ describe("usePaginationState", () => {
 
     act(() => result.current.setPage(3));
 
-    expect(new URLSearchParams(window.location.search).get("status")).toBe("active");
+    expect(new URLSearchParams(window.location.search).get("status")).toBe(
+      "active",
+    );
     expect(new URLSearchParams(window.location.search).get("page")).toBe("3");
   });
 
@@ -35,7 +40,9 @@ describe("usePaginationState", () => {
 
     act(() => result.current.setPage(4));
 
-    expect(new URLSearchParams(window.location.search).get("cases_page")).toBe("4");
+    expect(new URLSearchParams(window.location.search).get("cases_page")).toBe(
+      "4",
+    );
     expect(new URLSearchParams(window.location.search).get("page")).toBe("2");
   });
 });
