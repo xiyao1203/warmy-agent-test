@@ -41,7 +41,7 @@ export function HelpShell({ children }: HelpShellProps) {
 
   return (
     <div className="min-h-screen bg-[var(--canvas)]">
-      <header className="sticky top-0 z-50 border-b border-[var(--hairline)] bg-[var(--surface)]/95 backdrop-blur-sm">
+      <header className="sticky top-0 z-50 border-b border-[var(--hairline)] bg-[var(--surface)]">
         <div className="mx-auto flex h-14 max-w-[1180px] items-center justify-between gap-4 px-4 sm:px-6">
           <div className="flex min-w-0 items-center gap-4">
             <Link

@@ -94,7 +94,9 @@ export function MetricCard({
           ) : null}
         </div>
       </div>
-      {action ? <div className="precision-metric-action">{action}</div> : null}
+      {action && !disabled ? (
+        <div className="precision-metric-action">{action}</div>
+      ) : null}
     </article>
   );
 }

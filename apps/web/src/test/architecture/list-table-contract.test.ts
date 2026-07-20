@@ -226,10 +226,17 @@ describe("resource list table contract", () => {
     );
     const login = source("features/auth/login-form.tsx");
     const glassCard = source("components/uiverse/cards/glass-card.tsx");
+    const opaqueChrome = [
+      "app/(account)/account/page.tsx",
+      "features/help/help-shell.tsx",
+    ];
 
     expect(iconViolations).toEqual([]);
     expect(login).not.toContain("PulseButton");
     expect(login).not.toContain("radius-pill");
     expect(glassCard).not.toMatch(/backdrop-blur|bg-white\//);
+    expect(
+      opaqueChrome.filter((file) => source(file).includes("backdrop-blur")),
+    ).toEqual([]);
   });
 });

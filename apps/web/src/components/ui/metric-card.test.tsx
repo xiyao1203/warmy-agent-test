@@ -58,6 +58,7 @@ describe("MetricCard", () => {
   it("keeps static and disabled metrics non-interactive", () => {
     render(
       <MetricCard
+        action={<a href="/runs">不应出现</a>}
         disabled
         icon={<Activity aria-hidden="true" />}
         label="暂无数据"
@@ -69,6 +70,7 @@ describe("MetricCard", () => {
     const card = screen.getByRole("article", { name: "暂无数据" });
     expect(card).toHaveAttribute("data-disabled", "true");
     expect(card).toHaveAttribute("data-interactive", "false");
+    expect(screen.queryByRole("link", { name: "不应出现" })).toBeNull();
   });
 
   it("preserves the metric footprint while loading", () => {
