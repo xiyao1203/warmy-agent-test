@@ -106,16 +106,8 @@ export function LoginScreen({ returnTo }: { returnTo?: string }) {
   const authenticated = Boolean(workspaceEntryPath) || sessionQuery.isSuccess;
   const entryResolving =
     sessionChecking || (authenticated && !effectiveEntryPath);
-  const headerEntryLabel = sessionChecking
-    ? "正在检查"
-    : authenticated
-      ? "工作台"
-      : "登录";
-  const heroEntryLabel = sessionChecking
-    ? "正在检查"
-    : authenticated
-      ? "进入工作台"
-      : "登录并开始";
+  const headerEntryLabel = authenticated ? "工作台" : "登录";
+  const heroEntryLabel = authenticated ? "进入工作台" : "登录并开始";
 
   function handleSuccess(path: string) {
     setWorkspaceEntryPath(path);
@@ -147,7 +139,8 @@ export function LoginScreen({ returnTo }: { returnTo?: string }) {
           <div className="flex items-center gap-2">
             <ThemeToggle className="size-9 text-[var(--muted)] hover:bg-[var(--canvas-soft)] hover:text-[var(--ink)]" />
             <button
-              className="inline-flex h-9 items-center justify-center rounded-[var(--radius-md)] bg-[var(--primary)] px-4 text-sm font-medium text-[var(--on-primary)] transition-[background,transform] duration-[var(--motion-fast)] hover:bg-[var(--primary-active)] active:translate-y-px disabled:cursor-not-allowed disabled:translate-y-0 disabled:opacity-60"
+              aria-busy={entryResolving}
+              className="inline-flex h-9 min-w-20 items-center justify-center rounded-[var(--radius-md)] bg-[var(--primary)] px-4 text-sm font-medium text-[var(--on-primary)] transition-[background,transform] duration-[var(--motion-fast)] hover:bg-[var(--primary-active)] active:translate-y-px disabled:cursor-not-allowed disabled:translate-y-0 disabled:opacity-60"
               disabled={entryResolving}
               onClick={openWorkspaceEntry}
               type="button"
@@ -173,6 +166,7 @@ export function LoginScreen({ returnTo }: { returnTo?: string }) {
             </p>
             <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
               <button
+                aria-busy={entryResolving}
                 className="inline-flex h-10 items-center justify-center rounded-[var(--radius-md)] bg-[var(--primary)] px-5 text-sm font-medium text-[var(--on-primary)] transition-[background,transform] duration-[var(--motion-fast)] hover:bg-[var(--primary-active)] active:translate-y-px disabled:cursor-not-allowed disabled:translate-y-0 disabled:opacity-60"
                 disabled={entryResolving}
                 onClick={openWorkspaceEntry}

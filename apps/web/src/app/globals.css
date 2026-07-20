@@ -347,6 +347,14 @@ samp {
   color: var(--ink);
 }
 
+.app-tooltip-trigger:has(:focus-visible) > .app-tooltip-content {
+  opacity: 1;
+}
+
+.app-tooltip-trigger:has(:focus:not(:focus-visible)) > .app-tooltip-content {
+  opacity: 0;
+}
+
 @keyframes theme-toggle-icon-enter {
   from {
     opacity: 0;

@@ -75,7 +75,6 @@ return (
       aria-label={actionLabel}
       className={`app-icon-button ${className}`}
       onClick={() => selectTheme(nextPreference)}
-      title={actionLabel}
       type="button"
     >
       <ActiveIcon

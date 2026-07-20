@@ -46,4 +46,13 @@ describe("GLM workspace design tokens", () => {
     expect(dialogKeyframes?.[0]).toBeDefined();
     expect(dialogKeyframes?.[0]).not.toContain("translate(-50%");
   });
+
+  it("reveals shared tooltips only for visible keyboard focus", () => {
+    expect(globalStyles).toContain(
+      ".app-tooltip-trigger:has(:focus-visible) > .app-tooltip-content",
+    );
+    expect(globalStyles).toContain(
+      ".app-tooltip-trigger:has(:focus:not(:focus-visible)) > .app-tooltip-content",
+    );
+  });
 });

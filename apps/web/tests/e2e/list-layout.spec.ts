@@ -587,6 +587,20 @@ test("workspace shell supports grouped navigation, command search, and two-state
     "data-theme-preference",
     "dark",
   );
+  const lightToggle = page.getByRole("button", { name: "切换至浅色" });
+  const lightTooltip = page.locator(
+    '[role="tooltip"][data-tooltip="切换至浅色"]',
+  );
+  await expect(lightToggle).toBeFocused();
+  await expect(lightTooltip).toHaveCSS("opacity", "0");
+  await page.mouse.move(10, 400);
+  await expect(lightTooltip).toHaveCSS("opacity", "0");
+  await page.keyboard.press("Tab");
+  await page.keyboard.press("Shift+Tab");
+  await expect(lightToggle).toBeFocused();
+  await expect(lightTooltip).toHaveCSS("opacity", "1");
+  await page.keyboard.press("Tab");
+  await expect(lightTooltip).toHaveCSS("opacity", "0");
   await expect(page.getByRole("button", { name: "全部状态" })).toHaveCSS(
     "background-color",
     "rgb(31, 31, 34)",
@@ -600,7 +614,7 @@ test("workspace shell supports grouped navigation, command search, and two-state
   });
 
   await expect(page.getByRole("menuitemradio")).toHaveCount(0);
-  await page.getByRole("button", { name: "切换至浅色" }).click();
+  await lightToggle.click();
   await expect(page.locator("html")).toHaveClass(/light/);
   await expect(page.locator("html")).toHaveAttribute(
     "data-theme-preference",

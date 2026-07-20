@@ -15,6 +15,7 @@ describe("ThemeToggle", () => {
     render(<ThemeToggle />);
 
     const lightButton = screen.getByRole("button", { name: "切换至深色" });
+    expect(lightButton).not.toHaveAttribute("title");
     expect(lightButton.querySelector(".lucide-sun")).toBeInTheDocument();
     expect(lightButton.querySelector(".theme-toggle-icon")).toBeInTheDocument();
     expect(screen.getByRole("tooltip")).toHaveAttribute(

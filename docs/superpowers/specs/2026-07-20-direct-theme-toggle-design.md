@@ -14,7 +14,7 @@
 
 - 当前浅色时显示 Sun，单击后立即切换为深色并显示 Moon。
 - 当前深色时显示 Moon，单击后立即切换为浅色并显示 Sun。
-- 按钮的 `aria-label`、原生 `title` 和共享 Tooltip 均描述下一步动作：`切换至深色` 或 `切换至浅色`。
+- 按钮的 `aria-label` 和共享 Tooltip 均描述下一步动作：`切换至深色` 或 `切换至浅色`；不叠加原生 `title`。
 - 保留原有按钮尺寸、Hover、Focus、键盘 Enter/Space、`localStorage.theme` 持久化、根元素主题属性和跨标签页同步。
 - 删除 Dropdown、RadioGroup、菜单项和选中勾选，不再创建主题浮层。
 - 图标切换使用约 160-180ms 的轻量缩放/旋转入场；`prefers-reduced-motion: reduce` 下禁用该动画。
