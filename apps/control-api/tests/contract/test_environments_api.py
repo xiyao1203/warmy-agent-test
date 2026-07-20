@@ -22,6 +22,7 @@ from agenttest.modules.environments.domain.entities import (
 from agenttest.modules.identity.api.router import AuthApiDependencies
 from agenttest.modules.identity.public import Email, SystemRole, User, UserId
 from agenttest.modules.projects.public import ProjectId, ProjectNotFoundError
+from agenttest.shared.application.pagination import PageRequest, PageResult
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
@@ -46,6 +47,23 @@ class InMemoryEnvironmentTemplateRepository:
         del cursor
         items = [item for item in self.items.values() if item.project_id == project_id]
         return items[:limit], None
+
+    async def count_by_project(self, project_id: ProjectId) -> int:
+        return sum(item.project_id == project_id for item in self.items.values())
+
+    async def list_page_by_project(
+        self,
+        project_id: ProjectId,
+        page_request: PageRequest,
+    ) -> PageResult[EnvironmentTemplate]:
+        items = [item for item in self.items.values() if item.project_id == project_id]
+        start = page_request.offset
+        return PageResult(
+            items=items[start : start + page_request.page_size],
+            total=len(items),
+            page=page_request.page,
+            page_size=page_request.page_size,
+        )
 
     async def add(self, template: EnvironmentTemplate) -> None:
         self.items[template.template_id] = template
@@ -249,3 +267,30 @@ def test_app_factory_registers_environment_router() -> None:
     response = client.get(f"/api/v1/projects/{project_id.value}/environment-templates")
 
     assert response.status_code == 200
+
+
+def test_environment_list_supports_numbered_page_mode() -> None:
+    client, project_id = client_for(create_user(SystemRole.DEVELOPER))
+    for index in range(12):
+        created = client.post(
+            f"/api/v1/projects/{project_id.value}/environment-templates",
+            headers={"X-CSRF-Token": "csrf-token"},
+            json={"name": f"Environment {index:02d}", "template_type": "blank"},
+        )
+        assert created.status_code == 201
+
+    response = client.get(
+        f"/api/v1/projects/{project_id.value}/environment-templates",
+        params={"page": 2, "page_size": 10},
+    )
+
+    assert response.status_code == 200
+    assert len(response.json()["items"]) == 2
+    assert response.json() | {"items": []} == {
+        "items": [],
+        "next_cursor": None,
+        "total": 12,
+        "page": 2,
+        "page_size": 10,
+        "total_pages": 2,
+    }

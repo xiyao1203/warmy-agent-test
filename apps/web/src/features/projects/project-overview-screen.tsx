@@ -32,9 +32,9 @@ export function ProjectOverviewScreen({ projectId }: { projectId: string }) {
         listTestPlans(projectId),
       ]);
       return {
-        agents: agents.items.length,
-        datasets: datasets.items.length,
-        testPlans: testPlans.items.length,
+        agents: agents.total,
+        datasets: datasets.total,
+        testPlans: testPlans.total,
       };
     },
     queryKey: ["project-assets", projectId],

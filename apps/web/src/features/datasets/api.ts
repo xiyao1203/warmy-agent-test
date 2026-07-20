@@ -24,16 +24,28 @@ import {
 
 import { apiClient } from "@/lib/api/client";
 import { csrfHeaders } from "@/lib/api/csrf";
+import { collectAllPages } from "@/lib/pagination";
 
-export async function listDatasets(projectId: string, signal?: AbortSignal) {
+export async function listDatasets(
+  projectId: string,
+  signal?: AbortSignal,
+  page = 1,
+  pageSize = 10,
+) {
   const { data } = await listDatasetsApiV1ProjectsProjectIdDatasetsGet({
     client: apiClient,
     path: { project_id: projectId },
-    query: { limit: 100 },
+    query: { page, page_size: pageSize },
     signal,
     throwOnError: true,
   });
   return data;
+}
+
+export function listAllDatasets(projectId: string, signal?: AbortSignal) {
+  return collectAllPages((page, pageSize) =>
+    listDatasets(projectId, signal, page, pageSize),
+  );
 }
 
 export async function deleteDataset(projectId: string, datasetId: string) {

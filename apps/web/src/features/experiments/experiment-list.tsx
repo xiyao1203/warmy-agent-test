@@ -26,6 +26,9 @@ import {
 import { Input } from "@/components/ui/input";
 import { ListCard, ListCardMeta } from "@/components/ui/list-card";
 import { ResourceReferenceLink } from "@/components/ui/resource-reference-link";
+import { ResourcePagination } from "@/components/ui/resource-pagination";
+import { normalizeResourcePage } from "@/lib/pagination";
+import { usePaginationState } from "@/lib/use-pagination-state";
 
 import type { ExperimentItem } from "./api";
 import type { ExperimentRun } from "./api";
@@ -47,26 +50,55 @@ const STATUS_TONES: Record<
 };
 
 export function ExperimentList({ projectId }: { projectId: string }) {
+  const pagination = usePaginationState();
   const [experiments, setExperiments] = useState<ExperimentItem[]>([]);
+  const [total, setTotal] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
   const [loading, setLoading] = useState(true);
   const [createOpen, setCreateOpen] = useState(false);
 
   const reload = useCallback(async () => {
     setLoading(true);
     try {
-      setExperiments(await listExperiments(projectId));
+      const response = await listExperiments(
+        projectId,
+        undefined,
+        pagination.page,
+        pagination.pageSize,
+      );
+      const page = normalizeResourcePage(
+        response,
+        pagination.page,
+        pagination.pageSize,
+      );
+      setExperiments(page.items);
+      setTotal(page.total);
+      setTotalPages(page.total_pages);
     } catch {
       /* empty */
     } finally {
       setLoading(false);
     }
-  }, [projectId]);
+  }, [pagination.page, pagination.pageSize, projectId]);
 
   useEffect(() => {
     let active = true;
-    void listExperiments(projectId)
-      .then((items) => {
-        if (active) setExperiments(items);
+    void listExperiments(
+      projectId,
+      undefined,
+      pagination.page,
+      pagination.pageSize,
+    )
+      .then((response) => {
+        if (!active) return;
+        const page = normalizeResourcePage(
+          response,
+          pagination.page,
+          pagination.pageSize,
+        );
+        setExperiments(page.items);
+        setTotal(page.total);
+        setTotalPages(page.total_pages);
       })
       .catch(() => undefined)
       .finally(() => {
@@ -75,7 +107,7 @@ export function ExperimentList({ projectId }: { projectId: string }) {
     return () => {
       active = false;
     };
-  }, [projectId]);
+  }, [pagination.page, pagination.pageSize, projectId]);
 
   async function handleRun(expId: string) {
     await runExperiment(projectId, expId);
@@ -165,6 +197,16 @@ export function ExperimentList({ projectId }: { projectId: string }) {
           ))}
         </ul>
       )}
+      <div className="mt-4 overflow-hidden rounded-[var(--radius-lg)] border border-[var(--hairline)] bg-[var(--surface)]">
+        <ResourcePagination
+          onPageChange={pagination.setPage}
+          onPageSizeChange={pagination.setPageSize}
+          page={pagination.page}
+          pageSize={pagination.pageSize}
+          total={total}
+          totalPages={totalPages}
+        />
+      </div>
 
       <CreateExperimentDialog
         onCreated={reload}
@@ -287,14 +329,14 @@ function ExperimentCard({
                 查看逐用例提升和退化
               </summary>
               <div className="mt-2 overflow-hidden">
-                <table className="w-full table-fixed text-xs">
+                <table className="min-w-full text-xs">
                   <thead>
                     <tr className="border-b border-[var(--hairline)] text-left text-[var(--muted)]">
-                      <th className="pb-1.5 pr-3">用例</th>
-                      <th className="pb-1.5 pr-3">状态 A</th>
-                      <th className="pb-1.5 pr-3">状态 B</th>
-                      <th className="pb-1.5 pr-3">耗时差</th>
-                      <th className="pb-1.5">分类</th>
+                      <th className="min-w-24 pb-1.5 pr-3">用例</th>
+                      <th className="whitespace-nowrap pb-1.5 pr-3">状态 A</th>
+                      <th className="whitespace-nowrap pb-1.5 pr-3">状态 B</th>
+                      <th className="whitespace-nowrap pb-1.5 pr-3">耗时差</th>
+                      <th className="whitespace-nowrap pb-1.5">分类</th>
                     </tr>
                   </thead>
                   <tbody>

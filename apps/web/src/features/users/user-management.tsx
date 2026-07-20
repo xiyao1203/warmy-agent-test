@@ -14,6 +14,9 @@ import { Badge } from "@/components/ui/badge";
 import { DropdownSelect } from "@/components/ui/dropdown-select";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Input } from "@/components/ui/input";
+import { ListToolbar } from "@/components/ui/list-toolbar";
+import { ResourcePagination } from "@/components/ui/resource-pagination";
+import { SummaryItem, SummaryStrip } from "@/components/ui/summary-strip";
 import {
   Table,
   TableBody,
@@ -21,9 +24,14 @@ import {
   TableHead,
   TableHeader,
   TableRow,
+  TableValue,
 } from "@/components/ui/table";
-import { TableActionButton } from "@/components/ui/table-actions";
+import {
+  TableActionButton,
+  tableActionHeadClass,
+} from "@/components/ui/table-actions";
 import { TruncatedText } from "@/components/ui/truncated-text";
+import type { PageSize } from "@/lib/pagination";
 
 import { UserDrawer } from "./user-drawer";
 import { CreateUserDialog } from "./user-dialog";
@@ -32,14 +40,17 @@ type UserManagementProps = {
   currentUser?: UserResponse;
   error?: "permission" | "service";
   loading?: boolean;
-  nextCursor?: string | null;
   onCreate?: (payload: CreateUserRequest) => Promise<unknown>;
   onDelete?: (userId: string) => Promise<unknown>;
   onEdit?: (userId: string, payload: UpdateUserRequest) => Promise<unknown>;
-  onLoadMore?: () => Promise<unknown>;
+  onPageChange?: (page: number) => void;
+  onPageSizeChange?: (pageSize: PageSize) => void;
   onResetPassword?: (userId: string, password: string) => Promise<unknown>;
   onToggleStatus?: (userId: string, enabled: boolean) => Promise<unknown>;
-  paging?: boolean;
+  page?: number;
+  pageSize?: PageSize;
+  total?: number;
+  totalPages?: number;
   users?: UserResponse[];
 };
 
@@ -60,14 +71,17 @@ export function UserManagement({
   currentUser,
   error,
   loading = false,
-  nextCursor,
   onCreate = async () => undefined,
   onDelete = async () => undefined,
   onEdit = async () => undefined,
-  onLoadMore = async () => undefined,
+  onPageChange = () => undefined,
+  onPageSizeChange = () => undefined,
   onResetPassword = async () => undefined,
   onToggleStatus = async () => undefined,
-  paging = false,
+  page = 1,
+  pageSize = 10,
+  total = 0,
+  totalPages = 0,
   users = [],
 }: UserManagementProps) {
   const [query, setQuery] = useState("");
@@ -127,26 +141,23 @@ export function UserManagement({
         <CreateUserDialog onCreate={onCreate} />
       </header>
 
-      <section className="grid grid-cols-4 border-b border-[var(--hairline)] py-4 text-sm max-[900px]:grid-cols-2 max-[900px]:gap-4">
-        <Summary label="当前页用户" value={users.length} />
-        <Summary
+      <SummaryStrip>
+        <SummaryItem label="全部用户" value={total} />
+        <SummaryItem
           label="活跃"
           value={users.filter((user) => user.status === "active").length}
         />
-        <Summary
+        <SummaryItem
           label="已禁用"
           value={users.filter((user) => user.status === "disabled").length}
         />
-        <Summary
+        <SummaryItem
           label="需改密"
           value={users.filter((user) => user.must_change_password).length}
         />
-      </section>
+      </SummaryStrip>
 
-      <div
-        className="flex items-center gap-3 py-4 max-[760px]:flex-col max-[760px]:items-stretch"
-        data-testid="user-filter-bar"
-      >
+      <ListToolbar data-testid="user-filter-bar">
         <label className="relative min-w-0 flex-1 max-[760px]:w-full">
           <Search
             aria-hidden="true"
@@ -186,7 +197,7 @@ export function UserManagement({
           <option value="active">活跃</option>
           <option value="disabled">已禁用</option>
         </DropdownSelect>
-      </div>
+      </ListToolbar>
 
       <section className="overflow-hidden rounded-[var(--radius-lg)] border border-[var(--hairline)] bg-[var(--surface)]">
         {!users.length ? (
@@ -203,11 +214,11 @@ export function UserManagement({
           <Table>
             <TableHeader className="bg-[var(--canvas-soft)]">
               <TableRow>
-                <TableHead>用户</TableHead>
-                <TableHead>系统角色</TableHead>
-                <TableHead>状态</TableHead>
-                <TableHead>登录策略</TableHead>
-                <TableHead className="w-20">操作</TableHead>
+                <TableHead className="min-w-56">用户</TableHead>
+                <TableHead className="whitespace-nowrap">系统角色</TableHead>
+                <TableHead className="whitespace-nowrap">状态</TableHead>
+                <TableHead className="whitespace-nowrap">登录策略</TableHead>
+                <TableHead className={tableActionHeadClass}>操作</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -217,12 +228,14 @@ export function UserManagement({
                   key={user.id}
                 >
                   <TableCell>
-                    <TruncatedText className="font-medium">
-                      {user.display_name}
-                    </TruncatedText>
-                    <TruncatedText className="mt-0.5 text-xs text-[var(--muted)]">
-                      {user.email}
-                    </TruncatedText>
+                    <TableValue>
+                      <TruncatedText className="font-medium">
+                        {user.display_name}
+                      </TruncatedText>
+                      <TruncatedText className="mt-0.5 text-xs text-[var(--muted)]">
+                        {user.email}
+                      </TruncatedText>
+                    </TableValue>
                   </TableCell>
                   <TableCell>
                     <Badge
@@ -247,7 +260,8 @@ export function UserManagement({
                   </TableCell>
                   <TableCell>
                     <TableActionButton
-                      label={`查看${user.display_name}`}
+                      accessibleLabel={`查看${user.display_name}`}
+                      label="查看"
                       onClick={() => setSelectedUser(user)}
                     >
                       <Eye aria-hidden="true" />
@@ -258,19 +272,14 @@ export function UserManagement({
             </TableBody>
           </Table>
         )}
-        {nextCursor ? (
-          <div className="flex items-center justify-between gap-3 border-t border-[var(--hairline)] px-4 py-3 text-xs text-[var(--muted)]">
-            <span>还有更多用户未显示。</span>
-            <button
-              className="rounded-[var(--radius-md)] border border-[var(--hairline)] bg-[var(--surface)] px-3 py-1.5 text-sm font-medium text-[var(--ink)] hover:bg-[var(--canvas-soft)] disabled:cursor-not-allowed disabled:opacity-50"
-              disabled={paging}
-              onClick={() => void onLoadMore()}
-              type="button"
-            >
-              {paging ? "加载中..." : "加载更多"}
-            </button>
-          </div>
-        ) : null}
+        <ResourcePagination
+          onPageChange={onPageChange}
+          onPageSizeChange={onPageSizeChange}
+          page={page}
+          pageSize={pageSize}
+          total={total}
+          totalPages={totalPages}
+        />
       </section>
 
       <UserDrawer
@@ -285,15 +294,6 @@ export function UserManagement({
         open={Boolean(selectedUser)}
         user={selectedUser}
       />
-    </div>
-  );
-}
-
-function Summary({ label, value }: { label: string; value: number }) {
-  return (
-    <div className="border-r border-[var(--hairline)] px-4 first:pl-0 last:border-r-0">
-      <p className="text-xs text-[var(--muted)]">{label}</p>
-      <p className="mt-1 text-lg font-semibold">{value}</p>
     </div>
   );
 }

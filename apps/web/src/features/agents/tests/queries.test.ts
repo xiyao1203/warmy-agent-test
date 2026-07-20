@@ -8,6 +8,8 @@ describe("agent queries", () => {
     expect(agentQueries.list("project-1").queryKey).toEqual([
       "agents",
       "project-1",
+      1,
+      10,
     ]);
   });
 

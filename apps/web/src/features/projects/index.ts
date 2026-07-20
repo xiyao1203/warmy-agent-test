@@ -2,6 +2,7 @@ export {
   archiveProject,
   createProject,
   getProject,
+  listProjectPage,
   listProjectMembers,
   listProjects,
   renameProject,

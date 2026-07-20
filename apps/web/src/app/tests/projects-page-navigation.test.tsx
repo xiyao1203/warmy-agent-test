@@ -29,6 +29,7 @@ vi.mock("next/navigation", () => ({
 }));
 
 vi.mock("@tanstack/react-query", () => ({
+  keepPreviousData: (previousData: unknown) => previousData,
   useMutation,
   useQuery,
   useQueryClient,
@@ -38,14 +39,20 @@ vi.mock("@/features/projects", () => ({
   ProjectListScreen,
   archiveProject: vi.fn(),
   createProject: vi.fn(),
-  listProjects: vi.fn(),
+  listProjectPage: vi.fn(),
   renameProject: vi.fn(),
 }));
 
 describe("ProjectsPage navigation", () => {
   it("shows the project list without automatically leaving the page", () => {
     useQuery.mockReturnValue({
-      data: [{ archived: false, id: "project-1", name: "项目 A" }],
+      data: {
+        items: [{ archived: false, id: "project-1", name: "项目 A" }],
+        page: 1,
+        page_size: 10,
+        total: 1,
+        total_pages: 1,
+      },
       isError: false,
       isLoading: false,
       isSuccess: true,

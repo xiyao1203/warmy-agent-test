@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 from dataclasses import dataclass
+from math import ceil
 from typing import Protocol
 from uuid import UUID
 
@@ -34,8 +35,10 @@ from agenttest.modules.runs.application.ports import (
 from agenttest.modules.runs.domain.entities import Run, RunCase, RunCaseId, RunId
 from agenttest.modules.runs.domain.value_objects import RunCaseStatus
 from agenttest.modules.test_plans.public import TestPlanVersionId
+from agenttest.shared.api.pagination import resolve_page_request
 from agenttest.shared.api.problem_details import ProblemDetails
 from agenttest.shared.application.core_summaries import CoreSummaryReader
+from agenttest.shared.application.pagination import PageRequest, PageResult
 from agenttest.shared.application.uow import UnitOfWorkFactory, null_uow_factory
 
 CSRF_COOKIE_NAME = "agenttest_csrf"
@@ -61,6 +64,13 @@ class ListRunsExecutor(Protocol):
         *,
         limit: int = 50,
     ) -> list[Run]: ...
+
+    async def execute_page(
+        self,
+        actor: User,
+        project_id: ProjectId,
+        page: PageRequest,
+    ) -> PageResult[Run]: ...
 
 
 class GetRunExecutor(Protocol):
@@ -176,16 +186,35 @@ def create_run_router(
         request: Request,
         project_id: UUID,
         limit: int = Query(default=50, ge=1, le=100),
+        page: int | None = Query(default=None),
+        page_size: int | None = Query(default=None),
     ) -> RunListResponse | JSONResponse:
         actor = await actor_for(request)
         if isinstance(actor, JSONResponse):
             return actor
         try:
-            runs = await dependencies.list_runs.execute(
-                actor,
-                ProjectId(project_id),
-                limit=limit,
-            )
+            page_request = resolve_page_request(page=page, page_size=page_size)
+            if page_request is None:
+                runs = await dependencies.list_runs.execute(
+                    actor,
+                    ProjectId(project_id),
+                    limit=limit,
+                )
+                total = len(runs)
+                response_page = None
+                response_page_size = limit
+                total_pages = ceil(total / limit) if runs else 0
+            else:
+                result = await dependencies.list_runs.execute_page(
+                    actor,
+                    ProjectId(project_id),
+                    page_request,
+                )
+                runs = result.items
+                total = result.total
+                response_page = result.page
+                response_page_size = result.page_size
+                total_pages = result.total_pages
         except ProjectNotFoundError:
             return not_found()
         summaries = (
@@ -197,7 +226,11 @@ def create_run_router(
             else {}
         )
         return RunListResponse(
-            items=[RunResponse.from_domain(run, summaries.get(run.run_id.value)) for run in runs]
+            items=[RunResponse.from_domain(run, summaries.get(run.run_id.value)) for run in runs],
+            total=total,
+            page=response_page,
+            page_size=response_page_size,
+            total_pages=total_pages,
         )
 
     @router.get("/{run_id}", response_model=RunResponse)

@@ -38,11 +38,15 @@ from agenttest.modules.identity.application.queries.current_user import InvalidS
 from agenttest.modules.identity.application.queries.list_users import UserPage
 from agenttest.modules.identity.domain.entities import User
 from agenttest.modules.identity.domain.value_objects import Email, UserId
+from agenttest.shared.api.pagination import resolve_page_request
+from agenttest.shared.application.pagination import PageRequest
 from agenttest.shared.application.uow import UnitOfWorkFactory, null_uow_factory
 
 
 class ListUsersExecutor(Protocol):
     async def execute(self, actor: User, cursor: UUID | None, limit: int) -> UserPage: ...
+
+    async def execute_page(self, actor: User, page_request: PageRequest) -> UserPage: ...
 
 
 class GetUserExecutor(Protocol):
@@ -129,17 +133,28 @@ def create_admin_router(
         request: Request,
         cursor: UUID | None = None,
         limit: int = Query(default=50, ge=1, le=100),
+        page: int | None = None,
+        page_size: int | None = None,
     ) -> UserPageResponse | JSONResponse:
         actor = await actor_for(request)
         if isinstance(actor, JSONResponse):
             return actor
+        page_request = resolve_page_request(page=page, page_size=page_size)
         try:
-            page = await dependencies.list_users.execute(actor, cursor, limit)
+            result = (
+                await dependencies.list_users.execute_page(actor, page_request)
+                if page_request is not None
+                else await dependencies.list_users.execute(actor, cursor, limit)
+            )
         except PermissionDeniedError:
             return permission_denied()
         return UserPageResponse(
-            items=[UserResponse.from_domain(item) for item in page.items],
-            next_cursor=page.next_cursor,
+            items=[UserResponse.from_domain(item) for item in result.items],
+            next_cursor=result.next_cursor,
+            total=result.total,
+            page=result.page,
+            page_size=result.page_size,
+            total_pages=result.total_pages,
         )
 
     @router.get("/{user_id}", response_model=UserResponse)

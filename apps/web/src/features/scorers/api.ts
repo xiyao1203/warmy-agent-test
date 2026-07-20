@@ -31,6 +31,22 @@ export async function listScorers(projectId: string, signal?: AbortSignal) {
   return data.items;
 }
 
+export async function listScorerPage(
+  projectId: string,
+  signal?: AbortSignal,
+  page = 1,
+  pageSize = 10,
+) {
+  const { data } = await listScorersApiV1ProjectsProjectIdScorersGet({
+    client: apiClient,
+    path: { project_id: projectId },
+    query: { page, page_size: pageSize },
+    signal,
+    throwOnError: true,
+  });
+  return data;
+}
+
 export async function createScorer(
   projectId: string,
   payload: CreateScorerRequest,

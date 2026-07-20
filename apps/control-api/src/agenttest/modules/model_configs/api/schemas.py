@@ -74,6 +74,10 @@ class ModelConfigListResponse(BaseModel):
     """模型配置列表响应。"""
 
     items: list[ModelConfigResponse]
+    total: int
+    page: int | None = None
+    page_size: int = 50
+    total_pages: int = 0
 
 
 class ModelDefaultResponse(BaseModel):

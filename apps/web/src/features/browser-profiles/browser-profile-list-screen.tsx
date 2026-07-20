@@ -1,6 +1,7 @@
 "use client";
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { usePaginationState } from "@/lib/use-pagination-state";
 
 import {
   completeBrowserProfileLogin,
@@ -15,7 +16,10 @@ import { BrowserProfileList } from "./browser-profile-list";
 import { browserProfileQueries, invalidateBrowserProfileList } from "./queries";
 
 export function BrowserProfileListScreen({ projectId }: { projectId: string }) {
-  const query = useQuery(browserProfileQueries.list(projectId));
+  const pagination = usePaginationState();
+  const query = useQuery(
+    browserProfileQueries.list(projectId, pagination.page, pagination.pageSize),
+  );
   const queryClient = useQueryClient();
 
   if (query.isPending) {
@@ -31,8 +35,14 @@ export function BrowserProfileListScreen({ projectId }: { projectId: string }) {
 
   return (
     <BrowserProfileList
-      profiles={query.data ?? []}
+      onPageChange={pagination.setPage}
+      onPageSizeChange={pagination.setPageSize}
+      page={query.data.page ?? pagination.page}
+      pageSize={pagination.pageSize}
+      profiles={query.data.items}
       projectId={projectId}
+      total={query.data.total}
+      totalPages={query.data.total_pages}
       onCreate={async (payload) => {
         const result = await createBrowserProfile(projectId, payload);
         await refresh();

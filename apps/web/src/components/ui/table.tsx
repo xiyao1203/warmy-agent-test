@@ -12,7 +12,7 @@ export function Table({
   return (
     <div className="min-w-0 overflow-x-auto">
       <table
-        className={`w-full table-fixed border-collapse text-left text-[13px] ${className}`}
+        className={`w-full table-auto border-collapse text-center text-[13px] ${className}`}
         {...props}
       />
     </div>
@@ -45,7 +45,7 @@ export function TableHead({
 }: ThHTMLAttributes<HTMLTableCellElement>) {
   return (
     <th
-      className={`h-9 bg-[var(--surface-inset)] px-3 text-left text-xs font-medium text-[var(--muted)] ${className}`}
+      className={`h-9 bg-[var(--surface-inset)] px-3 text-center text-xs font-medium text-[var(--muted)] ${className}`}
       {...props}
     />
   );
@@ -57,7 +57,19 @@ export function TableCell({
 }: TdHTMLAttributes<HTMLTableCellElement>) {
   return (
     <td
-      className={`h-11 min-w-0 px-3 text-left align-middle ${className}`}
+      className={`h-11 min-w-0 px-3 text-center align-middle ${className}`}
+      {...props}
+    />
+  );
+}
+
+export function TableValue({
+  className = "",
+  ...props
+}: HTMLAttributes<HTMLDivElement>) {
+  return (
+    <div
+      className={`mx-auto w-fit max-w-full text-left ${className}`}
       {...props}
     />
   );

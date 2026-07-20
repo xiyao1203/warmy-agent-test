@@ -48,8 +48,18 @@ class InMemoryRunRepository:
             None,
         )
 
-    async def list_by_project(self, project_id: ProjectId, *, limit: int = 50) -> list[Run]:
-        return [run for run in self.runs.values() if run.project_id == project_id][:limit]
+    async def list_by_project(
+        self,
+        project_id: ProjectId,
+        *,
+        limit: int = 50,
+        offset: int = 0,
+    ) -> list[Run]:
+        runs = [run for run in self.runs.values() if run.project_id == project_id]
+        return runs[offset : offset + limit]
+
+    async def count_by_project(self, project_id: ProjectId) -> int:
+        return sum(run.project_id == project_id for run in self.runs.values())
 
     async def add(self, run: Run, cases: list[RunCase]) -> None:
         self.runs[run.run_id.value] = run
@@ -222,6 +232,41 @@ def test_create_is_idempotent_and_can_be_cancelled() -> None:
     assert len(orchestrator.started) == 1
     assert cancelled.status_code == 200
     assert cancelled.json()["status"] == "cancelled"
+
+
+def test_list_runs_supports_standard_page_mode() -> None:
+    client, project_id, _, _ = client_for()
+    for index in range(12):
+        response = client.post(
+            f"/api/v1/projects/{project_id.value}/runs",
+            headers={
+                "X-CSRF-Token": "csrf-token",
+                "Idempotency-Key": f"page-run-{index}",
+            },
+            json={"test_plan_version_id": str(uuid4())},
+        )
+        assert response.status_code == 201
+
+    response = client.get(
+        f"/api/v1/projects/{project_id.value}/runs",
+        params={"page": 2, "page_size": 10},
+    )
+
+    assert response.status_code == 200
+    assert len(response.json()["items"]) == 2
+    assert {key: response.json()[key] for key in ("total", "page", "page_size", "total_pages")} == {
+        "total": 12,
+        "page": 2,
+        "page_size": 10,
+        "total_pages": 2,
+    }
+    assert (
+        client.get(
+            f"/api/v1/projects/{project_id.value}/runs",
+            params={"page": 1, "page_size": 25},
+        ).status_code
+        == 422
+    )
 
 
 def test_create_rejects_same_idempotency_key_for_a_different_plan() -> None:

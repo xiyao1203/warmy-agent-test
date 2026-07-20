@@ -19,6 +19,7 @@ import {
 import { EmptyState } from "@/components/ui/empty-state";
 import { Input } from "@/components/ui/input";
 import { ResourceReferenceLink } from "@/components/ui/resource-reference-link";
+import { ResourcePagination } from "@/components/ui/resource-pagination";
 import {
   Table,
   TableBody,
@@ -26,6 +27,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
+  TableValue,
 } from "@/components/ui/table";
 import {
   TableActions,
@@ -36,6 +38,7 @@ import {
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { Skeleton, Tooltip } from "@/components/uiverse";
 import { useCreateIntent } from "@/lib/use-create-intent";
+import type { PageSize } from "@/lib/pagination";
 
 export function DatasetList({
   datasets = [],
@@ -43,14 +46,26 @@ export function DatasetList({
   loading = false,
   onCreate = async () => undefined,
   onDelete,
+  onPageChange = () => undefined,
+  onPageSizeChange = () => undefined,
+  page = 1,
+  pageSize = 10,
   projectId,
+  total = datasets.length,
+  totalPages = datasets.length ? 1 : 0,
 }: {
   datasets?: DatasetResponse[];
   error?: "not-found" | "service";
   loading?: boolean;
   onCreate?: (payload: CreateDatasetRequest) => Promise<unknown>;
   onDelete?: (datasetId: string) => Promise<unknown>;
+  onPageChange?: (page: number) => void;
+  onPageSizeChange?: (pageSize: PageSize) => void;
+  page?: number;
+  pageSize?: PageSize;
   projectId: string;
+  total?: number;
+  totalPages?: number;
 }) {
   if (loading)
     return (
@@ -88,13 +103,13 @@ export function DatasetList({
             title="暂无用例集"
           />
         ) : (
-          <Table className="w-full table-fixed">
+          <Table className="w-full">
             <TableHeader className="bg-[var(--canvas-soft)]">
               <TableRow>
-                <TableHead className="w-[25%]">用例集信息</TableHead>
-                <TableHead className="w-[18%]">最新版本</TableHead>
-                <TableHead className="w-[34%]">用例覆盖</TableHead>
-                <TableHead className="w-[12%]">更新时间</TableHead>
+                <TableHead className="min-w-60">用例集信息</TableHead>
+                <TableHead className="min-w-40">最新版本</TableHead>
+                <TableHead className="min-w-64">用例覆盖</TableHead>
+                <TableHead className="whitespace-nowrap">更新时间</TableHead>
                 <TableHead className={tableActionHeadClass}>操作</TableHead>
               </TableRow>
             </TableHeader>
@@ -119,30 +134,37 @@ export function DatasetList({
                       </div>
                     </div>
                   </TableCell>
-                  <TableCell className="text-left text-xs">
-                    <ResourceReferenceLink reference={dataset.latest_version} />
-                    <p className="mt-1 text-[var(--muted)]">
-                      发布于{" "}
-                      {dataset.published_at
-                        ? new Date(dataset.published_at).toLocaleDateString(
-                            "zh-CN",
-                          )
-                        : "暂无数据"}
-                    </p>
+                  <TableCell>
+                    <TableValue className="text-xs">
+                      <ResourceReferenceLink
+                        reference={dataset.latest_version}
+                      />
+                      <p className="mt-1 text-[var(--muted)]">
+                        发布于{" "}
+                        {dataset.published_at
+                          ? new Date(dataset.published_at).toLocaleDateString(
+                              "zh-CN",
+                            )
+                          : "暂无数据"}
+                      </p>
+                    </TableValue>
                   </TableCell>
-                  <TableCell className="text-left text-xs leading-5 text-[var(--muted)]">
-                    <p>
-                      用例 {dataset.case_count ?? 0} · 就绪{" "}
-                      {dataset.ready_count ?? 0} · API {dataset.api_count ?? 0}{" "}
-                      · 浏览器 {dataset.browser_count ?? 0} · Codex{" "}
-                      {dataset.codex_explore_count ?? 0}
-                    </p>
-                    <p>
-                      优先级：{formatDistribution(dataset.priority_coverage)}
-                    </p>
-                    <p>
-                      来源：{formatDistribution(dataset.source_distribution)}
-                    </p>
+                  <TableCell>
+                    <TableValue className="text-xs leading-5 text-[var(--muted)]">
+                      <p>
+                        用例 {dataset.case_count ?? 0} · 就绪{" "}
+                        {dataset.ready_count ?? 0} · API{" "}
+                        {dataset.api_count ?? 0} · 浏览器{" "}
+                        {dataset.browser_count ?? 0} · Codex{" "}
+                        {dataset.codex_explore_count ?? 0}
+                      </p>
+                      <p>
+                        优先级：{formatDistribution(dataset.priority_coverage)}
+                      </p>
+                      <p>
+                        来源：{formatDistribution(dataset.source_distribution)}
+                      </p>
+                    </TableValue>
                   </TableCell>
                   <TableCell className="whitespace-nowrap text-center text-sm text-[var(--muted)]">
                     {new Date(dataset.updated_at).toLocaleDateString("zh-CN")}
@@ -150,8 +172,9 @@ export function DatasetList({
                   <TableCell className={tableActionCellClass}>
                     <TableActions label={dataset.name}>
                       <TableActionButton
+                        accessibleLabel={`管理${dataset.name}用例`}
                         asChild
-                        label={`管理${dataset.name}用例`}
+                        label="管理"
                       >
                         <Link
                           href={`/projects/${projectId}/datasets/${dataset.id}`}
@@ -172,6 +195,14 @@ export function DatasetList({
             </TableBody>
           </Table>
         )}
+        <ResourcePagination
+          onPageChange={onPageChange}
+          onPageSizeChange={onPageSizeChange}
+          page={page}
+          pageSize={pageSize}
+          total={total}
+          totalPages={totalPages}
+        />
       </section>
     </div>
   );
@@ -281,15 +312,17 @@ function ConfirmDeleteButton({
 
   return (
     <Dialog onOpenChange={setOpen} open={open}>
-      <DialogTrigger asChild>
-        <Button
-          aria-label={`删除${label}`}
-          className="size-8 shrink-0 border-transparent bg-transparent p-0 hover:bg-[var(--danger-subtle)]"
-          variant="danger"
-        >
-          <Trash2 aria-hidden="true" className="size-4" />
-        </Button>
-      </DialogTrigger>
+      <Tooltip content="删除" side="top">
+        <DialogTrigger asChild>
+          <Button
+            aria-label={`删除${label}`}
+            className="size-8 shrink-0 border-transparent bg-transparent p-0 hover:bg-[var(--danger-subtle)]"
+            variant="danger"
+          >
+            <Trash2 aria-hidden="true" className="size-4" />
+          </Button>
+        </DialogTrigger>
+      </Tooltip>
       <DialogContent>
         <DialogTitle>确认删除</DialogTitle>
         <DialogDescription>

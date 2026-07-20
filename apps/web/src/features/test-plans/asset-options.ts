@@ -1,5 +1,5 @@
-import { listAgentVersions, listAgents } from "@/features/agents";
-import { listDatasets, listDatasetVersions } from "@/features/datasets";
+import { listAgentVersions, listAllAgents } from "@/features/agents";
+import { listAllDatasets, listDatasetVersions } from "@/features/datasets";
 import { listGates, listGateRuns } from "@/features/gates";
 import { listScorers } from "@/features/scorers";
 
@@ -19,10 +19,10 @@ export async function loadTestPlanAssetOptions(
   projectId: string,
   signal?: AbortSignal,
 ): Promise<TestPlanAssetOptions> {
-  const [agentPage, datasetPage, environments, scorers, gates, runs] =
+  const [agents, datasets, environments, scorers, gates, runs] =
     await Promise.all([
-      listAgents(projectId, signal),
-      listDatasets(projectId, signal),
+      listAllAgents(projectId, signal),
+      listAllDatasets(projectId, signal),
       listEnvironmentTemplates(projectId, signal),
       listScorers(projectId, signal),
       listGates(projectId, signal),
@@ -30,7 +30,7 @@ export async function loadTestPlanAssetOptions(
     ]);
   const agentVersions = (
     await Promise.all(
-      agentPage.items.map(async (agent) =>
+      agents.map(async (agent) =>
         (await listAgentVersions(projectId, agent.id, signal)).map(
           (version) => ({
             id: version.id,
@@ -43,7 +43,7 @@ export async function loadTestPlanAssetOptions(
   ).flat();
   const datasetVersions = (
     await Promise.all(
-      datasetPage.items.map(async (dataset) =>
+      datasets.map(async (dataset) =>
         (await listDatasetVersions(projectId, dataset.id, signal)).map(
           (version) => ({
             id: version.id,

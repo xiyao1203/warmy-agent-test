@@ -1,24 +1,32 @@
 "use client";
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  keepPreviousData,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import type { RenameProjectRequest } from "@warmy/generated-api-client";
 
 import {
   archiveProject,
   createProject,
-  listProjects,
+  listProjectPage,
   ProjectListScreen,
   renameProject,
 } from "@/features/projects";
 import { projectWorkspacePath } from "@/lib/routes";
+import { usePaginationState } from "@/lib/use-pagination-state";
 
 export default function ProjectsPage() {
   const router = useRouter();
   const queryClient = useQueryClient();
+  const pagination = usePaginationState();
   const projectsQuery = useQuery({
-    queryFn: listProjects,
-    queryKey: ["projects"],
+    queryFn: () => listProjectPage(pagination.page, pagination.pageSize),
+    queryKey: ["projects", pagination.page, pagination.pageSize],
+    placeholderData: keepPreviousData,
   });
 
   const refreshProjects = () =>
@@ -50,10 +58,16 @@ export default function ProjectsPage() {
       onArchive={(projectId) => archiveMutation.mutateAsync(projectId)}
       onCreate={(payload) => createMutation.mutateAsync(payload)}
       onOpen={(projectId) => router.push(projectWorkspacePath(projectId))}
+      onPageChange={pagination.setPage}
+      onPageSizeChange={pagination.setPageSize}
       onRename={(projectId, payload) =>
         renameMutation.mutateAsync({ payload, projectId })
       }
-      projects={projectsQuery.data ?? []}
+      page={projectsQuery.data?.page ?? pagination.page}
+      pageSize={pagination.pageSize}
+      projects={projectsQuery.data?.items ?? []}
+      total={projectsQuery.data?.total ?? 0}
+      totalPages={projectsQuery.data?.total_pages ?? 0}
     />
   );
 }

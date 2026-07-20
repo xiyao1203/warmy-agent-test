@@ -99,6 +99,10 @@ class TestPlanResponse(TestPlanSummaryMetrics):
 class TestPlanListResponse(BaseModel):
     items: list[TestPlanResponse]
     next_cursor: str | None = None
+    total: int
+    page: int | None
+    page_size: int
+    total_pages: int
 
 
 class TestPlanVersionResponse(BaseModel):

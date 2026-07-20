@@ -22,6 +22,7 @@ from agenttest.modules.test_plans.domain.repositories import (
     TestPlanRepository,
     TestPlanVersionRepository,
 )
+from agenttest.shared.application.pagination import PageRequest, PageResult
 
 
 class ListTestPlansHandler:
@@ -46,6 +47,19 @@ class ListTestPlansHandler:
     ) -> tuple[list[TestPlan], str | None]:
         await self._project_access.ensure_member(actor, project_id)
         return await self._test_plans.list_by_project(project_id, limit=limit, cursor=cursor)
+
+    async def count(self, actor: User, project_id: ProjectId) -> int:
+        await self._project_access.ensure_member(actor, project_id)
+        return await self._test_plans.count_by_project(project_id)
+
+    async def execute_page(
+        self,
+        actor: User,
+        project_id: ProjectId,
+        page_request: PageRequest,
+    ) -> PageResult[TestPlan]:
+        await self._project_access.ensure_member(actor, project_id)
+        return await self._test_plans.list_page_by_project(project_id, page_request)
 
 
 class GetTestPlanHandler:

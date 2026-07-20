@@ -2,12 +2,15 @@
 
 import type {
   CreateModelConfigRequest,
+  ModelConfigResponse,
   ModelPurpose,
   UpdateModelConfigRequest,
 } from "@warmy/generated-api-client";
 import { useCallback, useEffect, useState } from "react";
 
 import { problemMessage } from "@/lib/api/problem";
+import { normalizeResourcePage } from "@/lib/pagination";
+import { usePaginationState } from "@/lib/use-pagination-state";
 
 import {
   clearModelDefault,
@@ -22,9 +25,10 @@ import {
 import { ModelConfigList } from "./model-config-list";
 
 export function ModelConfigScreen({ projectId }: { projectId: string }) {
-  const [models, setModels] = useState<
-    Awaited<ReturnType<typeof listModelConfigs>>
-  >([]);
+  const pagination = usePaginationState();
+  const [models, setModels] = useState<ModelConfigResponse[]>([]);
+  const [total, setTotal] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
   const [defaults, setDefaults] = useState<
     Awaited<ReturnType<typeof listModelDefaults>>
   >([]);
@@ -34,10 +38,17 @@ export function ModelConfigScreen({ projectId }: { projectId: string }) {
   const reload = useCallback(async () => {
     try {
       const [nextModels, nextDefaults] = await Promise.all([
-        listModelConfigs(projectId),
+        listModelConfigs(projectId, pagination.page, pagination.pageSize),
         listModelDefaults(projectId),
       ]);
-      setModels(nextModels);
+      const page = normalizeResourcePage(
+        nextModels,
+        pagination.page,
+        pagination.pageSize,
+      );
+      setModels(page.items);
+      setTotal(page.total);
+      setTotalPages(page.total_pages);
       setDefaults(nextDefaults);
       setError("");
     } catch (error) {
@@ -50,17 +61,24 @@ export function ModelConfigScreen({ projectId }: { projectId: string }) {
     } finally {
       setLoading(false);
     }
-  }, [projectId]);
+  }, [pagination.page, pagination.pageSize, projectId]);
 
   useEffect(() => {
     let active = true;
     void Promise.all([
-      listModelConfigs(projectId),
+      listModelConfigs(projectId, pagination.page, pagination.pageSize),
       listModelDefaults(projectId),
     ])
       .then(([nextModels, nextDefaults]) => {
         if (!active) return;
-        setModels(nextModels);
+        const page = normalizeResourcePage(
+          nextModels,
+          pagination.page,
+          pagination.pageSize,
+        );
+        setModels(page.items);
+        setTotal(page.total);
+        setTotalPages(page.total_pages);
         setDefaults(nextDefaults);
         setError("");
       })
@@ -79,7 +97,7 @@ export function ModelConfigScreen({ projectId }: { projectId: string }) {
     return () => {
       active = false;
     };
-  }, [projectId]);
+  }, [pagination.page, pagination.pageSize, projectId]);
 
   return (
     <ModelConfigList
@@ -87,6 +105,12 @@ export function ModelConfigScreen({ projectId }: { projectId: string }) {
       error={error || undefined}
       loading={loading}
       models={models}
+      onPageChange={pagination.setPage}
+      onPageSizeChange={pagination.setPageSize}
+      page={pagination.page}
+      pageSize={pagination.pageSize}
+      total={total}
+      totalPages={totalPages}
       onCreate={async (value: CreateModelConfigRequest) => {
         await createModelConfig(projectId, value);
         await reload();

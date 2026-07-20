@@ -14,6 +14,7 @@ from agenttest.modules.test_plans.domain.entities import (
     TestPlanVersion,
     TestPlanVersionId,
 )
+from agenttest.shared.pagination import PageRequest, PageResult
 
 
 class TestPlanRepository(Protocol):
@@ -28,6 +29,14 @@ class TestPlanRepository(Protocol):
         limit: int = 50,
         cursor: str | None = None,
     ) -> tuple[list[TestPlan], str | None]: ...
+
+    async def count_by_project(self, project_id: ProjectId) -> int: ...
+
+    async def list_page_by_project(
+        self,
+        project_id: ProjectId,
+        page_request: PageRequest,
+    ) -> PageResult[TestPlan]: ...
 
     async def add(self, test_plan: TestPlan) -> None: ...
 

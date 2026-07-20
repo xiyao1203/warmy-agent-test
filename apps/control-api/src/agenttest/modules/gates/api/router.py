@@ -7,7 +7,7 @@ from datetime import datetime
 from typing import Protocol
 from uuid import UUID
 
-from fastapi import APIRouter, Header, Request
+from fastapi import APIRouter, Header, Query, Request
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
@@ -22,7 +22,9 @@ from agenttest.modules.gates.domain.entities import ReleaseGate
 from agenttest.modules.identity.public import InvalidSessionError, User
 from agenttest.modules.projects.public import ProjectNotFoundError
 from agenttest.shared.api.auth_guard import require_actor, require_writer
+from agenttest.shared.api.pagination import resolve_page_request
 from agenttest.shared.application.core_summaries import CoreSummaryReader, GateSummaryMetrics
+from agenttest.shared.application.pagination import paginate_items
 
 
 class CreateGateRequest(BaseModel):
@@ -57,6 +59,10 @@ class GateSummaryResponse(GateSummaryMetrics):
 
 class GateListResponse(BaseModel):
     items: list[GateSummaryResponse]
+    total: int
+    page: int | None = None
+    page_size: int = 50
+    total_pages: int = 0
 
 
 class ActorResolver(Protocol):
@@ -75,7 +81,12 @@ def create_gate_router(dependencies: GateApiDependencies) -> APIRouter:
     router = APIRouter(prefix="/projects/{project_id}/gates", tags=["release-gates"])
 
     @router.get("", response_model=GateListResponse)
-    async def list_gates(request: Request, project_id: UUID):
+    async def list_gates(
+        request: Request,
+        project_id: UUID,
+        page: int | None = Query(default=None),
+        page_size: int | None = Query(default=None),
+    ):
         actor = await require_actor(request, dependencies.actor_for, dependencies.settings)
         if isinstance(actor, JSONResponse):
             return actor
@@ -86,6 +97,19 @@ def create_gate_router(dependencies: GateApiDependencies) -> APIRouter:
             if response is not None:
                 return response
             raise
+        page_request = resolve_page_request(page=page, page_size=page_size)
+        if page_request:
+            result = paginate_items(gates, page_request)
+            gates = result.items
+            total = result.total
+            response_page = result.page
+            response_page_size = result.page_size
+            total_pages = result.total_pages
+        else:
+            total = len(gates)
+            response_page = None
+            response_page_size = 50
+            total_pages = 1 if gates else 0
         summaries = (
             await dependencies.summaries.gates(
                 project_id,
@@ -100,7 +124,11 @@ def create_gate_router(dependencies: GateApiDependencies) -> APIRouter:
                 if gate.gate_id.value in summaries
                 else _gate_to_dict(gate)
                 for gate in gates
-            ]
+            ],
+            "total": total,
+            "page": response_page,
+            "page_size": response_page_size,
+            "total_pages": total_pages,
         }
 
     @router.post("")

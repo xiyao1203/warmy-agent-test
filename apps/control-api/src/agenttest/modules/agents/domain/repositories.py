@@ -15,6 +15,7 @@ from agenttest.modules.agents.domain.entities import (
     AgentVersionId,
 )
 from agenttest.modules.projects.public import ProjectId
+from agenttest.shared.pagination import PageRequest, PageResult
 
 
 class AgentRepository(Protocol):
@@ -29,6 +30,14 @@ class AgentRepository(Protocol):
         limit: int = 50,
         cursor: str | None = None,
     ) -> tuple[list[Agent], str | None]: ...
+
+    async def count_by_project(self, project_id: ProjectId) -> int: ...
+
+    async def list_page_by_project(
+        self,
+        project_id: ProjectId,
+        page_request: PageRequest,
+    ) -> PageResult[Agent]: ...
 
     async def add(self, agent: Agent) -> None: ...
 

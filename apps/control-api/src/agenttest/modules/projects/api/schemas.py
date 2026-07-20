@@ -76,6 +76,10 @@ class ProjectResponse(ProjectSummaryMetrics):
 
 class ProjectListResponse(BaseModel):
     items: list[ProjectResponse]
+    total: int
+    page: int | None
+    page_size: int
+    total_pages: int
 
 
 class ProjectMembersResponse(BaseModel):

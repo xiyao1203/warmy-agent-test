@@ -5,6 +5,7 @@ const datasetId = "dataset-1";
 const versionId = "version-1";
 const caseId = "case-1";
 const caseName = "越权查询应被拒绝";
+const webOrigin = `http://localhost:${process.env.E2E_WEB_PORT ?? 5175}`;
 
 type JsonObject = Record<string, unknown>;
 
@@ -13,7 +14,7 @@ async function fulfill(route: Route, json: unknown, status = 200) {
     contentType: "application/json",
     headers: {
       "access-control-allow-credentials": "true",
-      "access-control-allow-origin": "http://localhost:5175",
+      "access-control-allow-origin": webOrigin,
     },
     json,
     status,
@@ -39,7 +40,7 @@ async function mockProfessionalCaseWorkflow(page: Page) {
           "access-control-allow-headers":
             "content-type,idempotency-key,x-csrf-token",
           "access-control-allow-methods": "GET,POST,PATCH,DELETE,OPTIONS",
-          "access-control-allow-origin": "http://localhost:5175",
+          "access-control-allow-origin": webOrigin,
         },
         status: 204,
       });

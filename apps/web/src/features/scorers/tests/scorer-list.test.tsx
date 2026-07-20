@@ -8,6 +8,7 @@ const api = vi.hoisted(() => ({
   createScorer: vi.fn(),
   deleteScorer: vi.fn(),
   listScorers: vi.fn(),
+  listScorerPage: vi.fn(),
   trialScorer: vi.fn(),
   updateScorer: vi.fn(),
 }));
@@ -45,12 +46,14 @@ describe("ScorerList", () => {
     api.createScorer.mockReset();
     api.deleteScorer.mockReset();
     api.listScorers.mockReset();
+    api.listScorerPage.mockReset();
     api.trialScorer.mockReset();
     api.updateScorer.mockReset();
   });
 
   it("shows the scorer workflow and plan links", async () => {
     api.listScorers.mockResolvedValue([scorer]);
+    api.listScorerPage.mockResolvedValue([scorer]);
 
     render(<ScorerList projectId="project-1" />);
 
@@ -79,10 +82,20 @@ describe("ScorerList", () => {
       "/projects/project-1/test-plans",
     );
     expect(screen.getByRole("button", { name: "设置事实评分" })).toBeVisible();
+    expect(
+      document.querySelector('[role="tooltip"][data-tooltip="禁用"]'),
+    ).toBeInTheDocument();
+    expect(
+      document.querySelector('[role="tooltip"][data-tooltip="设置"]'),
+    ).toBeInTheDocument();
+    expect(
+      document.querySelector('[role="tooltip"][data-tooltip="删除"]'),
+    ).toBeInTheDocument();
   });
 
   it("guides empty state to create scorer and configure plans", async () => {
     api.listScorers.mockResolvedValue([]);
+    api.listScorerPage.mockResolvedValue([]);
 
     render(<ScorerList projectId="project-1" />);
 

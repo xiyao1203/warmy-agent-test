@@ -58,6 +58,10 @@ class EnvironmentTemplateResponse(EnvironmentSummaryMetrics):
 class EnvironmentTemplateListResponse(BaseModel):
     items: list[EnvironmentTemplateResponse]
     next_cursor: str | None = None
+    total: int
+    page: int | None
+    page_size: int
+    total_pages: int
 
 
 # ── Environment Version schemas ──────────────────────────────────────────

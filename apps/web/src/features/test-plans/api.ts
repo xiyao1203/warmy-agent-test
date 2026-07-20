@@ -17,11 +17,16 @@ import {
 import { apiClient } from "@/lib/api/client";
 import { csrfHeaders } from "@/lib/api/csrf";
 
-export async function listTestPlans(projectId: string, signal?: AbortSignal) {
+export async function listTestPlans(
+  projectId: string,
+  signal?: AbortSignal,
+  page = 1,
+  pageSize = 10,
+) {
   const { data } = await listPlansApiV1ProjectsProjectIdTestPlansGet({
     client: apiClient,
     path: { project_id: projectId },
-    query: { limit: 100 },
+    query: { page, page_size: pageSize },
     signal,
     throwOnError: true,
   });

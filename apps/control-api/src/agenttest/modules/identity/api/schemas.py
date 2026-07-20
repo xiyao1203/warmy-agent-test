@@ -36,6 +36,10 @@ class UserResponse(BaseModel):
 class UserPageResponse(BaseModel):
     items: list[UserResponse]
     next_cursor: UUID | None
+    total: int
+    page: int | None
+    page_size: int
+    total_pages: int
 
 
 class CreateUserRequest(BaseModel):

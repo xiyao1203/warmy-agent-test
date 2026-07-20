@@ -3,6 +3,7 @@ from agenttest.modules.projects.application.commands.manage_members import requi
 from agenttest.modules.projects.domain.entities import Project, ProjectId
 from agenttest.modules.projects.domain.policies import ProjectAccessPolicy
 from agenttest.modules.projects.domain.repositories import ProjectRepository
+from agenttest.shared.application.pagination import PageRequest, PageResult
 
 
 class ListProjectsHandler:
@@ -12,6 +13,14 @@ class ListProjectsHandler:
     async def execute(self, actor: User) -> list[Project]:
         user_id = None if actor.role is SystemRole.SUPER_ADMIN else actor.user_id
         return await self._projects.list_for_user(user_id)
+
+    async def execute_page(
+        self,
+        actor: User,
+        page_request: PageRequest,
+    ) -> PageResult[Project]:
+        user_id = None if actor.role is SystemRole.SUPER_ADMIN else actor.user_id
+        return await self._projects.list_page_for_user(user_id, page_request)
 
 
 class GetProjectHandler:

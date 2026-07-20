@@ -26,6 +26,7 @@ import {
 import { EmptyState } from "@/components/ui/empty-state";
 import { Input } from "@/components/ui/input";
 import { ResourceReferenceLink } from "@/components/ui/resource-reference-link";
+import { ResourcePagination } from "@/components/ui/resource-pagination";
 import {
   Table,
   TableBody,
@@ -33,29 +34,45 @@ import {
   TableHead,
   TableHeader,
   TableRow,
+  TableValue,
 } from "@/components/ui/table";
 import {
   TableActions,
   TableActionButton,
   tableActionCellClass,
+  tableActionHeadClass,
 } from "@/components/ui/table-actions";
 import { TruncatedText } from "@/components/ui/truncated-text";
+import { Tooltip } from "@/components/uiverse";
 import { useCreateIntent } from "@/lib/use-create-intent";
+import type { PageSize } from "@/lib/pagination";
 
 export function TestPlanList({
   error,
   loading = false,
   onCreate = async () => undefined,
   onDelete,
+  onPageChange = () => undefined,
+  onPageSizeChange = () => undefined,
+  page = 1,
+  pageSize = 10,
   plans = [],
   projectId,
+  total = plans.length,
+  totalPages = plans.length ? 1 : 0,
 }: {
   error?: "not-found" | "service";
   loading?: boolean;
   onCreate?: (payload: CreateTestPlanRequest) => Promise<unknown>;
   onDelete?: (planId: string) => Promise<unknown>;
+  onPageChange?: (page: number) => void;
+  onPageSizeChange?: (pageSize: PageSize) => void;
+  page?: number;
+  pageSize?: PageSize;
   plans?: TestPlanResponse[];
   projectId: string;
+  total?: number;
+  totalPages?: number;
 }) {
   if (loading) return <StatusPanel title="正在加载测试计划…" />;
   if (error === "not-found") {
@@ -146,16 +163,14 @@ export function TestPlanList({
             title="暂无测试计划"
           />
         ) : (
-          <Table className="w-full table-fixed">
+          <Table className="w-full">
             <TableHeader className="bg-[var(--canvas-soft)]">
               <TableRow>
-                <TableHead className="w-[20%]">计划信息</TableHead>
-                <TableHead className="w-[27%]">资产绑定</TableHead>
-                <TableHead className="w-[22%]">执行配置</TableHead>
-                <TableHead className="w-[18%]">版本与结果</TableHead>
-                <TableHead className="w-[13%] whitespace-nowrap">
-                  下一步
-                </TableHead>
+                <TableHead className="min-w-52">计划信息</TableHead>
+                <TableHead className="min-w-60">资产绑定</TableHead>
+                <TableHead className="min-w-52">执行配置</TableHead>
+                <TableHead className="min-w-48">版本与结果</TableHead>
+                <TableHead className={tableActionHeadClass}>下一步</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -179,45 +194,58 @@ export function TestPlanList({
                       </div>
                     </div>
                   </TableCell>
-                  <TableCell className="space-y-1 text-left text-xs">
-                    <p>
-                      Agent：
-                      <ResourceReferenceLink reference={plan.agent_ref} />
-                    </p>
-                    <p>
-                      用例集：
-                      <ResourceReferenceLink reference={plan.dataset_ref} />
-                    </p>
-                    <p>
-                      环境：
-                      <ResourceReferenceLink reference={plan.environment_ref} />
-                    </p>
+                  <TableCell>
+                    <TableValue className="space-y-1 text-xs">
+                      <p>
+                        Agent：
+                        <ResourceReferenceLink reference={plan.agent_ref} />
+                      </p>
+                      <p>
+                        用例集：
+                        <ResourceReferenceLink reference={plan.dataset_ref} />
+                      </p>
+                      <p>
+                        环境：
+                        <ResourceReferenceLink
+                          reference={plan.environment_ref}
+                        />
+                      </p>
+                    </TableValue>
                   </TableCell>
-                  <TableCell className="text-left text-xs leading-5 text-[var(--muted)]">
-                    <p>
-                      用例 {plan.case_count ?? 0} · 重复{" "}
-                      {plan.repeat_count ?? 1} · 并发 {plan.concurrency ?? 1}
-                    </p>
-                    <p>
-                      超时 {plan.timeout_seconds ?? "暂无数据"} 秒 · 重试{" "}
-                      {plan.retry_count ?? 0} · 评分器 {plan.scorer_count ?? 0}
-                    </p>
+                  <TableCell>
+                    <TableValue className="text-xs leading-5 text-[var(--muted)]">
+                      <p>
+                        用例 {plan.case_count ?? 0} · 重复{" "}
+                        {plan.repeat_count ?? 1} · 并发 {plan.concurrency ?? 1}
+                      </p>
+                      <p>
+                        超时 {plan.timeout_seconds ?? "暂无数据"} 秒 · 重试{" "}
+                        {plan.retry_count ?? 0} · 评分器{" "}
+                        {plan.scorer_count ?? 0}
+                      </p>
+                    </TableValue>
                   </TableCell>
-                  <TableCell className="space-y-1 text-left text-xs">
-                    <ResourceReferenceLink reference={plan.latest_version} />
-                    <p className="text-[var(--muted)]">
-                      最近运行 {plan.last_run_status || "暂无数据"}
-                    </p>
-                    <p className="text-[var(--muted)]">
-                      通过率{" "}
-                      {plan.pass_rate == null
-                        ? "暂无数据"
-                        : `${(plan.pass_rate * 100).toFixed(1)}%`}
-                    </p>
+                  <TableCell>
+                    <TableValue className="space-y-1 text-xs">
+                      <ResourceReferenceLink reference={plan.latest_version} />
+                      <p className="text-[var(--muted)]">
+                        最近运行 {plan.last_run_status || "暂无数据"}
+                      </p>
+                      <p className="text-[var(--muted)]">
+                        通过率{" "}
+                        {plan.pass_rate == null
+                          ? "暂无数据"
+                          : `${(plan.pass_rate * 100).toFixed(1)}%`}
+                      </p>
+                    </TableValue>
                   </TableCell>
                   <TableCell className={tableActionCellClass}>
                     <TableActions label={plan.name}>
-                      <TableActionButton asChild label={`配置${plan.name}`}>
+                      <TableActionButton
+                        accessibleLabel={`配置${plan.name}`}
+                        asChild
+                        label="配置"
+                      >
                         <Link
                           href={`/projects/${projectId}/test-plans/${plan.id}`}
                         >
@@ -237,6 +265,14 @@ export function TestPlanList({
             </TableBody>
           </Table>
         )}
+        <ResourcePagination
+          onPageChange={onPageChange}
+          onPageSizeChange={onPageSizeChange}
+          page={page}
+          pageSize={pageSize}
+          total={total}
+          totalPages={totalPages}
+        />
       </section>
     </div>
   );
@@ -335,15 +371,17 @@ function ConfirmDeleteButton({
 
   return (
     <Dialog onOpenChange={setOpen} open={open}>
-      <DialogTrigger asChild>
-        <Button
-          aria-label={`删除${label}`}
-          className="size-8 shrink-0 border-transparent bg-transparent p-0 hover:bg-[var(--danger-subtle)]"
-          variant="danger"
-        >
-          <Trash2 aria-hidden="true" className="size-4" />
-        </Button>
-      </DialogTrigger>
+      <Tooltip content="删除" side="top">
+        <DialogTrigger asChild>
+          <Button
+            aria-label={`删除${label}`}
+            className="size-8 shrink-0 border-transparent bg-transparent p-0 hover:bg-[var(--danger-subtle)]"
+            variant="danger"
+          >
+            <Trash2 aria-hidden="true" className="size-4" />
+          </Button>
+        </DialogTrigger>
+      </Tooltip>
       <DialogContent>
         <DialogTitle>确认删除</DialogTitle>
         <DialogDescription>

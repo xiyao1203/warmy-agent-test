@@ -30,6 +30,7 @@ import {
 import { EmptyState } from "@/components/ui/empty-state";
 import { Input } from "@/components/ui/input";
 import { ResourceReferenceLink } from "@/components/ui/resource-reference-link";
+import { ResourcePagination } from "@/components/ui/resource-pagination";
 import {
   Table,
   TableBody,
@@ -37,6 +38,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
+  TableValue,
 } from "@/components/ui/table";
 import {
   TableActions,
@@ -47,6 +49,7 @@ import {
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { Skeleton, Tooltip } from "@/components/uiverse";
 import { useCreateIntent } from "@/lib/use-create-intent";
+import type { PageSize } from "@/lib/pagination";
 
 type AgentListProps = {
   agents?: AgentResponse[];
@@ -54,8 +57,14 @@ type AgentListProps = {
   loading?: boolean;
   onCreate?: (payload: CreateAgentRequest) => Promise<unknown>;
   onDelete?: (agentId: string) => Promise<unknown>;
+  onPageChange?: (page: number) => void;
+  onPageSizeChange?: (pageSize: PageSize) => void;
   onRetry?: () => void;
+  page?: number;
+  pageSize?: PageSize;
   projectId: string;
+  total?: number;
+  totalPages?: number;
 };
 
 const typeLabels: Record<AgentType, string> = {
@@ -69,8 +78,14 @@ export function AgentList({
   loading = false,
   onCreate = async () => undefined,
   onDelete,
+  onPageChange = () => undefined,
+  onPageSizeChange = () => undefined,
   onRetry,
+  page = 1,
+  pageSize = 10,
   projectId,
+  total = agents.length,
+  totalPages = agents.length ? 1 : 0,
 }: AgentListProps) {
   if (loading)
     return (
@@ -126,13 +141,13 @@ export function AgentList({
             title="暂无 Agent"
           />
         ) : (
-          <Table className="w-full table-fixed">
+          <Table className="w-full">
             <TableHeader className="bg-[var(--canvas-soft)]">
               <TableRow>
-                <TableHead className="w-[25%]">智能体信息</TableHead>
-                <TableHead className="w-[21%]">接入与模型</TableHead>
-                <TableHead className="w-[31%]">版本与质量</TableHead>
-                <TableHead className="w-[13%]">更新时间</TableHead>
+                <TableHead className="min-w-60">智能体信息</TableHead>
+                <TableHead className="min-w-48">接入与模型</TableHead>
+                <TableHead className="min-w-72">版本与质量</TableHead>
+                <TableHead className="whitespace-nowrap">更新时间</TableHead>
                 <TableHead className={tableActionHeadClass}>操作</TableHead>
               </TableRow>
             </TableHeader>
@@ -160,22 +175,24 @@ export function AgentList({
                       </div>
                     </div>
                   </TableCell>
-                  <TableCell className="text-left text-xs leading-5">
-                    <Badge
-                      tone={
-                        agent.agent_type === "canvas" ? "accent" : "neutral"
-                      }
-                    >
-                      {typeLabels[agent.agent_type]}
-                    </Badge>
-                    <p className="mt-1 text-[var(--muted)]">
-                      协议 {agent.protocol || "暂无数据"} · 模型{" "}
-                      {agent.model || "暂无数据"}
-                    </p>
-                    <p className="text-[var(--muted)]">
-                      工具 {agent.tool_count ?? 0} · 凭证绑定{" "}
-                      {agent.credential_binding_count ?? 0}
-                    </p>
+                  <TableCell>
+                    <TableValue className="text-xs leading-5">
+                      <Badge
+                        tone={
+                          agent.agent_type === "canvas" ? "accent" : "neutral"
+                        }
+                      >
+                        {typeLabels[agent.agent_type]}
+                      </Badge>
+                      <p className="mt-1 text-[var(--muted)]">
+                        协议 {agent.protocol || "暂无数据"} · 模型{" "}
+                        {agent.model || "暂无数据"}
+                      </p>
+                      <p className="text-[var(--muted)]">
+                        工具 {agent.tool_count ?? 0} · 凭证绑定{" "}
+                        {agent.credential_binding_count ?? 0}
+                      </p>
+                    </TableValue>
                   </TableCell>
                   <TableCell>
                     <div className="mx-auto w-fit max-w-full">
@@ -187,7 +204,11 @@ export function AgentList({
                   </TableCell>
                   <TableCell className={tableActionCellClass}>
                     <TableActions label={agent.name}>
-                      <TableActionButton asChild label={`管理${agent.name}`}>
+                      <TableActionButton
+                        accessibleLabel={`管理${agent.name}`}
+                        asChild
+                        label="管理"
+                      >
                         <Link
                           href={`/projects/${projectId}/agents/${agent.id}`}
                         >
@@ -207,6 +228,14 @@ export function AgentList({
             </TableBody>
           </Table>
         )}
+        <ResourcePagination
+          onPageChange={onPageChange}
+          onPageSizeChange={onPageSizeChange}
+          page={page}
+          pageSize={pageSize}
+          total={total}
+          totalPages={totalPages}
+        />
       </section>
     </div>
   );
@@ -389,15 +418,17 @@ function ConfirmDeleteButton({
 
   return (
     <Dialog onOpenChange={setOpen} open={open}>
-      <DialogTrigger asChild>
-        <Button
-          aria-label={`删除${label}`}
-          className="size-8 shrink-0 border-transparent bg-transparent p-0 hover:bg-[var(--danger-subtle)]"
-          variant="danger"
-        >
-          <Trash2 aria-hidden="true" className="size-4" />
-        </Button>
-      </DialogTrigger>
+      <Tooltip content="删除" side="top">
+        <DialogTrigger asChild>
+          <Button
+            aria-label={`删除${label}`}
+            className="size-8 shrink-0 border-transparent bg-transparent p-0 hover:bg-[var(--danger-subtle)]"
+            variant="danger"
+          >
+            <Trash2 aria-hidden="true" className="size-4" />
+          </Button>
+        </DialogTrigger>
+      </Tooltip>
       <DialogContent>
         <DialogTitle>确认删除</DialogTitle>
         <DialogDescription>

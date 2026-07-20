@@ -59,7 +59,10 @@ class RunRepository(Protocol):
         project_id: ProjectId,
         *,
         limit: int = 50,
+        offset: int = 0,
     ) -> list[Run]: ...
+
+    async def count_by_project(self, project_id: ProjectId) -> int: ...
 
     async def add(self, run: Run, cases: list[RunCase]) -> None: ...
 

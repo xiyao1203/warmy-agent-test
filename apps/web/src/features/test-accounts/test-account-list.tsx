@@ -16,6 +16,7 @@ import {
 import { EmptyState } from "@/components/ui/empty-state";
 import { Skeleton } from "@/components/uiverse";
 import { Input } from "@/components/ui/input";
+import { ResourcePagination } from "@/components/ui/resource-pagination";
 import {
   Table,
   TableBody,
@@ -30,6 +31,7 @@ import {
   tableActionHeadClass,
 } from "@/components/ui/table-actions";
 import { TruncatedText } from "@/components/ui/truncated-text";
+import { usePaginationState } from "@/lib/use-pagination-state";
 
 type TestAccount = {
   id: string;
@@ -71,6 +73,15 @@ export function TestAccountList({
   onDelete,
   onToggleEnabled,
 }: TestAccountListProps) {
+  const pagination = usePaginationState("test_accounts");
+  const totalPages = accounts.length
+    ? Math.ceil(accounts.length / pagination.pageSize)
+    : 0;
+  const pageStart = (pagination.page - 1) * pagination.pageSize;
+  const pagedAccounts = accounts.slice(
+    pageStart,
+    pageStart + pagination.pageSize,
+  );
   if (loading) {
     return (
       <div className="mt-6">
@@ -114,15 +125,17 @@ export function TestAccountList({
           <Table>
             <TableHeader className="bg-[var(--canvas-soft)]">
               <TableRow>
-                <TableHead>账号信息</TableHead>
-                <TableHead className="w-32">类型</TableHead>
-                <TableHead className="w-40">凭证（掩码）</TableHead>
-                <TableHead className="w-24">状态</TableHead>
+                <TableHead className="min-w-52">账号信息</TableHead>
+                <TableHead className="whitespace-nowrap">类型</TableHead>
+                <TableHead className="min-w-40 whitespace-nowrap">
+                  凭证（掩码）
+                </TableHead>
+                <TableHead className="whitespace-nowrap">状态</TableHead>
                 <TableHead className={tableActionHeadClass}>操作</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {accounts.map((account) => (
+              {pagedAccounts.map((account) => (
                 <TableRow
                   className="transition-colors hover:bg-[var(--canvas-soft)]"
                   key={account.id}
@@ -161,25 +174,30 @@ export function TestAccountList({
                     <TableActions label={account.name}>
                       {onToggleEnabled && (
                         <TableActionButton
-                          label={`${account.enabled ? "禁用" : "启用"}${account.name}`}
+                          accessibleLabel={`${account.enabled ? "禁用" : "启用"}测试账号 ${account.name}`}
+                          label={account.enabled ? "禁用" : "启用"}
                           onClick={() =>
                             onToggleEnabled(account.id, !account.enabled)
                           }
                         >
                           {account.enabled ? (
-                            <EyeOff className="size-4" />
+                            <EyeOff aria-hidden="true" className="size-4" />
                           ) : (
-                            <Eye className="size-4" />
+                            <Eye aria-hidden="true" className="size-4" />
                           )}
                         </TableActionButton>
                       )}
                       {onDelete && (
                         <TableActionButton
-                          label={`删除${account.name}`}
+                          accessibleLabel={`删除测试账号 ${account.name}`}
+                          label="删除"
                           onClick={() => onDelete(account.id)}
                           tone="danger"
                         >
-                          <Trash2 className="size-4 text-[var(--danger)]" />
+                          <Trash2
+                            aria-hidden="true"
+                            className="size-4 text-[var(--danger)]"
+                          />
                         </TableActionButton>
                       )}
                     </TableActions>
@@ -189,6 +207,14 @@ export function TestAccountList({
             </TableBody>
           </Table>
         )}
+        <ResourcePagination
+          onPageChange={pagination.setPage}
+          onPageSizeChange={pagination.setPageSize}
+          page={pagination.page}
+          pageSize={pagination.pageSize}
+          total={accounts.length}
+          totalPages={totalPages}
+        />
       </section>
     </div>
   );

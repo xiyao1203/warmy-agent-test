@@ -8,6 +8,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
+  TableValue,
 } from "./table";
 
 describe("Table", () => {
@@ -28,11 +29,11 @@ describe("Table", () => {
     );
     expect(screen.getByTestId("compact-table")).toHaveClass(
       "w-full",
-      "table-fixed",
+      "table-auto",
     );
   });
 
-  it("left aligns table headers by default for scanability", () => {
+  it("centers table headers and cells by default", () => {
     render(
       <Table>
         <TableHeader>
@@ -40,17 +41,6 @@ describe("Table", () => {
             <TableHead>操作</TableHead>
           </TableRow>
         </TableHeader>
-      </Table>,
-    );
-
-    expect(screen.getByRole("columnheader", { name: "操作" })).toHaveClass(
-      "text-left",
-    );
-  });
-
-  it("left aligns table cells by default for scanability", () => {
-    render(
-      <Table>
         <TableBody>
           <TableRow>
             <TableCell>值</TableCell>
@@ -59,6 +49,25 @@ describe("Table", () => {
       </Table>,
     );
 
-    expect(screen.getByRole("cell", { name: "值" })).toHaveClass("text-left");
+    expect(screen.getByRole("columnheader", { name: "操作" })).toHaveClass(
+      "text-center",
+    );
+    expect(screen.getByRole("cell", { name: "值" })).toHaveClass("text-center");
+  });
+
+  it("centers a rich value block while keeping its text readable", () => {
+    render(
+      <TableValue data-testid="table-value">
+        <strong>资源名称</strong>
+        <p>资源说明</p>
+      </TableValue>,
+    );
+
+    expect(screen.getByTestId("table-value")).toHaveClass(
+      "mx-auto",
+      "w-fit",
+      "max-w-full",
+      "text-left",
+    );
   });
 });

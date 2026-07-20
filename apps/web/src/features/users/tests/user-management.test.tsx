@@ -69,6 +69,7 @@ function renderUserManagementScreen() {
 describe("UserManagement", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    window.history.replaceState({}, "", "/system/users?page=1&page_size=10");
   });
 
   it("renders loading, error and permission states", () => {
@@ -131,23 +132,26 @@ describe("UserManagement", () => {
     );
   });
 
-  it("loads the next user page from the pagination control", async () => {
-    const onLoadMore = vi.fn().mockResolvedValue(undefined);
+  it("requests the next numbered page from the pagination control", async () => {
+    const onPageChange = vi.fn();
     render(
       <UserManagement
         currentUser={currentUser}
-        nextCursor="cursor-2"
-        onLoadMore={onLoadMore}
+        onPageChange={onPageChange}
+        page={1}
+        pageSize={10}
+        total={12}
+        totalPages={2}
         users={users}
       />,
     );
 
-    fireEvent.click(screen.getByRole("button", { name: "加载更多" }));
+    fireEvent.click(screen.getByRole("button", { name: "下一页" }));
 
-    await waitFor(() => expect(onLoadMore).toHaveBeenCalledTimes(1));
+    expect(onPageChange).toHaveBeenCalledWith(2);
   });
 
-  it("appends the next user page in the screen data flow", async () => {
+  it("replaces rows with the requested user page in the screen data flow", async () => {
     const nextPageUser = {
       display_name: "审核用户",
       email: "reviewer@example.com",
@@ -157,11 +161,25 @@ describe("UserManagement", () => {
       status: "active" as const,
     };
     getCurrentUser.mockResolvedValue(currentUser);
-    listUsers.mockImplementation(async (cursor?: string | null) => {
-      if (!cursor) {
-        return { items: users, next_cursor: "cursor-2" };
+    listUsers.mockImplementation(async (page: number) => {
+      if (page === 1) {
+        return {
+          items: users,
+          next_cursor: null,
+          page: 1,
+          page_size: 10,
+          total: 11,
+          total_pages: 2,
+        };
       }
-      return { items: [nextPageUser], next_cursor: null };
+      return {
+        items: [nextPageUser],
+        next_cursor: null,
+        page: 2,
+        page_size: 10,
+        total: 11,
+        total_pages: 2,
+      };
     });
 
     renderUserManagementScreen();
@@ -169,12 +187,10 @@ describe("UserManagement", () => {
     expect(await screen.findByText("dev@example.com")).toBeVisible();
     expect(screen.queryByText("reviewer@example.com")).not.toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole("button", { name: "加载更多" }));
+    fireEvent.click(screen.getByRole("button", { name: "下一页" }));
 
     expect(await screen.findByText("reviewer@example.com")).toBeVisible();
-    await waitFor(() =>
-      expect(screen.queryByRole("button", { name: "加载更多" })).toBeNull(),
-    );
-    expect(listUsers).toHaveBeenCalledWith("cursor-2");
+    await waitFor(() => expect(listUsers).toHaveBeenCalledWith(2, 10));
+    expect(screen.queryByText("dev@example.com")).not.toBeInTheDocument();
   });
 });

@@ -31,8 +31,9 @@ import {
   TableHead,
   TableHeader,
   TableRow,
+  TableValue,
 } from "@/components/ui/table";
-import { Skeleton } from "@/components/uiverse";
+import { Skeleton, Tooltip } from "@/components/uiverse";
 
 import { ImportWizard } from "./import-wizard";
 import { TestCaseDetail } from "./test-case-detail";
@@ -303,32 +304,49 @@ export function DatasetDetail({
           />
         ) : (
           <div className="mt-3 overflow-hidden rounded-[var(--radius-lg)] border border-[var(--hairline)] bg-[var(--surface)]">
-            <Table className="w-full table-fixed">
+            <Table className="w-full">
               <TableHeader className="bg-[var(--canvas-soft)]">
                 <TableRow>
                   {canSelectCases && (
-                    <TableHead className="w-[4%]">
-                      <button
-                        aria-label={allSelected ? "取消全选" : "全选"}
-                        onClick={toggleAll}
-                        type="button"
+                    <TableHead className="w-px whitespace-nowrap">
+                      <Tooltip
+                        content={allSelected ? "取消全选" : "全选"}
+                        side="bottom"
                       >
-                        {allSelected ? (
-                          <CheckSquare className="size-4" />
-                        ) : (
-                          <Square className="size-4" />
-                        )}
-                      </button>
+                        <Button
+                          aria-label={allSelected ? "取消全选" : "全选"}
+                          className="size-8 shrink-0 px-0"
+                          onClick={toggleAll}
+                          variant="ghost"
+                        >
+                          {allSelected ? (
+                            <CheckSquare
+                              aria-hidden="true"
+                              className="size-4"
+                            />
+                          ) : (
+                            <Square aria-hidden="true" className="size-4" />
+                          )}
+                        </Button>
+                      </Tooltip>
                     </TableHead>
                   )}
-                  <TableHead className={canSelectCases ? "w-[27%]" : "w-[31%]"}>
-                    用例 / 目标
+                  <TableHead className="min-w-64">用例 / 目标</TableHead>
+                  <TableHead className="whitespace-nowrap">
+                    分类 / 状态
                   </TableHead>
-                  <TableHead className="w-[13%]">分类 / 状态</TableHead>
-                  <TableHead className="w-[11%]">优先级 / 风险</TableHead>
-                  <TableHead className="w-[13%]">自动化 / 模式</TableHead>
-                  <TableHead className="w-[11%]">步骤 / 断言</TableHead>
-                  <TableHead className="w-[31%]">操作</TableHead>
+                  <TableHead className="whitespace-nowrap">
+                    优先级 / 风险
+                  </TableHead>
+                  <TableHead className="whitespace-nowrap">
+                    自动化 / 模式
+                  </TableHead>
+                  <TableHead className="whitespace-nowrap">
+                    步骤 / 断言
+                  </TableHead>
+                  <TableHead className="min-w-[26rem] whitespace-nowrap">
+                    操作
+                  </TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -339,23 +357,32 @@ export function DatasetDetail({
                   >
                     {canSelectCases && (
                       <TableCell>
-                        <button
-                          aria-label={
-                            selectedIds.has(c.id) ? "取消选中" : "选中"
-                          }
-                          onClick={() => toggleSelect(c.id)}
-                          type="button"
+                        <Tooltip
+                          content={selectedIds.has(c.id) ? "取消选中" : "选中"}
+                          side="top"
                         >
-                          {selectedIds.has(c.id) ? (
-                            <CheckSquare className="size-4 text-[var(--primary)]" />
-                          ) : (
-                            <Square className="size-4" />
-                          )}
-                        </button>
+                          <Button
+                            aria-label={
+                              selectedIds.has(c.id) ? "取消选中" : "选中"
+                            }
+                            className="size-8 shrink-0 px-0"
+                            onClick={() => toggleSelect(c.id)}
+                            variant="ghost"
+                          >
+                            {selectedIds.has(c.id) ? (
+                              <CheckSquare
+                                aria-hidden="true"
+                                className="size-4 text-[var(--primary)]"
+                              />
+                            ) : (
+                              <Square aria-hidden="true" className="size-4" />
+                            )}
+                          </Button>
+                        </Tooltip>
                       </TableCell>
                     )}
                     <TableCell className="min-w-0">
-                      <div className="mx-auto min-w-0 max-w-full text-left">
+                      <TableValue className="min-w-0">
                         <p className="truncate font-medium">{c.name}</p>
                         <p className="mt-0.5 truncate text-xs text-[var(--muted)]">
                           {c.case_key ?? "未编号"} · {c.component ?? "未分组件"}
@@ -363,7 +390,7 @@ export function DatasetDetail({
                         <p className="mt-0.5 line-clamp-2 text-xs text-[var(--muted)]">
                           {c.objective || "未填写测试目标"}
                         </p>
-                      </div>
+                      </TableValue>
                     </TableCell>
                     <TableCell className="whitespace-nowrap text-center">
                       <div className="space-y-1">
@@ -411,27 +438,31 @@ export function DatasetDetail({
                     </TableCell>
                     <TableCell>
                       <div className="mx-auto flex w-fit max-w-full justify-center gap-1 whitespace-nowrap">
-                        <Button
-                          aria-label="查看详情"
-                          className="h-8 w-8 shrink-0 px-0"
-                          onClick={() => setViewingCase(c)}
-                          variant="ghost"
-                        >
-                          <Eye className="size-4" />
-                        </Button>
+                        <Tooltip content="查看" side="top">
+                          <Button
+                            aria-label="查看详情"
+                            className="h-8 w-8 shrink-0 px-0"
+                            onClick={() => setViewingCase(c)}
+                            variant="ghost"
+                          >
+                            <Eye aria-hidden="true" className="size-4" />
+                          </Button>
+                        </Tooltip>
                         {canEditExistingCases && onUpdateCase && (
-                          <TestCaseEditor
-                            caseItem={c}
-                            onSubmit={async (payload) => {
-                              await onUpdateCase(c.id, payload);
-                              onRefresh?.();
-                            }}
-                            triggerAriaLabel={`编辑${c.name}`}
-                            triggerIcon={
-                              <Pencil aria-hidden="true" className="size-4" />
-                            }
-                            triggerLabel="编辑"
-                          />
+                          <Tooltip content="编辑" side="top">
+                            <TestCaseEditor
+                              caseItem={c}
+                              onSubmit={async (payload) => {
+                                await onUpdateCase(c.id, payload);
+                                onRefresh?.();
+                              }}
+                              triggerAriaLabel={`编辑${c.name}`}
+                              triggerIcon={
+                                <Pencil aria-hidden="true" className="size-4" />
+                              }
+                              triggerLabel="编辑"
+                            />
+                          </Tooltip>
                         )}
                         {canEditExistingCases && onValidateCase && (
                           <Button
@@ -481,14 +512,16 @@ export function DatasetDetail({
                           />
                         )}
                         {canEditExistingCases && onDeleteCases && (
-                          <Button
-                            aria-label={`删除${c.name}`}
-                            className="h-8 w-8 shrink-0 px-0"
-                            onClick={() => void handleDeleteOne(c.id)}
-                            variant="danger"
-                          >
-                            <Trash2 aria-hidden="true" className="size-4" />
-                          </Button>
+                          <Tooltip content="删除" side="top">
+                            <Button
+                              aria-label={`删除${c.name}`}
+                              className="h-8 w-8 shrink-0 px-0"
+                              onClick={() => void handleDeleteOne(c.id)}
+                              variant="danger"
+                            >
+                              <Trash2 aria-hidden="true" className="size-4" />
+                            </Button>
+                          </Tooltip>
                         )}
                       </div>
                       {validationByCase[c.id] && (

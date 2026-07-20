@@ -13,10 +13,10 @@ import {
 import { apiClient } from "@/lib/api/client";
 import { csrfHeaders } from "@/lib/api/csrf";
 
-export async function listUsers(cursor?: string | null) {
+export async function listUsers(page = 1, pageSize = 10) {
   const { data } = await listUsersApiV1SystemUsersGet({
     client: apiClient,
-    query: { cursor, limit: 100 },
+    query: { page, page_size: pageSize },
     throwOnError: true,
   });
   return data;

@@ -1,13 +1,19 @@
-import { queryOptions, type QueryClient } from "@tanstack/react-query";
+import {
+  keepPreviousData,
+  queryOptions,
+  type QueryClient,
+} from "@tanstack/react-query";
 
-import { listEnvironmentTemplates } from "./api";
+import { listEnvironmentTemplatePage } from "./api";
 
 export const environmentQueries = {
   all: ["environments"] as const,
-  list(projectId: string) {
+  list(projectId: string, page = 1, pageSize = 10) {
     return queryOptions({
-      queryFn: ({ signal }) => listEnvironmentTemplates(projectId, signal),
-      queryKey: ["environments", projectId] as const,
+      queryFn: ({ signal }) =>
+        listEnvironmentTemplatePage(projectId, signal, page, pageSize),
+      queryKey: ["environments", projectId, page, pageSize] as const,
+      placeholderData: keepPreviousData,
     });
   },
 };
@@ -17,6 +23,6 @@ export function invalidateEnvironmentList(
   projectId: string,
 ) {
   return client.invalidateQueries({
-    queryKey: environmentQueries.list(projectId).queryKey,
+    queryKey: ["environments", projectId],
   });
 }

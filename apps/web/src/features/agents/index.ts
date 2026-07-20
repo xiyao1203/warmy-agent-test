@@ -9,6 +9,7 @@ export {
   createAgentVersion,
   getAgent,
   listAgents,
+  listAllAgents,
   listAgentVersions,
   publishAgentVersion,
   updateAgentVersion,

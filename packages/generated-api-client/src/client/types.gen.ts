@@ -115,6 +115,22 @@ export type AgentListResponse = {
    * Next Cursor
    */
   next_cursor?: string | null;
+  /**
+   * Page
+   */
+  page: number | null;
+  /**
+   * Page Size
+   */
+  page_size: number;
+  /**
+   * Total
+   */
+  total: number;
+  /**
+   * Total Pages
+   */
+  total_pages: number;
 };
 
 /**
@@ -1240,6 +1256,22 @@ export type DatasetListResponse = {
    * Next Cursor
    */
   next_cursor?: string | null;
+  /**
+   * Page
+   */
+  page: number | null;
+  /**
+   * Page Size
+   */
+  page_size: number;
+  /**
+   * Total
+   */
+  total: number;
+  /**
+   * Total Pages
+   */
+  total_pages: number;
 };
 
 /**
@@ -1454,6 +1486,22 @@ export type EnvironmentTemplateListResponse = {
    * Next Cursor
    */
   next_cursor?: string | null;
+  /**
+   * Page
+   */
+  page: number | null;
+  /**
+   * Page Size
+   */
+  page_size: number;
+  /**
+   * Total
+   */
+  total: number;
+  /**
+   * Total Pages
+   */
+  total_pages: number;
 };
 
 /**
@@ -1658,6 +1706,22 @@ export type ExperimentListResponse = {
    * Items
    */
   items: Array<ExperimentSummaryResponse>;
+  /**
+   * Page
+   */
+  page?: number | null;
+  /**
+   * Page Size
+   */
+  page_size?: number;
+  /**
+   * Total
+   */
+  total: number;
+  /**
+   * Total Pages
+   */
+  total_pages?: number;
 };
 
 /**
@@ -1796,6 +1860,22 @@ export type GateListResponse = {
    * Items
    */
   items: Array<GateSummaryResponse>;
+  /**
+   * Page
+   */
+  page?: number | null;
+  /**
+   * Page Size
+   */
+  page_size?: number;
+  /**
+   * Total
+   */
+  total: number;
+  /**
+   * Total Pages
+   */
+  total_pages?: number;
 };
 
 /**
@@ -2049,6 +2129,22 @@ export type ModelConfigListResponse = {
    * Items
    */
   items: Array<ModelConfigResponse>;
+  /**
+   * Page
+   */
+  page?: number | null;
+  /**
+   * Page Size
+   */
+  page_size?: number;
+  /**
+   * Total
+   */
+  total: number;
+  /**
+   * Total Pages
+   */
+  total_pages?: number;
 };
 
 /**
@@ -2192,6 +2288,22 @@ export type ProjectListResponse = {
    * Items
    */
   items: Array<ProjectResponse>;
+  /**
+   * Page
+   */
+  page: number | null;
+  /**
+   * Page Size
+   */
+  page_size: number;
+  /**
+   * Total
+   */
+  total: number;
+  /**
+   * Total Pages
+   */
+  total_pages: number;
 };
 
 /**
@@ -2544,9 +2656,21 @@ export type ReviewListResponse = {
    */
   items: Array<ReviewSummaryResponse>;
   /**
+   * Page
+   */
+  page?: number | null;
+  /**
+   * Page Size
+   */
+  page_size?: number;
+  /**
    * Total
    */
   total: number;
+  /**
+   * Total Pages
+   */
+  total_pages?: number;
 };
 
 /**
@@ -2721,6 +2845,22 @@ export type RunListResponse = {
    * Items
    */
   items: Array<RunResponse>;
+  /**
+   * Page
+   */
+  page: number | null;
+  /**
+   * Page Size
+   */
+  page_size: number;
+  /**
+   * Total
+   */
+  total: number;
+  /**
+   * Total Pages
+   */
+  total_pages: number;
 };
 
 /**
@@ -2849,9 +2989,21 @@ export type ScorerListResponse = {
    */
   items: Array<ScorerSummaryResponse>;
   /**
+   * Page
+   */
+  page?: number | null;
+  /**
+   * Page Size
+   */
+  page_size?: number;
+  /**
    * Total
    */
   total: number;
+  /**
+   * Total Pages
+   */
+  total_pages?: number;
 };
 
 /**
@@ -2935,6 +3087,22 @@ export type SecurityScanListResponse = {
    * Items
    */
   items: Array<SecurityScanSummaryResponse>;
+  /**
+   * Page
+   */
+  page?: number | null;
+  /**
+   * Page Size
+   */
+  page_size?: number;
+  /**
+   * Total
+   */
+  total: number;
+  /**
+   * Total Pages
+   */
+  total_pages?: number;
 };
 
 /**
@@ -3460,6 +3628,22 @@ export type TestPlanListResponse = {
    * Next Cursor
    */
   next_cursor?: string | null;
+  /**
+   * Page
+   */
+  page: number | null;
+  /**
+   * Page Size
+   */
+  page_size: number;
+  /**
+   * Total
+   */
+  total: number;
+  /**
+   * Total Pages
+   */
+  total_pages: number;
 };
 
 /**
@@ -4175,6 +4359,22 @@ export type UserPageResponse = {
    * Next Cursor
    */
   next_cursor: string | null;
+  /**
+   * Page
+   */
+  page: number | null;
+  /**
+   * Page Size
+   */
+  page_size: number;
+  /**
+   * Total
+   */
+  total: number;
+  /**
+   * Total Pages
+   */
+  total_pages: number;
 };
 
 /**
@@ -4761,9 +4961,28 @@ export type ExecuteStageApiV1InternalProjectsProjectIdTestMissionsMissionIdRevis
 export type ListProjectsApiV1ProjectsGetData = {
   body?: never;
   path?: never;
-  query?: never;
+  query?: {
+    /**
+     * Page
+     */
+    page?: number | null;
+    /**
+     * Page Size
+     */
+    page_size?: number | null;
+  };
   url: "/api/v1/projects";
 };
+
+export type ListProjectsApiV1ProjectsGetErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type ListProjectsApiV1ProjectsGetError =
+  ListProjectsApiV1ProjectsGetErrors[keyof ListProjectsApiV1ProjectsGetErrors];
 
 export type ListProjectsApiV1ProjectsGetResponses = {
   /**
@@ -4895,6 +5114,14 @@ export type ListAgentsApiV1ProjectsProjectIdAgentsGetData = {
      * Cursor
      */
     cursor?: string | null;
+    /**
+     * Page
+     */
+    page?: number | null;
+    /**
+     * Page Size
+     */
+    page_size?: number | null;
   };
   url: "/api/v1/projects/{project_id}/agents";
 };
@@ -5646,7 +5873,16 @@ export type ListProfilesApiV1ProjectsProjectIdBrowserProfilesGetData = {
      */
     project_id: string;
   };
-  query?: never;
+  query?: {
+    /**
+     * Page
+     */
+    page?: number | null;
+    /**
+     * Page Size
+     */
+    page_size?: number | null;
+  };
   url: "/api/v1/projects/{project_id}/browser-profiles";
 };
 
@@ -6118,6 +6354,14 @@ export type ListDatasetsApiV1ProjectsProjectIdDatasetsGetData = {
      * Cursor
      */
     cursor?: string | null;
+    /**
+     * Page
+     */
+    page?: number | null;
+    /**
+     * Page Size
+     */
+    page_size?: number | null;
   };
   url: "/api/v1/projects/{project_id}/datasets";
 };
@@ -7164,6 +7408,14 @@ export type ListTemplatesApiV1ProjectsProjectIdEnvironmentTemplatesGetData = {
      * Cursor
      */
     cursor?: string | null;
+    /**
+     * Page
+     */
+    page?: number | null;
+    /**
+     * Page Size
+     */
+    page_size?: number | null;
   };
   url: "/api/v1/projects/{project_id}/environment-templates";
 };
@@ -7770,6 +8022,14 @@ export type ListExperimentsApiV1ProjectsProjectIdExperimentsGetData = {
      * Offset
      */
     offset?: number;
+    /**
+     * Page
+     */
+    page?: number | null;
+    /**
+     * Page Size
+     */
+    page_size?: number | null;
   };
   url: "/api/v1/projects/{project_id}/experiments";
 };
@@ -7955,7 +8215,16 @@ export type ListGatesApiV1ProjectsProjectIdGatesGetData = {
      */
     project_id: string;
   };
-  query?: never;
+  query?: {
+    /**
+     * Page
+     */
+    page?: number | null;
+    /**
+     * Page Size
+     */
+    page_size?: number | null;
+  };
   url: "/api/v1/projects/{project_id}/gates";
 };
 
@@ -8327,7 +8596,16 @@ export type ListConfigsApiV1ProjectsProjectIdModelConfigsGetData = {
      */
     project_id: string;
   };
-  query?: never;
+  query?: {
+    /**
+     * Page
+     */
+    page?: number | null;
+    /**
+     * Page Size
+     */
+    page_size?: number | null;
+  };
   url: "/api/v1/projects/{project_id}/model-configs";
 };
 
@@ -8763,6 +9041,14 @@ export type ListReviewsApiV1ProjectsProjectIdReviewsGetData = {
      * Offset
      */
     offset?: number;
+    /**
+     * Page
+     */
+    page?: number | null;
+    /**
+     * Page Size
+     */
+    page_size?: number | null;
   };
   url: "/api/v1/projects/{project_id}/reviews";
 };
@@ -8987,6 +9273,14 @@ export type ListRunsApiV1ProjectsProjectIdRunsGetData = {
      * Limit
      */
     limit?: number;
+    /**
+     * Page
+     */
+    page?: number | null;
+    /**
+     * Page Size
+     */
+    page_size?: number | null;
   };
   url: "/api/v1/projects/{project_id}/runs";
 };
@@ -9640,6 +9934,14 @@ export type ListScorersApiV1ProjectsProjectIdScorersGetData = {
      * Offset
      */
     offset?: number;
+    /**
+     * Page
+     */
+    page?: number | null;
+    /**
+     * Page Size
+     */
+    page_size?: number | null;
   };
   url: "/api/v1/projects/{project_id}/scorers";
 };
@@ -9927,6 +10229,14 @@ export type ListScansApiV1ProjectsProjectIdSecurityScansGetData = {
      * Limit
      */
     limit?: number;
+    /**
+     * Page
+     */
+    page?: number | null;
+    /**
+     * Page Size
+     */
+    page_size?: number | null;
   };
   url: "/api/v1/projects/{project_id}/security/scans";
 };
@@ -10027,7 +10337,16 @@ export type ListAccountsApiV1ProjectsProjectIdTestAccountsGetData = {
      */
     project_id: string;
   };
-  query?: never;
+  query?: {
+    /**
+     * Page
+     */
+    page?: number | null;
+    /**
+     * Page Size
+     */
+    page_size?: number | null;
+  };
   url: "/api/v1/projects/{project_id}/test-accounts";
 };
 
@@ -11060,6 +11379,14 @@ export type ListPlansApiV1ProjectsProjectIdTestPlansGetData = {
      * Cursor
      */
     cursor?: string | null;
+    /**
+     * Page
+     */
+    page?: number | null;
+    /**
+     * Page Size
+     */
+    page_size?: number | null;
   };
   url: "/api/v1/projects/{project_id}/test-plans";
 };
@@ -11597,6 +11924,14 @@ export type ListUsersApiV1SystemUsersGetData = {
      * Limit
      */
     limit?: number;
+    /**
+     * Page
+     */
+    page?: number | null;
+    /**
+     * Page Size
+     */
+    page_size?: number | null;
   };
   url: "/api/v1/system/users";
 };

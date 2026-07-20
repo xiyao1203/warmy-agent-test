@@ -27,6 +27,22 @@ export async function listGates(projectId: string, signal?: AbortSignal) {
   return data.items;
 }
 
+export async function listGatePage(
+  projectId: string,
+  signal?: AbortSignal,
+  page = 1,
+  pageSize = 10,
+) {
+  const { data } = await listGatesApiV1ProjectsProjectIdGatesGet({
+    client: apiClient,
+    path: { project_id: projectId },
+    query: { page, page_size: pageSize },
+    signal,
+    throwOnError: true,
+  });
+  return data;
+}
+
 export async function createGate(
   projectId: string,
   payload: CreateGateRequest,

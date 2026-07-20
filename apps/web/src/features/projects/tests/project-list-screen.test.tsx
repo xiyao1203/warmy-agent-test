@@ -41,6 +41,37 @@ function renderProjectListScreen() {
 }
 
 describe("ProjectListScreen", () => {
+  it("renders server pagination and forwards page changes", () => {
+    const handlers = renderProjectListScreen();
+    const onPageChange = vi.fn();
+    const onPageSizeChange = vi.fn();
+
+    render(
+      <ProjectListScreen
+        onPageChange={onPageChange}
+        onPageSizeChange={onPageSizeChange}
+        page={2}
+        pageSize={10}
+        projects={projects}
+        total={22}
+        totalPages={3}
+        {...handlers}
+      />,
+    );
+
+    expect(screen.getByText("共 22 条")).toBeVisible();
+    expect(screen.getByText("第 2 / 3 页")).toBeVisible();
+    expect(screen.getByTestId("project-summary-total")).toHaveTextContent("22");
+
+    fireEvent.click(screen.getByRole("button", { name: "下一页" }));
+    fireEvent.change(screen.getByRole("combobox", { name: "每页条数" }), {
+      target: { value: "20" },
+    });
+
+    expect(onPageChange).toHaveBeenCalledWith(3);
+    expect(onPageSizeChange).toHaveBeenCalledWith(20);
+  });
+
   it("shows projects and opens the test agent from a row action", () => {
     const handlers = renderProjectListScreen();
     render(<ProjectListScreen projects={projects} {...handlers} />);

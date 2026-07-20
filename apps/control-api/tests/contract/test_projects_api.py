@@ -26,6 +26,7 @@ from agenttest.modules.projects.domain.entities import (
     ProjectId,
     ProjectMemberRole,
 )
+from agenttest.shared.application.pagination import PageRequest, PageResult
 from fastapi.testclient import TestClient
 
 
@@ -44,6 +45,20 @@ class InMemoryProjectRepository:
             for project in self.projects.values()
             if project.member_role(user_id) is not None
         ]
+
+    async def list_page_for_user(
+        self,
+        user_id: UserId | None,
+        page_request: PageRequest,
+    ) -> PageResult[Project]:
+        projects = await self.list_for_user(user_id)
+        start = page_request.offset
+        return PageResult(
+            items=projects[start : start + page_request.page_size],
+            total=len(projects),
+            page=page_request.page,
+            page_size=page_request.page_size,
+        )
 
     async def add(self, project: Project) -> None:
         self.projects[project.project_id] = project
@@ -139,6 +154,28 @@ def test_super_admin_creates_and_lists_all_projects() -> None:
     assert created.status_code == 201
     assert listed.status_code == 200
     assert [item["name"] for item in listed.json()["items"]] == ["Project A"]
+
+
+def test_project_list_supports_numbered_page_mode() -> None:
+    admin = create_user(SystemRole.SUPER_ADMIN, "admin@example.com")
+    repository = InMemoryProjectRepository()
+    for _ in range(12):
+        create_project(repository, creator=admin)
+
+    response = client_for(admin, repository).get(
+        "/api/v1/projects",
+        params={"page": 2, "page_size": 10},
+    )
+
+    assert response.status_code == 200
+    assert len(response.json()["items"]) == 2
+    assert response.json() | {"items": []} == {
+        "items": [],
+        "total": 12,
+        "page": 2,
+        "page_size": 10,
+        "total_pages": 2,
+    }
 
 
 def test_project_api_round_trips_professional_metadata() -> None:

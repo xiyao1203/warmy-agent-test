@@ -2,6 +2,8 @@
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 
+import { usePaginationState } from "@/lib/use-pagination-state";
+
 import {
   createEnvironmentTemplate,
   createEnvironmentVersion,
@@ -13,7 +15,10 @@ import { EnvironmentList } from "./environment-list";
 import { environmentQueries, invalidateEnvironmentList } from "./queries";
 
 export function EnvironmentListScreen({ projectId }: { projectId: string }) {
-  const envQuery = useQuery(environmentQueries.list(projectId));
+  const pagination = usePaginationState();
+  const envQuery = useQuery(
+    environmentQueries.list(projectId, pagination.page, pagination.pageSize),
+  );
   const queryClient = useQueryClient();
 
   if (envQuery.isPending) {
@@ -29,7 +34,7 @@ export function EnvironmentListScreen({ projectId }: { projectId: string }) {
 
   return (
     <EnvironmentList
-      environments={envQuery.data ?? []}
+      environments={envQuery.data.items}
       onCreate={async (payload) => {
         await createEnvironmentTemplate(projectId, payload);
         await refresh();
@@ -66,7 +71,13 @@ export function EnvironmentListScreen({ projectId }: { projectId: string }) {
         await refresh();
         return result;
       }}
+      onPageChange={pagination.setPage}
+      onPageSizeChange={pagination.setPageSize}
+      page={envQuery.data.page ?? pagination.page}
+      pageSize={pagination.pageSize}
       projectId={projectId}
+      total={envQuery.data.total}
+      totalPages={envQuery.data.total_pages}
     />
   );
 }

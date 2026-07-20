@@ -4,6 +4,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 
 import { problemKind } from "@/lib/api/problem";
+import { usePaginationState } from "@/lib/use-pagination-state";
 
 import { createRun } from "./api";
 import { RunCenter } from "./run-center";
@@ -12,7 +13,10 @@ import { invalidateRunList, runQueries } from "./queries";
 export function RunCenterScreen({ projectId }: { projectId: string }) {
   const router = useRouter();
   const queryClient = useQueryClient();
-  const runsQuery = useQuery(runQueries.list(projectId));
+  const pagination = usePaginationState();
+  const runsQuery = useQuery(
+    runQueries.list(projectId, pagination.page, pagination.pageSize),
+  );
   const versionsQuery = useQuery(runQueries.publishedPlanVersions(projectId));
   if (runsQuery.isPending || versionsQuery.isPending) {
     return <RunCenter loading projectId={projectId} />;
@@ -41,9 +45,15 @@ export function RunCenterScreen({ projectId }: { projectId: string }) {
         }
         return run;
       }}
+      onPageChange={pagination.setPage}
+      onPageSizeChange={pagination.setPageSize}
+      page={runsQuery.data.page ?? pagination.page}
+      pageSize={pagination.pageSize}
       planVersions={versionsQuery.data}
       projectId={projectId}
-      runs={runsQuery.data}
+      runs={runsQuery.data.items}
+      total={runsQuery.data.total}
+      totalPages={runsQuery.data.total_pages}
     />
   );
 }

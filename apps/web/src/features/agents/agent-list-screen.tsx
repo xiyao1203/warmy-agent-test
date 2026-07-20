@@ -4,6 +4,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 
 import { problemKind } from "@/lib/api/problem";
+import { usePaginationState } from "@/lib/use-pagination-state";
 
 import { createAgent, deleteAgent } from "./api";
 import { AgentList } from "./agent-list";
@@ -12,7 +13,10 @@ import { agentQueries, invalidateAgentList } from "./queries";
 export function AgentListScreen({ projectId }: { projectId: string }) {
   const router = useRouter();
   const queryClient = useQueryClient();
-  const agentsQuery = useQuery(agentQueries.list(projectId));
+  const pagination = usePaginationState();
+  const agentsQuery = useQuery(
+    agentQueries.list(projectId, pagination.page, pagination.pageSize),
+  );
 
   if (agentsQuery.isPending) {
     return <AgentList loading projectId={projectId} />;
@@ -41,7 +45,13 @@ export function AgentListScreen({ projectId }: { projectId: string }) {
         await deleteAgent(projectId, agentId);
         await invalidateAgentList(queryClient, projectId);
       }}
+      onPageChange={pagination.setPage}
+      onPageSizeChange={pagination.setPageSize}
+      page={agentsQuery.data.page ?? pagination.page}
+      pageSize={pagination.pageSize}
       projectId={projectId}
+      total={agentsQuery.data.total}
+      totalPages={agentsQuery.data.total_pages}
     />
   );
 }

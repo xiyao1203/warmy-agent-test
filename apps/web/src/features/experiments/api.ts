@@ -34,15 +34,20 @@ export async function listExperimentRuns(
   ) as ExperimentRun[];
 }
 
-export async function listExperiments(projectId: string, signal?: AbortSignal) {
+export async function listExperiments(
+  projectId: string,
+  signal?: AbortSignal,
+  page = 1,
+  pageSize = 10,
+) {
   const { data } = await listExperimentsApiV1ProjectsProjectIdExperimentsGet({
     client: apiClient,
     path: { project_id: projectId },
-    query: { limit: 100, offset: 0 },
+    query: { page, page_size: pageSize },
     signal,
     throwOnError: true,
   });
-  return data.items;
+  return data;
 }
 
 export async function createExperiment(

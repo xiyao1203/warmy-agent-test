@@ -5,7 +5,7 @@ from datetime import datetime
 from typing import Protocol
 from uuid import UUID
 
-from fastapi import APIRouter, Header, Request
+from fastapi import APIRouter, Header, Query, Request
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
@@ -20,6 +20,7 @@ from agenttest.modules.reviews.application.service import (
 )
 from agenttest.modules.reviews.domain.entities import ReviewTask
 from agenttest.shared.api.auth_guard import require_actor, require_writer
+from agenttest.shared.api.pagination import resolve_page_request
 from agenttest.shared.application.core_summaries import CoreSummaryReader, ReviewSummaryMetrics
 
 
@@ -52,6 +53,9 @@ class ReviewSummaryResponse(ReviewSummaryMetrics):
 class ReviewListResponse(BaseModel):
     items: list[ReviewSummaryResponse]
     total: int
+    page: int | None = None
+    page_size: int = 50
+    total_pages: int = 0
 
 
 class ActorResolver(Protocol):
@@ -90,17 +94,21 @@ def create_review_router(dependencies: ReviewApiDependencies) -> APIRouter:
         status: str | None = None,
         limit: int = 50,
         offset: int = 0,
+        page: int | None = Query(default=None),
+        page_size: int | None = Query(default=None),
     ):
         actor = await reader(request)
         if isinstance(actor, JSONResponse):
             return actor
         try:
+            page_request = resolve_page_request(page=page, page_size=page_size)
+            effective_limit = page_request.page_size if page_request else limit
             tasks, total = await dependencies.service.list_reviews(
                 actor,
                 project_id,
                 status=status,
-                limit=limit,
-                offset=offset,
+                limit=effective_limit,
+                offset=page_request.offset if page_request else offset,
             )
         except (ProjectNotFoundError, PermissionError) as error:
             return _access_error(error)
@@ -120,6 +128,9 @@ def create_review_router(dependencies: ReviewApiDependencies) -> APIRouter:
                 for task in tasks
             ],
             "total": total,
+            "page": page_request.page if page_request else None,
+            "page_size": effective_limit,
+            "total_pages": (total + effective_limit - 1) // effective_limit if total else 0,
         }
 
     @router.get("/stats")

@@ -7,7 +7,7 @@ from datetime import datetime
 from typing import Protocol
 from uuid import UUID
 
-from fastapi import APIRouter, Header, Request
+from fastapi import APIRouter, Header, Query, Request
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 
@@ -23,6 +23,7 @@ from agenttest.modules.scorers.application.service import (
 )
 from agenttest.modules.scorers.domain.entities import Scorer
 from agenttest.shared.api.auth_guard import require_actor, require_writer
+from agenttest.shared.api.pagination import resolve_page_request
 from agenttest.shared.application.core_summaries import CoreSummaryReader, ScorerSummaryMetrics
 
 
@@ -69,6 +70,9 @@ class ScorerSummaryResponse(ScorerSummaryMetrics):
 class ScorerListResponse(BaseModel):
     items: list[ScorerSummaryResponse]
     total: int
+    page: int | None = None
+    page_size: int = 50
+    total_pages: int = 0
 
 
 class ActorResolver(Protocol):
@@ -87,12 +91,25 @@ def create_scorer_router(dependencies: ScorerApiDependencies) -> APIRouter:
     router = APIRouter(prefix="/projects/{project_id}/scorers", tags=["scorers"])
 
     @router.get("", response_model=ScorerListResponse)
-    async def list_scorers(request: Request, project_id: UUID, limit: int = 50, offset: int = 0):
+    async def list_scorers(
+        request: Request,
+        project_id: UUID,
+        limit: int = 50,
+        offset: int = 0,
+        page: int | None = Query(default=None),
+        page_size: int | None = Query(default=None),
+    ):
         actor = await require_actor(request, dependencies.actor_for, dependencies.settings)
         if isinstance(actor, JSONResponse):
             return actor
         try:
-            page = await dependencies.service.list(actor, project_id, limit=limit, offset=offset)
+            page_request = resolve_page_request(page=page, page_size=page_size)
+            result = await dependencies.service.list(
+                actor,
+                project_id,
+                limit=page_request.page_size if page_request else limit,
+                offset=page_request.offset if page_request else offset,
+            )
         except Exception as error:
             response = _access_error(error)
             if response is not None:
@@ -101,7 +118,7 @@ def create_scorer_router(dependencies: ScorerApiDependencies) -> APIRouter:
         summaries = (
             await dependencies.summaries.scorers(
                 project_id,
-                [item.scorer.scorer_id.value for item in page.items],
+                [item.scorer.scorer_id.value for item in result.items],
             )
             if dependencies.summaries
             else {}
@@ -114,9 +131,17 @@ def create_scorer_router(dependencies: ScorerApiDependencies) -> APIRouter:
                 }
                 if item.scorer.scorer_id.value in summaries
                 else _scorer_to_dict(item.scorer, item.published_version)
-                for item in page.items
+                for item in result.items
             ],
-            "total": page.total,
+            "total": result.total,
+            "page": page_request.page if page_request else None,
+            "page_size": page_request.page_size if page_request else limit,
+            "total_pages": (
+                (result.total + (page_request.page_size if page_request else limit) - 1)
+                // (page_request.page_size if page_request else limit)
+                if result.total
+                else 0
+            ),
         }
 
     @router.post("")

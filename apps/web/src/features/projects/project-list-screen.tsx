@@ -27,6 +27,8 @@ import {
 } from "@/components/ui/dialog";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Input } from "@/components/ui/input";
+import { ListToolbar } from "@/components/ui/list-toolbar";
+import { ResourcePagination } from "@/components/ui/resource-pagination";
 import { ResourceReferenceLink } from "@/components/ui/resource-reference-link";
 import {
   Table,
@@ -35,6 +37,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
+  TableValue,
 } from "@/components/ui/table";
 import {
   TableActions,
@@ -47,6 +50,7 @@ import {
   ProjectEmptyVisual,
   ProjectLoadingMotion,
 } from "@/components/visuals/project-state-visuals";
+import type { PageSize } from "@/lib/pagination";
 
 type ProjectListScreenProps = {
   error?: "service";
@@ -54,11 +58,17 @@ type ProjectListScreenProps = {
   onArchive: (projectId: string) => Promise<unknown>;
   onCreate: (payload: CreateProjectRequest) => Promise<unknown>;
   onOpen: (projectId: string) => void;
+  onPageChange?: (page: number) => void;
+  onPageSizeChange?: (pageSize: PageSize) => void;
   onRename: (
     projectId: string,
     payload: RenameProjectRequest,
   ) => Promise<unknown>;
+  page?: number;
+  pageSize?: PageSize;
   projects: ProjectResponse[];
+  total?: number;
+  totalPages?: number;
 };
 
 type ProjectStatusFilter = "active" | "all" | "archived";
@@ -69,8 +79,14 @@ export function ProjectListScreen({
   onArchive,
   onCreate,
   onOpen,
+  onPageChange = () => undefined,
+  onPageSizeChange = () => undefined,
   onRename,
+  page = 1,
+  pageSize = 10,
   projects,
+  total = projects.length,
+  totalPages = projects.length > 0 ? 1 : 0,
 }: ProjectListScreenProps) {
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState<ProjectStatusFilter>("all");
@@ -155,19 +171,16 @@ export function ProjectListScreen({
       </header>
 
       <section className="grid grid-cols-3 border-b border-[var(--hairline)] py-4 text-sm max-[760px]:grid-cols-1 max-[760px]:gap-4">
-        <Summary id="total" label="全部项目" value={projects.length} />
-        <Summary id="active" label="运行中" value={activeCount} />
+        <Summary id="total" label="全部项目" value={total} />
+        <Summary id="active" label="当前页运行中" value={activeCount} />
         <Summary
           id="archived"
-          label="已归档"
+          label="当前页已归档"
           value={projects.length - activeCount}
         />
       </section>
 
-      <div
-        className="flex items-center gap-3 py-4 max-[760px]:flex-col max-[760px]:items-stretch"
-        data-testid="project-filter-bar"
-      >
+      <ListToolbar className="border-t-0" data-testid="project-filter-bar">
         <label className="relative min-w-0 flex-1 max-[760px]:w-full">
           <span className="sr-only">搜索项目</span>
           <Search
@@ -193,7 +206,7 @@ export function ProjectListScreen({
           <option value="active">运行中</option>
           <option value="archived">已归档</option>
         </DropdownSelect>
-      </div>
+      </ListToolbar>
 
       {formError ? (
         <p className="mb-3 text-sm text-[var(--danger)]" role="alert">
@@ -216,13 +229,15 @@ export function ProjectListScreen({
               title="没有匹配的项目"
             />
           ) : (
-            <Table className="w-full table-fixed max-[640px]:block">
+            <Table className="w-full max-[640px]:block">
               <TableHeader className="bg-[var(--canvas-soft)] max-[640px]:hidden">
                 <TableRow>
-                  <TableHead className="w-[26%]">项目</TableHead>
-                  <TableHead className="w-[12%]">状态</TableHead>
-                  <TableHead className="w-[31%]">资产概览</TableHead>
-                  <TableHead className="w-[19%]">最近运行</TableHead>
+                  <TableHead className="min-w-60">项目</TableHead>
+                  <TableHead className="whitespace-nowrap">状态</TableHead>
+                  <TableHead className="min-w-52">资产概览</TableHead>
+                  <TableHead className="min-w-44 whitespace-nowrap">
+                    最近运行
+                  </TableHead>
                   <TableHead className={tableActionHeadClass}>操作</TableHead>
                 </TableRow>
               </TableHeader>
@@ -237,7 +252,7 @@ export function ProjectListScreen({
                       key={project.id}
                     >
                       <TableCell className="max-[640px]:col-span-2 max-[640px]:block max-[640px]:h-auto max-[640px]:p-0 max-[640px]:pb-1">
-                        <div className="mx-auto flex w-fit max-w-full min-w-0 items-center gap-3 text-left max-[640px]:mx-0 max-[640px]:w-full">
+                        <div className="mx-auto flex w-full max-w-80 min-w-0 items-center gap-3 text-left max-[640px]:mx-0 max-[640px]:max-w-full">
                           <span className="grid size-8 shrink-0 place-items-center rounded-[var(--radius-md)] bg-[var(--canvas-soft)] text-[var(--primary)]">
                             <FolderKanban
                               aria-hidden="true"
@@ -275,7 +290,7 @@ export function ProjectListScreen({
                         <span className="hidden self-center text-left max-[640px]:block">
                           资产概览
                         </span>
-                        <div className="text-left">
+                        <TableValue>
                           <p>
                             成员 {project.member_count ?? 0} · Agent{" "}
                             {project.agent_count ?? 0} · 用例集{" "}
@@ -287,13 +302,13 @@ export function ProjectListScreen({
                             {project.active_environment_count ?? 0}
                           </p>
                           <p>待审核 {project.open_review_count ?? 0}</p>
-                        </div>
+                        </TableValue>
                       </TableCell>
                       <TableCell className="text-left text-xs max-[640px]:contents">
                         <span className="hidden self-center text-left text-[var(--muted)] max-[640px]:block">
                           最近运行
                         </span>
-                        <div className="space-y-1">
+                        <TableValue className="space-y-1">
                           <ResourceReferenceLink reference={project.last_run} />
                           <p className="text-[var(--muted)]">
                             {project.last_run_at
@@ -302,7 +317,7 @@ export function ProjectListScreen({
                                 )
                               : "尚未执行"}
                           </p>
-                        </div>
+                        </TableValue>
                       </TableCell>
                       <TableCell
                         className={`${tableActionCellClass} max-[640px]:contents`}
@@ -312,22 +327,25 @@ export function ProjectListScreen({
                         </span>
                         <TableActions label={project.name}>
                           <TableActionButton
+                            accessibleLabel={`进入${project.name} 测试 Agent`}
                             disabled={project.archived}
-                            label={`进入${project.name} 测试 Agent`}
+                            label="进入"
                             onClick={() => onOpen(project.id)}
                           >
                             <PlayCircle aria-hidden="true" />
                           </TableActionButton>
                           <TableActionButton
+                            accessibleLabel={`编辑${project.name}`}
                             disabled={project.archived}
-                            label={`编辑${project.name}`}
+                            label="编辑"
                             onClick={() => startRename(project)}
                           >
                             <Edit3 aria-hidden="true" />
                           </TableActionButton>
                           <TableActionButton
+                            accessibleLabel={`归档${project.name}`}
                             disabled={project.archived || archivePending}
-                            label={`归档${project.name}`}
+                            label="归档"
                             onClick={() => submitArchive(project)}
                             tone="danger"
                           >
@@ -341,6 +359,14 @@ export function ProjectListScreen({
               </TableBody>
             </Table>
           )}
+          <ResourcePagination
+            onPageChange={onPageChange}
+            onPageSizeChange={onPageSizeChange}
+            page={page}
+            pageSize={pageSize}
+            total={total}
+            totalPages={totalPages}
+          />
         </section>
       ) : null}
       <Dialog

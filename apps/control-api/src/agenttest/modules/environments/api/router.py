@@ -39,8 +39,10 @@ from agenttest.modules.environments.domain.entities import (
 )
 from agenttest.modules.identity.public import InvalidSessionError, User
 from agenttest.modules.projects.public import ProjectId, ProjectNotFoundError
+from agenttest.shared.api.pagination import resolve_page_request
 from agenttest.shared.api.problem_details import ProblemDetails
 from agenttest.shared.application.core_summaries import CoreSummaryReader
+from agenttest.shared.application.pagination import PageRequest, PageResult
 from agenttest.shared.application.uow import UnitOfWorkFactory, null_uow_factory
 
 CSRF_COOKIE_NAME = "agenttest_csrf"
@@ -63,6 +65,15 @@ class ListTemplatesExecutor(Protocol):
         limit: int = 50,
         cursor: str | None = None,
     ) -> tuple[list[EnvironmentTemplate], str | None]: ...
+
+    async def count(self, actor: User, project_id: ProjectId) -> int: ...
+
+    async def execute_page(
+        self,
+        actor: User,
+        project_id: ProjectId,
+        page_request: PageRequest,
+    ) -> PageResult[EnvironmentTemplate]: ...
 
 
 class GetTemplateExecutor(Protocol):
@@ -210,17 +221,33 @@ def create_environment_router(
         project_id: UUID,
         limit: int = Query(default=50, ge=1, le=100),
         cursor: str | None = None,
+        page: int | None = None,
+        page_size: int | None = None,
     ) -> EnvironmentTemplateListResponse | JSONResponse:
         actor = await actor_for(request)
         if isinstance(actor, JSONResponse):
             return actor
+        project = ProjectId(project_id)
+        page_request = resolve_page_request(page=page, page_size=page_size)
         try:
-            items, next_cursor = await dependencies.list_templates.execute(
-                actor,
-                ProjectId(project_id),
-                limit=limit,
-                cursor=cursor,
-            )
+            if page_request is not None:
+                page_result = await dependencies.list_templates.execute_page(
+                    actor, project, page_request
+                )
+                items = page_result.items
+                next_cursor = None
+                total = page_result.total
+                response_page = page_result.page
+                response_page_size = page_result.page_size
+                total_pages = page_result.total_pages
+            else:
+                items, next_cursor = await dependencies.list_templates.execute(
+                    actor, project, limit=limit, cursor=cursor
+                )
+                total = await dependencies.list_templates.count(actor, project)
+                response_page = None
+                response_page_size = limit
+                total_pages = (total + limit - 1) // limit if total else 0
         except ProjectNotFoundError:
             return asset_not_found()
         summaries = (
@@ -240,6 +267,10 @@ def create_environment_router(
                 for item in items
             ],
             next_cursor=next_cursor,
+            total=total,
+            page=response_page,
+            page_size=response_page_size,
+            total_pages=total_pages,
         )
 
     @router.post("", response_model=EnvironmentTemplateResponse, status_code=201)

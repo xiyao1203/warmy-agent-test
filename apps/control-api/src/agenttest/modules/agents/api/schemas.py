@@ -107,6 +107,10 @@ class AgentResponse(AgentSummaryMetrics):
 class AgentListResponse(BaseModel):
     items: list[AgentResponse]
     next_cursor: str | None = None
+    total: int
+    page: int | None
+    page_size: int
+    total_pages: int
 
 
 class AgentVersionResponse(BaseModel):

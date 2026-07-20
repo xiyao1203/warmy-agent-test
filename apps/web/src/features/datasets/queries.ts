@@ -1,4 +1,8 @@
-import { queryOptions, type QueryClient } from "@tanstack/react-query";
+import {
+  keepPreviousData,
+  queryOptions,
+  type QueryClient,
+} from "@tanstack/react-query";
 
 import {
   getDataset,
@@ -9,10 +13,11 @@ import {
 
 export const datasetQueries = {
   all: ["datasets"] as const,
-  list(projectId: string) {
+  list(projectId: string, page = 1, pageSize = 10) {
     return queryOptions({
-      queryFn: ({ signal }) => listDatasets(projectId, signal),
-      queryKey: ["datasets", projectId] as const,
+      queryFn: ({ signal }) => listDatasets(projectId, signal, page, pageSize),
+      queryKey: ["datasets", projectId, page, pageSize] as const,
+      placeholderData: keepPreviousData,
     });
   },
   detail(projectId: string, datasetId: string) {
@@ -46,6 +51,6 @@ export const datasetQueries = {
 
 export function invalidateDatasetList(client: QueryClient, projectId: string) {
   return client.invalidateQueries({
-    queryKey: datasetQueries.list(projectId).queryKey,
+    queryKey: ["datasets", projectId],
   });
 }

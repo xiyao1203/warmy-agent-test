@@ -4,7 +4,7 @@ from datetime import UTC, datetime
 from math import isfinite
 from uuid import UUID, uuid4
 
-from sqlalchemy import select, update
+from sqlalchemy import func, select, update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
@@ -90,16 +90,28 @@ class SqlAlchemyRunRepository:
         project_id: ProjectId,
         *,
         limit: int = 50,
+        offset: int = 0,
     ) -> list[Run]:
         statement = (
             select(RunModel)
             .where(RunModel.project_id == project_id.value)
-            .order_by(RunModel.created_at.desc())
+            .order_by(RunModel.created_at.desc(), RunModel.id.desc())
+            .offset(offset)
             .limit(limit)
         )
         async with session_scope(self._session_factory) as session:
             models = list((await session.scalars(statement)).all())
         return [_to_run(model) for model in models]
+
+    async def count_by_project(self, project_id: ProjectId) -> int:
+        statement = (
+            select(func.count())
+            .select_from(RunModel)
+            .where(RunModel.project_id == project_id.value)
+        )
+        async with session_scope(self._session_factory) as session:
+            total = await session.scalar(statement)
+        return int(total or 0)
 
     async def add(self, run: Run, cases: list[RunCase]) -> None:
         try:

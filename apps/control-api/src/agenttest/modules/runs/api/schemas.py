@@ -64,6 +64,10 @@ class RunResponse(RunSummaryMetrics):
 
 class RunListResponse(BaseModel):
     items: list[RunResponse]
+    total: int
+    page: int | None
+    page_size: int
+    total_pages: int
 
 
 class RunCaseResponse(BaseModel):

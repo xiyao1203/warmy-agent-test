@@ -28,6 +28,10 @@ test("confirms deletion in a ChatGPT-style modal", () => {
     />,
   );
 
+  expect(
+    document.querySelectorAll('[role="tooltip"][data-tooltip="删除"]'),
+  ).toHaveLength(2);
+
   fireEvent.click(screen.getByRole("button", { name: "删除 第一条会话" }));
 
   expect(screen.getByRole("dialog")).toBeVisible();

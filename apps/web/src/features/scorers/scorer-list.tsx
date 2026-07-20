@@ -17,6 +17,7 @@ import { useCallback, useEffect, useState } from "react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { ResourcePagination } from "@/components/ui/resource-pagination";
 import { ResourceReferenceLink } from "@/components/ui/resource-reference-link";
 import {
   Dialog,
@@ -26,8 +27,11 @@ import {
 } from "@/components/ui/dialog";
 
 import { Skeleton } from "@/components/uiverse";
+import { Tooltip } from "@/components/uiverse";
+import { normalizeResourcePage } from "@/lib/pagination";
+import { usePaginationState } from "@/lib/use-pagination-state";
 import type { ScorerItem } from "./api";
-import { deleteScorer, listScorers, updateScorer } from "./api";
+import { deleteScorer, listScorerPage, updateScorer } from "./api";
 import { ScorerEditorDialog } from "./scorer-editor";
 
 const TYPE_LABELS: Record<string, string> = {
@@ -37,7 +41,10 @@ const TYPE_LABELS: Record<string, string> = {
 };
 
 export function ScorerList({ projectId }: { projectId: string }) {
+  const pagination = usePaginationState();
   const [scorers, setScorers] = useState<ScorerItem[]>([]);
+  const [total, setTotal] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [editorOpen, setEditorOpen] = useState(false);
@@ -48,19 +55,45 @@ export function ScorerList({ projectId }: { projectId: string }) {
   const reload = useCallback(async () => {
     setLoading(true);
     try {
-      setScorers(await listScorers(projectId));
+      const response = await listScorerPage(
+        projectId,
+        undefined,
+        pagination.page,
+        pagination.pageSize,
+      );
+      const page = normalizeResourcePage(
+        response,
+        pagination.page,
+        pagination.pageSize,
+      );
+      setScorers(page.items);
+      setTotal(page.total);
+      setTotalPages(page.total_pages);
     } catch {
       setError("加载评分器列表失败");
     } finally {
       setLoading(false);
     }
-  }, [projectId]);
+  }, [pagination.page, pagination.pageSize, projectId]);
 
   useEffect(() => {
     let active = true;
-    void listScorers(projectId)
-      .then((items) => {
-        if (active) setScorers(items);
+    void listScorerPage(
+      projectId,
+      undefined,
+      pagination.page,
+      pagination.pageSize,
+    )
+      .then((response) => {
+        if (!active) return;
+        const page = normalizeResourcePage(
+          response,
+          pagination.page,
+          pagination.pageSize,
+        );
+        setScorers(page.items);
+        setTotal(page.total);
+        setTotalPages(page.total_pages);
       })
       .catch(() => {
         if (active) setError("加载评分器列表失败");
@@ -71,7 +104,7 @@ export function ScorerList({ projectId }: { projectId: string }) {
     return () => {
       active = false;
     };
-  }, [projectId]);
+  }, [pagination.page, pagination.pageSize, projectId]);
 
   async function handleToggle(item: ScorerItem) {
     await updateScorer(projectId, item.id, { enabled: !item.enabled });
@@ -227,48 +260,68 @@ export function ScorerList({ projectId }: { projectId: string }) {
                     配置计划
                   </Link>
                 </Button>
-                <Button
-                  aria-label={s.enabled ? `禁用${s.name}` : `启用${s.name}`}
-                  onClick={() => handleToggle(s)}
-                  variant="ghost"
-                >
-                  {s.enabled ? (
-                    <ToggleRight
+                <Tooltip content={s.enabled ? "禁用" : "启用"} side="top">
+                  <Button
+                    aria-label={s.enabled ? `禁用${s.name}` : `启用${s.name}`}
+                    className="size-8 shrink-0 px-0"
+                    onClick={() => handleToggle(s)}
+                    variant="ghost"
+                  >
+                    {s.enabled ? (
+                      <ToggleRight
+                        aria-hidden="true"
+                        className="size-4 text-[var(--success)]"
+                      />
+                    ) : (
+                      <ToggleLeft
+                        aria-hidden="true"
+                        className="size-4 text-[var(--muted)]"
+                      />
+                    )}
+                  </Button>
+                </Tooltip>
+                <Tooltip content="设置" side="top">
+                  <Button
+                    aria-label={`设置${s.name}`}
+                    className="size-8 shrink-0 px-0"
+                    onClick={() => {
+                      setEditItem(s);
+                      setEditorOpen(true);
+                    }}
+                    variant="ghost"
+                  >
+                    <Pencil aria-hidden="true" className="size-4" />
+                  </Button>
+                </Tooltip>
+                <Tooltip content="删除" side="top">
+                  <Button
+                    aria-label={`删除${s.name}`}
+                    className="size-8 shrink-0 px-0"
+                    onClick={() => setDeleteTarget(s)}
+                    variant="ghost"
+                  >
+                    <Trash2
                       aria-hidden="true"
-                      className="size-4 text-[var(--success)]"
+                      className="size-4 text-[var(--danger)]"
                     />
-                  ) : (
-                    <ToggleLeft
-                      aria-hidden="true"
-                      className="size-4 text-[var(--muted)]"
-                    />
-                  )}
-                </Button>
-                <Button
-                  aria-label={`设置${s.name}`}
-                  onClick={() => {
-                    setEditItem(s);
-                    setEditorOpen(true);
-                  }}
-                  variant="ghost"
-                >
-                  <Pencil aria-hidden="true" className="size-4" />
-                </Button>
-                <Button
-                  aria-label={`删除${s.name}`}
-                  onClick={() => setDeleteTarget(s)}
-                  variant="ghost"
-                >
-                  <Trash2
-                    aria-hidden="true"
-                    className="size-4 text-[var(--danger)]"
-                  />
-                </Button>
+                  </Button>
+                </Tooltip>
               </div>
             </li>
           ))}
         </ul>
       )}
+
+      <div className="mt-4 overflow-hidden rounded-[var(--radius-lg)] border border-[var(--hairline)] bg-[var(--surface)]">
+        <ResourcePagination
+          onPageChange={pagination.setPage}
+          onPageSizeChange={pagination.setPageSize}
+          page={pagination.page}
+          pageSize={pagination.pageSize}
+          total={total}
+          totalPages={totalPages}
+        />
+      </div>
 
       <ScorerEditorDialog
         onSaved={reload}

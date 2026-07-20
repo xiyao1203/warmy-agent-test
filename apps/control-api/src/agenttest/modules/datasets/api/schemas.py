@@ -203,6 +203,10 @@ class DatasetResponse(DatasetSummaryMetrics):
 class DatasetListResponse(BaseModel):
     items: list[DatasetResponse]
     next_cursor: str | None = None
+    total: int
+    page: int | None
+    page_size: int
+    total_pages: int
 
 
 class DatasetVersionResponse(BaseModel):

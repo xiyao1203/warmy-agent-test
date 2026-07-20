@@ -10,6 +10,7 @@ const api = vi.hoisted(() => ({
   evaluateGate: vi.fn(),
   listGateRuns: vi.fn(),
   listGates: vi.fn(),
+  listGatePage: vi.fn(),
 }));
 
 vi.mock("../api", () => api);
@@ -52,10 +53,12 @@ describe("GateList", () => {
     api.evaluateGate.mockReset();
     api.listGateRuns.mockReset();
     api.listGates.mockReset();
+    api.listGatePage.mockReset();
   });
 
   it("shows gate evidence links and evaluates a real run", async () => {
     api.listGates.mockResolvedValue([gate]);
+    api.listGatePage.mockResolvedValue([gate]);
     api.listGateRuns.mockResolvedValue([run]);
     api.evaluateGate.mockResolvedValue({
       gate_id: gate.id,
@@ -94,6 +97,9 @@ describe("GateList", () => {
       "href",
       "/projects/project-1/experiments",
     );
+    expect(
+      document.querySelector('[role="tooltip"][data-tooltip="删除"]'),
+    ).toBeInTheDocument();
 
     fireEvent.change(screen.getByLabelText("选择执行记录"), {
       target: { value: "run-1" },
@@ -110,6 +116,7 @@ describe("GateList", () => {
 
   it("guides empty gates to plans and runs", async () => {
     api.listGates.mockResolvedValue([]);
+    api.listGatePage.mockResolvedValue([]);
     api.listGateRuns.mockResolvedValue([]);
 
     render(<GateList projectId="project-1" />);

@@ -35,8 +35,10 @@ from agenttest.modules.projects.domain.policies import (
     ProjectAccessDeniedError,
     ProjectNotFoundError,
 )
+from agenttest.shared.api.pagination import resolve_page_request
 from agenttest.shared.api.problem_details import ProblemDetails
 from agenttest.shared.application.core_summaries import CoreSummaryReader
+from agenttest.shared.application.pagination import PageRequest, PageResult
 from agenttest.shared.application.uow import UnitOfWorkFactory, null_uow_factory
 
 CSRF_COOKIE_NAME = "agenttest_csrf"
@@ -52,6 +54,12 @@ class CsrfExecutor(Protocol):
 
 class ListProjectsExecutor(Protocol):
     async def execute(self, actor: User) -> list[Project]: ...
+
+    async def execute_page(
+        self,
+        actor: User,
+        page_request: PageRequest,
+    ) -> PageResult[Project]: ...
 
 
 class GetProjectExecutor(Protocol):
@@ -133,11 +141,28 @@ def create_project_router(
         return actor
 
     @router.get("", response_model=ProjectListResponse)
-    async def list_projects(request: Request) -> ProjectListResponse | JSONResponse:
+    async def list_projects(
+        request: Request,
+        page: int | None = None,
+        page_size: int | None = None,
+    ) -> ProjectListResponse | JSONResponse:
         actor = await actor_for(request)
         if isinstance(actor, JSONResponse):
             return actor
-        projects = await dependencies.list_projects.execute(actor)
+        page_request = resolve_page_request(page=page, page_size=page_size)
+        if page_request is None:
+            projects = await dependencies.list_projects.execute(actor)
+            total = len(projects)
+            response_page = None
+            response_page_size = total or 10
+            total_pages = 1 if total else 0
+        else:
+            result = await dependencies.list_projects.execute_page(actor, page_request)
+            projects = result.items
+            total = result.total
+            response_page = result.page
+            response_page_size = result.page_size
+            total_pages = result.total_pages
         summaries = (
             await dependencies.summaries.projects(
                 [project.project_id.value for project in projects]
@@ -152,7 +177,11 @@ def create_project_router(
                     summaries.get(project.project_id.value),
                 )
                 for project in projects
-            ]
+            ],
+            total=total,
+            page=response_page,
+            page_size=response_page_size,
+            total_pages=total_pages,
         )
 
     @router.post("", response_model=ProjectResponse, status_code=201)
