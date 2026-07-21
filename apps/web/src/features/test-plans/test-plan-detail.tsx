@@ -88,7 +88,7 @@ export function TestPlanDetail({
       </Link>
       <header className="mt-4 flex items-start justify-between gap-4 border-b border-[var(--hairline)] pb-5">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">{plan.name}</h1>
+          <h1 className="text-page-title">{plan.name}</h1>
           <p className="mt-2 text-sm text-[var(--muted)]">
             {plan.description || "暂无描述"}
           </p>

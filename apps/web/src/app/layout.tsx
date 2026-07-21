@@ -1,9 +1,29 @@
 import type { Metadata } from "next";
+import { Geist, Geist_Mono, Noto_Sans_SC } from "next/font/google";
 import type { ReactNode } from "react";
 
 import { QueryProvider } from "@/lib/query/provider";
 
 import "./globals.css";
+
+const geist = Geist({
+  display: "swap",
+  subsets: ["latin"],
+  variable: "--font-geist",
+});
+
+const geistMono = Geist_Mono({
+  display: "swap",
+  subsets: ["latin"],
+  variable: "--font-geist-mono",
+});
+
+const notoSansSc = Noto_Sans_SC({
+  display: "swap",
+  subsets: ["latin"],
+  variable: "--font-noto-sans-sc",
+  weight: ["400", "500", "600"],
+});
 
 export const metadata: Metadata = {
   title: "Warmy Agent Test",
@@ -14,7 +34,11 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: ReactNode }>) {
   return (
-    <html lang="zh-CN" suppressHydrationWarning>
+    <html
+      className={`${geist.variable} ${geistMono.variable} ${notoSansSc.variable}`}
+      lang="zh-CN"
+      suppressHydrationWarning
+    >
       <head>
         <script
           dangerouslySetInnerHTML={{

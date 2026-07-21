@@ -116,7 +116,7 @@ export function MappingsSection({
       <label className="block text-sm font-medium">
         请求模板（JSON，支持 {"{{ input }}"} 占位）
         <textarea
-          className="mt-1.5 min-h-32 w-full rounded border border-[var(--hairline)] bg-[var(--surface)] p-3 font-mono text-xs"
+          className="text-code mt-1.5 min-h-32 w-full rounded border border-[var(--hairline)] bg-[var(--surface)] p-3"
           onChange={(event) => onRequestTemplateChange(event.target.value)}
           value={requestTemplate}
         />

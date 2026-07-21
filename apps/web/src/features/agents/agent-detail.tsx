@@ -152,9 +152,7 @@ export function AgentDetail({
       {/* ── 顶部固定区 ─────────────────────────────────────────────────── */}
       <header className="mt-4 flex items-start justify-between gap-4 border-b border-[var(--hairline)] pb-5">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">
-            {agent.name}
-          </h1>
+          <h1 className="text-page-title">{agent.name}</h1>
           <p className="mt-2 text-sm text-[var(--muted)]">
             {agent.description || "暂无描述"}
           </p>

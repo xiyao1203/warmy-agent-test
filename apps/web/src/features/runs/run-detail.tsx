@@ -69,9 +69,7 @@ export function RunDetail({
       <header className="flex flex-wrap items-start justify-between gap-4 border-b border-[var(--hairline)] pb-5">
         <div>
           <p className="text-xs font-medium text-[var(--body)]">运行详情</p>
-          <h1 className="text-2xl font-semibold tracking-tight">
-            Run {run.id.slice(0, 8)}
-          </h1>
+          <h1 className="text-page-title">Run {run.id.slice(0, 8)}</h1>
           <p className="mt-2 text-sm text-[var(--muted)]">
             {run.passed_cases} 通过 · {run.failed_cases} 失败 ·{" "}
             {run.error_cases} 错误 · {run.cancelled_cases} 已取消
@@ -257,7 +255,7 @@ export function RunDetail({
                   </div>
                 ) : null}
                 {item.output ? (
-                  <pre className="mt-4 overflow-auto rounded-[var(--radius-md)] bg-[var(--canvas-soft)] p-3 text-xs">
+                  <pre className="text-code mt-4 overflow-auto rounded-[var(--radius-md)] bg-[var(--canvas-soft)] p-3">
                     {JSON.stringify(item.output, null, 2)}
                   </pre>
                 ) : null}
@@ -279,7 +277,7 @@ export function RunDetail({
                             </span>
                             <Badge>{String(span.status ?? "recorded")}</Badge>
                           </div>
-                          <pre className="mt-2 overflow-auto text-[var(--muted)]">
+                          <pre className="text-code mt-2 overflow-auto text-[var(--muted)]">
                             {JSON.stringify(span, null, 2)}
                           </pre>
                         </div>

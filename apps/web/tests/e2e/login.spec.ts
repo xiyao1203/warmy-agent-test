@@ -152,6 +152,73 @@ test.describe("项目导航", () => {
   });
 });
 
+test("landing typography preserves display hierarchy across themes", async ({
+  page,
+}, testInfo) => {
+  await page.setViewportSize({ height: 900, width: 1440 });
+  await page.addInitScript(() => localStorage.setItem("theme", "light"));
+  await mockLoggedOutLanding(page);
+  await page.goto("/login");
+
+  const title = page.getByRole("heading", {
+    name: "Warmy Agent Test",
+    level: 1,
+  });
+  const headerEntry = page.getByRole("button", {
+    exact: true,
+    name: "登录",
+  });
+  const heroEntry = page.getByRole("button", { name: "登录并开始" });
+  const evidenceEntry = page.getByRole("link", { name: "查看运行证据" });
+
+  await expect(page.locator("html")).toHaveCSS("font-family", /Geist/i);
+  await expect(title).toHaveCSS("font-size", "58px");
+  await expect(title).toHaveCSS("font-weight", "600");
+  await expect(title).toHaveCSS("color", "rgb(16, 24, 40)");
+  await expect(headerEntry).toHaveCSS("font-size", "14px");
+  await expect(headerEntry).toHaveCSS("font-weight", "600");
+  await expect(heroEntry).toHaveCSS("font-size", "14px");
+  await expect(heroEntry).toHaveCSS("font-weight", "600");
+  await expect(evidenceEntry).toHaveCSS("font-size", "14px");
+  await expect(evidenceEntry).toHaveCSS("font-weight", "600");
+  await page.screenshot({
+    fullPage: true,
+    path: testInfo.outputPath("landing-typography-light-1440.png"),
+  });
+
+  await page.getByRole("button", { name: "切换至深色" }).click();
+  await expect(title).toHaveCSS("color", "rgb(245, 247, 250)");
+  await page.screenshot({
+    fullPage: true,
+    path: testInfo.outputPath("landing-typography-dark-1440.png"),
+  });
+
+  await page.setViewportSize({ height: 844, width: 390 });
+  await expect(title).toHaveCSS("font-size", "42px");
+  await assertNoHorizontalOverflow(page);
+  await page.screenshot({
+    fullPage: true,
+    path: testInfo.outputPath("landing-typography-dark-390.png"),
+  });
+  await page.getByRole("button", { name: "切换至浅色" }).click();
+  await expect(page.locator("html")).toHaveClass(/light/);
+  await expect(evidenceEntry).toHaveCSS(
+    "background-color",
+    "rgb(255, 255, 255)",
+  );
+  await expect(
+    page
+      .getByRole("region", { name: "真实运行证据" })
+      .locator(".precision-metric-card")
+      .first(),
+  ).toHaveCSS("background-color", "rgb(255, 255, 255)");
+  await assertNoHorizontalOverflow(page);
+  await page.screenshot({
+    fullPage: true,
+    path: testInfo.outputPath("landing-typography-light-390.png"),
+  });
+});
+
 for (const width of [390, 1280, 1440, 1920]) {
   test(`落地页在 ${width}px 保持紧凑且无页面溢出`, async ({
     page,

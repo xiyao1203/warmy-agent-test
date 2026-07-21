@@ -498,6 +498,87 @@ for (const width of [1280, 1440, 1920]) {
   });
 }
 
+test("developer typography stays consistent across themes and mobile", async ({
+  page,
+}, testInfo) => {
+  await page.setViewportSize({ height: 900, width: 1440 });
+  await page.addInitScript(() => localStorage.setItem("theme", "light"));
+  await mockProjectList(page);
+  await page.goto("/projects");
+
+  const title = page.getByRole("heading", { name: "项目管理", level: 1 });
+  const description = page.getByText(
+    "管理测试资产所在项目，进入项目后默认打开测试 Agent。",
+  );
+  const createButton = page.getByRole("button", { name: "新建项目" });
+  const firstHeader = page.getByRole("columnheader", { name: "项目" });
+  const firstCell = page.getByRole("cell").first();
+
+  await expect(page.locator("html")).toHaveCSS("font-family", /Geist/i);
+  await expect(title).toHaveCSS("font-size", "26px");
+  await expect(title).toHaveCSS("font-weight", "600");
+  await expect(title).toHaveCSS("line-height", "36px");
+  await expect(title).toHaveCSS("letter-spacing", "-0.52px");
+  await expect(title).toHaveCSS("color", "rgb(16, 24, 40)");
+  await expect(description).toHaveCSS("font-size", "14px");
+  await expect(description).toHaveCSS("line-height", "22px");
+  await expect(description).toHaveCSS("color", "rgb(71, 84, 103)");
+  await expect(createButton).toHaveCSS("font-size", "14px");
+  await expect(createButton).toHaveCSS("font-weight", "600");
+  await expect(firstHeader).toHaveCSS("font-size", "13px");
+  await expect(firstHeader).toHaveCSS("font-weight", "500");
+  await expect(firstHeader).toHaveCSS("line-height", "20px");
+  await expect(firstCell).toHaveCSS("font-size", "14px");
+  await expect(firstCell).toHaveCSS("font-weight", "400");
+  await expect(firstCell).toHaveCSS("line-height", "22px");
+
+  const navigationLabel = page.getByText("工作台", { exact: true });
+  const navigationLink = page.getByRole("link", { name: "项目列表" });
+  await expect(navigationLabel).toHaveCSS("font-size", "12px");
+  await expect(navigationLabel).toHaveCSS("font-weight", "500");
+  await expect(navigationLink).toHaveCSS("font-size", "14px");
+  await expect(navigationLink).toHaveCSS("font-weight", "600");
+  await page.screenshot({
+    fullPage: true,
+    path: testInfo.outputPath("developer-typography-light-1440.png"),
+  });
+
+  await page.getByRole("button", { name: "切换至深色" }).click();
+  await expect(page.locator("html")).toHaveClass(/dark/);
+  await expect(title).toHaveCSS("color", "rgb(245, 247, 250)");
+  await expect(description).toHaveCSS("color", "rgb(152, 162, 179)");
+  await page.screenshot({
+    fullPage: true,
+    path: testInfo.outputPath("developer-typography-dark-1440.png"),
+  });
+
+  await page.setViewportSize({ height: 844, width: 390 });
+  await assertNoHorizontalOverflow(page);
+  const [titleBox, buttonBox] = await Promise.all([
+    title.boundingBox(),
+    createButton.boundingBox(),
+  ]);
+  expect(titleBox).not.toBeNull();
+  expect(buttonBox).not.toBeNull();
+  expect(titleBox!.x + titleBox!.width).toBeLessThanOrEqual(390);
+  expect(buttonBox!.x + buttonBox!.width).toBeLessThanOrEqual(390);
+  await page.screenshot({
+    fullPage: true,
+    path: testInfo.outputPath("developer-typography-dark-390.png"),
+  });
+  await page.getByRole("button", { name: "切换至浅色" }).click();
+  await expect(page.locator("html")).toHaveClass(/light/);
+  await expect(page.getByRole("button", { name: "全部状态" })).toHaveCSS(
+    "background-color",
+    "rgb(255, 255, 255)",
+  );
+  await assertNoHorizontalOverflow(page);
+  await page.screenshot({
+    fullPage: true,
+    path: testInfo.outputPath("developer-typography-light-390.png"),
+  });
+});
+
 const adaptiveResourcePages = [
   {
     actionName: "管理客服测试 Agent",
@@ -605,6 +686,21 @@ test("workspace shell supports grouped navigation, command search, and two-state
     "background-color",
     "rgb(31, 31, 34)",
   );
+  await page.getByRole("button", { name: "全局搜索" }).click();
+  const darkCommand = page.getByRole("dialog", { name: "全局搜索" });
+  const darkCommandSearch = darkCommand.getByRole("searchbox", {
+    name: "全局搜索",
+  });
+  await expect(darkCommandSearch).toHaveCSS("border-top-width", "0px");
+  await expect(darkCommandSearch).toHaveCSS("border-right-width", "0px");
+  await expect(darkCommandSearch).toHaveCSS("border-bottom-width", "0px");
+  await expect(darkCommandSearch).toHaveCSS("border-left-width", "0px");
+  await expect(darkCommandSearch).toHaveCSS("outline-style", "none");
+  await expect(darkCommandSearch).toHaveCSS("box-shadow", "none");
+  await darkCommand.screenshot({
+    path: testInfo.outputPath("command-search-dark-borderless.png"),
+  });
+  await page.keyboard.press("Escape");
   await page.screenshot({
     fullPage: true,
     path: testInfo.outputPath("workspace-shell-dark-1440.png"),
@@ -656,13 +752,52 @@ test("chromatic sidebar keeps active color and collapsed hover text", async ({
     "data-collapsed",
     "true",
   );
+  await expect(page.locator("aside.app-sidebar")).toHaveCSS("width", "56px");
   await datasetLink.hover();
-  await expect(
-    page.locator('[role="tooltip"][data-tooltip="测试用例"]'),
-  ).toBeVisible();
-  await page.locator("aside.app-sidebar").screenshot({
+  const navigationTooltip = page.locator(
+    '[role="tooltip"][data-tooltip="测试用例"]',
+  );
+  await expect(navigationTooltip).toBeVisible();
+  await expect(navigationTooltip).toHaveAttribute("data-state", "open");
+  await expect(navigationTooltip).toHaveCSS("opacity", "1");
+  await expect(navigationTooltip).toHaveCSS("z-index", "80");
+  expect(
+    await navigationTooltip.evaluate(
+      (element) => element.parentElement === document.body,
+    ),
+  ).toBe(true);
+  const [sidebarBox, tooltipBox] = await Promise.all([
+    page.locator("aside.app-sidebar").boundingBox(),
+    navigationTooltip.boundingBox(),
+  ]);
+  expect(sidebarBox).not.toBeNull();
+  expect(tooltipBox).not.toBeNull();
+  expect(tooltipBox!.x).toBeGreaterThanOrEqual(
+    sidebarBox!.x + sidebarBox!.width - 1,
+  );
+  await page.screenshot({
     path: testInfo.outputPath("chromatic-sidebar-light-collapsed.png"),
   });
+
+  await page.mouse.move(900, 500);
+  const searchTrigger = page.getByRole("button", { name: "全局搜索" });
+  await expect(searchTrigger).toHaveCSS("border-top-width", "0px");
+  await expect(searchTrigger).toHaveCSS("border-right-width", "0px");
+  await expect(searchTrigger).toHaveCSS("border-bottom-width", "0px");
+  await expect(searchTrigger).toHaveCSS("border-left-width", "0px");
+  await searchTrigger.click();
+  const commandSearch = page.getByRole("searchbox", { name: "全局搜索" });
+  const commandSearchRegion = page.locator(".app-command-search");
+  await expect(commandSearchRegion).toHaveCSS("border-top-width", "0px");
+  await expect(commandSearchRegion).toHaveCSS("border-right-width", "0px");
+  await expect(commandSearchRegion).toHaveCSS("border-bottom-width", "0px");
+  await expect(commandSearchRegion).toHaveCSS("border-left-width", "0px");
+  await expect(commandSearch).toHaveCSS("outline-style", "none");
+  await expect(commandSearch).toHaveCSS("box-shadow", "none");
+  await page.getByRole("dialog", { name: "全局搜索" }).screenshot({
+    path: testInfo.outputPath("command-search-borderless.png"),
+  });
+  await page.keyboard.press("Escape");
 
   await page.getByRole("button", { name: "切换至深色" }).click();
   await expect(page.locator("html")).toHaveClass(/dark/);

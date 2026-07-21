@@ -261,7 +261,7 @@ export function MetadataSection({
       <label className="block text-sm font-medium">
         模型参数（JSON）
         <textarea
-          className="mt-1.5 min-h-20 w-full rounded border border-[var(--hairline)] p-3 font-mono text-xs"
+          className="text-code mt-1.5 min-h-20 w-full rounded border border-[var(--hairline)] p-3"
           onChange={(event) => onModelParamsChange(event.target.value)}
           value={modelParams}
         />
@@ -269,7 +269,7 @@ export function MetadataSection({
       <label className="block text-sm font-medium">
         工具及 Schema（JSON 数组）
         <textarea
-          className="mt-1.5 min-h-24 w-full rounded border border-[var(--hairline)] p-3 font-mono text-xs"
+          className="text-code mt-1.5 min-h-24 w-full rounded border border-[var(--hairline)] p-3"
           onChange={(event) => onToolsChange(event.target.value)}
           value={tools}
         />

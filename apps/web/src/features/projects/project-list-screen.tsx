@@ -157,10 +157,7 @@ export function ProjectListScreen({
     <div className="workspace-page">
       <header className="flex items-start justify-between gap-4 border-b border-[var(--hairline)] pb-5">
         <div>
-          <h1
-            className="font-display text-2xl font-semibold"
-            data-font-role="display"
-          >
+          <h1 className="font-display text-page-title" data-font-role="display">
             项目管理
           </h1>
           <p className="mt-2 text-sm text-[var(--muted)]">

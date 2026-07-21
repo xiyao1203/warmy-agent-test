@@ -46,7 +46,7 @@ export function AccountCenter({ children }: AccountCenterProps) {
         <p className="mb-2 text-sm font-medium text-[var(--muted)]">
           账户与偏好
         </p>
-        <h1 className="text-2xl font-semibold tracking-tight">账户中心</h1>
+        <h1 className="text-page-title">账户中心</h1>
         <p className="mt-2 text-sm text-[var(--muted)]">
           管理您的个人信息、偏好设置和安全选项
         </p>

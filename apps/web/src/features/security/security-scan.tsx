@@ -119,7 +119,7 @@ export function SecurityScanPage({ projectId }: { projectId: string }) {
     <div className="workspace-page">
       <header className="flex items-center justify-between gap-4 border-b border-[var(--hairline)] pb-5">
         <div>
-          <h1 className="flex items-center gap-2 text-2xl font-semibold tracking-tight">
+          <h1 className="text-page-title flex items-center gap-2">
             <Shield className="size-6" />
             安全测试
           </h1>

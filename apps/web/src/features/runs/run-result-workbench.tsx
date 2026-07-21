@@ -272,7 +272,7 @@ export function RunResultWorkbench({
               {selectedCase.input && (
                 <div>
                   <h5 className="text-sm font-medium">输入</h5>
-                  <pre className="mt-2 overflow-auto rounded-[var(--radius-md)] bg-[var(--canvas-soft)] p-3 text-xs">
+                  <pre className="text-code mt-2 overflow-auto rounded-[var(--radius-md)] bg-[var(--canvas-soft)] p-3">
                     {JSON.stringify(selectedCase.input, null, 2)}
                   </pre>
                 </div>
@@ -281,7 +281,7 @@ export function RunResultWorkbench({
               {selectedCase.output && (
                 <div>
                   <h5 className="text-sm font-medium">输出</h5>
-                  <pre className="mt-2 overflow-auto rounded-[var(--radius-md)] bg-[var(--canvas-soft)] p-3 text-xs">
+                  <pre className="text-code mt-2 overflow-auto rounded-[var(--radius-md)] bg-[var(--canvas-soft)] p-3">
                     {JSON.stringify(selectedCase.output, null, 2)}
                   </pre>
                 </div>

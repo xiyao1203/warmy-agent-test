@@ -129,7 +129,7 @@ export function EnvironmentList({
     <div className="workspace-page">
       <header className="flex items-start justify-between gap-4 border-b border-[var(--hairline)] pb-5">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">环境与凭证</h1>
+          <h1 className="text-page-title">环境与凭证</h1>
           <p className="mt-2 text-sm text-[var(--muted)]">
             先保存凭证，再绑定环境；测试计划选择环境后，执行时自动注入。
           </p>

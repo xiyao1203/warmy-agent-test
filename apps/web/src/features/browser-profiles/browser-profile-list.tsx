@@ -294,7 +294,7 @@ export function BrowserProfileList({
     <div className="workspace-page">
       <div className="mb-5 flex items-start justify-between gap-4 border-b border-[var(--hairline)] pb-5">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">浏览器实例</h1>
+          <h1 className="text-page-title">浏览器实例</h1>
           <p className="mt-1 text-sm text-[var(--muted)]">
             新建实例后启动浏览器，人工登录并确认保存；测试计划选择后，Codex
             测试用例会在隔离上下文中安全复用加密登录态。

@@ -58,7 +58,7 @@ export function CommandPalette({
           <DialogPrimitive.Title className="sr-only">
             全局搜索
           </DialogPrimitive.Title>
-          <div className="flex items-center gap-2 border-b border-[var(--hairline)] px-4">
+          <div className="app-command-search flex items-center gap-2 px-4">
             <Search aria-hidden="true" className="size-4 text-[var(--muted)]" />
             <input
               aria-activedescendant={
@@ -68,7 +68,7 @@ export function CommandPalette({
               aria-label="全局搜索"
               aria-autocomplete="list"
               autoFocus
-              className="h-12 min-w-0 flex-1 bg-transparent text-sm text-[var(--ink)] placeholder:text-[var(--muted)]"
+              className="app-command-search-input h-12 min-w-0 flex-1 bg-transparent text-sm text-[var(--ink)] placeholder:text-[var(--muted)]"
               onChange={(event) => {
                 setQuery(event.target.value);
                 setActiveIndex(0);

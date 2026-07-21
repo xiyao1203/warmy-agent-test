@@ -1,4 +1,10 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
+
+vi.mock("next/font/google", () => ({
+  Geist: () => ({ variable: "font-geist" }),
+  Geist_Mono: () => ({ variable: "font-geist-mono" }),
+  Noto_Sans_SC: () => ({ variable: "font-noto-sans-sc" }),
+}));
 
 import { metadata } from "../layout";
 

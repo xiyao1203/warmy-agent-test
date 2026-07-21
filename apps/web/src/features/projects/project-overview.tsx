@@ -102,9 +102,7 @@ export function ProjectOverview({
       <header className="flex flex-wrap items-start justify-between gap-4 border-b border-[var(--hairline)] pb-5">
         <div>
           <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-semibold tracking-tight">
-              {project.name}
-            </h1>
+            <h1 className="text-page-title">{project.name}</h1>
             {project.archived ? <Badge tone="warning">已归档</Badge> : null}
           </div>
           <p className="mt-2 text-sm text-[var(--muted)]">

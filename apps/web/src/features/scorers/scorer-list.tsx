@@ -145,7 +145,7 @@ export function ScorerList({ projectId }: { projectId: string }) {
     <div className="workspace-page">
       <header className="flex items-center justify-between gap-4 border-b border-[var(--hairline)] pb-5">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">评分器</h1>
+          <h1 className="text-page-title">评分器</h1>
           <p className="mt-1 text-sm text-[var(--muted)]">
             创建评分规则，测试计划选择后，运行结果会自动产出评分并用于实验对比。
           </p>

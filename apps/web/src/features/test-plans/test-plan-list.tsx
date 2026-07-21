@@ -85,7 +85,7 @@ export function TestPlanList({
     <div className="workspace-page">
       <header className="flex items-start justify-between gap-4 border-b border-[var(--hairline)] pb-5">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">测试计划</h1>
+          <h1 className="text-page-title">测试计划</h1>
           <p className="mt-2 text-sm text-[var(--muted)]">
             每个计划都要绑定已发布 Agent、用例集版本、环境、评分器和发布门禁。
           </p>

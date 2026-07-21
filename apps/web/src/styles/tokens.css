@@ -24,10 +24,10 @@
   --hairline-strong: #d4d4d8;
 
   /* Text */
-  --ink: #18181b;
-  --body: #3f3f46;
-  --muted: #71717a;
-  --muted-soft: #a1a1aa;
+  --ink: #101828;
+  --body: #344054;
+  --muted: #475467;
+  --muted-soft: #667085;
   --on-dark: #ffffff;
   --body-on-dark: #f4f4f5;
   --body-muted: #a1a1aa;
@@ -87,10 +87,38 @@
 
   /* Type */
   --font-sans:
-    Inter, "HarmonyOS Sans SC", "PingFang SC", "Microsoft YaHei UI",
-    -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    var(--font-geist), "Source Han Sans SC", var(--font-noto-sans-sc),
+    "Noto Sans SC", sans-serif;
   --font-display: var(--font-sans);
-  --font-code: "SFMono-Regular", "JetBrains Mono", "Fira Code", monospace;
+  --font-code: var(--font-geist-mono), "Source Code Pro", monospace;
+  --text-page-title-size: 26px;
+  --text-page-title-weight: 600;
+  --text-page-title-line-height: 36px;
+  --text-page-title-letter-spacing: -0.02em;
+  --text-section-title-size: 18px;
+  --text-section-title-weight: 600;
+  --text-section-title-line-height: 28px;
+  --text-section-title-letter-spacing: 0;
+  --text-card-title-size: 16px;
+  --text-card-title-weight: 600;
+  --text-card-title-line-height: 24px;
+  --text-card-title-letter-spacing: 0;
+  --text-body-size: 14px;
+  --text-body-weight: 400;
+  --text-body-line-height: 22px;
+  --text-body-letter-spacing: 0;
+  --text-secondary-size: 13px;
+  --text-secondary-weight: 400;
+  --text-secondary-line-height: 20px;
+  --text-secondary-letter-spacing: 0;
+  --text-caption-size: 12px;
+  --text-caption-weight: 500;
+  --text-caption-line-height: 18px;
+  --text-caption-letter-spacing: 0;
+  --text-code-size: 13px;
+  --text-code-weight: 400;
+  --text-code-line-height: 22px;
+  --text-code-letter-spacing: 0;
 
   /* Timing and z-index */
   --motion-micro: 120ms;
@@ -142,10 +170,10 @@
   --hairline-soft: #29292e;
   --hairline-strong: #3f3f46;
 
-  --ink: #fafafa;
-  --body: #d4d4d8;
-  --muted: #a1a1aa;
-  --muted-soft: #71717a;
+  --ink: #f5f7fa;
+  --body: #d0d5dd;
+  --muted: #98a2b3;
+  --muted-soft: #667085;
   --on-dark: #ffffff;
   --body-on-dark: #f4f4f5;
   --body-muted: #a1a1aa;

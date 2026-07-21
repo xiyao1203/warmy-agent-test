@@ -203,9 +203,7 @@ export function DatasetDetail({
       <header className="mt-4 flex flex-col gap-4 border-b border-[var(--hairline)] pb-5 lg:flex-row lg:items-start lg:justify-between">
         <div>
           <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-semibold tracking-tight">
-              {dataset.name}
-            </h1>
+            <h1 className="text-page-title">{dataset.name}</h1>
             {currentVersionId && (
               <Badge tone="accent">v{currentVersionId.slice(0, 6)}</Badge>
             )}

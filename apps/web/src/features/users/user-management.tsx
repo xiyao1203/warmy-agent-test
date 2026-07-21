@@ -133,7 +133,7 @@ export function UserManagement({
     <div className="workspace-page">
       <header className="flex items-start justify-between gap-4 border-b border-[var(--hairline)] pb-5">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">用户管理</h1>
+          <h1 className="text-page-title">用户管理</h1>
           <p className="mt-2 text-sm text-[var(--muted)]">
             管理内部账号、系统角色和登录状态。
           </p>

@@ -310,7 +310,7 @@ function CodexResultCard({ result }: { result: CodexExploreResult }) {
             <FileCode2 className="size-3" />
             执行日志
           </summary>
-          <pre className="mt-1 max-h-32 overflow-auto rounded-[var(--radius-sm)] bg-[var(--canvas-soft)] p-2 text-[0.65rem] text-[var(--ink)]">
+          <pre className="text-code mt-1 max-h-32 overflow-auto rounded-[var(--radius-sm)] bg-[var(--canvas-soft)] p-2 text-[var(--ink)]">
             {result.execution_log.slice(0, 2000)}
           </pre>
         </details>
@@ -322,7 +322,7 @@ function CodexResultCard({ result }: { result: CodexExploreResult }) {
             <Code2 className="size-3" />
             生成的 Playwright 脚本
           </summary>
-          <pre className="mt-1 max-h-48 overflow-auto rounded-[var(--radius-sm)] bg-[var(--canvas-soft)] p-2 text-[0.65rem] text-[var(--ink)]">
+          <pre className="text-code mt-1 max-h-48 overflow-auto rounded-[var(--radius-sm)] bg-[var(--canvas-soft)] p-2 text-[var(--ink)]">
             {result.generated_script}
           </pre>
         </details>
